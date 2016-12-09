@@ -10,10 +10,11 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
-import fi.vm.sade.hakurekisteri.batchimport.{BatchesBySource, ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
 import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.batchimport.QueryImportBatchReferences
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.web.rest.support._
@@ -33,7 +34,8 @@ import scala.util.Try
 import scala.xml.Elem
 import scalaz._
 
-class ImportBatchResource(eraRekisteri: ActorRef,
+class ImportBatchResource(eraOrgRekisteri: ActorRef,
+                          eraRekisteri: ActorRef,
                           parameterActor: ActorRef,
                           config: Config,
                           queryMapper: (Map[String, String]) => Query[ImportBatch])
@@ -114,8 +116,18 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   get("/withoutdata", operation(withoutdata)) {
     val user = getUser
-    if (!user.orgsFor("READ", "ImportBatch").contains(Oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
-    else new AsyncResult() {
+    val orgs = user.orgsFor("READ", "ImportBatch")
+    val isAdmin = orgs.contains(Oids.ophOrganisaatioOid)
+    if (!isAdmin) new AsyncResult() {
+      override implicit def timeout: Duration = 60.seconds
+      override val is =
+        eraOrgRekisteri ? QueryImportBatchReferences(orgs) flatMap {
+          case ReferenceResult(references) =>
+            eraRekisteri.?(BatchesByReference(references))(60.seconds)
+          case _ =>
+            Future.failed(new RuntimeException(s"Unable to get batch references for organisations ${orgs}!"))
+        }
+    } else new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       override val is = eraRekisteri.?(AllBatchStatuses)(60.seconds)
     }

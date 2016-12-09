@@ -23,7 +23,8 @@ import scala.concurrent.ExecutionContext
 
 object ProcessReadyBatches
 
-class ImportBatchProcessingActor(importBatchActor: ActorRef,
+class ImportBatchProcessingActor(importBatchOrgActor: ActorRef,
+                                 importBatchActor: ActorRef,
                                  henkiloActor: ActorRef,
                                  suoritusrekisteri: ActorRef,
                                  opiskelijarekisteri: ActorRef,
@@ -65,7 +66,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef,
           ))
         case "arvosanat" =>
           context.actorOf(Props(
-            new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)
+            new ArvosanatProcessingActor(importBatchOrgActor, importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)
           ))
         case t =>
           log.error(s"unknown batchType $t")
@@ -80,7 +81,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef,
 
 object ProcessingJammedException extends Exception("processing jammed")
 
-class ArvosanatProcessingActor(importBatchActor: ActorRef,
+class ArvosanatProcessingActor(importBatchOrgActor: ActorRef,
+                               importBatchActor: ActorRef,
                                henkiloActor: ActorRef,
                                suoritusrekisteri: ActorRef,
                                arvosanarekisteri: ActorRef,
@@ -91,7 +93,7 @@ class ArvosanatProcessingActor(importBatchActor: ActorRef,
   implicit val ec = context.dispatcher
 
   private val processor =
-    new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
+    new ArvosanatProcessing(importBatchOrgActor, organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
 
   private val startTime = Platform.currentTime
   log.info(s"started processing batch ${b.id}")
