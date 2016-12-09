@@ -98,7 +98,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     ItPostgres.reset()
     val rekisterit = new Registers {
       private val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-      insertSuoritukset(suoritusJournal)
+      insertAFewRandomishSuoritukset(suoritusJournal)
       private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
       private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
       private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
@@ -147,11 +147,15 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     super.beforeAll()
   }
 
-  private def insertSuoritukset(suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]) = {
-    println(getClass.getSimpleName + s" inserting ${suorituksetSeq.size} suoritus rows...")
+  private def insertAFewRandomishSuoritukset(suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]) = {
+    val interval = 1000
+    println(getClass.getSimpleName + s" inserting every ${interval}th of ${suorituksetSeq.size} suoritus rows...")
     val started = System.currentTimeMillis()
-    suorituksetSeq.foreach(s => suoritusJournal.addModification(Updated(s.identify)))
-    println(getClass.getSimpleName + s" ...inserting ${suorituksetSeq.size} suoritus rows complete, took ${System.currentTimeMillis() - started} ms.")
+    suorituksetSeq.zipWithIndex.foreach {
+      case (s, index) if index % interval == 0 => suoritusJournal.addModification(Updated(s.identify))
+      case _ =>
+    }
+    println(getClass.getSimpleName + s" ...inserting every ${interval}th of ${suorituksetSeq.size} suoritus rows complete, took ${System.currentTimeMillis() - started} ms.")
   }
 
   override def afterAll(): Unit = {
