@@ -276,16 +276,12 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                        opiskeluoikeusAlkanut: Option[DateTime],
                        vastaanotto: Option[DateTime],
                        suorittanutTutkinnonHakemukselta: Option[Int]): Ensikertalainen = {
-    var s: Seq[MenettamisenPeruste] = Seq()
-    if (valmistuminen.isDefined && valmistuminen.get.isBefore(leikkuripaiva))
-      s = s :+ SuoritettuKkTutkinto(valmistuminen.get)
-    if (opiskeluoikeusAlkanut.isDefined && opiskeluoikeusAlkanut.get.isBefore(leikkuripaiva))
-      s = s :+ OpiskeluoikeusAlkanut(opiskeluoikeusAlkanut.get)
-    if (vastaanotto.isDefined && vastaanotto.get.isBefore(leikkuripaiva))
-      s = s :+ KkVastaanotto(vastaanotto.get)
-    if(suorittanutTutkinnonHakemukselta.isDefined)
-      s = s :+ SuoritettuKkTutkintoHakemukselta(suorittanutTutkinnonHakemukselta.get)
-    Ensikertalainen(henkilo, s.toSet)
+    val suoritettuKkTutkintoSyy = valmistuminen.filter(_.isBefore(leikkuripaiva)).map(SuoritettuKkTutkinto)
+    val opiskeluOikeusSyy = opiskeluoikeusAlkanut.filter(_.isBefore(leikkuripaiva)).map(OpiskeluoikeusAlkanut)
+    val vastaanottoSyy = vastaanotto.filter(_.isBefore(leikkuripaiva)).map(KkVastaanotto)
+    val suoritettuKkTutkintoHakemukseltaSyy = suorittanutTutkinnonHakemukselta.map(SuoritettuKkTutkintoHakemukselta)
+    val syyt: Set[MenettamisenPeruste] = Set(suoritettuKkTutkintoSyy, opiskeluOikeusSyy, vastaanottoSyy, suoritettuKkTutkintoHakemukseltaSyy).flatten
+    Ensikertalainen(henkilo, syyt)
   }
 }
 
