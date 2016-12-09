@@ -49,24 +49,22 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       suoritukset = Seq(
         VirallinenSuoritus(koulutus_699999, myontaja, "VALMIS", date, henkiloOid, yksilollistaminen.Ei, "FI", None, vahv = true, "")
       ),
-      opiskeluoikeudet = Seq(
-        Opiskeluoikeus(new LocalDate(), None, henkiloOid, koulutus_699999, myontaja, "")
-      ),
-      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(new DateTime())))
+      opiskeluoikeudet = Nil,
+      vastaanotot = Nil
     )
 
     waitFuture(
       (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
+      e.head.menettamisenPeruste should be (Set(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
       valintarek.underlyingActor.counter should be (0)
     })
     waitFuture(
       (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid, "dummyoid"), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
+      e.head.menettamisenPeruste should be (Set(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
       valintarek.underlyingActor.counter should be (1)
     })
   }
@@ -84,7 +82,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(OpiskeluoikeusAlkanut(date.toDateTimeAtStartOfDay)))
+      e.head.menettamisenPeruste should be (Set(OpiskeluoikeusAlkanut(date.toDateTimeAtStartOfDay)))
       valintarek.underlyingActor.counter should be (0)
     })
   }
@@ -107,7 +105,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkintoHakemukselta(vanhatutkinto)))
+      e.head.menettamisenPeruste should be (Set(SuoritettuKkTutkintoHakemukselta(vanhatutkinto)))
       valintarek.underlyingActor.counter should be (0)
     })
   }
@@ -135,7 +133,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(KkVastaanotto(date)))
+      e.head.menettamisenPeruste should be (Set(KkVastaanotto(date)))
       valintarek.underlyingActor.counter should be (1)
     })
   }

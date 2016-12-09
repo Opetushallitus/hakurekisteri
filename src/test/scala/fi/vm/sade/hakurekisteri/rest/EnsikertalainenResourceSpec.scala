@@ -84,8 +84,8 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   test("returns ensikertalaisuus lost by KkVastaanotto") {
     get("/ensikertalainen?henkilo=foo&haku=1.2.3.4") {
       val e = read[Ensikertalainen](response.body)
-      e.menettamisenPeruste.map(_.peruste) should be (Some("KkVastaanotto"))
-      e.menettamisenPeruste.map(_.asInstanceOf[KkVastaanotto].paivamaara.toString) should be (Some(vastaanottohetki.toString))
+      e.menettamisenPeruste.map(_.peruste) should be (Set("KkVastaanotto"))
+      e.menettamisenPeruste.map(_.asInstanceOf[KkVastaanotto].paivamaara.toString) should be (Set(vastaanottohetki.toString))
     }
   }
 
