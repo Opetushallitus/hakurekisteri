@@ -93,7 +93,7 @@ object Oids {
 class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
-  override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusreksiteri.db.url")
+  override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusrekisteri.db.url")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
