@@ -18,7 +18,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, Opi
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
@@ -95,6 +95,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")),
       config)
     )
+    ItPostgres.reset()
     val rekisterit = new Registers {
       private val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
       insertSuoritukset(suoritusJournal)
@@ -143,7 +144,6 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     )))
     resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)
     addServlet(resource, "/*")
-    ItPostgres.reset()
     super.beforeAll()
   }
 
@@ -162,7 +162,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     }
   }
 
-  implicit val formats = HakurekisteriJsonSupport.format
+  implicit val formats = HakurekisteriJsonSupport.format ++ List(new SuoritusDeserializer)
 
   private val OK: Int = 200
   private val BAD_REQUEST: Int = 400
