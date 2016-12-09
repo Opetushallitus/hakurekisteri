@@ -52,7 +52,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient) extends IOppijaNumeroR
   }
 }
 
-object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri{
+object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
 
   /**
     Fetches linked henkilo oids from oppijanumerorekisteri.
