@@ -97,7 +97,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     )
     val rekisterit = new Registers {
       private val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-      suorituksetSeq.foreach(s => suoritusJournal.addModification(Updated(s.identify)))
+      insertSuoritukset(suoritusJournal)
       private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
       private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
       private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
@@ -145,6 +145,13 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     addServlet(resource, "/*")
     ItPostgres.reset()
     super.beforeAll()
+  }
+
+  private def insertSuoritukset(suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]) = {
+    println(getClass.getSimpleName + s" inserting ${suorituksetSeq.size} suoritus rows...")
+    val started = System.currentTimeMillis()
+    suorituksetSeq.foreach(s => suoritusJournal.addModification(Updated(s.identify)))
+    println(getClass.getSimpleName + s" ...inserting ${suorituksetSeq.size} suoritus rows complete, took ${System.currentTimeMillis() - started} ms.")
   }
 
   override def afterAll(): Unit = {
