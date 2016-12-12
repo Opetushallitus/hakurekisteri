@@ -62,7 +62,7 @@ class ImportBatchProcessingActor(importBatchOrgActor: ActorRef,
       b.batchType match {
         case "perustiedot" =>
           context.actorOf(Props(
-            new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)
+            new PerustiedotProcessingActor(importBatchOrgActor, importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)
           ))
         case "arvosanat" =>
           context.actorOf(Props(
@@ -128,7 +128,8 @@ class ArvosanatProcessingActor(importBatchOrgActor: ActorRef,
   }
 }
 
-class PerustiedotProcessingActor(importBatchActor: ActorRef,
+class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
+                                 importBatchActor: ActorRef,
                                  henkiloActor: ActorRef,
                                  suoritusrekisteri: ActorRef,
                                  opiskelijarekisteri: ActorRef,
@@ -304,6 +305,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef,
     case OppilaitosResponse(koodi, organisaatio) if organisaatiot.values.exists(_.isEmpty) =>
       organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
       if (!organisaatiot.values.exists(_.isEmpty)) {
+        organisaatiot.flatMap(_._2).map(_.oid).map(ImportBatchOrg(b.id,_)).foreach(importBatchOrgActor ! _)
         importHenkilot.values.foreach(h => {
           saveHenkilo(h, (lahtokoulu) => organisaatiot(lahtokoulu).map(_.oid).get)
         })
