@@ -8,6 +8,7 @@ import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HenkiloHakijaQuery, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
@@ -29,7 +30,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef)
+class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
                              (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with TiedotFetcher with OppijaFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport
     with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {
@@ -75,10 +76,12 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     if (henkilot.size > OppijatPostSize.maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
 
+    val personOidsWithAliases = oppijaNumeroRekisteri.enrichWithAliases(henkilot)
+
     new AsyncResult() {
       override implicit def timeout: Duration = 1000.seconds
 
-      private val tiedotFuture = getRekisteriData(henkilot)
+      private val tiedotFuture = getRekisteriData(personOidsWithAliases)
 
       logQuery(henkilot, t0, tiedotFuture)
 

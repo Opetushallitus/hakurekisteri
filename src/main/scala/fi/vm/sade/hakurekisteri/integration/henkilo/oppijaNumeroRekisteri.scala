@@ -21,6 +21,11 @@ trait IOppijaNumeroRekisteri {
     C -> [C]
     */
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Map[String, Set[String]]
+
+  def enrichWithAliases(henkiloOids: Set[String]): PersonOidsWithAliases = {
+    val linkMap = fetchLinkedHenkiloOidsMap(henkiloOids)
+    PersonOidsWithAliases(henkiloOids, linkMap, IOppijaNumeroRekisteri.combineLinkedHenkiloOids(henkiloOids, linkMap))
+  }
 }
 
 object IOppijaNumeroRekisteri {
@@ -70,3 +75,5 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
 }
 
 case class HenkiloViite(henkiloOid: String, masterOid: String)
+
+case class PersonOidsWithAliases(henkiloOids: Set[String], links: Map[String, Set[String]], henkiloOidsWithLinkedOids: Set[String])
