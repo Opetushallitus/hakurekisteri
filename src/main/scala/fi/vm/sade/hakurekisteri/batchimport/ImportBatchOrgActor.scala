@@ -27,12 +27,12 @@ class ImportBatchOrgActor(db: Database) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val table = TableQuery[ImportBatchOrgTable]
   JDBCUtil.createSchemaForTable(table, db)
-  
+
   override def receive: Receive = {
     case i: ImportBatchOrg =>
       log.info(s"Saving import batch organisation ${i.oid}!")
       val entry: (UUID, String, Long) = toRow(i)
-      Try(run(DBIO.seq(table += entry)))
+      Try(run(table.insertOrUpdate(entry)))
     case QueryImportBatchReferences(orgs) =>
       //val query = sql"select resource_id,oid from import_batch_org where resource_id in (select resource_id from import_batch_org where oid in ($o))".as[(String,String)]
       val subQuery = table.filter(_.oid.inSet(orgs)).map(_.resourceId)

@@ -19,5 +19,6 @@ class ImportBatchOrgTable(tag: Tag) extends Table[ImportBatchOrgsRow](tag, "impo
   def oid = column[String]("oid")
   def inserted = column[Long]("inserted")
 
+  def pk = primaryKey("pk_importbatchorg", (resourceId, oid))
   def * = (resourceId, oid, inserted)
 }
