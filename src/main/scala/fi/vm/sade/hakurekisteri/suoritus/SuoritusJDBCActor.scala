@@ -33,7 +33,13 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
       Right(all.filter(t => matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
         matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t)))
-    case SuoritusHenkilotQuery(henkilot) => Right(all.filter(_.henkiloOid.inSet(henkilot)))
+    case SuoritusHenkilotQuery(henkilot) =>
+      // TODO : insert linking data first in same transaction to temp table and then join there
+/*      val innerJoin = for {
+        (suoritus, henkiloViite) <- all join TableQuery[HenkiloViiteTable] on (_.henkiloOid === _.linkedOid)
+      } yield suoritus
+      */
+      Right(all.filter(_.henkiloOid.inSet(henkilot)))
     case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)))
     case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(all.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t)))
   }
