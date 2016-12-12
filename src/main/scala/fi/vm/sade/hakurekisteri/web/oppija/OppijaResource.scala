@@ -5,6 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
+import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -21,7 +22,7 @@ object OppijatPostSize {
   def maxOppijatPostSize: Int = 5000
 }
 
-class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef)
+class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
                     (implicit val system: ActorSystem, sw: Swagger, val security: Security)
     extends HakuJaValintarekisteriStack with OppijaFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport
     with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {

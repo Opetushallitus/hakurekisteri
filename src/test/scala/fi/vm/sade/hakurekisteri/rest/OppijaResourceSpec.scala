@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
@@ -58,7 +58,27 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     oids
   }
 
-  val suorituksetSeq = henkilot.map(henkilo =>
+  val henkiloOidWithAliases = "1.2.246.562.24.12345678901"
+  val aliasesOfHenkiloOid = Set("1.2.246.562.24.12345678902", "1.2.246.562.24.12345678903")
+  val fakeOppijaNumeroRekisteri = new IOppijaNumeroRekisteri {
+    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Map[String, Set[String]] = {
+      val allMappingsOfLinked = (aliasesOfHenkiloOid + henkiloOidWithAliases).map((_, aliasesOfHenkiloOid + henkiloOidWithAliases)).toMap
+      henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap ++ allMappingsOfLinked
+    }
+  }
+
+  val linkedPersonsSuoritus = VirallinenSuoritus(
+      "linkedPersonsSuoritusKomo",
+      "linkedPersonsMyontaja",
+      "VALMIS",
+      new LocalDate(1996, 12, 3),
+      henkiloOidWithAliases,
+      yksilollistaminen.Ei,
+      "FI",
+      None,
+      vahv = true, ""
+    )
+  val suorituksetSeq: Seq[VirallinenSuoritus] = henkilot.map(henkilo =>
     VirallinenSuoritus(
       "1.2.246.562.5.00000000001",
       "1.2.246.562.10.00000000001",
@@ -71,7 +91,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       vahv = true,
       ""
     )
-  ).toSeq
+  ).toSeq :+ linkedPersonsSuoritus
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
@@ -88,6 +108,8 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   var resource: OppijaResource = _
   val hakemusServiceMock = mock[IHakemusService]
 
+  private lazy val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+
   override def beforeAll(): Unit = {
     val config = new MockConfig
     system = ActorSystem("oppija-resource-test-system")
@@ -98,7 +120,6 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     )
     ItPostgres.reset()
     val rekisterit = new Registers {
-      private val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
       insertAFewRandomishSuoritukset(suoritusJournal)
       private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
       private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
@@ -143,10 +164,10 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
         }
       })),
       hakemusServiceMock,
-      MockOppijaNumeroRekisteri,
+      fakeOppijaNumeroRekisteri,
       config
     )))
-    resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)
+    resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor, fakeOppijaNumeroRekisteri)
     addServlet(resource, "/*")
     super.beforeAll()
   }
@@ -240,6 +261,29 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   test("OppijaResource should 200 when a list of person oids is sent as POST") {
     post("/?haku=1.2.3.4", """["1.2.246.562.24.00000000002"]""") {
       response.status should be (OK)
+    }
+  }
+
+  ignore("OppijaResource should return results for linked persons too when a list of person oids is sent as POST") {
+    suoritusJournal.addModification(Updated(linkedPersonsSuoritus.identify))
+    post(s"/?haku=1.2.3.4", s"""["$henkiloOidWithAliases"]""") {
+      response.status should be (OK)
+      val oppijas = read[Seq[Oppija]](response.body)
+      oppijas should have size 1
+      oppijas.head.suoritukset should have size 1
+      oppijas.head.suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus))
+    }
+
+    val aliasesSeq = aliasesOfHenkiloOid.toSeq
+    val (firstAlias, secondAlias) = (aliasesSeq(0), aliasesSeq(1))
+    post(s"/?haku=1.2.3.4", s"""["$firstAlias", "$secondAlias"]""") {
+      response.status should be (OK)
+      val oppijas = read[Seq[Oppija]](response.body)
+      oppijas should have size 2
+      oppijas(0).suoritukset should have size 1
+      oppijas(0).suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus))
+      oppijas(1).suoritukset should have size 1
+      oppijas(1).suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus))
     }
   }
 

@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrgActor, ImportBatch}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
@@ -82,7 +83,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
     }
   }))
 
-  val resource = new RekisteritiedotResource(rekisterit, mock[IHakemusService], notImplementedActor)
+  val resource = new RekisteritiedotResource(rekisterit, mock[IHakemusService], notImplementedActor, MockOppijaNumeroRekisteri)
 
   addServlet(resource, "/*")
 
