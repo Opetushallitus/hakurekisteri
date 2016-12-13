@@ -8,7 +8,9 @@ import fi.vm.sade.hakurekisteri.rest.support.JDBCUtil
 import fi.vm.sade.hakurekisteri.storage.ResourceService
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import slick.dbio.Effect.Write
 import slick.jdbc.meta.MTable
+import slick.profile.FixedSqlAction
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -28,11 +30,18 @@ class ImportBatchOrgActor(db: Database) extends Actor with ActorLogging {
   val table = TableQuery[ImportBatchOrgTable]
   JDBCUtil.createSchemaForTable(table, db)
 
+  def insertIfNotExists(resourceId: UUID, oid: String, created: Long) = table.map(u => (u.resourceId, u.oid, u.inserted)).forceInsertQuery {
+
+    val exists = table.filter(r => (r.resourceId === resourceId.bind && r.oid === oid.bind)).exists
+    Query((resourceId.bind, oid.bind, created.bind)).filter(_ => !exists)
+  }
+
   override def receive: Receive = {
     case i: ImportBatchOrg =>
       log.info(s"Saving import batch organisation ${i.oid}!")
-      val entry: (UUID, String, Long) = toRow(i)
-      Try(run(table.insertOrUpdate(entry)))
+      val (resourceId, oid, created)= toRow(i)
+      Try(run(insertIfNotExists(resourceId, oid, created)))
+
     case QueryImportBatchReferences(orgs) =>
       //val query = sql"select resource_id,oid from import_batch_org where resource_id in (select resource_id from import_batch_org where oid in ($o))".as[(String,String)]
       val subQuery = table.filter(_.oid.inSet(orgs)).map(_.resourceId)
