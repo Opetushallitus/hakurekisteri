@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService, Query}
 import fi.vm.sade.hakurekisteri.storage.ResourceActor
 import fi.vm.sade.hakurekisteri.storage.repository.Delta
+import slick.dbio.Effect.All
 import slick.lifted
 
 import scala.concurrent.ExecutionContext
@@ -20,9 +21,9 @@ class OpiskeluoikeusJDBCActor(val journal: JDBCJournal[Opiskeluoikeus, UUID, Opi
 
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
-  override val dbQuery: PartialFunction[Query[Opiskeluoikeus], Either[Throwable, lifted.Query[OpiskeluoikeusTable, Delta[Opiskeluoikeus, UUID], Seq]]] = {
+  override val dbQuery: PartialFunction[Query[Opiskeluoikeus], Either[Throwable, DBIOAction[Seq[Delta[Opiskeluoikeus, UUID]], Streaming[Delta[Opiskeluoikeus, UUID]], All]]] = {
     case OpiskeluoikeusQuery(henkilo, myontaja) => Right(all.filter(t =>
-      henkilo.fold[Rep[Boolean]](true)(t.henkiloOid === _) && myontaja.fold[Rep[Boolean]](true)(t.myontaja === _)))
-    case OpiskeluoikeusHenkilotQuery(henkilot) => Right(all.filter(t => t.henkiloOid.inSet(henkilot)))
+      henkilo.fold[Rep[Boolean]](true)(t.henkiloOid === _) && myontaja.fold[Rep[Boolean]](true)(t.myontaja === _)).result)
+    case OpiskeluoikeusHenkilotQuery(henkilot) => Right(all.filter(t => t.henkiloOid.inSet(henkilot)).result)
   }
 }
