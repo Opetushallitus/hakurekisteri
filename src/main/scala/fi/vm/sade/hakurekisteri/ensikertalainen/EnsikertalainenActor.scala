@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
@@ -224,13 +224,13 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   private def opiskeluoikeudet(henkiloOids: Set[String]): Future[Seq[Opiskeluoikeus]] = Future.sequence(
     henkiloOids
       .grouped(resourceQuerySize)
-      .map(oids => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(henkilot = oids)).mapTo[Seq[Opiskeluoikeus]])
+      .map(oids => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(PersonOidsWithAliases(oids))).mapTo[Seq[Opiskeluoikeus]])
   ).map(_.flatten.toSeq)
 
   private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] = Future.sequence(
     henkiloOids
       .grouped(resourceQuerySize)
-      .map(oids => (suoritusActor ? SuoritusHenkilotQuery(henkilot = oids)).mapTo[Seq[Suoritus]])
+      .map(oids => (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(oids))).mapTo[Seq[Suoritus]])
   ).map(_.flatten.toSeq)
 
   private def isKkTutkinto(suoritus: Suoritus): Future[Option[Suoritus]] = suoritus match {

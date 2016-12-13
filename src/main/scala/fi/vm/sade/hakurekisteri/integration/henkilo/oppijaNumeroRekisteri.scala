@@ -76,4 +76,12 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
 
 case class HenkiloViite(henkiloOid: String, masterOid: String)
 
-case class PersonOidsWithAliases(henkiloOids: Set[String], links: Map[String, Set[String]], henkiloOidsWithLinkedOids: Set[String])
+case class PersonOidsWithAliases(henkiloOids: Set[String], aliasesByPersonOids: Map[String, Set[String]], henkiloOidsWithLinkedOids: Set[String])
+
+object PersonOidsWithAliases {
+  /**
+    * @return a dummy object with just the given oids as their aliases, so we don't have to migrate everything at once
+    */
+  @Deprecated // The places where this is used should be updated to use real linked data"
+  def apply(henkiloOids: Set[String]): PersonOidsWithAliases = PersonOidsWithAliases(henkiloOids, henkiloOids.map(h => (h, Set(h))).toMap, henkiloOids)
+}

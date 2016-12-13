@@ -27,8 +27,8 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
   val suoritusActor = system.actorOf(Props(new Actor {
     override def receive: Receive = {
-      case q: SuoritusHenkilotQuery if q.henkilot.contains("timeout") => Future.successful(Thread.sleep(2000)) pipeTo sender
-      case q: SuoritusHenkilotQuery if q.henkilot.contains("rikki") => Future.failed(new Exception("palvelu rikki")) pipeTo sender
+      case q: SuoritusHenkilotQuery if q.henkilot.henkiloOidsWithLinkedOids.contains("timeout") => Future.successful(Thread.sleep(2000)) pipeTo sender
+      case q: SuoritusHenkilotQuery if q.henkilot.henkiloOidsWithLinkedOids.contains("rikki") => Future.failed(new Exception("palvelu rikki")) pipeTo sender
       case q: SuoritusHenkilotQuery => sender ! Seq(
         VirallinenSuoritus(PohjakoulutusOids.perusopetus, "1.2.246.562.10.1", "VALMIS", new LocalDate(), "1.2.246.562.24.1", yksilollistaminen = yksilollistaminen.Ei, "FI", None, vahv = true, "1.2.246.562.24.10")
       )

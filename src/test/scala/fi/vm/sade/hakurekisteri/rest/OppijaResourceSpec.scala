@@ -264,7 +264,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     }
   }
 
-  ignore("OppijaResource should return results for linked persons too when a list of person oids is sent as POST") {
+  test("OppijaResource should return results for linked persons too when a list of person oids is sent as POST") {
     suoritusJournal.addModification(Updated(linkedPersonsSuoritus.identify))
     post(s"/?haku=1.2.3.4", s"""["$henkiloOidWithAliases"]""") {
       response.status should be (OK)

@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.suoritus
 
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query}
 import Kausi.Kausi
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import org.joda.time.DateTime
 
 
@@ -23,6 +24,6 @@ object SuoritusQuery{
   }
 }
 
-case class SuoritusHenkilotQuery(henkilot: Set[String]) extends Query[Suoritus]
+case class SuoritusHenkilotQuery(henkilot: PersonOidsWithAliases) extends Query[Suoritus]
 case class SuoritysTyyppiQuery(henkilo: String, komo: String) extends Query[Suoritus]
 case class AllForMatchinHenkiloSuoritusQuery(vuosi: Option[String] = None, myontaja: Option[String] = None) extends Query[Suoritus]
