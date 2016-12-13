@@ -1,9 +1,11 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
+
 import scala.util.Try
 
 case class OpiskelijaQuery(henkilo: Option[String] = None,
@@ -27,4 +29,4 @@ object OpiskelijaQuery{
   }
 }
 
-case class OpiskelijaHenkilotQuery(henkilot: Set[String]) extends Query[Opiskelija]
+case class OpiskelijaHenkilotQuery(henkilot: PersonOidsWithAliases) extends Query[Opiskelija]

@@ -119,8 +119,9 @@ trait OppijaFetcher {
   private def fetchSuoritukset(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] =
     splittedQuery[Suoritus with Identified[UUID], Suoritus](personOidsWithAliases, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
 
-  private def splittedQuery[A, B](personOidsWithAliases: PersonOidsWithAliases, actor: ActorRef, q: (Set[String]) => Query[B])(implicit user: User): Future[Seq[A]] =
+  private def splittedQuery[A, B](personOidsWithAliases: PersonOidsWithAliases, actor: ActorRef, q: (PersonOidsWithAliases) => Query[B])(implicit user: User): Future[Seq[A]] =
+  // TODO fix or remove. There's just one PersonOidsWithAliases object, so there's always just one group here now.
     Future.sequence(personOidsWithAliases.henkiloOids.grouped(singleSplitQuerySize).map(henkiloSubset =>
-      (actor ? AuthorizedQuery(q(henkiloSubset), user)).mapTo[Seq[A]]
+      (actor ? AuthorizedQuery(q(personOidsWithAliases), user)).mapTo[Seq[A]]
     )).map(_.flatten.toSeq)
 }

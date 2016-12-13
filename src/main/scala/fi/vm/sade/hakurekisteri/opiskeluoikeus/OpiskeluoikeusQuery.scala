@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.opiskeluoikeus
 
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.Query
 
 case class OpiskeluoikeusQuery(henkilo: Option[String] = None, myontaja: Option[String] = None) extends Query[Opiskeluoikeus]
@@ -10,4 +11,4 @@ object OpiskeluoikeusQuery {
   }
 }
 
-case class OpiskeluoikeusHenkilotQuery(henkilot: Set[String]) extends Query[Opiskeluoikeus]
+case class OpiskeluoikeusHenkilotQuery(henkilot: PersonOidsWithAliases) extends Query[Opiskeluoikeus]

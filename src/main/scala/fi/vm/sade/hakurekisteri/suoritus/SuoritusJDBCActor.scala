@@ -54,7 +54,7 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
       }
 
       // TODO: Use the linked persons data here
-      val bulkInsert = DBIO.sequence(henkilot.toSeq.map { henkilo => henkiloviiteTable.forceInsert((henkilo, henkilo)) }) // Populate temp table rows
+      val bulkInsert = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTable.forceInsert((henkilo, a)) } } ) // Populate temp table rows
       val innerJoin = for {
         (suoritus, _) <- all join henkiloviiteTable on (_.henkiloOid === _.linkedOid)
       } yield suoritus
