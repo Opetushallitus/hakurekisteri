@@ -54,6 +54,9 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     case AuthorizedQuery(q, user) =>
       (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(authorizedResources(_, user, "READ")) pipeTo sender
 
+    case AuthorizedReadWithOrgsChecked(id, user) =>
+      (filteredActor ? id).mapTo[Option[A with Identified[UUID]]] pipeTo sender
+
     case AuthorizedRead(id, user) =>
       (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(user, "READ")) pipeTo sender
 
@@ -113,6 +116,7 @@ object FutureOrganizationHierarchy {
 
 case class AuthorizedQuery[A](q: Query[A],  user: User)
 case class AuthorizedRead[I](id: I, user: User)
+case class AuthorizedReadWithOrgsChecked[I](id: I, user: User)
 
 case class AuthorizedDelete[I](id: I, user: User)
 case class AuthorizedCreate[A <: Resource[I, A], I](q: A,  user: User)
