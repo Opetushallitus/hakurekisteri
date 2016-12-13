@@ -89,10 +89,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
   val dbQuery: PartialFunction[Query[R], Either[Throwable, DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R,I]], All]]]
 
   private def logSlowQuery(runtime: Long, query: DBIOAction[_,_,_]): Unit = {
-    log.warning("TODO: logging slow queries not implemented!")
-
-    /*
-    var queryStr = query.result.statements.mkString(" ")
+    var queryStr = query.getDumpInfo.mainInfo
     if(queryStr.length > 500) {
       queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
     }
@@ -101,6 +98,5 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     } else {
       log.warning(s"Query $queryStr took $runtime ms")
     }
-    */
   }
 }
