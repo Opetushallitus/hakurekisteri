@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Delta, Insert, Upda
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import slick.dbio.Effect.Read
+import slick.dbio.Effect.{All, Read}
 import slick.lifted
 import slick.profile.FixedSqlStreamingAction
 
@@ -49,13 +49,13 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
 
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
 
-  override val dbQuery: PartialFunction[support.Query[ImportBatch], Either[Throwable, lifted.Query[ImportBatchTable, Delta[ImportBatch, UUID], Seq]]]  = {
+  override val dbQuery: PartialFunction[support.Query[ImportBatch], Either[Throwable, DBIOAction[Seq[Delta[ImportBatch, UUID]], Streaming[Delta[ImportBatch, UUID]], All]]] = {
     case ImportBatchQuery(None, None, None, maxCount) =>
       val q = all
-      Right(maxCount.map(count => q.take(count)).getOrElse(q))
+      Right(maxCount.map(count => q.take(count)).getOrElse(q).result)
     case ImportBatchQuery(externalId, state, batchType, maxCount) =>
       val q = all.filter(i => matchExternalId(externalId)(i) && matchState(state)(i) && matchBatchType(batchType)(i))
-      Right(maxCount.map(count => q.take(count)).getOrElse(q))
+      Right(maxCount.map(count => q.take(count)).getOrElse(q).result)
   }
 
   def matchExternalId(externalId: Option[String])(i: ImportBatchTable): Rep[Option[Boolean]] = externalId match {

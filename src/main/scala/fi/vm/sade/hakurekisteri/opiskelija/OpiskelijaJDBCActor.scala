@@ -12,6 +12,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
+import slick.dbio.Effect.All
 import slick.lifted
 
 import scala.concurrent.ExecutionContext
@@ -24,13 +25,13 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
 
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
-  override val dbQuery: PartialFunction[support.Query[Opiskelija], Either[Throwable, lifted.Query[OpiskelijaTable, Delta[Opiskelija, UUID], Seq]]] = {
+  override val dbQuery: PartialFunction[support.Query[Opiskelija], Either[Throwable, DBIOAction[Seq[Delta[Opiskelija, UUID]], Streaming[Delta[Opiskelija, UUID]], All]]] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       Right(all.filter(t => matchHenkilo(henkilo)(t) &&
         matchOppilaitosOid(oppilaitosOid)(t) &&
         matchPaiva(paiva)(t) &&
         matchVuosiAndKausi(vuosi, kausi)(t) &&
-        matchLuokka(luokka)(t)))
+        matchLuokka(luokka)(t)).result)
   }
 
   private def matchHenkilo(henkilo: Option[String])(t: OpiskelijaTable): Rep[Boolean] = henkilo match {

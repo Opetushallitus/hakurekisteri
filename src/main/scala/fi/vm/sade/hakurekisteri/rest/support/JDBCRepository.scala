@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
+import slick.dbio.Effect.All
 import slick.lifted
 
 import scala.compat.Platform
@@ -73,19 +74,11 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     dbQuery.lift(q).map{
       case Right(query) =>
         val start = Platform.currentTime
-        val f = journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
+        val f = journal.db.run(query).map(_.collect { case Updated(res) => res })(dbExecutor)
         f.onComplete(_ => {
           val runtime = Platform.currentTime - start
           if (runtime > Config.slowQuery) {
-            var queryStr = query.result.statements.mkString(" ")
-            if(queryStr.length > 500) {
-              queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
-            }
-            if(runtime > Config.reallySlowQuery) {
-              log.info(s"Query $queryStr took $runtime ms")
-            } else {
-              log.warning(s"Query $queryStr took $runtime ms")
-            }
+            logSlowQuery(runtime, query)
           }
         })(dbExecutor)
         f
@@ -93,5 +86,21 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     }.getOrElse(Future.successful(Seq()))
   }
 
-  val dbQuery: PartialFunction[Query[R], Either[Throwable, lifted.Query[T, Delta[R, I], Seq]]]
+  val dbQuery: PartialFunction[Query[R], Either[Throwable, DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R,I]], All]]]
+
+  private def logSlowQuery(runtime: Long, query: DBIOAction[_,_,_]): Unit = {
+    log.warning("TODO: logging slow queries not implemented!")
+
+    /*
+    var queryStr = query.result.statements.mkString(" ")
+    if(queryStr.length > 500) {
+      queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
+    }
+    if(runtime > Config.reallySlowQuery) {
+      log.info(s"Query $queryStr took $runtime ms")
+    } else {
+      log.warning(s"Query $queryStr took $runtime ms")
+    }
+    */
+  }
 }
