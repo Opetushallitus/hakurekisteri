@@ -52,7 +52,7 @@ case class SuoritettuKkTutkintoHakemukselta(vuosi: Int) extends MenettamisenPeru
   override val peruste: String = "SuoritettuKkTutkintoHakemukselta"
 }
 
-case class Ensikertalainen(henkiloOid: String, menettamisenPeruste: Set[MenettamisenPeruste]){
+case class Ensikertalainen(henkiloOid: String, menettamisenPeruste: Option[MenettamisenPeruste]){
   val ensikertalainen = menettamisenPeruste.isEmpty
 }
 
@@ -113,8 +113,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   def mergeEnsikertalaisuus(henkiloOid:String, allEnsikertalainen: Set[Ensikertalainen]): Ensikertalainen = {
-    val kaikkiEnsikertalaisuudet = allEnsikertalainen.flatMap(_.menettamisenPeruste)
-    Ensikertalainen(henkiloOid, kaikkiEnsikertalaisuudet)
+    val mikaVainMenettamisenPeruste = allEnsikertalainen.flatMap(_.menettamisenPeruste).headOption
+    Ensikertalainen(henkiloOid, mikaVainMenettamisenPeruste)
   }
 
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
@@ -273,12 +273,18 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                        opiskeluoikeusAlkanut: Option[DateTime],
                        vastaanotto: Option[DateTime],
                        suorittanutTutkinnonHakemukselta: Option[Int]): Ensikertalainen = {
-    val suoritettuKkTutkintoSyy = valmistuminen.filter(_.isBefore(leikkuripaiva)).map(SuoritettuKkTutkinto)
-    val opiskeluOikeusSyy = opiskeluoikeusAlkanut.filter(_.isBefore(leikkuripaiva)).map(OpiskeluoikeusAlkanut)
-    val vastaanottoSyy = vastaanotto.filter(_.isBefore(leikkuripaiva)).map(KkVastaanotto)
-    val suoritettuKkTutkintoHakemukseltaSyy = suorittanutTutkinnonHakemukselta.map(SuoritettuKkTutkintoHakemukselta)
-    val syyt: Set[MenettamisenPeruste] = Set(suoritettuKkTutkintoSyy, opiskeluOikeusSyy, vastaanottoSyy, suoritettuKkTutkintoHakemukseltaSyy).flatten
-    Ensikertalainen(henkilo, syyt)
+    (valmistuminen, opiskeluoikeusAlkanut, vastaanotto, suorittanutTutkinnonHakemukselta) match {
+      case (Some(tutkintopaiva), _, _, _) if tutkintopaiva.isBefore(leikkuripaiva) =>
+        Ensikertalainen(henkilo, Some(SuoritettuKkTutkinto(tutkintopaiva)))
+      case (_, Some(opiskeluoikeusAlkupvm), _, _) if opiskeluoikeusAlkupvm.isBefore(leikkuripaiva) =>
+        Ensikertalainen(henkilo, Some(OpiskeluoikeusAlkanut(opiskeluoikeusAlkupvm)))
+      case (_, _, Some(vastaanottopaiva), _) if vastaanottopaiva.isBefore(leikkuripaiva) =>
+        Ensikertalainen(henkilo, Some(KkVastaanotto(vastaanottopaiva)))
+      case (_, _, _, Some(vuosi)) =>
+        Ensikertalainen(henkilo, Some(SuoritettuKkTutkintoHakemukselta(vuosi)))
+      case _ =>
+        Ensikertalainen(henkilo, None)
+    }
   }
 }
 
