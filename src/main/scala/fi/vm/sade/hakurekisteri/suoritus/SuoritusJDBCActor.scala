@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
+import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloViiteTable
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumnDate, yearOf}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
@@ -34,6 +35,22 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
       Right(all.filter(t => matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
         matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t)))
     case SuoritusHenkilotQuery(henkilot) =>
+      /* TODO : maybe possible to use temporary tables like this or better to use plain sql create statements?
+      * https://groups.google.com/forum/#!msg/scalaquery/Y4o7k_uQ2HE/HYCMQUPE1wMJ
+      **/
+      val createStatements = TableQuery[HenkiloViiteTable]
+        .schema
+        .createStatements
+        .map(_.replace("CREATE TABLE","CREATE TEMPORARY TABLE"))
+        .reduce(_ ++ _)
+        .concat(" ON COMMIT DROP")
+
+      val createTempTable = SimpleDBIO(_.connection.createStatement().addBatch(createStatements))  // Create table
+      val bulkInsert = DBIO.sequence(henkilot.map { henkilo => TableQuery[HenkiloViiteTable].insertOrUpdate((henkilo, henkilo))})  // Populate temp table rows
+      val innerJoin = sql"""select * from suoritus join henkiloviite on suoritus.henkilo_oid = henkiloviite.linked_oid where suoritus.current""".as[Option[Suoritus]]  // Query with temp table
+
+      val queryWithTempTable = DBIO.seq(createTempTable, bulkInsert, innerJoin).transactionally  // Run in single transaction, temp table deleted on commit
+      journal.db.run(queryWithTempTable) // TODO: Return result set
       // TODO : insert linking data first in same transaction to temp table and then join there
 /*      val innerJoin = for {
         (suoritus, henkiloViite) <- all join TableQuery[HenkiloViiteTable] on (_.henkiloOid === _.linkedOid)
