@@ -305,7 +305,7 @@ class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
     case OppilaitosResponse(koodi, organisaatio) if organisaatiot.values.exists(_.isEmpty) =>
       organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
       if (!organisaatiot.values.exists(_.isEmpty)) {
-        organisaatiot.flatMap(_._2).map(_.oid).map(ImportBatchOrg(b.id,_)).foreach(importBatchOrgActor ! _)
+        importBatchOrgActor ! ImportBatchOrgs(b.id, organisaatiot.flatMap(_._2).map(_.oid).toSet)
         importHenkilot.values.foreach(h => {
           saveHenkilo(h, (lahtokoulu) => organisaatiot(lahtokoulu).map(_.oid).get)
         })

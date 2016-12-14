@@ -12,6 +12,7 @@ object ImportBatchOrgTable {
   type ImportBatchOrgsRow = (UUID, String, Long)
 }
 
+case class ImportBatchOrgs(resourceId: UUID, oids: Set[String])
 case class ImportBatchOrg(resourceId: UUID, oid: String)
 
 class ImportBatchOrgTable(tag: Tag) extends Table[ImportBatchOrgsRow](tag, "import_batch_org") {

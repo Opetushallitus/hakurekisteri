@@ -46,9 +46,7 @@ class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: Acto
   }
   private def saveBatchOrganisaatiot(organisaatiot: Set[String])(batch: ImportBatch with Identified[UUID]): Future[ImportBatch with Identified[UUID]] = {
     val resourceId = batch.id
-    organisaatiot.foreach(organisaatio => {
-      importBatchOrgActor ! ImportBatchOrg(resourceId, organisaatio)
-    })
+    importBatchOrgActor ! ImportBatchOrgs(resourceId, organisaatiot)
     Future.successful(batch)
   }
   private def saveDoneBatch(batch: ImportBatch)(statukset: Seq[ImportArvosanaStatus]): Future[ImportBatch with Identified[UUID]] = {

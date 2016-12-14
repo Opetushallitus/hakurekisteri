@@ -37,6 +37,21 @@ class ImportBatchOrgActor(db: Database) extends Actor with ActorLogging {
   }
 
   override def receive: Receive = {
+    case ImportBatchOrgs(resourceId, orgs) =>
+      if(orgs.isEmpty) {
+        log.info(s"Batch $resourceId had no organizations!")
+      } else {
+        val rows = orgs.map(org => toRow(ImportBatchOrg(resourceId, org)))
+        val toBeInserted = rows.map { row => table.forceInsert(row) }
+        val deleteAndInsert = DBIO.sequence(Seq(table.filter(_.resourceId === resourceId.bind).delete) ++ toBeInserted)
+        Try(run(deleteAndInsert)) match {
+          case Failure(f) =>
+            log.error(s"Couldn't insert $resourceId organizations ($orgs)!")
+          case _ =>
+            log.debug(s"$resourceId organizations ($orgs) inserted!")
+        }
+      }
+
     case i: ImportBatchOrg =>
       log.info(s"Saving import batch organisation ${i.oid}!")
       val (resourceId, oid, created)= toRow(i)
