@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
@@ -49,7 +49,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
     valintarekisterActor = system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
         case q: ValintarekisteriQuery =>
-          val map: Seq[EnsimmainenVastaanotto] = q.henkiloOids.toSeq.map(o => EnsimmainenVastaanotto(o, Some(vastaanottohetki)))
+          val map: Seq[EnsimmainenVastaanotto] = q.personOidsWithAliases.henkiloOids.toSeq.map(o => EnsimmainenVastaanotto(o, Some(vastaanottohetki)))
           sender ! map
       }
     })),

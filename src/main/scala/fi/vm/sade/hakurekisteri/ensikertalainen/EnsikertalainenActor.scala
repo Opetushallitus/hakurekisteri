@@ -88,13 +88,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = for {
     haku <- (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
     tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(hakuOid)
-    valmistumishetket <- valmistumiset(tutkintovuodetHakemuksilta.keySet, Seq())
+    personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(tutkintovuodetHakemuksilta.keySet)
+    valmistumishetket <- valmistumiset(personOidsWithAliases, Seq())
     opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-      tutkintovuodetHakemuksilta.keySet.diff(valmistumishetket.keySet),
+      personOidsWithAliases.diff(valmistumishetket.keySet),
       Seq()
     )
     vastaanottohetket <- vastaanotot(
-      tutkintovuodetHakemuksilta.keySet
+      personOidsWithAliases
         .diff(valmistumishetket.keySet)
         .diff(opiskeluoikeuksienAlkamiset.keySet)
     )
@@ -118,34 +119,32 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
-    val henkiloLinks: Map[String, Set[String]] = oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(q.henkiloOids)
-    val henkiloOidsWithLinked: Set[String] = IOppijaNumeroRekisteri.combineLinkedHenkiloOids(q.henkiloOids, henkiloLinks)
-
     for {
       haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
-      tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(henkiloOidsWithLinked, q.hakuOid, q.hakukohdeOid)
+      personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
+      tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(personOidsWithAliases.henkiloOidsWithLinkedOids, q.hakuOid, q.hakukohdeOid)
       valmistumishetket <- valmistumiset(
-        henkiloOidsWithLinked
+        personOidsWithAliases
           .diff(tutkintovuodetHakemuksilta.keySet)
           .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
         q.suoritukset.getOrElse(Seq())
       )
       opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-        henkiloOidsWithLinked
+        personOidsWithAliases
           .diff(tutkintovuodetHakemuksilta.keySet)
           .diff(valmistumishetket.keySet)
           .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
         q.opiskeluoikeudet.getOrElse(Seq())
       )
       vastaanottohetket <- vastaanotot(
-        henkiloOidsWithLinked
+        personOidsWithAliases
           .diff(tutkintovuodetHakemuksilta.keySet)
           .diff(valmistumishetket.keySet)
           .diff(opiskeluoikeuksienAlkamiset.keySet)
       )
     } yield {
       q.henkiloOids.toSeq.flatMap(henkilo => {
-        henkiloLinks.get(henkilo).map(links => {
+        personOidsWithAliases.aliasesByPersonOids.get(henkilo).map(links => {
           mergeEnsikertalaisuus(henkilo, links.map(linkedOid => {
             ensikertalaisuus(
               henkilo,
@@ -189,19 +188,19 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }).toMap)
   }
 
-  private def vastaanotot(henkiloOids: Set[String]): Future[Map[String, DateTime]] =
-    if (henkiloOids.isEmpty) {
+  private def vastaanotot(personOidsWithAliases: PersonOidsWithAliases): Future[Map[String, DateTime]] =
+    if (personOidsWithAliases.isEmpty) {
       Future.successful(Map())
     } else {
-      (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
+      (valintarekisterActor ? ValintarekisteriQuery(personOidsWithAliases, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
         .map(_.collect {
           case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
         }.toMap)
     }
 
-  private def valmistumiset(henkiloOids: Set[String],
+  private def valmistumiset(personOidsWithAliases: PersonOidsWithAliases,
                             prefetchedSuoritukset: Seq[Suoritus]): Future[Map[String, DateTime]] =
-    suoritukset(henkiloOids).map(_ ++ prefetchedSuoritukset)
+    suoritukset(personOidsWithAliases).map(_ ++ prefetchedSuoritukset)
       .flatMap(kkSuoritukset)
       .map(_.groupBy(_.henkiloOid)
         .mapValues(aikaisinValmistuminen)
@@ -210,9 +209,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         }
       )
 
-  private def opiskeluoikeudetAlkaneet(henkiloOids: Set[String],
+  private def opiskeluoikeudetAlkaneet(personOidsWithAliases: PersonOidsWithAliases,
                                        prefetchedOpiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Map[String, DateTime]] =
-    opiskeluoikeudet(henkiloOids).map(fetchedOpiskeluoikeudet => {
+    opiskeluoikeudet(personOidsWithAliases).map(fetchedOpiskeluoikeudet => {
       (fetchedOpiskeluoikeudet ++ prefetchedOpiskeluoikeudet)
         .groupBy(_.henkiloOid)
         .mapValues(aikaisinMerkitsevaOpiskeluoikeus)
@@ -221,16 +220,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         }
     })
 
-  private def opiskeluoikeudet(henkiloOids: Set[String]): Future[Seq[Opiskeluoikeus]] = Future.sequence(
-    henkiloOids
+  private def opiskeluoikeudet(personOidsWithAliases: PersonOidsWithAliases): Future[Seq[Opiskeluoikeus]] = Future.sequence(
+    personOidsWithAliases
       .grouped(resourceQuerySize)
-      .map(oids => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(PersonOidsWithAliases(oids))).mapTo[Seq[Opiskeluoikeus]])
+      .map(oidsWithAliases => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(oidsWithAliases)).mapTo[Seq[Opiskeluoikeus]])
   ).map(_.flatten.toSeq)
 
-  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] = Future.sequence(
-    henkiloOids
+  private def suoritukset(personOidsWithAliases: PersonOidsWithAliases): Future[Seq[Suoritus]] = Future.sequence(
+    personOidsWithAliases
       .grouped(resourceQuerySize)
-      .map(oids => (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(oids))).mapTo[Seq[Suoritus]])
+      .map(oidsWithAliases => (suoritusActor ? SuoritusHenkilotQuery(oidsWithAliases)).mapTo[Seq[Suoritus]])
   ).map(_.flatten.toSeq)
 
   private def isKkTutkinto(suoritus: Suoritus): Future[Option[Suoritus]] = suoritus match {

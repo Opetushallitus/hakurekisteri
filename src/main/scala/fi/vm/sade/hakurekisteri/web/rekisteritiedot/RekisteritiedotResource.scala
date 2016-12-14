@@ -6,8 +6,8 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HenkiloHakijaQuery, IHakemusService}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanatQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
@@ -81,7 +81,7 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     new AsyncResult() {
       override implicit def timeout: Duration = 1000.seconds
 
-      private val tiedotFuture = getRekisteriData(personOidsWithAliases)
+      private val tiedotFuture = personOidsWithAliases.flatMap(getRekisteriData)
 
       logQuery(henkilot, t0, tiedotFuture)
 

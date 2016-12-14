@@ -1,14 +1,11 @@
 package fi.vm.sade.hakurekisteri.integration.henkilo
 
-import java.util.concurrent.TimeUnit.MINUTES
-
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import org.apache.commons.httpclient.HttpStatus
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
-
+import scala.collection.Iterator
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait IOppijaNumeroRekisteri {
   /**
@@ -20,11 +17,10 @@ trait IOppijaNumeroRekisteri {
     B -> [A, B]
     C -> [C]
     */
-  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Map[String, Set[String]]
+  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]]
 
-  def enrichWithAliases(henkiloOids: Set[String]): PersonOidsWithAliases = {
-    val linkMap = fetchLinkedHenkiloOidsMap(henkiloOids)
-    PersonOidsWithAliases(henkiloOids, linkMap, IOppijaNumeroRekisteri.combineLinkedHenkiloOids(henkiloOids, linkMap))
+  def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+    fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases.apply)
   }
 }
 
@@ -41,8 +37,8 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient) extends IOppijaNumeroR
   /**
     * TODO HOX NB HUOM : This is not correct data. See https://jira.oph.ware.fi/jira/browse/KJHH-914
     */
-  override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Map[String, Set[String]] = {
-    val linkedPersonsF: Future[Map[String, Set[String]]] = client.readObjectFromUrl[Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids", acceptedResponseCode = HttpStatus.SC_OK).map(viitteet => {
+  override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+    client.readObjectFromUrl[Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids", acceptedResponseCode = HttpStatus.SC_OK).map(viitteet => {
       val masterOids = viitteet.map(_.masterOid)
       val linkedOids = viitteet.map(_.henkiloOid)
       val viitteetByMasterOid = viitteet.groupBy(_.masterOid).map(kv => (kv._1, kv._2.map(_.henkiloOid)))
@@ -53,7 +49,6 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient) extends IOppijaNumeroR
         (queriedOid, (List(queriedOid) ++ allAliases).toSet)
       }).toMap
     })
-    Await.result(linkedPersonsF, Duration(1, MINUTES))
   }
 }
 
@@ -68,15 +63,24 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
     B -> [A, B]
     C -> [C]
     */
-  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Map[String, Set[String]] = {
-    henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap
-    //TODO fetch from oppijanumerorekisteri
+  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+    Future.successful(henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap)
   }
 }
 
 case class HenkiloViite(henkiloOid: String, masterOid: String)
 
-case class PersonOidsWithAliases(henkiloOids: Set[String], aliasesByPersonOids: Map[String, Set[String]], henkiloOidsWithLinkedOids: Set[String])
+case class PersonOidsWithAliases(henkiloOids: Set[String], aliasesByPersonOids: Map[String, Set[String]], henkiloOidsWithLinkedOids: Set[String]) {
+  def grouped(size: Int): Iterator[PersonOidsWithAliases] = {
+    aliasesByPersonOids.grouped(size).map(PersonOidsWithAliases.apply)
+  }
+
+  def diff(henkiloOidsToRemove: Set[String]): PersonOidsWithAliases = {
+    PersonOidsWithAliases(aliasesByPersonOids -- henkiloOidsToRemove)
+  }
+
+  def isEmpty: Boolean = aliasesByPersonOids.isEmpty
+}
 
 object PersonOidsWithAliases {
   /**
@@ -84,4 +88,9 @@ object PersonOidsWithAliases {
     */
   @Deprecated // The places where this is used should be updated to use real linked data"
   def apply(henkiloOids: Set[String]): PersonOidsWithAliases = PersonOidsWithAliases(henkiloOids, henkiloOids.map(h => (h, Set(h))).toMap, henkiloOids)
+
+  def apply(aliasesByPersonOids: Map[String, Set[String]]): PersonOidsWithAliases = {
+    val combinedOidSet = IOppijaNumeroRekisteri.combineLinkedHenkiloOids(aliasesByPersonOids.keySet, aliasesByPersonOids)
+    PersonOidsWithAliases(aliasesByPersonOids.keySet, aliasesByPersonOids, combinedOidSet)
+  }
 }

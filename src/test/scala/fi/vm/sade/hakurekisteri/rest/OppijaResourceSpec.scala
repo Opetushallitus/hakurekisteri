@@ -61,9 +61,9 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   val henkiloOidWithAliases = "1.2.246.562.24.12345678901"
   val aliasesOfHenkiloOid = Set("1.2.246.562.24.12345678902", "1.2.246.562.24.12345678903")
   val fakeOppijaNumeroRekisteri = new IOppijaNumeroRekisteri {
-    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Map[String, Set[String]] = {
+    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
       val allMappingsOfLinked = (aliasesOfHenkiloOid + henkiloOidWithAliases).map((_, aliasesOfHenkiloOid + henkiloOidWithAliases)).toMap
-      henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap ++ allMappingsOfLinked
+      Future.successful(henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap ++ allMappingsOfLinked)
     }
   }
 
