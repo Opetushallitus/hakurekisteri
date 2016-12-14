@@ -46,14 +46,14 @@ trait OppijaFetcher {
   }
 
   def fetchOppijat(persons: Set[String], ensikertalaisuudet: Boolean, q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
-    val personOidsWithAliases = oppijaNumeroRekisteri.enrichWithAliases(persons)
-
-    val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
-    if (ensikertalaisuudet) {
-      rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
-    } else {
-      rekisteriData
-    }
+    oppijaNumeroRekisteri.enrichWithAliases(persons).flatMap(personOidsWithAliases => {
+      val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
+      if (ensikertalaisuudet) {
+        rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
+      } else {
+        rekisteriData
+      }
+    })
   }
 
   def fetchOppija(person: String, ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {

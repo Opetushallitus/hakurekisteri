@@ -4,6 +4,7 @@ import akka.actor.Actor
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import org.joda.time.DateTime
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,7 +17,8 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
   private val ok = 200
 
   override def receive: Receive = {
-    case ValintarekisteriQuery(henkiloOids, koulutuksenAlkamiskausi) =>
+    case ValintarekisteriQuery(personOidsWithAliases, koulutuksenAlkamiskausi) =>
+      val henkiloOids = personOidsWithAliases.henkiloOids // Valintarekisteri already returns data for aliases
       fetchEnsimmainenVastaanotto(henkiloOids, koulutuksenAlkamiskausi) pipeTo sender
   }
 
@@ -25,6 +27,6 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
   }
 }
 
-case class ValintarekisteriQuery(henkiloOids: Set[String], koulutuksenAlkamiskausi: String)
+case class ValintarekisteriQuery(personOidsWithAliases: PersonOidsWithAliases, koulutuksenAlkamiskausi: String)
 
 case class EnsimmainenVastaanotto(personOid: String, paattyi: Option[DateTime])
