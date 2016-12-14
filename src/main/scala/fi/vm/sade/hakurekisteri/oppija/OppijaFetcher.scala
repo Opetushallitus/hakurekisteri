@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHe
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.tools.DurationHelper
 
 import scala.concurrent.duration.Duration
@@ -82,10 +82,25 @@ trait OppijaFetcher {
         oppijanumero = oid,
         opiskelu = opiskelijat.getOrElse(oid, Seq()),
         opiskeluoikeudet = opiskeluoikeudet.getOrElse(oid, Seq()),
-        suoritukset = todistukset.getOrElse(oid, Seq()),
+        suoritukset = suorituksetWithAliases(personOidsWithAliases, todistukset, oid),
         ensikertalainen = None
       )
     ).toSeq
+  }
+
+  private def suorituksetWithAliases(personOidsWithAliases: PersonOidsWithAliases, todistuksetByPersonOid: Map[String, Seq[Todistus]], oid: String): Seq[Todistus] = {
+    def copySuoritus(suoritus: Suoritus, henkiloOid: String): Suoritus = {
+      suoritus match {
+        case v: VirallinenSuoritus => v.copy(henkilo = henkiloOid)
+        case v: VapaamuotoinenSuoritus => v.copy(henkilo = henkiloOid)
+      }
+    }
+    val todistukset: Set[Todistus] = for {
+      alias: String <- personOidsWithAliases.aliasesByPersonOids(oid)
+      todistus <- todistuksetByPersonOid.getOrElse(alias, Seq())
+    } yield todistus.copy(suoritus = copySuoritus(todistus.suoritus, oid))
+
+    todistukset.toSeq
   }
 
   private def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Todistus]] =
