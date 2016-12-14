@@ -265,8 +265,9 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   }
 
   test("OppijaResource should return results for linked persons too when a list of person oids is sent as POST") {
+    when(hakemusServiceMock.hakemuksetForPersonsInHaku(any[Set[String]], anyString())).thenReturn(Future.successful(Seq[FullHakemus]()))
     suoritusJournal.addModification(Updated(linkedPersonsSuoritus.identify))
-    post(s"/?haku=1.2.3.4", s"""["$henkiloOidWithAliases"]""") {
+    post(s"/?haku=1.2.3.4&ensikertalaisuudet=false", s"""["$henkiloOidWithAliases"]""") {
       response.status should be (OK)
       val oppijas = read[Seq[Oppija]](response.body)
       oppijas should have size 1
@@ -276,14 +277,14 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
 
     val aliasesSeq = aliasesOfHenkiloOid.toSeq
     val (firstAlias, secondAlias) = (aliasesSeq(0), aliasesSeq(1))
-    post(s"/?haku=1.2.3.4", s"""["$firstAlias", "$secondAlias"]""") {
+    post(s"/?haku=1.2.3.4&ensikertalaisuudet=false", s"""["$firstAlias", "$secondAlias"]""") {
       response.status should be (OK)
       val oppijas = read[Seq[Oppija]](response.body)
       oppijas should have size 2
       oppijas(0).suoritukset should have size 1
-      oppijas(0).suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus))
+      oppijas(0).suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus.copy(henkilo = firstAlias)))
       oppijas(1).suoritukset should have size 1
-      oppijas(1).suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus))
+      oppijas(1).suoritukset.map(_.suoritus).foreach(_ should equal(linkedPersonsSuoritus.copy(henkilo = secondAlias)))
     }
   }
 

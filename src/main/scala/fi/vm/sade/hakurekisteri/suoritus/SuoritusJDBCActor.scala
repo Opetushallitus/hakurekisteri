@@ -53,14 +53,14 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
         }
       }
 
-      // TODO: Use the linked persons data here
-      val bulkInsert = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTable.forceInsert((henkilo, a)) } } ) // Populate temp table rows
+      val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTable.forceInsert((henkilo, a)) } } )
+
       val innerJoin = for {
         (suoritus, _) <- all join henkiloviiteTable on (_.henkiloOid === _.linkedOid)
       } yield suoritus
 
-      Right(createTempTable.andThen(bulkInsert).andThen(innerJoin.result).transactionally)
-    }
+      Right(createTempTable.andThen(populateTempTable).andThen(innerJoin.distinct.result).transactionally)
+     }
     case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)).result)
     case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(all.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t)).result)
   }
