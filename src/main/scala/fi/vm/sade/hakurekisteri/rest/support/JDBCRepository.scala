@@ -37,14 +37,14 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     * Query journaled table with temporary table populated by person-alias mappings from henkilot and journaled table is joined on temp table by the joinOn column
     */
   def joinHenkilotWithTempTable(henkilot: PersonOidsWithAliases, joinOn: String): DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R, I]], All with Transactional] = {
-    val henkiloviiteTable = TableQuery[HenkiloViiteTable]
+    val henkiloviiteTempTable = TableQuery[HenkiloViiteTable]
 
-    val createTempTableStatements = henkiloviiteTable.schema.createStatements
+    val createTempTableStatements = henkiloviiteTempTable.schema.createStatements
       .map(_.replaceAll("(?i)create table", "create temporary table"))
       .reduce(_ ++ _)
       .concat(" on commit drop")
 
-    val createTempTable = SimpleDBIO { session =>
+    val createHenkiloviiteTempTable = SimpleDBIO { session =>
       val statement: Statement = session.connection.createStatement()
       try {
         statement.addBatch(createTempTableStatements)
@@ -54,13 +54,13 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       }
     }
 
-    val innerJoin = for {
-      (suoritus, _) <- all join henkiloviiteTable on (_.column[String](joinOn)  === _.linkedOid)
-    } yield suoritus
+    val selectAllMatching = for {
+      (record, _) <- all join henkiloviiteTempTable on (_.column[String](joinOn)  === _.linkedOid)
+    } yield record
 
-    val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTable.forceInsert((henkilo, a)) } } )
+    val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTempTable.forceInsert((henkilo, a)) } } )
 
-    createTempTable.andThen(populateTempTable).andThen(innerJoin.distinct.result).transactionally
+    createHenkiloviiteTempTable.andThen(populateTempTable).andThen(selectAllMatching.distinct.result).transactionally
   }
 
   override def get(id: I): Option[R with Identified[I]] = Await.result(journal.db.run(latest(id).result.headOption), 10.seconds).collect {
