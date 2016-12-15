@@ -46,7 +46,7 @@ class YtlIntegration(config: OphProperties,
     IOUtils.closeQuietly(output)
   }
 
-  def sync(hakemus: FullHakemus): Unit = {
+  def sync(hakemus: FullHakemus): Either[Throwable, Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       hakemus.personOid match {
         case Some(personOid) =>
@@ -55,24 +55,35 @@ class YtlIntegration(config: OphProperties,
               logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL")
               ytlHttpClient.fetchOne(hetu) match {
                 case None =>
-                  logger.debug(s"No YTL data for hakemus ${hakemus.oid}")
+                  val noData = s"No YTL data for hakemus ${hakemus.oid}"
+                  logger.debug(noData)
+                  Left(new RuntimeException(noData))
                 case Some((json, student)) =>
-                  persistKokelas(StudentToKokelas.convert(personOid, student))
+                  val kokelas = StudentToKokelas.convert(personOid, student)
+                  persistKokelas(kokelas)
+                  Right(kokelas)
               }
             case None =>
-              logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
+              val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
+              logger.debug(noHetu)
+              Left(new RuntimeException(noHetu))
           }
         case None =>
-          logger.error(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!")
+          val noOid = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!"
+          logger.error(noOid)
+          Left(new RuntimeException(noOid))
       }
     } else {
-      logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!")
+      val notActiveHaku =s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!"
+      logger.debug(notActiveHaku)
+      Left(new RuntimeException(notActiveHaku))
     }
   }
 
-  def sync(personOid: String): Unit = {
-    hakemusService.hakemuksetForPerson(personOid).onComplete {
-      case Success(hakemukset) =>
+  def sync(personOid: String): Future[Seq[Either[Throwable, Kokelas]]] = {
+    val hakemusForPerson: Future[Seq[FullHakemus]] = hakemusService.hakemuksetForPerson(personOid)
+    hakemusForPerson.flatMap {
+      hakemukset =>
         if(hakemukset.isEmpty) {
           logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
           throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
@@ -86,13 +97,10 @@ class YtlIntegration(config: OphProperties,
         }.filter(_.personOid.isDefined)
         if(hakemuksetInCorrectStateAndWithPersonOid.isEmpty) {
           logger.error(s"Hakemukset with person OID $personOid in wrong state!")
-          throw new RuntimeException(s"Hakemukset with person OID $personOid in wrong state!")
+          Future.failed(new RuntimeException(s"Hakemukset with person OID $personOid in wrong state!"))
         } else {
-          hakemuksetInCorrectStateAndWithPersonOid.foreach(sync)
+          Future.successful(hakemuksetInCorrectStateAndWithPersonOid.map(sync))
         }
-      case Failure(e) =>
-        logger.error(s"failed to fetch one hakemus from hakemus service: ${e.getMessage}")
-        throw e
     }
   }
 
