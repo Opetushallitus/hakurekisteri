@@ -9,7 +9,8 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
-import slick.dbio.Effect.All
+import slick.dbio.DBIOAction
+import slick.dbio.Effect.{All, Transactional}
 import slick.lifted
 
 import scala.compat.Platform
@@ -35,7 +36,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   /**
     * Query journaled table with temporary table populated by person-alias mappings from henkilot and journaled table is joined on temp table by the joinOn column
     */
-  def joinHenkilotWithTempTable(henkilot: PersonOidsWithAliases, joinOn: String) = {
+  def joinHenkilotWithTempTable(henkilot: PersonOidsWithAliases, joinOn: String): DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R, I]], All with Transactional] = {
     val henkiloviiteTable = TableQuery[HenkiloViiteTable]
 
     val createTempTableStatements = henkiloviiteTable.schema.createStatements
