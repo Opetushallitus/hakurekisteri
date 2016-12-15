@@ -40,7 +40,6 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
     }
     (hakemusService.hakemuksetForPerson _) when(*) returns(hakemusWithPersonOidEnding9574)
     get("/http_request/050996-9574") {
-      Thread.sleep(1000L)
       status should be (202)
     }
   }
