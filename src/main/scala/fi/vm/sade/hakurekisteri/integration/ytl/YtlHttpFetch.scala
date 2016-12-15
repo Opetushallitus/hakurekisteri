@@ -12,8 +12,11 @@ import fi.vm.sade.properties.OphProperties
 import jawn.{ast, Parser, AsyncParser}
 import jawn.ast.JParser
 import org.apache.commons.io.IOUtils
-import org.apache.http.HttpHeaders
-import org.apache.http.auth.{UsernamePasswordCredentials, AuthScope}
+import org.apache.http.client.CredentialsProvider
+import org.apache.http.client.protocol.ClientContext
+import org.apache.http.protocol.{BasicHttpContext, ExecutionContext, HttpContext}
+import org.apache.http.{HttpHost, HttpRequest, HttpRequestInterceptor, HttpHeaders}
+import org.apache.http.auth.{AuthScheme, AuthState, UsernamePasswordCredentials, AuthScope}
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -28,6 +31,10 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
+class PreemptiveAuthInterceptor(creds: UsernamePasswordCredentials) extends HttpRequestInterceptor {
+  override def process(request: HttpRequest, context: HttpContext): Unit = request.addHeader(new BasicScheme().authenticate(creds, request, context))
+}
+
 class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: ApacheOphHttpClient.ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()) {
   val log = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
@@ -37,7 +44,6 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   val password = config.getProperty("ytl.http.password")
   val bufferSize = config.getOrElse("ytl.http.buffersize", "4096").toInt // 4K
   val credentials = new UsernamePasswordCredentials(username, password)
-  val preemptiveBasicAuthentication = new BasicScheme().authenticate(credentials, new HttpPost(), null).getValue
 
   private def buildClient(a: ApacheOphHttpClient.ApacheHttpClientBuilder) = {
     val provider = new BasicCredentialsProvider()
@@ -45,6 +51,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     provider.setCredentials(scope, credentials)
     a.httpBuilder.setDefaultCredentialsProvider(provider)
     a.httpBuilder.disableAutomaticRetries()
+    a.httpBuilder.addInterceptorFirst(new PreemptiveAuthInterceptor(credentials))
     val client = a.buildOphClient("ytlHttpClient", config)
     client
   }
@@ -147,7 +154,6 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
 
   def fetchOperation(hetus: Seq[String]): Either[Throwable, Operation] = {
     Try(client.post("ytl.http.host.bulk")
-      .header(HttpHeaders.AUTHORIZATION, preemptiveBasicAuthentication)
       .dataWriter("application/json", "UTF-8", new OphRequestPostWriter() {
         override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
       })

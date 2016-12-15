@@ -8,7 +8,7 @@ import fi.vm.sade.utils.tcp.PortChecker
 import org.apache.commons.io.IOUtils
 import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.security.{ConstraintSecurityHandler, ConstraintMapping, HashLoginService}
-import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.{RequestLog, Server}
 import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
 import org.eclipse.jetty.util.security.{Constraint, Credential}
 import org.scalatest.{Outcome, Suite, SuiteMixin}
@@ -105,6 +105,12 @@ class YtlMockServer {
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setSecurityHandler(basicAuth(username, password, "Private!"));
     context.setContextPath("/");
+    val v: RequestLog = new RequestLog {
+      def log(var1: org.eclipse.jetty.server.Request, var2: org.eclipse.jetty.server.Response) = {
+        // logging every request to server goes here!
+      }
+    }
+    server.setRequestLog(v)
     server.setHandler(context);
     context.addServlet(new ServletHolder(new YtlMockServlet()),"/*");
     server.start();
