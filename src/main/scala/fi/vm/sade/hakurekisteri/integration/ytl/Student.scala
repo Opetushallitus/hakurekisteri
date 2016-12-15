@@ -3,11 +3,10 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.Date
 
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo}
-import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.YoTutkinto
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus}
 import jawn._
 import jawn.ast.{JValue, JParser}
-import org.joda.time.{LocalDate}
+import org.joda.time.{MonthDay, LocalDate}
 import org.joda.time.format.DateTimeFormat
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{CustomSerializer}
@@ -17,6 +16,8 @@ import org.json4s.jackson.Serialization
 import scala.util.{Try}
 case class Operation(operationUuid: String)
 
+
+
 trait Status {}
 
 case class InProgress() extends Status
@@ -24,7 +25,20 @@ case class Finished() extends Status
 case class Failed() extends Status
 
 object Student {
-
+  val kevat = "(\\d{4})K".r
+  val syksy = "(\\d{4})S".r
+  val suoritettu = "suor".r
+  val kevaanAlku = new MonthDay(6, 1)
+  val syys = new MonthDay(12, 21)
+  def parseKausi(kausi: String) = kausi match {
+    case kevat(vuosi) => Some(kevaanAlku.toLocalDate(vuosi.toInt))
+    case syksy(vuosi) => Some(syys.toLocalDate(vuosi.toInt))
+    case _ => None
+  }
+  def nextKausi: String = MonthDay.now() match {
+    case d if d.isBefore(kevaanAlku) => s"${LocalDate.now.getYear}K"
+    case _ =>  s"${LocalDate.now.getYear}S"
+  }
   private val dtf = DateTimeFormat.forPattern("yyyy-MM-dd")
 
   case object DateSerializer extends CustomSerializer[LocalDate](format => ( {
@@ -98,10 +112,10 @@ trait Kausi {
   def toLocalDate : LocalDate
 }
 case class Kevat(vuosi:Int) extends Kausi {
-  override def toLocalDate = YTLXml.kevaanAlku.toLocalDate(vuosi.toInt)
+  override def toLocalDate = Student.kevaanAlku.toLocalDate(vuosi.toInt)
 }
 case class Syksy(vuosi:Int) extends Kausi{
-  override def toLocalDate = YTLXml.syys.toLocalDate(vuosi.toInt)
+  override def toLocalDate = Student.syys.toLocalDate(vuosi.toInt)
 }
 
 object Kausi {
@@ -127,7 +141,7 @@ object StudentToKokelas {
   }
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
-    val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(YTLXml.parseKausi(YTLXml.nextKausi).get)
+    val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(Student.parseKausi(Student.nextKausi).get)
     val valmis = s.graduationPeriod.isDefined
     val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen,
       kieli = s.language.toUpperCase, valmis = valmis)
