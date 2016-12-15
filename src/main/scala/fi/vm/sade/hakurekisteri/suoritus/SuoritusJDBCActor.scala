@@ -1,12 +1,10 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import java.sql.Statement
 import java.util.UUID
 import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloViiteTable
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumnDate, yearOf}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
@@ -37,29 +35,8 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
       Right(all.filter(t => matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
         matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t)).result)
     case SuoritusHenkilotQuery(henkilot) => {
-      val henkiloviiteTable = TableQuery[HenkiloViiteTable]
-      val createTempTableStatements = henkiloviiteTable.schema.createStatements
-        .map(_.replaceAll("(?i)create table", "create temporary table"))
-        .reduce(_ ++ _)
-        .concat(" on commit drop")
-
-      val createTempTable = SimpleDBIO { session =>
-        val statement: Statement = session.connection.createStatement()
-        try {
-          statement.addBatch(createTempTableStatements)
-          statement.executeBatch()
-        } finally {
-          statement.close()
-        }
-      }
-
-      val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTable.forceInsert((henkilo, a)) } } )
-
-      val innerJoin = for {
-        (suoritus, _) <- all join henkiloviiteTable on (_.henkiloOid === _.linkedOid)
-      } yield suoritus
-
-      Right(createTempTable.andThen(populateTempTable).andThen(innerJoin.distinct.result).transactionally)
+      val suoritusTable = TableQuery[SuoritusTable]
+      Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid"))
      }
     case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)).result)
     case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(all.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t)).result)

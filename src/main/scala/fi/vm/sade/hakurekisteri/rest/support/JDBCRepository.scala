@@ -1,7 +1,10 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import java.sql.Statement
+
 import akka.actor.ActorLogging
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloViiteTable, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
@@ -28,6 +31,36 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   val all = journal.latestResources.filter(_.deleted === false)
 
   def latest(id: I): lifted.Query[T, Delta[R, I], Seq] = all.filter((item) => item.resourceId === id)
+
+  /**
+    * Query journaled table with temporary table populated by person-alias mappings from henkilot and journaled table is joined on temp table by the joinOn column
+    */
+  def joinHenkilotWithTempTable(henkilot: PersonOidsWithAliases, joinOn: String) = {
+    val henkiloviiteTable = TableQuery[HenkiloViiteTable]
+
+    val createTempTableStatements = henkiloviiteTable.schema.createStatements
+      .map(_.replaceAll("(?i)create table", "create temporary table"))
+      .reduce(_ ++ _)
+      .concat(" on commit drop")
+
+    val createTempTable = SimpleDBIO { session =>
+      val statement: Statement = session.connection.createStatement()
+      try {
+        statement.addBatch(createTempTableStatements)
+        statement.executeBatch()
+      } finally {
+        statement.close()
+      }
+    }
+
+    val innerJoin = for {
+      (suoritus, _) <- all join henkiloviiteTable on (_.column[String](joinOn)  === _.linkedOid)
+    } yield suoritus
+
+    val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTable.forceInsert((henkilo, a)) } } )
+
+    createTempTable.andThen(populateTempTable).andThen(innerJoin.distinct.result).transactionally
+  }
 
   override def get(id: I): Option[R with Identified[I]] = Await.result(journal.db.run(latest(id).result.headOption), 10.seconds).collect {
     case Updated(res) => res
