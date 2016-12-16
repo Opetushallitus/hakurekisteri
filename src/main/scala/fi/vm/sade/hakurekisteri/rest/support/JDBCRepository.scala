@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import java.io.{PrintWriter, StringWriter}
 import java.sql.Statement
 
 import akka.actor.ActorLogging
@@ -12,6 +13,7 @@ import slick.ast.BaseTypedType
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.{All, Transactional}
 import slick.lifted
+import slick.util.TreePrinter
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -123,7 +125,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
   val dbQuery: PartialFunction[Query[R], Either[Throwable, DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R,I]], All]]]
 
   private def logSlowQuery(runtime: Long, query: DBIOAction[_,_,_]): Unit = {
-    var queryStr = query.getDumpInfo.mainInfo
+    var queryStr: String = sqlOf(query)
     if(queryStr.length > 500) {
       queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
     }
@@ -132,5 +134,11 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     } else {
       log.warning(s"Query $queryStr took $runtime ms")
     }
+  }
+
+  private def sqlOf(query: DBIOAction[_, _, _]) = {
+    val stringWriter = new StringWriter()
+    new TreePrinter().print(query, new PrintWriter(stringWriter))
+    stringWriter.toString.replaceAll("\\s", " ")
   }
 }
