@@ -35,7 +35,6 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
       Right(all.filter(t => matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
         matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t)).result)
     case SuoritusHenkilotQuery(henkilot) => {
-      val suoritusTable = TableQuery[SuoritusTable]
       Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid"))
      }
     case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)).result)
