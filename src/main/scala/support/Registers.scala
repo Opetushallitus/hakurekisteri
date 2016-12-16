@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanatQuery}
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrg, ImportBatchOrgActor, ImportBatch, ImportBatchActor}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor}
@@ -18,8 +18,8 @@ import fi.vm.sade.hakurekisteri.{Config, KomoOids, Oids}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-
-class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+class BareRegisters(system: ActorSystem, journals: Journals, db: Database) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5)), "suoritukset")
   override val ytlSuoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5)), "ytl-suoritukset")
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 5)), "opiskelijat")
@@ -27,6 +27,7 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "arvosanat")
   override val ytlArvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "ytl-arvosanat")
   override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal, 5)), "erat")
+  override val eraOrgRekisteri: ActorRef = system.actorOf(Props(new ImportBatchOrgActor(db)), "era-orgs")
 }
 
 class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: Config) extends Registers {
@@ -84,6 +85,7 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.myontaja), (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.komo))
   override val arvosanaRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, arvosanaResolver, config, organisaatioClient)), "arvosana-authorizer")
   override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => Some(Oids.ophOrganisaatioOid))
+  override val eraOrgRekisteri: ActorRef = unauthorized.eraOrgRekisteri
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null
 }

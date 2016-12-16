@@ -60,7 +60,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val journals = new DbJournals(config)
 
-    val registers = new BareRegisters(system, journals)
+    val registers = new BareRegisters(system, journals, journals.database)
     val authorizedRegisters = new AuthorizedRegisters(registers, system, config)
 
     val integrations = Integrations(registers, system, config)
@@ -90,10 +90,10 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/komo", "komo") -> new GuiServlet,
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
-    ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
-    ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
-    ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
-    ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
+    ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
+    ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
+    ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
+    ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
     ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
     ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.suoritusRekisteri),
     ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
@@ -118,6 +118,7 @@ class ScalatraBootstrap extends LifeCycle {
 
   private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =
     system.actorOf(Props(new ImportBatchProcessingActor(
+      authorizedRegisters.eraOrgRekisteri,
       authorizedRegisters.eraRekisteri,
       integrations.henkilo,
       authorizedRegisters.suoritusRekisteri,

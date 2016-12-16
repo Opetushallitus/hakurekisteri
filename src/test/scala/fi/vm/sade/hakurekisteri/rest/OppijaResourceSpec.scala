@@ -7,7 +7,7 @@ import akka.pattern.pipe
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrgActor, ImportBatch}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -103,6 +103,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
       private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
       private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
+      private val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null)))
       private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
       private val ytlArvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
       private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
@@ -110,6 +111,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
       private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
 
+      override val eraOrgRekisteri: ActorRef = eraOrgs
       override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
       override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
       override val ytlArvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlArvosanat)))

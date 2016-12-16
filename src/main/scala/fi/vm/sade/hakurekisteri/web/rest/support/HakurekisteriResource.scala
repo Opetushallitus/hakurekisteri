@@ -100,7 +100,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   def getResource: Object = {
-    Try(UUID.fromString(params("id"))).map(readResource(_, currentUser)).get
+    Try(UUID.fromString(params("id"))).map(id => readResource(AuthorizedRead(id, currentUser.get))).get
   }
 
   get("/", operation(query))(
@@ -212,8 +212,8 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
     new ActorResult[Boolean](AuthorizedDelete(id,  user.get), (unit) => Ok())
   }
 
-  def readResource(id: UUID, user: Option[User]): Object = {
-    new ActorResult[Option[A with Identified[UUID]]](AuthorizedRead(id, user.get), {
+  def readResource(withRef: AnyRef): AsyncResult = {
+    new ActorResult[Option[A with Identified[UUID]]](withRef, {
       case Some(data) => Ok(data)
       case None => NotFound()
     })

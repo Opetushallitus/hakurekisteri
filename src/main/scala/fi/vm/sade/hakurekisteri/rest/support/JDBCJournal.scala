@@ -15,6 +15,22 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.control.NonFatal
 
+object JDBCUtil {
+  def createSchemaForTable[T <: Table[_]](table: lifted.TableQuery[T], db: Database)(implicit ec: ExecutionContext) {
+    lazy val tableName = table.baseTableRow.tableName
+    val queryTimeout: Duration = 1.minute
+
+    Await.result(db.run(MTable.getTables(tableName).flatMap((t: Vector[MTable]) => {
+      if (t.isEmpty) {
+        schemaActionExtensionMethods(tableQueryToTableQueryExtensionMethods(table).schema).create
+      } else {
+        DBIO.successful(())
+      }
+    })), queryTimeout)
+
+  }
+}
+
 class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T])
                                                                      (implicit val db: Database, val idType: BaseTypedType[I], implicit val system: ActorSystem)
   extends Journal[R, I] {
@@ -23,15 +39,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
   val log = Logging.getLogger(system, this)
   lazy val tableName = table.baseTableRow.tableName
   val queryTimeout: Duration = 1.minute
-
-  Await.result(db.run(MTable.getTables(tableName).flatMap((t: Vector[MTable]) => {
-    if (t.isEmpty) {
-      schemaActionExtensionMethods(tableQueryToTableQueryExtensionMethods(table).schema).create
-    } else {
-      DBIO.successful(())
-    }
-  })), queryTimeout)
-
+  JDBCUtil.createSchemaForTable(table, db)
 
   log.info(s"started ${getClass.getSimpleName} with table $tableName")
 

@@ -38,9 +38,10 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   override def beforeAll(): Unit = {
     database = Database.forURL(ItPostgres.getEndpointURL())
     val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
+    val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database)))
     val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
     val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
-    addServlet(new ImportBatchResource(authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema), "/batch")
+    addServlet(new ImportBatchResource(eraOrgRekisteri, authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema), "/batch")
     super.beforeAll()
   }
 

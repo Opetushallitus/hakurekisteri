@@ -240,7 +240,7 @@ app.directive "tiedonsiirtomenu", ->
         {
           path: "/tiedonsiirto/tila"
           href: "#/tiedonsiirto/tila"
-          role: "app_tiedonsiirto_crud_1.2.246.562.10.00000000001"
+          role: "app_tiedonsiirto"
           messageKey: "suoritusrekisteri.tiedonsiirto.menu.tila"
           text: "Tiedonsiirtojen tila"
         }

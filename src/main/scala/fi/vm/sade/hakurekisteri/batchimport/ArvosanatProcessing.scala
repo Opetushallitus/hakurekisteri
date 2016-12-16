@@ -21,15 +21,17 @@ import scala.xml.Node
 
 case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
 
-class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
+class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = 1.hour
 
   def process(batch: ImportBatch): Future[ImportBatch with Identified[UUID]] = {
-    fetchOppiaineetKoodisto() flatMap
-      importArvosanat(batch) flatMap
-      saveDoneBatch(batch) recoverWith
-      saveFailedBatch(batch)
+    fetchOppiaineetKoodisto() flatMap importArvosanat(batch) flatMap(organisaatiotJaArvosanat => {
+      val organisaatiot = organisaatiotJaArvosanat.flatMap(_._1).toSet
+      val arvosanat = organisaatiotJaArvosanat.map(_._2)
+
+      (saveDoneBatch(batch)(arvosanat) recoverWith saveFailedBatch(batch)) flatMap saveBatchOrganisaatiot(organisaatiot)
+    })
   }
 
   private def saveFailedBatch(batch: ImportBatch): PartialFunction[Throwable, Future[ImportBatch with Identified[UUID]]] = {
@@ -42,7 +44,11 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       messages = Map("virhe" -> Set(t.toString))
     ), state = BatchState.FAILED)).mapTo[ImportBatch with Identified[UUID]]
   }
-
+  private def saveBatchOrganisaatiot(organisaatiot: Set[String])(batch: ImportBatch with Identified[UUID]): Future[ImportBatch with Identified[UUID]] = {
+    val resourceId = batch.id
+    importBatchOrgActor ! ImportBatchOrgs(resourceId, organisaatiot)
+    Future.successful(batch)
+  }
   private def saveDoneBatch(batch: ImportBatch)(statukset: Seq[ImportArvosanaStatus]): Future[ImportBatch with Identified[UUID]] = {
     val refs = extractReferences(statukset)
     val b = batch.copy(status = batch.status.copy(
@@ -57,7 +63,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     (importBatchActor ? b).mapTo[ImportBatch with Identified[UUID]]
   }
 
-  private def importArvosanat(batch: ImportBatch)(oppiaineet: Seq[String]): Future[Seq[ImportArvosanaStatus]] =
+  private def importArvosanat(batch: ImportBatch)(oppiaineet: Seq[String]): Future[Seq[(Seq[String], ImportArvosanaStatus)]] =
     Future.sequence(processBatch(batch)(oppiaineet))
 
   private def extractMessages(statukset: Seq[ImportArvosanaStatus]): Map[String, Set[String]] = statukset.collect {
@@ -130,12 +136,16 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       }
     )
 
-  private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
-    for (henkilo <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilo flatMap {
+  private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[(Seq[String], ImportArvosanaStatus)]] = {
+    val parsedBatch = parseData(batch)(oppiaineet)
+    val myontajat = parsedBatch.values.flatMap(_.todistukset.map(_.myontaja)).toSet
+    for (henkilo <- enrich(parsedBatch)(batch.source)) yield henkilo flatMap {
       case (henkilotunniste, henkiloOid, todistukset) =>
         Thread.sleep(50L)
-        processHenkilo(batch, henkilotunniste, henkiloOid, todistukset)
+        val orgs = todistukset.map(_._2)
+        processHenkilo(batch, henkilotunniste, henkiloOid, todistukset).flatMap(statukset => Future.successful((orgs, statukset)))
     }
+  }
 
   private trait ArvosanaStatus
   private case class OkArvosanaStatus(id: UUID, suoritus: UUID, tunniste: String) extends ArvosanaStatus

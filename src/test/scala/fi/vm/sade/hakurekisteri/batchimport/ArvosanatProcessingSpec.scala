@@ -53,6 +53,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGenerator.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
@@ -90,6 +91,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGeneratorUpdatedValmistuminen.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
@@ -123,6 +125,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGeneratorLuokalleJaanyt.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
@@ -161,6 +164,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGeneratorEiValmistu.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
@@ -200,6 +204,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGeneratorKymppiEiValmistuKorotuksilla.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
@@ -241,6 +246,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val importBatchWaiter = new Waiter()
         val batch = batchGenerator.generate
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](
@@ -270,6 +276,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val importBatchWaiter = new Waiter()
         val batch = batchGenerator.generate
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](
@@ -304,6 +311,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGenerator.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {s => }, query = {q => Seq(perusopetusSuoritus(new LocalDate(2001, 1, 1)))}))),
@@ -335,6 +343,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGeneratorValma.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
@@ -379,6 +388,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val batch = batchGeneratorLukio.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = (s: Suoritus) => {
@@ -410,6 +420,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val arvosanaActor = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
 
         val arvosanatProcessing = new ArvosanatProcessing(
+          createImportBatchOrgActor(system),
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {ss =>
@@ -514,6 +525,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
   private def createImportBatchActor(system: ActorSystem, batchSaveHandler: (ImportBatch) => Unit, batch: ImportBatch with Identified[UUID]): ActorRef =
     system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchSaveHandler, query = {q => Seq(batch)})))
+
+  private def createImportBatchOrgActor(system: ActorSystem): ActorRef =
+    system.actorOf(Props(new ImportBatchOrgActor(Database.forURL(ItPostgres.getEndpointURL()))))
 
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpOrganisaatioActor(
