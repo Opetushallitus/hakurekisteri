@@ -20,7 +20,7 @@ trait IOppijaNumeroRekisteri {
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]]
 
   def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
-    fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases.apply)
+    fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases(henkiloOids, _))
   }
 }
 
@@ -72,11 +72,14 @@ case class HenkiloViite(henkiloOid: String, masterOid: String)
 
 case class PersonOidsWithAliases(henkiloOids: Set[String], aliasesByPersonOids: Map[String, Set[String]], henkiloOidsWithLinkedOids: Set[String]) {
   def grouped(size: Int): Iterator[PersonOidsWithAliases] = {
-    aliasesByPersonOids.grouped(size).map(PersonOidsWithAliases.apply)
+    henkiloOids.grouped(size).map(oidsOfGroup => {
+      val aliasMapOfGroup: Map[String, Set[String]] = aliasesByPersonOids.filter(oidWithAliases => oidsOfGroup.contains(oidWithAliases._1))
+      PersonOidsWithAliases(oidsOfGroup, aliasMapOfGroup)
+    })
   }
 
   def diff(henkiloOidsToRemove: Set[String]): PersonOidsWithAliases = {
-    PersonOidsWithAliases(aliasesByPersonOids -- henkiloOidsToRemove)
+    PersonOidsWithAliases(henkiloOids -- henkiloOidsToRemove, aliasesByPersonOids -- henkiloOidsToRemove)
   }
 
   def isEmpty: Boolean = aliasesByPersonOids.isEmpty
@@ -89,8 +92,8 @@ object PersonOidsWithAliases {
   @Deprecated // The places where this is used should be updated to use real linked data"
   def apply(henkiloOids: Set[String]): PersonOidsWithAliases = PersonOidsWithAliases(henkiloOids, henkiloOids.map(h => (h, Set(h))).toMap, henkiloOids)
 
-  def apply(aliasesByPersonOids: Map[String, Set[String]]): PersonOidsWithAliases = {
-    val combinedOidSet = IOppijaNumeroRekisteri.combineLinkedHenkiloOids(aliasesByPersonOids.keySet, aliasesByPersonOids)
-    PersonOidsWithAliases(aliasesByPersonOids.keySet, aliasesByPersonOids, combinedOidSet)
+  def apply(queriedOids: Set[String], aliasesByPersonOids: Map[String, Set[String]]): PersonOidsWithAliases = {
+    val combinedOidSet = IOppijaNumeroRekisteri.combineLinkedHenkiloOids(queriedOids, aliasesByPersonOids)
+    PersonOidsWithAliases(queriedOids, aliasesByPersonOids, combinedOidSet)
   }
 }
