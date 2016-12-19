@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
+import fi.vm.sade.hakurekisteri.integration.ytl.{YoTutkinto}
 
 sealed trait Role
 
@@ -20,8 +20,8 @@ object Roles {
         case x if resources.contains(x)  => (org: String) => Set(org)
       },
       "KKHAKUVIRKAILIJA" -> {
-        case "Arvosana" =>  (_) => Set(YTLXml.YTL)
-        case "Suoritus" => (_) => Set(YTLXml.YTL, Oids.cscOrganisaatioOid)
+        case "Arvosana" =>  (_) => Set(YoTutkinto.YTL)
+        case "Suoritus" => (_) => Set(YoTutkinto.YTL, Oids.cscOrganisaatioOid)
         case "Opiskeluoikeus" => (_) => Set(Oids.cscOrganisaatioOid)
       }
     )

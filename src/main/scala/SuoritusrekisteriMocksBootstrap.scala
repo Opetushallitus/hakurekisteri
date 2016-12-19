@@ -7,7 +7,6 @@ import fi.vm.sade.hakurekisteri.web.proxies._
 import org.json4s.{Extraction, _}
 import org.json4s.jackson.JsonMethods._
 import org.scalatra._
-import support.SpecResource
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -23,7 +22,6 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     context.mount(new KoodistoProxyServlet(system), "/koodisto-service")
     context.mount(new LocalizationMockServlet(system), "/lokalisointi")
     context.mount(new CasMockServlet(system), "/cas")
-    context.mount(new SpecResource(config.productionServerConfig.integrations.ytl), "/spec")
   }
 
   class OrganizationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) {
