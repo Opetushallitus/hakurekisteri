@@ -186,8 +186,14 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
       internalClient((request <<? Map("ticket" -> ticket)).toRequest, sessionCapturer)
     })
 
-    res.onComplete{
-      case t => log.debug(s"call to $uri ${if (t.isSuccess) "was successful" else "failed: " + t.failed.get}")
+    res.onComplete {
+      t =>
+        if (t.isSuccess) {
+          log.debug(s"call to $uri was successful")
+        } else {
+          val throwable = t.failed.get
+          log.error(throwable, s"call to $uri failed: " + throwable)
+        }
     }
 
     sessionCapturer.jsession.onSuccess {
