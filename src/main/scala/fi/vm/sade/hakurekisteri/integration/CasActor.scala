@@ -1,20 +1,18 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.net.{ConnectException, URLEncoder}
-import java.util.UUID
-import java.util.concurrent.{ExecutionException, TimeoutException}
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{ExecutionException, TimeoutException}
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import com.ning.http.client.AsyncHandler.STATE
 import com.ning.http.client._
-import dispatch.{Req, FunctionHandler, Http}
-import fi.vm.sade.hakurekisteri.Config
+import dispatch.{FunctionHandler, Http, Req}
 import fi.vm.sade.hakurekisteri.integration.cas._
 
-import scala.concurrent.{ExecutionContext, Promise, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Try}
 
 case class JSessionKey(serviceUrl: String)
@@ -174,32 +172,27 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
 
     override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): STATE = inner.onBodyPartReceived(bodyPart)
 
-    override def onThrowable(t: Throwable): Unit = inner.onThrowable(t)
+    override def onThrowable(t: Throwable): Unit = {
+      promise.tryFailure(t)
+      inner.onThrowable(t)
+    }
   }
 
   private def getJSession[T](uri: String, handler: AsyncHandler[T]): dispatch.Future[JSessionId] = {
     val request: Req = dispatch.url(uri)
     val sessionCapturer = new SessionCapturer(handler)
 
-    val res: Future[T] = getServiceTicket.flatMap(ticket => {
+    val res: Future[JSessionId] = getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $uri with ticket $ticket to get jsession")
       internalClient((request <<? Map("ticket" -> ticket)).toRequest, sessionCapturer)
+      sessionCapturer.jsession
     })
 
-    res.onComplete {
-      t =>
-        if (t.isSuccess) {
-          log.debug(s"call to $uri was successful")
-        } else {
-          val throwable = t.failed.get
-          log.error(throwable, s"call to $uri failed: " + throwable)
-        }
+    res.onSuccess {
+      case t =>
+        log.debug(s"call to $uri was successful")
+        log.debug(s"got jsession $t")
     }
-
-    sessionCapturer.jsession.onSuccess {
-      case t => log.debug(s"got jsession $t")
-    }
-
-    sessionCapturer.jsession
+    res
   }
 }
