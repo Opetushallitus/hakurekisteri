@@ -11,4 +11,4 @@ object OpiskeluoikeusQuery {
   }
 }
 
-case class OpiskeluoikeusHenkilotQuery(henkilot: PersonOidsWithAliases) extends Query[Opiskeluoikeus]
+case class OpiskeluoikeusHenkilotQuery(henkilot: PersonOidsWithAliases, myontaja: Option[String] = None) extends Query[Opiskeluoikeus]
