@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.henkilo
 
+import akka.actor.ActorSystem
+import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import org.apache.commons.httpclient.HttpStatus
 
@@ -33,12 +35,14 @@ object IOppijaNumeroRekisteri {
   }
 }
 
-class OppijaNumeroRekisteri(client: VirkailijaRestClient) extends IOppijaNumeroRekisteri {
-  /**
-    * TODO HOX NB HUOM : This is not correct data. See https://jira.oph.ware.fi/jira/browse/KJHH-914
-    */
+class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSystem) extends IOppijaNumeroRekisteri {
+  private val logger = Logging.getLogger(system, this)
+
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
-    client.readObjectFromUrl[Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids", acceptedResponseCode = HttpStatus.SC_OK).map(viitteet => {
+    val queryObject: Map[String, Set[String]] = Map("henkiloOids" -> henkiloOids)
+    logger.debug(s"Querying with $queryObject")
+
+    client.postObject[Map[String, Set[String]], Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids")(resource = queryObject, acceptedResponseCode = HttpStatus.SC_OK).map(viitteet => {
       val masterOids = viitteet.map(_.masterOid)
       val linkedOids = viitteet.map(_.henkiloOid)
       val viitteetByMasterOid = viitteet.groupBy(_.masterOid).map(kv => (kv._1, kv._2.map(_.henkiloOid)))

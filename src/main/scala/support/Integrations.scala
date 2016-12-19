@@ -191,5 +191,5 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
-  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system))
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
 }
