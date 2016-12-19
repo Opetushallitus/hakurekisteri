@@ -24,6 +24,8 @@ class OpiskeluoikeusJDBCActor(val journal: JDBCJournal[Opiskeluoikeus, UUID, Opi
   override val dbQuery: PartialFunction[Query[Opiskeluoikeus], Either[Throwable, DBIOAction[Seq[Delta[Opiskeluoikeus, UUID]], Streaming[Delta[Opiskeluoikeus, UUID]], All]]] = {
     case OpiskeluoikeusQuery(henkilo, myontaja) => Right(all.filter(t =>
       henkilo.fold[Rep[Boolean]](true)(t.henkiloOid === _) && myontaja.fold[Rep[Boolean]](true)(t.myontaja === _)).result)
-    case OpiskeluoikeusHenkilotQuery(henkilot) => Right(all.filter(t => t.henkiloOid.inSet(henkilot.henkiloOidsWithLinkedOids)).result)
+    case OpiskeluoikeusHenkilotQuery(henkilot, myontaja) => {
+      Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid"))
+    }
   }
 }
