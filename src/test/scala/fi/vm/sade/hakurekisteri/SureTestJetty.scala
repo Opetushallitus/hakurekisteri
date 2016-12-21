@@ -4,6 +4,7 @@ import java.io.File
 
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.utils.Timer
+import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortChecker
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
@@ -21,28 +22,41 @@ object SureTestJettyWithMocks extends App {
   new SureTestJetty(8080, config = new MockConfig).start()
 }
 
-object SharedTestJetty {
+object SharedTestJetty extends Logging {
+  logger.info("Object getting initialised...")
   System.setProperty("suoritusrekisteri.it.postgres.port", ItPostgres.port.toString)
   private val config = new MockConfig
   private lazy val jetty = new SureTestJetty(config = config)
+  logger.info("...object initialised.")
 
   private def start() = {
+    logger.info("Starting...")
     Timer.timed("Jetty start") {
       if (!jetty.server.isRunning) {
+        logger.info("Not running, let's start ItPostgres...")
         ItPostgres.start()
+        logger.info("...ItPostgres started.")
       }
+      logger.info("Starting Jetty...")
       jetty.start()
+      logger.info("...Jetty Started.")
     }
   }
 
   def restart() :Unit = {
+    logger.info("Restarting...")
     if (jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
+        logger.info("restart() found was running, let's stop it...")
         jetty.server.stop()
+        logger.info("...jetty.server.stop called by restart() returned, resetting ItPostgres...")
         ItPostgres.reset()
+        logger.info("...ItPostgres.reset() called by restart() returned.")
       }
     }
+    logger.info("restart() calling start()...")
     start()
+    logger.info("...start() returned, restart() complete.")
   }
 
   def port: Int = jetty.port
