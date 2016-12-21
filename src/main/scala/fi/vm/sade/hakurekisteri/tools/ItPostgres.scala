@@ -36,6 +36,7 @@ object ItPostgres extends Logging {
 
   private def readPid: Option[Int] = {
     val pidFile = new File(dataDirFile, "postmaster.pid")
+    log.info(s"Reading pid from $pidFile")
     if (!pidFile.canRead) {
       None
     } else {
