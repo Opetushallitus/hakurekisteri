@@ -70,6 +70,7 @@ object ItPostgres extends Logging {
         if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(isAcceptingConnections)) {
           throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
         }
+        log.info(s"PostgreSQL started in port $port , (re)creating database $dbName")
         runBlocking(s"dropdb -p $port --if-exists $dbName")
         runBlocking(s"createdb -p $port $dbName")
         runBlocking(s"psql -h localhost -p $port -d $dbName -f postgresql/init_it_postgresql.sql")
