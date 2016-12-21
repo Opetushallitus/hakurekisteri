@@ -13,12 +13,12 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatra.test.HttpComponentsClient
 
 object SureTestJetty extends App {
-  new SureTestJetty(8080).start
+  new SureTestJetty(8080).start()
 }
 
 object SureTestJettyWithMocks extends App {
   ItPostgres.start()
-  new SureTestJetty(8080, config = new MockConfig).start
+  new SureTestJetty(8080, config = new MockConfig).start()
 }
 
 object SharedTestJetty {
@@ -26,12 +26,12 @@ object SharedTestJetty {
   private val config = new MockConfig
   private lazy val jetty = new SureTestJetty(config = config)
 
-  private def start = {
+  private def start() = {
     Timer.timed("Jetty start") {
       if (!jetty.server.isRunning) {
         ItPostgres.start()
       }
-      jetty.start
+      jetty.start()
     }
   }
 
@@ -42,7 +42,7 @@ object SharedTestJetty {
         ItPostgres.reset()
       }
     }
-    start
+    start()
   }
 
   def port: Int = jetty.port
@@ -71,7 +71,7 @@ class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Confi
   contexts.setHandlers(Array(suoritusrekisteriApp, mockApp))
   server.setHandler(contexts)
 
-  def start: Server = {
+  def start(): Server = {
     server.start()
     server
   }
