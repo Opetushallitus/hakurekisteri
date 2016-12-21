@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri
 
+import java.io.File
+
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.utils.Timer
 import fi.vm.sade.utils.tcp.PortChecker
@@ -47,7 +49,7 @@ object SharedTestJetty {
 }
 
 class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Config = Config.globalConfig) {
-  val root = ProjectRootFinder.findProjectRoot()
+  val root: File = ProjectRootFinder.findProjectRoot()
 
   val suoritusrekisteriApp = new WebAppContext()
   suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
@@ -70,14 +72,14 @@ class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Confi
   server.setHandler(contexts)
 
   def start: Server = {
-    server.start
+    server.start()
     server
   }
 }
 
 trait CleanSharedTestJettyBeforeEach extends BeforeAndAfterEach with HttpComponentsClient {
   this: Suite =>
-  val port = SharedTestJetty.port
+  val port: Int = SharedTestJetty.port
   val baseUrl = s"http://localhost:$port"
 
   override def beforeEach(): Unit = {
