@@ -42,7 +42,7 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
       }
     }))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1))))))
-    addServlet(new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor, SuoritusQuery(_)), "/*")
+    addServlet(new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor), "/*")
     super.beforeAll()
   }
 

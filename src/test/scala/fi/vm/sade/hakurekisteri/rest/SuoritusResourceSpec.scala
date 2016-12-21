@@ -80,7 +80,7 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
     val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor, SuoritusQuery(_))
+    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor)
     addServlet(servletWithOPHRight, "/*")
 
     super.beforeAll()
@@ -130,10 +130,10 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
     val x = TestActorRef(new MockParameterActor(true))
     val y = TestActorRef(new MockParameterActor(false))
 
-    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x, SuoritusQuery(_))
+    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x)
     addServlet(servletWithOPORightActive, "/foo", "foo")
 
-    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y, SuoritusQuery(_))
+    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y)
     addServlet(servletWithOPORightPassive, "/bar", "bar")
 
     super.beforeAll()

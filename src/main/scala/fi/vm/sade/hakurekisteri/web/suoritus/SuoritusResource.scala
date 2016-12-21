@@ -4,18 +4,18 @@ import _root_.akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.KomoOids
 import fi.vm.sade.hakurekisteri.integration.parametrit.{IsRestrictionActive, ParameterActor}
-import fi.vm.sade.hakurekisteri.rest.support.{User, Query}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.rest.support.{Query, User}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.batchimport.ResourceNotEnabledException
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.scalatra.NotFound
 import org.scalatra.swagger.Swagger
 
 import scala.concurrent.Future
+import scala.util.Try
 
 class SuoritusResource
-      (suoritusRekisteriActor: ActorRef, parameterActor: ActorRef, queryMapper: (Map[String, String]) => Query[Suoritus])
-      (implicit sw: Swagger, s: Security, system: ActorSystem)
+(suoritusRekisteriActor: ActorRef, parameterActor: ActorRef)(implicit sw: Swagger, s: Security, system: ActorSystem)
   extends HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteriActor, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SecuritySupport with IncidentReporting{
 
   override def createEnabled(resource: Suoritus, user: Option[User]) = {
