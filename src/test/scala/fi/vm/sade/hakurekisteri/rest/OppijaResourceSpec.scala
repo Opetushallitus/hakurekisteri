@@ -116,7 +116,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   override def beforeAll(): Unit = {
     val config = new MockConfig
     system = ActorSystem("oppija-resource-test-system")
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
       new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")),
       config)

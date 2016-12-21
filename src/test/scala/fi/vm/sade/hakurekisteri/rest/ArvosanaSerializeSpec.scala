@@ -36,7 +36,7 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
 
   override def beforeAll(): Unit = {
     system = ActorSystem()
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
     val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1))))))
     addServlet(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand], "/*")

@@ -58,7 +58,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val amount = 5
     val henkilot = Stream.continually(java.util.UUID.randomUUID).take(amount)
 
-    implicit val database = Database.forURL(ItPostgres.getEndpointURL())
+    implicit val database = Database.forURL(ItPostgres.getEndpointURL)
     ItPostgres.reset()
     createSystemAndInsertAndShutdown(henkilot)
     val suoritukset = createSystemAndInsertAndShutdown(henkilot)
