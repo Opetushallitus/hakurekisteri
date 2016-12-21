@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Files
 
 import fi.vm.sade.utils.slf4j.Logging
-import fi.vm.sade.utils.tcp.{ChooseFreePort, PortChooser}
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 
@@ -61,11 +61,10 @@ object ItPostgres extends Logging {
 
   def start() {
     readPid match {
-      case Some(pid) => {
-        println(s"PostgreSQL pid $pid is found in pid file, not touching the database.")
-      }
-      case None => {
-        println(s"PostgreSQL pid file cannot be read, starting in port $port:")
+      case Some(pid) =>
+        log.info(s"PostgreSQL pid $pid is found in pid file, not touching the database.")
+      case None =>
+        log.info(s"PostgreSQL pid file cannot be read, starting in port $port:")
         s"postgres --config_file=postgresql/postgresql.conf -d 0 -D $dataDirPath -p $port".run()
         if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(isAcceptingConnections)) {
           throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
@@ -79,28 +78,27 @@ object ItPostgres extends Logging {
             stop()
           }
         }))
-      }
     }
   }
 
   def reset(): Unit = {
-    println("Resetting database tables ...")
+    log.info("Resetting database tables ...")
     runBlocking(s"psql -h localhost -p $port -d $dbName -f postgresql/reset_database.sql")
   }
 
   def stop() {
     readPid match {
       case Some(pid) => {
-        println(s"Killing PostgreSQL process $pid")
+        log.info(s"Killing PostgreSQL process $pid")
         runBlocking(s"kill -s SIGINT $pid")
         if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(() => readPid.isEmpty)) {
-          println(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+          log.warn(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
         }
       }
       case None => log.info("No PostgreSQL pid found, not trying to stop it.")
     }
     if (dataDirFile.exists()) {
-      println(s"Nuking PostgreSQL data directory $dataDirPath")
+      log.info(s"Nuking PostgreSQL data directory $dataDirPath")
       FileUtils.forceDelete(dataDirFile)
     }
   }
