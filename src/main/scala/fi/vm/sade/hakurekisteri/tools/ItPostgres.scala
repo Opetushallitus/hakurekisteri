@@ -105,8 +105,8 @@ object ItPostgres extends Logging {
     }
   }
 
-  def getEndpointURL(): String = {
+  def getEndpointURL: String = {
     start()
-    s"jdbc:postgresql://localhost:${port}/suoritusrekisteri"
+    s"jdbc:postgresql://localhost:$port/suoritusrekisteri"
   }
 }
