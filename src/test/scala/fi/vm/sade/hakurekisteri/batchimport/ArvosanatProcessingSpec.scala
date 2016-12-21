@@ -410,7 +410,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     withSystem(
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
-        implicit val database = Database.forURL(ItPostgres.getEndpointURL())
+        implicit val database = Database.forURL(ItPostgres.getEndpointURL)
 
         val batch = batchGenerator.generate
 
@@ -527,7 +527,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchSaveHandler, query = {q => Seq(batch)})))
 
   private def createImportBatchOrgActor(system: ActorSystem): ActorRef =
-    system.actorOf(Props(new ImportBatchOrgActor(Database.forURL(ItPostgres.getEndpointURL()))))
+    system.actorOf(Props(new ImportBatchOrgActor(Database.forURL(ItPostgres.getEndpointURL))))
 
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpOrganisaatioActor(

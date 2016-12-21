@@ -30,7 +30,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
 
   def withActor(test: ActorRef => Any) {
     implicit val system = ActorSystem("opiskelija-test-system")
-    implicit val database = Database.forURL(ItPostgres.getEndpointURL())
+    implicit val database = Database.forURL(ItPostgres.getEndpointURL)
     val journal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
     val actor = system.actorOf(Props(new OpiskelijaJDBCActor(journal, 5)))
     try test(actor)

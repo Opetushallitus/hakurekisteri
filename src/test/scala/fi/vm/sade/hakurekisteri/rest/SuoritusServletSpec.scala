@@ -34,7 +34,7 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-tuo-suoritus")
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
     val mockParameterActor = system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {

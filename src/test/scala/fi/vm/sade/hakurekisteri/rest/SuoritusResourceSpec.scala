@@ -72,7 +72,7 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-suoritus-resource")
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
 
     val parameterActor = system.actorOf(Props(new MockParameterActor()))
     val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
@@ -121,7 +121,7 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-suoritus-resource")
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
     suoritusJournal.addModification(Updated(suoritus.identify))
     val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
