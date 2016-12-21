@@ -35,10 +35,10 @@ object SharedTestJetty {
     }
   }
 
-  def restart:Unit = {
+  def restart() :Unit = {
     if (jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
-        jetty.server.stop
+        jetty.server.stop()
         ItPostgres.reset()
       }
     }
@@ -83,7 +83,7 @@ trait CleanSharedTestJettyBeforeEach extends BeforeAndAfterEach with HttpCompone
   val baseUrl = s"http://localhost:$port"
 
   override def beforeEach(): Unit = {
-    SharedTestJetty.restart
+    SharedTestJetty.restart()
     super.beforeEach()
   }
 }
