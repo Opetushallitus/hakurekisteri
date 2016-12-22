@@ -1,13 +1,15 @@
 package fi.vm.sade.hakurekisteri.storage
 
 import akka.event.LoggingAdapter
-import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
+import fi.vm.sade.hakurekisteri.rest.support.{Query, QueryWithPersonAliasesResolver, Resource}
+
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.storage.repository._
 
 
 trait ResourceService[T, I] {
   def findBy(o: Query[T]):Future[Seq[T with Identified[I]]]
+  def findByWithPersonAliases(o: QueryWithPersonAliasesResolver[T]): Future[Seq[T with Identified[I]]] = findBy(o)
 }
 
 trait InMemQueryingResourceService[T <: Resource[I, T], I] extends ResourceService[T,I] { this: JournaledRepository[T,I] =>

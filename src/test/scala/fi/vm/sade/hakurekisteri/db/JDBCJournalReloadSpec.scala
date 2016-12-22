@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -46,7 +47,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
 
     Await.result(Future.sequence(yoSuoritukset), Duration(30, TimeUnit.SECONDS))
 
-    val suoritusFuture = (suoritusrekisteri ? SuoritusQuery()).mapTo[Seq[Suoritus]]
+    val suoritusFuture = (suoritusrekisteri ? SuoritusQuery(personOidAliasFetcher = s => Future.successful(PersonOidsWithAliases(s)))).mapTo[Seq[Suoritus]]
 
     val suoritukset = Await.result(suoritusFuture, Duration(30, TimeUnit.SECONDS))
 

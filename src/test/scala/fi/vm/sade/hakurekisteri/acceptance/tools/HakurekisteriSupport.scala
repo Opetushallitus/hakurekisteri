@@ -7,6 +7,7 @@ import java.util.{Date, UUID}
 import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.github.nscala_time.time.TypeImports.LocalDate
+import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -15,7 +16,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.rest.support._
-import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusResource, SuoritusSwaggerApi}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.json4s.jackson.JsonMethods._
@@ -23,10 +24,11 @@ import org.json4s.jackson.Serialization._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers._
 import org.scalatest.words.EmptyWord
+import org.scalatra.Params
 import org.scalatra.test.HttpComponentsClient
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 import scala.xml.{Elem, Node, NodeSeq}
@@ -57,7 +59,10 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
     val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1))))))
     val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1))))))
-    addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
+
+    val personOidsAliasFetcher: Set[String] => Future[PersonOidsWithAliases]= oids => Future.successful(PersonOidsWithAliases.apply(henkiloOids = oids))
+    val suoritusQueryMaker: Map[String, String] => fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus] = p => fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(p, personOidsAliasFetcher)
+    addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, suoritusQueryMaker) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
     addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/rest/v1/opiskelijat")
     super.beforeAll()
   }

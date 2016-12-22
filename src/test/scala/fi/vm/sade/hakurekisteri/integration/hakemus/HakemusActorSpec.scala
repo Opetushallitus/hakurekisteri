@@ -311,7 +311,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
           suoritukset = suoritukset :+ identified
           sender ! identified
           suoritusWaiter.dismiss()
-        case q@SuoritusQuery(Some(henkilo), _, _, _, _, _) =>
+        case q@SuoritusQuery(Some(henkilo), _, _, _, _, _, _) =>
           sender ! suoritukset.filter(_.henkiloOid == henkilo)
           suoritusQueryWaiter.dismiss()
         case LogMessage(_, Logging.DebugLevel) =>

@@ -8,6 +8,7 @@ import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, User}
@@ -80,7 +81,7 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
     val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor)
+    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor, MockOppijaNumeroRekisteri)
     addServlet(servletWithOPHRight, "/*")
 
     super.beforeAll()
@@ -130,10 +131,10 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
     val x = TestActorRef(new MockParameterActor(true))
     val y = TestActorRef(new MockParameterActor(false))
 
-    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x)
+    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x, MockOppijaNumeroRekisteri)
     addServlet(servletWithOPORightActive, "/foo", "foo")
 
-    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y)
+    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y, MockOppijaNumeroRekisteri)
     addServlet(servletWithOPORightPassive, "/bar", "bar")
 
     super.beforeAll()
