@@ -1,12 +1,10 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import java.sql.Statement
 import java.util.UUID
 import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloViiteTable
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumnDate, yearOf}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
@@ -42,42 +40,14 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen, personOidAliasFetcher) =>
       Right(filter(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen).result)
     case SuoritusQueryWithPersonAliases(q, henkilot) =>
-      val baseQUery = filter(q.henkilo, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen)
+      val baseQuery  = filter(q.henkilo, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen)
       if (henkilot.henkiloOids.isEmpty) {
-        Right(baseQUery.result)
+        Right(baseQuery.result)
       } else {
-        Right(
-          { // TODO : Consolidate this copy-paste with JDBCRepository.joinHenkilotWithTempTable
-
-            val henkiloviiteTempTable = TableQuery[HenkiloViiteTable]
-
-            val createTempTableStatements = henkiloviiteTempTable.schema.createStatements
-              .map(_.replaceAll("(?i)create table", "create temporary table"))
-              .reduce(_ ++ _)
-              .concat(" on commit drop")
-
-            val createHenkiloviiteTempTable = SimpleDBIO { session =>
-              val statement: Statement = session.connection.createStatement()
-              try {
-                statement.addBatch(createTempTableStatements)
-                statement.executeBatch()
-              } finally {
-                statement.close()
-              }
-            }
-
-            val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTempTable.forceInsert((henkilo, a)) } })
-
-            val selectAllMatching = for {
-              (record, _) <- baseQUery join henkiloviiteTempTable on (_.column[String]("henkilo_oid") === _.linkedOid)
-            } yield record
-
-            createHenkiloviiteTempTable.andThen(populateTempTable).andThen(selectAllMatching.distinct.result).transactionally
-
-          })
+        Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid", baseQuery))
       }
     case SuoritusHenkilotQuery(henkilot) => {
-      Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid"))
+      Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid", all))
      }
     case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)).result)
     case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(all.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t)).result)

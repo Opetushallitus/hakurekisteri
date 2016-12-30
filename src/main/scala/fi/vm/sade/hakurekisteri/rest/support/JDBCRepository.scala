@@ -38,7 +38,11 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   /**
     * Query journaled table with temporary table populated by person-alias mappings from henkilot and journaled table is joined on temp table by the joinOn column
     */
-  def joinHenkilotWithTempTable(henkilot: PersonOidsWithAliases, joinOn: String, columnFilters: Seq[(String, String)] = Seq()): DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R, I]], All with Transactional] = {
+  def joinHenkilotWithTempTable(
+      henkilot: PersonOidsWithAliases,
+      joinOn: String,
+      baseQuery: lifted.Query[T, Delta[R, I], Seq]): DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R, I]], All with Transactional] = {
+
     val henkiloviiteTempTable = TableQuery[HenkiloViiteTable]
 
     val createTempTableStatements = henkiloviiteTempTable.schema.createStatements
@@ -58,16 +62,9 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
     val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTempTable.forceInsert((henkilo, a)) } } )
 
-    val base = {
-      var cur = all
-      for (columnFilter <- columnFilters) {
-        cur = cur.filter(_.column[String](columnFilter._1) === columnFilter._2)
-      }
-      cur
-    }
 
     val selectAllMatching = for {
-      (record, _) <- base join henkiloviiteTempTable on (_.column[String](joinOn)  === _.linkedOid)
+      (record, _) <- baseQuery join henkiloviiteTempTable on (_.column[String](joinOn)  === _.linkedOid)
     } yield record
 
     createHenkiloviiteTempTable.andThen(populateTempTable).andThen(selectAllMatching.distinct.result).transactionally

@@ -215,14 +215,14 @@ trait TiedotFetcher {
     // Expand query to include person aliases from oppijaNumeroRekisteri
     oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid)).flatMap(personOidsWithAliases => {
       (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusHenkilotQuery(personOidsWithAliases, None), user)).mapTo[Seq[Opiskeluoikeus]]
-    })
+    }).map(_.map(_.copy(henkiloOid=henkiloOid))) // Todo: Is there a better way than this ugly .map(_.map( ?
   }
 
   def fetchOpiskelu(henkiloOid: String)(implicit user: User): Future[Seq[Opiskelija]] = {
     // Expand query to include person aliases from oppijaNumeroRekisteri
     oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid)).flatMap(personOidsWithAliases => {
       (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Opiskelija]]
-    })
+    }).map(_.map(_.copy(henkiloOid=henkiloOid))) // Todo: Is there a better way than this ugly .map(_.map( ?
   }
 
   def fetchOpiskelu(q: RekisteriQuery)(implicit user: User): Future[Seq[Opiskelija]] = {
@@ -232,7 +232,7 @@ trait TiedotFetcher {
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
     // Expand query to include person aliases from oppijaNumeroRekisteri
     oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid)).flatMap(personOidsWithAliases => {
-      (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
+      (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Suoritus with Identified[UUID]]] // Todo: Map queried henkiloOid to henkiloOid fields within returned Suoritus objects
     })
   }
 
