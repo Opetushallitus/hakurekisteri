@@ -25,15 +25,20 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston, kopioi luokalta tai pyydä kaverilta.
 
-2. Käynnistä paikallinen serveri ajamalla IDEA:ssa luokka `SureTestJetty`.
+2. Lisää/muokkaa `~/oph-configuration/common.properties`-tiedostoon seuraavat propertyt (jotta cas-ohjaukset toimivat oikein):
+```
+cas.callback.suoritusrekisteri=http://localhost:8080/suoritusrekisteri
+cas.service.suoritusrekisteri=http://localhost:8080/suoritusrekisteri
+```
+3. Käynnistä paikallinen serveri ajamalla IDEA:ssa luokka `SureTestJetty`.
 
-Sovellus on saatavilla osoitteessa http://localhost:8080/
+Sovellus on saatavilla osoitteessa http://localhost:8080/suoritusrekisteri
 
 Muutama huomio:
 
 - Katso tunnus ja salasana `~/oph-configuration/security-context-backend.xml`:stä, käyttäjällä pitää olla ainakin `ROLE_APP_SUORITUSREKISTERI` rooli
 
-API-dokumentaatio löytyy http://localhost:8080/swagger/index.html
+API-dokumentaatio löytyy http://localhost:8080/suoritusrekisteri/swagger/index.html
 
 ## Kehitystietokannat
 Sovellusta paikallisesti ajettaessa se käyttää properties-tiedostossa määriteltyä Postgres endpointtia (suoritusrekisteri.db.url).
