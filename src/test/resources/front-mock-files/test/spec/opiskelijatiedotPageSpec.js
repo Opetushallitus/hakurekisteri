@@ -257,7 +257,6 @@
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 wait.forAngular,
-                select(opiskelijatiedot.vuosiSearch, '1'),
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
@@ -281,8 +280,6 @@
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                 },
                 typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
-                wait.forAngular,
-                select(opiskelijatiedot.vuosiSearch, '1'),
                 wait.forAngular,
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
