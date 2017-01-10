@@ -89,16 +89,10 @@ trait OppijaFetcher {
   }
 
   private def suorituksetWithAliases(personOidsWithAliases: PersonOidsWithAliases, todistuksetByPersonOid: Map[String, Seq[Todistus]], oid: String): Seq[Todistus] = {
-    def copySuoritus(suoritus: Suoritus, henkiloOid: String): Suoritus = {
-      suoritus match {
-        case v: VirallinenSuoritus => v.copy(henkilo = henkiloOid)
-        case v: VapaamuotoinenSuoritus => v.copy(henkilo = henkiloOid)
-      }
-    }
     val todistukset: Set[Todistus] = for {
       alias: String <- personOidsWithAliases.aliasesByPersonOids(oid)
       todistus <- todistuksetByPersonOid.getOrElse(alias, Seq())
-    } yield todistus.copy(suoritus = copySuoritus(todistus.suoritus, oid))
+    } yield todistus.copy(suoritus = todistus.suoritus.copyWithHenkiloOid(oid))
 
     todistukset.toSeq
   }

@@ -24,6 +24,12 @@ case class Komoto(oid: String, komo: String, tarjoaja: String, alkamisvuosi: Opt
 
 sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean, val source: String) extends UUIDResource[Suoritus]{
 
+  def copyWithHenkiloOid(henkiloOid: String): Suoritus = {
+    this match {
+      case v: VirallinenSuoritus => v.copy(henkilo = henkiloOid)
+      case v: VapaamuotoinenSuoritus => v.copy(henkilo = henkiloOid)
+    }
+  }
 }
 
 case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {

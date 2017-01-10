@@ -8,7 +8,7 @@ import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemusService}
-import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery}
@@ -231,9 +231,10 @@ trait TiedotFetcher {
 
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
     // Expand query to include person aliases from oppijaNumeroRekisteri
-    oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid)).flatMap(personOidsWithAliases => {
-      (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Suoritus with Identified[UUID]]] // Todo: Map queried henkiloOid to henkiloOid fields within returned Suoritus objects
-    })
+    val personAliases: Future[PersonOidsWithAliases] = oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid))
+    personAliases.flatMap(personOidsWithAliases => {
+      (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
+    }).map(_.map(suoritus => suoritus.copyWithHenkiloOid(henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 
   def fetchSuoritukset(q: RekisteriQuery)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
