@@ -58,13 +58,9 @@ class ImportBatchOrgActor(db: Database) extends Actor with ActorLogging {
       Try(run(insertIfNotExists(resourceId, oid, created)))
 
     case QueryImportBatchReferences(orgs) =>
-      //val query = sql"select resource_id,oid from import_batch_org where resource_id in (select resource_id from import_batch_org where oid in ($o))".as[(String,String)]
-      val subQuery = table.filter(_.oid.inSet(orgs)).map(_.resourceId)
-      val query = table.filter(_.resourceId.in(subQuery)).result
-      Try(Await.result(db.run(query).map(result => {
-        val byUUID: Map[UUID, Set[String]] = result.groupBy(_._1).mapValues(_.map(_._2).toSet)
-        byUUID.filter(_._2.subsetOf(orgs)).keys.toSeq
-      }).map(ReferenceResult(_)), 10.seconds)) match {
+      val allResourceIdsWithUserOrgsQuery = table.filter(_.oid.inSet(orgs)).map(_.resourceId)
+      val query = table.filter(_.resourceId.in(allResourceIdsWithUserOrgsQuery)).result
+      Try(Await.result(db.run(query).map(result => result.map(_._1)).map(ReferenceResult(_)), 10.seconds)) match {
         case Success(result) =>
           sender ! result
         case Failure(exception) =>
