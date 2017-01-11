@@ -9,6 +9,7 @@ import javax.servlet.http.{HttpServletRequest, Part}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, GetChildOids}
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedQuery, AuthorizedReadWithOrgsChecked, AuthorizedRead}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
@@ -37,6 +38,7 @@ import scalaz._
 
 class ImportBatchResource(eraOrgRekisteri: ActorRef,
                           eraRekisteri: ActorRef,
+                          orgsActor: ActorRef,
                           parameterActor: ActorRef,
                           config: Config,
                           queryMapper: (Map[String, String]) => Query[ImportBatch])
@@ -111,6 +113,17 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
 
   override def notEnabled = ResourceNotEnabledException
 
+  private def parentOidToChildOids(parentOid: String): Future[Seq[String]] = {
+    (orgsActor ? GetChildOids(parentOid)).map{
+      case Some(childOids: ChildOids) =>
+        childOids.oids
+      case _ => Seq()
+    }
+  }
+  private def parentOidsToChildOidsIncludingParentOids(parentOids: Set[String]): Future[Set[String]] = {
+    Future.sequence(parentOids.map(parentOidToChildOids)).map(_.flatten ++ parentOids)
+  }
+
   def userImportBatchOrgs = {
     val user = getUser
     (user, user.orgsFor("READ", "ImportBatch"))
@@ -123,7 +136,7 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
       case (user, orgs) if isAdmin(orgs) =>
         readResource(AuthorizedRead(id, user))
       case (user, orgs) =>
-        val hasOrganizationAccess: Future[AnyRef] = (eraOrgRekisteri ? QueryImportBatchReferences(orgs)).map{
+        val hasOrganizationAccess: Future[AnyRef] = parentOidsToChildOidsIncludingParentOids(orgs).flatMap(childOrgs => eraOrgRekisteri ? QueryImportBatchReferences(childOrgs)).map{
           case ReferenceResult(references) if references.contains(id) =>
             AuthorizedReadWithOrgsChecked(id, user)
           case _ =>
@@ -154,7 +167,7 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
         new AsyncResult() {
           override implicit def timeout: Duration = 60.seconds
           override val is =
-            eraOrgRekisteri ? QueryImportBatchReferences(orgs) flatMap {
+            parentOidsToChildOidsIncludingParentOids(orgs).flatMap(childOrgs => eraOrgRekisteri ? QueryImportBatchReferences(childOrgs)) flatMap {
               case ReferenceResult(references) =>
                 eraRekisteri.?(BatchesByReference(references))(60.seconds)
               case _ =>
