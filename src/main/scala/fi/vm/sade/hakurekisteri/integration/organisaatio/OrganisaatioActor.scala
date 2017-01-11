@@ -32,6 +32,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
   private val cache: FutureCache[String, Organisaatio] = new FutureCache[String, Organisaatio](timeToLive.toMillis)
+  private val childOidCache: FutureCache[String, ChildOids] = new FutureCache[String, ChildOids](timeToLive.toMillis)
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
@@ -45,12 +46,29 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
         saveOrganisaatiot(org.children)
     })
   }
+  private def saveChildOids(parentOid: String, childOids: ChildOids): Unit = {
+    childOidCache + (parentOid, Future.successful(childOids))
+  }
 
-  private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
-    def notFound(t: Throwable) = t match {
-      case PreconditionFailedException(_, 204) => true
-      case _ => false
+  private def findAndCacheChildOids(parentOid: String): Future[Option[ChildOids]] = {
+    val tulos = organisaatioClient.readObject[ChildOids]("organisaatio-service.organisaatio.childoids", parentOid)(200, maxRetries).map(Option(_)).recoverWith {
+      case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
+        log.warning(s"organisaatios child OIDs not found with parent OID $parentOid")
+        Future.successful(None)
     }
+
+    tulos.onSuccess {
+      case Some(oids) => self ! CacheChildOids(parentOid, oids)
+    }
+
+    tulos
+  }
+  private def notFound(t: Throwable) = t match {
+    case PreconditionFailedException(_, 204) => true
+    case _ => false
+  }
+  private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
+
 
     val tulos = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
       case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
@@ -71,7 +89,12 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     else
       findAndCache(oid)
   }
-
+  private def findChildOids(parentOid: String): Future[Option[ChildOids]] = {
+    if (childOidCache.contains(parentOid))
+      childOidCache.get(parentOid).map(Some(_))
+    else
+      findAndCacheChildOids(parentOid)
+  }
   private def findByOppilaitoskoodi(koodi: String): Future[Option[Organisaatio]] = {
     oppilaitoskoodiIndex.get(koodi) match {
       case Some(oid) => findByOid(oid)
@@ -99,6 +122,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
   
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
+  case class CacheChildOids(parentOid: String, childOids: ChildOids)
 
   override def receive: Receive = {
     case RefreshOrganisaatioCache => fetchAll(sender())
@@ -106,6 +130,11 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case CacheOrganisaatiot(o) =>
       saveOrganisaatiot(o)
       log.info(s"${o.size} saved to cache: ${cache.size}, oppilaitoskoodiIndex: ${oppilaitoskoodiIndex.size}")
+      if (sender() != ActorRef.noSender)
+        sender ! true
+
+    case CacheChildOids(parentOid, childOids) =>
+      saveChildOids(parentOid, childOids)
       if (sender() != ActorRef.noSender)
         sender ! true
 
@@ -119,6 +148,9 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
     case oid: String =>
       findByOid(oid) pipeTo sender
+
+    case GetChildOids(parentOid) =>
+      findChildOids(parentOid) pipeTo sender
 
     case Oppilaitos(koodi) =>
       findByOppilaitoskoodi(koodi).flatMap {
@@ -143,6 +175,8 @@ class MockOrganisaatioActor(config: Config) extends Actor {
       find(koodi) pipeTo sender
   }
 }
+
+case class GetChildOids(parentOid: String)
 
 case class OrganisaatioResponse(numHits: Option[Int], organisaatiot: Seq[Organisaatio])
 

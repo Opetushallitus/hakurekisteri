@@ -7,3 +7,6 @@ Organisaatio(oid: String,
              oppilaitosKoodi: Option[String],
              parentOid: Option[String],
              children: Seq[Organisaatio])
+
+
+case class ChildOids(oids: Seq[String])
