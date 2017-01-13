@@ -234,7 +234,7 @@ trait TiedotFetcher {
     val personAliases: Future[PersonOidsWithAliases] = oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid))
     personAliases.flatMap(personOidsWithAliases => {
       (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
-    }).map(_.map(suoritus => suoritus.copyWithHenkiloOid(henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]]
+    }).map(_.map(suoritus => Suoritus.copyWithHenkiloOid(suoritus, henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 
   def fetchSuoritukset(q: RekisteriQuery)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {

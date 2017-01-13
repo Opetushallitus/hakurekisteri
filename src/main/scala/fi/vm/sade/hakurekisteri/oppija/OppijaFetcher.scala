@@ -92,7 +92,7 @@ trait OppijaFetcher {
     val todistukset: Set[Todistus] = for {
       alias: String <- personOidsWithAliases.aliasesByPersonOids(oid)
       todistus <- todistuksetByPersonOid.getOrElse(alias, Seq())
-    } yield todistus.copy(suoritus = todistus.suoritus.copyWithHenkiloOid(oid))
+    } yield todistus.copy(suoritus = Suoritus.copyWithHenkiloOid(todistus.suoritus, oid))
 
     todistukset.toSeq
   }
