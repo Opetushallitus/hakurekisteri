@@ -57,18 +57,16 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
 }
 
 object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
+  val linkedTestPersonOids = Seq("1.2.246.562.24.58099330694", "1.2.246.562.24.67587718272")
 
-  /**
-    Fetches linked henkilo oids from oppijanumerorekisteri.
-    Return map where every oid is mathed to set of linked oids
-
-    Example: Henkilos A and B are linked. C is not linked. Therefore this method returns map:
-    A -> [A, B]
-    B -> [A, B]
-    C -> [C]
-    */
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
-    Future.successful(henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap)
+    Future.successful(henkiloOids.map { queriedOid =>
+      if (linkedTestPersonOids.contains(queriedOid)) {
+        (queriedOid, linkedTestPersonOids.toSet)
+      } else {
+        (queriedOid, Set(queriedOid))
+      }
+    }.toMap)
   }
 }
 

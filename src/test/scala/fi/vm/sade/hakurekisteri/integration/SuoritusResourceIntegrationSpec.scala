@@ -4,14 +4,18 @@ import java.util.UUID
 
 import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioHyvaksytty, Arvosana}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer, SuoritusSerializer}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VapaamuotoinenSuoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.tools.AlueittainYksilollistettyPerusopetus
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.{JArray, JValue}
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
 import org.scalatest._
+import org.scalatra.json.JsonSupport
+import org.json4s.JsonDSL._
 
 class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
   override implicit def jsonFormats = super.jsonFormats ++ List(new SuoritusDeserializer)
@@ -168,6 +172,42 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
       arvosana.aine should equal("kielikoe")
       arvosana.lisatieto should equal(Some("FI"))
       arvosana.myonnetty should equal(Some(new LocalDate(2016, 9, 19)))
+    }
+  }
+
+  it should "Return suoritus resources for all aliases of queried person" in {
+    def parseSuoritus: Suoritus = {
+      val suoritusArrayJson: JValue = parse(response.body)
+      var suoritusArvosanaArray = suoritusArrayJson.extract[JArray].arr
+      suoritusArvosanaArray should have length 1
+
+      val suoritusJson = suoritusArvosanaArray.head
+      val suoritus = suoritusJson.extract[Suoritus]
+      suoritus
+    }
+
+    val linkedOid1 = MockOppijaNumeroRekisteri.linkedTestPersonOids.head
+    val linkedOid2 = MockOppijaNumeroRekisteri.linkedTestPersonOids(1)
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid1") {
+      parse(response.body).extract[JArray].arr shouldBe empty
+    }
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid2") {
+      parse(response.body).extract[JArray].arr shouldBe empty
+    }
+
+    val suoritusJson = new SuoritusSerializer().serialize(jsonFormats)(VirallinenSuoritus(komo = "testikomo", myontaja = "1.2.3.4", tila = "VALMIS", valmistuminen = new LocalDate(),
+      henkilo = linkedOid1, yksilollistaminen = yksilollistaminen.Ei, suoritusKieli = "FI", opiskeluoikeus = None, vahv = false, lahde = "lahde"))
+    postSuoritus(compact(suoritusJson))
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid1") {
+      val suoritus: Suoritus = parseSuoritus
+      suoritus.henkiloOid should equal(linkedOid1)
+    }
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid2") {
+      val suoritus: Suoritus = parseSuoritus
+      suoritus.henkiloOid should equal(linkedOid2)
     }
   }
 }

@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumnDate, yearOf}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
@@ -32,7 +33,19 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
 
   override def findByWithPersonAliases(o: QueryWithPersonAliasesResolver[Suoritus]): Future[Seq[Suoritus with Identified[UUID]]] = {
     o.fetchPersonAliases.flatMap { personOidsWithAliases =>
-      findBy(o.createQueryWithAliases(personOidsWithAliases)) // TODO there's probably a more elegant way to do this
+      findBy(o.createQueryWithAliases(personOidsWithAliases))
+        .map(suorituses => suorituses.map(s => replaceResultHenkiloOidsWithQueriedOids(s, personOidsWithAliases)))
+    }
+  }
+
+  private def replaceResultHenkiloOidsWithQueriedOids(suoritus: Suoritus with Identified[UUID], personOidsWithAliases: PersonOidsWithAliases): Suoritus with Identified[UUID] = {
+    if (personOidsWithAliases.henkiloOids.isEmpty || personOidsWithAliases.henkiloOids.contains(suoritus.henkiloOid)) {
+      suoritus
+    } else {
+      personOidsWithAliases.aliasesByPersonOids
+        .filter(_._2.contains(suoritus.henkiloOid))
+        .map { oidWithAliases => Suoritus.copyWithHenkiloOid(suoritus, oidWithAliases._1 ) }
+        .head
     }
   }
 
