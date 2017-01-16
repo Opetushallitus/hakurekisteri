@@ -40,7 +40,7 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen, personOidAliasFetcher) =>
       Right(filter(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen).result)
     case SuoritusQueryWithPersonAliases(q, henkilot) =>
-      val baseQuery  = filter(q.henkilo, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen)
+      val baseQuery  = filter(None, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen)
       if (henkilot.henkiloOids.isEmpty) {
         Right(baseQuery.result)
       } else {
