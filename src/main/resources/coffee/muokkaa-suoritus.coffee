@@ -138,4 +138,5 @@ app.controller "MuokkaaSuoritus", [
     $scope.addDataScope($scope)
     $scope.$watch "info", $scope.enableSave, true
     $scope.$watch "suoritus", $scope.enableSave, true
+
 ]

@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.organisaatio.MockOrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -44,9 +45,10 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   override def beforeAll(): Unit = {
     database = Database.forURL(ItPostgres.getEndpointURL())
     val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
+    val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database)))
     val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
     val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
-    addServlet(new ImportBatchResource(authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
+    addServlet(new ImportBatchResource(eraOrgRekisteri, authorized, orgsActor, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
     super.beforeAll()
   }
 
@@ -76,6 +78,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val parameterActor = system.actorOf(Props(new MockParameterActor()))
+  val orgsActor = system.actorOf(Props(new MockOrganisaatioActor(new MockConfig())))
 
   object TestSchema extends SchemaDefinition {
     override val schemaLocation: String = "test.xsd"

@@ -1,0 +1,46 @@
+<div class="row">
+    <div class="form-group col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</strong></div>
+    <div class="form-group col-sm-4"><strong oph-msg="suoritusrekisteri.muokkaa.suorituspaiva">Suorituspäivä</strong></div>
+    <div class="form-group col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.tulos">Tulos</strong></div>
+    <div class="form-group col-sm-4"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong></div>
+</div>
+<div class="row" ng-repeat="arvosana in arvosanat">
+    <div class="form-group col-sm-2">
+        <span class="test-suoritusKieli">{{resolveValueFromOptionArray(arvosana.lisatieto, kielet)}}</span>
+    </div>
+    <div class="form-group col-sm-4">
+        <div class="input-group">
+            <input type="text"
+                   ng-disabled="!isOPH()"
+                   ng-model="arvosana.myonnetty"
+                   ng-change="markModified(arvosana)"
+                   title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
+                   datepicker-popup="{{format}}"
+                   datepicker-options="dateOptions"
+                   datepicker-append-to-body="true"
+                   is-open="valmistuminenOpen"
+                   ng-click="valmistuminenOpen = true"
+                   show-button-bar="false"
+                   customdateparser
+                   class="form-control input-sm datepicker test-suoritusValmistuminen" />
+            <span class="input-group-btn">
+                <button type="button"
+                        ng-disabled="!isOPH()"
+                        ng-click="arvosana.myonnetty = null"
+                        class="btn btn-default btn-sm">
+                    <span class="glyphicon glyphicon-remove"> </span>
+                </button>
+            </span>
+        </div>
+    </div>
+    <div class="form-group col-sm-2">
+        <span ng-if="arvosana.arvio.arvosana === 'hyvaksytty'" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hyvaksytty">Hyväksytty</span>
+        <span ng-if="arvosana.arvio.arvosana === 'hylatty'" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hylatty">Hylätty</span>
+        <span ng-if="arvosana.arvio.arvosana === 'ei_osallistunut'" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.eiosallistunut">Ei osallistunut</span>
+    </div>
+    <div class="form-group col-sm-4">
+        <span>{{arvosana.source}}</span>
+        <br />
+        <span>{{myontajat[arvosana.id]}}</span>
+    </div>
+</div>

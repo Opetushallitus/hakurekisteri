@@ -2,10 +2,12 @@ package fi.vm.sade.hakurekisteri.web.arvosana
 
 import java.util.UUID
 
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana, UnknownScaleException}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCommand, LocalDateSupport}
 import org.joda.time.LocalDate
 import org.scalatra.commands._
+
+import scala.util.{Failure, Try}
 
 
 class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDateSupport {
@@ -13,6 +15,7 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
   val asteikko: Field[String] = asType[String]("arvio.asteikko").required.allowableValues(Arvio.asteikot:_*)
   val pisteet: Field[Option[Int]] = asType[Option[Int]]("arvio.pisteet").optional(None)
   val suoritus: Field[String] = asType[String]("suoritus").required.validForFormat("([a-f\\d]{8}(-[a-f\\d]{4}){3}-[a-f\\d]{12}?)".r,"%s is not a valid UUID")
+  val source: Field[Option[String]] = asType[Option[String]]("source").optional(None)
   val aine: Field[String] = asType[String]("aine").notBlank
   val myonnetty: Field[Option[LocalDate]] = asType[Option[LocalDate]]("myonnetty").optional(None)
   val lisatieto: Field[Option[String]] = asType[Option[String]]("lisatieto").optional(None)
@@ -22,12 +25,14 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
   override def toResource(user: String): Arvosana =
     Arvosana(
       suoritus = suoritus.value.map(UUID.fromString).get,
-      arvio = Arvio(arvio.value.get, asteikko.value.get, pisteet.value.get),
+      arvio = Try(Arvio(arvio.value.get, asteikko.value.get, pisteet.value.get)).recoverWith {
+        case e: UnknownScaleException => Failure(new IllegalArgumentException(e))
+      }.get,
       aine = aine.value.get,
       lisatieto = lisatieto.value.get,
       valinnainen = valinnainen.value.getOrElse(false),
       myonnetty = myonnetty.value.get,
-      source = user,
+      source = source.value.flatten.getOrElse(user),
       lahdeArvot = Map(),
       jarjestys = jarjestys.value.get
     )

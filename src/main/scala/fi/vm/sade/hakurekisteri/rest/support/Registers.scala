@@ -10,4 +10,5 @@ trait Registers {
   val arvosanaRekisteri: ActorRef
   val ytlArvosanaRekisteri: ActorRef
   val eraRekisteri: ActorRef
+  val eraOrgRekisteri: ActorRef
 }

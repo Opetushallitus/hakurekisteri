@@ -19,6 +19,10 @@ import slick.lifted
 import slick.profile.FixedSqlStreamingAction
 
 import scala.concurrent.duration._
+import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
+import slick.ast.BaseTypedType
+import slick.lifted
 
 object BatchState extends Enumeration {
   type BatchState = Value
@@ -30,7 +34,7 @@ object BatchState extends Enumeration {
 
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 
-case class BatchesBySource(source: String)
+case class BatchesByReference(reference: Seq[UUID])
 case object AllBatchStatuses
 case class Reprocess(id: UUID)
 case class WrongBatchStateException(s: BatchState) extends Exception(s"illegal batch state $s")
@@ -90,6 +94,8 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     t.source === i.source && t.batchType === i.batchType && t.externalId.getOrElse("") === i.externalId.getOrElse("")
 
   override def receive: Receive = super.receive.orElse {
+    case BatchesByReference(references) =>
+      sender ! getAll(references)
     case AllBatchStatuses =>
       allWithoutData.pipeTo(sender)
 

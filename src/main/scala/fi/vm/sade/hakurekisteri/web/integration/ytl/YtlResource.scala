@@ -9,6 +9,9 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, Use
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+
 class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport {
 
 
@@ -36,8 +39,17 @@ class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val sys
     shouldBeAdmin
     val personOid = params("personOid")
     logger.info("Fetching YTL data for person OID")
-    ytlIntegration.sync(personOid)
-    Accepted()
+
+    val done = Await.result(ytlIntegration.sync(personOid), 10.seconds)
+    val exists = done.exists{
+      case Right(s) => true
+      case _ => false
+    }
+    if(exists) {
+      Accepted()
+    } else {
+      InternalServerError()
+    }
   }
 
 }

@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrgActor, ImportBatch}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
@@ -55,6 +55,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
   ).identify(UUID.randomUUID())
 
   val rekisterit = new Registers {
+    val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null)))
     val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
     val arvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))
     val ytlArvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))
@@ -63,6 +64,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
     val suoritukset = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](query = q => Seq(suoritus))))
     val ytlSuoritukset = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](query = q => Seq(suoritus))))
 
+    override val eraOrgRekisteri: ActorRef = eraOrgs
     override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
     override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
     override val ytlArvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlArvosanat)))

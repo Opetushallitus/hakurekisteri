@@ -30,6 +30,9 @@ class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String
 
     case ArvioOsakoe(pisteet: String) =>
       Some(a.suoritus, pisteet.toString, Arvio.ASTEIKKO_OSAKOE, a.aine, a.lisatieto, a.valinnainen, None, a.myonnetty.map(_.toString), a.source, a.lahdeArvot, a.jarjestys)
+
+    case ArvioHyvaksytty(arvosana) =>
+      Some(a.suoritus, arvosana, Arvio.ASTEIKKO_HYVAKSYTTY, a.aine, a.lisatieto, a.valinnainen, None, a.myonnetty.map(_.toString), a.source, a.lahdeArvot, a.jarjestys)
   }
 
   override val deletedValues: String => (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Map[String,String], Option[Int]) =

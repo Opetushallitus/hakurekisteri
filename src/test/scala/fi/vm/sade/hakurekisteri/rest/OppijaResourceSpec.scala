@@ -7,7 +7,7 @@ import akka.pattern.pipe
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrgActor, ImportBatch}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -18,7 +18,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, Opi
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
@@ -95,13 +95,15 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")),
       config)
     )
+    ItPostgres.reset()
     val rekisterit = new Registers {
       private val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-      suorituksetSeq.foreach(s => suoritusJournal.addModification(Updated(s.identify)))
+      insertAFewRandomishSuoritukset(suoritusJournal)
       private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
       private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
       private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
       private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
+      private val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null)))
       private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
       private val ytlArvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
       private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
@@ -109,6 +111,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
       private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
 
+      override val eraOrgRekisteri: ActorRef = eraOrgs
       override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
       override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
       override val ytlArvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlArvosanat)))
@@ -143,8 +146,18 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     )))
     resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)
     addServlet(resource, "/*")
-    ItPostgres.reset()
     super.beforeAll()
+  }
+
+  private def insertAFewRandomishSuoritukset(suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]) = {
+    val interval = 1000
+    println(getClass.getSimpleName + s" inserting every ${interval}th of ${suorituksetSeq.size} suoritus rows...")
+    val started = System.currentTimeMillis()
+    suorituksetSeq.zipWithIndex.foreach {
+      case (s, index) if index % interval == 0 => suoritusJournal.addModification(Updated(s.identify))
+      case _ =>
+    }
+    println(getClass.getSimpleName + s" ...inserting every ${interval}th of ${suorituksetSeq.size} suoritus rows complete, took ${System.currentTimeMillis() - started} ms.")
   }
 
   override def afterAll(): Unit = {
@@ -155,7 +168,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     }
   }
 
-  implicit val formats = HakurekisteriJsonSupport.format
+  implicit val formats = HakurekisteriJsonSupport.format ++ List(new SuoritusDeserializer)
 
   private val OK: Int = 200
   private val BAD_REQUEST: Int = 400
@@ -179,7 +192,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(henkilot))
     when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
 
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
+    waitFuture(resource.fetchOppijat(true, HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
@@ -217,7 +230,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   }
 
   test("OppijaResource should tell ensikertalaisuus true also for oppija without hetu") {
-    waitFuture(resource.fetchOppijat(Set("1.2.246.562.24.00000000002"), HakemusQuery(haku = Some(Testihaku.oid)))(user))((s: Seq[Oppija]) => {
+    waitFuture(resource.fetchOppijat(Set("1.2.246.562.24.00000000002"), true, HakemusQuery(haku = Some(Testihaku.oid)))(user))((s: Seq[Oppija]) => {
       s.head.ensikertalainen should be(Some(true))
     })
   }

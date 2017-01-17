@@ -42,18 +42,20 @@ object Arvio {
   val ASTEIKKO_4_10 = "4-10"
   val ASTEIKKO_OSAKOE = "OSAKOE"
   val ASTEIKKOYO = "YO"
-  val asteikot = Seq(ASTEIKKO_4_10, ASTEIKKOYO, ASTEIKKO_OSAKOE)
+  val ASTEIKKO_HYVAKSYTTY = "HYVAKSYTTY"
+  val asteikot = Seq(ASTEIKKO_4_10, ASTEIKKOYO, ASTEIKKO_OSAKOE, ASTEIKKO_HYVAKSYTTY)
 
   def apply(arvosana: String, asteikko: String, pisteet: Option[Int] = None): Arvio = asteikko match {
     case ASTEIKKO_4_10 => Arvio410(arvosana)
     case ASTEIKKOYO => ArvioYo(arvosana, pisteet)
     case ASTEIKKO_OSAKOE => ArvioOsakoe(arvosana)
+    case ASTEIKKO_HYVAKSYTTY => ArvioHyvaksytty(arvosana)
     case _ => throw UnknownScaleException(asteikko)
   }
 }
 
 
-case class UnknownScaleException(scale: String) extends IllegalArgumentException(s"unknown scale: $scale")
+case class UnknownScaleException(scale: String) extends RuntimeException(s"unknown scale: $scale")
 
 case class Arvio410(arvosana: String) extends Arvio {
   val allowable = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
@@ -66,4 +68,9 @@ case class ArvioYo(arvosana: String, pisteet: Option[Int]) extends Arvio {
 }
 
 case class ArvioOsakoe(arvosana: String) extends Arvio {
+}
+
+case class ArvioHyvaksytty(arvosana: String) extends Arvio {
+  val allowable = Set[String]("hyvaksytty", "hylatty", "ei_osallistunut")
+  require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
 }

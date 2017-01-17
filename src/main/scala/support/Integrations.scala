@@ -1,9 +1,6 @@
 package support
 
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
@@ -21,17 +18,13 @@ import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient,
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.tools.LambdaJob.lambdaJob
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
-import org.apache.commons.lang3.time.DateUtils
-import org.quartz.CronExpression
 import org.quartz.CronScheduleBuilder._
 import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import support.YtlRerunPolicy.rerunPolicy
-;
-
 import scala.concurrent.duration._
-import scala.util.{Success, Failure, Try}
+import scala.util.{Failure, Try}
 
 trait Integrations {
   val hakuAppPermissionChecker: ActorRef

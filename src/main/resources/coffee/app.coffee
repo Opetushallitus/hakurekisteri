@@ -3,13 +3,16 @@
 injector = angular.injector(['ng']);
 $http = injector.get('$http');
 
-window.urls.loadFromUrls("suoritusrekisteri-web-oph.json", "rest/v1/properties").success ->
+plainUrls = undefined
+window.urls.load("suoritusrekisteri-web-oph.json", {overrides: "rest/v1/properties"}).then ->
   $http.get(window.url("cas.myroles"),
     cache: true
   ).success (myroles) ->
+    window.myroles = myroles
     setUserLang(myroles)
     angular.element(document).ready ->
       angular.bootstrap(document, ['myApp'])
+      plainUrls = window.urls().noEncode()
 
 setUserLang = (myroles) ->
   [lang] = myroles.filter (key) -> key.substring(0, 5) == 'LANG_'
@@ -40,8 +43,6 @@ app = angular.module "myApp", [
 if (window.mocksOn)
   angular.module('myApp').requires.push('e2e-mocks')
 
-plainUrls = window.urls().noEncode()
-  
 app.factory "Opiskelijat", ($resource) ->
   $resource plainUrls.url("suoritusrekisteri.opiskelija", ":opiskelijaId"), { opiskelijaId: "@id" }, {
       query:
@@ -239,7 +240,7 @@ app.directive "tiedonsiirtomenu", ->
         {
           path: "/tiedonsiirto/tila"
           href: "#/tiedonsiirto/tila"
-          role: "app_tiedonsiirto_crud_1.2.246.562.10.00000000001"
+          role: "app_tiedonsiirto"
           messageKey: "suoritusrekisteri.tiedonsiirto.menu.tila"
           text: "Tiedonsiirtojen tila"
         }
