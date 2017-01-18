@@ -1,14 +1,13 @@
 package fi.vm.sade.hakurekisteri.storage
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging, Status}
+import akka.actor.{Actor, ActorLogging}
 import akka.event.Logging
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.rest.support.{Query, QueryWithPersonAliasesResolver, Resource}
+import fi.vm.sade.hakurekisteri.rest.support.{Query, QueryWithPersonOid, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
@@ -25,7 +24,7 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
   }
 
   def receive: Receive = {
-    case q: QueryWithPersonAliasesResolver[T] =>
+    case q: QueryWithPersonOid[T] =>
       findByWithPersonAliases(q) pipeTo sender
 
     case q: Query[T] =>

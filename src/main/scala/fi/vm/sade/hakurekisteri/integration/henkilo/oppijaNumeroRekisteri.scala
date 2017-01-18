@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import org.apache.commons.httpclient.HttpStatus
+import support.PersonAliasesProvider
 
 import scala.collection.Iterator
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,9 +20,9 @@ trait IOppijaNumeroRekisteri {
     B -> [A, B]
     C -> [C]
     */
-  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]]
+  protected def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]]
 
-  private def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+  def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
     fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases(henkiloOids, _))
   }
 }
@@ -76,6 +77,10 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
       }
     }.toMap)
   }
+}
+
+object MockPersonAliasesProvider extends PersonAliasesProvider {
+  override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = MockOppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
 }
 
 case class HenkiloViite(henkiloOid: String, masterOid: String)

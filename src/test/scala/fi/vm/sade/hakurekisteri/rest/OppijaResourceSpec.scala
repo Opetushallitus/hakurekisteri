@@ -7,12 +7,12 @@ import akka.pattern.pipe
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrgActor, ImportBatch}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchOrgActor}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockPersonAliasesProvider}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
@@ -133,8 +133,8 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       private val ytlArvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
       private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
       private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
-      private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
-      private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
+      private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+      private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
 
       override val eraOrgRekisteri: ActorRef = eraOrgs
       override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))

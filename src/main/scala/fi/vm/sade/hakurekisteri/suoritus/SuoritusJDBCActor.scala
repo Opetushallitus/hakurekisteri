@@ -15,11 +15,12 @@ import fi.vm.sade.hakurekisteri.storage.repository.Delta
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.All
 import slick.lifted.Rep
+import support.PersonAliasesProvider
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
-class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable], poolSize: Int)
+class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable], poolSize: Int, personAliasProvider: PersonAliasesProvider)
   extends ResourceActor[Suoritus, UUID] with JDBCRepository[Suoritus, UUID, SuoritusTable] with JDBCService[Suoritus, UUID, SuoritusTable] {
 
   override def deduplicationQuery(o: Suoritus)(t: SuoritusTable): Rep[Boolean] = o match {
@@ -31,8 +32,8 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
 
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
-  override def findByWithPersonAliases(o: QueryWithPersonAliasesResolver[Suoritus]): Future[Seq[Suoritus with Identified[UUID]]] = {
-    o.fetchPersonAliases.flatMap { personOidsWithAliases =>
+  override def findByWithPersonAliases(o: QueryWithPersonOid[Suoritus]): Future[Seq[Suoritus with Identified[UUID]]] = {
+    personAliasProvider.enrichWithAliases(o.henkilo.toSet).flatMap { personOidsWithAliases =>
       findBy(o.createQueryWithAliases(personOidsWithAliases))
         .map(suorituses => suorituses.map(s => replaceResultHenkiloOidsWithQueriedOids(s, personOidsWithAliases)))
     }
@@ -50,7 +51,7 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
   }
 
   override val dbQuery: PartialFunction[Query[Suoritus], Either[Throwable, DBIOAction[Seq[Delta[Suoritus, UUID]], Streaming[Delta[Suoritus, UUID]], All]]] = {
-    case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen, personOidAliasFetcher) =>
+    case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
       Right(filter(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen).result)
     case SuoritusQueryWithPersonAliases(q, henkilot) =>
       val baseQuery  = filter(None, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen)

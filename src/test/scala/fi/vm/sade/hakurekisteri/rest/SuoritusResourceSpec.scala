@@ -8,7 +8,7 @@ import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider}
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, User}
@@ -78,10 +78,10 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
     val parameterActor = system.actorOf(Props(new MockParameterActor()))
     val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
     suoritusJournal.addModification(Updated(suoritus.identify))
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor, MockOppijaNumeroRekisteri)
+    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor)
     addServlet(servletWithOPHRight, "/*")
 
     super.beforeAll()
@@ -125,16 +125,16 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
     database = Database.forURL(ItPostgres.getEndpointURL)
     val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
     suoritusJournal.addModification(Updated(suoritus.identify))
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
     val x = TestActorRef(new MockParameterActor(true))
     val y = TestActorRef(new MockParameterActor(false))
 
-    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x, MockOppijaNumeroRekisteri)
+    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x)
     addServlet(servletWithOPORightActive, "/foo", "foo")
 
-    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y, MockOppijaNumeroRekisteri)
+    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y)
     addServlet(servletWithOPORightPassive, "/bar", "bar")
 
     super.beforeAll()
