@@ -39,6 +39,14 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   private val logger = Logging.getLogger(system, this)
 
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+    if (henkiloOids.isEmpty) {
+      Future.successful(Map())
+    } else {
+      queryFromOppijaNumeroRekisteri(henkiloOids)
+    }
+  }
+
+  private def queryFromOppijaNumeroRekisteri(henkiloOids: Set[String]) = {
     val queryObject: Map[String, Set[String]] = Map("henkiloOids" -> henkiloOids)
     logger.debug(s"Querying with $queryObject")
 
