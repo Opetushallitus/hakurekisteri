@@ -21,7 +21,7 @@ trait IOppijaNumeroRekisteri {
     */
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]]
 
-  def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+  private def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
     fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases(henkiloOids, _))
   }
 }
