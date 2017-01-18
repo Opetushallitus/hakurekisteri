@@ -2,20 +2,18 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.util.UUID
 
-import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioHyvaksytty, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer, SuoritusSerializer}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VapaamuotoinenSuoritus, VirallinenSuoritus, yksilollistaminen}
-import fi.vm.sade.hakurekisteri.tools.AlueittainYksilollistettyPerusopetus
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
 import org.joda.time.{DateTime, LocalDate}
-import org.json4s.{JArray, JValue}
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
+import org.json4s.{JArray, JValue}
 import org.scalatest._
-import org.scalatra.json.JsonSupport
-import org.json4s.JsonDSL._
 
 class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
   override implicit def jsonFormats = super.jsonFormats ++ List(new SuoritusDeserializer)
@@ -176,13 +174,13 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
   }
 
   it should "Return suoritus resources for all aliases of queried person" in {
-    def parseSuoritus: Suoritus = {
+    def parseSuoritus: Suoritus with Identified[UUID] = {
       val suoritusArrayJson: JValue = parse(response.body)
       var suoritusArvosanaArray = suoritusArrayJson.extract[JArray].arr
       suoritusArvosanaArray should have length 1
 
       val suoritusJson = suoritusArvosanaArray.head
-      val suoritus = suoritusJson.extract[Suoritus]
+      val suoritus = suoritusJson.extract[Suoritus with Identified[UUID]]
       suoritus
     }
 
@@ -201,12 +199,12 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     postSuoritus(compact(suoritusJson))
 
     get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid1") {
-      val suoritus: Suoritus = parseSuoritus
+      val suoritus: Suoritus with Identified[UUID] = parseSuoritus
       suoritus.henkiloOid should equal(linkedOid1)
     }
 
     get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid2") {
-      val suoritus: Suoritus = parseSuoritus
+      val suoritus: Suoritus with Identified[UUID] = parseSuoritus
       suoritus.henkiloOid should equal(linkedOid2)
     }
   }
