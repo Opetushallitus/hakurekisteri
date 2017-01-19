@@ -1,11 +1,15 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.{TestJournal, TestRepo, TestResource}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FlatSpec, Matchers}
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 
 class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBehaviors[TestResource] {
@@ -45,7 +49,7 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
 
   it should "add the modification to the journal" in new EmptyJournal {
 
-    val idResource = repo.save(TestResource("first item"))
+    val idResource = saveItem(repo, TestResource("first item"))
     val delta:Delta[TestResource, UUID] = Updated(idResource)
     journal.journal(None).last should be (delta)
 
@@ -70,6 +74,7 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
       (id) => repo.get(id) should not be None
     }
   }
+
 
 
 
@@ -106,13 +111,15 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
     val tr = TestResource("foo")
     val tr2 = TestResource("foo")
 
-    val saved = repo.save(tr)
-    val saved2 = repo.save(tr2)
+    val saved = saveItem(repo, tr)
+    val saved2 = saveItem(repo, tr2)
 
     saved.id should be (saved2.id)
   }
 
-
+  private def saveItem[T](repo: Repository[T, UUID], item: T): T with Identified[UUID] = {
+    Await.result(repo.save(item), atMost = Duration(1, TimeUnit.SECONDS))
+  }
 
 
 }

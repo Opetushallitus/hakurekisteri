@@ -31,7 +31,7 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
       findBy(q) pipeTo sender
 
     case o: T =>
-      sender ! operationOrFailure(() => save(o))
+      save(o) pipeTo sender
 
     case id: I =>
       sender ! operationOrFailure(() => get(id))

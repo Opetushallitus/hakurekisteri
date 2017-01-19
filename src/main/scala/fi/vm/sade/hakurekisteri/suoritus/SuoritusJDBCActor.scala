@@ -39,6 +39,21 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
     }
   }
 
+  override def deduplicationQuery(i: Suoritus, p: Option[PersonOidsWithAliases])(t: SuoritusTable): Rep[Boolean] = {
+    val personOidsWithAliases = p.getOrElse{throw new IllegalStateException("PersonOidsWithAliases required")}
+    i match {
+      case VapaamuotoinenSuoritus(henkilo, _, _, _, tyyppi, index, _) =>
+        (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) && (t.tyyppi === tyyppi).asColumnOf[Boolean] && (t.index === index).asColumnOf[Boolean]
+      case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _) =>
+        (t.komo === komo).asColumnOf[Boolean] && t.myontaja === myontaja && (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) && (t.vahvistettu === vahv).asColumnOf[Boolean]}
+  }
+
+  override def save(t: Suoritus): Future[Suoritus with Identified[UUID]] = {
+    personAliasProvider.enrichWithAliases(Set(t.henkiloOid)).map { p =>
+      doSave(t, Some(p))
+    }
+  }
+
   private def replaceResultHenkiloOidsWithQueriedOids(suoritus: Suoritus with Identified[UUID], personOidsWithAliases: PersonOidsWithAliases): Suoritus with Identified[UUID] = {
     if (personOidsWithAliases.henkiloOids.isEmpty || personOidsWithAliases.henkiloOids.contains(suoritus.henkiloOid)) {
       suoritus

@@ -83,26 +83,32 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   }
 
   def deduplicationQuery(i: R)(t: T): lifted.Rep[Boolean]
+  def deduplicationQuery(i: R, p: Option[PersonOidsWithAliases])(t: T): lifted.Rep[Boolean] = deduplicationQuery(i)(t)
 
-  private def deduplicate(i: R): DBIO[Option[R with Identified[I]]] = all.filter(deduplicationQuery(i)).result.map(_.collect {
+  private def deduplicate(i: R, p: Option[PersonOidsWithAliases]): DBIO[Option[R with Identified[I]]] = all.filter(deduplicationQuery(i, p)).result.map(_.collect {
     case Updated(res) => res
   }.headOption)
 
-  override def save(t: R): R with Identified[I] =
-    journal.runAsSerialized(10, 5.milliseconds, s"Saving $t",
-      deduplicate(t).flatMap {
-        case Some(old) if old == t => DBIO.successful(old)
-        case Some(old) => journal.addUpdate(t.identify(old.id))
-        case None => journal.addUpdate(t.identify)
+  protected def doSave(i: R, p: Option[PersonOidsWithAliases] = None): R with Identified[I] = {
+    journal.runAsSerialized(10, 5.milliseconds, s"Saving $i",
+      deduplicate(i, p).flatMap {
+        case Some(old) if old == i => DBIO.successful(old)
+        case Some(old) => journal.addUpdate(i.identify(old.id))
+        case None => journal.addUpdate(i.identify)
       }
     ) match {
       case Right(r) => r
       case Left(e) => throw e
     }
+  }
+
+  override def save(t: R): Future[R with Identified[I]] = {
+    Future.successful(doSave(t))
+  }
 
   override def insert(t: R): R with Identified[I] =
     journal.runAsSerialized(10, 5.milliseconds, s"Inserting $t",
-      deduplicate(t).flatMap(_.fold(journal.addUpdate(t.identify))(DBIO.successful))
+      deduplicate(t, None).flatMap(_.fold(journal.addUpdate(t.identify))(DBIO.successful))
     ) match {
       case Right(r) => r
       case Left(e) => throw e

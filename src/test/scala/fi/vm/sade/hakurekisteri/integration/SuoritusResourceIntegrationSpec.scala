@@ -198,7 +198,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     }
   }
 
-  ignore should "Update existing Suoritus even with alias person oid" in {
+  it should "Update existing Suoritus even with alias person oid" in {
     val originalSuoritus = VirallinenSuoritus(komo = "testikomo", myontaja = "1.2.3.4", tila = "KESKEN", valmistuminen = new LocalDate(),
       henkilo = linkedOid1, yksilollistaminen = yksilollistaminen.Ei, suoritusKieli = "FI", opiskeluoikeus = None, vahv = false, lahde = "lahde")
     postSuoritus(toJson(originalSuoritus))
