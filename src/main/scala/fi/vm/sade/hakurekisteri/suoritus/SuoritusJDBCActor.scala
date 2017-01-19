@@ -49,8 +49,16 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
   }
 
   override def save(t: Suoritus): Future[Suoritus with Identified[UUID]] = {
+    val fixPersonOid: (Suoritus, Suoritus with Identified[UUID]) => DBIO[Suoritus with Identified[UUID]] = { case (newSuoritus, oldSuoritus) =>
+      val correctedSuoritus = Suoritus.copyWithHenkiloOid(newSuoritus, oldSuoritus.henkiloOid)
+      if (correctedSuoritus == oldSuoritus) {
+        DBIO.successful(oldSuoritus)
+      } else {
+        journal.addUpdate(correctedSuoritus.identify(oldSuoritus.id))
+      }
+    }
     personAliasProvider.enrichWithAliases(Set(t.henkiloOid)).map { p =>
-      doSave(t, Some(p))
+      doSave(t, fixPersonOid, Some(p))
     }
   }
 

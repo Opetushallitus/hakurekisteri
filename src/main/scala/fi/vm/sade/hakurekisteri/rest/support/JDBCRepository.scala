@@ -89,11 +89,13 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     case Updated(res) => res
   }.headOption)
 
-  protected def doSave(i: R, p: Option[PersonOidsWithAliases] = None): R with Identified[I] = {
+  protected def doSave(i: R,
+                       handleExistingResourceUpdate: (R, R with Identified[I]) => DBIO[R with Identified[I]],
+                       p: Option[PersonOidsWithAliases] = None): R with Identified[I] = {
     journal.runAsSerialized(10, 5.milliseconds, s"Saving $i",
       deduplicate(i, p).flatMap {
         case Some(old) if old == i => DBIO.successful(old)
-        case Some(old) => journal.addUpdate(i.identify(old.id))
+        case Some(old) => handleExistingResourceUpdate(i, old)
         case None => journal.addUpdate(i.identify)
       }
     ) match {
@@ -103,7 +105,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   }
 
   override def save(t: R): Future[R with Identified[I]] = {
-    Future.successful(doSave(t))
+    Future.successful(doSave(t, (i, old) => journal.addUpdate(i.identify(old.id))))
   }
 
   override def insert(t: R): R with Identified[I] =
