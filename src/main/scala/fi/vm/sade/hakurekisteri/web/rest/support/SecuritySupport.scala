@@ -52,12 +52,12 @@ class SpringSecurity extends Security {
 }
 
 class TestSecurity extends Security {
-  object TestUser extends User {
-    override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
-    override val username: String = "Test"
-
-    override def toString: String = ToStringBuilder.reflectionToString(this)
-  }
-
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
+}
+
+object TestUser extends User {
+  override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+  override val username: String = "Test"
+
+  override def toString: String = ToStringBuilder.reflectionToString(this)
 }

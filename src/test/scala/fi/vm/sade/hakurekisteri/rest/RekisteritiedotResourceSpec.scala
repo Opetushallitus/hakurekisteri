@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrgActor, ImportBatch}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchOrgActor}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
@@ -15,7 +15,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Register
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.{RekisteriQuery, RekisteritiedotResource}
-import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity, TestUser}
 import org.apache.commons.lang.NotImplementedException
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.jackson.Serialization._
@@ -29,7 +29,7 @@ import scala.concurrent.{Await, Future}
 class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting with MockitoSugar {
   implicit val system = ActorSystem("rekisteritiedot-resource-test-system")
   implicit val security = new TestSecurity
-  implicit val user: User = security.TestUser
+  implicit val user: User = TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val formats = HakurekisteriJsonSupport.format ++ List(new SuoritusDeserializer)
 
