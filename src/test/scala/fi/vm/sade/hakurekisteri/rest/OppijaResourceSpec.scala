@@ -24,7 +24,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
-import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity, TestUser}
 import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import org.joda.time.LocalDate
 import org.json4s.Extraction.decompose
@@ -46,7 +46,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   implicit var system: ActorSystem = _
   implicit var database: Database = _
   implicit val security = new TestSecurity
-  implicit val user: User = security.TestUser
+  implicit val user: User = TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
   val henkilot: Set[String] = {
