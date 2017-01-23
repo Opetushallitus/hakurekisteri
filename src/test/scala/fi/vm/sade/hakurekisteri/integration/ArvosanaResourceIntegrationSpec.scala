@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit
 
 import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
-import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -22,16 +21,10 @@ import scala.concurrent.duration.Duration
 
 class ArvosanaResourceIntegrationSpec extends FlatSpec with CleanSharedTestJettyBeforeEach with BeforeAndAfterAll with Matchers {
   val lukioKomo = "1.2.246.562.5.2013061010184237348007"
-  val peruskouluKomo = "1.2.246.562.13.62959769647"
   private val aarnenOid: String = "1.2.246.562.24.71944845619"
-  val aarnenLukio = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "KESKEN")
-  val tyynenLukio = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", lukioKomo, "KESKEN")
-  val aarnenLukioValmistuminen = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "VALMIS")
-  val tyynenPeruskoulu = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", peruskouluKomo, "KESKEN")
+  val aarnenLukio: String = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "KESKEN")
 
-  val linkedOid1: String = MockOppijaNumeroRekisteri.linkedTestPersonOids.head
-  val linkedOid2: String = MockOppijaNumeroRekisteri.linkedTestPersonOids(1)
-  implicit val database = Database.forURL(ItPostgres.getEndpointURL)
+  implicit val database: _root_.fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.backend.DatabaseDef = Database.forURL(ItPostgres.getEndpointURL)
 
   def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset")
   def postArvosana(arvosana: String): String = postResourceJson(arvosana, "arvosanat")
