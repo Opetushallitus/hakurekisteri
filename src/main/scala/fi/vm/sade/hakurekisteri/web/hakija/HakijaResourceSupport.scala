@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{QueryLogging, ApiFormat}
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat._
@@ -13,6 +14,7 @@ import scala.concurrent.duration._
 
 
 trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaValintarekisteriStack =>
+  implicit val defaultTimeout: Timeout = 120.seconds
 
   def getContentType(t: ApiFormat): String = t match {
     case ApiFormat.Json => formats("json")
