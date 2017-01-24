@@ -12,13 +12,13 @@ import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.{All, Transactional}
+import slick.jdbc.SimpleJdbcAction
 import slick.lifted
-import slick.util.TreePrinter
+import slick.util.{DumpInfo, Dumpable, TreePrinter}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-
 
 trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Repository[R,I]  {
 
@@ -50,7 +50,8 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       .reduce(_ ++ _)
       .concat(" on commit drop")
 
-    val createHenkiloviiteTempTable = SimpleDBIO { session =>
+
+    val createHenkiloviiteTempTable: SimpleDBIO[Array[Int]] with Dumpable = new SimpleJdbcAction({ session =>
       val statement: Statement = session.connection.createStatement()
       try {
         statement.addBatch(createTempTableStatements)
@@ -58,6 +59,8 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       } finally {
         statement.close()
       }
+    }) {
+      override def getDumpInfo = DumpInfo(DumpInfo.simpleNameFor(getClass), mainInfo = createTempTableStatements)
     }
 
     val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTempTable.forceInsert((henkilo, a)) } } )
