@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
@@ -106,48 +107,27 @@ class KkHakijaResource(hakemusService: IHakemusService,
                        suoritukset: ActorRef,
                        valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
-    with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging {
+    with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging with HakijaResourceSupport {
 
   protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout: Timeout = 120.seconds
-
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
-  def getContentType(t: ApiFormat): String = t match {
-    case ApiFormat.Json => formats("json")
-    case ApiFormat.Excel => formats("binary")
-    case tyyppi => throw new IllegalArgumentException(s"tyyppi $tyyppi is not supported")
-  }
 
   override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
   override val streamingRender: (OutputStream, Seq[Hakija]) => Unit = KkExcelUtil.write
 
   get("/", operation(query)) {
-    val t0 = Platform.currentTime
     val q = KkHakijaQuery(params, currentUser)
-
-    val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
-    contentType = getContentType(tyyppi)
-
+    val tyyppi = getFormatFromTypeParam()
     if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
-
-    new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
-      val res = getKkHakijat(q)
-
-      val kkhakijatFuture = res.flatMap {
-        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
-          setContentDisposition(tyyppi, response, "hakijat")
-          Future.successful(result)
-        case result => Future.successful(result)
-      }
-
-      logQuery(q, t0, kkhakijatFuture)
-
-      val is = kkhakijatFuture
+    val kkhakijatFuture = getKkHakijat(q).flatMap {
+      case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+        setContentDisposition(tyyppi, response, "hakijat")
+        Future.successful(result)
+      case result => Future.successful(result)
     }
+    prepareAsyncResult(tyyppi, kkhakijatFuture)
   }
 
   incident {
