@@ -4,7 +4,7 @@ package fi.vm.sade.hakurekisteri.integration.mocks
 object HenkiloMock {
 
   def getResourceJson(filename: String): String = {
-    scala.io.Source.fromInputStream(getClass.getResourceAsStream(filename))
+    scala.io.Source.fromInputStream(getClass.getResourceAsStream(filename),"UTF-8")
       .getLines
       .mkString
   }
