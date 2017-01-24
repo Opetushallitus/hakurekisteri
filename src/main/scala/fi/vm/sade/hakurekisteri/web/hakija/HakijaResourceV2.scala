@@ -23,7 +23,7 @@ import scala.util.Try
 
 class HakijaResourceV2(hakijaActor: ActorRef)
                       (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[JSONHakijat])
-  extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijat] with DownloadSupport with QueryLogging {
+  extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijat] with DownloadSupport with QueryLogging with HakijaResourceSupport  {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -31,14 +31,7 @@ class HakijaResourceV2(hakijaActor: ActorRef)
 
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
-  implicit val defaultTimeout: Timeout = 120.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
-  def getContentType(t: ApiFormat): String = t match {
-    case ApiFormat.Json => formats("json")
-    case ApiFormat.Excel => formats("binary")
-    case tyyppi => throw new IllegalArgumentException(s"tyyppi $tyyppi is not supported")
-  }
 
   override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
 
@@ -49,29 +42,16 @@ class HakijaResourceV2(hakijaActor: ActorRef)
   get("/", operation(queryV2)) {
     if(params.get("haku").getOrElse("").isEmpty)
       throw new IllegalArgumentException(s"Haku can not be empty")
-    val t0 = Platform.currentTime
     val q = HakijaQuery(params, currentUser, 2)
-
-    val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
-    contentType = getContentType(tyyppi)
-
-    new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
-
-      val hakuResult = hakijaActor ? q
-
-      val hakijatFuture = hakuResult.flatMap {
-        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
-          setContentDisposition(tyyppi, response, "hakijat")
-          Future.successful(result)
-        case result =>
-          Future.successful(result)
-      }
-
-      logQuery(q, t0, hakijatFuture)
-
-      val is = hakijatFuture
+    val tyyppi = getFormatFromTypeParam()
+    val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
+      case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+        setContentDisposition(tyyppi, response, "hakijat")
+        Future.successful(result)
+      case result =>
+        Future.successful(result)
     }
+    prepareAsyncResult(tyyppi, hakijatFuture)
   }
 
   incident {
