@@ -10,11 +10,11 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
-import slick.dbio.DBIOAction
+import slick.dbio.{DBIOAction}
 import slick.dbio.Effect.{All, Transactional}
 import slick.jdbc.SimpleJdbcAction
 import slick.lifted
-import slick.util.{DumpInfo, Dumpable, TreePrinter}
+import slick.util.{DumpInfo, Dumpable}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -60,7 +60,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
         statement.close()
       }
     }) {
-      override def getDumpInfo = DumpInfo(DumpInfo.simpleNameFor(getClass), mainInfo = createTempTableStatements)
+      override def getDumpInfo: DumpInfo = DumpInfo(DumpInfo.simpleNameFor(getClass), mainInfo = "[" + createTempTableStatements + "]")
     }
 
     val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTempTable.forceInsert((henkilo, a)) } } )
@@ -142,19 +142,38 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
 
   private def logSlowQuery(runtime: Long, query: DBIOAction[_,_,_]): Unit = {
     var queryStr: String = sqlOf(query)
-    if(queryStr.length > 500) {
-      queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
+    var prettyPrint: String = ""
+
+    if(queryStr.length > 200) {
+      queryStr = queryStr.take(200) + "...(truncated from " + queryStr.length + " chars)"
+      prettyPrint = ", complete queries:\n" + sqlOf(query, multiline = true)
     }
     if(runtime > Config.reallySlowQuery) {
-      log.info(s"Query $queryStr took $runtime ms")
+      log.warning(s"Query $queryStr took $runtime ms$prettyPrint")
     } else {
-      log.warning(s"Query $queryStr took $runtime ms")
+      log.info(s"Query $queryStr took $runtime ms$prettyPrint")
     }
   }
 
-  private def sqlOf(query: DBIOAction[_, _, _]) = {
+  private def sqlOf(query: DBIOAction[_, _, _], multiline: Boolean = false) = {
     val stringWriter = new StringWriter()
-    new TreePrinter().print(query, new PrintWriter(stringWriter))
-    stringWriter.toString.replaceAll("\\s", " ")
+    printQueries(query, new PrintWriter(stringWriter))
+    if (multiline)
+      stringWriter.toString
+    else
+      stringWriter.toString.replaceAll("\\s", " ")
+  }
+
+  private def printQueries(n: Dumpable, out: PrintWriter): Unit = {
+    def dump(value: Dumpable, level: Int) {
+      val di = value.getDumpInfo
+      if (!di.mainInfo.isEmpty) out.println(di.mainInfo + (if (di.attrInfo.isEmpty) "" else " " + di.attrInfo))
+      val children = di.children.toSeq
+      children.foreach { case (name, value) =>
+        dump(value, level + 1)
+      }
+    }
+    dump(n, 0)
+    out.flush()
   }
 }
