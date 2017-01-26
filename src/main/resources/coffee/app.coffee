@@ -47,7 +47,7 @@ app.factory "socket", ($rootScope) ->
   obs = Rx.Observable.create((o) ->
     subSocket = null
     request = {
-      url: "/mocks"+ plainUrls.url("suoritusrekisteri.jonotus"),
+      url: plainUrls.url("suoritusrekisteri.jonotus"),
       contentType: "application/json",
       logLevel: 'debug',
       transport: 'websocket',
