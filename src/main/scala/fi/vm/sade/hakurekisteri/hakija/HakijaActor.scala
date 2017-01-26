@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
+import fi.vm.sade.hakurekisteri.web.kkhakija.Query
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
@@ -686,7 +687,7 @@ case class XMLHakijat(hakijat: Seq[XMLHakija]) {
 
 case class JSONHakijat(hakijat: Seq[JSONHakija])
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User], version: Int)
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User], version: Int) extends Query
 
 
 object Hakuehto extends Enumeration {
