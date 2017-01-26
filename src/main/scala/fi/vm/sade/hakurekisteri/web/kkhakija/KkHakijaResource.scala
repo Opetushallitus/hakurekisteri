@@ -37,12 +37,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
+trait Query
+
 case class KkHakijaQuery(oppijanumero: Option[String],
                          haku: Option[String],
                          organisaatio: Option[String],
                          hakukohde: Option[String],
                          hakuehto: Hakuehto.Hakuehto,
-                         user: Option[User])
+                         user: Option[User]) extends Query
 
 object KkHakijaQuery {
   def apply(params: Map[String,String], currentUser: Option[User]): KkHakijaQuery = new KkHakijaQuery(
