@@ -113,7 +113,7 @@ class KkHakijaResource(hakemusService: IHakemusService,
   protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
+  implicit val defaultTimeout: Timeout = 120.seconds
   override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
   override val streamingRender: (OutputStream, Seq[Hakija]) => Unit = KkExcelUtil.write
 

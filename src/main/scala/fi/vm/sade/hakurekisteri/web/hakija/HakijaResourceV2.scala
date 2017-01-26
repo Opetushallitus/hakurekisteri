@@ -24,7 +24,7 @@ import scala.util.Try
 class HakijaResourceV2(hakijaActor: ActorRef)
                       (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[JSONHakijat])
   extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijat] with DownloadSupport with QueryLogging with HakijaResourceSupport  {
-
+  implicit val defaultTimeout: Timeout = 120.seconds
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
