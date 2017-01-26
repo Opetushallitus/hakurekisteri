@@ -10,12 +10,13 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
-import slick.dbio.{DBIOAction}
+import slick.dbio.DBIOAction
 import slick.dbio.Effect.{All, Transactional}
 import slick.jdbc.SimpleJdbcAction
 import slick.lifted
 import slick.util.{DumpInfo, Dumpable}
 
+import scala.annotation.tailrec
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -155,25 +156,18 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     }
   }
 
-  private def sqlOf(query: DBIOAction[_, _, _], multiline: Boolean = false) = {
-    val stringWriter = new StringWriter()
-    printQueries(query, new PrintWriter(stringWriter))
-    if (multiline)
-      stringWriter.toString
-    else
-      stringWriter.toString.replaceAll("\\s", " ")
-  }
-
-  private def printQueries(n: Dumpable, out: PrintWriter): Unit = {
-    def dump(value: Dumpable, level: Int) {
-      val di = value.getDumpInfo
-      if (!di.mainInfo.isEmpty) out.println(di.mainInfo + (if (di.attrInfo.isEmpty) "" else " " + di.attrInfo))
-      val children = di.children.toSeq
-      children.foreach { case (name, value) =>
-        dump(value, level + 1)
+  private def sqlOf(dumpable: Dumpable, multiline: Boolean = false): String = {
+    def dump(dumpable: Dumpable, sb: StringBuilder): StringBuilder = {
+      val di = dumpable.getDumpInfo
+      if (!di.mainInfo.isEmpty) {
+        sb.append(di.mainInfo + (if (di.attrInfo.isEmpty) "" else " " + di.attrInfo))
+        if (multiline) sb.append("\n")
       }
+      di.children.toSeq.foreach { case (_, value) =>
+        dump(value, sb)
+      }
+      sb
     }
-    dump(n, 0)
-    out.flush()
+    dump(dumpable, new StringBuilder).toString
   }
 }
