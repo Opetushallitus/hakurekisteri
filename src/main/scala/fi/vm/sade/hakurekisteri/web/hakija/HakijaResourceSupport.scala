@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 
 
 trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaValintarekisteriStack =>
-  implicit val defaultTimeout: Timeout = 120.seconds
+
 
   def getContentType(t: ApiFormat): String = t match {
     case ApiFormat.Json => formats("json")
