@@ -3,10 +3,16 @@ import javax.servlet.{Servlet, ServletContext}
 import _root_.akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.web.jonotus.{JonotusResource}
 import fi.vm.sade.hakurekisteri.web.proxies._
+import org.atmosphere.cache.SessionBroadcasterCache
+import org.atmosphere.cpr.{DefaultBroadcaster, AtmosphereInterceptor, Broadcaster}
+import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
+import org.atmosphere.util.ExcludeSessionBroadcaster
 import org.json4s.{Extraction, _}
 import org.json4s.jackson.JsonMethods._
 import org.scalatra._
+import org.scalatra.atmosphere.{JacksonSimpleWireformat, DefaultScalatraBroadcaster, AtmosphereClient}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -17,6 +23,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     implicit val system = config.productionServerConfig.system
     implicit val ec = config.productionServerConfig.ec
     implicit val security = config.productionServerConfig.security
+    val r = new JonotusResource()
+    context.mount(r, "/mocks/suoritusrekisteri/jonotus")
     context.mount(new OrganizationProxyServlet(system), "/organisaatio-service")
     context.mount(new AuthenticationProxyServlet(system), "/authentication-service")
     context.mount(new KoodistoProxyServlet(system), "/koodisto-service")

@@ -1,0 +1,10 @@
+<div class="modal-header">
+    <button type="button" ng-click="modalInstance.close()" aria-hidden="true" class="close">&times;</button>
+    <h4 oph-msg="suoritusrekisteri.tiedostonmuodostus.otsikko" class="modal-title">Muodostetaan siirtotiedostoa</h4>
+</div>
+<div class="modal-body">
+    <p>Siirtotiedoston muodostuksessa on nyt ruuhkaa. Olet jonossa <strong>sijalla 5.</strong>, odota hetki!</p>
+    <p class="loading"></p>
+    <button type="submit" ng-click="hae()" class="btn btn-sm btn-primary">
+        <span oph-msg="suoritusrekisteri.tiedostonmuodostus.peruuta">Peruuta</span></button>
+</div>

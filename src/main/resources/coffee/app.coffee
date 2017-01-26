@@ -43,6 +43,32 @@ app = angular.module "myApp", [
 if (window.mocksOn)
   angular.module('myApp').requires.push('e2e-mocks')
 
+app.factory "socket", ($rootScope) ->
+  obs = Rx.Observable.create((o) ->
+    subSocket = null
+    request = {
+      url: "/mocks"+ plainUrls.url("suoritusrekisteri.jonotus"),
+      contentType: "application/json",
+      logLevel: 'debug',
+      transport: 'websocket',
+      fallbackTransport: 'long-polling'
+    }
+    send = (msg) ->
+      subSocket.push(msg)
+    request.onOpen = (response) ->
+      o.onNext({socket: send, connectionEvent: true})
+    request.onMessage = (response) ->
+      o.onNext({socket: send, messageEvent: true, message: JSON.parse(response.messages[0])})
+    request.onReconnect = (rq, rs) ->
+      o.onNext({socket: send, reconnectedEvent: true})
+
+    socket = $.atmosphere
+    subSocket = socket.subscribe(request)
+  )
+
+
+  return obs
+
 app.factory "Opiskelijat", ($resource) ->
   $resource plainUrls.url("suoritusrekisteri.opiskelija", ":opiskelijaId"), { opiskelijaId: "@id" }, {
       query:

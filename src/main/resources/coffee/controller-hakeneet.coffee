@@ -74,7 +74,11 @@ app.controller "HakeneetCtrl", [
   "haut"
   "hakukohdekoodit"
   ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit) ->
-
+    $modal.open(
+      templateUrl: "templates/tiedostonmuodostusdialogi.html"
+      controller: "TiedostonMuodostusCtrl"
+      size: "sm"
+    )
     $('#oppijanumero').placeholder()
     $('#hakukohde').placeholder()
 
