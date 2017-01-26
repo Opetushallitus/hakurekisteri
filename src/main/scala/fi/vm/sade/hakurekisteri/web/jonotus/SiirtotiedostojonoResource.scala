@@ -15,12 +15,12 @@ import org.json4s._
 
 case class Sijoitus(sijoitus: Int)
 
-class JonotusResource(implicit val security: Security) extends ScalatraServlet
+class SiirtotiedostojonoResource(implicit val security: Security) extends ScalatraServlet
   with ScalateSupport with JValueResult
   with JacksonJsonSupport with SessionSupport
   with AtmosphereSupport with SecuritySupport {
 
-  private val logger = LoggerFactory.getLogger(classOf[JonotusResource])
+  private val logger = LoggerFactory.getLogger(classOf[SiirtotiedostojonoResource])
 
   atmosphere("/") {
     new AtmosphereClient {
