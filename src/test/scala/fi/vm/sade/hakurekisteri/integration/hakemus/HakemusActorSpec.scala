@@ -8,6 +8,7 @@ import akka.testkit.TestActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -305,6 +306,9 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         case q@SuoritusQuery(Some(henkilo), _, _, _, _, _) =>
           sender ! suoritukset.filter(_.henkiloOid == henkilo)
           suoritusQueryWaiter.dismiss()
+        case q@SuoritusQueryWithPersonAliases(SuoritusQuery(Some(henkilo), _, _, _, _, _), _) =>
+          sender ! suoritukset.filter(_.henkiloOid == henkilo)
+          suoritusQueryWaiter.dismiss()
         case LogMessage(_, Logging.DebugLevel) =>
           bypassWaiter.dismiss()
       }
@@ -326,14 +330,14 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       .putArvosana("PK_MA","8")
       .build
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, logBypassed = true)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, PersonOidsWithAliases(hakemus.personOid.toSet), logBypassed = true)
 
     suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
     suoritusWaiter.await(waiterTimeout, dismissals(1))
     arvosanaWaiter.await(waiterTimeout, dismissals(1))
     bypassWaiter.await(waiterTimeout, dismissals(0))
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, logBypassed = true)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, PersonOidsWithAliases(hakemus.personOid.toSet), logBypassed = true)
 
     suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
     bypassWaiter.await(waiterTimeout, dismissals(1))

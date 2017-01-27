@@ -2,18 +2,18 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.ask
+import fi.vm.sade.hakurekisteri.integration.hakemus.{IHakemusService, Trigger}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import org.joda.time.DateTime
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.collection.mutable
-import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService, Trigger}
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.web.integration.virta.Status
 import fi.vm.sade.hakurekisteri.web.integration.virta.Status.Status
+import org.joda.time.DateTime
+
+import scala.collection.mutable
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
@@ -32,7 +32,7 @@ object VirtaHealth
 object CancelSchedule
 
 
-class VirtaQueue(virtaActor: ActorRef, hakemusService: IHakemusService, hakuActor: ActorRef) extends Actor with ActorLogging {
+class VirtaQueue(virtaActor: ActorRef, hakemusService: IHakemusService, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, hakuActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val virtaQueue: mutable.Set[VirtaQuery] = mutable.LinkedHashSet()
@@ -85,7 +85,7 @@ class VirtaQueue(virtaActor: ActorRef, hakemusService: IHakemusService, hakuActo
   }
 
   override def preStart(): Unit = {
-    val trigger: Trigger = Trigger((oid, hetu, hakuOid) =>
+    val trigger: Trigger = Trigger((oid, hetu, hakuOid, personOidsWithAliases) =>
       if (!isYsiHetu(hetu))
         (hakuActor ? GetHaku(hakuOid))(1.hour).mapTo[Haku].map(haku => haku.kkHaku).recoverWith {
           case t: HakuNotFoundException => Future.successful(true)

@@ -6,9 +6,10 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
+import fi.vm.sade.hakurekisteri.storage.InsertResource
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import org.joda.time.LocalDate
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
@@ -73,6 +74,14 @@ class SuoritusJDBCActorSpec extends FlatSpec with BeforeAndAfterEach with  Befor
     henkilo2Komot should have length 1
     henkilo1Komot.head should equal("komo")
     henkilo2Komot.head should equal("uusikomo")
+  }
+
+  it should "insert new suoritus with InsertResource message" in {
+    run(database.run(sql"select komo from suoritus where henkilo_oid = $linkedOid1 and current".as[String])) should have length 1
+
+    val insert = InsertResource[UUID,Suoritus](originalSuoritus.copy(komo = "different komo").identify, PersonOidsWithAliases(Set(originalSuoritus.henkiloOid)))
+    run(suoritusrekisteri ? insert)
+    run(database.run(sql"select komo from suoritus where henkilo_oid = $linkedOid1 and current".as[String])) should have length 2
   }
 
   private def run[T](f: Future[T]): T = Await.result(f, atMost = timeout.duration)

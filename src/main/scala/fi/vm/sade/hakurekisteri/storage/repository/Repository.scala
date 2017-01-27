@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
 
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
@@ -11,7 +12,7 @@ trait Repository[T, I] {
 
   def save(t:T): Future[T with Identified[I]]
 
-  def insert(t:T):T with Identified[I]
+  def insert(t:T, personOidsWithAliases: PersonOidsWithAliases):T with Identified[I]
 
   def listAll():Seq[T with Identified[I]]
 
@@ -39,7 +40,7 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
 
   override def cursor(t: T): Option[(Long, String)] = cursor.get(t.hashCode % 16384)
 
-  def save(o: T ): Future[T with Identified[I]] = {
+  override def save(o: T ): Future[T with Identified[I]] = {
     Future.successful(
       reverseStore.get(o.core) match {
         case Some(id::ids)  => store(id) match {
@@ -64,7 +65,7 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
       })
   }
 
-  def insert(o: T ): T with Identified[I] = {
+  override def insert(o: T, personOidsWithAliases: PersonOidsWithAliases): T with Identified[I] = {
 
     val oid = reverseStore.get(o.core).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(o.identify)
     val old = store.get(oid.id)

@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import akka.actor.ActorSystem
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, PersonOidsWithAliases}
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
@@ -18,7 +19,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val endPoint = mock[Endpoint]
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val hakemusService = new HakemusService(restClient = client, pageSize = 10)
+  val hakemusService = new HakemusService(restClient = client, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10)
 
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
@@ -74,7 +75,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
 
 
     var triggerCounter = 0
-    val trigger = Trigger(f = (hakemus: FullHakemus) => {
+    val trigger = Trigger(f = (hakemus: FullHakemus, personOidsWithAliases: PersonOidsWithAliases) => {
       triggerCounter += 1
     })
 

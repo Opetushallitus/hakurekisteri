@@ -1,11 +1,12 @@
 package support
 
 import java.util.concurrent.TimeUnit
+
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockHenkiloActor, MockOppijaNumeroRekisteri, OppijaNumeroRekisteri}
+import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
@@ -143,7 +144,8 @@ class BaseIntegrations(rekisterit: Registers,
   val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
-  val hakemusService = new HakemusService(hakemusClient)(system)
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
+  val hakemusService = new HakemusService(hakemusClient, oppijaNumeroRekisteri)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
@@ -171,7 +173,7 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
-  val ytlTrigger: Trigger = Trigger { hakemus => Try(ytlIntegration.sync(hakemus)) match {
+  val ytlTrigger: Trigger = Trigger { (hakemus, personOidsWithAliases: PersonOidsWithAliases) => Try(ytlIntegration.sync(hakemus)) match {
       case Failure(e) =>
         logger.error(s"YTL sync failed for hakemus with OID ${hakemus.oid}", e)
       case _ => // pass
@@ -191,5 +193,4 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
-  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
 }

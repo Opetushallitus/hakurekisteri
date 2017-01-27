@@ -4,6 +4,7 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging}
 import akka.event.Logging
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.{Query, QueryWithPersonOid, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
@@ -45,8 +46,8 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
     case ids: Seq[_] if ids.isInstanceOf[Seq[I]] =>
       sender ! operationOrFailure(() => getAll(ids.asInstanceOf[Seq[I]]))
 
-    case InsertResource(resource: T) =>
-      sender ! operationOrFailure(() => insert(resource))
+    case InsertResource(resource: T, personOidsWithAliases: PersonOidsWithAliases) =>
+      sender ! operationOrFailure(() => insert(resource, personOidsWithAliases))
 
     case LogMessage(message, level) =>
       log.log(level, message)
@@ -54,5 +55,5 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
 }
 
 case class DeleteResource[I](id: I, source: String)
-case class InsertResource[I, T <: Resource[I, T]](resource: T)
+case class InsertResource[I, T <: Resource[I, T]](resource: T, personOidsWithAliases: PersonOidsWithAliases)
 case class LogMessage(message: String, level: Logging.LogLevel)

@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import java.io.{PrintWriter, StringWriter}
 import java.sql.Statement
 
 import akka.actor.ActorLogging
@@ -16,7 +15,6 @@ import slick.jdbc.SimpleJdbcAction
 import slick.lifted
 import slick.util.{DumpInfo, Dumpable}
 
-import scala.annotation.tailrec
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -112,9 +110,9 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     Future.successful(doSave(t, (i, old) => journal.addUpdate(i.identify(old.id))))
   }
 
-  override def insert(t: R): R with Identified[I] =
+  override def insert(t: R, personOidsWithAliases: PersonOidsWithAliases): R with Identified[I] =
     journal.runAsSerialized(10, 5.milliseconds, s"Inserting $t",
-      deduplicate(t, None).flatMap(_.fold(journal.addUpdate(t.identify))(DBIO.successful))
+      deduplicate(t, Some(personOidsWithAliases)).flatMap(_.fold(journal.addUpdate(t.identify))(DBIO.successful))
     ) match {
       case Right(r) => r
       case Left(e) => throw e

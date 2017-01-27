@@ -1,16 +1,17 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
-import org.scalatest.{FlatSpec, Matchers}
-import org.scalatest.prop.TableDrivenPropertyChecks._
-import org.scalatest.prop.Tables.Table
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import scala.annotation.tailrec
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.Identified
+import org.scalatest.prop.TableDrivenPropertyChecks._
+import org.scalatest.prop.Tables.Table
+import org.scalatest.{FlatSpec, Matchers}
 
+import scala.annotation.tailrec
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
 trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
@@ -91,7 +92,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
     it should "contain inserted item when inserted" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
         forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
-          (item) => repo.get(repo.insert(item).id) should be (Some(item))
+          (item) => repo.get(repo.insert(item, PersonOidsWithAliases(Set())).id) should be (Some(item))
         }
     }
 
@@ -100,7 +101,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
         for (i <- repo.listAll().size to 1) saveItem(repo, itemConstructor)
         val original = repo.listAll().head
         val updated = itemUpdater(original)
-        repo.get(repo.insert(updated).id) should be (Some(original))
+        repo.get(repo.insert(updated, PersonOidsWithAliases(Set())).id) should be (Some(original))
     }
 
     it should "retain id of the item when updated" in repoContext {

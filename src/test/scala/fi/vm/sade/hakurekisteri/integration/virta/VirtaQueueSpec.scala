@@ -7,6 +7,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.DateTime
 import org.scalatest.{Matchers, WordSpec}
@@ -34,7 +35,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     val hakemusService = new HakemusServiceMock
 
     "receiving query" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, hakuActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor)))
       val q = VirtaQuery("foo", Some("bar"))
       virtaQueue ! q
 
@@ -44,7 +45,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "consuming all" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, hakuActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor)))
       virtaQueue ! VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQuery("foo", Some("bar2"))
       virtaQueue ! StartVirtaProcessing
@@ -57,7 +58,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "receiving the same query multiple times" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, hakuActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor)))
       val q1 = VirtaQuery("foo", Some("bar"))
       val q2 = VirtaQuery("foo", Some("bar"))
       virtaQueue ! q1
@@ -72,7 +73,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       import scala.concurrent.duration._
       implicit val timeout: Timeout = 30.seconds
 
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, hakuActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor)))
       (0 until 1000000).foreach(i => virtaQueue ! VirtaQuery(s"foo$i", None))
 
       val healthcheck = Await.result((virtaQueue ? VirtaHealth).mapTo[VirtaStatus], 30.seconds)

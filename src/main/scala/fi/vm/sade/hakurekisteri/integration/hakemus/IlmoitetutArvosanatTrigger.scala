@@ -8,6 +8,7 @@ import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{DateTime, LocalDate}
@@ -26,17 +27,20 @@ object IlmoitetutArvosanatTrigger {
     arvosana.copy(suoritus = s.id)
   }
 
-  def muodostaSuorituksetJaArvosanat(hakemus: FullHakemus, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, logBypassed: Boolean = false)
+  def muodostaSuorituksetJaArvosanat(hakemus: FullHakemus, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
+                                     personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
                                     (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] =
-      (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor)).mapTo[Suoritus with Identified[UUID]].recoverWith {
+      (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor, personOidsWithAliases)).mapTo[Suoritus with Identified[UUID]].recoverWith {
         case t: AskTimeoutException => saveSuoritus(suor)
       }
-    def fetchExistingSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] =
-      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]].recoverWith {
+    def fetchExistingSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
+      val q = SuoritusQuery(henkilo = Some(henkiloOid))
+      (suoritusRekisteri ? SuoritusQueryWithPersonAliases(q, personOidsWithAliases)).mapTo[Seq[Suoritus]].recoverWith {
         case t: AskTimeoutException => fetchExistingSuoritukset(henkiloOid)
       }
+    }
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
       case s: VirallinenSuoritus => s.core == suor.core
       case _ => false
@@ -49,7 +53,7 @@ object IlmoitetutArvosanatTrigger {
               for (
                 suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suor)
               ) arvosanat.foreach(arvosana =>
-                arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus))
+                arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
               )
             } else if (logBypassed) {
               suoritusRekisteri ! LogMessage(s"suoritus already exists: $suor", Logging.DebugLevel)
@@ -63,8 +67,8 @@ object IlmoitetutArvosanatTrigger {
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): Trigger = {
     Trigger {
-      hakemus => {
-        muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri)
+      (hakemus, personOidsWithAliases: PersonOidsWithAliases) => {
+        muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases)
       }
     }
   }

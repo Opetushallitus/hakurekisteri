@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 
@@ -14,7 +15,7 @@ import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)
 
@@ -26,18 +27,20 @@ object HakemusQuery {
   def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 
-case class Trigger(f: (FullHakemus) => Unit)
+case class Trigger(f: (FullHakemus, PersonOidsWithAliases) => Unit)
 
 object Trigger {
-  def apply(f: (String, String, String) => Unit): Trigger = Trigger(_ match {
-    case FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _) =>
-      for (
-        henkilo <- answers.henkilotiedot;
-        hetu <- henkilo.Henkilotunnus
-      ) f(personOid, hetu, hakuOid)
-
-    case _ =>
-  })
+  def apply(f: (String, String, String, PersonOidsWithAliases) => Unit): Trigger = {
+    val g: (FullHakemus, PersonOidsWithAliases) => Unit = {
+      case (FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _), personOidsWithAliases) => {
+        for (
+          henkilo <- answers.henkilotiedot;
+          hetu <- henkilo.Henkilotunnus
+        ) f(personOid, hetu, hakuOid, personOidsWithAliases)
+      }
+    }
+    Trigger(g)
+  }
 }
 
 case class HetuPersonOid(hetu: String, personOid: String)
@@ -76,7 +79,12 @@ trait IHakemusService {
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
-class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(implicit val system: ActorSystem) extends IHakemusService {
+class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 2000)
+                    (implicit val system: ActorSystem) extends IHakemusService {
+  val fetchPersonAliases: (Seq[FullHakemus]) => Future[(Seq[FullHakemus], PersonOidsWithAliases)] = { hs: Seq[FullHakemus] =>
+    val personOids: Seq[String] = hs.flatMap(_.personOid)
+    oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
+  }
 
   case class SearchParams(aoOids: String = null, asId: String = null, organizationFilter: String = null,
                           updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)
@@ -130,10 +138,10 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(imp
   def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
 
   def reprocessHaunHakemukset(hakuOid: String): Unit = {
-    hakemuksetForHaku(hakuOid, None).onComplete {
-      case Success(hakemukset) =>
+    hakemuksetForHaku(hakuOid, None).flatMap(fetchPersonAliases).onComplete {
+      case Success((hakemukset, personOidsWithAliases)) =>
         logger.info(s"Reprocessing ${hakemukset.size} hakemus of haku $hakuOid")
-        triggerHakemukset(hakemukset)
+        triggerHakemukset(hakemukset, personOidsWithAliases)
         logger.info(s"Reprocessed ${hakemukset.size} hakemus of haku $hakuOid")
       case Failure(t) =>
         logger.error(t, s"Failed to reprocess hakemukset of haku $hakuOid")
@@ -146,9 +154,9 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(imp
       val lastChecked = new Date()
       fetchHakemukset(
         params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))
-      ).onComplete {
-        case Success(hakemukset) =>
-          Try(triggerHakemukset(hakemukset)) match {
+      ).flatMap(fetchPersonAliases).onComplete {
+        case Success((hakemukset, personOidsWithAliases)) =>
+          Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
             case Failure(e) => logger.error(e, "Exception in trigger!")
             case _ => 
           }
@@ -160,9 +168,9 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(imp
     })
   }
 
-  private def triggerHakemukset(hakemukset: Seq[FullHakemus]) =
+  private def triggerHakemukset(hakemukset: Seq[FullHakemus], personOidsWithAliases: PersonOidsWithAliases) =
     hakemukset.foreach(hakemus =>
-      triggers.foreach(trigger => trigger.f(hakemus))
+      triggers.foreach(trigger => trigger.f(hakemus, personOidsWithAliases))
     )
 
   private def fetchHakemukset(page: Int = 0, params: SearchParams): Future[Seq[FullHakemus]] = {
