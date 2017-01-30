@@ -24,8 +24,8 @@ object Config {
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
   lazy val mockDevConfig = new MockDevConfig
-  val slowQuery: Long = 200
-  val reallySlowQuery: Long = 10000
+  val slowQuery: Long = java.lang.Long.parseLong(globalConfig.slowQueryMillis)
+  val reallySlowQuery: Long = java.lang.Long.parseLong(globalConfig.reallySlowQueryMillis)
 }
 
 object OrganisaatioOids {
@@ -96,6 +96,8 @@ class DefaultConfig extends Config {
   override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusrekisteri.db.url")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
+  val slowQueryMillis = getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.slowquery.millis")
+  val reallySlowQueryMillis = getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.reallyslowquery.millis")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
