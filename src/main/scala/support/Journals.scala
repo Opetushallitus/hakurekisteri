@@ -39,10 +39,10 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   implicit val database = Database.forConfig("suoritusrekisteri.db", configForDb)
   system.registerOnTermination(database.close())
 
-  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable)
-  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable)
-  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable)
-  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable)
-  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable)
+  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable, config.slowQuery, config.reallySlowQuery)
+  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable, config.slowQuery, config.reallySlowQuery)
+  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, config.slowQuery, config.reallySlowQuery)
+  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, config.slowQuery, config.reallySlowQuery)
+  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, config.slowQuery, config.reallySlowQuery)
 
 }

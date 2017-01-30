@@ -31,7 +31,7 @@ object JDBCUtil {
   }
 }
 
-class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T])
+class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T], val slowQueryMillis: Long = 200, val reallySlowQueryMillis: Long = 10000)
                                                                      (implicit val db: Database, val idType: BaseTypedType[I], implicit val system: ActorSystem)
   extends Journal[R, I] {
 

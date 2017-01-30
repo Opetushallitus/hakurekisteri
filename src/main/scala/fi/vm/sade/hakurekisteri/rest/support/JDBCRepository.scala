@@ -128,7 +128,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
         val f = journal.db.run(query).map(_.collect { case Updated(res) => res })(dbExecutor)
         f.onComplete(_ => {
           val runtime = Platform.currentTime - start
-          if (runtime > Config.slowQuery) {
+          if (runtime > journal.slowQueryMillis) {
             logSlowQuery(runtime, query)
           }
         })(dbExecutor)
@@ -150,7 +150,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     } else {
       (sqlString, "")
     }
-    if (runtime > Config.reallySlowQuery) {
+    if (runtime > journal.reallySlowQueryMillis) {
       log.warning(s"Query $loggableQueryStr took $runtime ms$prettyPrint")
     } else {
       log.info(s"Query $loggableQueryStr took $runtime ms$prettyPrint")
