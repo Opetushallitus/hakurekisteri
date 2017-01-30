@@ -49,8 +49,6 @@ class SuoritusJDBCActorSpec extends FlatSpec with BeforeAndAfterEach with  Befor
   it should "update suoritus with linked person oid retains original person oid in database" in {
     val original = run((suoritusrekisteri ? SuoritusQuery(henkilo = Some(linkedOid2))).mapTo[Seq[VirallinenSuoritus]]).head
     val newCopy = originalSuoritus.copy(henkilo = linkedOid2, tila = "VALMIS")
-    println("original: " + original)
-    println("Kopio: " + newCopy)
     run(suoritusrekisteri ? newCopy)
     val henkilo1Tilat = run(database.run(sql"select tila from suoritus where henkilo_oid = $linkedOid1 and current".as[String]))
     val henkilo2Tilat = run(database.run(sql"select tila from suoritus where henkilo_oid = $linkedOid2 and current".as[String]))
