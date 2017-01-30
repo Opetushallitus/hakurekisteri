@@ -14,7 +14,7 @@ import slick.dbio.Effect.{All, Transactional}
 import slick.jdbc.SimpleJdbcAction
 import slick.lifted
 import slick.util.{DumpInfo, Dumpable}
-
+import scala.collection.mutable.ListBuffer
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -140,32 +140,44 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
   val dbQuery: PartialFunction[Query[R], Either[Throwable, DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R,I]], All]]]
 
   private def logSlowQuery(runtime: Long, query: DBIOAction[_,_,_]): Unit = {
-    var queryStr: String = sqlOf(query)
-    var prettyPrint: String = ""
+    val sqls: Seq[(String, Int)] = sqlOf(query)
+    val sqlStrings = sqls.map(x => x._1 + (if (x._2 > 1) s" (repeated ${x._2} times)" else "") )
+    val sqlString = sqlStrings.mkString(" ")
 
-    if(queryStr.length > 200) {
-      queryStr = queryStr.take(200) + "...(truncated from " + queryStr.length + " chars)"
-      prettyPrint = ", complete queries:\n" + sqlOf(query, multiline = true)
-    }
-    if(runtime > Config.reallySlowQuery) {
-      log.warning(s"Query $queryStr took $runtime ms$prettyPrint")
+    val (loggableQueryStr, prettyPrint) = if (sqlString.length > 200) {
+      (sqlString.take(200) + "...(truncated from " + sqlString.length + " chars)" + s" took $runtime ms",
+      ", complete queries:\n" + sqlStrings.mkString("\n"))
     } else {
-      log.info(s"Query $queryStr took $runtime ms$prettyPrint")
+      (sqlString, "")
+    }
+    if (runtime > Config.reallySlowQuery) {
+      log.warning(s"Query $loggableQueryStr took $runtime ms$prettyPrint")
+    } else {
+      log.info(s"Query $loggableQueryStr took $runtime ms$prettyPrint")
     }
   }
 
-  private def sqlOf(dumpable: Dumpable, multiline: Boolean = false): String = {
-    def dump(dumpable: Dumpable, sb: StringBuilder): StringBuilder = {
+  private def sqlOf(dumpable: Dumpable): Seq[(String, Int)] = {
+    val lb = new ListBuffer[(String, Int)]()
+    def dump(dumpable: Dumpable): Unit = {
       val di = dumpable.getDumpInfo
       if (!di.mainInfo.isEmpty) {
-        sb.append(di.mainInfo + (if (di.attrInfo.isEmpty) "" else " " + di.attrInfo))
-        if (multiline) sb.append("\n")
+        val newQuery = di.mainInfo + (if (di.attrInfo.isEmpty) "" else " " + di.attrInfo)
+        val previousQuery = if (lb.nonEmpty) lb.last._1 else ""
+        if (previousQuery == newQuery) {
+          val newCount = lb.last._2 + 1
+          lb.remove(lb.indexOf(lb.last))
+          lb.append((newQuery, newCount))
+        } else {
+          lb.append((newQuery, 1))
+        }
+      } else {
+        di.children.foreach  { case (_, value) =>
+          dump(value)
+        }
       }
-      di.children.toSeq.foreach { case (_, value) =>
-        dump(value, sb)
-      }
-      sb
     }
-    dump(dumpable, new StringBuilder).toString
+    dump(dumpable)
+    lb
   }
 }
