@@ -88,7 +88,7 @@ app.controller "HakeneetCtrl", [
           else
             console.log(response)
             $scope.query = null
-            $scope.asiakirjaError = response.data
+            $scope.asiakirjaError = response.statusText
         )
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
