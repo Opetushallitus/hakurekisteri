@@ -32,5 +32,6 @@
     "tarjonta-service.hakukohde": "/tarjonta-service/rest/v1/hakukohde/search",
     "tarjonta-service.hakukohdeById": "/tarjonta-service/rest/v1/hakukohde/$1",
     "cas.myroles": "/cas/myroles",
-    "suoritusrekisteri.jonotus": "/suoritusrekisteri/siirtotiedostojono"
+    "suoritusrekisteri.jonotus": "/suoritusrekisteri/siirtotiedostojono",
+    "suoritusrekisteri.asiakirja": "/suoritusrekisteri/asiakirja/$1"
 }

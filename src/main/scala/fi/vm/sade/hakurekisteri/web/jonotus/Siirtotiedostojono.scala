@@ -1,70 +1,136 @@
 package fi.vm.sade.hakurekisteri.web.jonotus
 
-import java.util.{UUID, Date}
+import java.io.ByteArrayOutputStream
+import java.util.UUID
 import java.util.concurrent._
-import java.util.function.BiFunction
 
-import com.google.common.cache.{CacheLoader, RemovalNotification, RemovalListener, CacheBuilder}
-import fi.vm.sade.hakurekisteri.web.kkhakija.Query
+import _root_.akka.pattern._
+import akka.actor.{ActorRef, ActorSystem}
+import akka.util.Timeout
+import com.google.common.cache.{CacheBuilder, CacheLoader, RemovalListener, RemovalNotification}
+import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.web.kkhakija._
+import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
+import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
+import org.apache.commons.io.IOUtils
+import org.json4s.DefaultFormats
+import org.json4s.jackson.Serialization.write
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.Try
 
-class Siirtotiedostojono {
-
+class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(implicit system: ActorSystem) {
+  private implicit val defaultTimeout: Timeout = 120.seconds
+  private implicit val formats = DefaultFormats
   private val poolSize = 1
   private val threadPool = Executors.newFixedThreadPool(poolSize)
   private val logger = LoggerFactory.getLogger(classOf[Siirtotiedostojono])
-  private val jobs = new CopyOnWriteArrayList[Query]()
-  private val shortUrls = new ConcurrentHashMap[String, Query]()
-  private def eradicateAllShortUrlsToQuery(q: Query): Unit = {
+  private val jobs = new CopyOnWriteArrayList[QueryAndFormat]()
+  private val inprogress = new CopyOnWriteArrayList[QueryAndFormat]()
+  private val shortIds = new ConcurrentHashMap[String, QueryAndFormat]()
+
+  private def eradicateAllShortUrlsToQuery(q: QueryAndFormat): Unit = {
     import scala.collection.JavaConversions._
-    shortUrls.entrySet().filter(_.getValue.equals(q)).map(_.getKey)
-      .foreach(shortUrls.remove)
+    shortIds.entrySet().filter(_.getValue.equals(q)).map(_.getKey)
+      .foreach(shortIds.remove)
   }
+
   private val asiakirjat = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .expireAfterWrite(10, TimeUnit.MINUTES)
-    .removalListener(new RemovalListener[Query, Array[Byte]]() {
-      override def onRemoval(notification: RemovalNotification[Query, Array[Byte]]): Unit =
+    .removalListener(new RemovalListener[QueryAndFormat, Array[Byte]]() {
+      override def onRemoval(notification: RemovalNotification[QueryAndFormat, Array[Byte]]): Unit =
         eradicateAllShortUrlsToQuery(notification.getKey)
     })
     .build(
-      new CacheLoader[Query, Array[Byte]]() {
-        override def load(q: Query): Array[Byte] = {
-          Thread.sleep(15L * 1000L)
-          "Jee jee jee".getBytes
+      new CacheLoader[QueryAndFormat, Array[Byte]]() {
+        override def load(q: QueryAndFormat): Array[Byte] = {
+          Try(q.query match {
+            case query:KkHakijaQuery =>
+              val hakijat = Await.result(kkHakija.getKkHakijat(query), defaultTimeout.duration)
+              val bytes = new ByteArrayOutputStream()
+              q.format match {
+                case ApiFormat.Json =>
+                  IOUtils.write(write(hakijat), bytes)
+                  bytes.toByteArray
+                case ApiFormat.Excel =>
+                  KkExcelUtil.write(bytes, hakijat)
+                  bytes.toByteArray
+              }
+            case query:HakijaQuery =>
+              Await.result((hakijaActor ? q), defaultTimeout.duration) match {
+                case hakijat: XMLHakijat =>
+                  val bytes = new ByteArrayOutputStream()
+                  ExcelUtilV1.write(bytes, hakijat)
+                  bytes.toByteArray
+                case hakijat: JSONHakijat =>
+                  val bytes = new ByteArrayOutputStream()
+                  q.format match {
+                    case ApiFormat.Json =>
+                      IOUtils.write(write(hakijat), bytes)
+                      bytes.toByteArray
+                    case ApiFormat.Excel =>
+                      ExcelUtilV2.write(bytes, hakijat)
+                      bytes.toByteArray
+                  }
+                case _ =>
+                  logger.error(s"Couldn't handle return type from HakijaActor!")
+                  throw new RuntimeException("No content to store!")
+              }
+            case _ =>
+              logger.error(s"Unknown 'asiakirja' requested with query ${q.query}")
+              throw new RuntimeException("No content to store!")
+          }).toOption.getOrElse(Array())
         }
       })
-  private def submitNewAsiakirja(q: Query) {
+
+  def getAsiakirjaWithId(id: String): Option[(ApiFormat, Array[Byte])] = {
+    Option(shortIds.get(id)).map(q => (q.format, asiakirjat.getIfPresent(q)))
+  }
+  private def submitNewAsiakirja(q: QueryAndFormat) {
     threadPool.execute(new Runnable() {
       override def run(): Unit = {
-        if(jobs.remove(q)) {
-          if(asiakirjat.getIfPresent(q) == null) {
-            asiakirjat.get(q)
-            logger.info(s"Asiakirja created for id ${queryToShortUrl(q)}")
+        // prevent multiple threads from starting same job <= case where user retries multiple times
+        val firstInProgress = inprogress.addIfAbsent(q)
+        if(firstInProgress) {
+          try {
+          val jobWasAvailable = jobs.remove(q)
+          if(jobWasAvailable) {
+            if(asiakirjat.getIfPresent(q) == null) {
+              // TODO REMOVE AT ONCE
+              Thread.sleep(10000)
+              asiakirjat.get(q)
+              logger.info(s"Asiakirja created for id ${queryToShortId(q)}")
+            }
+          }
+          } finally {
+            inprogress.remove(q)
           }
         }
       }
     })
   }
-  def queryToShortUrl(q: Query): String = {
+  def queryToShortId(q: QueryAndFormat): String = {
     import scala.collection.JavaConversions._
-    shortUrls.entrySet().find(_.getValue.equals(q)) match {
+    shortIds.entrySet().find(_.getValue.equals(q)) match {
       case Some(entry) =>
         entry.getKey
       case None =>
         val uuid = UUID.randomUUID().toString
-        shortUrls.put(uuid, q)
+        shortIds.put(uuid, q)
         uuid
     }
   }
 
-  def addToJono(q: Query, personOid: String): String = {
+  def addToJono(q: QueryAndFormat, personOid: String): Int = {
     jobs.add(q)
+    val pos = positionInQueue(q)
     submitNewAsiakirja(q)
-    queryToShortUrl(q)
+    queryToShortId(q)
+    pos
   }
-  def isExistingAsiakirja(q: Query): Boolean = asiakirjat.getIfPresent(q) != null
-  def positionInQueue(q: Query): Int = jobs.indexOf(q)
-  private def addPersonOid(p: SiirtotiedostoPyynto, oid: String) = p.copy(personOids = p.personOids + oid)
+  def isExistingAsiakirja(q: QueryAndFormat): Boolean = asiakirjat.getIfPresent(q) != null
+  def positionInQueue(q: QueryAndFormat): Int = jobs.indexOf(q)
 }
