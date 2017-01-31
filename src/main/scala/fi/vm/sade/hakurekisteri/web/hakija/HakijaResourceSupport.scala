@@ -26,10 +26,9 @@ trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaV
 
   def prepareAsyncResult(query: Any, process: Future[Any]) = {
     val t0 = Platform.currentTime
+    contentType = getContentType(getFormatFromTypeParam())
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-
-      override val contentType = getContentType(getFormatFromTypeParam())
 
       val is = process
     }
