@@ -339,9 +339,4 @@ app.controller "HakeneetCtrl", [
       return true  if !$scope.kausi or ($scope.kausi and !$scope.kausi.kausi and !$scope.kausi.vuosi)
       $scope.kausi and haku.kausi is $scope.kausi.kausi and haku.vuosi is $scope.kausi.vuosi
 
-
-
-    # TODO REMO
-    $scope.oppijanumero = "afsgadfg"
-    $scope.hakukohdenimi = "bvrswe45"
 ]
