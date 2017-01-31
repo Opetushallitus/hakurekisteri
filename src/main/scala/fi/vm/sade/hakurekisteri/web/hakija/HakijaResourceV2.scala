@@ -44,9 +44,10 @@ class HakijaResourceV2(hakijaActor: ActorRef)
       throw new IllegalArgumentException(s"Haku can not be empty")
     val q = HakijaQuery(params, currentUser, 2)
     val tyyppi = getFormatFromTypeParam()
+    val thisResponse = response
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
       case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
-        setContentDisposition(tyyppi, response, "hakijat")
+        setContentDisposition(tyyppi, thisResponse, "hakijat")
         Future.successful(result)
       case result =>
         Future.successful(result)
