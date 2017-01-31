@@ -140,13 +140,13 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
   val dbQuery: PartialFunction[Query[R], Either[Throwable, DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R,I]], All]]]
 
   private def logSlowQuery(runtime: Long, query: DBIOAction[_,_,_]): Unit = {
-    val sqls: Seq[(String, Int)] = sqlOf(query)
-    val sqlStrings = sqls.map(x => x._1 + (if (x._2 > 1) s" (repeated ${x._2} times)" else "") )
-    val sqlString = sqlStrings.mkString(" ")
+    val sqlsAndCounts: Seq[(String, Int)] = sqlOf(query)
+    val sqlStringSeq = sqlsAndCounts.map(x => x._1 + (if (x._2 > 1) s" (repeated ${x._2} times)" else "") )
+    val sqlString = sqlStringSeq.mkString(" ")
 
     val (loggableQueryStr, prettyPrint) = if (sqlString.length > 200) {
-      (sqlString.take(200) + "...(truncated from " + sqlString.length + " chars)" ,
-      ", complete queries:\n" + sqlStrings.mkString("\n"))
+      (sqlString.take(200) + "...(truncated from " + sqlString.length + " chars)" + s" took $runtime ms",
+      ", complete queries:\n" + sqlStringSeq.mkString("\n"))
     } else {
       (sqlString, "")
     }
@@ -157,6 +157,28 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     }
   }
 
+  /**
+    * Extract SQL queries from a Dumpable object.
+    *
+    * Takes a Dumpable object, traverses it recursively and collects SQL queries
+    * and the counts of repeated queries.
+    *
+    * The method is recursive and it works as follows:
+    * 1.  The auxiliary method dump is called
+    * 2.  It extracts DumpInfo object from the current Dumpable
+    * 3a. If the DumpInfo object's mainInfo-field is not empty (mainInfo and
+    *     attrInfo) contain the things we want to extract), then a string
+    *     representation of the SQL query is constructed. This string is then
+    *     compared with the last extracted sql query, which is stored as the last
+    *     element in the ListBuffer object 'lb'. If the strings match, then the
+    *     count is incremented, else the query is simply appended to the
+    *     ListBuffer, with a count of 1.
+    * 3b. Else dump is called with each of the children of the DumpInfo object
+    *     (which are Dumpable objects)
+    *
+    * @param dumpable A Dumpable object
+    * @return Sequence of pairs containing query and count
+    */
   private def sqlOf(dumpable: Dumpable): Seq[(String, Int)] = {
     val lb = new ListBuffer[(String, Int)]()
     def dump(dumpable: Dumpable): Unit = {
