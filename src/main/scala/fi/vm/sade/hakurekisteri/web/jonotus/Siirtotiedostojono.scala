@@ -99,8 +99,6 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           val jobWasAvailable = jobs.remove(q)
           if(jobWasAvailable) {
             if(asiakirjat.getIfPresent(q) == null) {
-              // TODO REMOVE AT ONCE
-              Thread.sleep(10000)
               asiakirjat.get(q)
               logger.info(s"Asiakirja created for id ${queryToShortId(q)}")
             }
