@@ -1,19 +1,15 @@
-import javax.servlet.{Servlet, ServletContext}
+import javax.servlet.ServletContext
 
 import _root_.akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.web.jonotus.{Siirtotiedostojono, SiirtotiedostojonoResource}
+import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
-import org.atmosphere.cache.SessionBroadcasterCache
-import org.atmosphere.cpr.{DefaultBroadcaster, AtmosphereInterceptor, Broadcaster}
-import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
-import org.atmosphere.util.ExcludeSessionBroadcaster
-import org.json4s.{Extraction, _}
 import org.json4s.jackson.JsonMethods._
+import org.json4s.{Extraction, _}
 import org.scalatra._
-import org.scalatra.atmosphere.{JacksonSimpleWireformat, DefaultScalatraBroadcaster, AtmosphereClient}
-
 import scala.concurrent.{ExecutionContext, Future}
 
 class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSupport {
@@ -23,8 +19,17 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     implicit val system = config.productionServerConfig.system
     implicit val ec = config.productionServerConfig.ec
     implicit val security = config.productionServerConfig.security
-    val r = new SiirtotiedostojonoResource(new Siirtotiedostojono())
-    context.mount(r, "/mocks/suoritusrekisteri/siirtotiedostojono")
+
+    val anyActorRef = system.deadLetters
+    val kkHakijaService = new KkHakijaService(hakemusService = new HakemusServiceMock(),
+      tarjonta = anyActorRef,
+      haut = anyActorRef,
+      koodisto = anyActorRef,
+      suoritukset = anyActorRef,
+      valintaTulos = anyActorRef)
+    val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
+    context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
+    context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
     context.mount(new OrganizationProxyServlet(system), "/organisaatio-service")
     context.mount(new AuthenticationProxyServlet(system), "/authentication-service")
     context.mount(new KoodistoProxyServlet(system), "/koodisto-service")
