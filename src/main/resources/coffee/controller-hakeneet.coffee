@@ -73,12 +73,28 @@ app.controller "HakeneetCtrl", [
   "aste"
   "haut"
   "hakukohdekoodit"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit) ->
-    $modal.open(
-      templateUrl: "templates/tiedostonmuodostusdialogi.html"
-      controller: "TiedostonMuodostusCtrl"
-      size: "sm"
+  "$interval"
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, $interval) ->
+    pollInterval = 1 * 1500 # every second
+
+    $scope.handlePoll = (reply) ->
+      if(reply.asiakirjaId)
+        $scope.query = null
+        $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
+      else if(reply.sijoitus)
+        $scope.sijoitus = reply.sijoitus
+
+    stop = $interval((->
+      if($scope.query)
+        $http.post(plainUrls.url("suoritusrekisteri.jonotus"), $scope.query, {headers: {
+          'Content-type': 'application/json'
+        }}).success($scope.handlePoll)
+    ), pollInterval)
+    $scope.$on('$destroy', ->
+      if(angular.isDefined(stop))
+        $interval.cancel(stop)
     )
+
     $('#oppijanumero').placeholder()
     $('#hakukohde').placeholder()
 
@@ -147,6 +163,7 @@ app.controller "HakeneetCtrl", [
 
     isValidTiedostotyyppi = () -> R.contains($scope.tiedostotyyppi, R.pluck('value', $scope.tiedostotyypit))
 
+
     $scope.search = ->
       MessageService.clearMessages()
       if isKk()
@@ -195,6 +212,7 @@ app.controller "HakeneetCtrl", [
           return
       url = (if isKk() then "rest/v1/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
       data = (if isKk() then {
+        kk: true
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
@@ -211,25 +229,8 @@ app.controller "HakeneetCtrl", [
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
       })
-      $scope.fileLoading = true
-      $.fileDownload(url,
-        data: data
-      ).done(->
-        $scope.$apply ->
-          delete $scope.fileLoading
-          return
-        return
-      ).fail ->
-        $scope.$apply ->
-          MessageService.addMessage
-            type: "danger"
-            message: "Tiedoston lataaminen epäonnistui."
-            messageKey: "suoritusrekisteri.hakeneet.latausepaonnistui"
-            description: "Palvelussa saattaa olla kuormaa. Yritä hetken kuluttua uudelleen."
-            descriptionKey: "suoritusrekisteri.hakeneet.latausepaonnistuiselite"
-          delete $scope.fileLoading
-          return
-        return
+      $scope.asiakirja = null
+      $scope.query = data
       return
 
     $scope.reset = ->
@@ -337,4 +338,10 @@ app.controller "HakeneetCtrl", [
     $scope.hakuFilter = (haku, i) ->
       return true  if !$scope.kausi or ($scope.kausi and !$scope.kausi.kausi and !$scope.kausi.vuosi)
       $scope.kausi and haku.kausi is $scope.kausi.kausi and haku.vuosi is $scope.kausi.vuosi
+
+
+
+    # TODO REMO
+    $scope.oppijanumero = "afsgadfg"
+    $scope.hakukohdenimi = "bvrswe45"
 ]
