@@ -1,130 +1,109 @@
 package fi.vm.sade.hakurekisteri.web.jonotus
 
-import java.io.OutputStream
 import java.lang.Boolean.parseBoolean
-import java.util.Date
-import java.util.concurrent._
-import java.util.function.BiFunction
 
-
-import com.google.common.cache.{RemovalNotification, RemovalListener, CacheLoader, CacheBuilder}
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.web.kkhakija.{Query, KkHakijaQuery}
-import fi.vm.sade.hakurekisteri.web.rest.support.{DownloadSupport, ExcelSupport, Security, SecuritySupport}
-import org.scalatra.SessionSupport
-import org.scalatra._
-import org.scalatra.atmosphere._
-import org.slf4j.LoggerFactory
-import scalate.ScalateSupport
-import org.scalatra.json.{JValueResult, JacksonJsonSupport}
-import scala.concurrent._
-import ExecutionContext.Implicits.global
-import org.json4s.jackson.Serialization.{write}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, Query}
+import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
+import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.json4s._
+import org.json4s.jackson.Serialization.write
+import org.scalatra.{SessionSupport, _}
+import org.scalatra.json.{JValueResult, JacksonJsonSupport}
+import org.slf4j.LoggerFactory
 
 import scala.util.Try
 
 class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security: Security) extends ScalatraServlet
-  with ScalateSupport with JValueResult
-  with JacksonJsonSupport with SessionSupport
-  with AtmosphereSupport with SecuritySupport {
+  with JValueResult
+  with JacksonJsonSupport with SessionSupport with SecuritySupport {
 
   private val logger = LoggerFactory.getLogger(classOf[SiirtotiedostojonoResource])
 
-  atmosphere("/") {
-    new AtmosphereClient {
-      def receive = {
-        case Connected =>
-          logger.info(s"User connected $currentUser!")
-        case Disconnected(disconnector, couldContainErrors) =>
-          handle(None,uuid, currentUser) match {
-            case LoggedInUser(id, personOid) =>
-              logger.error(s"User $personOid disconnected!")
-            case _ =>
-              logger.error("Got no usable information from disconnected user!")
-          }
-          couldContainErrors.foreach(logger.error("Disconnected with exception!",_))
-        case JsonMessage(json) =>
-          handle(Some(json), uuid, currentUser) match {
-            case QueryWithExistingAsiakirja(id, personOid, query) =>
-              send(write(Valmis(jono.queryToShortUrl(query))))
-              logger.info(s"User $currentUser requested existing asiakirja with $query")
-            case AsiakirjaQuery(id, personOid, query) =>
-              jono.addToJono(query, personOid)
-              send(write(Sijoitus(jono.positionInQueue(query))))
-              logger.info(s"User $currentUser requested asiakirja with $query")
-            case RequestSijoitusQuery(id, personOid, query) =>
-              val position = jono.positionInQueue(query)
-              send(write(Sijoitus(position)))
-              logger.info(s"User $currentUser in position $position")
-            case _ =>
-              logger.error(s"Unexpected query from user $currentUser")
-          }
-        case event =>
-          logger.error(s"Unexpected event in 'siirtotiedoston jonotus' $event")
-      }
-    }
-  }
-  private def handle(json: Option[JValue], uuid: String, user: Option[User]): Event = {
-    currentUser match {
-      case Some(user) =>
-        val personOid = user.username
-        val params = json.map(_.extract[Map[String,String]]).getOrElse(Map[String,String]())
-        toQuery(params,user) match {
-          case Some(query) =>
-            val isAlreadyCreated = jono.isExistingAsiakirja(query)
-            if(isAlreadyCreated) {
-              QueryWithExistingAsiakirja(uuid, personOid, query)
-            } else {
-              val isSijoitusQuery = params.get("position").exists(parseBoolean)
-              if(isSijoitusQuery) {
-                RequestSijoitusQuery(uuid, personOid, query)
-              } else {
-                AsiakirjaQuery(uuid, personOid, query)
-              }
-            }
-          case None =>
-            LoggedInUser(uuid, personOid)
+  post("/") {
+
+    toEvent(readJsonFromBody(request.body), currentUser) match {
+      case QueryWithExistingAsiakirja(personOid, query) =>
+        val shortId = jono.queryToShortId(query)
+        logger.info(s"User $currentUser requested existing asiakirja with $query")
+        halt(status=200, body=write(Valmis(shortId)))
+      case RequestSijoitusQuery(personOid, query, position, isNew) =>
+        if(isNew) {
+          logger.info(s"User $currentUser requested asiakirja with $query")
+        } else {
+          logger.info(s"User $currentUser in position $position")
         }
-      case None =>
-        AnonymousUser(uuid)
+        halt(status=200, body=write(Sijoitus(position)))
+      case AnonymousUser() =>
+        halt(status=401, body="Anonymous user not authorized!")
+      case _ =>
+        logger.error(s"Unexpected query from user $currentUser")
+        halt(status=400, body="Query is not valid!")
     }
   }
 
-  private def toQuery(params: Map[String,String], u: User): Option[Query] = {
+  private def toEvent(json: JValue, user: Option[User]): Event = {
+    currentUser match {
+      case Some(user) =>
+        val personOid = user.username
+        implicit val formats = DefaultFormats
+        val extracted = json.extract[Map[String,JValue]].filter(_._2 != JNull)
+        val params = extracted.mapValues(_.values.toString)
+        toQuery(params,user) match {
+          case Some(query) =>
+            def incSijoitus(s: Int) = s + 1
+            val position = Option(jono.positionInQueue(query))
+              .filter(_ != -1)
+              .map(incSijoitus)
+
+            position match {
+              case Some(pos) =>
+                RequestSijoitusQuery(personOid, query, pos, false)
+              case None =>
+                val isAlreadyCreated = jono.isExistingAsiakirja(query)
+                if(isAlreadyCreated) {
+                  QueryWithExistingAsiakirja(personOid, query)
+                } else {
+                  RequestSijoitusQuery(personOid, query, incSijoitus(jono.addToJono(query, personOid)), true)
+                }
+            }
+          case None =>
+            LoggedInUser(personOid)
+        }
+      case None =>
+        AnonymousUser()
+    }
+  }
+
+  private def toQuery(params: Map[String,String], u: User): Option[QueryAndFormat] = {
     def act = {
       val isKK = params.get("kk").exists(parseBoolean)
+      val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
       if(isKK) {
-        KkHakijaQuery(params, Option(u))
+        QueryAndFormat(KkHakijaQuery(params, Option(u)),tyyppi)
       } else {
-        HakijaQuery(params, Option(u), 3)
+        QueryAndFormat(HakijaQuery(params, Option(u), 3),tyyppi)
       }
     }
     Try(act).toOption
   }
 
-
-
-
-
   override protected implicit def jsonFormats: Formats = HakurekisteriJsonSupport.format
 
+
 }
 
-case class SiirtotiedostoPyynto(created: Date, personOids: Set[String])
+case class QueryAndFormat(query: Query, format: ApiFormat)
 case class Sijoitus(sijoitus: Int)
 case class Valmis(asiakirjaId: String)
+case class Ping()
 
-trait Event {
-  val id: String
-}
+trait Event
 trait UserEvent extends Event {
   val personOid: String
 }
-case class LoggedInUser(id: String, personOid: String) extends UserEvent
-case class QueryWithExistingAsiakirja(id: String, personOid: String, q: Query) extends UserEvent
-case class RequestSijoitusQuery(id: String, personOid: String, q: Query) extends UserEvent
-case class AsiakirjaQuery(id: String, personOid: String, q: Query) extends UserEvent
-case class AnonymousUser(id: String) extends Event
+case class LoggedInUser(personOid: String) extends UserEvent
+case class QueryWithExistingAsiakirja(personOid: String, q: QueryAndFormat) extends UserEvent
+case class RequestSijoitusQuery(personOid: String, q: QueryAndFormat, position: Int, isNew: Boolean) extends UserEvent
+case class AnonymousUser() extends Event

@@ -9,6 +9,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.AkkaHakupalvelu
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQueue
 import fi.vm.sade.hakurekisteri.rest.support.Registers
+import fi.vm.sade.hakurekisteri.web.jonotus.Siirtotiedostojono
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 
 import scala.concurrent.ExecutionContext
 
@@ -17,6 +19,8 @@ trait Koosteet {
   val ensikertalainen: ActorRef
   val haut: ActorRef
   val virtaQueue: ActorRef
+  val siirtotiedostojono: Siirtotiedostojono
+  val kkHakijaService: KkHakijaService
 }
 
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers, config: Config) extends Koosteet {
@@ -29,4 +33,12 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.valintarekisteri, integrations.tarjonta, haut, integrations.hakemusService, config)), "ensikertalainen")
+
+  val kkHakijaService: KkHakijaService = new KkHakijaService(integrations.hakemusService,
+    integrations.tarjonta,
+    haut,
+    integrations.koodisto,
+    registers.suoritusRekisteri,
+    integrations.valintaTulos)(system)
+  val siirtotiedostojono = new Siirtotiedostojono(hakijat, kkHakijaService)(system)
 }

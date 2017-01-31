@@ -94,14 +94,25 @@
                 </div>
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
-                        <button type="button" ng-click="reset()" class="btn btn-default">
+                        <button ng-hide="query" type="button" ng-click="reset()" class="btn btn-default">
                             <span oph-msg="suoritusrekisteri.hakeneet.tyhjenna">Tyhjennä</span>
                             <span class="glyphicon glyphicon-remove"></span>
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button ng-class="{disabled:query}" type="submit" class="btn btn-primary">
                             <span oph-msg="suoritusrekisteri.hakeneet.hae">Muodosta ja lataa</span>
                             <span class="glyphicon glyphicon-download"></span>
                         </button>
+                        <div ng-show="query">
+                            <br>
+                            <p ng-show="sijoitus">
+                                Siirtotiedoston luonti on jonossa <strong>({{sijoitus}}.)</strong>
+                            </p>
+                            <p class="loading"></p>
+                        </div>
+                        <div ng-show="asiakirja">
+                            <br>
+                            <p>Siirtotiedosto on valmis! <strong><a href="{{asiakirja}}">Lataa siirtotiedosto tästä linkistä.</a></strong></p>
+                        </div>
                     </div>
                 </div>
             </fieldset>
