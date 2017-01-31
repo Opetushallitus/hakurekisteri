@@ -60,7 +60,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
                   bytes.toByteArray
               }
             case query:HakijaQuery =>
-              Await.result((hakijaActor ? q), defaultTimeout.duration) match {
+              Await.result((hakijaActor ? query), defaultTimeout.duration) match {
                 case hakijat: XMLHakijat =>
                   val bytes = new ByteArrayOutputStream()
                   ExcelUtilV1.write(bytes, hakijat)
