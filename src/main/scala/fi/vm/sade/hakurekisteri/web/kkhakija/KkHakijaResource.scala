@@ -55,9 +55,10 @@ class KkHakijaResource(kkHakijaService: KkHakijaService)(implicit system: ActorS
     val q = KkHakijaQuery(params, currentUser)
     val tyyppi = getFormatFromTypeParam()
     if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
+    val thisResponse= response
     val kkhakijatFuture = kkHakijaService.getKkHakijat(q).flatMap {
       case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
-        setContentDisposition(tyyppi, response, "hakijat")
+        setContentDisposition(tyyppi, thisResponse, "hakijat")
         Future.successful(result)
       case result => Future.successful(result)
     }
