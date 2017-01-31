@@ -74,13 +74,22 @@ app.controller "HakeneetCtrl", [
   "haut"
   "hakukohdekoodit"
   "$interval"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, $interval) ->
+  "LokalisointiService"
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, $interval, LokalisointiService) ->
     pollInterval = 1 * 1500 # every second
 
     $scope.handlePoll = (reply) ->
       if(reply.asiakirjaId)
-        $scope.query = null
-        $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
+        statusUrl = plainUrls.url("suoritusrekisteri.asiakirja.status",reply.asiakirjaId)
+        $http.get(statusUrl).success((response) ->
+          if(response.status == 200)
+            $scope.query = null
+            $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
+          else
+            console.log(response)
+            $scope.query = null
+            $scope.asiakirjaError = response.data
+        )
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
 
@@ -230,6 +239,7 @@ app.controller "HakeneetCtrl", [
         tiedosto: true
       })
       $scope.asiakirja = null
+      $scope.asiakirjaError = null
       $scope.query = data
       return
 
