@@ -26,13 +26,13 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
     toEvent(readJsonFromBody(request.body), currentUser) match {
       case QueryWithExistingAsiakirja(personOid, query) =>
         val shortId = jono.queryToShortId(query)
-        logger.info(s"User $currentUser requested existing asiakirja with $query")
+        logger.debug(s"User $currentUser requested existing asiakirja with $query")
         halt(status=200, body=write(Valmis(shortId)))
       case RequestSijoitusQuery(personOid, query, position, isNew) =>
         if(isNew) {
-          logger.info(s"User $currentUser requested asiakirja with $query")
+          logger.debug(s"User $currentUser requested asiakirja with $query")
         } else {
-          logger.info(s"User $currentUser in position $position")
+          logger.debug(s"User $currentUser in position $position")
         }
         halt(status=200, body=write(Sijoitus(position)))
       case AnonymousUser() =>
