@@ -99,7 +99,6 @@ case class Sijoitus(sijoitus: Int)
 case class Valmis(asiakirjaId: String)
 case class Ping()
 
-trait Event
 trait UserEvent extends Event {
   val personOid: String
 }
