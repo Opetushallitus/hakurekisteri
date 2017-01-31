@@ -9,6 +9,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.google.common.cache.{CacheBuilder, CacheLoader, RemovalListener, RemovalNotification}
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.web.kkhakija._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(implicit system: ActorSystem) {
   private implicit val defaultTimeout: Timeout = 120.seconds
@@ -40,14 +41,14 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
   private val asiakirjat = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .expireAfterWrite(10, TimeUnit.MINUTES)
-    .removalListener(new RemovalListener[QueryAndFormat, Array[Byte]]() {
-      override def onRemoval(notification: RemovalNotification[QueryAndFormat, Array[Byte]]): Unit =
+    .removalListener(new RemovalListener[QueryAndFormat, Either[Exception, Array[Byte]]]() {
+      override def onRemoval(notification: RemovalNotification[QueryAndFormat, Either[Exception, Array[Byte]]]): Unit =
         eradicateAllShortUrlsToQuery(notification.getKey)
     })
     .build(
-      new CacheLoader[QueryAndFormat, Array[Byte]]() {
-        override def load(q: QueryAndFormat): Array[Byte] = {
-          Try(q.query match {
+      new CacheLoader[QueryAndFormat, Either[Exception, Array[Byte]]] {
+        override def load(q: QueryAndFormat): Either[Exception, Array[Byte]] = {
+          val tryCreateContent: Try[Array[Byte]] = Try(q.query match {
             case query:KkHakijaQuery =>
               val hakijat = Await.result(kkHakija.getKkHakijat(query), defaultTimeout.duration)
               val bytes = new ByteArrayOutputStream()
@@ -82,12 +83,24 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
             case _ =>
               logger.error(s"Unknown 'asiakirja' requested with query ${q.query}")
               throw new RuntimeException("No content to store!")
-          }).toOption.getOrElse(Array())
+          })
+          tryCreateContent match {
+            case Success(content) =>
+              if(content.length == 0) {
+                Left(new EmptyAsiakirjaException())
+              } else {
+                Right(content)
+              }
+            case Failure(fail: Exception) =>
+              Left(fail)
+            case Failure(t: Throwable) =>
+              Left(new RuntimeException(t))
+          }
         }
       })
 
-  def getAsiakirjaWithId(id: String): Option[(ApiFormat, Array[Byte])] = {
-    Option(shortIds.get(id)).map(q => (q.format, asiakirjat.getIfPresent(q)))
+  def getAsiakirjaWithId(id: String): Option[(ApiFormat, Either[Exception, Array[Byte]], Option[User])] = {
+    Option(shortIds.get(id)).map(q => (q.format, asiakirjat.getIfPresent(q), q.query.user))
   }
   private def submitNewAsiakirja(q: QueryAndFormat) {
     threadPool.execute(new Runnable() {

@@ -109,6 +109,10 @@
                             </p>
                             <p class="loading"></p>
                         </div>
+                        <div ng-show="asiakirjaError">
+                            <br>
+                            <p oph-msg="{{asiakirjaError}}">Asiakirjan luonnissa tapahtui virhe!</p>
+                        </div>
                         <div ng-show="asiakirja">
                             <br>
                             <p>Siirtotiedosto on valmis! <strong><a href="{{asiakirja}}">Lataa siirtotiedosto tästä linkistä.</a></strong></p>
