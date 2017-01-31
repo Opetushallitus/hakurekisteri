@@ -145,7 +145,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     val sqlString = sqlStringSeq.mkString(" ")
 
     val (loggableQueryStr, prettyPrint) = if (sqlString.length > 200) {
-      (sqlString.take(200) + "...(truncated from " + sqlString.length + " chars)" + s" took $runtime ms",
+      (sqlString.take(200) + "...(truncated from " + sqlString.length + " chars)",
       ", complete queries:\n" + sqlStringSeq.mkString("\n"))
     } else {
       (sqlString, "")
