@@ -25,7 +25,7 @@ class OpiskeluoikeusJDBCActor(val journal: JDBCJournal[Opiskeluoikeus, UUID, Opi
     case OpiskeluoikeusQuery(henkilo, myontaja) => Right(all.filter(t =>
       henkilo.fold[Rep[Boolean]](true)(t.henkiloOid === _) && myontaja.fold[Rep[Boolean]](true)(t.myontaja === _)).result)
     case OpiskeluoikeusHenkilotQuery(henkilot, myontaja) => {
-      Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid", all.filter(t => myontaja.fold[Rep[Boolean]](true)(t.myontaja === _))))
+      Right(findWithHenkilot(henkilot, "henkilo_oid", all.filter(t => myontaja.fold[Rep[Boolean]](true)(t.myontaja === _))))
     }
   }
 }

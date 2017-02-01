@@ -36,7 +36,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   /**
     * Query journaled table with temporary table populated by person-alias mappings from henkilot and journaled table is joined on temp table by the joinOn column
     */
-  def joinHenkilotWithTempTable(
+  private def joinHenkilotWithTempTable(
       henkilot: PersonOidsWithAliases,
       joinOn: String,
       baseQuery: lifted.Query[T, Delta[R, I], Seq]): DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R, I]], All with Transactional] = {
@@ -72,6 +72,15 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     } yield record
 
     createHenkiloviiteTempTable.andThen(populateTempTable).andThen(selectAllMatching.distinct.result).transactionally
+  }
+
+  def findWithHenkilot(henkilot: PersonOidsWithAliases,
+                       joinOn: String,
+                       baseQuery: lifted.Query[T, Delta[R, I], Seq]): DBIOAction[Seq[Delta[R, I]], Streaming[Delta[R, I]], All with Transactional] = {
+    henkilot.uniquePersonOid match {
+      case Some(uniquePersonOid) => baseQuery.filter(x => x.column[String](joinOn) === uniquePersonOid).result
+      case None => joinHenkilotWithTempTable(henkilot, joinOn, baseQuery)
+    }
   }
 
   override def get(id: I): Option[R with Identified[I]] = Await.result(journal.db.run(latest(id).result.headOption), 10.seconds).collect {

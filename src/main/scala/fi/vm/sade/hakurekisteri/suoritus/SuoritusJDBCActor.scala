@@ -81,10 +81,10 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
       if (henkilot.henkiloOids.isEmpty) {
         Right(baseQuery.result)
       } else {
-        Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid", baseQuery))
+        Right(findWithHenkilot(henkilot, "henkilo_oid", baseQuery))
       }
     case SuoritusHenkilotQuery(henkilot) => {
-      Right(joinHenkilotWithTempTable(henkilot, "henkilo_oid", all))
+      Right(findWithHenkilot(henkilot, "henkilo_oid", all))
      }
     case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)).result)
     case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(all.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t)).result)

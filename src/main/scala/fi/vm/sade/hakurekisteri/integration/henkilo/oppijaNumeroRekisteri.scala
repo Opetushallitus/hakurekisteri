@@ -99,7 +99,11 @@ case class PersonOidsWithAliases(henkiloOids: Set[String], aliasesByPersonOids: 
 
   def isEmpty: Boolean = aliasesByPersonOids.isEmpty
 
-  def isSinglePersonWithoutAliases: Boolean = henkiloOids.size == 1 && aliasesByPersonOids(henkiloOids.head).size == 1
+  private def isSinglePersonWithoutAliases: Boolean = henkiloOids.size == 1 && aliasesByPersonOids(henkiloOids.head).size == 1
+
+  def uniquePersonOid: Option[String] = {
+    if (isSinglePersonWithoutAliases) Some(henkiloOids.head) else None
+  }
 }
 
 object PersonOidsWithAliases {
