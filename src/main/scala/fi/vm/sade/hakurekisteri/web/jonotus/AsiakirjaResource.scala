@@ -37,9 +37,9 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
         if(isStatusCheck) {
           exception match {
             case e:EmptyAsiakirjaException =>
-              ActionResult(ResponseStatus(204), "suoritusrekisteri.poikkeus.eisisaltoa", Map.empty)
+              NoContent(reason = "suoritusrekisteri.poikkeus.eisisaltoa")
             case _ =>
-              ActionResult(ResponseStatus(204), "suoritusrekisteri.poikkeus.tuntematon", Map.empty)
+              NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
           }
         } else {
           NoContent(reason = exception.toString)
