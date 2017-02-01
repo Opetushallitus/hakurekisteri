@@ -4,6 +4,10 @@ import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock._
 
 object OrganisaatioMock {
 
+  def ryhmat(): String = {
+    getResourceJson("/mock-data/organisaatio/organisaatio-ryhmat.json")
+  }
+
   def findAll(): String = {
     getResourceJson("/mock-data/organisaatio/organisaatio-all.json")
   }

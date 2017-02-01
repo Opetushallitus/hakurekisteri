@@ -227,6 +227,7 @@ app.controller "HakeneetCtrl", [
       url = (if isKk() then "rest/v1/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
       data = (if isKk() then {
         kk: true
+        hakukohderyhma: (if $scope.hakukohderyhma then $scope.hakukohderyhma else null)
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
@@ -237,12 +238,14 @@ app.controller "HakeneetCtrl", [
       }
       else {
         haku: (if $scope.haku then $scope.haku.oid else null)
+        hakukohderyhma: (if $scope.hakukohderyhma then $scope.hakukohderyhma else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
         hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohde else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
       })
+      console.log(data.hakukohderyhma)
       $scope.asiakirja = null
       $scope.asiakirjaError = null
       $scope.query = data
@@ -288,6 +291,28 @@ app.controller "HakeneetCtrl", [
 
     $scope.hakukohdekoodit = []
     loadHakukohdekoodit hakukohdekoodit, $scope
+
+    sortByNimi = (a, b) ->
+      return 0  if not a.nimi and not b.nimi
+      return -1  unless a.nimi
+      return 1  unless b.nimi
+      return 0  if a.nimi.toLowerCase() is b.nimi.toLowerCase()
+      (if a.nimi.toLowerCase() < b.nimi.toLowerCase() then -1 else 1)
+
+    $scope.searchHakukohderyhma = ->
+      $http.get(window.url("organisaatio-service.ryhmat"),
+        cache: true
+      ).then ((res) ->
+        return [] if not res.data or res.data.length is 0
+        hakukohderyhmat = res.data.filter((r)->r.ryhmatyypit[0] == "hakukohde").map((r)->
+          oid: r.oid
+          nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
+        )
+        hakukohderyhmat.sort sortByNimi
+        hakukohderyhmat
+      ), ->
+        []
+
     $scope.searchHakukohde = ->
       $http.get(window.url("tarjonta-service.hakukohde"),
         params:
@@ -317,6 +342,9 @@ app.controller "HakeneetCtrl", [
       ), ->
         []
 
+    $scope.setHakukohderyhma = (item) ->
+      $scope.hakukohderyhma = item.oid
+      return
 
     $scope.setHakukohde = (item) ->
       $scope.hakukohde = item.oid
