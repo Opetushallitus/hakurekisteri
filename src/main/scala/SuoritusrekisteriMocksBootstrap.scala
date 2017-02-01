@@ -38,6 +38,12 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
   }
 
   class OrganizationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) {
+    get("/rest/organisaatio/v2/ryhmat") {
+      new AsyncResult() {
+        override val is = Future.successful(OrganisaatioMock.ryhmat())
+      }
+    }
+
     get("/rest/organisaatio/v2/hae") {
       new AsyncResult() {
         override val is = Future.successful(OrganisaatioMock.findAll())
