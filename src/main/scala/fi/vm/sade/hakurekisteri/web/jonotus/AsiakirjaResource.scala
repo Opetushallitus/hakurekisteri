@@ -9,8 +9,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
-import org.scalatra.ActionResultHelpers._
-import org.scalatra.{ActionResult, NoContent, Ok}
+import org.scalatra.{ResponseStatus, ActionResult, NoContent, Ok}
 
 class EmptyAsiakirjaException extends RuntimeException()
 
@@ -38,9 +37,9 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
         if(isStatusCheck) {
           exception match {
             case e:EmptyAsiakirjaException =>
-              ActionResult(responseStatus(204, ""), "suoritusrekisteri.poikkeus.eisisaltoa", Map.empty)
+              ActionResult(ResponseStatus(204), "suoritusrekisteri.poikkeus.eisisaltoa", Map.empty)
             case _ =>
-              ActionResult(responseStatus(204, ""), "suoritusrekisteri.poikkeus.tuntematon", Map.empty)
+              ActionResult(ResponseStatus(204), "suoritusrekisteri.poikkeus.tuntematon", Map.empty)
           }
         } else {
           NoContent(reason = exception.toString)
