@@ -4,6 +4,7 @@ import java.lang.Boolean._
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
@@ -36,6 +37,8 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
       case AsiakirjaWithExceptions(exception) =>
         if(isStatusCheck) {
           exception match {
+            case i:InitialLoadingNotDone =>
+              NoContent(reason = "suoritusrekisteri.poikkeus.alustuskesken")
             case e:EmptyAsiakirjaException =>
               NoContent(reason = "suoritusrekisteri.poikkeus.eisisaltoa")
             case _ =>
