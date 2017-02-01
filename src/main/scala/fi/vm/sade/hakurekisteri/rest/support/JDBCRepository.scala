@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.rest.support
 import java.sql.Statement
 
 import akka.actor.ActorLogging
-import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloViiteTable, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
@@ -62,8 +61,11 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       override def getDumpInfo: DumpInfo = DumpInfo(DumpInfo.simpleNameFor(getClass), mainInfo = "[" + createTempTableStatements + "]")
     }
 
-    val populateTempTable = DBIO.sequence(henkilot.aliasesByPersonOids.flatMap { case (henkilo, aliases) => aliases.map { a => henkiloviiteTempTable.forceInsert((henkilo, a)) } } )
-
+    val henkiloAliasPairs: Iterable[(String, String)] = for {
+      henkiloOid <- henkilot.aliasesByPersonOids.keys
+      aliasOid <- henkilot.aliasesByPersonOids(henkiloOid)
+    } yield (henkiloOid, aliasOid)
+    val populateTempTable = henkiloviiteTempTable ++= henkiloAliasPairs
 
     val selectAllMatching = for {
       (record, _) <- baseQuery join henkiloviiteTempTable on (_.column[String](joinOn)  === _.linkedOid)
