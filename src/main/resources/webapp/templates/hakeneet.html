@@ -105,17 +105,17 @@
                         <div ng-show="query">
                             <br>
                             <p ng-show="sijoitus">
-                                Siirtotiedoston luonti on jonossa <strong>({{sijoitus}}.)</strong>
+                                <span oph-msg="suoritusrekisteri.siirtotiedosto.jonossa">Siirtotiedoston luonti on jonossa</span><strong>({{sijoitus}}.)</strong>
                             </p>
                             <p class="loading"></p>
                         </div>
                         <div ng-show="asiakirjaError">
                             <br>
-                            <p oph-msg="{{asiakirjaError}}">Asiakirjan luonnissa tapahtui virhe!</p>
+                            <p>{{asiakirjaError}}</p>
                         </div>
                         <div ng-show="asiakirja">
                             <br>
-                            <p>Siirtotiedosto on valmis! <strong><a href="{{asiakirja}}">Lataa siirtotiedosto tästä linkistä.</a></strong></p>
+                            <p><span oph-msg="suoritusrekisteri.siirtotiedosto.valmis">Siirtotiedosto on valmis!</span>&nbsp;<strong><a href="{{asiakirja}}" oph-msg="suoritusrekisteri.siirtotiedosto.linkki">Lataa siirtotiedosto tästä linkistä.</a></strong></p>
                         </div>
                     </div>
                 </div>
