@@ -81,14 +81,19 @@ app.controller "HakeneetCtrl", [
     $scope.handlePoll = (reply) ->
       if(reply.asiakirjaId)
         statusUrl = plainUrls.url("suoritusrekisteri.asiakirja.status",reply.asiakirjaId)
-        $http.get(statusUrl).success((response) ->
-          if(response.status == 200)
+        $http.get(statusUrl).then((response) ->
+          status = response.status
+          statusText = response.statusText
+          if(status == 200)
             $scope.query = null
             $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
           else
-            console.log(response)
             $scope.query = null
-            $scope.asiakirjaError = response.data
+            asiakirjaError = LokalisointiService.getTranslation(statusText)
+            if(asiakirjaError)
+              $scope.asiakirjaError = asiakirjaError
+            else
+              $scope.asiakirjaError = "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
         )
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
