@@ -2,15 +2,15 @@ package fi.vm.sade.hakurekisteri.web.jonotus
 
 import java.lang.Boolean._
 
-import akka.actor.ActorSystem
-import akka.event.{Logging, LoggingAdapter}
+import _root_.akka.actor.ActorSystem
+import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
-import org.scalatra.{ResponseStatus, ActionResult, NoContent, Ok}
+import org.scalatra._
 
 class EmptyAsiakirjaException extends RuntimeException()
 
@@ -23,8 +23,8 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
     val isStatusCheck = params.get("status").exists(parseBoolean)
     toEvent() match {
       case NotAuthorized() =>
-        halt(status = 401, body=s"User not authorized!")
-      case NotFound() =>
+        halt(status = 401, body=s"User is not document owner or authorized!")
+      case AsiakirjaNotFound() =>
         halt(status = 404, body=s"Resource not found!")
       case Asiakirja(format, bytes) =>
         if(isStatusCheck) {
@@ -45,7 +45,7 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
               NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
           }
         } else {
-          NoContent(reason = exception.toString)
+          NotFound(exception.toString)
         }
     }
   }
@@ -69,10 +69,10 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
                   NotAuthorized()
                 }
               case _ =>
-                NotFound()
+                AsiakirjaNotFound()
             }
           case _ =>
-            NotFound()
+            AsiakirjaNotFound()
         }
       case _ =>
         NotAuthorized()
@@ -81,6 +81,6 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
 }
 trait Event
 case class NotAuthorized() extends Event
-case class NotFound() extends Event
+case class AsiakirjaNotFound() extends Event
 case class Asiakirja(format: ApiFormat, data: Array[Byte]) extends Event
 case class AsiakirjaWithExceptions(exception: Exception) extends Event
