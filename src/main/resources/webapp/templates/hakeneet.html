@@ -65,6 +65,19 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="hakukohderyhma" oph-msg="suoritusrekisteri.hakeneet.hakukohderyhma"
+                           class="col-sm-2 control-label">Hakukohderyhmä</label>
+                    <div class="col-sm-8">
+                        <input class="form-control col-sm-6 {{hakukohderyhmatloading ? 'input-loading' : ''}}" type="text" id="hakukohderyhma" ng-model="hakukohderyhmanimi" autocomplete="off"
+                               placeholder="Etsi hakukohderyhmää syöttämällä osa sen nimestä"
+                               typeahead="hk.nimi for hk in searchHakukohderyhma($viewValue) | filter:$viewValue | limitTo:20"
+                               typeahead-on-select="setHakukohderyhma($item)"
+                               typeahead-wait-ms="500"
+                               typeahead-loading="hakukohderyhmatloading"/>
+                        <input type="hidden" ng-model="hakukohderyhma"/>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="hakuehto" oph-msg="suoritusrekisteri.hakeneet.hakuehto" class="col-sm-2 control-label">Hakuehto</label>
 
                     <div class="col-sm-4">
@@ -94,6 +107,7 @@
                 </div>
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
+                        <p>{{hakukohderyhmat}}</p>
                         <button ng-hide="query" type="button" ng-click="reset()" class="btn btn-default">
                             <span oph-msg="suoritusrekisteri.hakeneet.tyhjenna">Tyhjennä</span>
                             <span class="glyphicon glyphicon-remove"></span>
