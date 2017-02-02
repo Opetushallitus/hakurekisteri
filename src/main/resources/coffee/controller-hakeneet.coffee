@@ -238,7 +238,6 @@ app.controller "HakeneetCtrl", [
       }
       else {
         haku: (if $scope.haku then $scope.haku.oid else null)
-        hakukohderyhma: (if $scope.hakukohderyhma then $scope.hakukohderyhma else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
         hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohde else null)
         hakuehto: $scope.hakuehto
