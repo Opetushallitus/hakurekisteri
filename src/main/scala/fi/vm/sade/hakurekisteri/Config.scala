@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
-import support.Integrations
+import support.{Integrations, SureDbLoggingConfig}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
@@ -96,6 +96,7 @@ class DefaultConfig extends Config {
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val slowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.slowquery.millis"))
   override val reallySlowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.reallyslowquery.millis"))
+  override val maxDbLogLineLength: Int = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.db.max.log.line.length", "configuration key missing: suoritusrekisteri.db.max.log.line.length"))
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
@@ -106,8 +107,12 @@ class MockDevConfig extends Config {
   override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
-  override val slowQuery: Long = 200
-  override val reallySlowQuery: Long = 10000
+
+  private val defaultDbLoggingConfig = SureDbLoggingConfig()
+  override val slowQuery: Long = defaultDbLoggingConfig.slowQueryMillis
+  override val reallySlowQuery: Long = defaultDbLoggingConfig.reallySlowQueryMillis
+  override val maxDbLogLineLength: Int = defaultDbLoggingConfig.maxLogLineLength
+
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
@@ -124,6 +129,7 @@ abstract class Config {
 
   val slowQuery: Long
   val reallySlowQuery: Long
+  val maxDbLogLineLength: Int
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path

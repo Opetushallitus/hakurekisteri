@@ -39,10 +39,21 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   implicit val database = Database.forConfig("suoritusrekisteri.db", configForDb)
   system.registerOnTermination(database.close())
 
-  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable, config.slowQuery, config.reallySlowQuery)
-  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable, config.slowQuery, config.reallySlowQuery)
-  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, config.slowQuery, config.reallySlowQuery)
-  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, config.slowQuery, config.reallySlowQuery)
-  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, config.slowQuery, config.reallySlowQuery)
+  val dbLoggingConfig = SureDbLoggingConfig(config)
 
+  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable, dbLoggingConfig)
+  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable, dbLoggingConfig)
+  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, dbLoggingConfig)
+  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, dbLoggingConfig)
+  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, dbLoggingConfig)
+}
+
+case class SureDbLoggingConfig(slowQueryMillis: Long = 200,
+                               reallySlowQueryMillis: Long = 10000,
+                               maxLogLineLength: Int = 600)
+object SureDbLoggingConfig {
+  def apply(config: Config): SureDbLoggingConfig = new SureDbLoggingConfig(
+    slowQueryMillis = config.slowQuery,
+    reallySlowQueryMillis = config.reallySlowQuery,
+    maxLogLineLength = config.maxDbLogLineLength)
 }

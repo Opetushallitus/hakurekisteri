@@ -140,7 +140,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
         val f = journal.db.run(query).map(_.collect { case Updated(res) => res })(dbExecutor)
         f.onComplete(_ => {
           val runtime = Platform.currentTime - start
-          if (runtime > journal.slowQueryMillis) {
+          if (runtime > journal.dbLoggingConfig.slowQueryMillis) {
             logSlowQuery(runtime, query)
           }
         })(dbExecutor)
@@ -156,13 +156,13 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     val sqlStringSeq = sqlsAndCounts.map(x => x._1 + (if (x._2 > 1) s" (repeated ${x._2} times)" else "") )
     val sqlString = sqlStringSeq.mkString(" ")
 
-    val (loggableQueryStr, prettyPrint) = if (sqlString.length > 200) {
-      (sqlString.take(200) + "...(truncated from " + sqlString.length + " chars)",
+    val (loggableQueryStr, prettyPrint) = if (sqlString.length > journal.dbLoggingConfig.maxLogLineLength) {
+      (sqlString.take(journal.dbLoggingConfig.maxLogLineLength) + "...(truncated from " + sqlString.length + " chars)",
       ", complete queries:\n" + sqlStringSeq.mkString("\n"))
     } else {
       (sqlString, "")
     }
-    if (runtime > journal.reallySlowQueryMillis) {
+    if (runtime > journal.dbLoggingConfig.reallySlowQueryMillis) {
       log.warning(s"Query $loggableQueryStr took $runtime ms$prettyPrint")
     } else {
       log.info(s"Query $loggableQueryStr took $runtime ms$prettyPrint")
