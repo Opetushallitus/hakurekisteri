@@ -42,6 +42,9 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
       case AsiakirjaWithExceptions(exception) =>
         if(isStatusCheck) {
           exception match {
+            case e:ExecutionException =>
+              val cause = e.getCause
+              NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
             case i:InitialLoadingNotDone =>
               NoContent(reason = "suoritusrekisteri.poikkeus.alustuskesken")
             case e:EmptyAsiakirjaException =>
