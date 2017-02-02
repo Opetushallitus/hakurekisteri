@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloViiteTable, PersonOi
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
+import org.springframework.util.ReflectionUtils
 import slick.ast.BaseTypedType
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.{All, Transactional}
@@ -195,6 +196,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     def dump(dumpable: Dumpable): Unit = {
       val di = dumpable.getDumpInfo
       if (!di.mainInfo.isEmpty) {
+        kludgeLoggingMultiInsertParameters(dumpable)
         val newQuery = di.mainInfo + (if (di.attrInfo.isEmpty) "" else " " + di.attrInfo)
         val previousQuery = if (lb.nonEmpty) lb.last._1 else ""
         if (previousQuery == newQuery) {
@@ -212,5 +214,26 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     }
     dump(dumpable)
     lb
+  }
+
+  /**
+    * Slick has a class MultiInsertAction not visible to outside which stores in a private
+    * field its query parameters...
+    *
+    * @see slick.driver.JdbcActionComponent.InsertActionComposerImpl.MultiInsertAction
+    */
+  private def kludgeLoggingMultiInsertParameters(dumpable: Dumpable) = {
+    if (log.isInfoEnabled && dumpable.getDumpInfo.name == "MultiInsertAction") {
+      dumpable.getClass.getFields.find(_.getName.endsWith("values")).foreach { field =>
+        field.setAccessible(true)
+        val valuesObj = ReflectionUtils.getField(field, dumpable)
+        valuesObj match {
+          case sqlParameterValues: Iterable[_] =>
+            log.info(s"MultiInsertAction being run for ${sqlParameterValues.size} values")
+            log.debug(s"MultiInsertAction parameter values: $sqlParameterValues")
+          case _ =>
+        }
+      }
+    }
   }
 }
