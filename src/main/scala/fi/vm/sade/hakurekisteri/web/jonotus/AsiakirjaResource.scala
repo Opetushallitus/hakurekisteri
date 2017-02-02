@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.web.jonotus
 
+import java.io.OutputStream
 import java.lang.Boolean._
+import java.util.concurrent.ExecutionException
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
@@ -8,6 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
+import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.scalatra._
@@ -16,6 +19,8 @@ class EmptyAsiakirjaException extends RuntimeException()
 
 class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with SecuritySupport with DownloadSupport with HakijaResourceSupport {
+
+  addMimeMapping("application/octet-stream", "binary")
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -78,6 +83,7 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
         NotAuthorized()
     }
   }
+
 }
 trait Event
 case class NotAuthorized() extends Event
