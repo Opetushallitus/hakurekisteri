@@ -46,7 +46,10 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     val groupUuid = UUID.randomUUID().toString
     val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = ytlHttpFetch.fetch(groupUuid, List("050996-9574"))
 
-    val (zip, stream) = students.map(_.right.get).next
+    val (zip, stream) = students.map {
+      case Right(x) => x
+      case Left(e) => throw e
+    }.next
     stream.size should equal (5)
   }
 
