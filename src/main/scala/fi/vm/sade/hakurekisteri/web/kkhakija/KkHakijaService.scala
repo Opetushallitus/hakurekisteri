@@ -41,6 +41,7 @@ case class KkHakijaQuery(oppijanumero: Option[String],
                          haku: Option[String],
                          organisaatio: Option[String],
                          hakukohde: Option[String],
+                         hakukohderyhma: Option[String],
                          hakuehto: Hakuehto.Hakuehto,
                          user: Option[User]) extends Query
 
@@ -50,6 +51,7 @@ object KkHakijaQuery {
     haku = params.get("haku").flatMap(_.blankOption),
     organisaatio = params.get("organisaatio").flatMap(_.blankOption),
     hakukohde = params.get("hakukohde").flatMap(_.blankOption),
+    hakukohderyhma = params.get("hakukohderyhma").flatMap(_.blankOption),
     hakuehto = Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
     user = currentUser
   )
@@ -101,6 +103,7 @@ case class Hakija(hetu: String,
 object KkHakijaParamMissingException extends Exception
 
 class KkHakijaService(hakemusService: IHakemusService,
+                      hakupalvelu: Hakupalvelu,
                       tarjonta: ActorRef,
                       haut: ActorRef,
                       koodisto: ActorRef,
@@ -116,11 +119,12 @@ class KkHakijaService(hakemusService: IHakemusService,
         q.oppijanumero.forall(hakemus.personOid.contains(_)) &&
         q.haku.forall(_ == hakemus.applicationSystemId)
     }
-
     for (
       hakemukset <- q match {
-        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
-        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
+        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
+        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
+        case KkHakijaQuery(None, _, _, None, Some(hakukohderyhma), _, _) => hakupalvelu.getHakukohdeOids(hakukohderyhma)
+          .flatMap(hakukohdeOids => Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, q.organisaatio)))).map(_.flatten)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
       hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
