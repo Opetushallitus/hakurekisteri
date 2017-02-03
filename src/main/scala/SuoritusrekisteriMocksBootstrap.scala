@@ -1,7 +1,8 @@
 import javax.servlet.ServletContext
 
 import _root_.akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
+import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakupalvelu, AkkaHakupalvelu, HakemusServiceMock}
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
@@ -22,6 +23,10 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
 
     val anyActorRef = system.deadLetters
     val kkHakijaService = new KkHakijaService(hakemusService = new HakemusServiceMock(),
+      hakupalvelu = new Hakupalvelu() {
+        override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
+        override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = Future.successful(Seq())
+      },
       tarjonta = anyActorRef,
       haut = anyActorRef,
       koodisto = anyActorRef,

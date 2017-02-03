@@ -28,12 +28,13 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.valintaTulos, integrations.ytl, integrations.ytlIntegration, config)), "haut")
 
   val virtaQueue = system.actorOf(Props(new VirtaQueue(integrations.virta, integrations.hakemusService, integrations.oppijaNumeroRekisteri, haut)), "virta-queue")
-
+  val hakupalvelu = new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, haut)
   val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.valintarekisteri, integrations.tarjonta, haut, integrations.hakemusService, integrations.oppijaNumeroRekisteri, config)), "ensikertalainen")
 
   val kkHakijaService: KkHakijaService = new KkHakijaService(integrations.hakemusService,
+    hakupalvelu,
     integrations.tarjonta,
     haut,
     integrations.koodisto,
