@@ -520,6 +520,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case _ => Future(hakijat)
     }
 
+
+
     val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
 
     def hakijat: Seq[Hakija] = {
@@ -553,6 +555,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def withLisakysymykset (lisakysymykset: Map[String, ThemeQuestion]): Unit = {
       this.lisakysymykset = lisakysymykset
     }
+
+    override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = Future.successful(Seq())
   }
 
   class MockedOrganisaatioActor extends Actor {
