@@ -19,6 +19,7 @@ import scala.util.Try
 
 trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
+  def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]]
 }
 
 case class ThemeQuestion(`type`: String, messageText: String, applicationOptionOids: Seq[String], options: Option[Map[String, String]],
@@ -73,6 +74,11 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
 
   private def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] = {
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ hardCodedLisakysymys)
+  }
+
+  override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = {
+    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map("organisaatioRyhmaOid"->hakukohderyhma))
+      .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
   private def hakukohdeOids(organisaatio: Option[String],
