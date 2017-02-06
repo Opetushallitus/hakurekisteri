@@ -103,7 +103,8 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       applicationSystemId = "1.2.246.562.6.00000000001",
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(henkilo))))),
       state = Some("INCOMPLETE"),
-      preferenceEligibilities = Seq()
+      preferenceEligibilities = Seq(),
+      attachmentRequests = Seq()
     )
   }).toSeq
 
