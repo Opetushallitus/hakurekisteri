@@ -181,7 +181,7 @@ app.controller "HakeneetCtrl", [
     $scope.search = ->
       MessageService.clearMessages()
       if isKk()
-        if not $scope.oppijanumero and not $scope.hakukohde
+        if not $scope.oppijanumero and not $scope.hakukohde and not $scope.hakukohderyhma
           unless ($scope.oppijanumero or $scope.hakukohderyhma)
             MessageService.addMessage
               type: "danger"
