@@ -58,7 +58,7 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
       hakemus.hKelpoisuusLahde.getOrElse(""),
       hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
       hakemus.hakukohteenKoulutukset.map(k => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})").mkString(","),
-      hakemus.liitteet.map(j => s"Liite(${j.id},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})").mkString(",")).zipWithIndex.toSet
+      hakemus.liitteet.map(j => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})").mkString(",")).zipWithIndex.toSet
 
     for (sarake <- rivi) yield StringCell(sarake._2, sarake._1)
   })).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
