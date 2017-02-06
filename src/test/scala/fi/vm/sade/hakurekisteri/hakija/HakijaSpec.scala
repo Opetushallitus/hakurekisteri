@@ -113,7 +113,8 @@ class HakijaSpec extends FlatSpec with Matchers {
         osaaminen = None)
     ),
     state = Some("ACTIVE"),
-    preferenceEligibilities = Seq()
+    preferenceEligibilities = Seq(),
+    attachmentRequests = Seq()
   )
 
   val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.1", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)

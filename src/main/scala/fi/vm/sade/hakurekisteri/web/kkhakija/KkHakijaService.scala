@@ -60,6 +60,12 @@ object KkHakijaQuery {
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
 case class InvalidKausiException(m: String) extends Exception(m)
 
+case class Liite(id: String,
+                 tila: String,
+                 saapumisenTila: String,
+                 nimi: String,
+                 vastaanottaja: String)
+
 case class Hakemus(haku: String,
                    hakuVuosi: Int,
                    hakuKausi: String,
@@ -75,7 +81,9 @@ case class Hakemus(haku: String,
                    julkaisulupa: Option[Boolean],
                    hKelpoisuus: String,
                    hKelpoisuusLahde: Option[String],
-                   hakukohteenKoulutukset: Seq[Hakukohteenkoulutus])
+                   hKelpoisuusMaksuvelvollisuus: Option[String],
+                   hakukohteenKoulutukset: Seq[Hakukohteenkoulutus],
+                   liitteet: Seq[Liite])
 
 case class Hakija(hetu: String,
                   oppijanumero: String,
@@ -87,6 +95,8 @@ case class Hakija(hetu: String,
                   postitoimipaikka: String,
                   maa: String,
                   kansalaisuus: String,
+                  kaksoiskansalaisuus: String,
+                  syntymaaika: String,
                   matkapuhelin: Option[String],
                   puhelin: Option[String],
                   sahkoposti: Option[String],
@@ -97,6 +107,7 @@ case class Hakija(hetu: String,
                   koulusivistyskieli: String,
                   koulutusmarkkinointilupa: Option[Boolean],
                   onYlioppilas: Boolean,
+                  yoSuoritusVuosi: String,
                   turvakielto: Boolean,
                   hakemukset: Seq[Hakemus])
 
@@ -159,7 +170,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
       case None =>
         val defaultState = ""
-        PreferenceEligibility(hakukohdeOid, defaultState, None)
+        PreferenceEligibility(hakukohdeOid, defaultState, None, None)
 
     }
   }
@@ -287,8 +298,10 @@ class KkHakijaService(hakemusService: IHakemusService,
           julkaisulupa = lisatiedot.get("lupaJulkaisu").map(_ == "true"),
           hKelpoisuus = hakukelpoisuus.status,
           hKelpoisuusLahde = hakukelpoisuus.source,
+          hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
-            .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None))
+            .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
+          liitteet = hakemus.attachmentRequests.map(a => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, a.applicationAttachment.name.translations.fi, a.applicationAttachment.address.recipient))
         ))
       } else {
         None
@@ -321,6 +334,8 @@ class KkHakijaService(hakemusService: IHakemusService,
       postitoimipaikka = toimipaikka,
       maa = maa,
       kansalaisuus = kansalaisuus,
+      kaksoiskansalaisuus = henkilotiedot.kaksoiskansalaisuus.getOrElse(""),
+      syntymaaika = henkilotiedot.syntymaaika.getOrElse(""),
       matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
       puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
       sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
@@ -331,6 +346,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       koulusivistyskieli = henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
       koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Map()).get("lupaMarkkinointi").map(_ == "true"),
       onYlioppilas = isYlioppilas(suoritukset),
+      yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
       turvakielto = henkilotiedot.turvakielto.contains("true"),
       hakemukset = hakemukset
     )
@@ -389,6 +405,13 @@ object KkHakijaUtil {
   }
 
   def isYlioppilas(suoritukset: Seq[VirallinenSuoritus]): Boolean = suoritukset.exists(s => s.tila == "VALMIS" && s.vahvistettu)
+
+  def getYoSuoritusVuosi(suoritukset: Seq[VirallinenSuoritus]): String = {
+    suoritukset.find(p => p.tila == "VALMIS" && p.vahvistettu) match {
+      case Some(m) => m.valmistuminen.getYear().toString()
+      case None => ""
+    }
+  }
 
   def getMaakoodi(koodiArvo: String, koodisto: ActorRef)(implicit timeout: Timeout): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
