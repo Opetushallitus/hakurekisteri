@@ -149,12 +149,15 @@ object AkkaHakupalvelu {
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
-  def attachmentRequestToLiite(har: HakemusAttachmentRequest): Liite = har match {
-    case a: HakemusAttachmentRequest => (a.applicationAttachment.name, a.applicationAttachment.header) match {
-      case (Some(name), _) => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, name.translations.fi, a.applicationAttachment.address.recipient)
-      case (_, Some(header)) => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, header.translations.fi, a.applicationAttachment.address.recipient)
-      case (None, None) => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, "", a.applicationAttachment.address.recipient)
+  def attachmentRequestToLiite(har: HakemusAttachmentRequest): Liite = {
+    val name = (har.applicationAttachment.name, har.applicationAttachment.header) match {
+      case (Some(name), _) => name.translations.fi
+      case (_, Some(header)) => header.translations.fi
+      case (None, None) => ""
     }
+    var prefAoId = (har.preferenceAoId) match { case Some(a) => a case None => ""}
+    var prefAoGroupId = (har.preferenceAoGroupId) match { case Some(a) => a case None => ""}
+    Liite(prefAoId, prefAoGroupId, har.receptionStatus, har.processingStatus, name, har.applicationAttachment.address.recipient)
   }
 
   def getLiitteet(hakemus: FullHakemus): Seq[Liite] = {
@@ -427,7 +430,7 @@ object Koulutustausta {
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Map[String, String]] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
 
-case class HakemusAttachmentRequest(id: String, preferenceAoId: String, processingStatus: String, receptionStatus: String, applicationAttachment: ApplicationAttachment)
+case class HakemusAttachmentRequest(id: String, preferenceAoId: Option[String], preferenceAoGroupId: Option[String], processingStatus: String, receptionStatus: String, applicationAttachment: ApplicationAttachment)
 
 case class ApplicationAttachment(name: Option[Name], header: Option[Header], address: Address)
 
