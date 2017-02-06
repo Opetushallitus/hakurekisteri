@@ -150,7 +150,11 @@ object AkkaHakupalvelu {
   }
 
   def attachmentRequestToLiite(har: HakemusAttachmentRequest): Liite = har match {
-    case a: HakemusAttachmentRequest => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, a.applicationAttachment.name.translations.fi, a.applicationAttachment.address.recipient)
+    case a: HakemusAttachmentRequest => (a.applicationAttachment.name, a.applicationAttachment.header) match {
+      case (Some(name), _) => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, name.translations.fi, a.applicationAttachment.address.recipient)
+      case (_, Some(header)) => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, header.translations.fi, a.applicationAttachment.address.recipient)
+      case (None, None) => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, "", a.applicationAttachment.address.recipient)
+    }
   }
 
   def getLiitteet(hakemus: FullHakemus): Seq[Liite] = {
@@ -425,9 +429,11 @@ case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, ko
 
 case class HakemusAttachmentRequest(id: String, preferenceAoId: String, processingStatus: String, receptionStatus: String, applicationAttachment: ApplicationAttachment)
 
-case class ApplicationAttachment(name: Name, address: Address)
+case class ApplicationAttachment(name: Option[Name], header: Option[Header], address: Address)
 
 case class Name(translations: Translations)
+
+case class Header(translations: Translations)
 
 case class Address(recipient: String, streetAddress: String, postalCode: String, postOffice: String)
 
