@@ -244,7 +244,6 @@ app.controller "HakeneetCtrl", [
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
       })
-      console.log(data.hakukohderyhma)
       $scope.asiakirja = null
       $scope.asiakirjaError = null
       $scope.query = data
