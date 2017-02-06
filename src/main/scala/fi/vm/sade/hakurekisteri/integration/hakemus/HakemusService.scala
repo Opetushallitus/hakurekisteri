@@ -32,7 +32,7 @@ case class Trigger(f: (FullHakemus, PersonOidsWithAliases) => Unit)
 object Trigger {
   def apply(f: (String, String, String, PersonOidsWithAliases) => Unit): Trigger = {
     def processHakemusWithPersonOid(fullHakemus: FullHakemus, personOidsWithAliases: PersonOidsWithAliases): Unit = (fullHakemus, personOidsWithAliases) match {
-      case (FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _), personOidsWithAliases) =>
+      case (FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _, _), personOidsWithAliases) =>
         for (
           henkilo <- answers.henkilotiedot;
           hetu <- henkilo.Henkilotunnus)
