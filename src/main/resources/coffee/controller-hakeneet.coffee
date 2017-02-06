@@ -190,7 +190,7 @@ app.controller "HakeneetCtrl", [
               description: "Syötä oppijanumero ja yritä uudelleen."
               descriptionKey: "suoritusrekisteri.hakeneet.hakunumeroaeisyotettyselite"
 
-          unless $scope.hakukohde
+          unless ($scope.hakukohde or $scope.hakukohderyhma)
             MessageService.addMessage
               type: "danger"
               message: "Hakukohdetta ei ole valittu."
