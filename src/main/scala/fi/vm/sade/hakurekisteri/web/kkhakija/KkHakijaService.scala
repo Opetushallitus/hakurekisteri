@@ -301,11 +301,19 @@ class KkHakijaService(hakemusService: IHakemusService,
           hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
             .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
-          liitteet = hakemus.attachmentRequests.map(a => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, a.applicationAttachment.name.translations.fi, a.applicationAttachment.address.recipient))
+          liitteet = hakemus.attachmentRequests.map(a => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
         ))
       } else {
         None
       }
+    }
+  }
+
+  def getLiitteenNimi(liite: ApplicationAttachment): String = {
+    (liite.name, liite.header) match {
+      case (Some(a),_) => a.translations.fi
+      case (_,Some(b)) => b.translations.fi
+      case (None, None) => ""
     }
   }
 
