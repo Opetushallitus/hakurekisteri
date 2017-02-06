@@ -149,6 +149,13 @@ object AkkaHakupalvelu {
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
+  def attachmentRequestToLiite(har: HakemusAttachmentRequest): Liite = har match {
+    case a: HakemusAttachmentRequest => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, a.applicationAttachment.name.translations.fi, a.applicationAttachment.address.recipient)
+  }
+
+  def getLiitteet(hakemus: FullHakemus): Seq[Liite] = {
+    hakemus.attachmentRequests.map(a=> attachmentRequestToLiite(a))
+  }
 
   def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
 
@@ -262,8 +269,10 @@ object AkkaHakupalvelu {
         sukunimi = getHenkiloTietoOrBlank(_.Sukunimi),
         etunimet = getHenkiloTietoOrBlank(_.Etunimet),
         kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
+        turvakielto = getHenkiloTietoOrBlank(_.Turvakielto),
         oppijanumero = hakemus.personOid.getOrElse(""),
         kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
+        kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
         asiointiKieli = kieli,
         eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
         sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
@@ -274,7 +283,8 @@ object AkkaHakupalvelu {
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid)
+        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
+        liitteet = getLiitteet(hakemus)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid),
       lahtokoulu match {
@@ -289,7 +299,7 @@ object AkkaHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
+      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq())).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq()))
     )
   }
 
@@ -358,7 +368,9 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String] = None,
                                 Sukunimi: Option[String] = None,
                                 Etunimet: Option[String] = None,
                                 Kutsumanimi: Option[String] = None,
+                                Turvakielto: Option[String] = None,
                                 kansalaisuus: Option[String] = None,
+                                kaksoiskansalaisuus: Option[String] = None,
                                 onkoSinullaSuomalainenHetu: Option[String] = None,
                                 sukupuoli: Option[String] = None,
                                 syntymaaika: Option[String] = None,
@@ -411,9 +423,19 @@ object Koulutustausta {
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Map[String, String]] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
 
-case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
+case class HakemusAttachmentRequest(id: String, preferenceAoId: String, processingStatus: String, receptionStatus: String, applicationAttachment: ApplicationAttachment)
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String, FullHakemus] with Identified[String] {
+case class ApplicationAttachment(name: Name, address: Address)
+
+case class Name(translations: Translations)
+
+case class Address(recipient: String, streetAddress: String, postalCode: String, postOffice: String)
+
+case class Translations(fi:String, sv:String, en:String)
+
+case class PreferenceEligibility(aoId: String, status: String, source: Option[String], maksuvelvollisuus: Option[String])
+
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility], attachmentRequests: Seq[HakemusAttachmentRequest] = Seq()) extends Resource[String, FullHakemus] with Identified[String] {
   val source = Oids.ophOrganisaatioOid
 
   override def identify(identity: String): FullHakemus with Identified[String] = this
