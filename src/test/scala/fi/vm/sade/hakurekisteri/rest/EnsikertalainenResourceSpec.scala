@@ -97,9 +97,9 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   test("returns ensikertalaisuus for all hakijas in haku") {
     Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(Matchers.anyString, Matchers.any[Option[String]]))
       .thenReturn(Future.successful(Seq[FullHakemus](
-        FullHakemus("1", Some("1"), "1.2.3", None, None, Seq()),
-        FullHakemus("2", Some("2"), "1.2.3", None, None, Seq()),
-        FullHakemus("3", Some("3"), "1.2.3", None, None, Seq())
+        FullHakemus("1", Some("1"), "1.2.3", None, None, Seq(), Seq()),
+        FullHakemus("2", Some("2"), "1.2.3", None, None, Seq(), Seq()),
+        FullHakemus("3", Some("3"), "1.2.3", None, None, Seq(), Seq())
       )))
     get("/ensikertalainen/haku/1.2.3") {
       val e = read[Seq[Ensikertalainen]](response.body)

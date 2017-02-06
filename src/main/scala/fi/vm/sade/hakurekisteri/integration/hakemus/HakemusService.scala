@@ -30,7 +30,7 @@ case class Trigger(f: (FullHakemus) => Unit)
 
 object Trigger {
   def apply(f: (String, String, String) => Unit): Trigger = Trigger(_ match {
-    case FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _) =>
+    case FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _, _) =>
       for (
         henkilo <- answers.henkilotiedot;
         hetu <- henkilo.Henkilotunnus
@@ -76,7 +76,7 @@ trait IHakemusService {
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
-class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(implicit val system: ActorSystem) extends IHakemusService {
+class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 200)(implicit val system: ActorSystem) extends IHakemusService {
 
   case class SearchParams(aoOids: String = null, asId: String = null, organizationFilter: String = null,
                           updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)

@@ -157,7 +157,7 @@ case class Peruuntunut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Bo
   override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
-case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Boolean, hakuOid: String, lisapistekoulutus: Option[String])
+case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Boolean, hakuOid: String, lisapistekoulutus: Option[String], liitteet: Seq[Liite])
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
@@ -354,6 +354,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           sukunimi = h.sukunimi,
           etunimet = h.etunimet,
           kutsumanimi = h.kutsumanimi,
+          turvakielto = h.turvakielto,
           lahiosoite = h.lahiosoite,
           postinumero = h.postinumero,
           maa = maa,
@@ -363,6 +364,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           sahkoposti = h.sahkoposti,
           kotikunta = h.kotikunta,
           kansalaisuus = kansalaisuus,
+          kaksoiskansalaisuus = h.kaksoiskansalaisuus,
           asiointiKieli = h.asiointiKieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
           markkinointilupa = h.markkinointilupa,
@@ -370,7 +372,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           huoltajannimi = h.huoltajannimi,
           huoltajanpuhelinnumero = h.huoltajanpuhelinnumero,
           huoltajansahkoposti = h.huoltajansahkoposti,
-          lisakysymykset = h.lisakysymykset
+          lisakysymykset = h.lisakysymykset,
+          liitteet = h.liitteet
         ),
         suoritukset = hakija.suoritukset,
         opiskeluhistoria = hakija.opiskeluhistoria,
