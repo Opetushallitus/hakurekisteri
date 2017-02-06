@@ -42,10 +42,21 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("hakukohteenKoulutukset", null, DataType.GenList(DataType("HakukohteenKoulutus")))
   )
 
+  val liiteFields = Seq(
+    ModelField("koulutusId", null, DataType.String),
+    ModelField("tila", null, DataType.String),
+    ModelField("saapumisenTila", null, DataType.String),
+    ModelField("nimi", null, DataType.String),
+    ModelField("vastaanottaja", null, DataType.String)
+  )
+
   registerModel(Model("Hakemus", "Hakemus", hakemusFields.map{ t => (t.name, t) }.toMap))
+
+  registerModel(Model("Liite", "Liite", liiteFields.map{ t => (t.name, t) }.toMap))
 
   val hakijaFields = Seq(
     ModelField("hetu", null, DataType.String),
+    ModelField("syntymäaika", null, DataType.String),
     ModelField("oppijanumero", null, DataType.String),
     ModelField("sukunimi", null, DataType.String),
     ModelField("etunimet", null, DataType.String),
@@ -55,6 +66,7 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("postitoimipaikka", null, DataType.String),
     ModelField("maa", null, DataType.String),
     ModelField("kansalaisuus", null, DataType.String),
+    ModelField("kaksoiskansalaisuus", null, DataType.String),
     ModelField("matkapuhelin", null, DataType.String, required = false),
     ModelField("puhelin", null, DataType.String, required = false),
     ModelField("sahkoposti", null, DataType.String, required = false),
@@ -65,8 +77,10 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("koulusivistyskieli", null, DataType.String),
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, required = false),
     ModelField("onYlioppilas", null, DataType.Boolean),
+    ModelField("yoSuoritusvuosi", null, DataType.String),
     ModelField("turvakielto", null, DataType.Boolean),
-    ModelField("hakemukset", null, DataType.GenList(DataType("Hakemus")))
+    ModelField("hakemukset", null, DataType.GenList(DataType("Hakemus"))),
+    ModelField("liitteet", null, DataType.GenList(DataType("Liite")))
   )
 
   registerModel(Model("Hakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
