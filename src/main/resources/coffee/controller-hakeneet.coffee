@@ -182,7 +182,7 @@ app.controller "HakeneetCtrl", [
       MessageService.clearMessages()
       if isKk()
         if not $scope.oppijanumero and not $scope.hakukohde
-          unless $scope.oppijanumero
+          unless ($scope.oppijanumero or $scope.hakukohderyhma)
             MessageService.addMessage
               type: "danger"
               message: "Oppijanumeroa ei ole syötetty."
