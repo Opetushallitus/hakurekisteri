@@ -60,7 +60,8 @@ object KkHakijaQuery {
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
 case class InvalidKausiException(m: String) extends Exception(m)
 
-case class Liite(id: String,
+case class Liite(hakuId: String,
+                 hakuRyhmaId: String,
                  tila: String,
                  saapumisenTila: String,
                  nimi: String,
@@ -301,7 +302,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
             .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
-          liitteet = hakemus.attachmentRequests.map(a => Liite(a.preferenceAoId, a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
+          liitteet = hakemus.attachmentRequests.map(a => Liite(a.preferenceAoId.getOrElse(""), a.preferenceAoGroupId.getOrElse(""), a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
         ))
       } else {
         None
