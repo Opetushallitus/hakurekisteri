@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.web.jonotus
 
 import java.io.OutputStream
 import java.lang.Boolean._
-import java.util.concurrent.ExecutionException
+import java.util.concurrent.{TimeoutException, ExecutionException}
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
@@ -42,6 +42,8 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
       case AsiakirjaWithExceptions(exception) =>
         if(isStatusCheck) {
           exception match {
+            case t:TimeoutException =>
+              NoContent(reason = "suoritusrekisteri.poikkeus.aikakatkaisu")
             case e:ExecutionException =>
               val cause = e.getCause
               NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
