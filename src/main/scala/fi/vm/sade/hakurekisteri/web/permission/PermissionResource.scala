@@ -5,6 +5,7 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonMappingException
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -56,8 +57,8 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
     new AsyncResult() {
 
       val permissionFuture = for {
-        suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(r.personOidsForSamePerson)).mapTo[Seq[Suoritus]]
-        opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(r.personOidsForSamePerson)).mapTo[Seq[Opiskelija]]
+        suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Suoritus]]
+        opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Opiskelija]]
       } yield
         PermissionCheckResponse(
           accessAllowed = Some(

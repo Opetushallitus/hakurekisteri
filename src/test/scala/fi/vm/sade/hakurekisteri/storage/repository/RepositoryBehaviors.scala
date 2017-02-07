@@ -1,11 +1,17 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
-import org.scalatest.{Matchers, FlatSpec}
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.storage.Identified
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.Tables.Table
-import java.util.UUID
+import org.scalatest.{FlatSpec, Matchers}
+
 import scala.annotation.tailrec
-import fi.vm.sade.hakurekisteri.storage.Identified
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
@@ -51,7 +57,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
       (repo, items, itemConstructor, itemUpdater) =>
         forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
           (item) => {
-            val saved = repo.save(item)
+            val saved = saveItem(repo, item)
             repo.get(saved.id) should be (Some(saved))
           }
         }
@@ -60,16 +66,16 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
     it should "contain created item when created" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
         forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
-          (item) => repo.get(repo.save(item).id) should be (Some(item))
+          (item) => repo.get(saveItem(repo, item).id) should be (Some(item))
         }
     }
 
     it should "return updated item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        for (i <- repo.listAll().size to 10) saveItem(repo, itemConstructor)
         forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
           (item) => {
-            val saved = repo.save(item)
+            val saved = saveItem(repo, item)
             repo.get(saved.id) should be (Some(saved))
           }
         }
@@ -77,38 +83,38 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
     it should "contain updated item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        for (i <- repo.listAll().size to 10) saveItem(repo, itemConstructor)
         forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
-          (item) => repo.get(repo.save(item).id) should be (Some(item))
+          (item) => repo.get(saveItem(repo, item).id) should be (Some(item))
         }
     }
 
     it should "contain inserted item when inserted" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
         forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
-          (item) => repo.get(repo.insert(item).id) should be (Some(item))
+          (item) => repo.get(repo.insert(item, PersonOidsWithAliases(Set())).id) should be (Some(item))
         }
     }
 
     it should "not update when inserting" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll().size to 1) repo.save(itemConstructor)
+        for (i <- repo.listAll().size to 1) saveItem(repo, itemConstructor)
         val original = repo.listAll().head
         val updated = itemUpdater(original)
-        repo.get(repo.insert(updated).id) should be (Some(original))
+        repo.get(repo.insert(updated, PersonOidsWithAliases(Set())).id) should be (Some(original))
     }
 
     it should "retain id of the item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        for (i <- repo.listAll().size to 10) saveItem(repo, itemConstructor)
         forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
-          (item) => repo.get(repo.save(item).id).map(_.id) should be (Some(item.id))
+          (item) => repo.get(saveItem(repo, item).id).map(_.id) should be (Some(item.id))
         }
     }
 
     it should "remove item when item is deleted" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        val saved = repo.save(itemConstructor)
+        val saved = saveItem(repo, itemConstructor)
         repo.delete(saved.id, source = "Test")
         repo.listAll should not(contain(saved))
     }
@@ -118,7 +124,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
       (repo, items, itemConstructor, itemUpdater) =>
         val item = itemConstructor
         val start = repo.cursor(item)
-        repo.save(item)
+        saveItem(repo, item)
         repo.cursor(item) should not (be (start))
     }
 
@@ -126,7 +132,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
       (repo, items, itemConstructor, itemUpdater) =>
         val item = itemConstructor
 
-        val saved = repo.listAll().headOption.getOrElse(repo.save(item))
+        val saved = repo.listAll().headOption.getOrElse(saveItem(repo, item))
         val start = repo.cursor(saved)
         repo.save(itemUpdater(saved))
         repo.cursor(saved) should not (be (start))
@@ -136,7 +142,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
       (repo, items, itemConstructor, itemUpdater) =>
         val item = itemConstructor
 
-        val saved = repo.save(item)
+        val saved = saveItem(repo, item)
         val start = repo.cursor(item)
         repo.delete(saved.id, source = "Test")
         repo.cursor(item) should not (be (start))
@@ -155,7 +161,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
     it should "change cursor when same item is updated twice" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        val item = repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
+        val item = saveItem(repo, repo.listAll().headOption.getOrElse(itemConstructor))
         val start = repo.cursor(item)
         val updated = itemUpdater(repo.listAll().head)
 
@@ -165,11 +171,11 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
     it should "change cursor when same item is updated in row" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        var item = repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
+        var item = saveItem(repo, repo.listAll().headOption.getOrElse(itemConstructor))
         var start = repo.cursor(item)
         for( i <- 1 to 100) {
           start = repo.cursor(item)
-          val newItem  = repo.save(itemUpdater(repo.listAll().head))
+          val newItem  = saveItem(repo, itemUpdater(repo.listAll().head))
           repo.cursor(item) should not (be (start))
           item = newItem
         }
@@ -177,6 +183,10 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
     }
 
 
+  }
+
+  private def saveItem(repo: Repository[T, UUID], item: T): T with Identified[UUID] = {
+    Await.result(repo.save(item), atMost = Duration(1, TimeUnit.SECONDS))
   }
 
   def beforeAndAfterAdds(initialState:String, repoContext: ((Repository[T,UUID], Seq[T], => T,  (T with Identified[UUID]) => T with Identified[UUID]) => Any) => Unit) {
@@ -192,7 +202,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
     def repoAdder(amount:Int)(repo: Repository[T,UUID], items: Seq[T], itemConstructor: => T) = {
       val adds = Stream.continually(itemConstructor).take(amount)
-      adds.foreach((item) => repo.save(item))
+      adds.foreach((item) => saveItem(repo, item))
       (repo, items ++ adds)
     }
 

@@ -6,16 +6,17 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HenkiloHakijaQuery, IHakemusService}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanatQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.oppija.{InvalidTodistus, Oppija, OppijaFetcher, Todistus}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{AllForMatchinHenkiloSuoritusQuery, Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.oppija.OppijatPostSize
 import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
@@ -29,7 +30,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef)
+class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
                              (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with TiedotFetcher with OppijaFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport
     with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {
@@ -75,10 +76,12 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     if (henkilot.size > OppijatPostSize.maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
 
+    val personOidsWithAliases = oppijaNumeroRekisteri.enrichWithAliases(henkilot)
+
     new AsyncResult() {
       override implicit def timeout: Duration = 1000.seconds
 
-      private val tiedotFuture = getRekisteriData(henkilot)
+      private val tiedotFuture = personOidsWithAliases.flatMap(getRekisteriData)
 
       logQuery(henkilot, t0, tiedotFuture)
 
@@ -157,6 +160,8 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
 trait TiedotFetcher {
 
   val rekisterit: Registers
+  val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
+
 
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
@@ -207,11 +212,17 @@ trait TiedotFetcher {
     ) yield suoritukset.map(suoritus => Todistus(suoritus, arvosanat.getOrElse(suoritus.id, Seq())))
 
   def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] = {
-    (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskeluoikeus]]
+    // Expand query to include person aliases from oppijaNumeroRekisteri
+    oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid)).flatMap(personOidsWithAliases => {
+      (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusHenkilotQuery(personOidsWithAliases, None), user)).mapTo[Seq[Opiskeluoikeus]]
+    }).map(_.map(_.copy(henkiloOid=henkiloOid))) // Todo: Is there a better way than this ugly .map(_.map( ?
   }
 
   def fetchOpiskelu(henkiloOid: String)(implicit user: User): Future[Seq[Opiskelija]] = {
-    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskelija]]
+    // Expand query to include person aliases from oppijaNumeroRekisteri
+    oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid)).flatMap(personOidsWithAliases => {
+      (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Opiskelija]]
+    }).map(_.map(_.copy(henkiloOid=henkiloOid))) // Todo: Is there a better way than this ugly .map(_.map( ?
   }
 
   def fetchOpiskelu(q: RekisteriQuery)(implicit user: User): Future[Seq[Opiskelija]] = {
@@ -219,7 +230,11 @@ trait TiedotFetcher {
   }
 
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
-    (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
+    // Expand query to include person aliases from oppijaNumeroRekisteri
+    val personAliases: Future[PersonOidsWithAliases] = oppijaNumeroRekisteri.enrichWithAliases(Set(henkiloOid))
+    personAliases.flatMap(personOidsWithAliases => {
+      (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusHenkilotQuery(personOidsWithAliases), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
+    }).map(_.map(suoritus => Suoritus.copyWithHenkiloOid(suoritus, henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 
   def fetchSuoritukset(q: RekisteriQuery)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {

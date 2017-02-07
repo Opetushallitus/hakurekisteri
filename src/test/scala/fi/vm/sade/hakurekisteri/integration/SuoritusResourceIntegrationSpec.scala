@@ -2,15 +2,17 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.util.UUID
 
-import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioHyvaksytty, Arvosana}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer, SuoritusSerializer}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
 import org.joda.time.{DateTime, LocalDate}
-import org.json4s.{JArray, JValue}
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
+import org.json4s.{JArray, JValue}
 import org.scalatest._
 
 class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
@@ -24,10 +26,13 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
   val aarnenLukioValmistuminen = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "VALMIS")
   val tyynenPeruskoulu = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", peruskouluKomo, "KESKEN")
 
+  val linkedOid1: String = MockOppijaNumeroRekisteri.linkedTestPersonOids.head
+  val linkedOid2: String = MockOppijaNumeroRekisteri.linkedTestPersonOids(1)
+
   def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset")
   def postArvosana(arvosana: String): String = postResourceJson(arvosana, "arvosanat")
 
-  private def postResourceJson(content: String, endpoint: String) = {
+  private def postResourceJson(content: String, endpoint: String): String = {
     post(s"/suoritusrekisteri/rest/v1/$endpoint", content, Map("Content-Type" -> "application/json; charset=UTF-8")) {
       response.status should be(201)
       parse(body).extract[JObject].values("id").asInstanceOf[String]
@@ -169,5 +174,67 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
       arvosana.lisatieto should equal(Some("FI"))
       arvosana.myonnetty should equal(Some(new LocalDate(2016, 9, 19)))
     }
+  }
+
+  it should "Return suoritus resources for all aliases of queried person" in {
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid1") {
+      parse(response.body).extract[JArray].arr shouldBe empty
+    }
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid2") {
+      parse(response.body).extract[JArray].arr shouldBe empty
+    }
+
+    postSuoritus(toJson(VirallinenSuoritus(komo = "testikomo", myontaja = "1.2.3.4", tila = "VALMIS", valmistuminen = new LocalDate(),
+      henkilo = linkedOid1, yksilollistaminen = yksilollistaminen.Ei, suoritusKieli = "FI", opiskeluoikeus = None, vahv = false, lahde = "lahde")))
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid1") {
+      val suoritus: Suoritus with Identified[UUID] = parseSuoritusWithId
+      suoritus.henkiloOid should equal(linkedOid1)
+    }
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid2") {
+      val suoritus: Suoritus with Identified[UUID] = parseSuoritusWithId
+      suoritus.henkiloOid should equal(linkedOid2)
+    }
+  }
+
+  it should "Update existing Suoritus even with alias person oid" in {
+    val originalSuoritus = VirallinenSuoritus(komo = "testikomo", myontaja = "1.2.3.4", tila = "KESKEN", valmistuminen = new LocalDate(),
+      henkilo = linkedOid1, yksilollistaminen = yksilollistaminen.Ei, suoritusKieli = "FI", opiskeluoikeus = None, vahv = false, lahde = "lahde")
+    postSuoritus(toJson(originalSuoritus))
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid1") {
+      val suoritusWithLinkedOid1: Suoritus with Identified[UUID] = parseSuoritusWithId
+      val originalResourceId = suoritusWithLinkedOid1.id
+      suoritusWithLinkedOid1.henkiloOid should equal(linkedOid1)
+
+      val suoritusToUpdate = suoritusWithLinkedOid1.asInstanceOf[VirallinenSuoritus].copy(tila = "KESKEYTYNYT")
+      val updatedSuoritusResourceId = postSuoritus(toJson(suoritusToUpdate))
+      updatedSuoritusResourceId should equal(originalResourceId.toString)
+    }
+
+    get(s"/suoritusrekisteri/rest/v1/suoritukset?henkilo=$linkedOid2") {
+      val suoritusWithLinkedOid2: Suoritus with Identified[UUID] = parseSuoritusWithId
+      val originalResourceId = suoritusWithLinkedOid2.id
+      suoritusWithLinkedOid2.henkiloOid should equal(linkedOid2)
+
+      val suoritusToUpdate = suoritusWithLinkedOid2.asInstanceOf[VirallinenSuoritus].copy(tila = "VALMIS")
+      val updatedSuoritusResourceId = postSuoritus(toJson(suoritusToUpdate))
+      updatedSuoritusResourceId should equal(originalResourceId.toString)
+    }
+  }
+
+  private def parseSuoritusWithId: Suoritus with Identified[UUID] = {
+    val suoritusArrayJson: JValue = parse(response.body)
+    var suoritusArvosanaArray = suoritusArrayJson.extract[JArray].arr
+    suoritusArvosanaArray should have length 1
+
+    val suoritusJson = suoritusArvosanaArray.head
+    val suoritus = suoritusJson.extract[Suoritus with Identified[UUID]]
+    suoritus
+  }
+
+  private def toJson(suoritus1: VirallinenSuoritus): String = {
+    compact(new SuoritusSerializer().serialize(jsonFormats)(suoritus1))
   }
 }

@@ -1,11 +1,12 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusHenkilotQuery
@@ -48,7 +49,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
     valintarekisterActor = system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
         case q: ValintarekisteriQuery =>
-          val map: Seq[EnsimmainenVastaanotto] = q.henkiloOids.toSeq.map(o => EnsimmainenVastaanotto(o, Some(vastaanottohetki)))
+          val map: Seq[EnsimmainenVastaanotto] = q.personOidsWithAliases.henkiloOids.toSeq.map(o => EnsimmainenVastaanotto(o, Some(vastaanottohetki)))
           sender ! map
       }
     })),
@@ -64,7 +65,8 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
         case q: GetHaku => sender ! Testihaku
       }
     })),
-    hakemusService = hakemusServiceMock
+    hakemusService = hakemusServiceMock,
+    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   ))), hakemusService = hakemusServiceMock), "/ensikertalainen")
 
   test("returns 200 ok") {

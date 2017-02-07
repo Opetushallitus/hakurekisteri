@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
-import support.Integrations
+import support.{Integrations, SureDbLoggingConfig}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
@@ -24,8 +24,6 @@ object Config {
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
   lazy val mockDevConfig = new MockDevConfig
-  val slowQuery: Long = 200
-  val reallySlowQuery: Long = 10000
 }
 
 object OrganisaatioOids {
@@ -93,9 +91,12 @@ object Oids {
 class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
-  override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusreksiteri.db.url")
+  override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusrekisteri.db.url")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
+  override val slowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.slowquery.millis"))
+  override val reallySlowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.reallyslowquery.millis"))
+  override val maxDbLogLineLength: Int = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.db.max.log.line.length", "configuration key missing: suoritusrekisteri.db.max.log.line.length"))
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
@@ -106,6 +107,12 @@ class MockDevConfig extends Config {
   override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
+
+  private val defaultDbLoggingConfig = SureDbLoggingConfig()
+  override val slowQuery: Long = defaultDbLoggingConfig.slowQueryMillis
+  override val reallySlowQuery: Long = defaultDbLoggingConfig.reallySlowQueryMillis
+  override val maxDbLogLineLength: Int = defaultDbLoggingConfig.maxLogLineLength
+
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
@@ -119,6 +126,10 @@ abstract class Config {
   val databaseUrl: String
   val postgresUser: String
   val postgresPassword: String
+
+  val slowQuery: Long
+  val reallySlowQuery: Long
+  val maxDbLogLineLength: Int
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
@@ -186,6 +197,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
   val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
+  val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
+
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
   val virtaJarjestelmaTest = ""
   val virtaTunnusTest = ""
@@ -199,6 +212,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val parameterServiceUrl = properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val valintaTulosServiceUrl = properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
+  val oppijaNumeroRekisteriUrl = properties.getOrElse("cas.service.oppijanumerorekisteri-service", oppijaNumeroRekisteriServiceUrlQa)
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl = properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
@@ -219,6 +233,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
   }
   val valintarekisteriConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
+  val oppijaNumeroRekisteriConfig = ServiceConfig(casUrl = casUrl, serviceUrl = oppijaNumeroRekisteriUrl, user = serviceUser, password = servicePassword, properties = properties)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt

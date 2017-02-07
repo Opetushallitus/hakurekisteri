@@ -6,11 +6,13 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanatQuery}
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchOrg, ImportBatchOrgActor, ImportBatch, ImportBatchActor}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor, ImportBatchOrgActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor}
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -18,10 +20,9 @@ import fi.vm.sade.hakurekisteri.{Config, KomoOids, Oids}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-class BareRegisters(system: ActorSystem, journals: Journals, db: Database) extends Registers {
-  override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5)), "suoritukset")
-  override val ytlSuoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5)), "ytl-suoritukset")
+class BareRegisters(system: ActorSystem, journals: Journals, db: Database, integrationsProvider: PersonAliasesProvider) extends Registers {
+  override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider)), "suoritukset")
+  override val ytlSuoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider)), "ytl-suoritukset")
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 5)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusJDBCActor(journals.opiskeluoikeusJournal, 5)), "opiskeluoikeudet")
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "arvosanat")
@@ -88,4 +89,8 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   override val eraOrgRekisteri: ActorRef = unauthorized.eraOrgRekisteri
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null
+}
+
+trait PersonAliasesProvider {
+  def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases]
 }

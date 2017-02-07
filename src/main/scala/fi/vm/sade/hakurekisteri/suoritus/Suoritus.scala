@@ -22,6 +22,24 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String, alkamisvuosi: Option[String], alkamiskausi: Option[Kausi])
 
+object Suoritus {
+
+  def copyWithHenkiloOid(suoritus: Suoritus, henkiloOid: String): Suoritus = {
+    suoritus match {
+      case s: VirallinenSuoritus => s.copy(henkilo = henkiloOid)
+      case s: VapaamuotoinenSuoritus => s.copy(henkilo = henkiloOid)
+    }
+  }
+
+  def copyWithHenkiloOid(suoritus: Suoritus with Identified[UUID], henkiloOid: String)(implicit d: DummyImplicit): Suoritus with Identified[UUID] = {
+    val id: UUID = suoritus.id
+    suoritus.asInstanceOf[Suoritus] match {
+      case s: VapaamuotoinenSuoritus => s.copy(henkilo = henkiloOid).identify(id)
+      case s: VirallinenSuoritus => s.copy(henkilo = henkiloOid).identify(id)
+    }
+  }
+}
+
 sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean, val source: String) extends UUIDResource[Suoritus]{
 
 }

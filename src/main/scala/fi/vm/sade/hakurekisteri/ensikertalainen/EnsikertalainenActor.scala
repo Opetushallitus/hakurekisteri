@@ -6,8 +6,9 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusService, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
@@ -51,7 +52,9 @@ case class SuoritettuKkTutkintoHakemukselta(vuosi: Int) extends MenettamisenPeru
   override val peruste: String = "SuoritettuKkTutkintoHakemukselta"
 }
 
-case class Ensikertalainen(henkiloOid: String, ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
+case class Ensikertalainen(henkiloOid: String, menettamisenPeruste: Option[MenettamisenPeruste]){
+  val ensikertalainen = menettamisenPeruste.isEmpty
+}
 
 class EnsikertalainenActor(suoritusActor: ActorRef,
                            opiskeluoikeusActor: ActorRef,
@@ -59,6 +62,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                            tarjontaActor: ActorRef,
                            hakuActor: ActorRef,
                            hakemusService: IHakemusService,
+                           oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
                            config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   val syksy2014 = "2014S"
@@ -84,13 +88,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = for {
     haku <- (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
     tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(hakuOid)
-    valmistumishetket <- valmistumiset(tutkintovuodetHakemuksilta.keySet, Seq())
+    personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(tutkintovuodetHakemuksilta.keySet)
+    valmistumishetket <- valmistumiset(personOidsWithAliases, Seq())
     opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-      tutkintovuodetHakemuksilta.keySet.diff(valmistumishetket.keySet),
+      personOidsWithAliases.diff(valmistumishetket.keySet),
       Seq()
     )
     vastaanottohetket <- vastaanotot(
-      tutkintovuodetHakemuksilta.keySet
+      personOidsWithAliases
         .diff(valmistumishetket.keySet)
         .diff(opiskeluoikeuksienAlkamiset.keySet)
     )
@@ -108,39 +113,51 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }.toSeq
   }
 
-  private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = for {
-    haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
-    tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(q.henkiloOids, q.hakuOid, q.hakukohdeOid)
-    valmistumishetket <- valmistumiset(
-      q.henkiloOids
-        .diff(tutkintovuodetHakemuksilta.keySet)
-        .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
-      q.suoritukset.getOrElse(Seq())
-    )
-    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-      q.henkiloOids
-        .diff(tutkintovuodetHakemuksilta.keySet)
-        .diff(valmistumishetket.keySet)
-        .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
-      q.opiskeluoikeudet.getOrElse(Seq())
-    )
-    vastaanottohetket <- vastaanotot(
-      q.henkiloOids
-        .diff(tutkintovuodetHakemuksilta.keySet)
-        .diff(valmistumishetket.keySet)
-        .diff(opiskeluoikeuksienAlkamiset.keySet)
-    )
-  } yield {
-    q.henkiloOids.toSeq.map(henkilo => {
-      ensikertalaisuus(
-        henkilo,
-        haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
-        valmistumishetket.get(henkilo),
-        opiskeluoikeuksienAlkamiset.get(henkilo),
-        vastaanottohetket.get(henkilo),
-        tutkintovuodetHakemuksilta.get(henkilo)
+  def mergeEnsikertalaisuus(henkiloOid:String, allEnsikertalainen: Set[Ensikertalainen]): Ensikertalainen = {
+    val mikaVainMenettamisenPeruste = allEnsikertalainen.flatMap(_.menettamisenPeruste).headOption
+    Ensikertalainen(henkiloOid, mikaVainMenettamisenPeruste)
+  }
+
+  private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
+    for {
+      haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
+      personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
+      tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(personOidsWithAliases.henkiloOidsWithLinkedOids, q.hakuOid, q.hakukohdeOid)
+      valmistumishetket <- valmistumiset(
+        personOidsWithAliases
+          .diff(tutkintovuodetHakemuksilta.keySet)
+          .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
+        q.suoritukset.getOrElse(Seq())
       )
-    })
+      opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
+        personOidsWithAliases
+          .diff(tutkintovuodetHakemuksilta.keySet)
+          .diff(valmistumishetket.keySet)
+          .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
+        q.opiskeluoikeudet.getOrElse(Seq())
+      )
+      vastaanottohetket <- vastaanotot(
+        personOidsWithAliases
+          .diff(tutkintovuodetHakemuksilta.keySet)
+          .diff(valmistumishetket.keySet)
+          .diff(opiskeluoikeuksienAlkamiset.keySet)
+      )
+    } yield {
+      q.henkiloOids.toSeq.flatMap(henkilo => {
+        personOidsWithAliases.aliasesByPersonOids.get(henkilo).map(links => {
+          mergeEnsikertalaisuus(henkilo, links.map(linkedOid => {
+            ensikertalaisuus(
+              henkilo,
+              haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
+              valmistumishetket.get(linkedOid),
+              opiskeluoikeuksienAlkamiset.get(linkedOid),
+              vastaanottohetket.get(linkedOid),
+              tutkintovuodetHakemuksilta.get(linkedOid)
+            )
+          }))
+        })
+      })
+    }
   }
 
   private def tutkinnotHakemuksilta(hakuOid: String): Future[Map[String, Option[Int]]] = {
@@ -171,19 +188,19 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }).toMap)
   }
 
-  private def vastaanotot(henkiloOids: Set[String]): Future[Map[String, DateTime]] =
-    if (henkiloOids.isEmpty) {
+  private def vastaanotot(personOidsWithAliases: PersonOidsWithAliases): Future[Map[String, DateTime]] =
+    if (personOidsWithAliases.isEmpty) {
       Future.successful(Map())
     } else {
-      (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
+      (valintarekisterActor ? ValintarekisteriQuery(personOidsWithAliases, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
         .map(_.collect {
           case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
         }.toMap)
     }
 
-  private def valmistumiset(henkiloOids: Set[String],
+  private def valmistumiset(personOidsWithAliases: PersonOidsWithAliases,
                             prefetchedSuoritukset: Seq[Suoritus]): Future[Map[String, DateTime]] =
-    suoritukset(henkiloOids).map(_ ++ prefetchedSuoritukset)
+    suoritukset(personOidsWithAliases).map(_ ++ prefetchedSuoritukset)
       .flatMap(kkSuoritukset)
       .map(_.groupBy(_.henkiloOid)
         .mapValues(aikaisinValmistuminen)
@@ -192,9 +209,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         }
       )
 
-  private def opiskeluoikeudetAlkaneet(henkiloOids: Set[String],
+  private def opiskeluoikeudetAlkaneet(personOidsWithAliases: PersonOidsWithAliases,
                                        prefetchedOpiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Map[String, DateTime]] =
-    opiskeluoikeudet(henkiloOids).map(fetchedOpiskeluoikeudet => {
+    opiskeluoikeudet(personOidsWithAliases).map(fetchedOpiskeluoikeudet => {
       (fetchedOpiskeluoikeudet ++ prefetchedOpiskeluoikeudet)
         .groupBy(_.henkiloOid)
         .mapValues(aikaisinMerkitsevaOpiskeluoikeus)
@@ -203,16 +220,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         }
     })
 
-  private def opiskeluoikeudet(henkiloOids: Set[String]): Future[Seq[Opiskeluoikeus]] = Future.sequence(
-    henkiloOids
+  private def opiskeluoikeudet(personOidsWithAliases: PersonOidsWithAliases): Future[Seq[Opiskeluoikeus]] = Future.sequence(
+    personOidsWithAliases
       .grouped(resourceQuerySize)
-      .map(oids => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(henkilot = oids)).mapTo[Seq[Opiskeluoikeus]])
+      .map(oidsWithAliases => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(oidsWithAliases)).mapTo[Seq[Opiskeluoikeus]])
   ).map(_.flatten.toSeq)
 
-  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] = Future.sequence(
-    henkiloOids
+  private def suoritukset(personOidsWithAliases: PersonOidsWithAliases): Future[Seq[Suoritus]] = Future.sequence(
+    personOidsWithAliases
       .grouped(resourceQuerySize)
-      .map(oids => (suoritusActor ? SuoritusHenkilotQuery(henkilot = oids)).mapTo[Seq[Suoritus]])
+      .map(oidsWithAliases => (suoritusActor ? SuoritusHenkilotQuery(oidsWithAliases)).mapTo[Seq[Suoritus]])
   ).map(_.flatten.toSeq)
 
   private def isKkTutkinto(suoritus: Suoritus): Future[Option[Suoritus]] = suoritus match {
@@ -254,19 +271,20 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                        valmistuminen: Option[DateTime],
                        opiskeluoikeusAlkanut: Option[DateTime],
                        vastaanotto: Option[DateTime],
-                       suorittanutTutkinnonHakemukselta: Option[Int]): Ensikertalainen = (valmistuminen, opiskeluoikeusAlkanut, vastaanotto, suorittanutTutkinnonHakemukselta) match {
-    case (Some(tutkintopaiva), _, _, _) if tutkintopaiva.isBefore(leikkuripaiva) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
-    case (_, Some(opiskeluoikeusAlkupvm), _, _) if opiskeluoikeusAlkupvm.isBefore(leikkuripaiva) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(OpiskeluoikeusAlkanut(opiskeluoikeusAlkupvm)))
-    case (_, _, Some(vastaanottopaiva), _) if vastaanottopaiva.isBefore(leikkuripaiva) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
-    case (_, _, _, Some(vuosi)) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(SuoritettuKkTutkintoHakemukselta(vuosi)))
-    case _ =>
-      Ensikertalainen(henkilo, ensikertalainen = true, None)
+                       suorittanutTutkinnonHakemukselta: Option[Int]): Ensikertalainen = {
+    (valmistuminen, opiskeluoikeusAlkanut, vastaanotto, suorittanutTutkinnonHakemukselta) match {
+      case (Some(tutkintopaiva), _, _, _) if tutkintopaiva.isBefore(leikkuripaiva) =>
+        Ensikertalainen(henkilo, Some(SuoritettuKkTutkinto(tutkintopaiva)))
+      case (_, Some(opiskeluoikeusAlkupvm), _, _) if opiskeluoikeusAlkupvm.isBefore(leikkuripaiva) =>
+        Ensikertalainen(henkilo, Some(OpiskeluoikeusAlkanut(opiskeluoikeusAlkupvm)))
+      case (_, _, Some(vastaanottopaiva), _) if vastaanottopaiva.isBefore(leikkuripaiva) =>
+        Ensikertalainen(henkilo, Some(KkVastaanotto(vastaanottopaiva)))
+      case (_, _, _, Some(vuosi)) =>
+        Ensikertalainen(henkilo, Some(SuoritettuKkTutkintoHakemukselta(vuosi)))
+      case _ =>
+        Ensikertalainen(henkilo, None)
+    }
   }
-
 }
 
 

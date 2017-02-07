@@ -7,6 +7,7 @@ import java.util.{Date, UUID}
 import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.github.nscala_time.time.TypeImports.LocalDate
+import fi.vm.sade.hakurekisteri.integration.henkilo.{MockPersonAliasesProvider, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -26,8 +27,8 @@ import org.scalatest.words.EmptyWord
 import org.scalatra.test.HttpComponentsClient
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 
-import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.xml.{Elem, Node, NodeSeq}
 
@@ -52,12 +53,15 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
 
   override def beforeAll(): Unit = {
     system = ActorSystem()
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
     val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
-    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1))))))
+    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider))))))
     val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1))))))
-    addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
+
+    val personOidsAliasFetcher: Set[String] => Future[PersonOidsWithAliases]= oids => Future.successful(PersonOidsWithAliases.apply(henkiloOids = oids))
+    val suoritusQueryMaker: Map[String, String] => fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus] = p => fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(p)
+    addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, suoritusQueryMaker) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
     addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/rest/v1/opiskelijat")
     super.beforeAll()
   }

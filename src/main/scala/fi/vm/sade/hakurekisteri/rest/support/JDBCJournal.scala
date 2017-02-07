@@ -10,6 +10,7 @@ import slick.ast.BaseTypedType
 import slick.jdbc.TransactionIsolation
 import slick.jdbc.meta.MTable
 import slick.lifted
+import support.SureDbLoggingConfig
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -31,7 +32,7 @@ object JDBCUtil {
   }
 }
 
-class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T])
+class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T], val dbLoggingConfig: SureDbLoggingConfig = SureDbLoggingConfig())
                                                                      (implicit val db: Database, val idType: BaseTypedType[I], implicit val system: ActorSystem)
   extends Journal[R, I] {
 

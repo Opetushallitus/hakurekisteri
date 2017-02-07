@@ -1,7 +1,8 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query}
-import Kausi.Kausi
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query, QueryWithPersonOid}
 import org.joda.time.DateTime
 
 
@@ -10,10 +11,13 @@ case class SuoritusQuery(henkilo: Option[String] = None,
                          vuosi: Option[String] = None,
                          myontaja: Option[String] = None,
                          komo: Option[String] = None,
-                         override val muokattuJalkeen: Option[DateTime] = None) extends Query[Suoritus]
+                         override val muokattuJalkeen: Option[DateTime] = None)
+  extends QueryWithPersonOid[Suoritus] {
+  override def createQueryWithAliases(personOidsWithAliases: PersonOidsWithAliases) = SuoritusQueryWithPersonAliases(this, personOidsWithAliases)
+}
 
-object SuoritusQuery{
-  def apply(params: Map[String,String]): SuoritusQuery = {
+object SuoritusQuery {
+  def apply(params: Map[String, String]): SuoritusQuery = {
     SuoritusQuery(params.get("henkilo"),
       params.get("kausi").map(Kausi.withName),
       params.get("vuosi"),
@@ -23,6 +27,7 @@ object SuoritusQuery{
   }
 }
 
-case class SuoritusHenkilotQuery(henkilot: Set[String]) extends Query[Suoritus]
+case class SuoritusQueryWithPersonAliases(wrappedQuery: SuoritusQuery, personOidsWithAliases: PersonOidsWithAliases) extends Query[Suoritus]
+case class SuoritusHenkilotQuery(henkilot: PersonOidsWithAliases) extends Query[Suoritus]
 case class SuoritysTyyppiQuery(henkilo: String, komo: String) extends Query[Suoritus]
 case class AllForMatchinHenkiloSuoritusQuery(vuosi: Option[String] = None, myontaja: Option[String] = None) extends Query[Suoritus]

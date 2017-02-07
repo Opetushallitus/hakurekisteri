@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
@@ -38,7 +39,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val endPoint = mock[Endpoint]
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val hakemusService = new HakemusService(client)
+  val hakemusService = new HakemusService(client, MockOppijaNumeroRekisteri)
   val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))

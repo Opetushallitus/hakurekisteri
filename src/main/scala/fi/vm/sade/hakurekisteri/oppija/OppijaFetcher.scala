@@ -10,12 +10,13 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.tools.DurationHelper
 
 import scala.concurrent.duration.Duration
@@ -27,6 +28,7 @@ trait OppijaFetcher {
   val rekisterit: Registers
   val hakemusService: IHakemusService
   val ensikertalaisuus: ActorRef
+  val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
 
   val singleSplitQuerySize = 5000
 
@@ -44,44 +46,55 @@ trait OppijaFetcher {
   }
 
   def fetchOppijat(persons: Set[String], ensikertalaisuudet: Boolean, q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
-    val rekisteriData = getRekisteriData(persons)(user)
-    if (ensikertalaisuudet) {
-      rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
-    } else {
-      rekisteriData
-    }
+    oppijaNumeroRekisteri.enrichWithAliases(persons).flatMap(personOidsWithAliases => {
+      val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
+      if (ensikertalaisuudet) {
+        rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
+      } else {
+        rekisteriData
+      }
+    })
   }
 
   def fetchOppija(person: String, ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
     fetchOppijat(Set(person), ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user).map(_.head)
   }
 
-  def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
+  def getRekisteriData(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Oppija]] = {
     val logId = UUID.randomUUID()
     def timed[A](msg: String, f: Future[A]): Future[A] =
       DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
-    val todistuksetF = timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOids))
+    val todistuksetF = timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOidsWithAliases))
       .flatMap(suoritukset => timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset)))
       .map(_.groupBy(_.suoritus.henkiloOid))
-    val opiskeluoikeudetF = timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOids))
+    val opiskeluoikeudetF = timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOidsWithAliases))
       .map(_.groupBy(_.henkiloOid))
-    val opiskelijatF = timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOids))
+    val opiskelijatF = timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOidsWithAliases))
       .map(_.groupBy(_.henkiloOid))
 
     for {
       todistukset <- todistuksetF
       opiskeluoikeudet <- opiskeluoikeudetF
       opiskelijat <- opiskelijatF
-    } yield personOids.map(oid =>
+    } yield personOidsWithAliases.henkiloOids.map(oid =>
       Oppija(
         oppijanumero = oid,
         opiskelu = opiskelijat.getOrElse(oid, Seq()),
         opiskeluoikeudet = opiskeluoikeudet.getOrElse(oid, Seq()),
-        suoritukset = todistukset.getOrElse(oid, Seq()),
+        suoritukset = suorituksetWithAliases(personOidsWithAliases, todistukset, oid),
         ensikertalainen = None
       )
     ).toSeq
+  }
+
+  private def suorituksetWithAliases(personOidsWithAliases: PersonOidsWithAliases, todistuksetByPersonOid: Map[String, Seq[Todistus]], oid: String): Seq[Todistus] = {
+    val todistukset: Set[Todistus] = for {
+      alias: String <- personOidsWithAliases.aliasesByPersonOids(oid)
+      todistus <- todistuksetByPersonOid.getOrElse(alias, Seq())
+    } yield todistus.copy(suoritus = Suoritus.copyWithHenkiloOid(todistus.suoritus, oid))
+
+    todistukset.toSeq
   }
 
   private def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Todistus]] =
@@ -106,17 +119,18 @@ trait OppijaFetcher {
     ) yield oppija.copy(ensikertalainen = ensikertalaisuudet.get(oppija.oppijanumero).map(_.ensikertalainen))
   }
 
-  private def fetchOpiskeluoikeudet(henkilot: Set[String])(implicit user: User): Future[Seq[Opiskeluoikeus]] =
-    splittedQuery[Opiskeluoikeus, Opiskeluoikeus](henkilot, rekisterit.opiskeluoikeusRekisteri, (henkilot) => OpiskeluoikeusHenkilotQuery(henkilot))
+  private def fetchOpiskeluoikeudet(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Opiskeluoikeus]] =
+    splittedQuery[Opiskeluoikeus, Opiskeluoikeus](personOidsWithAliases, rekisterit.opiskeluoikeusRekisteri, (henkilot) => OpiskeluoikeusHenkilotQuery(henkilot))
 
-  private def fetchOpiskelu(henkilot: Set[String])(implicit user: User): Future[Seq[Opiskelija]] =
-    splittedQuery[Opiskelija, Opiskelija](henkilot, rekisterit.opiskelijaRekisteri, (henkilot) => OpiskelijaHenkilotQuery(henkilot))
+  private def fetchOpiskelu(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Opiskelija]] =
+    splittedQuery[Opiskelija, Opiskelija](personOidsWithAliases, rekisterit.opiskelijaRekisteri, (henkilot) => OpiskelijaHenkilotQuery(henkilot))
 
-  private def fetchSuoritukset(henkilot: Set[String])(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] =
-    splittedQuery[Suoritus with Identified[UUID], Suoritus](henkilot, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
+  private def fetchSuoritukset(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] =
+    splittedQuery[Suoritus with Identified[UUID], Suoritus](personOidsWithAliases, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
 
-  private def splittedQuery[A, B](henkilot: Set[String], actor: ActorRef, q: (Set[String]) => Query[B])(implicit user: User): Future[Seq[A]] =
-    Future.sequence(henkilot.grouped(singleSplitQuerySize).map(henkiloSubset =>
-      (actor ? AuthorizedQuery(q(henkiloSubset), user)).mapTo[Seq[A]]
+  private def splittedQuery[A, B](personOidsWithAliases: PersonOidsWithAliases, actor: ActorRef, q: (PersonOidsWithAliases) => Query[B])(implicit user: User): Future[Seq[A]] =
+  // TODO fix or remove. There's just one PersonOidsWithAliases object, so there's always just one group here now.
+    Future.sequence(personOidsWithAliases.henkiloOids.grouped(singleSplitQuerySize).map(henkiloSubset =>
+      (actor ? AuthorizedQuery(q(personOidsWithAliases), user)).mapTo[Seq[A]]
     )).map(_.flatten.toSeq)
 }

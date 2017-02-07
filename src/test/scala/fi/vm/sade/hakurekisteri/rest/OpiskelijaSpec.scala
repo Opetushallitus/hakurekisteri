@@ -31,7 +31,7 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   implicit val swagger = new HakurekisteriSwagger
 
   override def beforeAll(): Unit = {
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
     val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1))))))
     addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/*")

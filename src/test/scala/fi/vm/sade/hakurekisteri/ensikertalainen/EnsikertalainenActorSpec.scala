@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
@@ -48,10 +49,8 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       suoritukset = Seq(
         VirallinenSuoritus(koulutus_699999, myontaja, "VALMIS", date, henkiloOid, yksilollistaminen.Ei, "FI", None, vahv = true, "")
       ),
-      opiskeluoikeudet = Seq(
-        Opiskeluoikeus(new LocalDate(), None, henkiloOid, koulutus_699999, myontaja, "")
-      ),
-      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(new DateTime())))
+      opiskeluoikeudet = Nil,
+      vastaanotot = Nil
     )
 
     waitFuture(
@@ -185,7 +184,8 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
           case q: GetHaku => sender ! Testihaku
         }
       })),
-      hakemusService = hakemusServiceMock
+      hakemusService = hakemusServiceMock,
+      oppijaNumeroRekisteri = MockOppijaNumeroRekisteri
     ) {
       override val sizeLimitForFetchingByPersons: Int = 1
     })), valintarekisteri)

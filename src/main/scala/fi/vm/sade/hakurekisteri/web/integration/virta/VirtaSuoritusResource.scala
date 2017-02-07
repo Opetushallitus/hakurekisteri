@@ -29,7 +29,6 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: Acto
   override protected def applicationDescription: String = "Henkilön suoritusten haun rajapinta Virta-palvelusta"
   implicit val defaultTimeout: Timeout = 30.seconds
 
-  // XXX: Replace with proper permission checks
   def hasAccess(personOid: String, user: User): Future[Boolean] =
     if (user.isAdmin) {
       Future.successful(true)

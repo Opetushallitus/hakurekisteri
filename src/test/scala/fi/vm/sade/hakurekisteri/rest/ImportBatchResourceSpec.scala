@@ -43,7 +43,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
 
 
   override def beforeAll(): Unit = {
-    database = Database.forURL(ItPostgres.getEndpointURL())
+    database = Database.forURL(ItPostgres.getEndpointURL)
     val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
     val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database)))
     val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))

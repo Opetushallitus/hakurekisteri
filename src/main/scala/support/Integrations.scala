@@ -1,11 +1,12 @@
 package support
 
 import java.util.concurrent.TimeUnit
+
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
+import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
@@ -23,6 +24,7 @@ import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import support.YtlRerunPolicy.rerunPolicy
+
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
 
@@ -43,6 +45,7 @@ trait Integrations {
   val valintarekisteri: ActorRef
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
+  val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
 }
 
 object Integrations {
@@ -91,6 +94,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       case a: HasPermission => sender ! true
     }
   }))
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
 }
 
 
@@ -140,7 +144,8 @@ class BaseIntegrations(rekisterit: Registers,
   val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
-  val hakemusService = new HakemusService(hakemusClient)(system)
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
+  val hakemusService = new HakemusService(hakemusClient, oppijaNumeroRekisteri)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
@@ -168,7 +173,7 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
-  val ytlTrigger: Trigger = Trigger { hakemus => Try(ytlIntegration.sync(hakemus)) match {
+  val ytlTrigger: Trigger = Trigger { (hakemus, personOidsWithAliases: PersonOidsWithAliases) => Try(ytlIntegration.sync(hakemus)) match {
       case Failure(e) =>
         logger.error(s"YTL sync failed for hakemus with OID ${hakemus.oid}", e)
       case _ => // pass

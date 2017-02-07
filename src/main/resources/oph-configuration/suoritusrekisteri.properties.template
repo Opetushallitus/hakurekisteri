@@ -44,6 +44,9 @@ suoritusrekisteri.db.queueSize=10000
 suoritusrekisteri.db.registerMbeans=true
 suoritusrekisteri.db.initializationFailFast=true
 suoritusrekisteri.db.timeout=20 seconds
+suoritusrekisteri.db.slowquery.millis=200
+suoritusrekisteri.db.reallyslowquery.millis=10000
+suoritusrekisteri.db.max.log.line.length=600
 
 # Oletusarvoja
 activemq.queue.name.log=Sade.Log
@@ -63,6 +66,7 @@ cas.service.sijoittelu-service=https://${host.virkailija}/sijoittelu-service
 cas.service.suoritusrekisteri=https://${host.virkailija}/suoritusrekisteri
 cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
 cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-service
+cas.service.oppijanumerorekisteri-service=https://${host.virkailija}/oppijanumerorekisteri-service
 ldap.cache.size=10000
 ldap.data.dir=${user.home}/data
 ldap.filter.people=uid\=%u

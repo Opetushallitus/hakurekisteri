@@ -1,0 +1,38 @@
+[{
+  "oidHenkilo": "1.2.246.562.24.58099330694",
+  "hetu": null,
+  "passivoitu": false,
+  "henkiloTyyppi": "OPPIJA",
+  "etunimet": "Matti On",
+  "kutsumanimi": "Matti",
+  "sukunimi": "Duplikaatti",
+  "aidinkieli": {
+    "kieliKoodi": "fi",
+    "kieliTyyppi": "suomi",
+    "id": 17429801
+  },
+  "asiointiKieli": {
+    "kieliKoodi": "fi",
+    "kieliTyyppi": "suomi",
+    "id": 17429802
+  },
+  "kielisyys": [],
+  "kansalaisuus": [],
+  "kasittelijaOid": "1.2.246.562.24.84608031840",
+  "syntymaaika": "2017-01-01",
+  "sukupuoli": "1",
+  "passinnumero": null,
+  "oppijanumero": null,
+  "turvakielto": null,
+  "eiSuomalaistaHetua": false,
+  "yksiloity": false,
+  "yksiloityVTJ": false,
+  "yksilointiYritetty": false,
+  "duplicate": false,
+  "created": 1484219001784,
+  "modified": 1484219566836,
+  "vtjsynced": null,
+  "huoltaja": null,
+  "yhteystiedotRyhma": [],
+  "id": 17429800
+}]

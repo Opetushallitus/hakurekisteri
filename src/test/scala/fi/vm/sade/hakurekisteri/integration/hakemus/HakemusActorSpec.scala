@@ -1,27 +1,20 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import java.text.SimpleDateFormat
-import java.util.{Date, UUID}
+import java.util.UUID
 
 import akka.actor._
 import akka.event.Logging
-import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Oids, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
-import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import fi.vm.sade.hakurekisteri.{Oids, SpecsLikeMockito}
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s._
-import org.mockito.Mockito._
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers._
 import org.scalatest.mock.MockitoSugar
@@ -29,8 +22,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.Seq
 import scala.concurrent.duration._
-import scala.language.implicitConversions
-import scala.language.reflectiveCalls
+import scala.language.{implicitConversions, reflectiveCalls}
 
 
 class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions
@@ -314,6 +306,9 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         case q@SuoritusQuery(Some(henkilo), _, _, _, _, _) =>
           sender ! suoritukset.filter(_.henkiloOid == henkilo)
           suoritusQueryWaiter.dismiss()
+        case q@SuoritusQueryWithPersonAliases(SuoritusQuery(Some(henkilo), _, _, _, _, _), _) =>
+          sender ! suoritukset.filter(_.henkiloOid == henkilo)
+          suoritusQueryWaiter.dismiss()
         case LogMessage(_, Logging.DebugLevel) =>
           bypassWaiter.dismiss()
       }
@@ -335,14 +330,14 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       .putArvosana("PK_MA","8")
       .build
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, logBypassed = true)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, PersonOidsWithAliases(hakemus.personOid.toSet), logBypassed = true)
 
     suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
     suoritusWaiter.await(waiterTimeout, dismissals(1))
     arvosanaWaiter.await(waiterTimeout, dismissals(1))
     bypassWaiter.await(waiterTimeout, dismissals(0))
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, logBypassed = true)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, PersonOidsWithAliases(hakemus.personOid.toSet), logBypassed = true)
 
     suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
     bypassWaiter.await(waiterTimeout, dismissals(1))
