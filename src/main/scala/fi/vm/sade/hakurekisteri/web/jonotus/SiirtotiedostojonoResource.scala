@@ -22,9 +22,9 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
   private val logger = LoggerFactory.getLogger(classOf[SiirtotiedostojonoResource])
 
   post("/") {
-
+    val createNewDocumentIfErrors = params.get("createNewDocumentIfErrors").exists(parseBoolean)
     toEvent(readJsonFromBody(request.body), currentUser) match {
-      case QueryWithExistingAsiakirja(personOid, query, createNewDocumentIfErrors) =>
+      case QueryWithExistingAsiakirja(personOid, query) =>
         if(createNewDocumentIfErrors && jono.isExistingAsiakirjaWithErrors(query)) {
           logger.debug(s"User $currentUser re-creating existing asiakirja with $query")
           halt(status=200, body=write(Sijoitus(jono.addToJono(query, personOid).get)))
@@ -65,7 +65,7 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
               case None =>
                 val isAlreadyCreated = jono.isExistingAsiakirja(query)
                 if(isAlreadyCreated) {
-                  QueryWithExistingAsiakirja(personOid, query, params.get("createNewDocumentIfErrors").exists(parseBoolean))
+                  QueryWithExistingAsiakirja(personOid, query)
                 } else {
                   RequestSijoitusQuery(personOid, query, jono.addToJono(query, personOid).get, true)
                 }
@@ -105,6 +105,6 @@ trait UserEvent extends Event {
   val personOid: String
 }
 case class LoggedInUser(personOid: String) extends UserEvent
-case class QueryWithExistingAsiakirja(personOid: String, q: QueryAndFormat, createNewDocumentIfErrors: Boolean) extends UserEvent
+case class QueryWithExistingAsiakirja(personOid: String, q: QueryAndFormat) extends UserEvent
 case class RequestSijoitusQuery(personOid: String, q: QueryAndFormat, position: Int, isNew: Boolean) extends UserEvent
 case class AnonymousUser() extends Event
