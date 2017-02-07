@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExcelWriter}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.Koulutus
+import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 
 object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
@@ -11,7 +12,9 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
     "Aidinkieli", "Asiointikieli", "Koulusivistyskieli", "Koulutusmarkkinointilupa", "On ylioppilas", "Suoritusvuosi",
     "Haku", "Hakuvuosi", "Hakukausi", "Hakemusnumero", "Organisaatio", "Hakukohde", "Hakukohteen kk-id", "Avoin vayla",
     "Valinnan tila", "Vastaanottotieto", "Ilmoittautumiset", "Pohjakoulutus", "Julkaisulupa", "Hakukelpoisuus",
-    "Hakukelpoisuuden lahde", "Maksuvelvollisuus", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto", "Hakukohteen koulutukset", "Liitteet"
+    "Hakukelpoisuuden lahde", "Maksuvelvollisuus", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto",
+    "Hakukohteen koulutukset 1(komoOid,koulutusKoodi,kkKoulutusId)", "Koulutus 2", "Koulutus 3", "Koulutus 4", "Koulutus 5", "Koulutus 6",
+    "Liite 1(hakuId,hakuRyhmäId,tila,saapumisenTila,nimi,vastaanottaja)", "Liite 2", "Liite 3", "Liite 4", "Liite 5", "Liite 6"
   )
 
   override def getHeaders(hakijat: Seq[Hakija]): Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
@@ -59,9 +62,18 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
       hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
       hakemus.yleinenkielitutkinto,
       hakemus.valtionhallinnonkielitutkinto,
-      hakemus.hakukohteenKoulutukset.map(k => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})").mkString(","),
-      hakemus.liitteet.map(j => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})").mkString(",")).zipWithIndex.toSet
-
+      hakemus.hakukohteenKoulutukset lift 0 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
+      hakemus.hakukohteenKoulutukset lift 1 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
+      hakemus.hakukohteenKoulutukset lift 2 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
+      hakemus.hakukohteenKoulutukset lift 3 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
+      hakemus.hakukohteenKoulutukset lift 4 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
+      hakemus.hakukohteenKoulutukset lift 5 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
+      hakemus.liitteet lift 0 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
+      hakemus.liitteet lift 1 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
+      hakemus.liitteet lift 2 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
+      hakemus.liitteet lift 3 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
+      hakemus.liitteet lift 4 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
+      hakemus.liitteet lift 5 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}).zipWithIndex.toSet
     for (sarake <- rivi) yield StringCell(sarake._2, sarake._1)
   })).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
 
