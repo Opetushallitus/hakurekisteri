@@ -23,9 +23,9 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(implicit system: ActorSystem) {
-  private implicit val defaultTimeout: Timeout = 120.seconds
+  private implicit val defaultTimeout: Timeout = 45.minutes
   private implicit val formats = DefaultFormats
-  private val poolSize = 1
+  private val poolSize = 4
   private val threadPool = Executors.newFixedThreadPool(poolSize)
   private val logger = LoggerFactory.getLogger(classOf[Siirtotiedostojono])
   private val jobs = new CopyOnWriteArrayList[QueryAndFormat]()
@@ -40,7 +40,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
 
   private val asiakirjat = CacheBuilder.newBuilder()
     .maximumSize(1000)
-    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .expireAfterWrite(1, TimeUnit.HOURS)
     .removalListener(new RemovalListener[QueryAndFormat, Either[Exception, Array[Byte]]]() {
       override def onRemoval(notification: RemovalNotification[QueryAndFormat, Either[Exception, Array[Byte]]]): Unit =
         eradicateAllShortUrlsToQuery(notification.getKey)
