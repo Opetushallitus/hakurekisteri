@@ -11,7 +11,7 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
     "Aidinkieli", "Asiointikieli", "Koulusivistyskieli", "Koulutusmarkkinointilupa", "On ylioppilas", "Suoritusvuosi",
     "Haku", "Hakuvuosi", "Hakukausi", "Hakemusnumero", "Organisaatio", "Hakukohde", "Hakukohteen kk-id", "Avoin vayla",
     "Valinnan tila", "Vastaanottotieto", "Ilmoittautumiset", "Pohjakoulutus", "Julkaisulupa", "Hakukelpoisuus",
-    "Hakukelpoisuuden lahde", "Hakukohteen koulutukset", "Liitteet"
+    "Hakukelpoisuuden lahde", "Maksuvelvollisuus", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto", "Hakukohteen koulutukset", "Liitteet"
   )
 
   override def getHeaders(hakijat: Seq[Hakija]): Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
@@ -57,6 +57,8 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
       hakemus.hKelpoisuus,
       hakemus.hKelpoisuusLahde.getOrElse(""),
       hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
+      hakemus.yleinenkielitutkinto,
+      hakemus.valtionhallinnonkielitutkinto,
       hakemus.hakukohteenKoulutukset.map(k => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})").mkString(","),
       hakemus.liitteet.map(j => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})").mkString(",")).zipWithIndex.toSet
 
