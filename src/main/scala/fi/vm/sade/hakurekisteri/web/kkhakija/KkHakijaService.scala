@@ -79,6 +79,8 @@ case class Hakemus(haku: String,
                    vastaanottotieto: Option[Vastaanottotila],
                    ilmoittautumiset: Seq[Lasnaolo],
                    pohjakoulutus: Seq[String],
+                   yleinenkielitutkinto: String,
+                   valtionhallinnonkielitutkinto: String,
                    julkaisulupa: Option[Boolean],
                    hKelpoisuus: String,
                    hKelpoisuusLahde: Option[String],
@@ -296,6 +298,8 @@ class KkHakijaService(hakemusService: IHakemusService,
           vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
           ilmoittautumiset = lasnaolot,
           pohjakoulutus = getPohjakoulutukset(koulutustausta),
+          yleinenkielitutkinto = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_sv"),
+          valtionhallinnonkielitutkinto = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_sv"),
           julkaisulupa = lisatiedot.get("lupaJulkaisu").map(_ == "true"),
           hKelpoisuus = hakukelpoisuus.status,
           hKelpoisuusLahde = hakukelpoisuus.source,
@@ -307,6 +311,13 @@ class KkHakijaService(hakemusService: IHakemusService,
       } else {
         None
       }
+    }
+  }
+
+  def getOsaaminenOsaalue(hakemusAnswers: Option[HakemusAnswers], key: String): String = {
+    hakemusAnswers match {
+      case Some(ha) => ha.osaaminen match { case Some(a) => a.getOrElse(key, "") case None => "" }
+      case None => ""
     }
   }
 
