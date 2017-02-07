@@ -329,12 +329,7 @@ app.controller "HakeneetCtrl", [
         ).reduce((a, b) ->
           a.concat b
         )
-        hakukohteet.sort (a, b) ->
-          return 0  if not a.nimi and not b.nimi
-          return -1  unless a.nimi
-          return 1  unless b.nimi
-          return 0  if a.nimi.toLowerCase() is b.nimi.toLowerCase()
-          (if a.nimi.toLowerCase() < b.nimi.toLowerCase() then -1 else 1)
+        hakukohteet.sort sortByNimi
 
         hakukohteet
       ), ->
