@@ -135,13 +135,20 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     }
   }
 
-  def addToJono(q: QueryAndFormat, personOid: String): Int = {
+  def addToJono(q: QueryAndFormat, personOid: String): Option[Int] = {
+    asiakirjat.invalidate(q)
     jobs.add(q)
     val pos = positionInQueue(q)
     submitNewAsiakirja(q)
     queryToShortId(q)
     pos
   }
+  def isExistingAsiakirjaWithErrors(q: QueryAndFormat): Boolean = Option(asiakirjat.getIfPresent(q)) match {
+    case Some(Left(_)) =>
+      true
+    case _ =>
+      false
+  }
   def isExistingAsiakirja(q: QueryAndFormat): Boolean = asiakirjat.getIfPresent(q) != null
-  def positionInQueue(q: QueryAndFormat): Int = jobs.indexOf(q)
+  def positionInQueue(q: QueryAndFormat): Option[Int] = Some(jobs.indexOf(q)).filter(_ != -1).map(_ + 1)
 }
