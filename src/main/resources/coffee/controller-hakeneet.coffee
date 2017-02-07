@@ -98,11 +98,14 @@ app.controller "HakeneetCtrl", [
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
 
+    $scope.poll = (url) ->
+      $http.post(url, $scope.query, {headers: {
+        'Content-type': 'application/json'
+      }}).success($scope.handlePoll)
+
     stop = $interval((->
       if($scope.query)
-        $http.post(plainUrls.url("suoritusrekisteri.jonotus"), $scope.query, {headers: {
-          'Content-type': 'application/json'
-        }}).success($scope.handlePoll)
+        $scope.poll(plainUrls.url("suoritusrekisteri.jonotus"))
     ), pollInterval)
     $scope.$on('$destroy', ->
       if(angular.isDefined(stop))
@@ -247,6 +250,7 @@ app.controller "HakeneetCtrl", [
       $scope.asiakirja = null
       $scope.asiakirjaError = null
       $scope.query = data
+      $scope.poll(plainUrls.url("suoritusrekisteri.jonotus.createNewIfErrors"))
       return
 
     $scope.reset = ->
