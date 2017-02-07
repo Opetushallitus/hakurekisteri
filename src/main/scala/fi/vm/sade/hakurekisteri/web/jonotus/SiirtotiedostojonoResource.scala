@@ -24,10 +24,15 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
   post("/") {
 
     toEvent(readJsonFromBody(request.body), currentUser) match {
-      case QueryWithExistingAsiakirja(personOid, query) =>
-        val shortId = jono.queryToShortId(query)
-        logger.debug(s"User $currentUser requested existing asiakirja with $query")
-        halt(status=200, body=write(Valmis(shortId)))
+      case QueryWithExistingAsiakirja(personOid, query, createNewDocumentIfErrors) =>
+        if(createNewDocumentIfErrors && jono.isExistingAsiakirjaWithErrors(query)) {
+          logger.debug(s"User $currentUser re-creating existing asiakirja with $query")
+          halt(status=200, body=write(Sijoitus(jono.addToJono(query, personOid).get)))
+        } else {
+          val shortId = jono.queryToShortId(query)
+          logger.debug(s"User $currentUser requested existing asiakirja with $query")
+          halt(status=200, body=write(Valmis(shortId)))
+        }
       case RequestSijoitusQuery(personOid, query, position, isNew) =>
         if(isNew) {
           logger.debug(s"User $currentUser requested asiakirja with $query")
@@ -52,10 +57,7 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
         val params = extracted.mapValues(_.values.toString)
         toQuery(params,user) match {
           case Some(query) =>
-            def incSijoitus(s: Int) = s + 1
-            val position = Option(jono.positionInQueue(query))
-              .filter(_ != -1)
-              .map(incSijoitus)
+            val position = jono.positionInQueue(query)
 
             position match {
               case Some(pos) =>
@@ -63,9 +65,9 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
               case None =>
                 val isAlreadyCreated = jono.isExistingAsiakirja(query)
                 if(isAlreadyCreated) {
-                  QueryWithExistingAsiakirja(personOid, query)
+                  QueryWithExistingAsiakirja(personOid, query, params.get("createNewDocumentIfErrors").exists(parseBoolean))
                 } else {
-                  RequestSijoitusQuery(personOid, query, incSijoitus(jono.addToJono(query, personOid)), true)
+                  RequestSijoitusQuery(personOid, query, jono.addToJono(query, personOid).get, true)
                 }
             }
           case None =>
@@ -103,6 +105,6 @@ trait UserEvent extends Event {
   val personOid: String
 }
 case class LoggedInUser(personOid: String) extends UserEvent
-case class QueryWithExistingAsiakirja(personOid: String, q: QueryAndFormat) extends UserEvent
+case class QueryWithExistingAsiakirja(personOid: String, q: QueryAndFormat, createNewDocumentIfErrors: Boolean) extends UserEvent
 case class RequestSijoitusQuery(personOid: String, q: QueryAndFormat, position: Int, isNew: Boolean) extends UserEvent
 case class AnonymousUser() extends Event
