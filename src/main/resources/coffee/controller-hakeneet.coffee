@@ -297,8 +297,7 @@ app.controller "HakeneetCtrl", [
       return 0  if a.nimi.toLowerCase() is b.nimi.toLowerCase()
       (if a.nimi.toLowerCase() < b.nimi.toLowerCase() then -1 else 1)
 
-    $scope.searchHakukohderyhma = ->
-      $http.get(window.url("organisaatio-service.ryhmat"),
+    $http.get(window.url("organisaatio-service.ryhmat"),
         cache: true
       ).then ((res) ->
         return [] if not res.data or res.data.length is 0
@@ -307,9 +306,15 @@ app.controller "HakeneetCtrl", [
           nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
         )
         hakukohderyhmat.sort sortByNimi
-        hakukohderyhmat
+        $scope.hakukohderyhmat = hakukohderyhmat
       ), ->
-        []
+        $scope.hakukohderyhmat = []
+
+    $scope.searchHakukohderyhma = (nimi) ->
+      R.filter(((hkr) ->
+        hkr.nimi.toLowerCase().indexOf(nimi.toLowerCase()) != -1), $scope.hakukohderyhmat)
+
+
 
     $scope.searchHakukohde = ->
       $http.get(window.url("tarjonta-service.hakukohde"),
