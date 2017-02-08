@@ -940,22 +940,28 @@
                     ))
                 })
                 describe("Luokkatieto", function () {
+                    function aarnenDatat() {
+                        httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().organisaatioService.pikkaralaKoodi()
+                        httpFixtures().organisaatioService.pikkaralaLuokkaTieto()
+                        httpFixtures().organisaatioService.pikkoloOid()
+                        httpFixtures().organisaatioService.pikkoloKoodi()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().suorituksetLocal.aarnenSuoritus()
+                        httpFixtures().arvosanatLocal.aarnenArvosanat()
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
+                        httpFixtures().komoLocal.komoTiedot()
+                    }
                     it("Lisää uusi luokkatieto toiminto luo uuden luokkatiedon", seqDone(
-                        wait.forAngular,
-                        function () {
-                            httpFixtures().organisaatioService.pikkaralaOid()
-                            httpFixtures().organisaatioService.pikkaralaKoodi()
-                            httpFixtures().organisaatioService.pikkaralaLuokkaTieto()
-                            httpFixtures().henkiloPalveluService.aarne()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                            httpFixtures().suorituksetLocal.aarnenSuoritus()
-                            httpFixtures().arvosanatLocal.aarnenArvosanat()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getDefaultYear())
+                        wait.forAngular(),
+                        function() {
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
-                            httpFixtures().komoLocal.komoTiedot()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getDefaultYear())
                         },
+                        aarnenDatat,
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
@@ -986,7 +992,52 @@
                     ))
                     it.skip("!! Luokkatiedon poistaminen", seqDone(
                     ))
-                    it.skip("!! Luokkatiedon muokkaaminen", seqDone(
+                    it("Luokkatiedot tallennetaan vain jos muuttuneita arvoja", seqDone(
+                        function() {
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot(getDefaultYear())
+                        },
+                        aarnenDatat,
+                        input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        saveDisabled(),
+                        typeaheadInput(opiskelijatiedot.luokkatietoOppilaitos, "Pik", opiskelijatiedot.typeaheadMenuChild(2)),
+                        saveEnabled(),
+                        typeaheadInput(opiskelijatiedot.luokkatietoOppilaitos, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
+                        saveDisabled(),
+                        input(opiskelijatiedot.luokkatietoLuokka, "9A"),
+                        saveEnabled(),
+                        input(opiskelijatiedot.luokkatietoLuokka, "10A"),
+                        saveDisabled(),
+                        input(opiskelijatiedot.luokkatietoLuokkaTaso, "2"),
+                        saveEnabled(),
+                        input(opiskelijatiedot.luokkatietoLuokkaTaso, "3"),
+                        saveDisabled(),
+                        input(opiskelijatiedot.luokkatietoAlkuPaiva, "1.1.2017"),
+                        saveEnabled(),
+                        input(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014"),
+                        saveDisabled(),
+                        input(opiskelijatiedot.luokkatietoLoppuPaiva, "2.1.2017"),
+                        saveEnabled(),
+                        input(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015"),
+                        saveDisabled(),
+                        typeaheadInput(opiskelijatiedot.luokkatietoOppilaitos, "Pik", opiskelijatiedot.typeaheadMenuChild(2)),
+                        saveEnabled(),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/opiskelijat\/e86fb63a-607a-48da-b701-4527193e9efc$/),
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                "id": "e86fb63a-607a-48da-b701-4527193e9efc",
+                                "oppilaitosOid": "1.2.246.562.10.16546622305",
+                                "luokkataso": "10",
+                                "luokka": "10A",
+                                "henkiloOid": "1.2.246.562.24.71944845619",
+                                "alkuPaiva": "2014-08-17T21:00:00.000Z",
+                                "loppuPaiva": "2015-06-03T21:00:00.000Z",
+                                "source": "Test"
+                            })
+                        },
+                        saveDisabled()
                     ))
                 })
             }
