@@ -90,6 +90,7 @@ app.controller "HakeneetCtrl", [
           else
             $scope.query = null
             asiakirjaError = LokalisointiService.getTranslation(statusText)
+            console.log(statusText + ' -> ' asiakirjaError)
             if(asiakirjaError)
               $scope.asiakirjaError = asiakirjaError
             else
