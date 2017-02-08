@@ -25,7 +25,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     val kkHakijaService = new KkHakijaService(hakemusService = new HakemusServiceMock(),
       hakupalvelu = new Hakupalvelu() {
         override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
-        override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = Future.successful(Seq())
+        override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
       },
       tarjonta = anyActorRef,
       haut = anyActorRef,
