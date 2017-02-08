@@ -51,30 +51,42 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           val tryCreateContent: Try[Array[Byte]] = Try(q.query match {
             case query:KkHakijaQuery =>
               val hakijat = Await.result(kkHakija.getKkHakijat(query), defaultTimeout.duration)
-              val bytes = new ByteArrayOutputStream()
-              q.format match {
-                case ApiFormat.Json =>
-                  IOUtils.write(write(hakijat), bytes)
-                  bytes.toByteArray
-                case ApiFormat.Excel =>
-                  KkExcelUtil.write(bytes, hakijat)
-                  bytes.toByteArray
+              if(hakijat.isEmpty){
+                Array()
+              } else {
+                val bytes = new ByteArrayOutputStream()
+                q.format match {
+                  case ApiFormat.Json =>
+                    IOUtils.write(write(hakijat), bytes)
+                    bytes.toByteArray
+                  case ApiFormat.Excel =>
+                    KkExcelUtil.write(bytes, hakijat)
+                    bytes.toByteArray
+                }
               }
             case query:HakijaQuery =>
               Await.result((hakijaActor ? query), defaultTimeout.duration) match {
                 case hakijat: XMLHakijat =>
-                  val bytes = new ByteArrayOutputStream()
-                  ExcelUtilV1.write(bytes, hakijat)
-                  bytes.toByteArray
+                  if(hakijat.hakijat.isEmpty) {
+                    Array()
+                  } else {
+                    val bytes = new ByteArrayOutputStream()
+                    ExcelUtilV1.write(bytes, hakijat)
+                    bytes.toByteArray
+                  }
                 case hakijat: JSONHakijat =>
-                  val bytes = new ByteArrayOutputStream()
-                  q.format match {
-                    case ApiFormat.Json =>
-                      IOUtils.write(write(hakijat), bytes)
-                      bytes.toByteArray
-                    case ApiFormat.Excel =>
-                      ExcelUtilV2.write(bytes, hakijat)
-                      bytes.toByteArray
+                  if(hakijat.hakijat.isEmpty) {
+                    Array()
+                  } else {
+                    val bytes = new ByteArrayOutputStream()
+                    q.format match {
+                      case ApiFormat.Json =>
+                        IOUtils.write(write(hakijat), bytes)
+                        bytes.toByteArray
+                      case ApiFormat.Excel =>
+                        ExcelUtilV2.write(bytes, hakijat)
+                        bytes.toByteArray
+                    }
                   }
                 case _ =>
                   logger.error(s"Couldn't handle return type from HakijaActor!")
