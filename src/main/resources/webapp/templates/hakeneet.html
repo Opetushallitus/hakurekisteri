@@ -118,7 +118,7 @@
                         <div ng-show="query">
                             <br>
                             <p ng-show="sijoitus">
-                                <span oph-msg="suoritusrekisteri.siirtotiedosto.jonossa">Siirtotiedoston luonti on jonossa</span><strong>({{sijoitus}}.)</strong>
+                                <span oph-msg="suoritusrekisteri.siirtotiedosto.jonossa">Siirtotiedoston luonti on jonossa</span><strong ng-hide="tyonalla">({{sijoitus}}.)</strong>
                             </p>
                             <p class="loading"></p>
                         </div>

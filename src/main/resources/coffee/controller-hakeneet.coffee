@@ -97,6 +97,7 @@ app.controller "HakeneetCtrl", [
         )
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
+        $scope.tyonalla = reply.tyonalla == true
 
     $scope.poll = (url) ->
       $http.post(url, $scope.query, {headers: {
