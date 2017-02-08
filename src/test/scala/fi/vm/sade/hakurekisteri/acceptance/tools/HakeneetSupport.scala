@@ -561,7 +561,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       this.lisakysymykset = lisakysymykset
     }
 
-    override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = Future.successful(Seq())
+    override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
   }
 
   class MockedOrganisaatioActor extends Actor {
