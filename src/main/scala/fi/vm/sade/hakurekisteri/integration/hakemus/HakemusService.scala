@@ -110,7 +110,11 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
     fetchHakemukset(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
   }
   def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    fetchHakemukset(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
+    if(hakukohdeOids.isEmpty) {
+      Future.successful(Seq())
+    } else {
+      fetchHakemukset(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
+    }
   }
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
     fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
