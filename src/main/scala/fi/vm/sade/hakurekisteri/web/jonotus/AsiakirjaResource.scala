@@ -6,6 +6,7 @@ import java.util.concurrent.{TimeoutException, ExecutionException}
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -45,8 +46,12 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
             case t:TimeoutException =>
               NoContent(reason = "suoritusrekisteri.poikkeus.aikakatkaisu")
             case e:ExecutionException =>
-              val cause = e.getCause
-              NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
+              e.getCause match {
+                case p: PreconditionFailedException =>
+                  NoContent(reason = "suoritusrekisteri.poikkeus.taustapalveluvirhe")
+                case _ =>
+                  NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
+              }
             case i:InitialLoadingNotDone =>
               NoContent(reason = "suoritusrekisteri.poikkeus.alustuskesken")
             case e:EmptyAsiakirjaException =>
