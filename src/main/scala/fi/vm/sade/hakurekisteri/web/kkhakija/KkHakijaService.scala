@@ -128,7 +128,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
     def resolveMultipleHakukohdeOidsAsHakemukset(hakukohdeOids: Seq[String]): Future[Seq[FullHakemus]] = {
-      Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, q.organisaatio))).map(_.flatten)
+      hakemusService.hakemuksetForHakukohdes(hakukohdeOids.toSet, q.organisaatio)
     }
 
     def matchHakemusToQuery(hakemus: FullHakemus) : Boolean = {
