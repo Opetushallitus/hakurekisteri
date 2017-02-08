@@ -66,6 +66,7 @@ object ListFullSearchDto {
 trait IHakemusService {
   def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]]
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]]
+  def hakemuksetForHakukohdes(hakukohdeOid: Set[String], organisaatio: Option[String]): Future[Seq[FullHakemus]]
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
   def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]]
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]]
@@ -83,7 +84,7 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
 
-  case class SearchParams(aoOids: String = null, asId: String = null, organizationFilter: String = null,
+  case class SearchParams(aoOids: Seq[String] = null, asId: String = null, organizationFilter: String = null,
                           updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)
 
   private val logger = Logging.getLogger(system, this)
@@ -102,9 +103,11 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
   }
 
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    fetchHakemukset(params = SearchParams(aoOids = hakukohdeOid, organizationFilter = organisaatio.orNull))
+    fetchHakemukset(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
   }
-
+  def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
+    fetchHakemukset(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
+  }
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
     fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
   }
@@ -185,6 +188,8 @@ class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForPerson(personOid: String) = Future.successful(Seq[FullHakemus]())
 
   override def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
+
+  override def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
 
   override def personOidsForHaku(hakuOid: String, organisaatio: Option[String]) = Future.successful(Set[String]())
 
