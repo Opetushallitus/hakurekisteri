@@ -47,7 +47,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
   val hakupalvelu = new Hakupalvelu() {
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
-    override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = Future.successful(Seq())
+    override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
   }
 
   val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock)
