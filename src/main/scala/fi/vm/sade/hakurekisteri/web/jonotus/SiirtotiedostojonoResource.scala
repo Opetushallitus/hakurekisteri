@@ -27,19 +27,19 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
       case QueryWithExistingAsiakirja(personOid, query) =>
         if(createNewDocumentIfErrors && jono.isExistingAsiakirjaWithErrors(query)) {
           logger.debug(s"User $currentUser re-creating existing asiakirja with $query")
-          halt(status=200, body=write(Sijoitus(jono.addToJono(query, personOid).get)))
+          halt(status=200, body=write(Sijoitus(jono.forceAddToJono(query, personOid).get, false)))
         } else {
           val shortId = jono.queryToShortId(query)
           logger.debug(s"User $currentUser requested existing asiakirja with $query")
           halt(status=200, body=write(Valmis(shortId)))
         }
-      case RequestSijoitusQuery(personOid, query, position, isNew) =>
+      case RequestSijoitusQuery(personOid, query, position, isNew, isInProgress) =>
         if(isNew) {
           logger.debug(s"User $currentUser requested asiakirja with $query")
         } else {
           logger.debug(s"User $currentUser in position $position")
         }
-        halt(status=200, body=write(Sijoitus(position)))
+        halt(status=200, body=write(Sijoitus(position, isInProgress)))
       case AnonymousUser() =>
         halt(status=401, body="Anonymous user not authorized!")
       case _ =>
@@ -61,13 +61,14 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
 
             position match {
               case Some(pos) =>
-                RequestSijoitusQuery(personOid, query, pos, false)
+                val isInProgress =jono.isInProgress(query)
+                RequestSijoitusQuery(personOid, query, pos, false, isInProgress)
               case None =>
                 val isAlreadyCreated = jono.isExistingAsiakirja(query)
                 if(isAlreadyCreated) {
                   QueryWithExistingAsiakirja(personOid, query)
                 } else {
-                  RequestSijoitusQuery(personOid, query, jono.addToJono(query, personOid).get, true)
+                  RequestSijoitusQuery(personOid, query, jono.forceAddToJono(query, personOid).get, true, false)
                 }
             }
           case None =>
@@ -97,7 +98,7 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
 }
 
 case class QueryAndFormat(query: Query, format: ApiFormat)
-case class Sijoitus(sijoitus: Int)
+case class Sijoitus(sijoitus: Int, tyonalla: Boolean)
 case class Valmis(asiakirjaId: String)
 case class Ping()
 
@@ -106,5 +107,5 @@ trait UserEvent extends Event {
 }
 case class LoggedInUser(personOid: String) extends UserEvent
 case class QueryWithExistingAsiakirja(personOid: String, q: QueryAndFormat) extends UserEvent
-case class RequestSijoitusQuery(personOid: String, q: QueryAndFormat, position: Int, isNew: Boolean) extends UserEvent
+case class RequestSijoitusQuery(personOid: String, q: QueryAndFormat, position: Int, isNew: Boolean, isInProgress: Boolean) extends UserEvent
 case class AnonymousUser() extends Event
