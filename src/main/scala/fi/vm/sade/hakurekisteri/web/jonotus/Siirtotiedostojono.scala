@@ -106,17 +106,14 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     threadPool.execute(new Runnable() {
       override def run(): Unit = {
         // prevent multiple threads from starting same job <= case where user retries multiple times
-        val firstInProgress = inprogress.addIfAbsent(q)
-        if(firstInProgress) {
+        val isMissing = asiakirjat.getIfPresent(q) == null
+        val firstInProcessor = isMissing && inprogress.addIfAbsent(q)
+        if(firstInProcessor) {
           try {
-          val jobWasAvailable = jobs.remove(q)
-          if(jobWasAvailable) {
-            if(asiakirjat.getIfPresent(q) == null) {
-              asiakirjat.get(q)
-              logger.info(s"Asiakirja created for id ${queryToShortId(q)}")
-            }
-          }
+            asiakirjat.get(q)
+            logger.info(s"Asiakirja created for id ${queryToShortId(q)}")
           } finally {
+            jobs.remove(q)
             inprogress.remove(q)
           }
         }
@@ -135,7 +132,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     }
   }
 
-  def addToJono(q: QueryAndFormat, personOid: String): Option[Int] = {
+  def forceAddToJono(q: QueryAndFormat, personOid: String): Option[Int] = {
     asiakirjat.invalidate(q)
     jobs.add(q)
     val pos = positionInQueue(q)
@@ -151,4 +148,5 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
   }
   def isExistingAsiakirja(q: QueryAndFormat): Boolean = asiakirjat.getIfPresent(q) != null
   def positionInQueue(q: QueryAndFormat): Option[Int] = Some(jobs.indexOf(q)).filter(_ != -1).map(_ + 1)
+  def isInProgress(q: QueryAndFormat): Boolean = inprogress.contains(q)
 }
