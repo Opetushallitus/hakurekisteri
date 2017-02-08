@@ -184,8 +184,8 @@ app.controller "HakeneetCtrl", [
     $scope.search = ->
       MessageService.clearMessages()
       if isKk()
-        if not $scope.oppijanumero and not $scope.hakukohde and not $scope.hakukohderyhma
-          unless ($scope.oppijanumero or $scope.hakukohderyhma)
+        if not $scope.oppijanumero and not $scope.hakukohde and not ($scope.hakukohderyhma and $scope.haku)
+          unless $scope.oppijanumero
             MessageService.addMessage
               type: "danger"
               message: "Oppijanumeroa ei ole syötetty."
@@ -193,13 +193,22 @@ app.controller "HakeneetCtrl", [
               description: "Syötä oppijanumero ja yritä uudelleen."
               descriptionKey: "suoritusrekisteri.hakeneet.hakunumeroaeisyotettyselite"
 
-          unless ($scope.hakukohde or $scope.hakukohderyhma)
+          unless $scope.hakukohde
             MessageService.addMessage
               type: "danger"
               message: "Hakukohdetta ei ole valittu."
               messageKey: "suoritusrekisteri.hakeneet.hakukohdettaeisyotetty"
               description: "Valitse hakukohde ja yritä uudelleen. Hakukohde on helpompi löytää, jos valitset ensin haun ja organisaation."
               descriptionKey: "suoritusrekisteri.hakeneet.hakukohdettaeisyotettyselite"
+
+          unless ($scope.hakukohderyhma and $scope.haku)
+            MessageService.addMessage
+              type: "danger"
+              message: "Hakukohderyhmää ja hakua ei ole valittu."
+              messageKey: "suoritusrekisteri.hakeneet.hakukohderyhmaajahakuaeisyotetty"
+              description: "Valitse hakukohderyhmä ja haku ja yritä uudelleen."
+              descriptionKey: "suoritusrekisteri.hakeneet.hakukohderyhmaajahakuaeisyotetty"
+
 
           return
       else

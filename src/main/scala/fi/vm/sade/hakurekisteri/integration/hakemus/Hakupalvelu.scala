@@ -19,7 +19,7 @@ import scala.util.Try
 
 trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
-  def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]]
+  def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]]
 }
 
 case class ThemeQuestion(`type`: String, messageText: String, applicationOptionOids: Seq[String], options: Option[Map[String, String]],
@@ -76,8 +76,8 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ hardCodedLisakysymys)
   }
 
-  override def getHakukohdeOids(hakukohderyhma: String): Future[Seq[String]] = {
-    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map("organisaatioRyhmaOid"->hakukohderyhma))
+  override def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]] = {
+    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map("hakuOid" -> haku, "organisaatioRyhmaOid"->hakukohderyhma))
       .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
