@@ -126,8 +126,11 @@ class KkHakijaService(hakemusService: IHakemusService,
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
 
-
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
+    def resolveMultipleHakukohdeOidsAsHakemukset(hakukohdeOids: Seq[String]): Future[Seq[FullHakemus]] = {
+      Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, q.organisaatio))).map(_.flatten)
+    }
+
     def matchHakemusToQuery(hakemus: FullHakemus) : Boolean = {
       hakemus.personOid.isDefined && hakemus.stateValid &&
         q.oppijanumero.forall(hakemus.personOid.contains(_)) &&
@@ -137,8 +140,8 @@ class KkHakijaService(hakemusService: IHakemusService,
       hakemukset <- q match {
         case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
         case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
-        case KkHakijaQuery(None, _, _, None, Some(hakukohderyhma), _, _) => hakupalvelu.getHakukohdeOids(hakukohderyhma)
-          .flatMap(hakukohdeOids => Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, q.organisaatio)))).map(_.flatten)
+        case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _) =>
+          hakupalvelu.getHakukohdeOids(hakukohderyhma, haku).flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
       hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
