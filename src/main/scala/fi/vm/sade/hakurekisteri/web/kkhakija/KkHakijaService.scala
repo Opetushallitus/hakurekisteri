@@ -149,7 +149,8 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus])(q: KkHakijaQuery): Future[Seq[Hakija]] = {
-    Future.sequence(hakemukset.groupBy(_.applicationSystemId).map {
+    val byHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
+    Future.sequence(byHakuOid.map {
       case (hakuOid, h) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
