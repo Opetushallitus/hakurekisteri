@@ -34,7 +34,7 @@ app = angular.module "myApp", [
   "ngRoute"
   "ngResource"
   "ui.bootstrap"
-  "ngUpload"
+  "ngFileUpload"
   "ngSanitize"
   "ngCookies"
   "angular-clipboard"

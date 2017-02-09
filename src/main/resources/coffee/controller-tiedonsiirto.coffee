@@ -4,7 +4,8 @@ app.controller "TiedonsiirtoCtrl", [
   "LokalisointiService"
   "$log"
   "$http"
-  ($scope, MessageService, LokalisointiService, $log, $http) ->
+  "Upload"
+  ($scope, MessageService, LokalisointiService, $log, $http, Upload) ->
     supportsFileApi = window.FileReader?
 
     fetchEnabledState = (type) ->
@@ -43,6 +44,18 @@ app.controller "TiedonsiirtoCtrl", [
       catch e
         $log.error(e)
 
+    $scope.batchUpload = (url) ->
+      Upload.upload({
+        url: url + $scope.tyyppi,
+        method: 'POST',
+        data: {data: $scope.batchFile, name: $scope.tyyppi}
+      })
+      .then (res) ->
+        $scope.uploadComplete(res)
+      , (err) ->
+        $scope.uploadComplete(err)
+
+
     $scope.validateXmlFile = ->
       if supportsFileApi and $scope.tyyppi is "arvosanat"
         file = fileupload.files[0]
@@ -64,37 +77,8 @@ app.controller "TiedonsiirtoCtrl", [
         {ruleId, todistukset, count: todistukset.length, message}
       $scope.$apply()
 
-    $scope.beforeSubmitCheck = ->
-      $scope.$apply(->
-        MessageService.clearMessages()
-      )
-      if !$scope.tyyppi
-        $scope.$apply(->
-          MessageService.addMessage
-            type: "danger"
-            message: "Tiedoston tyyppiä ei ole valittu"
-            messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
-        )
-        false
-      if !fileupload.value
-        $scope.$apply(->
-          MessageService.addMessage
-            type: "danger"
-            message: "Tiedostoa ei ole valittu"
-            messageKey: "suoritusrekisteri.tiedonsiirto.tiedostoaeiolevalittu"
-        )
-        false
-      else
-        form = jQuery("#uploadForm")
-        if form.get(0)
-          url = 'rest/v2/siirto/' + $scope.tyyppi
-
-          form.get(0).setAttribute('action', url)
-        $scope.sending = true
-        delete $scope.uploadResult
-        true
-
-    $scope.uploadComplete = (content) ->
+    $scope.uploadComplete = (response) ->
+      content = response.data
       isImportBatchResponse = (content) ->
         (typeof content is "string" and content.match(/.*"batchType".*/g)) or (typeof content is "object" and content.batchType)
 
@@ -116,7 +100,6 @@ app.controller "TiedonsiirtoCtrl", [
           messageKey: "suoritusrekisteri.tiedonsiirto.virhe"
           description: response.message
           validationErrors: response.validationErrors
-      delete $scope.sending
       clearFile()
       return
 

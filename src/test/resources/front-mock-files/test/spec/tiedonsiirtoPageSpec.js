@@ -37,13 +37,6 @@
                 })
             })
 
-            describe("Kun tiedoston tyyppiä ja tiedostoa ei ole valittu", function() {
-
-                it('ilmoittaa, että tyyppiä ja tiedostoa ei ole valittu', function () {
-                    expect(page.submitButton().isEnabled()).to.equal(false)
-                })
-            })
-
             describe("Kun lomake resetoidaan", function () {
                 before(
                   page.resetButton().click,
