@@ -97,6 +97,11 @@ case class PersonOidsWithAliases(henkiloOids: Set[String], aliasesByPersonOids: 
     PersonOidsWithAliases(henkiloOids -- henkiloOidsToRemove, aliasesByPersonOids -- henkiloOidsToRemove)
   }
 
+  def intersect(henkiloOidsToInclude: Set[String]): PersonOidsWithAliases = {
+    PersonOidsWithAliases(henkiloOids.intersect(henkiloOidsToInclude),
+      aliasesByPersonOids.filter { case (key, value) => henkiloOidsToInclude.contains(key) })
+  }
+
   def isEmpty: Boolean = aliasesByPersonOids.isEmpty
 
   private def isSinglePersonWithoutAliases: Boolean = henkiloOids.size == 1 && aliasesByPersonOids(henkiloOids.head).size == 1
