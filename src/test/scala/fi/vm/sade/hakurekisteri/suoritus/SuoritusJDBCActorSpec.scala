@@ -82,6 +82,14 @@ class SuoritusJDBCActorSpec extends FlatSpec with BeforeAndAfterEach with  Befor
     run(database.run(sql"select komo from suoritus where henkilo_oid = $linkedOid1 and current".as[String])) should have length 2
   }
 
+  it should "crash if InsertResource message is constructed with PersonOidsWithAliases with several oids" in {
+    val brokenInsert = InsertResource[UUID,Suoritus](originalSuoritus.copy(komo = "different komo").identify, PersonOidsWithAliases(Set(originalSuoritus.henkiloOid, "1.2.3")))
+    val illegalArgumentException = intercept[IllegalArgumentException] {
+      run(suoritusrekisteri ? brokenInsert)
+    }
+    illegalArgumentException.getMessage should include(s"Got ${brokenInsert.personOidsWithAliases.henkiloOids.size} person aliases")
+  }
+
   private def run[T](f: Future[T]): T = Await.result(f, atMost = timeout.duration)
 
 }
