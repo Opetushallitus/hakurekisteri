@@ -12,34 +12,28 @@ app.controller "MuokkaaLuokkatieto", [
           $scope.info.organisaatio = organisaatio
       $scope.info.editable = true
 
-    getOppilaitosOid = () ->
-      d = $q.defer()
-      getOrganisaatio $http, $scope.info.oppilaitos, ((organisaatio) ->
-        $scope.luokkatieto.oppilaitosOid = organisaatio.oid
-        d.resolve "validated against organisaatio"
-      ), ->
-        d.reject "validationerror in call to organisaatio"
-      d.promise
+    $scope.validateData = (updateOnly) ->
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateModel($scope.info, $scope.luokkatieto, !updateOnly)
 
     $scope.hasChanged = ->
+      $scope.validateData(true)
       modifiedCache.hasChanged()
 
     $scope.saveData = ->
       if $scope.hasChanged()
         d = $q.defer()
-        getOppilaitosOid().then () ->
-          luokkatieto = $scope.luokkatieto
-          luokkatieto.$save (->
-            enrichLuokkatieto luokkatieto
-            d.resolve "done"
-          ), ->
-            MessageService.addMessage
-              type: "danger"
-              messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
-              message: "Virhe tallennettaessa luokkatietoja."
-              descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
-              description: "Yritä uudelleen."
-            d.reject "error saving luokkatieto: " + JSON.stringify luokkatieto
+        luokkatieto = $scope.luokkatieto
+        luokkatieto.$save (->
+          enrichLuokkatieto luokkatieto
+          d.resolve "done"
+        ), ->
+          MessageService.addMessage
+            type: "danger"
+            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
+            message: "Virhe tallennettaessa luokkatietoja."
+            descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
+            description: "Yritä uudelleen."
+          d.reject "error saving luokkatieto: " + JSON.stringify luokkatieto
         d.promise.then () ->
           modifiedCache.update()
         [d.promise]
