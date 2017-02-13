@@ -47,7 +47,12 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
       sender ! operationOrFailure(() => getAll(ids.asInstanceOf[Seq[I]]))
 
     case InsertResource(resource: T, personOidsWithAliases: PersonOidsWithAliases) =>
-      sender ! operationOrFailure(() => insert(resource, personOidsWithAliases))
+      if (personOidsWithAliases.henkiloOids.size > 1) {
+        sender ! Failure(new IllegalArgumentException(s"Got ${personOidsWithAliases.henkiloOids.size} person aliases " +
+          s"for inserting a single resource $resource . This would make the deduplication query unneccessarily heavy."))
+      } else {
+        sender ! operationOrFailure(() => insert(resource, personOidsWithAliases))
+      }
 
     case LogMessage(message, level) =>
       log.log(level, message)

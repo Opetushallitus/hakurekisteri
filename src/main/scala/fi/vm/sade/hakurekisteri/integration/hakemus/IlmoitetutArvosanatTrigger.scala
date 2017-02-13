@@ -68,7 +68,7 @@ object IlmoitetutArvosanatTrigger {
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): Trigger = {
     Trigger {
       (hakemus, personOidsWithAliases: PersonOidsWithAliases) => {
-        muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases)
+        muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases.intersect(hakemus.personOid.toSet))
       }
     }
   }

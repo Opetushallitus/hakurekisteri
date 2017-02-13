@@ -39,6 +39,11 @@ class ArvosanaResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
   def responseIds(body: String): Seq[String] = parse(body).extract[JArray].arr
     .map(_.extract[JObject].values("id").asInstanceOf[String])
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    ItPostgres.reset()
+  }
+
   override def afterAll(): Unit = {
     super.afterAll()
     database.close()

@@ -27,7 +27,9 @@ object SuoritusQuery {
   }
 }
 
-case class SuoritusQueryWithPersonAliases(wrappedQuery: SuoritusQuery, personOidsWithAliases: PersonOidsWithAliases) extends Query[Suoritus]
+case class SuoritusQueryWithPersonAliases(wrappedQuery: SuoritusQuery, fullPersonOidsWithAliases: PersonOidsWithAliases) extends Query[Suoritus] {
+  val personOidsWithAliases: PersonOidsWithAliases = fullPersonOidsWithAliases.intersect(wrappedQuery.henkilo.toSet)
+}
 case class SuoritusHenkilotQuery(henkilot: PersonOidsWithAliases) extends Query[Suoritus]
 case class SuoritysTyyppiQuery(henkilo: String, komo: String) extends Query[Suoritus]
 case class AllForMatchinHenkiloSuoritusQuery(vuosi: Option[String] = None, myontaja: Option[String] = None) extends Query[Suoritus]
