@@ -7,8 +7,8 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchOrgActor}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
-import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
+import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
@@ -97,6 +97,19 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
       opiskeluoikeudet = Seq(),
       ensikertalainen = None
     )))
+
+    tiedot.head.suoritukset.head.suoritus.identify.id should equal(suoritus.id)
+  }
+
+  test("correct suoritus resource id should be retained when querying with person aliases") {
+    val personOids = new PersonOidsWithAliases(Set("1.2.246.562.24.00000000001"),
+      Map("1.2.246.562.24.00000000001" -> Set("1.2.246.562.24.00000000001")),
+      Set("1.2.246.562.24.00000000001"))
+    val oppijat = Await.result(resource.getRekisteriData(personOids), 15.seconds)
+    oppijat should have size 1
+    oppijat.head.suoritukset should have size 1
+
+    oppijat.head.suoritukset.head.suoritus.identify.id should equal(suoritus.id)
   }
 
   test("should return a list of oppijas for a post query") {
@@ -105,6 +118,8 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
 
       val oppijat = read[List[Oppija]](body)
       oppijat.size should be (2)
+
+      oppijat.head.suoritukset.head.suoritus.identify.id should equal(suoritus.id)
     }
   }
 

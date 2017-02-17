@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHe
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.tools.DurationHelper
 
 import scala.concurrent.duration.Duration
@@ -92,7 +92,7 @@ trait OppijaFetcher {
     val todistukset: Set[Todistus] = for {
       alias: String <- personOidsWithAliases.aliasesByPersonOids(oid)
       todistus <- todistuksetByPersonOid.getOrElse(alias, Seq())
-    } yield todistus.copy(suoritus = Suoritus.copyWithHenkiloOid(todistus.suoritus, oid))
+    } yield todistus.copy(suoritus = Suoritus.copyWithHenkiloOid(todistus.suoritus.identify, oid))
 
     todistukset.toSeq
   }
