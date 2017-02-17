@@ -65,7 +65,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
                 }
               }
             case query:HakijaQuery =>
-              Await.result((hakijaActor ? query), defaultTimeout.duration) match {
+              Await.result(hakijaActor ? query, defaultTimeout.duration) match {
                 case hakijat: XMLHakijat =>
                   if(hakijat.hakijat.isEmpty) {
                     Array()
