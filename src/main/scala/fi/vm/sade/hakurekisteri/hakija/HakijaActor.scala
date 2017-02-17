@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.Query
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import scala.util.Try
+import scala.util.{Failure, Try}
 import akka.pattern.{pipe, ask}
 import ForkedSeq._
 import TupledFuture._
@@ -168,11 +168,17 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def receive = {
     case q: HakijaQuery => {
-      q.version match {
+      Try(q.version match {
         case 1 => XMLQuery(q) pipeTo sender
         case 2 => JSONQuery(q) pipeTo sender
+      }) match {
+        case Failure(fail) =>
+          log.error(s"Unexpected failure ${fail}")
+        case _ =>
       }
     }
+    case something =>
+      log.error(s"Unexpected query ${something}")
   }
 
   def resolveOppilaitosKoodi(o: Organisaatio): Future[Option[String]] = o.oppilaitosKoodi match {
