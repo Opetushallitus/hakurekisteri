@@ -89,6 +89,19 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     triggerCounter should be (40)
   }
 
+  it should "be able to skip application without person oid" in {
+    var triggerCounter = 0
+    val trigger = Trigger(f = (oid: String, hetu: String, hakuOid: String, personOidsWithAliases: PersonOidsWithAliases) => {
+      triggerCounter += 1
+    })
+    val answers = Some(HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("123456-7890")))))
+
+    trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+    triggerCounter should equal(1)
+    trigger.f(FullHakemus("oid", None, "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+    triggerCounter should equal(1)
+  }
+
   it should "return hetus and personOids" in {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("hetuAndPersonOid")))
