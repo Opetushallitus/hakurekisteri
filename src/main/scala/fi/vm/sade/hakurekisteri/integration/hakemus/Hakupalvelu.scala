@@ -237,6 +237,13 @@ object AkkaHakupalvelu {
       .toSeq
   }
 
+  def getOsaaminenOsaalue(hakemusAnswers: Option[HakemusAnswers], key: String): Option[String] = {
+    hakemusAnswers match {
+      case Some(ha) => ha.osaaminen match { case Some(a) => a.get(key) case None => None }
+      case None => None
+    }
+  }
+
   def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
@@ -253,6 +260,11 @@ object AkkaHakupalvelu {
       lisatiedot <- a.lisatiedot;
       julkaisu <- lisatiedot.get("lupaJulkaisu")
     ) yield julkaisu).getOrElse("false").toBoolean
+
+    val yleinen_kielitutkinto_sv = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_sv")
+    val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_sv")
+
+    val osaaminen = Osaaminen(yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv)
 
     val lisapistekoulutus = for (
       tausta <- koulutustausta;
@@ -306,13 +318,13 @@ object AkkaHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq())).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq()))
-    )
+      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
   }
 
   def getValue[A](key: (HakemusAnswers) => Option[A], subKey: (A) => Option[String], default: String = "")(implicit answers: Option[HakemusAnswers]): String = {
     (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
+
 
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {

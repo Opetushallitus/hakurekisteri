@@ -81,7 +81,7 @@ trait IHakemusService {
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
-class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 10000)
+class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
                     (implicit val system: ActorSystem) extends IHakemusService {
   val fetchPersonAliases: (Seq[FullHakemus]) => Future[(Seq[FullHakemus], PersonOidsWithAliases)] = { hs: Seq[FullHakemus] =>
     val personOids: Seq[String] = hs.flatMap(_.personOid)

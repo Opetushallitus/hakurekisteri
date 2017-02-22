@@ -13,7 +13,7 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
     "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus",
     "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
-    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"
+    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
   )
 
   def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat) = {
@@ -81,7 +81,9 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       ht.lasnaolo.getOrElse(""),
       toBooleanX(ht.terveys),
       toBooleanX(ht.aiempiperuminen),
-      toBooleanX(ht.kaksoistutkinto))
+      toBooleanX(ht.kaksoistutkinto),
+      h.hakemus.osaaminen.yleinen_kielitutkinto_sv.getOrElse(""),
+      h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv.getOrElse(""))
 
 
     def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
