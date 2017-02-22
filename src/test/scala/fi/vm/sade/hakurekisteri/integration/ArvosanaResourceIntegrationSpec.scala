@@ -23,15 +23,18 @@ class ArvosanaResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
   val lukioKomo = "1.2.246.562.5.2013061010184237348007"
   private val aarnenOid: String = "1.2.246.562.24.71944845619"
   val aarnenLukio: String = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "KESKEN")
+  val peruskouluKomo = "1.2.246.562.13.62959769647"
+  private val tyynenOid = "1.2.246.562.24.98743797763"
+  val tyynenPeruskoulu = SuoritusMock.getSuoritusByHenkiloKomoTila(tyynenOid, peruskouluKomo, "KESKEN")
 
   implicit val database: _root_.fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.backend.DatabaseDef = Database.forURL(ItPostgres.getEndpointURL)
 
-  def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset")
-  def postArvosana(arvosana: String): String = postResourceJson(arvosana, "arvosanat")
+  def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset", 201)
+  def postArvosana(arvosana: String, id: Option[String] = None, expectedStatusCode: Int = 201): String = postResourceJson(arvosana, "arvosanat" + id.map("/" + _).getOrElse(""), expectedStatusCode)
 
-  private def postResourceJson(content: String, endpoint: String): String = {
+  private def postResourceJson(content: String, endpoint: String, expectedStatusCode: Int): String = {
     post(s"/suoritusrekisteri/rest/v1/$endpoint", content, Map("Content-Type" -> "application/json; charset=UTF-8")) {
-      response.status should be(201)
+      response.status should be(expectedStatusCode)
       parse(body).extract[JObject].values("id").asInstanceOf[String]
     }
   }
@@ -105,6 +108,39 @@ class ArvosanaResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
       val arvosana = arvosanaJson.extract[Arvosana]
 
       arvosana.source should equal(TestUser.username)
+    }
+  }
+
+  it should "allow rekisterinpitaja to update any kind of arvosana even with different source" in {
+    val createdSuoritusResourceId = postSuoritus(tyynenPeruskoulu)
+    val arvosanaResourceId = postArvosana(s"""{ "suoritus": "$createdSuoritusResourceId",
+                       "arvio": { "arvosana": "8", "asteikko": "4-10"},
+                       "aine": "B1",
+                       "valinnainen": false,
+                       "lisatieto": "SV",
+                       "myonnetty": "21.12.1988"}""")
+
+    postArvosana(
+      s"""{ "suoritus": "$createdSuoritusResourceId",
+                       "arvio": { "arvosana": "9", "asteikko": "4-10"},
+                       "aine": "B1",
+                       "valinnainen": false,
+                       "lisatieto": "SV",
+                       "source": "$tyynenOid",
+                       "myonnetty": "21.12.1988"}""", Some(arvosanaResourceId), 200)
+
+    get(s"/suoritusrekisteri/rest/v1/oppijat/$tyynenOid") {
+      val suoritusJson: JValue = parse(response.body) \ "suoritukset"
+      var suoritusArvosanaArray = suoritusJson.extract[JArray].arr
+      suoritusArvosanaArray should have length 1
+
+      val peruskouluArvosanat = suoritusArvosanaArray.head \ "arvosanat"
+      val peruskouluArvosanaArray = peruskouluArvosanat.extract[JArray].arr
+      peruskouluArvosanaArray should have length 1
+      val arvosanaJson = peruskouluArvosanaArray.head
+      val arvosana = arvosanaJson.extract[Arvosana]
+
+      arvosana.source should equal(tyynenOid)
     }
   }
 

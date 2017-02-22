@@ -18,12 +18,16 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
     with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand]
     with SecuritySupport {
 
-  override def createEnabled(resource: Arvosana, user: Option[User]): Future[Boolean] = updateEnabled(resource, user)
+  override def createEnabled(resource: Arvosana, user: Option[User]): Future[Boolean] =
+    (suoritusActor ? resource.suoritus).mapTo[Option[Suoritus]].flatMap {
+      case Some(v: VirallinenSuoritus) if v.komo == KomoOids.ammatillisenKielikoe => Future.successful(user.exists(_.isAdmin))
+      case Some(_) => Future.successful(user.exists(_.username == resource.source))
+      case _ => super.updateEnabled(resource, user)
+    }
 
   override def updateEnabled(resource: Arvosana, user: Option[User]): Future[Boolean] =
     (suoritusActor ? resource.suoritus).mapTo[Option[Suoritus]].flatMap {
       case Some(v: VirallinenSuoritus) if v.komo == KomoOids.ammatillisenKielikoe => Future.successful(user.exists(_.isAdmin))
-      case Some(_) => Future.successful(user.exists(_.username == resource.source))
       case _ => super.updateEnabled(resource, user)
     }
 }
