@@ -357,5 +357,3 @@ object EmptyPart extends Part {
 }
 
 case class TiedonsiirtoOpen(open: Boolean)
-
-object ResourceNotEnabledException extends Exception

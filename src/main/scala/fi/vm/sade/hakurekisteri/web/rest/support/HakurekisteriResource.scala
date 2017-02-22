@@ -12,7 +12,6 @@ import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.batchimport.ResourceNotEnabledException
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
@@ -239,6 +238,4 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
   protected implicit def swagger: SwaggerEngine[_] = sw
 }
 
-
-
-
+object ResourceNotEnabledException extends Exception

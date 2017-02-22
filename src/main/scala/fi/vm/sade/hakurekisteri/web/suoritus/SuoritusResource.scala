@@ -6,8 +6,7 @@ import fi.vm.sade.hakurekisteri.KomoOids
 import fi.vm.sade.hakurekisteri.integration.parametrit.{IsRestrictionActive, ParameterActor}
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.batchimport.ResourceNotEnabledException
-import fi.vm.sade.hakurekisteri.web.rest.support._
+import fi.vm.sade.hakurekisteri.web.rest.support.{ResourceNotEnabledException, _}
 import org.scalatra.NotFound
 import org.scalatra.swagger.Swagger
 
