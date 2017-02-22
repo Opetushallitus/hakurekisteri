@@ -46,7 +46,6 @@ sealed abstract class Hakutoive {
   def withPisteet(pisteet: Option[BigDecimal]): Hakutoive
 }
 
-
 sealed trait Lasnaolo
 case class Lasna(kausi: Kausi) extends Lasnaolo
 case class Poissa(kausi: Kausi) extends Lasnaolo
@@ -157,9 +156,11 @@ case class Peruuntunut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Bo
   override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
-case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Boolean, hakuOid: String, lisapistekoulutus: Option[String], liitteet: Seq[Liite])
+case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Boolean, hakuOid: String, lisapistekoulutus: Option[String], liitteet: Seq[Liite], osaaminen: Osaaminen)
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
+
+case class Osaaminen(yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String])
 
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
@@ -208,6 +209,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     futureToiveet.join.map(_.flatten)
   }
 
+//   def getXmlOsaaminen(hakija: Hakija): Future[XMLOsaaminen] = Future.successful(XMLOsaaminen(hakija.hakemus.osaaminen.yleinen_kielitutkinto_sv, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv))
+
   def extractOption(t: (Option[Organisaatio], Option[String])): Option[(Organisaatio, String)] = t._1 match {
     case None => None
     case Some(o) => Some((o, t._2.get))
@@ -217,12 +220,13 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     getOrg(tarjoaja).flatMap((o) => findOppilaitoskoodi(o.map(_.oid)).map(k => extractOption(o, k)))
   }
 
-  def createHakemus(hakija: Hakija)(opiskelija: Option[Opiskelija], org: Option[Organisaatio], ht: Seq[XMLHakutoive]) = XMLHakemus(hakija, opiskelija, org, ht)
+  def createHakemus(hakija: Hakija)(opiskelija: Option[Opiskelija], org: Option[Organisaatio], ht: Seq[XMLHakutoive], os: XMLOsaaminen) = XMLHakemus(hakija, opiskelija, org, ht, os)
 
   def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
-    val data = (opiskelutieto, lahtokoulu, ht).join
+    val osaaminen: Future[XMLOsaaminen] = Future.successful(XMLOsaaminen(hakija.hakemus.osaaminen.yleinen_kielitutkinto_sv, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv))
+    val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
 
     data.tupledMap(createHakemus(hakija))
   }
@@ -484,10 +488,14 @@ object XMLHakutoive {
   }
 }
 
+case class XMLOsaaminen(yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String]) {
+
+}
+
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
                       luokkataso: Option[String], pohjakoulutus: String, todistusvuosi: Option[String], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
                       lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
-                      painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive]) {
+                      painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive], osaaminen: XMLOsaaminen) {
   def toXml: Node = {
     <Hakemus>
       <Vuosi>{vuosi}</Vuosi>
@@ -508,6 +516,8 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
       <Hakutoiveet>
         {hakutoiveet.map(_.toXml)}
       </Hakutoiveet>
+      {if (osaaminen.yleinen_kielitutkinto_sv.isDefined) <YleinenKielitutkintoSv>{osaaminen.yleinen_kielitutkinto_sv.get}</YleinenKielitutkintoSv>}
+      {if (osaaminen.valtionhallinnon_kielitutkinto_sv.isDefined) <ValtionhallinnonKielitutkintoSv>{osaaminen.valtionhallinnon_kielitutkinto_sv.get}</ValtionhallinnonKielitutkintoSv>}
     </Hakemus>
   }
 }
@@ -537,7 +547,7 @@ object XMLHakemus {
     case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _)  => Some(date.getYear.toString)
   }
 
-  def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
+  def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive], osaaminen: XMLOsaaminen): XMLHakemus =
     XMLHakemus(vuosi = hakija.hakemus.hakutoiveet.headOption.flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamisvuosi)).getOrElse(""),
       kausi = hakija.hakemus.hakutoiveet.headOption.flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamiskausi.map(_.toString))).getOrElse(""),
       hakemusnumero = hakija.hakemus.hakemusnumero,
@@ -553,7 +563,8 @@ object XMLHakemus {
       lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
       yleinenkoulumenestys = None,
       painotettavataineet = None,
-      hakutoiveet = toiveet)
+      hakutoiveet = toiveet,
+      osaaminen = osaaminen)
 }
 
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
