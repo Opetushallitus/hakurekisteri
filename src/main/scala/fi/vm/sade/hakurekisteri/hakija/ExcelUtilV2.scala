@@ -82,8 +82,8 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       toBooleanX(ht.terveys),
       toBooleanX(ht.aiempiperuminen),
       toBooleanX(ht.kaksoistutkinto),
-      h.hakemus.osaaminen.yleinen_kielitutkinto_sv.getOrElse(""),
-      h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv.getOrElse(""))
+      ht.koulutuksenKieli.getOrElse("") match { case "SV" => h.hakemus.osaaminen.yleinen_kielitutkinto_sv.getOrElse("") case _ => ""},
+      ht.koulutuksenKieli.getOrElse("") match { case "SV" => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv.getOrElse("") case _ => ""})
 
 
     def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {

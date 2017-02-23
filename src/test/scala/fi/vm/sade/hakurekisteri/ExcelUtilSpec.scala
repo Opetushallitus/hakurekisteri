@@ -58,7 +58,8 @@ class ExcelUtilSpec extends ScalatraFunSuite {
           lasnaolo = None,
           terveys = None,
           aiempiperuminen = None,
-          kaksoistutkinto = None
+          kaksoistutkinto = None,
+          koulutuksenKieli = None
         )),
         XMLOsaaminen(None, None)
       )

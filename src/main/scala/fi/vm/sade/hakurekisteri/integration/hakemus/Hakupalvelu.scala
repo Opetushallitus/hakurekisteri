@@ -337,9 +337,23 @@ object AkkaHakupalvelu {
     }
   }
 
+  def findEnsimmainenRuotsinkielinenHakukohde(toiveet: Map[String, String]): Int = {
+    var x: Int = 0
+    for{
+      a <- 1 to 6
+      if x == 0
+    } (toiveet.getOrElse(s"preference${a}-Koulutus-id-lang", "")) match {
+      case ("SV") => x = a.toInt
+      case _ =>
+    }
+    x
+  }
+
   def convertToiveet(toiveet: Map[String, String], haku: Haku): Seq[Hakutoive] = {
     val Pattern = "preference(\\d+)-Opetuspiste-id".r
     val notEmpty = "(.+)".r
+    var ensimmainenRuotsinkielinenHakukohde: Int = findEnsimmainenRuotsinkielinenHakukohde(toiveet)
+
     val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
       case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
     }.toSeq
@@ -362,7 +376,11 @@ object AkkaHakupalvelu {
       val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
       val organisaatioParentOidPath = toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "")
       val hakukohdeOid = toiveet.getOrElse(s"preference$jno-Koulutus-id", "")
-      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath)
+      val koulutuksenKieli: Option[String] = (toiveet(s"preference${jno}-Koulutus-id-lang"), jno == ensimmainenRuotsinkielinenHakukohde) match {
+        case ("SV", true) => Some("SV")
+        case _ => None
+      }
+      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath, koulutuksenKieli)
     }
   }
 }
