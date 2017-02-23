@@ -161,7 +161,7 @@ case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisul
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
-case class Osaaminen(yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String])
+case class Osaaminen(yleinen_kielitutkinto: Option[String], valtionhallinnon_kielitutkinto: Option[String])
 
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
@@ -224,7 +224,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
-    val osaaminen: Future[XMLOsaaminen] = Future.successful(XMLOsaaminen(hakija.hakemus.osaaminen.yleinen_kielitutkinto_sv, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv))
+    val osaaminen: Future[XMLOsaaminen] = Future.successful(
+      XMLOsaaminen(hakija.hakemus.osaaminen.yleinen_kielitutkinto, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto))
     val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
 
     data.tupledMap(createHakemus(hakija))
@@ -488,7 +489,7 @@ object XMLHakutoive {
   }
 }
 
-case class XMLOsaaminen(yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String]) {
+case class XMLOsaaminen(yleinen_kielitutkinto: Option[String], valtionhallinnon_kielitutkinto: Option[String]) {
 
 }
 
@@ -516,8 +517,8 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
       <Hakutoiveet>
         {hakutoiveet.map(_.toXml)}
       </Hakutoiveet>
-      {if (osaaminen.yleinen_kielitutkinto_sv.isDefined) <YleinenKielitutkintoSv>{osaaminen.yleinen_kielitutkinto_sv.get}</YleinenKielitutkintoSv>}
-      {if (osaaminen.valtionhallinnon_kielitutkinto_sv.isDefined) <ValtionhallinnonKielitutkintoSv>{osaaminen.valtionhallinnon_kielitutkinto_sv.get}</ValtionhallinnonKielitutkintoSv>}
+      {if (osaaminen.yleinen_kielitutkinto.isDefined) <YleinenKielitutkinto>{osaaminen.yleinen_kielitutkinto.get}</YleinenKielitutkinto>}
+      {if (osaaminen.valtionhallinnon_kielitutkinto.isDefined) <ValtionhallinnonKielitutkinto>{osaaminen.valtionhallinnon_kielitutkinto.get}</ValtionhallinnonKielitutkinto>}
     </Hakemus>
   }
 }

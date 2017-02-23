@@ -337,13 +337,13 @@ object AkkaHakupalvelu {
     }
   }
 
-  def findEnsimmainenRuotsinkielinenHakukohde(toiveet: Map[String, String]): Int = {
+  def findEnsimmainenAmmatillinenKielinenHakukohde(toiveet: Map[String, String], kieli: String): Int = {
     var x: Int = 0
     for{
       a <- 1 to 6
       if x == 0
-    } (toiveet.getOrElse(s"preference${a}-Koulutus-id-lang", "")) match {
-      case ("SV") => x = a.toInt
+    } (toiveet.getOrElse(s"preference${a}-Koulutus-id-lang", "") == kieli, toiveet.getOrElse(s"preference${a}-Koulutus-id-vocational", "")) match {
+      case (true, "true") => x = a.toInt
       case _ =>
     }
     x
@@ -352,7 +352,10 @@ object AkkaHakupalvelu {
   def convertToiveet(toiveet: Map[String, String], haku: Haku): Seq[Hakutoive] = {
     val Pattern = "preference(\\d+)-Opetuspiste-id".r
     val notEmpty = "(.+)".r
-    var ensimmainenRuotsinkielinenHakukohde: Int = findEnsimmainenRuotsinkielinenHakukohde(toiveet)
+    var ensimmainenSuomenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "FI")
+    var ensimmainenRuotsinkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SV")
+    var ensimmainenEnglanninkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "EN")
+    var ensimmainenSaamenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SE")
 
     val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
       case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
@@ -376,8 +379,11 @@ object AkkaHakupalvelu {
       val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
       val organisaatioParentOidPath = toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "")
       val hakukohdeOid = toiveet.getOrElse(s"preference$jno-Koulutus-id", "")
-      val koulutuksenKieli: Option[String] = (toiveet(s"preference${jno}-Koulutus-id-lang"), jno == ensimmainenRuotsinkielinenHakukohde) match {
-        case ("SV", true) => Some("SV")
+      val koulutuksenKieli: Option[String] = (jno == ensimmainenSuomenkielinenHakukohde, jno == ensimmainenRuotsinkielinenHakukohde, jno == ensimmainenEnglanninkielinenHakukohde, jno == ensimmainenSaamenkielinenHakukohde) match {
+        case (true, false, false, false) => Some("FI")
+        case (false, true, false, false) => Some("SV")
+        case (false, false, true, false) => Some("EN")
+        case (false, false, false, true) => Some("SE")
         case _ => None
       }
       Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath, koulutuksenKieli)

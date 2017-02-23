@@ -82,9 +82,8 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       toBooleanX(ht.terveys),
       toBooleanX(ht.aiempiperuminen),
       toBooleanX(ht.kaksoistutkinto),
-      ht.koulutuksenKieli.getOrElse("") match { case "SV" => h.hakemus.osaaminen.yleinen_kielitutkinto_sv.getOrElse("") case _ => ""},
-      ht.koulutuksenKieli.getOrElse("") match { case "SV" => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv.getOrElse("") case _ => ""})
-
+      ht.koulutuksenKieli match { case Some(a) => h.hakemus.osaaminen.yleinen_kielitutkinto.getOrElse("") case _ => "" },
+      ht.koulutuksenKieli match { case Some(a) => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto.getOrElse("") case _ => "" })
 
     def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
       val answers = for {
