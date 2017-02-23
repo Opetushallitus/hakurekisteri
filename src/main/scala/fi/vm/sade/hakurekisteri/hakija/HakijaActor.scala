@@ -161,7 +161,10 @@ case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisul
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
-case class Osaaminen(yleinen_kielitutkinto: Option[String], valtionhallinnon_kielitutkinto: Option[String])
+case class Osaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_kielitutkinto_fi: Option[String],
+                     yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String],
+                     yleinen_kielitutkinto_en: Option[String], valtionhallinnon_kielitutkinto_en: Option[String],
+                     yleinen_kielitutkinto_se: Option[String], valtionhallinnon_kielitutkinto_se: Option[String])
 
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
@@ -225,7 +228,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
     val osaaminen: Future[XMLOsaaminen] = Future.successful(
-      XMLOsaaminen(hakija.hakemus.osaaminen.yleinen_kielitutkinto, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto))
+      XMLOsaaminen(hakija.hakemus.osaaminen.yleinen_kielitutkinto_fi, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_fi,
+        hakija.hakemus.osaaminen.yleinen_kielitutkinto_sv, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv,
+        hakija.hakemus.osaaminen.yleinen_kielitutkinto_en, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_en,
+        hakija.hakemus.osaaminen.yleinen_kielitutkinto_se, hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_se))
     val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
 
     data.tupledMap(createHakemus(hakija))
@@ -489,7 +495,10 @@ object XMLHakutoive {
   }
 }
 
-case class XMLOsaaminen(yleinen_kielitutkinto: Option[String], valtionhallinnon_kielitutkinto: Option[String]) {
+case class XMLOsaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_kielitutkinto_fi: Option[String],
+                        yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String],
+                        yleinen_kielitutkinto_en: Option[String], valtionhallinnon_kielitutkinto_en: Option[String],
+                        yleinen_kielitutkinto_se: Option[String], valtionhallinnon_kielitutkinto_se: Option[String]) {
 
 }
 
@@ -517,8 +526,14 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
       <Hakutoiveet>
         {hakutoiveet.map(_.toXml)}
       </Hakutoiveet>
-      {if (osaaminen.yleinen_kielitutkinto.isDefined) <YleinenKielitutkinto>{osaaminen.yleinen_kielitutkinto.get}</YleinenKielitutkinto>}
-      {if (osaaminen.valtionhallinnon_kielitutkinto.isDefined) <ValtionhallinnonKielitutkinto>{osaaminen.valtionhallinnon_kielitutkinto.get}</ValtionhallinnonKielitutkinto>}
+      {if (osaaminen.yleinen_kielitutkinto_fi.isDefined) <YleinenKielitutkinto>{osaaminen.yleinen_kielitutkinto_fi.get}</YleinenKielitutkinto>}
+      {if (osaaminen.valtionhallinnon_kielitutkinto_fi.isDefined) <ValtionhallinnonKielitutkinto>{osaaminen.valtionhallinnon_kielitutkinto_fi.get}</ValtionhallinnonKielitutkinto>}
+      {if (osaaminen.yleinen_kielitutkinto_sv.isDefined) <YleinenKielitutkinto>{osaaminen.yleinen_kielitutkinto_sv.get}</YleinenKielitutkinto>}
+      {if (osaaminen.valtionhallinnon_kielitutkinto_sv.isDefined) <ValtionhallinnonKielitutkinto>{osaaminen.valtionhallinnon_kielitutkinto_sv.get}</ValtionhallinnonKielitutkinto>}
+      {if (osaaminen.yleinen_kielitutkinto_en.isDefined) <YleinenKielitutkinto>{osaaminen.yleinen_kielitutkinto_en.get}</YleinenKielitutkinto>}
+      {if (osaaminen.valtionhallinnon_kielitutkinto_en.isDefined) <ValtionhallinnonKielitutkinto>{osaaminen.valtionhallinnon_kielitutkinto_en.get}</ValtionhallinnonKielitutkinto>}
+      {if (osaaminen.yleinen_kielitutkinto_se.isDefined) <YleinenKielitutkinto>{osaaminen.yleinen_kielitutkinto_se.get}</YleinenKielitutkinto>}
+      {if (osaaminen.valtionhallinnon_kielitutkinto_se.isDefined) <ValtionhallinnonKielitutkinto>{osaaminen.valtionhallinnon_kielitutkinto_se.get}</ValtionhallinnonKielitutkinto>}
     </Hakemus>
   }
 }

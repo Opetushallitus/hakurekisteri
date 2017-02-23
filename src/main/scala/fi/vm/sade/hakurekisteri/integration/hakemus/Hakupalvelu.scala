@@ -261,10 +261,19 @@ object AkkaHakupalvelu {
       julkaisu <- lisatiedot.get("lupaJulkaisu")
     ) yield julkaisu).getOrElse("false").toBoolean
 
+    val yleinen_kielitutkinto_fi = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_fi")
+    val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_fi")
     val yleinen_kielitutkinto_sv = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_sv")
     val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_sv")
+    val yleinen_kielitutkinto_en = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_en")
+    val valtionhallinnon_kielitutkinto_en = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_en")
+    val yleinen_kielitutkinto_se = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_se")
+    val valtionhallinnon_kielitutkinto_se = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_se")
 
-    val osaaminen = Osaaminen(yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv)
+    val osaaminen = Osaaminen(yleinen_kielitutkinto_fi, valtionhallinnon_kielitutkinto_fi,
+                          yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv,
+                          yleinen_kielitutkinto_en, valtionhallinnon_kielitutkinto_en,
+                          yleinen_kielitutkinto_se, valtionhallinnon_kielitutkinto_se)
 
     val lisapistekoulutus = for (
       tausta <- koulutustausta;
