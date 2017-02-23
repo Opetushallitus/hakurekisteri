@@ -60,8 +60,6 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
       hakemus.hKelpoisuus,
       hakemus.hKelpoisuusLahde.getOrElse(""),
       hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
-      hakemus.yleinenkielitutkinto,
-      hakemus.valtionhallinnonkielitutkinto,
       hakemus.hakukohteenKoulutukset lift 0 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
       hakemus.hakukohteenKoulutukset lift 1 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
       hakemus.hakukohteenKoulutukset lift 2 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
