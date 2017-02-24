@@ -153,7 +153,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     pos
   }
   def isExistingAsiakirjaWithErrors(q: QueryAndFormat): Boolean = Option(asiakirjat.getIfPresent(q)) match {
-    case Some(Left(_)) =>
+    case Some((_, Left(_))) =>
       true
     case _ =>
       false
