@@ -152,12 +152,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     queryToShortId(q)
     pos
   }
-  def isExistingAsiakirjaWithErrors(q: QueryAndFormat): Boolean = Option(asiakirjat.getIfPresent(q)) match {
-    case Some((_, Left(_))) =>
-      true
-    case _ =>
-      false
-  }
+
   def isExistingAsiakirja(q: QueryAndFormat): Boolean = asiakirjat.getIfPresent(q) != null
   def positionInQueue(q: QueryAndFormat): Option[Int] = Some(jobs.indexOf(q)).filter(_ != -1).map(_ + 1)
   def isInProgress(q: QueryAndFormat): Boolean = inprogress.contains(q)
