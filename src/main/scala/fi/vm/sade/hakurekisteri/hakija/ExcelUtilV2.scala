@@ -30,6 +30,12 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
     Set(Row(0, headersWithLisakysymys.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
   }
 
+  def kieleistys(totuusArvo: Option[String]): String = totuusArvo match {
+    case Some("true") => "Kyllä"
+    case Some("false") => "Ei"
+    case _ => ""
+  }
+
   override def getRows(hakijat: JSONHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
     val mainAnswers = Seq(
       h.hetu,
@@ -83,16 +89,16 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       toBooleanX(ht.aiempiperuminen),
       toBooleanX(ht.kaksoistutkinto),
       ht.koulutuksenKieli match {
-        case Some("FI") => h.hakemus.osaaminen.yleinen_kielitutkinto_fi.getOrElse("")
-        case Some("SV") => h.hakemus.osaaminen.yleinen_kielitutkinto_sv.getOrElse("")
-        case Some("EN") => h.hakemus.osaaminen.yleinen_kielitutkinto_en.getOrElse("")
-        case Some("SE") => h.hakemus.osaaminen.yleinen_kielitutkinto_se.getOrElse("")
+        case Some("FI") => kieleistys(h.hakemus.osaaminen.yleinen_kielitutkinto_fi)
+        case Some("SV") => kieleistys(h.hakemus.osaaminen.yleinen_kielitutkinto_sv)
+        case Some("EN") => kieleistys(h.hakemus.osaaminen.yleinen_kielitutkinto_en)
+        case Some("SE") => kieleistys(h.hakemus.osaaminen.yleinen_kielitutkinto_se)
         case _ => "" },
       ht.koulutuksenKieli match {
-        case Some("FI") => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_fi.getOrElse("")
-        case Some("SV") => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv.getOrElse("")
-        case Some("EN") => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_en.getOrElse("")
-        case Some("SE") => h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_se.getOrElse("")
+        case Some("FI") => kieleistys(h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_fi)
+        case Some("SV") => kieleistys(h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv)
+        case Some("EN") => kieleistys(h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_en)
+        case Some("SE") => kieleistys(h.hakemus.osaaminen.valtionhallinnon_kielitutkinto_se)
         case _ => "" })
 
     def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
