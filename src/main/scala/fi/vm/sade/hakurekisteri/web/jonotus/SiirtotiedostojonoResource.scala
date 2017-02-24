@@ -22,10 +22,11 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
   private val logger = LoggerFactory.getLogger(classOf[SiirtotiedostojonoResource])
 
   post("/") {
-    val createNewDocumentIfErrors = params.get("createNewDocumentIfErrors").exists(parseBoolean)
+    val isForceNewDocument = params.get("createNewDocumentIfErrors").exists(parseBoolean)
     toEvent(readJsonFromBody(request.body), currentUser) match {
       case QueryWithExistingAsiakirja(personOid, query) =>
-        if(createNewDocumentIfErrors && jono.isExistingAsiakirjaWithErrors(query)) {
+        //val isForceNewDocumentAndErrors = isForceNewDocument && jono.isExistingAsiakirjaWithErrors(query)
+        if(isForceNewDocument) {
           logger.debug(s"User $currentUser re-creating existing asiakirja with $query")
           halt(status=200, body=write(Sijoitus(jono.forceAddToJono(query, personOid).get, false)))
         } else {
