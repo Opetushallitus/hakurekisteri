@@ -175,7 +175,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case q: HakijaQuery => {
       Try(q.version match {
         case 1 => XMLQuery(q) pipeTo sender
-        case 2 => JSONQuery(q) pipeTo sender
+        case version if version > 1 =>
+          JSONQuery(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
