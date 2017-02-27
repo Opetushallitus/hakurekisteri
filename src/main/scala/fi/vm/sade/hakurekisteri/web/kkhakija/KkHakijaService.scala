@@ -96,8 +96,8 @@ case class Hakija(hetu: String,
                   postitoimipaikka: String,
                   maa: String,
                   kansalaisuus: String,
-                  kaksoiskansalaisuus: String,
-                  syntymaaika: String,
+                  kaksoiskansalaisuus: Option[String],
+                  syntymaaika: Option[String],
                   matkapuhelin: Option[String],
                   puhelin: Option[String],
                   sahkoposti: Option[String],
@@ -108,7 +108,7 @@ case class Hakija(hetu: String,
                   koulusivistyskieli: String,
                   koulutusmarkkinointilupa: Option[Boolean],
                   onYlioppilas: Boolean,
-                  yoSuoritusVuosi: String,
+                  yoSuoritusVuosi: Option[String],
                   turvakielto: Boolean,
                   hakemukset: Seq[Hakemus])
 
@@ -124,7 +124,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
 
-  def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
+  def getKkHakijat(q: KkHakijaQuery, version: Int): Future[Seq[Hakija]] = {
     def resolveMultipleHakukohdeOidsAsHakemukset(hakukohdeOids: Seq[String]): Future[Seq[FullHakemus]] = {
       hakemusService.hakemuksetForHakukohdes(hakukohdeOids.toSet, q.organisaatio)
     }
@@ -142,22 +142,34 @@ class KkHakijaService(hakemusService: IHakemusService,
           hakupalvelu.getHakukohdeOids(hakukohderyhma, haku).flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
-      hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
+      hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery), version)(q)
     ) yield hakijat
   }
 
-  private def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus])(q: KkHakijaQuery): Future[Seq[Hakija]] = {
+  private def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus], version: Int)(q: KkHakijaQuery): Future[Seq[Hakija]] = {
     val byHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
     Future.sequence(byHakuOid.map {
       case (hakuOid, h) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
             if (q.oppijanumero.isEmpty) {
-              getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
-                Future.sequence(h.map(getKkHakija(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
-              )
+              version match{
+                case 1 => {
+                  getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
+                    Future.sequence(h.map(getKkHakijaV1(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                  )
+                }
+                case 3 => {
+                  getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
+                    Future.sequence(h.map(getKkHakijaV3(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                  )
+                }
+              }
             } else {
-              Future.sequence(h.map(getKkHakija(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+              version match {
+                case 1 => Future.sequence(h.map(getKkHakijaV1(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                case 3 => Future.sequence(h.map(getKkHakijaV3(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+              }
             }
           } else {
             Future.successful(Seq())
@@ -329,7 +341,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     }
   }
 
-  private def getKkHakija(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos])(hakemus: FullHakemus): Option[Future[Hakija]] =
+  private def getKkHakijaV1(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos])(hakemus: FullHakemus): Option[Future[Hakija]] =
     for {
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
@@ -354,8 +366,50 @@ class KkHakijaService(hakemusService: IHakemusService,
       postitoimipaikka = toimipaikka,
       maa = maa,
       kansalaisuus = kansalaisuus,
-      kaksoiskansalaisuus = henkilotiedot.kaksoiskansalaisuus.getOrElse(""),
-      syntymaaika = henkilotiedot.syntymaaika.getOrElse(""),
+      kaksoiskansalaisuus = None,
+      syntymaaika = None,
+      matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
+      puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
+      sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
+      kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("999"),
+      sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
+      aidinkieli = henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99"),
+      asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99")),
+      koulusivistyskieli = henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+      koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Map()).get("lupaMarkkinointi").map(_ == "true"),
+      onYlioppilas = isYlioppilas(suoritukset),
+      yoSuoritusVuosi = None,
+      turvakielto = henkilotiedot.turvakielto.contains("true"),
+      hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = Seq(), julkaisulupa = None, hKelpoisuusMaksuvelvollisuus = None))
+    )
+
+  private def getKkHakijaV3(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos])(hakemus: FullHakemus): Option[Future[Hakija]] =
+    for {
+      answers: HakemusAnswers <- hakemus.answers
+      henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
+      hakutoiveet: Map[String, String] <- answers.hakutoiveet
+      henkiloOid <- hakemus.personOid
+    } yield for {
+      hakemukset <- getHakemukset(haku, hakemus, q, kokoHaunTulos)
+      maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
+      toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa, koodisto)
+      suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
+      kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse(""), koodisto)
+    } yield Hakija(
+      hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
+      oppijanumero = hakemus.personOid.getOrElse(""),
+      sukunimi = henkilotiedot.Sukunimi.getOrElse(""),
+      etunimet = henkilotiedot.Etunimet.getOrElse(""),
+      kutsumanimi = henkilotiedot.Kutsumanimi.getOrElse(""),
+      lahiosoite = henkilotiedot.lahiosoite.flatMap(_.blankOption).
+        getOrElse(henkilotiedot.osoiteUlkomaa.getOrElse("")),
+      postinumero = henkilotiedot.Postinumero.flatMap(_.blankOption).
+        getOrElse(henkilotiedot.postinumeroUlkomaa.getOrElse("")),
+      postitoimipaikka = toimipaikka,
+      maa = maa,
+      kansalaisuus = kansalaisuus,
+      kaksoiskansalaisuus = henkilotiedot.kaksoiskansalaisuus,
+      syntymaaika = henkilotiedot.syntymaaika,
       matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
       puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
       sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
@@ -370,8 +424,6 @@ class KkHakijaService(hakemusService: IHakemusService,
       turvakielto = henkilotiedot.turvakielto.contains("true"),
       hakemukset = hakemukset
     )
-
-
 }
 
 object KkHakijaUtil {
@@ -426,10 +478,10 @@ object KkHakijaUtil {
 
   def isYlioppilas(suoritukset: Seq[VirallinenSuoritus]): Boolean = suoritukset.exists(s => s.tila == "VALMIS" && s.vahvistettu)
 
-  def getYoSuoritusVuosi(suoritukset: Seq[VirallinenSuoritus]): String = {
+  def getYoSuoritusVuosi(suoritukset: Seq[VirallinenSuoritus]): Option[String] = {
     suoritukset.find(p => p.tila == "VALMIS" && p.vahvistettu) match {
-      case Some(m) => m.valmistuminen.getYear().toString()
-      case None => ""
+      case Some(m) => Some(m.valmistuminen.getYear().toString())
+      case None => None
     }
   }
 

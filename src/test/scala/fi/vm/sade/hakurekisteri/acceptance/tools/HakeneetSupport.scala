@@ -40,7 +40,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object FullHakemus1 extends FullHakemus("1.25.1", Some("1.24.1"), "1.1",
     answers = Some(
       HakemusAnswers(
-        osaaminen = None,
+        osaaminen = Some(Map("yleinen_kielitutkinto_fi" -> "true", "valtionhallinnon_kielitutkinto_fi" -> "true")),
         henkilotiedot = Some(
           HakemusHenkilotiedot(
             kansalaisuus = Some("FIN"),
@@ -118,6 +118,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
           "preference1-Koulutus-id-lang" -> "FI",
           "preference1-Koulutus-id-sora" -> "true",
+          "preference1-Koulutus-id-vocational" -> "true",
           "preference1_sora_terveys" -> "true",
           "preference1_sora_oikeudenMenetys" -> "true",
           "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",

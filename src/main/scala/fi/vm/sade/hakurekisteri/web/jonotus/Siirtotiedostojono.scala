@@ -102,7 +102,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
   }
 
   def kkQueryToAsiakirja(format: ApiFormat, query: KkHakijaQuery): Array[Byte] = {
-    val hakijat = Await.result(kkHakija.getKkHakijat(query), defaultTimeout.duration)
+    val hakijat = Await.result(kkHakija.getKkHakijat(query, 3), defaultTimeout.duration)
     if (hakijat.isEmpty) {
       Array()
     } else {
