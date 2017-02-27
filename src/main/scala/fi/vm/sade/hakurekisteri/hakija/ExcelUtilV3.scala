@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 
-object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
+object ExcelUtilV3 extends HakijatExcelWriter[JSONHakijat] {
 
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
@@ -13,7 +13,7 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
     "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus",
     "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
-    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"
+    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
   )
 
   def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat) = {
@@ -28,6 +28,12 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
     val lisakysymysQuestions = getLisakysymysIdsAndQuestionsInOrder(hakijat).map(_.header)
     val headersWithLisakysymys = headers ++ lisakysymysQuestions
     Set(Row(0, headersWithLisakysymys.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
+  }
+
+  def kieleistys(totuusArvo: Option[String]): String = totuusArvo match {
+    case Some("true") => "Kyllä"
+    case Some("false") => "Ei"
+    case _ => ""
   }
 
   override def getRows(hakijat: JSONHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
@@ -81,7 +87,30 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       ht.lasnaolo.getOrElse(""),
       toBooleanX(ht.terveys),
       toBooleanX(ht.aiempiperuminen),
-      toBooleanX(ht.kaksoistutkinto))
+      toBooleanX(ht.kaksoistutkinto),
+      h.hakemus.osaaminen match {
+        case Some(os) => {
+          (ht.koulutuksenKieli) match {
+          case Some("FI") => kieleistys(os.yleinen_kielitutkinto_fi)
+          case Some("SV") => kieleistys(os.yleinen_kielitutkinto_sv)
+          case Some("EN") => kieleistys(os.yleinen_kielitutkinto_en)
+          case Some("SE") => kieleistys(os.yleinen_kielitutkinto_se)
+          case _ => "" }
+        }
+        case _ => ""
+      },
+      h.hakemus.osaaminen match {
+        case Some(os) => {
+          ht.koulutuksenKieli match {
+            case Some("FI") => kieleistys(os.valtionhallinnon_kielitutkinto_fi)
+            case Some("SV") => kieleistys(os.valtionhallinnon_kielitutkinto_sv)
+            case Some("EN") => kieleistys(os.valtionhallinnon_kielitutkinto_en)
+            case Some("SE") => kieleistys(os.valtionhallinnon_kielitutkinto_se)
+            case _ => ""
+          }
+        }
+        case _ => ""
+      })
 
     def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
       val answers = for {

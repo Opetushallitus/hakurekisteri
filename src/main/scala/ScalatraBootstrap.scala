@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
-import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2}
+import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
@@ -107,6 +107,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(koosteet.siirtotiedostojono),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
     ("/rest/v2/hakijat", "rest/v2/hakijat") -> new HakijaResourceV2(koosteet.hakijat),
+    ("/rest/v3/hakijat", "rest/v3/hakijat") -> new HakijaResourceV3(koosteet.hakijat),
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(koosteet.kkHakijaService),
     ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemusService, koosteet.ensikertalainen, integrations.oppijaNumeroRekisteri),
