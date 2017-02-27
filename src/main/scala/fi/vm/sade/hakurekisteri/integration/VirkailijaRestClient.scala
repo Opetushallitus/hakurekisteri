@@ -128,7 +128,10 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     f.onComplete(t => {
       val took = Platform.currentTime - t0
       if (took > config.httpClientSlowRequest) {
-        logger.warning(s"slow request: url $url took $took ms to complete, result was ${result(t)}")
+        logger.warning(s"slow request: url $url took $took ms to complete, result was ${result(t)}, " +
+          s"parameters: connectionTimeoutInMs=${internalClient.client.getConfig.getConnectionTimeoutInMs}, " +
+          s"requestTimeoutInMs=${internalClient.client.getConfig.getRequestTimeoutInMs}, " +
+          s"idleConnectionTimeoutInMs=${internalClient.client.getConfig.getIdleConnectionTimeoutInMs}")
       }
     })
   }
