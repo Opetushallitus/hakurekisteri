@@ -91,7 +91,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
               IOUtils.write(write(hakijat), bytes)
               bytes.toByteArray
             case ApiFormat.Excel =>
-              ExcelUtilV2.write(bytes, hakijat)
+              ExcelUtilV3.write(bytes, hakijat)
               bytes.toByteArray
           }
         }
@@ -112,7 +112,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           IOUtils.write(write(hakijat), bytes)
           bytes.toByteArray
         case ApiFormat.Excel =>
-          KkExcelUtil.write(bytes, hakijat)
+          KkExcelUtilV3.write(bytes, hakijat)
           bytes.toByteArray
       }
     }

@@ -155,10 +155,14 @@ app.controller "HakeneetCtrl", [
       }
       {
         value: 2,
+        text: "2"
+      }
+      {
+        value: 3,
         text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
       }
     ]
-    $scope.rajapinnanVersio = 2
+    $scope.rajapinnanVersio = 3
     $scope.hakuehdot = [
       {
         value: "Kaikki"
@@ -237,7 +241,7 @@ app.controller "HakeneetCtrl", [
               messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
 
           return
-      url = (if isKk() then "rest/v1/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
+      url = (if isKk() then "rest/v" + $scope.rajapinnanVersio + "/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
       data = (if isKk() then {
         kk: true
         hakukohderyhma: (if $scope.hakukohderyhma then $scope.hakukohderyhma else null)
