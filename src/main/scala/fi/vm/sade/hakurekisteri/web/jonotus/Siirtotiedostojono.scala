@@ -48,55 +48,15 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     .build(
       new CacheLoader[QueryAndFormat, Either[Exception, Array[Byte]]] {
         override def load(q: QueryAndFormat): Either[Exception, Array[Byte]] = {
-          val tryCreateContent: Try[Array[Byte]] = Try(q.query match {
+          Try(q.query match {
             case query:KkHakijaQuery =>
-              val hakijat = Await.result(kkHakija.getKkHakijat(query), defaultTimeout.duration)
-              if(hakijat.isEmpty){
-                Array()
-              } else {
-                val bytes = new ByteArrayOutputStream()
-                q.format match {
-                  case ApiFormat.Json =>
-                    IOUtils.write(write(hakijat), bytes)
-                    bytes.toByteArray
-                  case ApiFormat.Excel =>
-                    KkExcelUtil.write(bytes, hakijat)
-                    bytes.toByteArray
-                }
-              }
+              kkQueryToAsiakirja(q.format, query)
             case query:HakijaQuery =>
-              Await.result(hakijaActor ? query, defaultTimeout.duration) match {
-                case hakijat: XMLHakijat =>
-                  if(hakijat.hakijat.isEmpty) {
-                    Array()
-                  } else {
-                    val bytes = new ByteArrayOutputStream()
-                    ExcelUtilV1.write(bytes, hakijat)
-                    bytes.toByteArray
-                  }
-                case hakijat: JSONHakijat =>
-                  if(hakijat.hakijat.isEmpty) {
-                    Array()
-                  } else {
-                    val bytes = new ByteArrayOutputStream()
-                    q.format match {
-                      case ApiFormat.Json =>
-                        IOUtils.write(write(hakijat), bytes)
-                        bytes.toByteArray
-                      case ApiFormat.Excel =>
-                        ExcelUtilV2.write(bytes, hakijat)
-                        bytes.toByteArray
-                    }
-                  }
-                case _ =>
-                  logger.error(s"Couldn't handle return type from HakijaActor!")
-                  throw new RuntimeException("No content to store!")
-              }
+              queryToAsiakirja(q.format, query)
             case _ =>
               logger.error(s"Unknown 'asiakirja' requested with query ${q.query}")
               throw new RuntimeException("No content to store!")
-          })
-          tryCreateContent match {
+          }) match {
             case Success(content) =>
               if(content.length == 0) {
                 Left(new EmptyAsiakirjaException())
@@ -110,6 +70,53 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           }
         }
       })
+
+  def queryToAsiakirja(format: ApiFormat, query: HakijaQuery): Array[Byte] = {
+    Await.result(hakijaActor ? query, defaultTimeout.duration) match {
+      case hakijat: XMLHakijat =>
+        if (hakijat.hakijat.isEmpty) {
+          Array()
+        } else {
+          val bytes = new ByteArrayOutputStream()
+          ExcelUtilV1.write(bytes, hakijat)
+          bytes.toByteArray
+        }
+      case hakijat: JSONHakijat =>
+        if (hakijat.hakijat.isEmpty) {
+          Array()
+        } else {
+          val bytes = new ByteArrayOutputStream()
+          format match {
+            case ApiFormat.Json =>
+              IOUtils.write(write(hakijat), bytes)
+              bytes.toByteArray
+            case ApiFormat.Excel =>
+              ExcelUtilV2.write(bytes, hakijat)
+              bytes.toByteArray
+          }
+        }
+      case _ =>
+        logger.error(s"Couldn't handle return type from HakijaActor!")
+        throw new scala.RuntimeException("No content to store!")
+    }
+  }
+
+  def kkQueryToAsiakirja(format: ApiFormat, query: KkHakijaQuery): Array[Byte] = {
+    val hakijat = Await.result(kkHakija.getKkHakijat(query), defaultTimeout.duration)
+    if (hakijat.isEmpty) {
+      Array()
+    } else {
+      val bytes = new ByteArrayOutputStream()
+      format match {
+        case ApiFormat.Json =>
+          IOUtils.write(write(hakijat), bytes)
+          bytes.toByteArray
+        case ApiFormat.Excel =>
+          KkExcelUtil.write(bytes, hakijat)
+          bytes.toByteArray
+      }
+    }
+  }
 
   def getAsiakirjaWithId(id: String): Option[(ApiFormat, Either[Exception, Array[Byte]], Option[User])] = {
     Option(shortIds.get(id)).map(q => (q.format, asiakirjat.getIfPresent(q), q.query.user))
