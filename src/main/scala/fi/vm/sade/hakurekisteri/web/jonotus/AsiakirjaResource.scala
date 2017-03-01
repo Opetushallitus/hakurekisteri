@@ -7,6 +7,7 @@ import java.util.concurrent.{TimeoutException, ExecutionException}
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -14,12 +15,17 @@ import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
 import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
+import org.json4s.Formats
 import org.scalatra._
+import org.json4s._
+import org.json4s.jackson.Serialization.write
 
 class EmptyAsiakirjaException extends RuntimeException()
-
+case class LocalizedMessage(message: String, parameter: Option[String] = None)
 class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with SecuritySupport with DownloadSupport with HakijaResourceSupport {
+
+  override protected implicit def jsonFormats: Formats = HakurekisteriJsonSupport.format
 
   addMimeMapping("application/octet-stream", "binary")
 
@@ -42,26 +48,35 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
         }
       case AsiakirjaWithExceptions(exception) =>
         if(isStatusCheck) {
-          exception match {
-            case t:TimeoutException =>
-              NoContent(reason = "suoritusrekisteri.poikkeus.aikakatkaisu")
-            case e:ExecutionException =>
-              e.getCause match {
-                case p: PreconditionFailedException =>
-                  NoContent(reason = "suoritusrekisteri.poikkeus.taustapalveluvirhe")
-                case _ =>
-                  NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
-              }
-            case i:InitialLoadingNotDone =>
-              NoContent(reason = "suoritusrekisteri.poikkeus.alustuskesken")
-            case e:EmptyAsiakirjaException =>
-              NoContent(reason = "suoritusrekisteri.poikkeus.eisisaltoa")
-            case _ =>
-              NoContent(reason = "suoritusrekisteri.poikkeus.tuntematon")
-          }
+          exceptionToNoContentResponse(exception)
         } else {
           NotFound(exception.toString)
         }
+    }
+  }
+  def exceptionToNoContentResponse(exception: Exception): ActionResult = {
+    exception match {
+      case t: TimeoutException =>
+        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.aikakatkaisu")))
+      case e: ExecutionException =>
+        e.getCause match {
+          case p: PreconditionFailedException =>
+            val KoodistoUrl = ".*koodisto-service/rest/json/relaatio/rinnasteinen/([^,]*).*".r
+            p.message match {
+              case KoodistoUrl(koodi) =>
+                NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.koodisto", Some(koodi))))
+              case _ =>
+                NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.taustapalveluvirhe")))
+            }
+          case _ =>
+            NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
+        }
+      case i: InitialLoadingNotDone =>
+        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.alustuskesken")))
+      case e: EmptyAsiakirjaException =>
+        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.eisisaltoa")))
+      case _ =>
+        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
     }
   }
 
