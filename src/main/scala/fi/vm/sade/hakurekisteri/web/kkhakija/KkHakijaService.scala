@@ -203,11 +203,6 @@ class KkHakijaService(hakemusService: IHakemusService,
     oids.map(o => parents.getOrElse("").split(",").toSet.contains(o)).find(_ == true).getOrElse(false)
   }
 
-  private def matchHakukohde(hakutoive: String, hakukohde: Option[String]) = hakukohde match {
-    case None => true
-    case Some(oid) => hakutoive == oid
-  }
-
   import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.isHyvaksytty
   import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.isVastaanottanut
 
@@ -257,26 +252,41 @@ class KkHakijaService(hakemusService: IHakemusService,
   private def extractHakemukset(hakemus: FullHakemus,
                                 q: KkHakijaQuery,
                                 haku: Haku,
-                                sijoitteluTulos: SijoitteluTulos): Seq[Future[Option[Hakemus]]] =
-    (for {
-      answers: HakemusAnswers <- hakemus.answers
-      hakutoiveet: Map[String, String] <- answers.hakutoiveet
-    } yield hakutoiveet.keys.collect {
-      case Pattern(jno: String) if hakutoiveet(s"preference$jno-Koulutus-id") != "" && queryMatches(q, hakutoiveet, jno) =>
-        extractSingleHakemus(
-          hakemus,
-          q,
-          hakutoiveet,
-          answers.lisatiedot.getOrElse(Map()),
-          answers.koulutustausta.getOrElse(Koulutustausta()),
-          jno,
-          haku,
-          sijoitteluTulos
-        )
-    }.toSeq).getOrElse(Seq())
+                                sijoitteluTulos: SijoitteluTulos): Seq[Future[Option[Hakemus]]] = {
+    val combinedHakukohdeOids: Future[Seq[String]] = q.hakukohderyhma
+      .map(hakukohderyhma => hakupalvelu.getHakukohdeOids(hakukohderyhma, haku.oid))
+      .getOrElse(Future.successful(Seq())).map(_ ++ q.hakukohde.toSeq)
 
-  private def queryMatches(q: KkHakijaQuery, hakutoiveet: Map[String, String], jno: String): Boolean = {
-    matchHakukohde(hakutoiveet(s"preference$jno-Koulutus-id"), q.hakukohde) &&
+
+      (for {
+        answers: HakemusAnswers <- hakemus.answers
+        hakutoiveet: Map[String, String] <- answers.hakutoiveet
+      } yield hakutoiveet.keys.map(key => {
+          combinedHakukohdeOids.flatMap(hakukohdeOids =>
+          key match {
+            case Pattern(jno: String) if hakutoiveet(s"preference$jno-Koulutus-id") != "" && queryMatches(q, hakutoiveet, hakukohdeOids, jno) =>
+
+              extractSingleHakemus(
+                hakemus,
+                q,
+                hakutoiveet,
+                answers.lisatiedot.getOrElse(Map()),
+                answers.koulutustausta.getOrElse(Koulutustausta()),
+                jno,
+                haku,
+                sijoitteluTulos
+              )
+            case _ =>
+              Future.successful(None)
+          })
+        }).toSeq).getOrElse(Seq())
+  }
+
+  private def queryMatches(q: KkHakijaQuery, hakutoiveet: Map[String, String], hakukohdeOids: Seq[String], jno: String): Boolean = {
+    def anyHakukohdeMatch(hakutoive: String, hakukohdes: Seq[String]) =
+      hakukohdes.isEmpty || hakukohdes.exists(oid => hakutoive == oid)
+
+    anyHakukohdeMatch(hakutoiveet(s"preference$jno-Koulutus-id"), hakukohdeOids) &&
       isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), q.organisaatio) &&
       isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user))
   }
