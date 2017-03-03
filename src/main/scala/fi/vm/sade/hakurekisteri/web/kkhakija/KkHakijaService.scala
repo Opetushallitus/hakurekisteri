@@ -161,16 +161,16 @@ class KkHakijaService(hakemusService: IHakemusService,
                     Future.sequence(h.map(getKkHakijaV1(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                   )
                 }
-                case 3 => {
+                case 2 => {
                   getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
-                    Future.sequence(h.map(getKkHakijaV3(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                    Future.sequence(h.map(getKkHakijaV2(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                   )
                 }
               }
             } else {
               version match {
                 case 1 => Future.sequence(h.map(getKkHakijaV1(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
-                case 3 => Future.sequence(h.map(getKkHakijaV3(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                case 2 => Future.sequence(h.map(getKkHakijaV2(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
               }
             }
           } else {
@@ -395,7 +395,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = Seq(), julkaisulupa = None, hKelpoisuusMaksuvelvollisuus = None))
     )
 
-  private def getKkHakijaV3(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos])(hakemus: FullHakemus): Option[Future[Hakija]] =
+  private def getKkHakijaV2(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos])(hakemus: FullHakemus): Option[Future[Hakija]] =
     for {
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
