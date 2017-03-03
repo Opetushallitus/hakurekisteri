@@ -40,7 +40,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object FullHakemus1 extends FullHakemus("1.25.1", Some("1.24.1"), "1.1",
     answers = Some(
       HakemusAnswers(
-        osaaminen = None,
+        osaaminen = Some(Map("yleinen_kielitutkinto_fi" -> "true", "valtionhallinnon_kielitutkinto_fi" -> "true")),
         henkilotiedot = Some(
           HakemusHenkilotiedot(
             kansalaisuus = Some("FIN"),
@@ -118,6 +118,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
           "preference1-Koulutus-id-lang" -> "FI",
           "preference1-Koulutus-id-sora" -> "true",
+          "preference1-Koulutus-id-vocational" -> "true",
           "preference1_sora_terveys" -> "true",
           "preference1_sora_oikeudenMenetys" -> "true",
           "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
@@ -128,7 +129,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "lupaJulkaisu-id" -> "true",
           "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("ACTIVE"),
-    preferenceEligibilities = Seq(PreferenceEligibility("1.11.1", "NOT_CHECKED", Some("UNKNOWN")), PreferenceEligibility("1.11.2", "NOT_CHECKED", Some("UNKNOWN")))
+    preferenceEligibilities = Seq(PreferenceEligibility("1.11.1", "NOT_CHECKED", Some("UNKNOWN"), Some("NOT_CHECKED")), PreferenceEligibility("1.11.2", "NOT_CHECKED", Some("UNKNOWN"), Some("NOT_CHECKED"))),
+    attachmentRequests = Seq(HakemusAttachmentRequest ("3bb18492-abe1-4c69-be59-7eb721447aa6", None, Some("1.2.246.562.20.18496942519"), "NOT_CHECKED", "NOT_RECEIVED", ApplicationAttachment(Option(Name(Translations("suomi", "ruotsi" ,"englanti"))), Option(Header(Translations("suomi", "ruotsi" ,"englanti"))), Address("Vastaanottaja", "Tie 1", "00100", "Helsinki"))))
   )
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
@@ -222,7 +224,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "lupaJulkaisu-id" -> "true",
           "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
-    preferenceEligibilities = Seq()
+    preferenceEligibilities = Seq(),
+    attachmentRequests = Seq()
   )
   object FullHakemus3 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
@@ -317,8 +320,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "lupaJulkaisu-id" -> "true",
           "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
-    preferenceEligibilities = Seq()
-  )
+    preferenceEligibilities = Seq(),
+    attachmentRequests = Seq(HakemusAttachmentRequest("3bb18492-abe1-4c69-be59-7eb721447aa6", Some("1.2.246.562.20.18496942519"), None, "NOT_CHECKED", "NOT_RECEIVED", ApplicationAttachment(Option(Name(Translations("suomi", "ruotsi" ,"englanti"))), Option(Header(Translations("suomi", "ruotsi" ,"englanti"))), Address("Vastaanottajan kanslia", "Tie 1", "00100", "Helsinki")))))
 
   object FullHakemus4 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
@@ -421,7 +424,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "miksi_ammatilliseen" -> "Siksi ammatilliseen",
           "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
-    preferenceEligibilities = Seq()
+    preferenceEligibilities = Seq(),
+    attachmentRequests = Seq()
   )
 
   object SynteettinenHakemus extends FullHakemus("1.25.3", Some("1.24.3"), "1.3",
@@ -458,7 +462,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-Opetuspiste-id-parents" -> "1.10.1,1.2.246.562.10.00000000001")),
         lisatiedot = None)),
     state = Some("ACTIVE"),
-    preferenceEligibilities = Seq()
+    preferenceEligibilities = Seq(),
+    attachmentRequests = Seq()
   )
 
   object VanhentuneenHaunHakemus extends FullHakemus("1.25.10", Some("1.24.10"), "1.3.10",
@@ -495,7 +500,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-Opetuspiste-id-parents" -> "1.10.1,1.2.246.562.10.00000000001")),
         lisatiedot = None)),
     state = Some("ACTIVE"),
-    preferenceEligibilities = Seq()
+    preferenceEligibilities = Seq(),
+    attachmentRequests = Seq()
   )
 
   object notEmpty
@@ -519,6 +525,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       }
       case _ => Future(hakijat)
     }
+
+
 
     val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
 
@@ -553,6 +561,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def withLisakysymykset (lisakysymykset: Map[String, ThemeQuestion]): Unit = {
       this.lisakysymykset = lisakysymykset
     }
+
+    override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
   }
 
   class MockedOrganisaatioActor extends Actor {

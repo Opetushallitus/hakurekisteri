@@ -21,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
-class HakijaResourceV2(hakijaActor: ActorRef)
+class HakijaResourceV3(hakijaActor: ActorRef)
                       (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[JSONHakijat])
   extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijat] with DownloadSupport with QueryLogging with HakijaResourceSupport  {
   implicit val defaultTimeout: Timeout = 120.seconds
@@ -36,13 +36,13 @@ class HakijaResourceV2(hakijaActor: ActorRef)
   override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
 
   override val streamingRender: (OutputStream, JSONHakijat) => Unit = (out, hakijat) => {
-    ExcelUtilV2.write(out, hakijat)
+    ExcelUtilV3.write(out, hakijat)
   }
 
   get("/", operation(queryV2)) {
     if(params.get("haku").getOrElse("").isEmpty)
       throw new IllegalArgumentException(s"Haku can not be empty")
-    val q = HakijaQuery(params, currentUser, 2)
+    val q = HakijaQuery(params, currentUser, 3)
     val tyyppi = getFormatFromTypeParam()
     val thisResponse = response
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {

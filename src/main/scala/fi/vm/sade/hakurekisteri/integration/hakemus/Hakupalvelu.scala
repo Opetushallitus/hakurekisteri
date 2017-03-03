@@ -19,6 +19,7 @@ import scala.util.Try
 
 trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
+  def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]]
 }
 
 case class ThemeQuestion(`type`: String, messageText: String, applicationOptionOids: Seq[String], options: Option[Map[String, String]],
@@ -73,6 +74,11 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
 
   private def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] = {
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ hardCodedLisakysymys)
+  }
+
+  override def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]] = {
+    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map("hakuOid" -> haku, "organisaatioRyhmaOid"->hakukohderyhma))
+      .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
   private def hakukohdeOids(organisaatio: Option[String],
@@ -143,6 +149,20 @@ object AkkaHakupalvelu {
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
+  def attachmentRequestToLiite(har: HakemusAttachmentRequest): Liite = {
+    val name = (har.applicationAttachment.name, har.applicationAttachment.header) match {
+      case (Some(name), _) => name.translations.fi
+      case (_, Some(header)) => header.translations.fi
+      case (None, None) => ""
+    }
+    var prefAoId = (har.preferenceAoId) match { case Some(a) => a case None => ""}
+    var prefAoGroupId = (har.preferenceAoGroupId) match { case Some(a) => a case None => ""}
+    Liite(prefAoId, prefAoGroupId, har.receptionStatus, har.processingStatus, name, har.applicationAttachment.address.recipient)
+  }
+
+  def getLiitteet(hakemus: FullHakemus): Seq[Liite] = {
+    hakemus.attachmentRequests.map(a=> attachmentRequestToLiite(a))
+  }
 
   def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
 
@@ -217,6 +237,13 @@ object AkkaHakupalvelu {
       .toSeq
   }
 
+  def getOsaaminenOsaalue(hakemusAnswers: Option[HakemusAnswers], key: String): Option[String] = {
+    hakemusAnswers match {
+      case Some(ha) => ha.osaaminen match { case Some(a) => a.get(key) case None => None }
+      case None => None
+    }
+  }
+
   def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
@@ -233,6 +260,20 @@ object AkkaHakupalvelu {
       lisatiedot <- a.lisatiedot;
       julkaisu <- lisatiedot.get("lupaJulkaisu")
     ) yield julkaisu).getOrElse("false").toBoolean
+
+    val yleinen_kielitutkinto_fi = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_fi")
+    val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_fi")
+    val yleinen_kielitutkinto_sv = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_sv")
+    val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_sv")
+    val yleinen_kielitutkinto_en = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_en")
+    val valtionhallinnon_kielitutkinto_en = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_en")
+    val yleinen_kielitutkinto_se = getOsaaminenOsaalue(hakemus.answers, "yleinen_kielitutkinto_se")
+    val valtionhallinnon_kielitutkinto_se = getOsaaminenOsaalue(hakemus.answers, "valtionhallinnon_kielitutkinto_se")
+
+    val osaaminen = Osaaminen(yleinen_kielitutkinto_fi, valtionhallinnon_kielitutkinto_fi,
+                          yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv,
+                          yleinen_kielitutkinto_en, valtionhallinnon_kielitutkinto_en,
+                          yleinen_kielitutkinto_se, valtionhallinnon_kielitutkinto_se)
 
     val lisapistekoulutus = for (
       tausta <- koulutustausta;
@@ -256,8 +297,10 @@ object AkkaHakupalvelu {
         sukunimi = getHenkiloTietoOrBlank(_.Sukunimi),
         etunimet = getHenkiloTietoOrBlank(_.Etunimet),
         kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
+        turvakielto = getHenkiloTietoOrBlank(_.Turvakielto),
         oppijanumero = hakemus.personOid.getOrElse(""),
         kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
+        kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
         asiointiKieli = kieli,
         eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
         sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
@@ -268,7 +311,8 @@ object AkkaHakupalvelu {
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid)
+        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
+        liitteet = getLiitteet(hakemus)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid),
       lahtokoulu match {
@@ -283,13 +327,13 @@ object AkkaHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
-    )
+      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
   }
 
   def getValue[A](key: (HakemusAnswers) => Option[A], subKey: (A) => Option[String], default: String = "")(implicit answers: Option[HakemusAnswers]): String = {
     (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
+
 
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {
@@ -302,9 +346,26 @@ object AkkaHakupalvelu {
     }
   }
 
+  def findEnsimmainenAmmatillinenKielinenHakukohde(toiveet: Map[String, String], kieli: String): Int = {
+    var x: Int = 0
+    for{
+      a <- 1 to 6
+      if x == 0
+    } (toiveet.getOrElse(s"preference${a}-Koulutus-id-lang", "") == kieli, toiveet.getOrElse(s"preference${a}-Koulutus-id-vocational", "")) match {
+      case (true, "true") => x = a.toInt
+      case _ =>
+    }
+    x
+  }
+
   def convertToiveet(toiveet: Map[String, String], haku: Haku): Seq[Hakutoive] = {
     val Pattern = "preference(\\d+)-Opetuspiste-id".r
     val notEmpty = "(.+)".r
+    var ensimmainenSuomenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "FI")
+    var ensimmainenRuotsinkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SV")
+    var ensimmainenEnglanninkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "EN")
+    var ensimmainenSaamenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SE")
+
     val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
       case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
     }.toSeq
@@ -327,7 +388,14 @@ object AkkaHakupalvelu {
       val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
       val organisaatioParentOidPath = toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "")
       val hakukohdeOid = toiveet.getOrElse(s"preference$jno-Koulutus-id", "")
-      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath)
+      val koulutuksenKieli: Option[String] = (jno == ensimmainenSuomenkielinenHakukohde, jno == ensimmainenRuotsinkielinenHakukohde, jno == ensimmainenEnglanninkielinenHakukohde, jno == ensimmainenSaamenkielinenHakukohde) match {
+        case (true, false, false, false) => Some("FI")
+        case (false, true, false, false) => Some("SV")
+        case (false, false, true, false) => Some("EN")
+        case (false, false, false, true) => Some("SE")
+        case _ => None
+      }
+      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath, koulutuksenKieli)
     }
   }
 }
@@ -352,7 +420,9 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String] = None,
                                 Sukunimi: Option[String] = None,
                                 Etunimet: Option[String] = None,
                                 Kutsumanimi: Option[String] = None,
+                                Turvakielto: Option[String] = None,
                                 kansalaisuus: Option[String] = None,
+                                kaksoiskansalaisuus: Option[String] = None,
                                 onkoSinullaSuomalainenHetu: Option[String] = None,
                                 sukupuoli: Option[String] = None,
                                 syntymaaika: Option[String] = None,
@@ -405,9 +475,21 @@ object Koulutustausta {
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Map[String, String]] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
 
-case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
+case class HakemusAttachmentRequest(id: String, preferenceAoId: Option[String], preferenceAoGroupId: Option[String], processingStatus: String, receptionStatus: String, applicationAttachment: ApplicationAttachment)
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String, FullHakemus] with Identified[String] {
+case class ApplicationAttachment(name: Option[Name], header: Option[Header], address: Address)
+
+case class Name(translations: Translations)
+
+case class Header(translations: Translations)
+
+case class Address(recipient: String, streetAddress: String, postalCode: String, postOffice: String)
+
+case class Translations(fi:String, sv:String, en:String)
+
+case class PreferenceEligibility(aoId: String, status: String, source: Option[String], maksuvelvollisuus: Option[String])
+
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility], attachmentRequests: Seq[HakemusAttachmentRequest] = Seq()) extends Resource[String, FullHakemus] with Identified[String] {
   val source = Oids.ophOrganisaatioOid
 
   override def identify(identity: String): FullHakemus with Identified[String] = this

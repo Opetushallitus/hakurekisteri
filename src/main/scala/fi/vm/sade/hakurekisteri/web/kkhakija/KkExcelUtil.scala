@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExcelWriter}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.Koulutus
+import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 
 object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
@@ -15,7 +16,7 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
   )
 
   override def getHeaders(hakijat: Seq[Hakija]): Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
-  
+
   override def getRows(hakijat: Seq[Hakija]): Set[Row] = hakijat.flatMap((hakija) => hakija.hakemukset.map(hakemus => {
     val rivi = Seq(
       hakija.hetu,

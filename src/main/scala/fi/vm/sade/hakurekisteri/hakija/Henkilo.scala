@@ -7,6 +7,7 @@ case class Henkilo(hetu: String,
                    sukunimi: String,
                    etunimet: String,
                    kutsumanimi: String,
+                   turvakielto: String,
                    lahiosoite: String,
                    postinumero: String,
                    postitoimipaikka: String,
@@ -16,6 +17,7 @@ case class Henkilo(hetu: String,
                    sahkoposti: String,
                    kotikunta: String,
                    kansalaisuus: String,
+                   kaksoiskansalaisuus: String,
                    asiointiKieli: String,
                    eiSuomalaistaHetua: Boolean,
                    markkinointilupa: Option[Boolean],
@@ -23,7 +25,9 @@ case class Henkilo(hetu: String,
                    huoltajannimi: String,
                    huoltajanpuhelinnumero: String,
                    huoltajansahkoposti: String,
-                   lisakysymykset: Seq[Lisakysymys])
+                   lisakysymykset: Seq[Lisakysymys],
+                   liitteet: Seq[Liite])
 
 case class Lisakysymys(kysymysid: String, kysymystyyppi: String, kysymysteksti: String, vastaukset: Seq[LisakysymysVastaus])
 case class LisakysymysVastaus(vastausid: Option[String], vastausteksti: String)
+case class Liite(koulutusId: String, koulutusRyhmaId: String, tila: String, saapumisenTila: String, nimi: String, vastaanottaja: String)

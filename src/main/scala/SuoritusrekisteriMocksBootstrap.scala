@@ -1,13 +1,16 @@
-import javax.servlet.{Servlet, ServletContext}
+import javax.servlet.ServletContext
 
 import _root_.akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakupalvelu, AkkaHakupalvelu, HakemusServiceMock}
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
-import org.json4s.{Extraction, _}
 import org.json4s.jackson.JsonMethods._
+import org.json4s.{Extraction, _}
 import org.scalatra._
-
 import scala.concurrent.{ExecutionContext, Future}
 
 class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSupport {
@@ -17,6 +20,21 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     implicit val system = config.productionServerConfig.system
     implicit val ec = config.productionServerConfig.ec
     implicit val security = config.productionServerConfig.security
+
+    val anyActorRef = system.deadLetters
+    val kkHakijaService = new KkHakijaService(hakemusService = new HakemusServiceMock(),
+      hakupalvelu = new Hakupalvelu() {
+        override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
+        override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
+      },
+      tarjonta = anyActorRef,
+      haut = anyActorRef,
+      koodisto = anyActorRef,
+      suoritukset = anyActorRef,
+      valintaTulos = anyActorRef)
+    val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
+    context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
+    context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
     context.mount(new OrganizationProxyServlet(system), "/organisaatio-service")
     context.mount(new AuthenticationProxyServlet(system), "/authentication-service")
     context.mount(new KoodistoProxyServlet(system), "/koodisto-service")
@@ -25,6 +43,12 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
   }
 
   class OrganizationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) {
+    get("/rest/organisaatio/v2/ryhmat") {
+      new AsyncResult() {
+        override val is = Future.successful(OrganisaatioMock.ryhmat())
+      }
+    }
+
     get("/rest/organisaatio/v2/hae") {
       new AsyncResult() {
         override val is = Future.successful(OrganisaatioMock.findAll())

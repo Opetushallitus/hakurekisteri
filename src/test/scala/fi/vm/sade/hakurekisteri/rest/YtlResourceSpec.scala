@@ -29,7 +29,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
   val answers = HakemusAnswers(henkilotiedot= Some(HakemusHenkilotiedot(Henkilotunnus=Some("050996-9574"))))
-  val hakemusWithPersonOidEnding9574 = Future.successful(Seq(FullHakemus("",Some("050996-9574"),someKkHaku,Some(answers),Some("ACTIVE"),Seq())))
+  val hakemusWithPersonOidEnding9574 = Future.successful(Seq(FullHakemus("",Some("050996-9574"),someKkHaku,Some(answers),Some("ACTIVE"),Seq(),Seq())))
 
   addServlet(new YtlResource(null, ytlIntegration), "/*")
 

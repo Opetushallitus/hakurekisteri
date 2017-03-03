@@ -73,7 +73,47 @@ app.controller "HakeneetCtrl", [
   "aste"
   "haut"
   "hakukohdekoodit"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit) ->
+  "$interval"
+  "LokalisointiService"
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, $interval, LokalisointiService) ->
+    pollInterval = 1 * 1500 # every second
+
+    $scope.handlePoll = (reply) ->
+      if(reply.asiakirjaId)
+        statusUrl = plainUrls.url("suoritusrekisteri.asiakirja.status",reply.asiakirjaId)
+        $http.get(statusUrl).then((response) ->
+          status = response.status
+          if(status == 200)
+            $scope.query = null
+            $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
+          else
+            $scope.query = null
+            reason = JSON.parse(response.statusText)
+            asiakirjaError = LokalisointiService.getTranslation(reason.message)
+            if(asiakirjaError)
+              if(reason.parameter)
+                asiakirjaError = asiakirjaError + " " + reason.parameter
+              $scope.asiakirjaError = asiakirjaError
+            else
+              $scope.asiakirjaError = "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
+        )
+      else if(reply.sijoitus)
+        $scope.sijoitus = reply.sijoitus
+        $scope.tyonalla = reply.tyonalla == true
+
+    $scope.poll = (url) ->
+      $http.post(url, $scope.query, {headers: {
+        'Content-type': 'application/json'
+      }}).success($scope.handlePoll)
+
+    stop = $interval((->
+      if($scope.query)
+        $scope.poll(plainUrls.url("suoritusrekisteri.jonotus"))
+    ), pollInterval)
+    $scope.$on('$destroy', ->
+      if(angular.isDefined(stop))
+        $interval.cancel(stop)
+    )
 
     $('#oppijanumero').placeholder()
     $('#hakukohde').placeholder()
@@ -110,17 +150,50 @@ app.controller "HakeneetCtrl", [
 
     $scope.haut = []
     $scope.kaudet = []
-    $scope.rajapinnanVersiot = [
-      {
-        value: 1,
-        text: "1"
-      }
-      {
-        value: 2,
-        text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
-      }
-    ]
-    $scope.rajapinnanVersio = 2
+    
+    rajapintaVaihtoehdot = ->
+      if(isKk())
+        return [
+          {
+            value: 1,
+            text: "1"
+          }
+          {
+            value: 2,
+            text: "2"
+          }
+          {
+            value: 2,
+            text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
+          }
+        ]
+      else
+        return [
+          {
+            value: 1,
+            text: "1"
+          }
+          {
+            value: 2,
+            text: "2"
+          }
+          {
+            value: 3,
+            text: "3"
+          }
+          {
+            value: 3,
+            text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
+          }
+        ]
+
+    $scope.rajapinnanVersiot = rajapintaVaihtoehdot()
+
+    if(isKk())
+      $scope.rajapinnanVersio = 2
+    else
+      $scope.rajapinnanVersio = 3
+
     $scope.hakuehdot = [
       {
         value: "Kaikki"
@@ -143,10 +216,11 @@ app.controller "HakeneetCtrl", [
 
     isValidTiedostotyyppi = () -> R.contains($scope.tiedostotyyppi, R.pluck('value', $scope.tiedostotyypit))
 
+
     $scope.search = ->
       MessageService.clearMessages()
       if isKk()
-        if not $scope.oppijanumero and not $scope.hakukohde
+        if not $scope.oppijanumero and not $scope.hakukohde and not ($scope.hakukohderyhma and $scope.haku)
           unless $scope.oppijanumero
             MessageService.addMessage
               type: "danger"
@@ -162,6 +236,15 @@ app.controller "HakeneetCtrl", [
               messageKey: "suoritusrekisteri.hakeneet.hakukohdettaeisyotetty"
               description: "Valitse hakukohde ja yritä uudelleen. Hakukohde on helpompi löytää, jos valitset ensin haun ja organisaation."
               descriptionKey: "suoritusrekisteri.hakeneet.hakukohdettaeisyotettyselite"
+
+          unless ($scope.hakukohderyhma and $scope.haku)
+            MessageService.addMessage
+              type: "danger"
+              message: "Hakukohderyhmää ja hakua ei ole valittu."
+              messageKey: "suoritusrekisteri.hakeneet.hakukohderyhmaajahakuaeisyotetty"
+              description: "Valitse hakukohderyhmä ja haku ja yritä uudelleen."
+              descriptionKey: "suoritusrekisteri.hakeneet.hakukohderyhmaajahakuaeisyotetty"
+
 
           return
       else
@@ -189,8 +272,10 @@ app.controller "HakeneetCtrl", [
               messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
 
           return
-      url = (if isKk() then "rest/v1/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
+      url = (if isKk() then "rest/v" + $scope.rajapinnanVersio + "/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
       data = (if isKk() then {
+        kk: true
+        hakukohderyhma: (if $scope.hakukohderyhma then $scope.hakukohderyhma else null)
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
@@ -198,6 +283,7 @@ app.controller "HakeneetCtrl", [
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
+        version: $scope.rajapinnanVersio
       }
       else {
         haku: (if $scope.haku then $scope.haku.oid else null)
@@ -206,26 +292,12 @@ app.controller "HakeneetCtrl", [
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
+        version: $scope.rajapinnanVersio
       })
-      $scope.fileLoading = true
-      $.fileDownload(url,
-        data: data
-      ).done(->
-        $scope.$apply ->
-          delete $scope.fileLoading
-          return
-        return
-      ).fail ->
-        $scope.$apply ->
-          MessageService.addMessage
-            type: "danger"
-            message: "Tiedoston lataaminen epäonnistui."
-            messageKey: "suoritusrekisteri.hakeneet.latausepaonnistui"
-            description: "Palvelussa saattaa olla kuormaa. Yritä hetken kuluttua uudelleen."
-            descriptionKey: "suoritusrekisteri.hakeneet.latausepaonnistuiselite"
-          delete $scope.fileLoading
-          return
-        return
+      $scope.asiakirja = null
+      $scope.asiakirjaError = null
+      $scope.query = data
+      $scope.poll(plainUrls.url("suoritusrekisteri.jonotus.createNewIfErrors"))
       return
 
     $scope.reset = ->
@@ -268,6 +340,33 @@ app.controller "HakeneetCtrl", [
 
     $scope.hakukohdekoodit = []
     loadHakukohdekoodit hakukohdekoodit, $scope
+
+    sortByNimi = (a, b) ->
+      return 0  if not a.nimi and not b.nimi
+      return -1  unless a.nimi
+      return 1  unless b.nimi
+      return 0  if a.nimi.toLowerCase() is b.nimi.toLowerCase()
+      (if a.nimi.toLowerCase() < b.nimi.toLowerCase() then -1 else 1)
+
+    $http.get(window.url("organisaatio-service.ryhmat"),
+        cache: true
+      ).then ((res) ->
+        return [] if not res.data or res.data.length is 0
+        hakukohderyhmat = res.data.filter((r)->r.ryhmatyypit[0] == "hakukohde").map((r)->
+          oid: r.oid
+          nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
+        )
+        hakukohderyhmat.sort sortByNimi
+        $scope.hakukohderyhmat = hakukohderyhmat
+      ), ->
+        $scope.hakukohderyhmat = []
+
+    $scope.searchHakukohderyhma = (nimi) ->
+      R.filter(((hkr) ->
+        hkr.nimi.toLowerCase().indexOf(nimi.toLowerCase()) != -1), $scope.hakukohderyhmat)
+
+
+
     $scope.searchHakukohde = ->
       $http.get(window.url("tarjonta-service.hakukohde"),
         params:
@@ -286,17 +385,15 @@ app.controller "HakeneetCtrl", [
         ).reduce((a, b) ->
           a.concat b
         )
-        hakukohteet.sort (a, b) ->
-          return 0  if not a.nimi and not b.nimi
-          return -1  unless a.nimi
-          return 1  unless b.nimi
-          return 0  if a.nimi.toLowerCase() is b.nimi.toLowerCase()
-          (if a.nimi.toLowerCase() < b.nimi.toLowerCase() then -1 else 1)
+        hakukohteet.sort sortByNimi
 
         hakukohteet
       ), ->
         []
 
+    $scope.setHakukohderyhma = (item) ->
+      $scope.hakukohderyhma = item.oid
+      return
 
     $scope.setHakukohde = (item) ->
       $scope.hakukohde = item.oid
@@ -333,4 +430,5 @@ app.controller "HakeneetCtrl", [
     $scope.hakuFilter = (haku, i) ->
       return true  if !$scope.kausi or ($scope.kausi and !$scope.kausi.kausi and !$scope.kausi.vuosi)
       $scope.kausi and haku.kausi is $scope.kausi.kausi and haku.vuosi is $scope.kausi.vuosi
+
 ]

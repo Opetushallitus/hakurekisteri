@@ -15,6 +15,7 @@
     "organisaatio-service.organisaatio": "/organisaatio-service/rest/organisaatio/$1",
     "organisaatio-service.hae": "/organisaatio-service/rest/organisaatio/hae",
     "organisaatio-service.haeV2": "/organisaatio-service/rest/organisaatio/v2/hae",
+    "organisaatio-service.ryhmat": "/organisaatio-service/rest/organisaatio/v2/ryhmat",
     "koodisto-service.koodiByUri": "/koodisto-service/rest/json/$1/koodi/$2",
     "koodisto-service.koodisByKoodisto": "/koodisto-service/rest/json/$1/koodi",
     "koodisto-service.relaatio": "/koodisto-service/rest/json/relaatio/$1/$2",
@@ -31,5 +32,9 @@
     "tarjonta-service.hakuById": "/tarjonta-service/rest/v1/haku/$1",
     "tarjonta-service.hakukohde": "/tarjonta-service/rest/v1/hakukohde/search",
     "tarjonta-service.hakukohdeById": "/tarjonta-service/rest/v1/hakukohde/$1",
-    "cas.myroles": "/cas/myroles"
+    "cas.myroles": "/cas/myroles",
+    "suoritusrekisteri.jonotus": "/suoritusrekisteri/siirtotiedostojono",
+    "suoritusrekisteri.jonotus.createNewIfErrors": "/suoritusrekisteri/siirtotiedostojono?createNewDocumentIfErrors=true",
+    "suoritusrekisteri.asiakirja": "/suoritusrekisteri/asiakirja/$1",
+    "suoritusrekisteri.asiakirja.status": "/suoritusrekisteri/asiakirja/$1?status=true"
 }
