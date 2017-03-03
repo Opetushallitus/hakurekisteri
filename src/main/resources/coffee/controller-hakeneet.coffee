@@ -150,21 +150,47 @@ app.controller "HakeneetCtrl", [
 
     $scope.haut = []
     $scope.kaudet = []
-    $scope.rajapinnanVersiot = [
-      {
-        value: 1,
-        text: "1"
-      }
-      {
-        value: 2,
-        text: "2"
-      }
-      {
-        value: 3,
-        text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
-      }
-    ]
-    $scope.rajapinnanVersio = 3
+    $scope.rajapinnanVersiot = ->
+      if(isKk())
+        return [
+          {
+            value: 1,
+            text: "1"
+          }
+          {
+            value: 2,
+            text: "2"
+          }
+          {
+            value: 2,
+            text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
+          }
+          ]
+      else
+        return [
+          {
+            value: 1,
+            text: "1"
+          }
+          {
+            value: 2,
+            text: "2"
+          }
+          {
+            value: 3,
+            text: "3"
+          }
+          {
+            value: 3,
+            text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
+          }
+        ]
+
+    if(isKk())
+      $scope.rajapinnanVersio = 2
+    else
+      $scope.rajapinnanVersio = 3
+
     $scope.hakuehdot = [
       {
         value: "Kaikki"
@@ -254,6 +280,7 @@ app.controller "HakeneetCtrl", [
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
+        version: $scope.rajapinnanVersio
       }
       else {
         haku: (if $scope.haku then $scope.haku.oid else null)
@@ -262,6 +289,7 @@ app.controller "HakeneetCtrl", [
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
+        version: $scope.rajapinnanVersio
       })
       $scope.asiakirja = null
       $scope.asiakirjaError = null

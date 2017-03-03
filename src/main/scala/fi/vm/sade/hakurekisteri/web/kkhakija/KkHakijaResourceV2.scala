@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
-class KkHakijaResourceV3(kkHakijaService: KkHakijaService)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
+class KkHakijaResourceV2(kkHakijaService: KkHakijaService)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
     with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging with HakijaResourceSupport {
 

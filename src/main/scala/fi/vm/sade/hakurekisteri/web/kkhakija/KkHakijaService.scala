@@ -43,6 +43,7 @@ case class KkHakijaQuery(oppijanumero: Option[String],
                          hakukohde: Option[String],
                          hakukohderyhma: Option[String],
                          hakuehto: Hakuehto.Hakuehto,
+                         version: Int,
                          user: Option[User]) extends Query
 
 object KkHakijaQuery {
@@ -53,6 +54,7 @@ object KkHakijaQuery {
     hakukohde = params.get("hakukohde").flatMap(_.blankOption),
     hakukohderyhma = params.get("hakukohderyhma").flatMap(_.blankOption),
     hakuehto = Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
+    version = Try(params("version").toInt).recover{ case _ => 2 }.get,
     user = currentUser
   )
 }
@@ -136,9 +138,9 @@ class KkHakijaService(hakemusService: IHakemusService,
     }
     for (
       hakemukset <- q match {
-        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
-        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
-        case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _) =>
+        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
+        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
+        case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _) =>
           hakupalvelu.getHakukohdeOids(hakukohderyhma, haku).flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
