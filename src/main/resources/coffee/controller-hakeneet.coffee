@@ -150,7 +150,8 @@ app.controller "HakeneetCtrl", [
 
     $scope.haut = []
     $scope.kaudet = []
-    $scope.rajapinnanVersiot = ->
+    
+    rajapintaVaihtoehdot = ->
       if(isKk())
         return [
           {
@@ -165,7 +166,7 @@ app.controller "HakeneetCtrl", [
             value: 2,
             text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
           }
-          ]
+        ]
       else
         return [
           {
@@ -185,6 +186,8 @@ app.controller "HakeneetCtrl", [
             text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
           }
         ]
+
+    $scope.rajapinnanVersiot = rajapintaVaihtoehdot()
 
     if(isKk())
       $scope.rajapinnanVersio = 2
