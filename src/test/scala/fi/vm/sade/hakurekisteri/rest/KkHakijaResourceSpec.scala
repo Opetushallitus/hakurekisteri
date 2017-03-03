@@ -212,7 +212,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
-    hakijat.head.hakemukset.head.hKelpoisuus should be ("")
+    hakijat.head.hakemukset.exists(_.hKelpoisuus == "") should be (true)
   }
 
   test("should return hakukelpoisuus from hakemus") {
@@ -221,7 +221,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
-    hakijat.head.hakemukset(1).hKelpoisuus should be ("NOT_CHECKED")
+    hakijat.head.hakemukset.exists(_.hKelpoisuus == "NOT_CHECKED") should be (true)
   }
 
   test("should return kotikunta default if it is not defined in hakemus") {
