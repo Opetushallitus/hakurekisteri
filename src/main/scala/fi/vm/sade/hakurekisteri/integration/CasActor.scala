@@ -54,8 +54,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
       case Fetching(f) =>
         f pipeTo sender
       case Empty =>
-        implicit val system = context.system
-        val f = getJSession(serviceUrl)
+        val f = getJSession
         f.onComplete {
           case Success(id) =>
             self ! Set(id)
@@ -108,18 +107,18 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
 
   private object NoSessionFound extends Exception("No JSession Found")
 
-  private def getJSession(uri: String): Future[JSessionId] = {
-    val request: Req = dispatch.url(uri)
+  private def getJSession: Future[JSessionId] = {
+    val request: Req = dispatch.url(serviceUrl)
     getServiceTicket.flatMap(ticket => {
-      log.debug(s"about to call $uri with ticket $ticket to get jsession")
+      log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
       internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) => (r.getStatusCode, Option(r.getHeader("Set-Cookie")).filter(JSessionIdCookieParser.isJSessionIdCookie)) match {
         case (200 | 302 | 404, Some(cookie)) =>
           val id = JSessionIdCookieParser.fromString(cookie)
-          log.debug(s"call to $uri was successful")
+          log.debug(s"call to $serviceUrl was successful")
           log.debug(s"got jsession $id")
           id
         case (200 | 302 | 404, None) => throw NoSessionFound
-        case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $uri, response code: $code, text: ${r.getStatusText}", code)
+        case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $serviceUrl, response code: $code, text: ${r.getStatusText}", code)
       }))
     })
   }
