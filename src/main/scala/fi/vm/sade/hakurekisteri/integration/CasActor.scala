@@ -75,7 +75,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
   }
 
   private object LocationHeader extends (Response => String) {
-    def apply(r: Response) =
+    def apply(r: Response): String =
       Try(Option(r.getHeader("Location")).get).recoverWith{
         case  e: NoSuchElementException => Failure(LocationHeaderNotFoundException("location header not found"))
       }.get
@@ -85,7 +85,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     extends FunctionHandler[String](LocationHeader) with TgtHandler
 
   private class StFunctionHandler extends AsyncCompletionHandler[String] {
-    override def onStatusReceived(status: HttpResponseStatus) = {
+    override def onStatusReceived(status: HttpResponseStatus): STATE = {
       if (status.getStatusCode == 200)
         super.onStatusReceived(status)
       else
@@ -100,7 +100,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
   }
 
   private trait TgtHandler extends AsyncHandler[String] {
-    abstract override def onStatusReceived(status: HttpResponseStatus) = {
+    abstract override def onStatusReceived(status: HttpResponseStatus): STATE = {
       if (status.getStatusCode == 201)
         super.onStatusReceived(status)
       else
@@ -111,7 +111,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
   private val TgtUrl = new TgtFunctionHandler
   private val ServiceTicket = new StFunctionHandler
 
-  private def getTgtUrl() = {
+  private def getTgtUrl = {
     val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") << s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
     internalClient(tgtUrlReq > TgtUrl)
   }
@@ -123,7 +123,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     case _ => false
   }
 
-  private def tryServiceTicket(retry: Int): Future[String] = getTgtUrl().flatMap(tgtUrl => {
+  private def tryServiceTicket(retry: Int): Future[String] = getTgtUrl.flatMap(tgtUrl => {
     val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
     internalClient(proxyReq > ServiceTicket)
   }).recoverWith {
@@ -140,7 +140,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
 
   private class SessionCapturer[T](inner: AsyncHandler[T]) extends AsyncHandler[T] {
     private val promise = Promise[JSessionId]
-    val jsession = promise.future
+    val jsession: Future[JSessionId] = promise.future
 
     log.debug("initialized session capturer")
 
