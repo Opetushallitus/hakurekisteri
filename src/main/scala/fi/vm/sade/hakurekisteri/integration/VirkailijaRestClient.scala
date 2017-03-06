@@ -62,7 +62,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
 
   object Client {
-    private def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]
+    private def jSessionId: Future[JSessionId] = (casActor ? GetJSession).mapTo[JSessionId]
 
     import org.json4s.jackson.Serialization._
 

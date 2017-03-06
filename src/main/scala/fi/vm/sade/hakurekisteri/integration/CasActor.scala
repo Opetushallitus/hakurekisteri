@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.net.{ConnectException, URLEncoder}
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ExecutionException, TimeoutException}
+import java.util.concurrent.{ExecutionException, TimeUnit, TimeoutException}
 
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
@@ -11,24 +11,33 @@ import com.ning.http.client._
 import dispatch.{FunctionHandler, Http, Req}
 import fi.vm.sade.hakurekisteri.integration.cas._
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
-case class JSessionKey(serviceUrl: String)
+case object GetJSession
 case class JSessionId(sessionId: String)
 
-class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
-  val jSessionIdCache: FutureCache[JSessionKey, JSessionId] = new FutureCache[JSessionKey, JSessionId](5.minutes.toMillis)
+class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
-  val serviceUrl = serviceConfig.serviceUrl
-  val casUrl = serviceConfig.casUrl
-  val user = serviceConfig.user
-  val password = serviceConfig.password
+  private sealed trait State
+  private case object Empty extends State
+  private case class Fetching(f: Future[JSessionId]) extends State
+  private case class Cached(id: JSessionId) extends State
 
-  val cookieExpirationMillis = 5.minutes.toMillis
+  private case object Clear
+  private case class Set(id: JSessionId)
 
-  def serviceName = serviceUrl.split("/").lastOption
+  private val jSessionTtl = Duration(5, TimeUnit.MINUTES)
+  private val serviceUrlSuffix = "/j_spring_cas_security_check"
+  private val serviceUrl = serviceConfig.serviceUrl match {
+    case s if !s.endsWith(serviceUrlSuffix) => s"${serviceConfig.serviceUrl}$serviceUrlSuffix"
+    case s => s
+  }
+  private val casUrl = serviceConfig.casUrl
+  private val user = serviceConfig.user
+  private val password = serviceConfig.password
+  if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("casUrl, user or password is not defined")
 
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(serviceConfig.httpClientConnectionTimeout)
@@ -38,27 +47,32 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     .setMaxRequestRetry(2)
   ))
 
+  private var state: State = Empty
+
   override def receive: Receive = {
-    case k: JSessionKey =>
-      getJSessionIdFor(k) pipeTo sender
-  }
-
-  private def getJSessionIdFor(key: JSessionKey): Future[JSessionId] = {
-    if (jSessionIdCache.contains(key)) {
-      jSessionIdCache.get(key)
-    } else {
-      log.debug(s"no jsession found or it was expired, fetching a new one for $serviceUrl")
-      implicit val system = context.system
-      val jSession = getJSession(postfixServiceUrl(serviceUrl), JsonExtractor.handler[Unit](302, 200, 404))
-
-      jSessionIdCache + (JSessionKey(serviceUrl), jSession)
-
-      jSession.onSuccess {
-        case s => log.debug(s"got jsession $s for $serviceUrl")
-      }
-
-      jSession
+    case GetJSession => state match {
+      case Cached(id) =>
+        sender ! id
+      case Fetching(f) =>
+        f pipeTo sender
+      case Empty =>
+        implicit val system = context.system
+        val f = getJSession(serviceUrl, JsonExtractor.handler[Unit](302, 200, 404))
+        f.onComplete {
+          case Success(id) =>
+            self ! Set(id)
+          case Failure(e) =>
+            log.error(e, s"Fetching jsession for $serviceUrl failed")
+            self ! Clear
+        }
+        state = Fetching(f)
+        f pipeTo sender
     }
+    case Set(id) =>
+      state = Cached(id)
+      context.system.scheduler.scheduleOnce(jSessionTtl, self, Clear)
+    case Clear =>
+      state = Empty
   }
 
   private object LocationHeader extends (Response => String) {
@@ -103,14 +117,6 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     internalClient(tgtUrlReq > TgtUrl)
   }
 
-  private val serviceUrlSuffix = "/j_spring_cas_security_check"
-  private val maxRetriesCas = serviceConfig.httpClientMaxRetries
-
-  private def postfixServiceUrl(url: String): String = url match {
-    case s if !s.endsWith(serviceUrlSuffix) => s"$url$serviceUrlSuffix"
-    case s => s
-  }
-
   private def retryable(t: Throwable): Boolean = t match {
     case t: TimeoutException => true
     case t: ConnectException => true
@@ -119,11 +125,11 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
   }
 
   private def tryServiceTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl().flatMap(tgtUrl => {
-    val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(postfixServiceUrl(serviceUrl), "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
+    val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
     internalClient(proxyReq > ServiceTicket)
   }).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
-      if (retryCount.getAndIncrement <= maxRetriesCas) {
+      if (retryCount.getAndIncrement <= serviceConfig.httpClientMaxRetries) {
         log.warning(s"retrying request to $casUrl due to $t, retry attempt #${retryCount.get - 1}")
         tryServiceTicket(retryCount)
       } else {
@@ -133,8 +139,6 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
   }
 
   private def getServiceTicket: Future[String] = {
-    if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("casUrl, user or password is not defined")
-
     val retryCount = new AtomicInteger(1)
     tryServiceTicket(retryCount)
   }
