@@ -9,6 +9,7 @@ import com.ning.http.client._
 import dispatch.{Http, Req}
 import fi.vm.sade.hakurekisteri.integration.cas._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -93,15 +94,16 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     val request: Req = dispatch.url(serviceUrl)
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
-      internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) => (r.getStatusCode, Option(r.getHeader("Set-Cookie")).filter(JSessionIdCookieParser.isJSessionIdCookie)) match {
-        case (200 | 302 | 404, Some(cookie)) =>
-          val id = JSessionIdCookieParser.fromString(cookie)
-          log.debug(s"call to $serviceUrl was successful")
-          log.debug(s"got jsession $id")
-          id
-        case (200 | 302 | 404, None) => throw NoSessionFound
-        case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $serviceUrl, response code: $code, text: ${r.getStatusText}", code)
-      }))
+      internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) =>
+        (r.getStatusCode, r.getHeaders("Set-Cookie").asScala.find(JSessionIdCookieParser.isJSessionIdCookie)) match {
+          case (200 | 302 | 404, Some(cookie)) =>
+            val id = JSessionIdCookieParser.fromString(cookie)
+            log.debug(s"call to $serviceUrl was successful")
+            log.debug(s"got jsession $id")
+            id
+          case (200 | 302 | 404, None) => throw NoSessionFound
+          case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $serviceUrl, response code: $code, text: ${r.getStatusText}", code)
+        }))
     })
   }
 }
