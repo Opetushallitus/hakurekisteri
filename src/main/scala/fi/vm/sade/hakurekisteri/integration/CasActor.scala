@@ -74,15 +74,11 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
       state = Empty
   }
 
-  private object LocationHeader extends (Response => String) {
-    def apply(r: Response): String =
-      Try(Option(r.getHeader("Location")).get).recoverWith{
-        case  e: NoSuchElementException => Failure(LocationHeaderNotFoundException("location header not found"))
-      }.get
+  private def locationHeader(r: Response): String = {
+    Option(r.getHeader("Location")).getOrElse(throw LocationHeaderNotFoundException("location header not found"))
   }
 
-  private class TgtFunctionHandler
-    extends FunctionHandler[String](LocationHeader) with TgtHandler
+  private class TgtFunctionHandler extends FunctionHandler[String](locationHeader) with TgtHandler
 
   private class StFunctionHandler extends AsyncCompletionHandler[String] {
     override def onStatusReceived(status: HttpResponseStatus): STATE = {
