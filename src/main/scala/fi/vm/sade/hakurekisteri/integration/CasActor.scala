@@ -5,14 +5,13 @@ import java.util.concurrent.{ExecutionException, TimeUnit, TimeoutException}
 
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
-import com.ning.http.client.AsyncHandler.STATE
 import com.ning.http.client._
-import dispatch.{FunctionHandler, Http, Req}
+import dispatch.{Http, Req}
 import fi.vm.sade.hakurekisteri.integration.cas._
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 case object GetJSession
 case class JSessionId(sessionId: String)
@@ -56,7 +55,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
         f pipeTo sender
       case Empty =>
         implicit val system = context.system
-        val f = getJSession(serviceUrl, JsonExtractor.handler[Unit](302, 200, 404))
+        val f = getJSession(serviceUrl)
         f.onComplete {
           case Success(id) =>
             self ! Set(id)
@@ -74,42 +73,13 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
       state = Empty
   }
 
-  private def locationHeader(r: Response): String = {
-    Option(r.getHeader("Location")).getOrElse(throw LocationHeaderNotFoundException("location header not found"))
-  }
-
-  private class TgtFunctionHandler extends FunctionHandler[String](locationHeader) with TgtHandler
-
-  private class StFunctionHandler extends AsyncCompletionHandler[String] {
-    override def onStatusReceived(status: HttpResponseStatus): STATE = {
-      if (status.getStatusCode == 200)
-        super.onStatusReceived(status)
-      else
-        throw STWasNotCreatedException(s"got non ok response from cas: ${status.getStatusCode}")
-    }
-
-    override def onCompleted(response: Response): String = {
-      val st = response.getResponseBody.trim
-      if (TicketValidator.isValidSt(st)) st
-      else throw InvalidServiceTicketException(st)
-    }
-  }
-
-  private trait TgtHandler extends AsyncHandler[String] {
-    abstract override def onStatusReceived(status: HttpResponseStatus): STATE = {
-      if (status.getStatusCode == 201)
-        super.onStatusReceived(status)
-      else
-        throw TGTWasNotCreatedException(s"got non ok response code from cas: ${status.getStatusCode}")
-    }
-  }
-
-  private val TgtUrl = new TgtFunctionHandler
-  private val ServiceTicket = new StFunctionHandler
-
   private def getTgtUrl = {
     val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") << s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
-    internalClient(tgtUrlReq > TgtUrl)
+    internalClient(tgtUrlReq > ((r: Response) => (r.getStatusCode, Option(r.getHeader("Location"))) match {
+      case (201, Some(location)) => location
+      case (201, None) => throw LocationHeaderNotFoundException("location header not found")
+      case (code, _) => throw TGTWasNotCreatedException(s"got non ok response code from cas: $code")
+    }))
   }
 
   private def retryable(t: Throwable): Boolean = t match {
@@ -121,7 +91,11 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
 
   private def tryServiceTicket(retry: Int): Future[String] = getTgtUrl.flatMap(tgtUrl => {
     val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
-    internalClient(proxyReq > ServiceTicket)
+    internalClient(proxyReq > ((r: Response) => (r.getStatusCode, r.getResponseBody.trim) match {
+      case (200, st) if TicketValidator.isValidSt(st) => st
+      case (200, st) => throw InvalidServiceTicketException(st)
+      case (code, _) => throw STWasNotCreatedException(s"got non ok response from cas: $code")
+    }))
   }).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) && retry < serviceConfig.httpClientMaxRetries =>
       log.warning(s"retrying request to $casUrl due to $t, retry attempt #${retry + 1}")
@@ -134,58 +108,19 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
 
   private object NoSessionFound extends Exception("No JSession Found")
 
-  private class SessionCapturer[T](inner: AsyncHandler[T]) extends AsyncHandler[T] {
-    private val promise = Promise[JSessionId]
-    val jsession: Future[JSessionId] = promise.future
-
-    log.debug("initialized session capturer")
-
-    override def onCompleted(): T = inner.onCompleted()
-
-    override def onHeadersReceived(headers: HttpResponseHeaders): STATE = {
-      import scala.collection.JavaConversions._
-      for (
-        header <- headers.getHeaders.entrySet() if header.getKey == "Set-Cookie";
-        value <- header.getValue if JSessionIdCookieParser.isJSessionIdCookie(value)
-      ) {
-        val jses = JSessionIdCookieParser.fromString(value)
-        log.debug(s"got jsession $jses")
-        promise.trySuccess(jses)
-      }
-
-      if (!promise.isCompleted) {
-        log.debug("no session found")
-        promise.tryFailure(NoSessionFound)
-      }
-
-      inner.onHeadersReceived(headers)
-    }
-
-    override def onStatusReceived(responseStatus: HttpResponseStatus): STATE = inner.onStatusReceived(responseStatus)
-
-    override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): STATE = inner.onBodyPartReceived(bodyPart)
-
-    override def onThrowable(t: Throwable): Unit = {
-      promise.tryFailure(t)
-      inner.onThrowable(t)
-    }
-  }
-
-  private def getJSession[T](uri: String, handler: AsyncHandler[T]): dispatch.Future[JSessionId] = {
+  private def getJSession(uri: String): Future[JSessionId] = {
     val request: Req = dispatch.url(uri)
-    val sessionCapturer = new SessionCapturer(handler)
-
-    val res: Future[JSessionId] = getServiceTicket.flatMap(ticket => {
+    getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $uri with ticket $ticket to get jsession")
-      internalClient((request <<? Map("ticket" -> ticket)).toRequest, sessionCapturer)
-      sessionCapturer.jsession
+      internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) => (r.getStatusCode, Option(r.getHeader("Set-Cookie")).filter(JSessionIdCookieParser.isJSessionIdCookie)) match {
+        case (200 | 302 | 404, Some(cookie)) =>
+          val id = JSessionIdCookieParser.fromString(cookie)
+          log.debug(s"call to $uri was successful")
+          log.debug(s"got jsession $id")
+          id
+        case (200 | 302 | 404, None) => throw NoSessionFound
+        case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $uri, response code: $code, text: ${r.getStatusText}", code)
+      }))
     })
-
-    res.onSuccess {
-      case t =>
-        log.debug(s"call to $uri was successful")
-        log.debug(s"got jsession $t")
-    }
-    res
   }
 }
