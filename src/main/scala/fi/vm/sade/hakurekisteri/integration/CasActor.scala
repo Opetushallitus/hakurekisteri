@@ -14,18 +14,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 case object GetJSession
+case object ClearJSession
 case class JSessionId(sessionId: String)
 
 class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
-
-  private sealed trait State
-  private case object Empty extends State
-  private case class Fetching(f: Future[JSessionId]) extends State
-  private case class Cached(id: JSessionId) extends State
-
-  private case object Clear
-  private case class Set(id: JSessionId)
-
   private val jSessionTtl = Duration(5, TimeUnit.MINUTES)
   private val serviceUrlSuffix = "/j_spring_cas_security_check"
   private val serviceUrl = serviceConfig.serviceUrl match {
@@ -45,31 +37,21 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     .setMaxRequestRetry(2)
   ))
 
-  private var state: State = Empty
+  private var jSessionId: Option[Future[JSessionId]] = None
 
   override def receive: Receive = {
-    case GetJSession => state match {
-      case Cached(id) =>
-        sender ! id
-      case Fetching(f) =>
-        f pipeTo sender
-      case Empty =>
-        val f = getJSession
-        f.onComplete {
-          case Success(id) =>
-            self ! Set(id)
-          case Failure(e) =>
-            log.error(e, s"Fetching jsession for $serviceUrl failed")
-            self ! Clear
-        }
-        state = Fetching(f)
-        f pipeTo sender
-    }
-    case Set(id) =>
-      state = Cached(id)
-      context.system.scheduler.scheduleOnce(jSessionTtl, self, Clear)
-    case Clear =>
-      state = Empty
+    case GetJSession =>
+      val f = jSessionId.getOrElse(getJSession.andThen {
+        case Success(_) =>
+          context.system.scheduler.scheduleOnce(jSessionTtl, self, ClearJSession)
+        case Failure(t) =>
+          log.error(t, s"Fetching jsession for $serviceUrl failed")
+          self ! ClearJSession
+      })
+      f pipeTo sender
+      jSessionId = Some(f)
+    case ClearJSession =>
+      jSessionId = None
   }
 
   private def getTgtUrl = {
