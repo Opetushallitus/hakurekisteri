@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.net.{ConnectException, URLEncoder}
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{ExecutionException, TimeUnit, TimeoutException}
 
 import akka.actor.{Actor, ActorLogging}
@@ -124,23 +123,17 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     case _ => false
   }
 
-  private def tryServiceTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl().flatMap(tgtUrl => {
+  private def tryServiceTicket(retry: Int): Future[String] = getTgtUrl().flatMap(tgtUrl => {
     val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
     internalClient(proxyReq > ServiceTicket)
   }).recoverWith {
-    case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
-      if (retryCount.getAndIncrement <= serviceConfig.httpClientMaxRetries) {
-        log.warning(s"retrying request to $casUrl due to $t, retry attempt #${retryCount.get - 1}")
-        tryServiceTicket(retryCount)
-      } else {
-        log.error(s"error calling cas: $t")
-        Future.failed(t)
-      }
+    case t: ExecutionException if t.getCause != null && retryable(t.getCause) && retry < serviceConfig.httpClientMaxRetries =>
+      log.warning(s"retrying request to $casUrl due to $t, retry attempt #${retry + 1}")
+      tryServiceTicket(retry + 1)
   }
 
   private def getServiceTicket: Future[String] = {
-    val retryCount = new AtomicInteger(1)
-    tryServiceTicket(retryCount)
+    tryServiceTicket(0)
   }
 
   private object NoSessionFound extends Exception("No JSession Found")
