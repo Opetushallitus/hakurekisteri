@@ -23,9 +23,18 @@ app.controller "MuokkaaLuokkatieto", [
       if $scope.hasChanged()
         d = $q.defer()
         luokkatieto = $scope.luokkatieto
-        luokkatieto.$save (->
-          enrichLuokkatieto luokkatieto
-          d.resolve "done"
+        luokkatieto.$save ((result) ->
+          if JSON.stringify(result) == JSON.stringify(modifiedCache.original())
+            MessageService.addMessage
+              type: "danger"
+              messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
+              message: "Virhe tallennettaessa luokkatietoja."
+              descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoikeudet"
+              description: "Tarkista oikeudet organisaatioon."
+            d.reject "not authorized to save luokkatieto: " + JSON.stringify luokkatieto
+          else
+            enrichLuokkatieto luokkatieto
+            d.resolve "done"
         ), ->
           MessageService.addMessage
             type: "danger"
