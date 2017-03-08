@@ -1,34 +1,34 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.net.{ConnectException, URLEncoder}
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ExecutionException, TimeoutException}
+import java.util.concurrent.{ExecutionException, TimeUnit, TimeoutException}
 
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
-import com.ning.http.client.AsyncHandler.STATE
 import com.ning.http.client._
-import dispatch.{FunctionHandler, Http, Req}
+import dispatch.{Http, Req}
 import fi.vm.sade.hakurekisteri.integration.cas._
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Try}
+import scala.collection.JavaConverters._
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
-case class JSessionKey(serviceUrl: String)
+case object GetJSession
+case object ClearJSession
 case class JSessionId(sessionId: String)
 
-class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
-  val jSessionIdCache: FutureCache[JSessionKey, JSessionId] = new FutureCache[JSessionKey, JSessionId](5.minutes.toMillis)
-
-  val serviceUrl = serviceConfig.serviceUrl
-  val casUrl = serviceConfig.casUrl
-  val user = serviceConfig.user
-  val password = serviceConfig.password
-
-  val cookieExpirationMillis = 5.minutes.toMillis
-
-  def serviceName = serviceUrl.split("/").lastOption
+class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+  private val jSessionTtl = Duration(5, TimeUnit.MINUTES)
+  private val serviceUrlSuffix = "/j_spring_cas_security_check"
+  private val serviceUrl = serviceConfig.serviceUrl match {
+    case s if !s.endsWith(serviceUrlSuffix) => s"${serviceConfig.serviceUrl}$serviceUrlSuffix"
+    case s => s
+  }
+  private val casUrl = serviceConfig.casUrl
+  private val user = serviceConfig.user
+  private val password = serviceConfig.password
+  if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("casUrl, user or password is not defined")
 
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(serviceConfig.httpClientConnectionTimeout)
@@ -38,77 +38,30 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     .setMaxRequestRetry(2)
   ))
 
+  private var jSessionId: Option[Future[JSessionId]] = None
+
   override def receive: Receive = {
-    case k: JSessionKey =>
-      getJSessionIdFor(k) pipeTo sender
+    case GetJSession =>
+      val f = jSessionId.getOrElse(getJSession.andThen {
+        case Success(_) =>
+          context.system.scheduler.scheduleOnce(jSessionTtl, self, ClearJSession)
+        case Failure(t) =>
+          log.error(t, s"Fetching jsession for $serviceUrl failed")
+          self ! ClearJSession
+      })
+      f pipeTo sender
+      jSessionId = Some(f)
+    case ClearJSession =>
+      jSessionId = None
   }
 
-  private def getJSessionIdFor(key: JSessionKey): Future[JSessionId] = {
-    if (jSessionIdCache.contains(key)) {
-      jSessionIdCache.get(key)
-    } else {
-      log.debug(s"no jsession found or it was expired, fetching a new one for $serviceUrl")
-      implicit val system = context.system
-      val jSession = getJSession(postfixServiceUrl(serviceUrl), JsonExtractor.handler[Unit](302, 200, 404))
-
-      jSessionIdCache + (JSessionKey(serviceUrl), jSession)
-
-      jSession.onSuccess {
-        case s => log.debug(s"got jsession $s for $serviceUrl")
-      }
-
-      jSession
-    }
-  }
-
-  private object LocationHeader extends (Response => String) {
-    def apply(r: Response) =
-      Try(Option(r.getHeader("Location")).get).recoverWith{
-        case  e: NoSuchElementException => Failure(LocationHeaderNotFoundException("location header not found"))
-      }.get
-  }
-
-  private class TgtFunctionHandler
-    extends FunctionHandler[String](LocationHeader) with TgtHandler
-
-  private class StFunctionHandler extends AsyncCompletionHandler[String] {
-    override def onStatusReceived(status: HttpResponseStatus) = {
-      if (status.getStatusCode == 200)
-        super.onStatusReceived(status)
-      else
-        throw STWasNotCreatedException(s"got non ok response from cas: ${status.getStatusCode}")
-    }
-
-    override def onCompleted(response: Response): String = {
-      val st = response.getResponseBody.trim
-      if (TicketValidator.isValidSt(st)) st
-      else throw InvalidServiceTicketException(st)
-    }
-  }
-
-  private trait TgtHandler extends AsyncHandler[String] {
-    abstract override def onStatusReceived(status: HttpResponseStatus) = {
-      if (status.getStatusCode == 201)
-        super.onStatusReceived(status)
-      else
-        throw TGTWasNotCreatedException(s"got non ok response code from cas: ${status.getStatusCode}")
-    }
-  }
-
-  private val TgtUrl = new TgtFunctionHandler
-  private val ServiceTicket = new StFunctionHandler
-
-  private def getTgtUrl() = {
+  private def getTgtUrl = {
     val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") << s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
-    internalClient(tgtUrlReq > TgtUrl)
-  }
-
-  private val serviceUrlSuffix = "/j_spring_cas_security_check"
-  private val maxRetriesCas = serviceConfig.httpClientMaxRetries
-
-  private def postfixServiceUrl(url: String): String = url match {
-    case s if !s.endsWith(serviceUrlSuffix) => s"$url$serviceUrlSuffix"
-    case s => s
+    internalClient(tgtUrlReq > ((r: Response) => (r.getStatusCode, Option(r.getHeader("Location"))) match {
+      case (201, Some(location)) => location
+      case (201, None) => throw LocationHeaderNotFoundException("location header not found")
+      case (code, _) => throw TGTWasNotCreatedException(s"got non ok response code from cas: $code")
+    }))
   }
 
   private def retryable(t: Throwable): Boolean = t match {
@@ -118,81 +71,39 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     case _ => false
   }
 
-  private def tryServiceTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl().flatMap(tgtUrl => {
-    val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(postfixServiceUrl(serviceUrl), "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
-    internalClient(proxyReq > ServiceTicket)
+  private def tryServiceTicket(retry: Int): Future[String] = getTgtUrl.flatMap(tgtUrl => {
+    val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
+    internalClient(proxyReq > ((r: Response) => (r.getStatusCode, r.getResponseBody.trim) match {
+      case (200, st) if TicketValidator.isValidSt(st) => st
+      case (200, st) => throw InvalidServiceTicketException(st)
+      case (code, _) => throw STWasNotCreatedException(s"got non ok response from cas: $code")
+    }))
   }).recoverWith {
-    case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
-      if (retryCount.getAndIncrement <= maxRetriesCas) {
-        log.warning(s"retrying request to $casUrl due to $t, retry attempt #${retryCount.get - 1}")
-        tryServiceTicket(retryCount)
-      } else {
-        log.error(s"error calling cas: $t")
-        Future.failed(t)
-      }
+    case t: ExecutionException if t.getCause != null && retryable(t.getCause) && retry < serviceConfig.httpClientMaxRetries =>
+      log.warning(s"retrying request to $casUrl due to $t, retry attempt #${retry + 1}")
+      tryServiceTicket(retry + 1)
   }
 
   private def getServiceTicket: Future[String] = {
-    if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("casUrl, user or password is not defined")
-
-    val retryCount = new AtomicInteger(1)
-    tryServiceTicket(retryCount)
+    tryServiceTicket(0)
   }
 
   private object NoSessionFound extends Exception("No JSession Found")
 
-  private class SessionCapturer[T](inner: AsyncHandler[T]) extends AsyncHandler[T] {
-    private val promise = Promise[JSessionId]
-    val jsession = promise.future
-
-    log.debug("initialized session capturer")
-
-    override def onCompleted(): T = inner.onCompleted()
-
-    override def onHeadersReceived(headers: HttpResponseHeaders): STATE = {
-      import scala.collection.JavaConversions._
-      for (
-        header <- headers.getHeaders.entrySet() if header.getKey == "Set-Cookie";
-        value <- header.getValue if JSessionIdCookieParser.isJSessionIdCookie(value)
-      ) {
-        val jses = JSessionIdCookieParser.fromString(value)
-        log.debug(s"got jsession $jses")
-        promise.trySuccess(jses)
-      }
-
-      if (!promise.isCompleted) {
-        log.debug("no session found")
-        promise.tryFailure(NoSessionFound)
-      }
-
-      inner.onHeadersReceived(headers)
-    }
-
-    override def onStatusReceived(responseStatus: HttpResponseStatus): STATE = inner.onStatusReceived(responseStatus)
-
-    override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): STATE = inner.onBodyPartReceived(bodyPart)
-
-    override def onThrowable(t: Throwable): Unit = {
-      promise.tryFailure(t)
-      inner.onThrowable(t)
-    }
-  }
-
-  private def getJSession[T](uri: String, handler: AsyncHandler[T]): dispatch.Future[JSessionId] = {
-    val request: Req = dispatch.url(uri)
-    val sessionCapturer = new SessionCapturer(handler)
-
-    val res: Future[JSessionId] = getServiceTicket.flatMap(ticket => {
-      log.debug(s"about to call $uri with ticket $ticket to get jsession")
-      internalClient((request <<? Map("ticket" -> ticket)).toRequest, sessionCapturer)
-      sessionCapturer.jsession
+  private def getJSession: Future[JSessionId] = {
+    val request: Req = dispatch.url(serviceUrl)
+    getServiceTicket.flatMap(ticket => {
+      log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
+      internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) =>
+        (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie))) match {
+          case (200 | 302 | 404, Some(cookie)) =>
+            val id = JSessionIdCookieParser.fromString(cookie)
+            log.debug(s"call to $serviceUrl was successful")
+            log.debug(s"got jsession $id")
+            id
+          case (200 | 302 | 404, None) => throw NoSessionFound
+          case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $serviceUrl, response code: $code, text: ${r.getStatusText}", code)
+        }))
     })
-
-    res.onSuccess {
-      case t =>
-        log.debug(s"call to $uri was successful")
-        log.debug(s"got jsession $t")
-    }
-    res
   }
 }
