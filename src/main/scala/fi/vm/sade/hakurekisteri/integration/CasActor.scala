@@ -95,7 +95,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
       internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) =>
-        (r.getStatusCode, r.getHeaders("Set-Cookie").asScala.find(JSessionIdCookieParser.isJSessionIdCookie)) match {
+        (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie))) match {
           case (200 | 302 | 404, Some(cookie)) =>
             val id = JSessionIdCookieParser.fromString(cookie)
             log.debug(s"call to $serviceUrl was successful")
