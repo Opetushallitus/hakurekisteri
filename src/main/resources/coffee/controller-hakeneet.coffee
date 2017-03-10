@@ -77,7 +77,7 @@ app.controller "HakeneetCtrl", [
   "aikuhakukohdekoodit"
   "$interval"
   "LokalisointiService"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, $interval, LokalisointiService) ->
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, aikuhakukohdekoodit, $interval, LokalisointiService) ->
     pollInterval = 1 * 1500 # every second
 
     $scope.handlePoll = (reply) ->
