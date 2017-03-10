@@ -338,7 +338,7 @@ app.controller "HakeneetCtrl", [
 
       delete $scope.hakukohde
 
-      $scope.updateHakukohteet
+      $scope.updateHakukohteet()
 
       return
 
@@ -352,7 +352,7 @@ app.controller "HakeneetCtrl", [
 
     $scope.hakukohdekoodit = []
 
-    $scope.updateHakukohteet
+    $scope.updateHakukohteet()
 
     sortByNimi = (a, b) ->
       return 0  if not a.nimi and not b.nimi
