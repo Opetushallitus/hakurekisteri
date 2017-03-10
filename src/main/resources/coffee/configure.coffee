@@ -41,6 +41,14 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
             description: "Päivitä näyttö tai navigoi sille uudelleen."
           []
         )
+      aikuhakukohdekoodit: ($http, MessageService) ->
+        $http.get(window.url("koodisto-service.koodisByKoodisto","aikuhakukohteet"), { cache: true }).then(((response) -> response.data), ->
+          MessageService.addMessage
+            type: "danger"
+            message: "Tietojen lataaminen näytölle epäonnistui."
+            description: "Päivitä näyttö tai navigoi sille uudelleen."
+          []
+        )
 
   $routeProvider.when "/tiedonsiirto",
     redirectTo: (routeParams, currentLocation, search) ->
@@ -62,6 +70,8 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
           []
         )
       hakukohdekoodit: ->
+        []
+      aikuhakukohdekoodit: ->
         []
 
   $routeProvider.otherwise
