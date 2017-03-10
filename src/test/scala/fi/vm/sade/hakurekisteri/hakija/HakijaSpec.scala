@@ -117,7 +117,14 @@ class HakijaSpec extends FlatSpec with Matchers {
     attachmentRequests = Seq()
   )
 
-  val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.1", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
+  val haku = Haku(
+    Kieliversiot(Some("haku"), None, None),
+    "1.1",
+    Ajanjakso(new DateTime(), InFuture),
+    "kausi_s#1",
+    2014,
+    Some("kausi_k#1"),
+    Some(2015), false, None, None)
 
   val tq1 = ThemeQuestion(`type` = "ThemeRadioButtonQuestion", messageText = "Millä kielellä haluat saada valintakokeen?", options = Some(Map(
     "option_0" -> "Suomi",

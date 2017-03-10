@@ -119,7 +119,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       koulutuksenAlkamiskausi = Some("kausi_k#1"),
       koulutuksenAlkamisvuosi = Some(2015),
       kkHaku = true,
-      viimeinenHakuaikaPaattyy = Some(new DateTime())
+      viimeinenHakuaikaPaattyy = Some(new DateTime()),
+      None
     )
 
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus1))
@@ -145,7 +146,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       koulutuksenAlkamiskausi = Some("kausi_s#1"),
       koulutuksenAlkamisvuosi = Some(2015),
       kkHaku = true,
-      viimeinenHakuaikaPaattyy = Some(new DateTime())
+      viimeinenHakuaikaPaattyy = Some(new DateTime()),
+      None
     )
 
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus2))
@@ -171,7 +173,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       koulutuksenAlkamiskausi = Some("kausi_s#1"),
       koulutuksenAlkamisvuosi = Some(2016),
       kkHaku = true,
-      viimeinenHakuaikaPaattyy = Some(new DateTime())
+      viimeinenHakuaikaPaattyy = Some(new DateTime()),
+      None
     )
 
     val koulutusSyksy = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)

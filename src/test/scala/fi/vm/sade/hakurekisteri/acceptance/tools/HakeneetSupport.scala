@@ -528,7 +528,14 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
 
 
-    val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
+    val haku = Haku(
+      Kieliversiot(Some("haku"), None, None),
+      "1.2",
+      Ajanjakso(new DateTime(), InFuture),
+      "kausi_s#1",
+      2014,
+      Some("kausi_k#1"),
+      Some(2015), kkHaku = false, None, None)
 
     def hakijat: Seq[Hakija] = {
       tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty))
