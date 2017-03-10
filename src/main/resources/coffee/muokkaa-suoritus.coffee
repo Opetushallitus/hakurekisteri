@@ -39,7 +39,7 @@ app.controller "MuokkaaSuoritus", [
         org.nimi[LokalisointiService.lang] or org.nimi.fi or org.nimi.sv or org.nimi.en
 
     $scope.validateData = (updateOnly) ->
-      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateModel($scope.info, $scope.suoritus, !updateOnly)
       if $scope.info.editable
         $scope.validateValmistuminen(updateOnly)
 

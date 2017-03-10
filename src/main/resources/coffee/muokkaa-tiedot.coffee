@@ -306,8 +306,8 @@ app.factory "MuokkaaTiedot", [
       $scope.editSuoritusDisabled = (suoritus) ->
         return suoritus.komo != $scope.komo.ylioppilastutkinto && $scope.restrictionActiveSecondaryLevel && !$scope.isOPH()
 
-      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
-        if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and (model.komo is $scope.komo.ylioppilastutkinto or $scope.isAmmatillinenKielikoe(model.komo)))
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateModel = (info, model, validateError) ->
+        if (model.vahvistettu or model.luokkataso) and not info["delete"] and info.editable and not (model.komo and (model.komo is $scope.komo.ylioppilastutkinto or $scope.isAmmatillinenKielikoe(model.komo)))
           d = $q.defer()
           if not info.oppilaitos or not info.oppilaitos.match(/^\d{5}$/)
             if validateError
