@@ -123,6 +123,25 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
     })
   }
 
+  it should "not lose ensikertalaisuus for hakemus that has suoritusoikeus_tai_aiempi_tutkinto without a year" in {
+    val fullHakemus = Hakemus().setApplicationSystemId(Testihaku.oid).
+      setPersonOid(henkiloOid).build
+    val brokenAnswers = fullHakemus.answers.map { answers =>
+      answers.copy(koulutustausta = answers.koulutustausta.map { koulutustausta =>
+        koulutustausta.copy(suoritusoikeus_tai_aiempi_tutkinto = Some("true"),
+          suoritusoikeus_tai_aiempi_tutkinto_vuosi = None)
+      }) }
+    val brokenHakemus = fullHakemus.copy(answers = brokenAnswers)
+    val (actor, valintarek) = initEnsikertalainenActor(hakemukset = Seq(brokenHakemus))
+
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
+      e.head.ensikertalainen should be (true)
+      valintarek.underlyingActor.counter should be (1)
+    })
+  }
+
   it should "return ensikertalainen false based on vastaanotto" in {
     val date = new DateTime()
     val (actor, valintarek) = initEnsikertalainenActor(
