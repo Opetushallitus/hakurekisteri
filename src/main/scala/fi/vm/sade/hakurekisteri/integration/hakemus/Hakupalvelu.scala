@@ -376,9 +376,7 @@ object AkkaHakupalvelu {
   }
 
   def getMuukoulutus(hakemus: FullHakemus): Option[String] = {
-    val hanswers: HakemusAnswers = hakemus.answers.get
-    val koulutus: Koulutustausta = hanswers.koulutustausta.get
-    koulutus.muukoulutus
+    hakemus.answers.flatMap(_.koulutustausta).flatMap(_.muukoulutus)
   }
 
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
