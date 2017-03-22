@@ -62,7 +62,40 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
       `type` = "ThemeTextQuestion",
       messageText = "Miksi haet erityisoppilaitokseen?",
       applicationOptionOids = Nil,
-      options = None)
+      options = None),
+
+    "TYOKOKEMUSKUUKAUDET" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Työkokemus kuukausina",
+      applicationOptionOids = Nil,
+      options = None),
+
+    "muukoulutus" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Minkä muun koulutuksen/opintoja olet suorittanut?",
+      applicationOptionOids = Nil,
+      options = None),
+
+    "lupaSahkoisesti" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "lupaSms" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä.",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
+
+    // Työkokemus kuukausina:
+    // Minkä muun koulutuksen/opintoja olet suorittanut?
+    // Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti.
+    // Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä
   )
 
   private val acceptedResponseCode: Int = 200
@@ -222,8 +255,12 @@ object AkkaHakupalvelu {
     }
 
     def thatAreLisakysymysInHakukohde(kysymysId: String): Boolean = {
-      lisakysymykset.keys.exists(key => kysymysId.contains(key) &&
-        (hakukohdeOid.isEmpty || lisakysymykset.get(key).get.isHaunLisakysymys || lisakysymykset.get(key).get.applicationOptionOids.contains(hakukohdeOid.get)))
+      lisakysymykset.keys.exists(
+        key => kysymysId.contains(key)
+          &&
+          (hakukohdeOid.isEmpty
+            || lisakysymykset(key).isHaunLisakysymys
+            || lisakysymykset(key).applicationOptionOids.contains(hakukohdeOid.get)))
     }
 
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
@@ -284,6 +321,7 @@ object AkkaHakupalvelu {
       (for (h <- henkilotiedot; osoite <- f(h)) yield osoite).getOrElse(orElse)
 
     def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
+
     Hakija(
       Henkilo(
         lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
@@ -312,7 +350,9 @@ object AkkaHakupalvelu {
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
         lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
-        liitteet = getLiitteet(hakemus)
+        liitteet = getLiitteet(hakemus),
+        muukoulutus = getMuukoulutus(hakemus)
+
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid),
       lahtokoulu match {
@@ -330,10 +370,16 @@ object AkkaHakupalvelu {
       (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
   }
 
+
   def getValue[A](key: (HakemusAnswers) => Option[A], subKey: (A) => Option[String], default: String = "")(implicit answers: Option[HakemusAnswers]): String = {
     (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
 
+  def getMuukoulutus(hakemus: FullHakemus): Option[String] = {
+    val hanswers: HakemusAnswers = hakemus.answers.get
+    val koulutus: Koulutustausta = hanswers.koulutustausta.get
+    koulutus.muukoulutus
+  }
 
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {
@@ -466,11 +512,12 @@ case class Koulutustausta(lahtokoulu: Option[String],
                           aiempitutkinto_korkeakoulu: Option[String],
                           aiempitutkinto_vuosi: Option[String],
                           suoritusoikeus_tai_aiempi_tutkinto: Option[String],
-                          suoritusoikeus_tai_aiempi_tutkinto_vuosi: Option[String])
+                          suoritusoikeus_tai_aiempi_tutkinto_vuosi: Option[String],
+                          muukoulutus: Option[String])
 
 object Koulutustausta {
   def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None, None,
-    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Map[String, String]] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)

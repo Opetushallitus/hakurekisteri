@@ -460,7 +460,8 @@ case class HakemusBuilder(osaaminen: Map[String, String],
       pohjakoulutus_muu_vuosi = None, aiempitutkinto_tutkinto = None,
       aiempitutkinto_korkeakoulu = None, aiempitutkinto_vuosi = None,
       suoritusoikeus_tai_aiempi_tutkinto_vuosi = suoritusoikeus_tai_aiempi_tutkinto_vuosi,
-      suoritusoikeus_tai_aiempi_tutkinto = if (suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined) Some("true") else None
+      suoritusoikeus_tai_aiempi_tutkinto = if (suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined) Some("true") else None,
+      muukoulutus = None
     )), None, None, Some(osaaminen))), Some("ACTIVE"), Nil, Nil)
 
 }
