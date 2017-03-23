@@ -225,5 +225,6 @@ object Testihaku extends Haku(
   koulutuksenAlkamiskausi = Some("S"),
   koulutuksenAlkamisvuosi = Some(new LocalDate().getYear),
   kkHaku = true,
-  viimeinenHakuaikaPaattyy = Some(new DateTime().plusDays(1))
+  viimeinenHakuaikaPaattyy = Some(new DateTime().plusDays(1)),
+  None
 )

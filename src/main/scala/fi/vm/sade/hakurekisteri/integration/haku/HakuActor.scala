@@ -122,7 +122,16 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean, viimeinenHakuaikaPaattyy: Option[DateTime]) {
+case class Haku(
+                 nimi: Kieliversiot,
+                 oid: String, aika:
+                 Ajanjakso, kausi: String,
+                 vuosi: Int,
+                 koulutuksenAlkamiskausi: Option[String],
+                 koulutuksenAlkamisvuosi: Option[Int],
+                 kkHaku: Boolean,
+                 viimeinenHakuaikaPaattyy: Option[DateTime],
+                 kohdejoukkoUri: Option[String]) {
   val isActive: Boolean = aika.isCurrently
 }
 
@@ -137,7 +146,8 @@ object Haku {
       haku.koulutuksenAlkamiskausiUri,
       haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
-      viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku)
+      viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
+      kohdejoukkoUri = haku.kohdejoukkoUri
     )
   }
 

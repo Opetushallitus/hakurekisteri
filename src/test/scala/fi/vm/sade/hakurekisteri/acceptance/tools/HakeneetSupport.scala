@@ -99,7 +99,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             aiempitutkinto_tutkinto = None,
             aiempitutkinto_vuosi = None,
             suoritusoikeus_tai_aiempi_tutkinto = None,
-            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None,
+            muukoulutus = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
@@ -195,7 +196,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             aiempitutkinto_tutkinto = None,
             aiempitutkinto_vuosi = None,
             suoritusoikeus_tai_aiempi_tutkinto = None,
-            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None,
+            muukoulutus = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
@@ -291,7 +293,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             aiempitutkinto_tutkinto = None,
             aiempitutkinto_vuosi = None,
             suoritusoikeus_tai_aiempi_tutkinto = None,
-            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None,
+            muukoulutus = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
@@ -387,7 +390,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             aiempitutkinto_tutkinto = None,
             aiempitutkinto_vuosi = None,
             suoritusoikeus_tai_aiempi_tutkinto = None,
-            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None,
+            muukoulutus = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
@@ -528,7 +532,14 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
 
 
-    val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
+    val haku = Haku(
+      Kieliversiot(Some("haku"), None, None),
+      "1.2",
+      Ajanjakso(new DateTime(), InFuture),
+      "kausi_s#1",
+      2014,
+      Some("kausi_k#1"),
+      Some(2015), kkHaku = false, None, None)
 
     def hakijat: Seq[Hakija] = {
       tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty))

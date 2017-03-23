@@ -24,6 +24,7 @@ loadHakutiedot = (hautResponse, $scope) ->
         kausi: haku.kausi
         hakukausi: resolveKausiText(haku.kausi)
         oid: haku.oid
+        kohdejoukkoUri: haku.kohdejoukkoUri
         text: ((if haku.nimi and haku.nimi.fi then haku.nimi.fi else ((if haku.nimi and haku.nimi.sv then haku.nimi.sv else ((if haku.nimi and haku.nimi.en then haku.nimi.en else "NIMI PUUTTUU"))))))
   sortByNimi = (a, b) ->
     if a and b and a.text and b.text
@@ -73,9 +74,10 @@ app.controller "HakeneetCtrl", [
   "aste"
   "haut"
   "hakukohdekoodit"
+  "aikuhakukohdekoodit"
   "$interval"
   "LokalisointiService"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, $interval, LokalisointiService) ->
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, aikuhakukohdekoodit, $interval, LokalisointiService) ->
     pollInterval = 1 * 1500 # every second
 
     $scope.handlePoll = (reply) ->
@@ -150,7 +152,7 @@ app.controller "HakeneetCtrl", [
 
     $scope.haut = []
     $scope.kaudet = []
-    
+
     rajapintaVaihtoehdot = ->
       if(isKk())
         return [
@@ -336,10 +338,21 @@ app.controller "HakeneetCtrl", [
 
       delete $scope.hakukohde
 
+      $scope.updateHakukohteet()
+
       return
 
+    $scope.updateHakukohteet = ->
+      ## päivitetään hakukohteet listaan riippuen valitusta hausta
+      isAikuHaku = if $scope.haku then ($scope.haku.kohdejoukkoUri.indexOf("haunkohdejoukko_20") > -1) else false
+      if isAikuHaku
+        loadHakukohdekoodit aikuhakukohdekoodit, $scope
+      else
+        loadHakukohdekoodit hakukohdekoodit, $scope
+
     $scope.hakukohdekoodit = []
-    loadHakukohdekoodit hakukohdekoodit, $scope
+
+    $scope.updateHakukohteet()
 
     sortByNimi = (a, b) ->
       return 0  if not a.nimi and not b.nimi
@@ -349,17 +362,17 @@ app.controller "HakeneetCtrl", [
       (if a.nimi.toLowerCase() < b.nimi.toLowerCase() then -1 else 1)
 
     $http.get(window.url("organisaatio-service.ryhmat"),
-        cache: true
-      ).then ((res) ->
-        return [] if not res.data or res.data.length is 0
-        hakukohderyhmat = res.data.filter((r)->r.ryhmatyypit[0] == "hakukohde").map((r)->
-          oid: r.oid
-          nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
-        )
-        hakukohderyhmat.sort sortByNimi
-        $scope.hakukohderyhmat = hakukohderyhmat
-      ), ->
-        $scope.hakukohderyhmat = []
+      cache: true
+    ).then ((res) ->
+      return [] if not res.data or res.data.length is 0
+      hakukohderyhmat = res.data.filter((r)->r.ryhmatyypit[0] == "hakukohde").map((r)->
+        oid: r.oid
+        nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
+      )
+      hakukohderyhmat.sort sortByNimi
+      $scope.hakukohderyhmat = hakukohderyhmat
+    ), ->
+      $scope.hakukohderyhmat = []
 
     $scope.searchHakukohderyhma = (nimi) ->
       R.filter(((hkr) ->

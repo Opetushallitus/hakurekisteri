@@ -38,6 +38,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
         luokkataso = None,
         pohjakoulutus = "1",
         todistusvuosi = Some("2014"),
+        muukoulutus = Some("muukoulutushere 1"),
         julkaisulupa = None,
         yhteisetaineet = None,
         lukiontasapisteet = None,
