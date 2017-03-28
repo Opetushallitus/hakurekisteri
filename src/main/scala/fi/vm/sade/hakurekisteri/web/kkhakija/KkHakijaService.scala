@@ -262,10 +262,7 @@ class KkHakijaService(hakemusService: IHakemusService,
                                 haku: Haku,
                                 sijoitteluTulos: SijoitteluTulos,
                                 hakukohdeOids: Future[Seq[String]]): Seq[Future[Option[Hakemus]]] = {
-    val combinedHakukohdeOids: Future[Seq[String]] = q.hakukohderyhma
-      .map(hakukohderyhma => hakukohdeOids)
-      .getOrElse(Future.successful(Seq())).map(_ ++ q.hakukohde.toSeq)
-
+    val combinedHakukohdeOids: Future[Seq[String]] = hakukohdeOids.map(_ ++ q.hakukohde.toSeq)
 
       (for {
         answers: HakemusAnswers <- hakemus.answers
