@@ -60,7 +60,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
   private def hakukohdeOids(organisaatio: Option[String],
                             hakuOid: Option[String],
                             hakukohdekoodi: Option[String]): Future[Seq[String]] = {
-    val hakukohteenNimiUriHakuehto = hakukohdekoodi.map(koodi => "hakukohteenNimiUri" -> s"hakukohteet_$koodi")
+    val hakukohteenNimiUriHakuehto = hakukohdekoodi.map(koodi => "hakukohteenNimiUri" -> koodi)
     val q = (organisaatio.map("organisationOid" -> _) ++ hakuOid.map("hakuOid" -> _) ++ hakukohteenNimiUriHakuehto).toMap
     restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", q)
       .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
@@ -252,12 +252,15 @@ object AkkaHakupalvelu {
     }
 
     def thatAreLisakysymysInHakukohde(kysymysId: String): Boolean = {
-      lisakysymykset.keys.exists(
-        key => kysymysId.contains(key)
-          &&
-          (hakukohdeOid.isEmpty
-            || lisakysymykset(key).isHaunLisakysymys
-            || lisakysymykset(key).applicationOptionOids.contains(hakukohdeOid.get)))
+      val kysymysOpt = lisakysymykset.get(kysymysId)
+
+      val noHakukohdeSpecified = hakukohdeOid.isEmpty
+      val isDefaultKysymys = kysymysOpt.exists(_.isHaunLisakysymys)
+      val isKysymysForSpecifiedHakukohde = hakukohdeOid.isDefined && kysymysOpt.exists(_.applicationOptionOids.contains(hakukohdeOid.get))
+
+      val kysymysIncludedForCurrentHakukohde = isDefaultKysymys || isKysymysForSpecifiedHakukohde
+
+      noHakukohdeSpecified || kysymysIncludedForCurrentHakukohde
     }
 
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())

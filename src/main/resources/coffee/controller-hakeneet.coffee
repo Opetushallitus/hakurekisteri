@@ -50,6 +50,7 @@ loadHakutiedot = (hautResponse, $scope) ->
 loadHakukohdekoodit = (data, $scope) ->
   $scope.hakukohdekoodit = data.map((koodi) ->
     koodi: koodi.koodiArvo
+    koodiUri: koodi.koodiUri
     nimi: koodi.metadata.sort((a, b) ->
       if a.kieli and b.kieli and a.kieli isnt b.kieli
         (if a.kieli < b.kieli then -1 else 1)
@@ -281,7 +282,7 @@ app.controller "HakeneetCtrl", [
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
-        hakukohde: (if $scope.hakukohde then $scope.hakukohde else null)
+        hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohdekoodiuri else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
@@ -290,7 +291,7 @@ app.controller "HakeneetCtrl", [
       else {
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
-        hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohde else null)
+        hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohdekoodiuri else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
@@ -311,6 +312,7 @@ app.controller "HakeneetCtrl", [
       delete $scope.hakukohde
 
       $scope.hakukohdenimi = ""
+      $scope.hakukohdekoodiuri = ""
       $scope.hakuehto = "Kaikki"
       $scope.tiedostotyyppi = "Json"
       return
@@ -344,11 +346,14 @@ app.controller "HakeneetCtrl", [
 
     $scope.updateHakukohteet = ->
       ## päivitetään hakukohteet listaan riippuen valitusta hausta
-      isAikuHaku = if $scope.haku then ($scope.haku.kohdejoukkoUri.indexOf("haunkohdejoukko_20") > -1) else false
-      if isAikuHaku
+      if isAikuHaku()
         loadHakukohdekoodit aikuhakukohdekoodit, $scope
       else
         loadHakukohdekoodit hakukohdekoodit, $scope
+
+    isAikuHaku = ->
+      return ($scope.haku && ($scope.haku.kohdejoukkoUri.indexOf("haunkohdejoukko_20") > -1))
+
 
     $scope.hakukohdekoodit = []
 
@@ -431,13 +436,16 @@ app.controller "HakeneetCtrl", [
 
     $scope.setHakukohdenimi = ->
       if $scope.hakukohde
-        nimet = $scope.searchHakukohdekoodi($scope.hakukohde)
-        if nimet.length is 1
-          $scope.hakukohdenimi = nimet[0].nimi
+        hakukohteet = $scope.searchHakukohdekoodi($scope.hakukohde)
+        if hakukohteet.length is 1
+          $scope.hakukohdenimi = hakukohteet[0].nimi
+          $scope.hakukohdekoodiuri = hakukohteet[0].koodiUri
         else
           $scope.hakukohdenimi = ""
+          $scope.hakukohdekoodiuri = ""
       else
         $scope.hakukohdenimi = ""
+        $scope.hakukohdekoodiuri = ""
       return
 
     $scope.hakuFilter = (haku, i) ->
