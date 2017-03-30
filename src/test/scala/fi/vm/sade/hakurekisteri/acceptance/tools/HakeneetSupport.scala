@@ -592,8 +592,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   class MockedKoodistoActor extends Actor {
     override def receive: Actor.Receive = {
-      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_fin", _) => sender ! "246"
-      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_nan", _) => sender ! "999"
+      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "fin", _) => sender ! "246"
+      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "nan", _) => sender ! "999"
       case q: GetKoodi =>
         sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))))
     }

@@ -161,31 +161,34 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def tutkinnotHakemuksilta(hakuOid: String): Future[Map[String, Option[Int]]] = {
-    hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, None).map(_.collect {
+    hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, None).map(findCasesWithSuoritusoikeusTaiAiempiTutkinto(_).toMap)
+  }
+
+  private def tutkinnotHakemuksilta(henkiloOids: Set[String],
+                                    hakuOid: String,
+                                    hakukohdeOid: Option[String]): Future[Map[String, Int]] = {
+    val hakemukset = {
+      if (henkiloOids.size <= sizeLimitForFetchingByPersons) {
+        hakemusService.hakemuksetForPersonsInHaku(henkiloOids, hakuOid)
+      } else {
+        hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, hakukohdeOid)
+      }
+    }
+
+    hakemukset.map(findCasesWithSuoritusoikeusTaiAiempiTutkinto(_).collect {
+      case (personOid, Some(year)) => (personOid, year)
+    }.toMap)
+  }
+
+  private def findCasesWithSuoritusoikeusTaiAiempiTutkinto: Seq[FullHakemus] => Seq[(String, Option[Int])] = { hakemukset =>
+    hakemukset.collect {
       case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _, _)
         if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") &&
           koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined =>
         (personOid, Some(koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt))
       case FullHakemus(_, Some(personOid), _, _, _, _, _) =>
         (personOid, None)
-    }.toMap)
-  }
-
-  private def tutkinnotHakemuksilta(henkiloOids: Set[String],
-                                    hakuOid: String,
-                                    hakukohdeOid: Option[String]): Future[Map[String, Int]] = {
-    def fetchHakemukset = {
-      if (henkiloOids.size <= sizeLimitForFetchingByPersons)
-        hakemusService.hakemuksetForPersonsInHaku(henkiloOids, hakuOid)
-      else
-        hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, hakukohdeOid)
     }
-
-    fetchHakemukset.map(_.collect({
-      case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _, _)
-        if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") =>
-        (personOid, koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt)
-    }).toMap)
   }
 
   private def vastaanotot(personOidsWithAliases: PersonOidsWithAliases): Future[Map[String, DateTime]] =
