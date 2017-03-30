@@ -219,9 +219,10 @@ object AkkaHakupalvelu {
 
     def extractLisakysymysFromAnswer(avain: String, arvo: String): Lisakysymys = {
       val compositeIds = extractCompositeIds(avain)
-      val kysymys: ThemeQuestion = lisakysymykset(compositeIds.questionId)
+      val kysymysId = compositeIds.questionId
+      val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, hardCodedLisakysymys(kysymysId))
       Lisakysymys(
-        kysymysid = compositeIds.questionId,
+        kysymysid = kysymysId,
         kysymystyyppi = kysymys.`type`,
         kysymysteksti = kysymys.messageText,
         vastaukset = getAnswersByType(kysymys, arvo, compositeIds.answerId)
@@ -252,15 +253,17 @@ object AkkaHakupalvelu {
     }
 
     def thatAreLisakysymysInHakukohde(kysymysId: String): Boolean = {
-      val kysymysOpt = lisakysymykset.get(kysymysId)
+      lisakysymykset.keys.exists {
+        (key: String) =>
+          kysymysId.contains(key) && {
+            val noHakukohdeSpecified = hakukohdeOid.isEmpty
+            val isDefaultKysymys = lisakysymykset(key).isHaunLisakysymys
+            val isKysymysForSpecifiedHakukohde = !noHakukohdeSpecified && lisakysymykset(key).applicationOptionOids.contains(hakukohdeOid.get)
+            val kysymysIncludedForCurrentHakukohde = isDefaultKysymys || isKysymysForSpecifiedHakukohde
 
-      val noHakukohdeSpecified = hakukohdeOid.isEmpty
-      val isDefaultKysymys = kysymysOpt.exists(_.isHaunLisakysymys)
-      val isKysymysForSpecifiedHakukohde = hakukohdeOid.isDefined && kysymysOpt.exists(_.applicationOptionOids.contains(hakukohdeOid.get))
-
-      val kysymysIncludedForCurrentHakukohde = isDefaultKysymys || isKysymysForSpecifiedHakukohde
-
-      noHakukohdeSpecified || kysymysIncludedForCurrentHakukohde
+            noHakukohdeSpecified || kysymysIncludedForCurrentHakukohde
+          }
+      }
     }
 
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
