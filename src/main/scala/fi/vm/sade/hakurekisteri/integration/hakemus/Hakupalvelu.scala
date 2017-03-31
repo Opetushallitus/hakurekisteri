@@ -135,13 +135,6 @@ object AkkaHakupalvelu {
       applicationOptionOids = Nil,
       options = None),
 
-    "muukoulutus" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Minkä muun koulutuksen/opintoja olet suorittanut?",
-      applicationOptionOids = Nil,
-      options = None),
-
     "lupaSahkoisesti" -> ThemeQuestion(
       isHaunLisakysymys = true,
       `type` = "ThemeRadioButtonQuestion",
