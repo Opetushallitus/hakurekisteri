@@ -344,7 +344,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case None => true
   }
 
-  def matchesHakukohdeKoodi(h: Hakutoive, q: HakijaQuery) = q.hakukohdekoodi.isEmpty || h.hakukohde.hakukohdekoodi == q.hakukohdekoodi.get
+  def matchesHakukohdeKoodi(h: Hakutoive, q: HakijaQuery): Boolean = {
+    def getSuffix(s: String): String = s.split('_').last
+
+    q.hakukohdekoodi.isEmpty || getSuffix(h.hakukohde.hakukohdekoodi) == getSuffix(q.hakukohdekoodi.get)
+  }
 
   def matchesOrganisation(h: Hakutoive, q: HakijaQuery) = q.organisaatio.isEmpty || h.organisaatioParendOidPath.contains(q.organisaatio.get)
 

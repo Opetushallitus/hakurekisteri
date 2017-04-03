@@ -40,63 +40,6 @@ case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IHakemusService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
-  val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
-
-    "hojks" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
-        "suunnitelma)?",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "koulutuskokeilu" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Oletko ollut koulutuskokeilussa?",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "miksi_ammatilliseen" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Miksi haet erityisoppilaitokseen?",
-      applicationOptionOids = Nil,
-      options = None),
-
-    "TYOKOKEMUSKUUKAUDET" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Työkokemus kuukausina",
-      applicationOptionOids = Nil,
-      options = None),
-
-    "muukoulutus" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Minkä muun koulutuksen/opintoja olet suorittanut?",
-      applicationOptionOids = Nil,
-      options = None),
-
-    "lupaSahkoisesti" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "lupaSms" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä.",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
-
-    // Työkokemus kuukausina:
-    // Minkä muun koulutuksen/opintoja olet suorittanut?
-    // Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti.
-    // Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä
-  )
 
   private val acceptedResponseCode: Int = 200
 
@@ -106,7 +49,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
   private def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] = {
-    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ hardCodedLisakysymys)
+    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ AkkaHakupalvelu.hardCodedLisakysymys)
   }
 
   override def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]] = {
@@ -117,7 +60,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
   private def hakukohdeOids(organisaatio: Option[String],
                             hakuOid: Option[String],
                             hakukohdekoodi: Option[String]): Future[Seq[String]] = {
-    val hakukohteenNimiUriHakuehto = hakukohdekoodi.map(koodi => "hakukohteenNimiUri" -> s"hakukohteet_$koodi")
+    val hakukohteenNimiUriHakuehto = hakukohdekoodi.map(koodi => "hakukohteenNimiUri" -> koodi)
     val q = (organisaatio.map("organisationOid" -> _) ++ hakuOid.map("hakuOid" -> _) ++ hakukohteenNimiUriHakuehto).toMap
     restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", q)
       .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
@@ -160,6 +103,53 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
 
 object AkkaHakupalvelu {
   val DEFAULT_POHJA_KOULUTUS: String = "1"
+
+  val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
+
+    "hojks" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
+        "suunnitelma)?",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "koulutuskokeilu" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Oletko ollut koulutuskokeilussa?",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "miksi_ammatilliseen" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Miksi haet erityisoppilaitokseen?",
+      applicationOptionOids = Nil,
+      options = None),
+
+    "TYOKOKEMUSKUUKAUDET" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Työkokemus kuukausina",
+      applicationOptionOids = Nil,
+      options = None),
+
+    "lupaSahkoisesti" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "lupaSms" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä.",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
+  )
+
 
   def getVuosi(vastaukset: Koulutustausta)(pohjakoulutus: String): Option[String] = pohjakoulutus match {
     case "9" => vastaukset.lukioPaattotodistusVuosi
@@ -222,9 +212,10 @@ object AkkaHakupalvelu {
 
     def extractLisakysymysFromAnswer(avain: String, arvo: String): Lisakysymys = {
       val compositeIds = extractCompositeIds(avain)
-      val kysymys: ThemeQuestion = lisakysymykset.get(compositeIds.questionId).get
+      val kysymysId = compositeIds.questionId
+      val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, hardCodedLisakysymys(kysymysId))
       Lisakysymys(
-        kysymysid = compositeIds.questionId,
+        kysymysid = kysymysId,
         kysymystyyppi = kysymys.`type`,
         kysymysteksti = kysymys.messageText,
         vastaukset = getAnswersByType(kysymys, arvo, compositeIds.answerId)
@@ -235,7 +226,7 @@ object AkkaHakupalvelu {
       tq.`type` match {
         case "ThemeRadioButtonQuestion" => Seq(LisakysymysVastaus(
           vastausid = Some(vastaus),
-          vastausteksti = tq.options.get(vastaus)
+          vastausteksti = tq.options.get.apply(if (vastaus.isEmpty) "false" else vastaus)
         ))
         case "ThemeCheckBoxQuestion" =>
           if (vastaus != "true") {
@@ -255,23 +246,38 @@ object AkkaHakupalvelu {
     }
 
     def thatAreLisakysymysInHakukohde(kysymysId: String): Boolean = {
-      lisakysymykset.keys.exists(
-        key => kysymysId.contains(key)
-          &&
-          (hakukohdeOid.isEmpty
-            || lisakysymykset(key).isHaunLisakysymys
-            || lisakysymykset(key).applicationOptionOids.contains(hakukohdeOid.get)))
+      lisakysymykset.keys.exists {
+        (key: String) =>
+          kysymysId.contains(key) && {
+            val noHakukohdeSpecified = hakukohdeOid.isEmpty
+            val isDefaultKysymys = lisakysymykset(key).isHaunLisakysymys
+            val isKysymysForSpecifiedHakukohde = !noHakukohdeSpecified && lisakysymykset(key).applicationOptionOids.contains(hakukohdeOid.get)
+            val kysymysIncludedForCurrentHakukohde = isDefaultKysymys || isKysymysForSpecifiedHakukohde
+
+            noHakukohdeSpecified || kysymysIncludedForCurrentHakukohde
+          }
+      }
     }
 
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
     val flatAnswers = answers.hakutoiveet.getOrElse(Map()) ++ answers.osaaminen.getOrElse(Map()) ++ answers.lisatiedot.getOrElse(Map())
 
-    flatAnswers
-      .filterKeys(thatAreLisakysymysInHakukohde)
+    val missingQuestionAnswers = hardCodedLisakysymys.filterNot(q => {
+      val id = q._1
+      flatAnswers.contains(id)
+    }).map(q => (q._1, ""))
+
+    /*
+    The missing question answers are added here forcefully since the excel sheets and what not need to have them in all cases
+     */
+    val filteredAnswers = flatAnswers.filterKeys(thatAreLisakysymysInHakukohde) ++ missingQuestionAnswers
+    val finalanswers = filteredAnswers
       .map { case (avain, arvo) => extractLisakysymysFromAnswer(avain, arvo) }
       .groupBy(_.kysymysid)
       .map { case (questionId, answerList) => mergeAnswers(questionId, answerList)}
       .toSeq
+
+    finalanswers
   }
 
   def getOsaaminenOsaalue(hakemusAnswers: Option[HakemusAnswers], key: String): Option[String] = {
