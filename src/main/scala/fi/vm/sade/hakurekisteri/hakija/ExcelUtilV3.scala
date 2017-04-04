@@ -18,16 +18,16 @@ object ExcelUtilV3 extends HakijatExcelWriter[JSONHakijat] {
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
   )
 
-  def getLisakysymysQuestionsInOrder(hakijat: JSONHakijat): Seq[String] = {
-    val kysymysIdsAndTexts: Seq[(String, String)] = hakijat.hakijat.flatMap(_.lisakysymykset.map((lk: Lisakysymys) => lk.kysymysid -> lk.kysymysteksti))
-    val questionsInOrder: Seq[String] = kysymysIdsAndTexts.sortBy(_._2).map(_._2)
-    questionsInOrder.distinct
+  def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat) = {
+    val raw: Seq[(String, String)] = hakijat.hakijat.flatMap(_.lisakysymykset.map(lk => lk.kysymysid -> lk.kysymysteksti))
+      .distinct.sortBy(_._2)
+    raw.map(t => lisakysymysHeader(t._1, t._2))
   }
 
   case class lisakysymysHeader(id: String, header: String)
 
   override def getHeaders(hakijat: JSONHakijat): Set[Row] = {
-    val lisakysymysQuestions = getLisakysymysQuestionsInOrder(hakijat)
+    val lisakysymysQuestions = getLisakysymysIdsAndQuestionsInOrder(hakijat).map(_.header)
     val headersWithLisakysymys = headers ++ lisakysymysQuestions
     Set(Row(0, headersWithLisakysymys.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
   }
@@ -115,10 +115,10 @@ object ExcelUtilV3 extends HakijatExcelWriter[JSONHakijat] {
         case _ => ""
       })
 
-    def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], kysymysTeksti: String): String = {
+    def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
       val answers: Seq[Seq[String]] = for {
         lk <- lisakysymykset.filter{ q =>
-          val isMatchingKysymys = q.kysymysteksti == kysymysTeksti
+          val isMatchingKysymys = q.kysymysid == id
           val isIncludedKysymys = q.hakukohdeOids.isEmpty || q.hakukohdeOids.contains(ht.hakukohdeOid)
           isMatchingKysymys && isIncludedKysymys
         }
@@ -129,9 +129,9 @@ object ExcelUtilV3 extends HakijatExcelWriter[JSONHakijat] {
       list.mkString(", ")
     }
 
-    val lisakysymysTexts = getLisakysymysQuestionsInOrder(hakijat)
+    val lisakysymysIds = getLisakysymysIdsAndQuestionsInOrder(hakijat)
 
-    val allAnswers = mainAnswers ++ lisakysymysTexts.map(kysymysTeksti => getLisakysymysAnswer(h.lisakysymykset, kysymysTeksti))
+    val allAnswers = mainAnswers ++ lisakysymysIds.map(q => getLisakysymysAnswer(h.lisakysymykset, q.id))
 
     val rivi = allAnswers.zipWithIndex.toSet
 
