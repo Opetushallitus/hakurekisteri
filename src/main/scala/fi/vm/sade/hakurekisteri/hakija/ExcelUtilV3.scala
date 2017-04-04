@@ -39,7 +39,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
     val hakutoiveet = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet)
 
     val allLisakysymysHeaders: Seq[lisakysymysHeader] = hakutoiveet
-      .flatMap(ht => getLisakysymysIdsAndQuestionsInOrder(hakijat, ht.hakukohdeOid))
+      .flatMap(ht => getLisakysymysIdsAndQuestionsInOrder(hakijat, ht.hakukohdeOid)).distinct.sortBy(_.header)
 
     val rows: Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
       val mainAnswers = Seq(
