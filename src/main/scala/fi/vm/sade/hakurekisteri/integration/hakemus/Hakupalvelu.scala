@@ -204,6 +204,7 @@ object AkkaHakupalvelu {
       val q = questions.head
       Lisakysymys(
         kysymysid = q.kysymysid,
+        hakukohdeOids = q.hakukohdeOids,
         kysymystyyppi = q.kysymystyyppi,
         kysymysteksti = q.kysymysteksti,
         vastaukset = questions.flatMap(_.vastaukset).toSeq
@@ -216,6 +217,7 @@ object AkkaHakupalvelu {
       val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, hardCodedLisakysymys(kysymysId))
       Lisakysymys(
         kysymysid = kysymysId,
+        hakukohdeOids = kysymys.applicationOptionOids,
         kysymystyyppi = kysymys.`type`,
         kysymysteksti = kysymys.messageText,
         vastaukset = getAnswersByType(kysymys, arvo, compositeIds.answerId)

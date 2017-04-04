@@ -29,6 +29,6 @@ case class Henkilo(hetu: String,
                    lisakysymykset: Seq[Lisakysymys],
                    liitteet: Seq[Liite])
 
-case class Lisakysymys(kysymysid: String, kysymystyyppi: String, kysymysteksti: String, vastaukset: Seq[LisakysymysVastaus])
+case class Lisakysymys(kysymysid: String, hakukohdeOids: Seq[String], kysymystyyppi: String, kysymysteksti: String, vastaukset: Seq[LisakysymysVastaus])
 case class LisakysymysVastaus(vastausid: Option[String], vastausteksti: String)
 case class Liite(koulutusId: String, koulutusRyhmaId: String, tila: String, saapumisenTila: String, nimi: String, vastaanottaja: String)

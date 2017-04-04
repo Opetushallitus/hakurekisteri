@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
+import java.io.OutputStream
+
+import fi.vm.sade.hakurekisteri.rest.support._
 
 
 object ExcelUtilV3 extends HakijatExcelWriter[JSONHakijat] {
