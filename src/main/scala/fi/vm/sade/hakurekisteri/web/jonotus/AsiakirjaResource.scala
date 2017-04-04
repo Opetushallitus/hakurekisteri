@@ -91,6 +91,7 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
 
                   status match {
                     case Left(exception) =>
+                      logger.error("Create asiakirja with exception: {}", exception)
                       AsiakirjaWithExceptions(exception)
                     case Right(bytes) =>
                       Asiakirja(format, bytes)
