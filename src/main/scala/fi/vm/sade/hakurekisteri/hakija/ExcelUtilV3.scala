@@ -18,7 +18,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
   )
 
-  def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String) = {
+  private def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String): Seq[lisakysymysHeader] = {
     val raw: Seq[(String, String)] = hakijat.hakijat
       .flatMap(_.lisakysymykset
         .filter(lk => lk.hakukohdeOids.isEmpty || lk.hakukohdeOids.contains(hakukohdeOid))
@@ -131,11 +131,9 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         }
       }
 
-      val lisakysymysIds = getLisakysymysIdsAndQuestionsInOrder(hakijat, ht.hakukohdeOid)
+      val allAnswers: Seq[String] = mainAnswers ++ allLisakysymysHeaders.map(q => getLisakysymysAnswer(h.lisakysymykset, q.id))
 
-      val allAnswers = mainAnswers ++ allLisakysymysHeaders.map(q => getLisakysymysAnswer(h.lisakysymykset, q.id))
-
-      val rivi = allAnswers.zipWithIndex.toSet
+      val rivi: Set[(String, Int)] = allAnswers.zipWithIndex.toSet
 
       for (sarake <- rivi) yield StringCell(sarake._2, sarake._1)
     })).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
