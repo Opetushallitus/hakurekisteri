@@ -125,12 +125,15 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
           answer <- lk.vastaukset
         } yield answer.vastausteksti
         val list: Seq[String] = answers.flatten
-        list.mkString(", ")
+        list match {
+          case Nil => "N/A"
+          case l => list.mkString(", ")
+        }
       }
 
       val lisakysymysIds = getLisakysymysIdsAndQuestionsInOrder(hakijat, ht.hakukohdeOid)
 
-      val allAnswers = mainAnswers ++ lisakysymysIds.map(q => getLisakysymysAnswer(h.lisakysymykset, q.id))
+      val allAnswers = mainAnswers ++ allLisakysymysHeaders.map(q => getLisakysymysAnswer(h.lisakysymykset, q.id))
 
       val rivi = allAnswers.zipWithIndex.toSet
 
