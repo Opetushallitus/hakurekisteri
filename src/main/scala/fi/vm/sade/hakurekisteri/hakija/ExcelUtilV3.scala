@@ -126,7 +126,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         } yield answer.vastausteksti
         val list: Seq[String] = answers.flatten
         list match {
-          case Nil => "N/A"
+          case Nil => ""
           case l => list.mkString(", ")
         }
       }
