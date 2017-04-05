@@ -452,7 +452,7 @@ object XMLUtil {
 
 import XMLUtil._
 
-case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], koulutus: String,
+case class XMLHakutoive(hakukohdeOid: String, hakujno: Short, oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], koulutus: String,
                         harkinnanvaraisuusperuste: Option[String], urheilijanammatillinenkoulutus: Option[Boolean], yhteispisteet: Option[BigDecimal],
                         valinta: Option[String], vastaanotto: Option[String], lasnaolo: Option[String], terveys: Option[Boolean], aiempiperuminen: Option[Boolean],
                         kaksoistutkinto: Option[Boolean], koulutuksenKieli: Option[String]) {
@@ -478,7 +478,7 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 }
 
 object XMLHakutoive {
-  def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
+  def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.hakukohde.oid, ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
     ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
     ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), lasnaolo(ht),
     ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto, ht.koulutuksenKieli)

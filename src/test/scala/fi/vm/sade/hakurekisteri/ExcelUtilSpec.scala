@@ -46,6 +46,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
         yleinenkoulumenestys = None,
         painotettavataineet = None,
         hakutoiveet = Seq(XMLHakutoive(
+          hakukohdeOid = "hakukohde1",
           hakujno = 1,
           oppilaitos = "00999",
           opetuspiste = None,

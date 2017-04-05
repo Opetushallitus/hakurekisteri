@@ -112,3 +112,21 @@ trait HakijatExcelWriter[T] {
   def toBooleanX(v: Option[Boolean]): String = if (v.getOrElse(false)) "X" else ""
 
 }
+
+trait HakijatExcelWriterV3[T] {
+
+  val zero = BigDecimal.valueOf(0)
+
+  def getRows(hakijat: T): Set[Row]
+
+  def write(out: OutputStream, hakijat: T): Unit = {
+    val sheet = Sheet("Hakijat", getRows(hakijat))
+    val wb = new Workbook(Seq(sheet))
+    wb.writeTo(out)
+  }
+
+  def toBooleanX(v: Boolean): String = if (v) "X" else ""
+
+  def toBooleanX(v: Option[Boolean]): String = if (v.getOrElse(false)) "X" else ""
+
+}
