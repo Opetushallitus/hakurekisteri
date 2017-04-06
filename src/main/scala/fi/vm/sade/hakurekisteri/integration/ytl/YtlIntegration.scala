@@ -183,7 +183,7 @@ class YtlIntegration(config: OphProperties,
         AuditLogger.audit.log(LogMessage.builder().message(s"Ytl sync failed: ${e.getMessage}").build())
     } finally {
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
-      val message = Option(allSucceeded.get()).filter(_).map(_ => "successfully").getOrElse("with failing patches!")
+      val message = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
       AuditLogger.audit.log(LogMessage.builder().message(s"Ytl sync ended ${message}!").build())
       atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
     }
