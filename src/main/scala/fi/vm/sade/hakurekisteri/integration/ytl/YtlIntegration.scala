@@ -9,7 +9,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import akka.actor.ActorRef
+import fi.vm.sade.auditlog.hakurekisteri.HakuRekisteriOperation.RESOURCE_UPDATE
+import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{IHakemusService, FullHakemus, HakemusService, HetuPersonOid}
+import fi.vm.sade.hakurekisteri.web.AuditLogger
+import fi.vm.sade.hakurekisteri.web.AuditLogger.audit
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
@@ -132,6 +136,7 @@ class YtlIntegration(config: OphProperties,
       throw new RuntimeException(message)
     } else {
       logger.info(s"Starting sync all!")
+      audit.log(message("Ytl sync started!"))
       val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeKKHakuOids.get()
         .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
 
@@ -141,6 +146,7 @@ class YtlIntegration(config: OphProperties,
 
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+          audit.log(message(s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}"))
           atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
           throw e
       }
@@ -157,6 +163,7 @@ class YtlIntegration(config: OphProperties,
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}")
+          audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}"))
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count!")
@@ -174,8 +181,11 @@ class YtlIntegration(config: OphProperties,
       case e: Throwable =>
         allSucceeded.set(false)
         logger.error(s"YTL sync all failed!", e)
+        audit.log(message(s"Ytl sync failed: ${e.getMessage}"))
     } finally {
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
+      val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
+      audit.log(message(s"Ytl sync ended ${msg}!"))
       atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
     }
   }
@@ -183,4 +193,6 @@ class YtlIntegration(config: OphProperties,
   private def persistKokelas(kokelas: Kokelas): Unit = {
     ytlActor ! kokelas
   }
+  private def message(msg:String) = LogMessage.builder().message(msg).add("operaatio","YTL_SYNC").build()
+
 }
