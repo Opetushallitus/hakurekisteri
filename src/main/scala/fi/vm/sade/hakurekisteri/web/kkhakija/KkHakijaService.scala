@@ -36,6 +36,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
+import org.slf4j.LoggerFactory
 
 case class KkHakijaQuery(oppijanumero: Option[String],
                          haku: Option[String],
@@ -493,12 +494,18 @@ object KkHakijaUtil {
     }
   }
 
-  def getMaakoodi(koodiArvo: String, koodisto: ActorRef)(implicit timeout: Timeout): Future[String] = koodiArvo.toLowerCase match {
+  private val logger = LoggerFactory.getLogger(getClass)
+
+  def getMaakoodi(koodiArvo: String, koodisto: ActorRef)(implicit timeout: Timeout, ec: ExecutionContext): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
     case "" => Future.successful("999")
 
     case arvo =>
-      (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
+      val maaFuture = (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
+      maaFuture.onFailure {
+        case e => logger.error(s"failed to fetch country $koodiArvo")
+      }
+      maaFuture
   }
 
   def getToimipaikka(maa: String, postinumero: Option[String], kaupunkiUlkomaa: Option[String], koodisto: ActorRef)
