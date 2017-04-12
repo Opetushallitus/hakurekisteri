@@ -206,6 +206,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
 
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
+  val koosteServiceUrl = properties("cas.service.valintalaskentakoostepalvelu")
   val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
   val koodistoServiceUrl = properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
@@ -226,6 +227,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword, properties)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
   val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
+  val koosteConfig = ServiceConfig(casUrl, koosteServiceUrl, serviceUser, servicePassword, properties)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl, properties = properties)
