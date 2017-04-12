@@ -282,7 +282,7 @@ app.controller "HakeneetCtrl", [
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
-        hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohdekoodiuri else null)
+        hakukohde: (if $scope.hakukohde then $scope.hakukohde else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
