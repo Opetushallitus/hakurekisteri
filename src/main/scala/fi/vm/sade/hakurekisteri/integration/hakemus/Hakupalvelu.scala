@@ -85,7 +85,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
         } yield hakemukset.filter(_.stateValid)
           .map { hakemus =>
-              val koosteData: Map[String, String] = hakijaSuorituksetMap.apply(hakemus.personOid.get)
+              val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
               AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData)
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
@@ -102,7 +102,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
             hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid.get, hakemukset)
             (haku, lisakysymykset) <- f
           } yield {
-            val koosteData: Map[String, String] = hakijaSuorituksetMap.apply(hakemus.personOid.get)
+            val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
             AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)
           })
         } yield hakijat.toSeq
@@ -298,12 +298,12 @@ object AkkaHakupalvelu {
     }
   }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Map[String,String]): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
     val lahtokoulu: Option[String] = for (k <- koulutustausta; l <- k.lahtokoulu) yield l
-    val pohjakoulutus: Option[String] = koosteData.get("POHJAKOULUTUS")
+    val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
     val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
     val kieli = (for (a <- v; henkilotiedot: HakemusHenkilotiedot <- a.henkilotiedot; aidinkieli <- henkilotiedot.aidinkieli) yield aidinkieli).getOrElse("FI")
     val myontaja = lahtokoulu.getOrElse("")

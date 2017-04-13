@@ -522,7 +522,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object Hakupalvelu extends Hakupalvelu {
     var tehdytHakemukset: Seq[FullHakemus] = Seq()
     var lisakysymykset: Map[String, ThemeQuestion] = Map()
-    val koosteData: Map[String,String] = Map()
+    val koosteData: Option[Map[String,String]] = None
 
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
       case Some(org) => {

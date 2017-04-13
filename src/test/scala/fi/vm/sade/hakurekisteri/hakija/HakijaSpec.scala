@@ -142,7 +142,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     "54c8e11ee4b03c06d74fc5cc" -> tq2,
     "54e30c41e4b08eed6d776189" -> tq3)
 
-  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), Map("pohjakoulutus" -> "0")).hakemus.hakutoiveet.head
+  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), None).hakemus.hakutoiveet.head
 
 
   behavior of "Hakemuksen lasnaolotieto"
@@ -165,7 +165,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   }
 
   it should "have v2 fields" in {
-    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, Map("pohjakoulutus" -> "0"))
+    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, None)
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardCodedLisakysymys.size)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
