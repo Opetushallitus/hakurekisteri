@@ -170,4 +170,27 @@ class HakijaSpec extends FlatSpec with Matchers {
     hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardCodedLisakysymys.size)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
   }
+
+
+  behavior of "KoosteData"
+
+  it should "resolve pohjakoulutus from KoosteData not from Hakemus" in {
+    val nonExistentKoosteData = None
+    val emptyKoosteData = Some(Map[String,String]())
+    val koosteData = Some(Map("POHJAKOULUTUS" -> "1"))
+
+    val hakija1 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, nonExistentKoosteData)
+    val hakija2 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, emptyKoosteData)
+    val hakija3 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, koosteData)
+
+    def getPohjaKoulutus(hakija: Hakija): String = {
+      val hakemus: XMLHakemus = XMLHakemus.apply(hakija, opiskelutieto = None, lahtokoulu = None, toiveet = Seq(), osaaminen = None)
+      val jsonHakija: JSONHakija = JSONHakija(hakija, hakemus)
+      jsonHakija.hakemus.pohjakoulutus
+    }
+
+    getPohjaKoulutus(hakija1) should be("7")
+    getPohjaKoulutus(hakija2) should be("7")
+    getPohjaKoulutus(hakija3) should be("1")
+  }
 }
