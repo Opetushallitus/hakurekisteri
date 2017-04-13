@@ -5,9 +5,11 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import org.apache.poi.ss.formula.functions.T
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.util.Try
 
 trait IKoosteService {
   def getSuoritukset(hakuOid: String, hakemus: FullHakemus): Future[Map[String,String]]
