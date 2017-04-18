@@ -236,7 +236,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   }
 
   test("Oppijaresource should return multiple oppijas with multipe parameters") {
-    get("/many/1.2.246.562.24.00000000001,1.2.246.562.24.00000000001") {
+    get("/many/1.2.246.562.24.00000000001,1.2.246.562.24.00000000002") {
       response.status should be(OK)
 
       val oppijas = read[Seq[Oppija]](response.body)
