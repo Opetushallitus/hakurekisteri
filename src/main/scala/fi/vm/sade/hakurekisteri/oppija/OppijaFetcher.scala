@@ -60,6 +60,10 @@ trait OppijaFetcher {
     fetchOppijat(persons.toSet, ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user)
   }
 
+  def fetchOppija(person: String, ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
+    fetchOppijat(Set(person), ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user).map(_.head)
+  }
+
   def getRekisteriData(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Oppija]] = {
     val logId = UUID.randomUUID()
     def timed[A](msg: String, f: Future[A]): Future[A] =
