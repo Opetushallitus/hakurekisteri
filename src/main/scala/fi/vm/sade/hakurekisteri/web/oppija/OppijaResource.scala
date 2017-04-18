@@ -66,8 +66,25 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
       val is = oppijatFuture
     }
   }
+  get("/:oid", operation(read)) {
+    val t0 = Platform.currentTime
+    implicit val user = getUser
+    val personOid = params("oid")
+    val hakuOid = params.get("haku")
 
-  get("/:oids", operation(read)) {
+    new AsyncResult() {
+      override implicit def timeout: Duration = 500.seconds
+
+      private val oppijaFuture = fetchOppija(personOid, hakuOid.isDefined, hakuOid)
+
+      logQuery(Map("oid" -> personOid, "haku" -> hakuOid), t0, oppijaFuture)
+
+      override val is = oppijaFuture
+    }
+
+  }
+
+  get("/many/:oids", operation(read)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
     val personOids: Seq[String] = params("oids").split(',')
