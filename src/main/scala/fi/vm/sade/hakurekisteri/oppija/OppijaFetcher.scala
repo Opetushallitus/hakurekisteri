@@ -56,8 +56,8 @@ trait OppijaFetcher {
     })
   }
 
-  def fetchOppija(person: String, ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
-    fetchOppijat(Set(person), ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user).map(_.head)
+  def fetchOppijat(persons: Seq[String], ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Seq[Oppija]] = {
+    fetchOppijat(persons.toSet, ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user)
   }
 
   def getRekisteriData(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Oppija]] = {
