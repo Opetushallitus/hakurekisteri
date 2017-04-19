@@ -56,10 +56,6 @@ trait OppijaFetcher {
     })
   }
 
-  def fetchOppijat(persons: Seq[String], ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Seq[Oppija]] = {
-    fetchOppijat(persons.toSet, ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user)
-  }
-
   def fetchOppija(person: String, ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
     fetchOppijat(Set(person), ensikertalaisuudet, HakemusQuery(haku = hakuOid))(user).map(_.head)
   }
