@@ -6,8 +6,10 @@ import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.OppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.oppija.{Oppija, OppijaFetcher}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, yksilollistaminen}
@@ -67,6 +69,22 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
       .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
+  private def fetchOppijat(henkiloOids: Seq[String], hakuOid: String): Future[Seq[Oppija]] = {
+    val a: Future[Seq[Oppija]] = Future.sequence(henkiloOids.map {
+      oid =>
+        val f = virkailijaClient.readObject[Oppija]("suoritusrekisteri.oppijat.opiskelijaoid", oid)(200, maxRetries)
+        f
+    })
+
+    a
+  }
+
+  private def fetchOppija(henkiloOid: String, hakuOid: String): Future[Oppija] = {
+    val f: Future[Oppija] = virkailijaClient.readObject[Oppija]("suoritusrekisteri.oppijat.opiskelijaoid", henkiloOid)(200, maxRetries)
+
+    f
+  }
+
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
@@ -82,7 +100,8 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio)
-          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
+          oppijat <- fetchOppijat(hakemukset.map(_.personOid.get), hakuOid)
+          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, oppijat, hakemukset)
         } yield hakemukset.filter(_.stateValid)
           .map { hakemus =>
               val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
@@ -99,7 +118,8 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
             (hakukohdeOid, hakemukset) <- hakukohteet
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
-            hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid.get, hakemukset)
+            oppijat <- fetchOppijat(hakemukset.map(_.personOid.get), hakuOid.get)
+            hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid.get, oppijat, hakemukset)
             (haku, lisakysymykset) <- f
           } yield {
             val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
