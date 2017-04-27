@@ -59,13 +59,16 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           }) match {
             case Success(content) =>
               if(content.length == 0) {
+                logger.error("Created asiakirja had no content")
                 Left(new EmptyAsiakirjaException())
               } else {
                 Right(content)
               }
             case Failure(fail: Exception) =>
+              logger.error("Error creating asiakirja: ", fail)
               Left(fail)
             case Failure(t: Throwable) =>
+              logger.error("Error creating asiakirja: ", t)
               Left(new RuntimeException(t))
           }
         }
