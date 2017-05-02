@@ -91,12 +91,12 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     val henkilot = parse(request.body).extract[Set[String]]
     if (henkilot.size > OppijatPostSize.maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
-    val hakuOid = params("haku")
+    val hakuOid: Option[String] = params.get("haku")
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, ensikertalaisuudet, HakemusQuery(haku = Some(hakuOid)))
+      private val oppijat = fetchOppijat(henkilot, ensikertalaisuudet, HakemusQuery(hakuOid))
 
       logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
 
