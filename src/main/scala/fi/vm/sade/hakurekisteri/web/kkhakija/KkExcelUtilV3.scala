@@ -66,12 +66,12 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
       hakemus.hakukohteenKoulutukset lift 3 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
       hakemus.hakukohteenKoulutukset lift 4 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
       hakemus.hakukohteenKoulutukset lift 5 match { case Some(k) => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})" case None => ""},
-      hakemus.liitteet lift 0 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
-      hakemus.liitteet lift 1 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
-      hakemus.liitteet lift 2 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
-      hakemus.liitteet lift 3 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
-      hakemus.liitteet lift 4 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""},
-      hakemus.liitteet lift 5 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}).zipWithIndex.toSet
+      hakemus.liitteet match { case None => "" case Some(l) => l lift 0 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}},
+      hakemus.liitteet match { case None => "" case Some(l) => l  lift 1 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}},
+      hakemus.liitteet match { case None => "" case Some(l) => l  lift 2 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}},
+      hakemus.liitteet match { case None => "" case Some(l) => l  lift 3 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}},
+      hakemus.liitteet match { case None => "" case Some(l) => l  lift 4 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}},
+      hakemus.liitteet match { case None => "" case Some(l) => l  lift 5 match { case Some(j) => s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})" case None => ""}}).zipWithIndex.toSet
     for (sarake <- rivi) yield StringCell(sarake._2, sarake._1)
   })).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
 

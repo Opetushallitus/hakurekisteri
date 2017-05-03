@@ -87,7 +87,7 @@ case class Hakemus(haku: String,
                    hKelpoisuusLahde: Option[String],
                    hKelpoisuusMaksuvelvollisuus: Option[String],
                    hakukohteenKoulutukset: Seq[Hakukohteenkoulutus],
-                   liitteet: Seq[Liite])
+                   liitteet: Option[Seq[Liite]])
 
 case class Hakija(hetu: String,
                   oppijanumero: String,
@@ -327,11 +327,19 @@ class KkHakijaService(hakemusService: IHakemusService,
           hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
             .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
-          liitteet = hakemus.attachmentRequests.map(a => Liite(a.preferenceAoId.getOrElse(""), a.preferenceAoGroupId.getOrElse(""), a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
+          liitteet = attachmentToLiite(hakemus.attachmentRequests)
         ))
       } else {
         None
       }
+    }
+  }
+
+  def attachmentToLiite(attachments: Seq[HakemusAttachmentRequest]): Option[Seq[Liite]] = {
+    var liitteet: Seq[Liite] = attachments.map(a => Liite(a.preferenceAoId.getOrElse(""), a.preferenceAoGroupId.getOrElse(""), a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
+    (liitteet) match {
+      case Seq() => None
+      case _ => Some(liitteet)
     }
   }
 
@@ -389,7 +397,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       onYlioppilas = isYlioppilas(suoritukset),
       yoSuoritusVuosi = None,
       turvakielto = henkilotiedot.turvakielto.contains("true"),
-      hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = Seq(), julkaisulupa = None, hKelpoisuusMaksuvelvollisuus = None))
+      hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = None, julkaisulupa = None, hKelpoisuusMaksuvelvollisuus = None))
     )
 
   private def getKkHakijaV2(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String])(hakemus: FullHakemus): Option[Future[Hakija]] =
