@@ -9,7 +9,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.google.common.cache.{CacheBuilder, CacheLoader, RemovalListener, RemovalNotification}
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.kkhakija._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
@@ -24,7 +24,7 @@ import scala.util.{Failure, Success, Try}
 
 class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(implicit system: ActorSystem) {
   private implicit val defaultTimeout: Timeout = 45.minutes
-  private implicit val formats = DefaultFormats
+  private implicit val formats = HakurekisteriJsonSupport.format
   private val poolSize = 4
   private val threadPool = Executors.newFixedThreadPool(poolSize)
   private val logger = LoggerFactory.getLogger(classOf[Siirtotiedostojono])
@@ -104,6 +104,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         throw new scala.RuntimeException("No content to store!")
     }
   }
+
 
   def kkQueryToAsiakirja(format: ApiFormat, query: KkHakijaQuery): Array[Byte] = {
     val hakijat = Await.result(kkHakija.getKkHakijat(query, query.version), defaultTimeout.duration)
