@@ -89,8 +89,13 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     implicit val user = getUser
     val ensikertalaisuudet = params.getOrElse("ensikertalaisuudet", "true").toBoolean
     val henkilot = parse(request.body).extract[Set[String]]
-    if (henkilot.size > OppijatPostSize.maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
-    if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
+    if (henkilot.size > OppijatPostSize.maxOppijatPostSize) {
+      val msg = s"too many person oids: ${henkilot.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
+      throw new IllegalArgumentException(msg)
+    }
+    if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) {
+      throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
+    }
     val hakuOid: Option[String] = params.get("haku")
 
     new AsyncResult() {
