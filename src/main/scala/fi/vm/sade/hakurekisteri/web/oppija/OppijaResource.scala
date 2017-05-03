@@ -98,14 +98,18 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     }
     val hakuOid: Option[String] = params.get("haku")
 
-    new AsyncResult() {
-      override implicit def timeout: Duration = 500.seconds
+    if (ensikertalaisuudet && hakuOid.getOrElse("").isEmpty) {
+      BadRequest(null,null,"Haku has to be defined if ensikertalaisuudet is true")
+    } else {
+      new AsyncResult() {
+        override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, ensikertalaisuudet, HakemusQuery(hakuOid))
+        private val oppijat = fetchOppijat(henkilot, ensikertalaisuudet, HakemusQuery(hakuOid))
 
-      logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
+        logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
 
-      override val is: Future[_] = oppijat
+        override val is: Future[_] = oppijat
+      }
     }
   }
 
