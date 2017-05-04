@@ -30,6 +30,25 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 cas.callback.suoritusrekisteri=http://localhost:8080/suoritusrekisteri
 cas.service.suoritusrekisteri=http://localhost:8080/suoritusrekisteri
 ```
+Kommentoi pois ValintaTulosActor-luokan getSijoittelut-metodin ensimmäinen haara jotta käynnistyminen tapahtuu järkevässä ajassa:
+```
+private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
+    //if (!initialLoadingDone) {
+    //  Future.failed(InitialLoadingNotDone())
+    //} else {
+      if (q.cachedOk && cache.contains(q.hakuOid))
+        cache.get(q.hakuOid)
+      else {
+        if (q.hakemusOid.isEmpty) {
+          queueForResult(q.hakuOid)
+        } else {
+          callBackend(q.hakuOid, q.hakemusOid)
+        }
+      }
+    //}
+  }
+```
+
 3. Käynnistä paikallinen serveri ajamalla IDEA:ssa luokka `SureTestJetty`.
 
 Sovellus on saatavilla osoitteessa http://localhost:8080/suoritusrekisteri

@@ -82,7 +82,6 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
 
       override val is = oppijaFuture
     }
-
   }
 
   post("/", operation(post)) {
@@ -90,18 +89,27 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     implicit val user = getUser
     val ensikertalaisuudet = params.getOrElse("ensikertalaisuudet", "true").toBoolean
     val henkilot = parse(request.body).extract[Set[String]]
-    if (henkilot.size > OppijatPostSize.maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
-    if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
-    val hakuOid = params("haku")
+    if (henkilot.size > OppijatPostSize.maxOppijatPostSize) {
+      val msg = s"too many person oids: ${henkilot.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
+      throw new IllegalArgumentException(msg)
+    }
+    if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) {
+      throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
+    }
+    val hakuOid: Option[String] = params.get("haku")
 
-    new AsyncResult() {
-      override implicit def timeout: Duration = 500.seconds
+    if (ensikertalaisuudet && hakuOid.getOrElse("").isEmpty) {
+      BadRequest(null,null,"Haku has to be defined if ensikertalaisuudet is true")
+    } else {
+      new AsyncResult() {
+        override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, ensikertalaisuudet, HakemusQuery(haku = Some(hakuOid)))
+        private val oppijat = fetchOppijat(henkilot, ensikertalaisuudet, HakemusQuery(hakuOid))
 
-      logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
+        logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
 
-      override val is: Future[_] = oppijat
+        override val is: Future[_] = oppijat
+      }
     }
   }
 

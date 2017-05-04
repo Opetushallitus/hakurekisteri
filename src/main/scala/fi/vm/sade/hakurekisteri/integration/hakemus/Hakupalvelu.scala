@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -37,7 +38,7 @@ case class HakukohdeSearchResultList(tulokset: Seq[HakukohdeSearchResultTarjoaja
 
 case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 
-class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IHakemusService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
+class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IHakemusService, koosteService: IKoosteService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
 
@@ -81,21 +82,29 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio)
+          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
         } yield hakemukset.filter(_.stateValid)
-          .map(hakemus => AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None))
+          .map { hakemus =>
+              val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
+              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData)
+          }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
           hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
           hakukohteittain <- Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, organisaatio)))
           hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
           hakijat <- Future.sequence(for {
-            (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined
+            (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
             f = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
+            hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid.get, hakemukset)
             (haku, lisakysymykset) <- f
-          } yield AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid)))
+          } yield {
+            val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
+            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)
+          })
         } yield hakijat.toSeq
     }
   }
@@ -289,12 +298,12 @@ object AkkaHakupalvelu {
     }
   }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
     val lahtokoulu: Option[String] = for (k <- koulutustausta; l <- k.lahtokoulu) yield l
-    val pohjakoulutus: Option[String] = for (k <- koulutustausta; p <- k.POHJAKOULUTUS) yield p
+    val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
     val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
     val kieli = (for (a <- v; henkilotiedot: HakemusHenkilotiedot <- a.henkilotiedot; aidinkieli <- henkilotiedot.aidinkieli) yield aidinkieli).getOrElse("FI")
     val myontaja = lahtokoulu.getOrElse("")
@@ -362,7 +371,7 @@ object AkkaHakupalvelu {
         muukoulutus = getMuukoulutus(hakemus)
 
       ),
-      getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid),
+      getSuoritus(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid).toSeq,
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
@@ -387,7 +396,7 @@ object AkkaHakupalvelu {
     hakemus.answers.flatMap(_.koulutustausta).flatMap(_.muukoulutus)
   }
 
-  def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
+  def getSuoritus(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Option[Suoritus] = {
     Seq(pohjakoulutus).collect {
       case Some("0") => VirallinenSuoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false, lahde = hakija.getOrElse(Oids.ophOrganisaatioOid))
       case Some("1") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false, lahde = hakija.getOrElse(Oids.ophOrganisaatioOid))
@@ -395,7 +404,7 @@ object AkkaHakupalvelu {
       case Some("3") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli, vahv = false, lahde = hakija.getOrElse(Oids.ophOrganisaatioOid))
       case Some("6") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli, vahv = false, lahde = hakija.getOrElse(Oids.ophOrganisaatioOid))
       case Some("9") => VirallinenSuoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false, lahde = hakija.getOrElse(Oids.ophOrganisaatioOid))
-    }
+    }.headOption
   }
 
   def findEnsimmainenAmmatillinenKielinenHakukohde(toiveet: Map[String, String], kieli: String): Int = {
