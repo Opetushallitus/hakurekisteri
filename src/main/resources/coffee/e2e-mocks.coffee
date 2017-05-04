@@ -11,6 +11,7 @@ angular.module('e2e-mocks', ['ngMockE2E'])
                  branchName=master
                  vcsRevision=xxx
                  buildTtime=20150227-0927")
+  $httpBackend.when('GET', /.*\/oppijanumerorekisteri-service\/cas\/prequel/).respond("ok")
   $httpBackend.when('GET', /.*rest\/v1\/rajoitukset\/opoUpdateGraduation/).respond(true)
 
   window.casRolesMock = $httpBackend.when('GET', /.*\/cas\/myroles/)

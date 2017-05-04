@@ -92,3 +92,12 @@ app.run ($cacheFactory, $http, $log, MessageService) ->
       message: "Henkilöpalveluun ei juuri nyt saada yhteyttä."
       descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita"
       description: "Yritä hetken kuluttua uudelleen."
+  $http.get(window.url("oppijanumerorekisteri-service.prequel")).success(->
+    return
+  ).error ->
+    MessageService.addMessage
+      type: "danger"
+      messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta"
+      message: "Henkilöpalveluun ei juuri nyt saada yhteyttä."
+      descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita"
+      description: "Yritä hetken kuluttua uudelleen."

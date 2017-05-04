@@ -43,11 +43,11 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   override def receive: Receive = {
     case henkiloOid: String =>
       log.debug(s"received henkiloOid: $henkiloOid")
-      virkailijaClient.readObject[Henkilo]("authentication-service.henkilo", henkiloOid)(200, maxRetries) pipeTo sender
+      virkailijaClient.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo", henkiloOid)(200, maxRetries) pipeTo sender
 
     case HetuQuery(Hetu(hetu)) =>
       log.debug(s"received HetuQuery: ${hetu.substring(0, 6)}XXXX")
-      virkailijaClient.readObject[Henkilo]("authentication-service.s2s.byHetu", hetu)(200, maxRetries) pipeTo sender
+      virkailijaClient.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(200, maxRetries) pipeTo sender
 
     case q: HenkiloQuery =>
       log.debug(s"received HenkiloQuery: $q")
