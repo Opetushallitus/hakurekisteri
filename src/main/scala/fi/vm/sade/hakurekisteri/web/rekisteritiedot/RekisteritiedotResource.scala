@@ -143,7 +143,7 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
 
       def hasArvosanat(todistukset:Seq[Todistus]): Boolean = {
         !todistukset.exists{
-          case Todistus(s: VirallinenSuoritus, arvosanat) if tarkastetut.contains(s.komo) && arvosanat.isEmpty => true
+          case Todistus(s: VirallinenSuoritus, arvosanat) if tarkastetut.contains(s.komo) && arvosanat.isEmpty && !s.yksilollistaminen.equals(yksilollistaminen.Alueittain) => true
           case Todistus(s: VirallinenSuoritus, _) if s.valmistuminen.getYear < 2015 => false
           case t:Todistus => valid.validateData(t).isFailure
           case default => false
