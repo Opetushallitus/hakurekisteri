@@ -61,7 +61,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         henkiloOidPattern = new RegExp("^1\\.2\\.246\\.562\\.24\\.")
         trimmedHenkiloSearchTerm = $scope.henkiloTerm.trim().toUpperCase()
         if trimmedHenkiloSearchTerm.match(henkiloOidPattern)
-          henkiloSearchUrl = window.url("authentication-service.henkilo", trimmedHenkiloSearchTerm)
+          henkiloSearchUrl = window.url("oppijanumerorekisteri-service.henkilo", trimmedHenkiloSearchTerm)
           optimizedHenkiloSearch = true
         else
           optimizedHenkiloSearch = false
@@ -142,7 +142,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
     showCurrentRows = (henkiloMap) ->
-      $http.post(window.url("authentication-service.henkilotByHenkiloOidList"), Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
+      $http.post(window.url("oppijanumerorekisteri-service.henkilotByHenkiloOidList"), Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
       ).success((henkiloList, status) ->
         if status != 200 || typeof henkiloList == "string"
           $scope.loading = false
