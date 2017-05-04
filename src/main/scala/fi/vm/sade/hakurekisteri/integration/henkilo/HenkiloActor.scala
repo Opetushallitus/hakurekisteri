@@ -17,10 +17,6 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
 
-  def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
-
-  def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
-
   def receive: Receive
 }
 
@@ -29,14 +25,6 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   private var savingHenkilo = false
   private var lastUnhandledSaveNext = 0L
   private val saveQueue: mutable.Map[SaveHenkilo, ActorRef] = new mutable.LinkedHashMap[SaveHenkilo, ActorRef]()
-
-  override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    virkailijaClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo]("authentication-service.henkilo.organisaatiohenkilo",oidHenkilo)(200, organisaatioHenkilo)
-  }
-
-  override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    virkailijaClient.readObject[Seq[OrganisaatioHenkilo]]("authentication-service.henkilo.organisaatiohenkilo",oidHenkilo)(200)
-  }
 
   private object SaveNext
 
@@ -116,15 +104,6 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
 
     case msg =>
       log.warning(s"not implemented receive(${msg})")
-  }
-
-  override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    throw new UnsupportedOperationException("Not implemented")
-  }
-
-  override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
-    json.extract[OrganisaatioResponse]
   }
 }
 
