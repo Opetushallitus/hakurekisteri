@@ -37,17 +37,6 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       log.debug(s"received HetuQuery: ${hetu.substring(0, 6)}XXXX")
       virkailijaClient.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(200, maxRetries) pipeTo sender
 
-    case q: HenkiloQuery =>
-      log.debug(s"received HenkiloQuery: $q")
-      if (q.oppijanumero.isEmpty && q.hetu.isEmpty) {
-        sender ! FoundHenkilos(Seq(), q.tunniste)
-      } else {
-        virkailijaClient.readObject[HenkiloSearchResponse]("authentication-service.henkiloSearchQ",q.oppijanumero.getOrElse(q.hetu.get), "2")(200, maxRetries).
-          map(r => FoundHenkilos(r.results, q.tunniste)) pipeTo sender
-      }
-
-
-
     case s: SaveHenkilo =>
       saveQueue.put(s, sender())
       if (!savingHenkilo)
@@ -96,9 +85,6 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
       val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
       sender ! json.extract[Henkilo]
 
-    case q: HenkiloQuery =>
-      throw new UnsupportedOperationException("Not implemented")
-
     case s: SaveHenkilo =>
       throw new UnsupportedOperationException("Not implemented")
 
@@ -122,8 +108,6 @@ object HetuUtil {
 }
 
 case class HetuQuery(hetu: String)
-
-case class HenkiloQuery(oppijanumero: Option[String] = None, hetu: Option[String] = None, tunniste: String)
 
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
@@ -160,7 +144,3 @@ case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 case class SavedHenkilo(henkiloOid: String, tunniste: String)
 
 case class HenkiloSaveFailed(tunniste: String, t: Throwable) extends Exception(s"henkilo save failed for tunniste $tunniste", t)
-
-case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
-
-case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
