@@ -8,7 +8,7 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
 
   private val headers = Seq(
     "Hetu", "Syntymäaika", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero",
-    "Postitoimipaikka", "Maa", "Kansalaisuus", "Kaksoiskansalaisuus", "Matkapuhelin", "Puhelin", "Sahkoposti", "Kotikunta", "Sukupuoli",
+    "Postitoimipaikka", "Maa", "Kansalaisuus", "Kaksoiskansalaisuus", "Matkapuhelin", "Puhelin", "Sahkoposti", "Lukuvuosimaksu", "Kotikunta", "Sukupuoli",
     "Aidinkieli", "Asiointikieli", "Koulusivistyskieli", "Koulutusmarkkinointilupa", "On ylioppilas", "Suoritusvuosi",
     "Haku", "Hakuvuosi", "Hakukausi", "Hakemusnumero", "Organisaatio", "Hakukohde", "Hakukohteen kk-id", "Avoin vayla",
     "Valinnan tila", "Vastaanottotieto", "Ilmoittautumiset", "Pohjakoulutus", "Julkaisulupa", "Hakukelpoisuus",
@@ -36,6 +36,7 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
       hakija.matkapuhelin.getOrElse(""),
       hakija.puhelin.getOrElse(""),
       hakija.sahkoposti.getOrElse(""),
+      hakemus.lukuvuosimaksu.getOrElse(""),
       hakija.kotikunta,
       hakija.sukupuoli,
       hakija.aidinkieli,
