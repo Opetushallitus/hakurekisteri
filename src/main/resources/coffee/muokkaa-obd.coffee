@@ -62,30 +62,14 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         trimmedHenkiloSearchTerm = $scope.henkiloTerm.trim().toUpperCase()
         if trimmedHenkiloSearchTerm.match(henkiloOidPattern)
           henkiloSearchUrl = window.url("oppijanumerorekisteri-service.henkilo", trimmedHenkiloSearchTerm)
-          optimizedHenkiloSearch = true
         else
-          optimizedHenkiloSearch = false
-          henkiloSearchUrl = window.url("authentication-service.henkiloSearch", {
-            index: 0,
-            count: 1,
-            no: true,
-            p: false,
-            s: true,
-            q: trimmedHenkiloSearchTerm
-          })
+          henkiloSearchUrl = window.url("oppijanumerorekisteri-service.byHakutermi", trimmedHenkiloSearchTerm)
         $http.get(henkiloSearchUrl,
           cache: false,
           headers: { 'External-Permission-Service': 'SURE' }
         ).success((henkilo) ->
-          if optimizedHenkiloSearch
-            henkilo = {
-              results: [henkilo]
-            }
-          if henkilo.results and henkilo.results.length is 1
-            $scope.henkilo = henkilo.results[0]
-            henkiloTerm.resolve()
-          else
-            henkiloTerm.reject()
+          $scope.henkilo = henkilo
+          henkiloTerm.resolve()
           return
         ).error ->
           henkiloTerm.reject()
