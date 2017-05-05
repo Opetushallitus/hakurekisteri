@@ -83,15 +83,6 @@ app.run ($cacheFactory, $http, $log, MessageService) ->
   if (window.mocksOn)
     $http.defaults.cache = $cacheFactory("test")
     window.testCache = $http.defaults.cache
-  $http.get(window.url("authentication-service.buildversion")).success(->
-    return
-  ).error ->
-    MessageService.addMessage
-      type: "danger"
-      messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta"
-      message: "Henkilöpalveluun ei juuri nyt saada yhteyttä."
-      descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita"
-      description: "Yritä hetken kuluttua uudelleen."
   $http.get(window.url("oppijanumerorekisteri-service.prequel")).success(->
     return
   ).error ->

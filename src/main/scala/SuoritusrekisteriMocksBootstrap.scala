@@ -36,7 +36,6 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
     context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
     context.mount(new OrganizationProxyServlet(system), "/organisaatio-service")
-    context.mount(new AuthenticationProxyServlet(system), "/authentication-service")
     context.mount(new OppijanumerorekisteriProxyServlet(system), "/oppijanumerorekisteri-service")
     context.mount(new KoodistoProxyServlet(system), "/koodisto-service")
     context.mount(new LocalizationMockServlet(system), "/lokalisointi")
@@ -63,21 +62,6 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class AuthenticationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
-    get("/buildversion.txt") {
-      contentType = "text/plain"
-      "artifactId=authentication-service\nmocked"
-    }
-
-    get("/resources/henkilo") {
-      new AsyncResult() {
-        override val is = henkiloByQparam(params("q"))
-      }
-    }
-
-    def henkiloByQparam(hetu: String) = Future.successful(HenkiloMock.getHenkiloByQParam(hetu))
-  }
-
   class OppijanumerorekisteriProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
     get("/cas/prequel") {
       contentType = "text/plain"
@@ -90,6 +74,12 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       }
     }
 
+    get("/henkilo/hakutermi=:hakutermi") {
+      new AsyncResult() {
+        override val is = henkiloByQparam(params("hakutermi"))
+      }
+    }
+
     post("/henkilo/henkilotByHenkiloOidList") {
       new AsyncResult() {
         val parsedBody = parse(request.body)
@@ -99,6 +89,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
 
     def henkilotByOidList(oidList: List[String]) = Future.successful(HenkiloMock.henkilotByHenkiloOidList(oidList))
     def henkiloByOid(oid: String) = Future.successful(HenkiloMock.getHenkiloByOid(oid))
+    def henkiloByQparam(hetu: String) = Future.successful(HenkiloMock.getHenkiloByQParam(hetu))
   }
 
   class KoodistoProxyServlet(system: ActorSystem)(implicit ec: ExecutionContext) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
