@@ -154,6 +154,13 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     logLongQuery(result, url)
     result
   }
+
+  def post[B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200): Future[B] = {
+    val url = OphUrlProperties.url(uriKey, args:_*)
+    val result = Client.request(url)(JsonExtractor.handler[B](acceptedResponseCode), None)
+    logLongQuery(result, url)
+    result
+  }
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
