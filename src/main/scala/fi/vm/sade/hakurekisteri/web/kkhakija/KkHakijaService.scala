@@ -153,28 +153,26 @@ class KkHakijaService(hakemusService: IHakemusService,
     val byHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
 
 
+
+
     Future.sequence(byHakuOid.map {
       case (hakuOid, h) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
+            def valinnanTulosForOppijanumero(oppijanumero: Option[String]): Future[Option[SijoitteluTulos]] =
+              oppijanumero.map(_ => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))).getOrElse(Future.successful(None))
+
             q.hakukohderyhma.map(hakupalvelu.getHakukohdeOids(_, haku.oid)).getOrElse(Future.successful(Seq())).flatMap(hakukohdeOids => {
-              if (q.oppijanumero.isEmpty) {
-                version match{
-                  case 1 => {
-                    getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
-                      Future.sequence(h.map(getKkHakijaV1(haku, q, Some(kokoHaunTulos), hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
-                    )
-                  }
-                  case 2 => {
-                    getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
-                      Future.sequence(h.map(getKkHakijaV2(haku, q, Some(kokoHaunTulos), hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
-                    )
-                  }
+              version match {
+                case 1 => {
+                  valinnanTulosForOppijanumero(q.oppijanumero).flatMap(kokoHaunTulos =>
+                    Future.sequence(h.map(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                  )
                 }
-              } else {
-                version match {
-                  case 1 => Future.sequence(h.map(getKkHakijaV1(haku, q, None, hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
-                  case 2 => Future.sequence(h.map(getKkHakijaV2(haku, q, None, hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                case 2 => {
+                  valinnanTulosForOppijanumero(q.oppijanumero).flatMap(kokoHaunTulos =>
+                    Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                  )
                 }
               }
             })
