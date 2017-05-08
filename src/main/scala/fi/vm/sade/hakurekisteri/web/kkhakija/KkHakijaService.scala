@@ -172,7 +172,8 @@ class KkHakijaService(hakemusService: IHakemusService,
                   )
                 }
                 case 2 => {
-                  getLukuvuosimaksut(hakukohdeOids).flatMap(lukuvuosimaksut => {
+                  val allHakukohdeOids = q.hakukohde.toSet ++ hakukohdeOids
+                  getLukuvuosimaksut(allHakukohdeOids.toSeq).flatMap(lukuvuosimaksut => {
                     valinnanTulosForOppijanumero(q.oppijanumero).flatMap(kokoHaunTulos => {
                       Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                     }
