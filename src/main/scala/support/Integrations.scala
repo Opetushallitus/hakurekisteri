@@ -79,7 +79,6 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
   override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config))
   override val ytl: ActorRef = system.actorOf(Props(new YtlActor(
-    henkilo,
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
     hakemusService,
@@ -158,7 +157,6 @@ class BaseIntegrations(rekisterit: Registers,
   val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(
-    henkilo,
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
     hakemusService,
