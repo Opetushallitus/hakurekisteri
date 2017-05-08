@@ -7,8 +7,6 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
-import org.json4s.jackson.JsonMethods._
-import org.json4s.{DefaultFormats, _}
 import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,10 +27,6 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   private object SaveNext
 
   override def receive: Receive = {
-    case henkiloOid: String =>
-      log.debug(s"received henkiloOid: $henkiloOid")
-      virkailijaClient.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo", henkiloOid)(200, maxRetries) pipeTo sender
-
     case s: SaveHenkilo =>
       saveQueue.put(s, sender())
       if (!savingHenkilo)
@@ -69,14 +63,7 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
 }
 
 class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
-  implicit val formats = DefaultFormats
-
   override def receive: Receive = {
-    case henkiloOid: String =>
-      log.debug(s"received henkiloOid: $henkiloOid")
-      val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
-      sender ! json.extract[Henkilo]
-
     case s: SaveHenkilo =>
       throw new UnsupportedOperationException("Not implemented")
 
