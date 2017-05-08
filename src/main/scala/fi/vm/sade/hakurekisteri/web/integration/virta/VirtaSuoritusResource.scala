@@ -6,7 +6,7 @@ import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResult}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.matching.Regex
 
-class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: ActorRef, henkiloActor: ActorRef)
+class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: ActorRef, oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with VirtaSuoritusSwaggerApi with JacksonJsonSupport
     with SecuritySupport with FutureSupport {
@@ -55,7 +55,7 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: Acto
     new AsyncResult() {
       override implicit def timeout: Duration = 30.seconds
       override val is =
-        (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].flatMap(henkilo => {
+        oppijaNumeroRekisteri.getByHetu(hetu).flatMap(henkilo => {
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
               auditlogQuery(user.username, henkilo.oidHenkilo)

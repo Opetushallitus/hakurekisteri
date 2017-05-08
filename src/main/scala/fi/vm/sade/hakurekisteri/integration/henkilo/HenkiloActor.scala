@@ -33,10 +33,6 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       log.debug(s"received henkiloOid: $henkiloOid")
       virkailijaClient.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo", henkiloOid)(200, maxRetries) pipeTo sender
 
-    case HetuQuery(Hetu(hetu)) =>
-      log.debug(s"received HetuQuery: ${hetu.substring(0, 6)}XXXX")
-      virkailijaClient.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(200, maxRetries) pipeTo sender
-
     case s: SaveHenkilo =>
       saveQueue.put(s, sender())
       if (!savingHenkilo)
@@ -81,10 +77,6 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
       val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
       sender ! json.extract[Henkilo]
 
-    case HetuQuery(hetu) =>
-      val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
-      sender ! json.extract[Henkilo]
-
     case s: SaveHenkilo =>
       throw new UnsupportedOperationException("Not implemented")
 
@@ -106,8 +98,6 @@ object HetuUtil {
     case _ => None
   }
 }
-
-case class HetuQuery(hetu: String)
 
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
