@@ -39,6 +39,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
     haut,
     integrations.koodisto,
     registers.suoritusRekisteri,
-    integrations.valintaTulos)(system)
+    integrations.valintaTulos,
+    integrations.valintarekisteri)(system)
   val siirtotiedostojono = new Siirtotiedostojono(hakijat, kkHakijaService)(system)
 }

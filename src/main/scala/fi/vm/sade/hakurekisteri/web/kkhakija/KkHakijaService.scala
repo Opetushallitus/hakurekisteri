@@ -127,7 +127,8 @@ class KkHakijaService(hakemusService: IHakemusService,
                       haut: ActorRef,
                       koodisto: ActorRef,
                       suoritukset: ActorRef,
-                      valintaTulos: ActorRef)(implicit system: ActorSystem) {
+                      valintaTulos: ActorRef,
+                      valintaRekisteri: ActorRef)(implicit system: ActorSystem) {
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
 
@@ -253,9 +254,9 @@ class KkHakijaService(hakemusService: IHakemusService,
   private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
 
   private def getLukuvuosimaksut(hakukohdeOids: Seq[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] =
-    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession)).map(q => (valintaTulos ? q).mapTo[Lukuvuosimaksu]))
+    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession)).map(q => (valintaRekisteri ? q).mapTo[Lukuvuosimaksu]))
 
-  private def getLukuvuosimaksu(q: LukuvuosimaksuQuery): Future[Lukuvuosimaksu] = (valintaTulos ? q).mapTo[Lukuvuosimaksu]
+  private def getLukuvuosimaksu(q: LukuvuosimaksuQuery): Future[Lukuvuosimaksu] = (valintaRekisteri ? q).mapTo[Lukuvuosimaksu]
 
   private def getHakemukset(haku: Haku, hakemus: FullHakemus, lukuvuosimaksu: Option[Lukuvuosimaksu], q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {

@@ -44,13 +44,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
   val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
+  val valintaRekisteri = system.actorOf(Props(new MockedValintarekisteriActor()))
   val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
   val hakupalvelu = new Hakupalvelu() {
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
     override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
   }
 
-  val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock)
+  val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri)
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")
 
@@ -340,6 +341,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     }
   }
 
+  class MockedValintarekisteriActor extends Actor {
+    override def receive: Actor.Receive = {
+      case _ =>
+        sender ! Seq.empty
+    }
+  }
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
       case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>

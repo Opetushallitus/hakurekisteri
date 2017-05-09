@@ -31,7 +31,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       haut = anyActorRef,
       koodisto = anyActorRef,
       suoritukset = anyActorRef,
-      valintaTulos = anyActorRef)
+      valintaTulos = anyActorRef,
+      valintaRekisteri = anyActorRef)
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
     context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
