@@ -79,15 +79,15 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
         AnonymousUser()
     }
   }
-
   private def toQuery(params: Map[String,String], u: User): Option[QueryAndFormat] = {
     def act = {
       val isKK = params.get("kk").exists(parseBoolean)
       val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
       if(isKK) {
-        QueryAndFormat(KkHakijaQuery(params, Option(u)),tyyppi)
+
+        QueryAndFormat(KkHakijaQuery(params, Some(u)),tyyppi)
       } else {
-        QueryAndFormat(HakijaQuery(params, Option(u), params.get("version").map(_.toInt).getOrElse(3)),tyyppi)
+        QueryAndFormat(HakijaQuery(params, Some(u), params.get("version").map(_.toInt).getOrElse(3)),tyyppi)
       }
     }
     Try(act).toOption

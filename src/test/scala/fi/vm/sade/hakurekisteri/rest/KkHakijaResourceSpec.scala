@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
-import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaService, KkHakijaQuery, KkHakijaResource, KkHakijaUtil}
@@ -300,6 +300,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   def testUser(user: String, organisaatioOid: String) = new User {
     override val username: String = user
+    override val auditSession = AuditSessionRequest(user, Set(organisaatioOid), "", "")
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
   }
 

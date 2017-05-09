@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider}
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, User}
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, HakurekisteriJsonSupport, JDBCJournal, User}
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}
@@ -34,6 +34,7 @@ class SuoritusResourceTestSecurity extends Security {
   object TestUser extends User {
     override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.39644336305")
     override val username: String = "Test"
+    override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.39644336305"), "","")
   }
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
@@ -43,6 +44,7 @@ class SuoritusResourceAdminTestSecurity extends Security {
   object AdminTestUser extends User {
     override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     override val username: String = "Test"
+    override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "","")
   }
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(AdminTestUser)
