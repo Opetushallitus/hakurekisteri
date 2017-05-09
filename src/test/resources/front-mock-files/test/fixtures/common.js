@@ -352,25 +352,25 @@ var httpFixtures = function () {
 
     fixtures.henkiloPalveluService = {
         aarne: function () {
-            fixtures.get(/.*\/authentication-service\/resources\/henkilo\/1\.2\.246\.562\.24\.71944845619$/).passThrough()
+            fixtures.get(/.*\/oppijanumerorekisteri-service\/henkilo\/1\.2\.246\.562\.24\.71944845619$/).passThrough()
         },
         tyyne: function () {
-            fixtures.get(/.*\/authentication-service\/resources\/henkilo\/1\.2\.246\.562\.24\.98743797763$/).passThrough()
+            fixtures.get(/.*\/oppijanumerorekisteri-service\/henkilo\/1\.2\.246\.562\.24\.98743797763$/).passThrough()
         },
         foobar: function () {
-            fixtures.get(/.*\/authentication-service\/resources\/henkilo\?index=0&count=1&no=true&p=false&s=true&q=FOOBAR$/).passThrough()
+            fixtures.get(/.*\/oppijanumerorekisteri-service\/henkilo\/hakutermi=FOOBAR$/).passThrough()
         },
         aarneHenkiloPalvelu: function () {
-            fixtures.get(/.*\/authentication-service\/resources\/henkilo\?index=0&count=1&no=true&p=false&s=true&q=1\.2\.246\.562\.24\.71944845619$/).passThrough()
+            fixtures.get(/.*\/oppijanumerorekisteri-service\/henkilo\/hakutermi=1\.2\.246\.562\.24\.71944845619$/).passThrough()
         },
         aarneHenkiloPalveluHetu: function () {
-            fixtures.get(/.*\/authentication-service\/resources\/henkilo\?index=0&count=1&no=true&p=false&s=true&q=123456-789$/).passThrough()
+            fixtures.get(/.*\/oppijanumerorekisteri-service\/henkilo\/hakutermi=123456-789$/).passThrough()
         },
         aarneHenkiloListana: function () {
-            testFrame().httpBackend.when('POST', /.*\/authentication-service\/resources\/henkilo\/henkilotByHenkiloOidList$/, ["1.2.246.562.24.71944845619"]).passThrough()
+            testFrame().httpBackend.when('POST', /.*\/oppijanumerorekisteri-service\/henkilo\/henkilotByHenkiloOidList$/, ["1.2.246.562.24.71944845619"]).passThrough()
         },
         aarneJaTyyneHenkiloListana: function () {
-            testFrame().httpBackend.when('POST', /.*\/authentication-service\/resources\/henkilo\/henkilotByHenkiloOidList$/, ["1.2.246.562.24.71944845619", "1.2.246.562.24.49719248091", "1.2.246.562.24.76359038731", "1.2.246.562.24.87951154293", "1.2.246.562.24.98743797763"]).passThrough()
+            testFrame().httpBackend.when('POST', /.*\/oppijanumerorekisteri-service\/henkilo\/henkilotByHenkiloOidList$/, ["1.2.246.562.24.71944845619", "1.2.246.562.24.49719248091", "1.2.246.562.24.76359038731", "1.2.246.562.24.87951154293", "1.2.246.562.24.98743797763"]).passThrough()
         }
     }
 

@@ -27,7 +27,7 @@ app.controller "TiedonsiirtotilaCtrl", [
     stopLoading = -> $scope.loading = false
 
     enrichBatch = (b, d) ->
-      $http.get(window.url("authentication-service.henkilo", b.source), { cache: true, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
+      $http.get(window.url("oppijanumerorekisteri-service.henkilo", b.source), { cache: true, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
         d.resolve()
       ).error(->

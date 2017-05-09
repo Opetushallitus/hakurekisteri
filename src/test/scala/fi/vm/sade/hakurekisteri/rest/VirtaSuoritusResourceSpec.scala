@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaClient, VirtaResourceActor, VirtaResults}
 import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
@@ -13,6 +13,7 @@ import org.mockito.Mockito
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import scala.concurrent.Future
 
 class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport with MockitoSugar {
   implicit val system = ActorSystem()
@@ -42,9 +43,12 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
     }
   })
 
-  val henkiloActor = TestActorRef(new Actor {
-    override def receive: Receive = {
-      case HetuQuery(hetu) => sender ! Henkilo(
+  val fakeOppijaNumeroRekisteri = new IOppijaNumeroRekisteri {
+    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+      throw new UnsupportedOperationException("Not implemented")
+    }
+    override def getByHetu(hetu: String): Future[Henkilo] = {
+      Future.successful(Henkilo(
         "1.2.4",
         Some("111111-1975"),
         "OPPIJA",
@@ -53,12 +57,12 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
         None,
         None,
         None
-      )
+      ))
     }
-  })
+  }
 
 
-  addServlet(new VirtaSuoritusResource(virtaSuoritusActor, permissionChecker, henkiloActor), "/*")
+  addServlet(new VirtaSuoritusResource(virtaSuoritusActor, permissionChecker, fakeOppijaNumeroRekisteri), "/*")
 
 
   test("should return required fields from Virta for empty response") {

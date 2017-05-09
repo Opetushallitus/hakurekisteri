@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockPersonAliasesProvider}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, MockPersonAliasesProvider}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
@@ -67,6 +67,9 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
         oidsOfAllLinked.map((_, oidsOfAllLinked)).toMap
       } else Map()
       Future.successful(henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap ++ allMappingsOfLinked)
+    }
+    override def getByHetu(hetu: String): Future[Henkilo] = {
+      throw new UnsupportedOperationException("Not implemented")
     }
   }
 

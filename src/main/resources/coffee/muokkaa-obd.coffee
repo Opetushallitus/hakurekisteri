@@ -61,31 +61,15 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         henkiloOidPattern = new RegExp("^1\\.2\\.246\\.562\\.24\\.")
         trimmedHenkiloSearchTerm = $scope.henkiloTerm.trim().toUpperCase()
         if trimmedHenkiloSearchTerm.match(henkiloOidPattern)
-          henkiloSearchUrl = window.url("authentication-service.henkilo", trimmedHenkiloSearchTerm)
-          optimizedHenkiloSearch = true
+          henkiloSearchUrl = window.url("oppijanumerorekisteri-service.henkilo", trimmedHenkiloSearchTerm)
         else
-          optimizedHenkiloSearch = false
-          henkiloSearchUrl = window.url("authentication-service.henkiloSearch", {
-            index: 0,
-            count: 1,
-            no: true,
-            p: false,
-            s: true,
-            q: trimmedHenkiloSearchTerm
-          })
+          henkiloSearchUrl = window.url("oppijanumerorekisteri-service.byHakutermi", trimmedHenkiloSearchTerm)
         $http.get(henkiloSearchUrl,
           cache: false,
           headers: { 'External-Permission-Service': 'SURE' }
         ).success((henkilo) ->
-          if optimizedHenkiloSearch
-            henkilo = {
-              results: [henkilo]
-            }
-          if henkilo.results and henkilo.results.length is 1
-            $scope.henkilo = henkilo.results[0]
-            henkiloTerm.resolve()
-          else
-            henkiloTerm.reject()
+          $scope.henkilo = henkilo
+          henkiloTerm.resolve()
           return
         ).error ->
           henkiloTerm.reject()
@@ -142,7 +126,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
     showCurrentRows = (henkiloMap) ->
-      $http.post(window.url("authentication-service.henkilotByHenkiloOidList"), Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
+      $http.post(window.url("oppijanumerorekisteri-service.henkilotByHenkiloOidList"), Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
       ).success((henkiloList, status) ->
         if status != 200 || typeof henkiloList == "string"
           $scope.loading = false
