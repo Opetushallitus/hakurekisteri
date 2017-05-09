@@ -254,7 +254,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
 
   private def getLukuvuosimaksut(hakukohdeOids: Seq[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] =
-    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession)).map(q => (valintaRekisteri ? q).mapTo[Lukuvuosimaksu]))
+    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession)).map(q => (valintaRekisteri ? q).mapTo[Seq[Lukuvuosimaksu]])).map(_.flatten)
 
   private def getLukuvuosimaksu(q: LukuvuosimaksuQuery): Future[Lukuvuosimaksu] = (valintaRekisteri ? q).mapTo[Lukuvuosimaksu]
 
