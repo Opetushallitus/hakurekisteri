@@ -4,6 +4,7 @@ import java.util.{Date, TimeZone, UUID}
 
 import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportBatchSerializer}
 import fi.vm.sade.hakurekisteri.ensikertalainen._
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.Maksuntila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.rest.support.MenettamisenPerusteSerializer.paivamaara
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -30,6 +31,7 @@ object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
     new org.json4s.ext.EnumNameSerializer(Ilmoittautumistila) +
     new org.json4s.ext.EnumNameSerializer(Valintatila) +
     new org.json4s.ext.EnumNameSerializer(Vastaanottotila) +
+    new org.json4s.ext.EnumNameSerializer(Maksuntila) +
     new org.json4s.ext.EnumNameSerializer(BatchState) +
     FieldSerializer[Identified[UUID]]() +
     new UUIDSerializer +
