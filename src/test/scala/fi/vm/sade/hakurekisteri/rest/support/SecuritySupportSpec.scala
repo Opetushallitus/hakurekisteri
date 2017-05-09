@@ -68,7 +68,7 @@ object SecurityUser {
   object  user {
 
     def having(rights:Set[DefinedRole]) = OPHUser(username = "test",
-      authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"})
+      authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"}, userAgent = "", inetAddress = "")
   }
 
   object securitySession {

@@ -46,7 +46,9 @@ case class KkHakijaQuery(oppijanumero: Option[String],
                          hakukohderyhma: Option[String],
                          hakuehto: Hakuehto.Hakuehto,
                          version: Int,
-                         user: Option[User]) extends Query
+                         user: Option[User]) extends Query {
+
+}
 
 object KkHakijaQuery {
   def apply(params: Map[String,String], currentUser: Option[User]): KkHakijaQuery = new KkHakijaQuery(
@@ -173,7 +175,7 @@ class KkHakijaService(hakemusService: IHakemusService,
                 }
                 case 2 => {
                   val allHakukohdeOids = q.hakukohde.toSet ++ hakukohdeOids
-                  getLukuvuosimaksut(allHakukohdeOids.toSeq).flatMap(lukuvuosimaksut => {
+                  getLukuvuosimaksut(allHakukohdeOids.toSeq, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
                     valinnanTulosForOppijanumero(q.oppijanumero).flatMap(kokoHaunTulos => {
                       Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                     }
@@ -250,8 +252,8 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
 
-  private def getLukuvuosimaksut(hakukohdeOids: Seq[String]): Future[Seq[Lukuvuosimaksu]] =
-    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_)).map(q => (valintaTulos ? q).mapTo[Lukuvuosimaksu]))
+  private def getLukuvuosimaksut(hakukohdeOids: Seq[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] =
+    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession)).map(q => (valintaTulos ? q).mapTo[Lukuvuosimaksu]))
 
   private def getLukuvuosimaksu(q: LukuvuosimaksuQuery): Future[Lukuvuosimaksu] = (valintaTulos ? q).mapTo[Lukuvuosimaksu]
 

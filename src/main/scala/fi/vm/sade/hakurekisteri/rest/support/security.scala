@@ -71,6 +71,8 @@ trait User {
   def isAdmin: Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
 
   def allowByKomo(komo: String, action: String): Boolean = isKkVirkailija && komo.startsWith("koulutus_") && "READ".equals(action)
+
+  def auditSession(): AuditSessionRequest
 }
 
 trait Roles {
@@ -83,14 +85,17 @@ trait RoleUser extends User with Roles {
   }
 }
 
-case class OPHUser(username: String, authorities: Set[String]) extends RoleUser {
+case class AuditSessionRequest(personOid: String, roles: Set[String], userAgent: String, inetAddress: String)
+
+case class OPHUser(username: String, authorities: Set[String], userAgent: String, inetAddress: String) extends RoleUser {
+  override val auditSession = AuditSessionRequest(username, authorities, userAgent, inetAddress)
   override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }
   override def isKkVirkailija: Boolean = authorities.exists(_.startsWith("ROLE_APP_KKHAKUVIRKAILIJA"))
 }
 
-case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser
+//case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser
 
 
 

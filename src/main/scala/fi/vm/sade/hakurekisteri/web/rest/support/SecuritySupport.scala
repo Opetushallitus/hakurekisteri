@@ -4,7 +4,7 @@ import java.security.Principal
 import javax.servlet.http.HttpServletRequest
 
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.rest.support.{OPHUser, User}
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, User}
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.springframework.security.core.{Authentication, GrantedAuthority}
 
@@ -28,9 +28,12 @@ trait Security {
 class SpringSecurity extends Security {
   import scala.collection.JavaConverters._
 
+  private def userAgent(r: HttpServletRequest) = Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
+  private def inetAddress(r: HttpServletRequest) = Option(r.getHeader("X-Forwarded-For")).getOrElse(r.getRemoteAddr)
+
   override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
-    case a: Authentication => OPHUser(username(a), authorities(a).toSet)
-    case u: Principal => OPHUser(username(u), Set())
+    case a: Authentication => OPHUser(username(a), authorities(a).toSet,userAgent(request),inetAddress(request))
+    case u: Principal => OPHUser(username(u), Set(),userAgent(request),inetAddress(request))
   }
 
   def username(u: Principal): String = {
@@ -58,6 +61,6 @@ class TestSecurity extends Security {
 object TestUser extends User {
   override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
   override val username: String = "Test"
-
+  override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "", "")
   override def toString: String = ToStringBuilder.reflectionToString(this)
 }
