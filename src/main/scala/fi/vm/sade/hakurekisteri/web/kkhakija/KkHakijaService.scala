@@ -253,10 +253,13 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
 
-  private def getLukuvuosimaksut(hakukohdeOids: Seq[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] =
-    Future.sequence(hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession)).map(q => (valintaRekisteri ? q).mapTo[Seq[Lukuvuosimaksu]])).map(_.flatten)
+  private def getLukuvuosimaksut(hakukohdeOids: Seq[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
+    val querys = hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession))
 
-  private def getLukuvuosimaksu(q: LukuvuosimaksuQuery): Future[Lukuvuosimaksu] = (valintaRekisteri ? q).mapTo[Lukuvuosimaksu]
+    val maksutByHakukohde: Seq[Future[Seq[Lukuvuosimaksu]]] = querys.map(q => (valintaRekisteri ? q).mapTo[Seq[Lukuvuosimaksu]])
+    val sequenced: Future[Seq[Seq[Lukuvuosimaksu]]] = Future.sequence(maksutByHakukohde)
+    sequenced.map[Seq[Lukuvuosimaksu]](_.flatten)
+  }
 
   private def getHakemukset(haku: Haku, hakemus: FullHakemus, lukuvuosimaksu: Option[Lukuvuosimaksu], q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {
