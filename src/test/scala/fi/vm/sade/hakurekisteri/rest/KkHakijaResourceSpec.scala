@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
-import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaService, KkHakijaQuery, KkHakijaResource, KkHakijaUtil}
@@ -44,13 +44,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
   val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
+  val valintaRekisteri = system.actorOf(Props(new MockedValintarekisteriActor()))
   val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
   val hakupalvelu = new Hakupalvelu() {
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
     override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
   }
 
-  val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock)
+  val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri)
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")
 
@@ -300,6 +301,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   def testUser(user: String, organisaatioOid: String) = new User {
     override val username: String = user
+    override val auditSession = AuditSessionRequest(user, Set(organisaatioOid), "", "")
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
   }
 
@@ -339,6 +341,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     }
   }
 
+  class MockedValintarekisteriActor extends Actor {
+    override def receive: Actor.Receive = {
+      case _ =>
+        sender ! Seq.empty
+    }
+  }
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
       case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>

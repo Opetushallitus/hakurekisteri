@@ -154,6 +154,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     logLongQuery(result, url)
     result
   }
+
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
