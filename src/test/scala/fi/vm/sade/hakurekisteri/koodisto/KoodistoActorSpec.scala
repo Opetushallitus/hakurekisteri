@@ -5,7 +5,9 @@ import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, Koodisto, KoodistoActor}
+import org.junit.runner.RunWith
 import org.scalatest.Matchers
+import org.scalatest.junit.JUnitRunner
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
@@ -13,6 +15,7 @@ import org.scalatest.mock.MockitoSugar
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
+@RunWith(classOf[JUnitRunner])
 class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar {
   private val koodisto = "koodisto"
   private val koodiArvo = "arvo"
