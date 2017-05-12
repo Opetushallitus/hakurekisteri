@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutionException
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, FutureCache, PreconditionFailedException, VirkailijaRestClient}
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
@@ -73,15 +73,21 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   def getRinnasteinenKoodiArvo(q: GetRinnasteinenKoodiArvoQuery): Future[String] = {
     if (relaatioCache.contains(q)) relaatioCache.get(q)
     else {
-      restClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)(200, maxRetries)
-        .map(_.head.koodiUri).flatMap(uri => {
-          val fs = restClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", uri)(200, maxRetries)
-            .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
-              case None => throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodiurilla $uri")
-              case Some(k) => k.koodiArvo
-            })
-          relaatioCache + (q, fs)
-          fs
+      val url = OphUrlProperties.url("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)
+      restClient.readObjectFromUrl[Seq[Koodi]](url, 200, maxRetries)
+          .map(_.headOption.map(_.koodiUri)).flatMap(uriOpt => {
+            uriOpt match {
+              case Some(uri) =>
+                val fs = restClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", uri)(200, maxRetries)
+                  .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
+                    case None => throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodiurilla $uri")
+                    case Some(k) => k.koodiArvo
+                  })
+                relaatioCache + (q, fs)
+                fs
+              case _ =>
+                throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodistosta: $url")
+            }
         })
     }
   }
