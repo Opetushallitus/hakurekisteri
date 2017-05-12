@@ -73,8 +73,8 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   def getRinnasteinenKoodiArvo(q: GetRinnasteinenKoodiArvoQuery): Future[String] = {
     if (relaatioCache.contains(q)) relaatioCache.get(q)
     else {
-      val url = OphUrlProperties.url("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)
-      restClient.readObjectFromUrl[Seq[Koodi]](url, 200, maxRetries)
+      lazy val url = OphUrlProperties.url("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)
+      restClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)(200, maxRetries)
           .map(_.headOption.map(_.koodiUri)).flatMap(uriOpt => {
             uriOpt match {
               case Some(uri) =>
