@@ -104,7 +104,13 @@ case class Student(ssn: String, lastname: String, firstnames: String,
                    language: String,
                    exams: Seq[Exam])
 
-case class Exam(examId: String,examRole: String, period: Kausi, grade: String, points: Option[Int], sections: Seq[Section])
+case class Exam(examId: String,
+                examRoleLegacy: Option[String],
+                examRoleShort: String,
+                period: Kausi,
+                grade: String,
+                points: Option[Int],
+                sections: Seq[Section])
 
 case class Section(sectionId: String, sectionPoints: String)
 
@@ -133,9 +139,9 @@ object StudentToKokelas {
 
   def convert(oid: String, s: Student): Kokelas = {
     val suoritus: VirallinenSuoritus = toYoTutkinto(oid, s)
-    val yoTodistus = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRole, exam.period.toLocalDate))
+    val yoTodistus = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate))
     val osakokeet = s.exams.flatMap(exam => exam.sections.map(section => {
-      Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRole, exam.period.toLocalDate)
+      Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate)
     }))
     Kokelas(oid,suoritus,None,yoTodistus,osakokeet)
   }
