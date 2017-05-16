@@ -8,10 +8,12 @@ import fi.vm.sade.scalaproperties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.json4s.NoTypeHints
 import org.json4s.jackson.Serialization
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.slf4j.LoggerFactory
 
-
+@RunWith(classOf[JUnitRunner])
 class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   private val logger = LoggerFactory.getLogger(getClass)
   val config = ytlProperties.addDefault("ytl.http.buffersize", "128")
@@ -20,7 +22,8 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
 
   test("zip to students") {
     var bytesRead = 0
-    val p = Zip.toInputStreams(new ZipInputStream(getClass.getResource("/student-results.zip").openStream())).map(ProgressInputStream(bytesRead += _))
+
+    val p = Iterator(getClass.getResource("/s.json").openStream()).map(ProgressInputStream(bytesRead += _))
 
     val students = ytlHttpFetch.streamToStudents(p).map(_._2)
     bytesRead should equal (0)
