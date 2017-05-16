@@ -64,7 +64,8 @@ class YtlJsonSpec extends ScalatraFunSuite {
       |      "exams": [
       |        {
       |          "examId": "A",
-      |          "examRole": 11,
+      |          "examRoleShort": "mother-tongue",
+      |          "examRoleLegacy": "11",
       |          "period": "2015K",
       |          "grade": "M",
       |          "points": 80,
