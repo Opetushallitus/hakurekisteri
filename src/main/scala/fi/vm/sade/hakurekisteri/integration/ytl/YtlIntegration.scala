@@ -137,12 +137,17 @@ class YtlIntegration(config: OphProperties,
     } else {
       logger.info(s"Starting sync all!")
       audit.log(message("Ytl sync started!"))
-      val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeKKHakuOids.get()
-        .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
-
-      Future.sequence(hakemusFutures).onComplete {
+      def fetchInChunks(hakuOids: Set[String]): Future[Set[HetuPersonOid]] = {
+        def fetchChunk(chunk: Set[String]): Future[Set[HetuPersonOid]] = {
+          Future.sequence(chunk.map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))).map(_.flatten)
+        }
+        hakuOids.grouped(10).foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
+          case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
+        }
+      }
+      fetchInChunks(activeKKHakuOids.get()).onComplete {
         case Success(persons) =>
-          handleHakemukset(currentStatus.uuid, persons.flatten)
+          handleHakemukset(currentStatus.uuid, persons)
 
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
