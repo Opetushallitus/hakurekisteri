@@ -1,0 +1,107 @@
+[
+  {
+    "ssn": "200495-9177",
+    "unexpectedfield": 1234,
+    "lastname": "Testinen",
+    "firstnames": "Jussi Johannes",
+    "graduationPeriod": "2015K",
+    "graduationDate": "2016-06-04",
+    "graduationSchoolOphOid": "1.2.33.44444",
+    "graduationSchoolYtlNumber": "1234",
+    "language": "fi",
+    "exams": [
+      {
+        "examId": "A",
+        "examRoleShort": "mother-tongue",
+        "period": "2015K",
+        "grade": "M",
+        "points": 65,
+        "sections": null
+      }
+    ]
+  },
+  {
+    "ssn": "200495-9177",
+    "unexpectedfield": 1234,
+    "lastname": "Testinen",
+    "firstnames": "Jussi Johannes",
+    "graduationPeriod": "2015K",
+    "graduationDate": "2016-06-04",
+    "graduationSchoolOphOid": "1.2.33.44444",
+    "graduationSchoolYtlNumber": "1234",
+    "language": "fi",
+    "exams": [
+      {
+        "examId": "A",
+        "examRoleShort": "mother-tongue",
+        "period": "2015K",
+        "grade": "M",
+        "points": 65,
+        "sections": null
+      }
+    ]
+  },
+  {
+    "ssn": "200495-9177",
+    "unexpectedfield": 1234,
+    "lastname": "Testinen",
+    "firstnames": "Jussi Johannes",
+    "graduationPeriod": "2015K",
+    "graduationDate": "2016-06-04",
+    "graduationSchoolOphOid": "1.2.33.44444",
+    "graduationSchoolYtlNumber": "1234",
+    "language": "fi",
+    "exams": [
+      {
+        "examId": "A",
+        "examRoleShort": "mother-tongue",
+        "period": "2015K",
+        "grade": "M",
+        "points": 65,
+        "sections": null
+      }
+    ]
+  },
+  {
+    "ssn": "200495-9177",
+    "unexpectedfield": 1234,
+    "lastname": "Testinen",
+    "firstnames": "Jussi Johannes",
+    "graduationPeriod": "2015K",
+    "graduationDate": "2016-06-04",
+    "graduationSchoolOphOid": "1.2.33.44444",
+    "graduationSchoolYtlNumber": "1234",
+    "language": "fi",
+    "exams": [
+      {
+        "examId": "A",
+        "examRoleShort": "mother-tongue",
+        "period": "2015K",
+        "grade": "M",
+        "points": 65,
+        "sections": null
+      }
+    ]
+  },
+  {
+    "ssn": "200495-9177",
+    "unexpectedfield": 1234,
+    "lastname": "Testinen",
+    "firstnames": "Jussi Johannes",
+    "graduationPeriod": "2015K",
+    "graduationDate": "2016-06-04",
+    "graduationSchoolOphOid": "1.2.33.44444",
+    "graduationSchoolYtlNumber": "1234",
+    "language": "fi",
+    "exams": [
+      {
+        "examId": "A",
+        "examRoleShort": "mother-tongue",
+        "period": "2015K",
+        "grade": "M",
+        "points": 65,
+        "sections": null
+      }
+    ]
+  }
+]
