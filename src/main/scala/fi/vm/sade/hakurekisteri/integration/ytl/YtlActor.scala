@@ -9,7 +9,6 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time._
@@ -17,7 +16,7 @@ import org.joda.time._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
+class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var haut = Set[String]()
@@ -73,12 +72,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
           log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
       }
 
-  }
-
-  def resolveOidFromHenkiloPalvelu(hetu: String): Future[String] =
-  {
-    implicit val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
-    (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].map(_.oidHenkilo).flatMap(Future.successful)
   }
 }
 

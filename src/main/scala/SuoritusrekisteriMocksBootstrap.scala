@@ -37,7 +37,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
     context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
     context.mount(new OrganizationProxyServlet(system), "/organisaatio-service")
-    context.mount(new AuthenticationProxyServlet(system), "/authentication-service")
+    context.mount(new OppijanumerorekisteriProxyServlet(system), "/oppijanumerorekisteri-service")
     context.mount(new KoodistoProxyServlet(system), "/koodisto-service")
     context.mount(new LocalizationMockServlet(system), "/lokalisointi")
     context.mount(new CasMockServlet(system), "/cas")
@@ -63,25 +63,25 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class AuthenticationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
-    get("/buildversion.txt") {
+  class OppijanumerorekisteriProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
+    get("/cas/prequel") {
       contentType = "text/plain"
-      "artifactId=authentication-service\nmocked"
+      "ok"
     }
 
-    get("/resources/henkilo/:oid") {
+    get("/henkilo/:oid") {
       new AsyncResult() {
         override val is = henkiloByOid(params("oid"))
       }
     }
 
-    get("/resources/henkilo") {
+    get("/henkilo/hakutermi=:hakutermi") {
       new AsyncResult() {
-        override val is = henkiloByQparam(params("q"))
+        override val is = henkiloByQparam(params("hakutermi"))
       }
     }
 
-    post("/resources/henkilo/henkilotByHenkiloOidList") {
+    post("/henkilo/henkilotByHenkiloOidList") {
       new AsyncResult() {
         val parsedBody = parse(request.body)
         override val is = henkilotByOidList(parsedBody.extract[List[String]])

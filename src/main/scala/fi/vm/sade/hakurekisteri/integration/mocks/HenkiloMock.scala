@@ -17,8 +17,8 @@ object HenkiloMock {
   }
 
   def getHenkiloByQParam(q: String): String = {
-    if (q.equals("123456-789")) getResourceJson("/mock-data/henkilo/henkilo-aarne-hetuhaku.json")
-    else if (q.equals("1.2.246.562.24.71944845619")) getResourceJson("/mock-data/henkilo/henkilo-aarne-hetuhaku.json")
+    if (q.equals("123456-789")) getResourceJson("/mock-data/henkilo/henkilo-aarne.json")
+    else if (q.equals("1.2.246.562.24.71944845619")) getResourceJson("/mock-data/henkilo/henkilo-aarne.json")
     else if (q.equals("1.2.246.562.24.98743797763")) getResourceJson("/mock-data/henkilo/henkilo-tyyne.json")
     else getResourceJson("/mock-data/henkilo/henkilo-empty.json")
   }

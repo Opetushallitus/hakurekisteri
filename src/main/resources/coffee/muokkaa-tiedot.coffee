@@ -218,7 +218,7 @@ app.factory "MuokkaaTiedot", [
         ("#{$scope.formatLaji(suoritus.laji)}\t#{suoritus.nimi or ""}\t#{$scope.formatArvosana(suoritus.arvosana, suoritus.asteikko)}\t#{suoritus.laajuus or ""}\t#{$scope.formatMyontaja(suoritus.organisaatio, suoritus.myontaja)}\t#{suoritus.suoritusPvm or ""}\n" for suoritus in suoritukset).join("")
 
       fetchHenkilotiedot = ->
-        $http.get(window.url("authentication-service.henkilo", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
+        $http.get(window.url("oppijanumerorekisteri-service.henkilo", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
           jQuery.extend($scope.henkilo, henkilo)  if henkilo
           return
         ).error ->

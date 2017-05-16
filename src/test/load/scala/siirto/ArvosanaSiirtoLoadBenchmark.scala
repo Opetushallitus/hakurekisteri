@@ -263,14 +263,6 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
       case SaveHenkilo(_, tunniste) =>
         log.debug(s"saving $tunniste")
         sender ! SavedHenkilo("1.2.3.4.5", tunniste)
-
-      case HenkiloQuery(Some(oid), _ , tunniste) =>
-        log.debug(s"checking $oid")
-        sender ! FoundHenkilos(Seq(Henkilo(oid, None, "", None, None, None, None, None)), tunniste)
-
-      case HenkiloQuery(None, _ , tunniste) =>
-        log.debug(s"checking $tunniste")
-        sender ! FoundHenkilos(Seq(Henkilo("1.2.3.4.5", None, "", None, None, None, None, None)), tunniste)
     }
   }
 

@@ -3,7 +3,10 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import org.apache.commons.httpclient.HttpStatus
+import org.json4s.jackson.JsonMethods._
+import org.json4s.{DefaultFormats, _}
 import support.PersonAliasesProvider
 
 import scala.collection.Iterator
@@ -25,6 +28,8 @@ trait IOppijaNumeroRekisteri {
   def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
     fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases(henkiloOids, _))
   }
+
+  def getByHetu(hetu: String): Future[Henkilo]
 }
 
 object IOppijaNumeroRekisteri {
@@ -63,9 +68,15 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
       }).toMap
     })
   }
+
+  override def getByHetu(hetu: String): Future[Henkilo] = {
+    logger.debug(s"Querying with hetu ${hetu.substring(0, 6)}XXXX")
+    client.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(acceptedResponseCode = HttpStatus.SC_OK)
+  }
 }
 
 object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
+  implicit val formats = DefaultFormats
   val linkedTestPersonOids = Seq("1.2.246.562.24.58099330694", "1.2.246.562.24.67587718272")
 
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
@@ -76,6 +87,11 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
         (queriedOid, Set(queriedOid))
       }
     }.toMap)
+  }
+
+  def getByHetu(hetu: String): Future[Henkilo] = {
+    val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
+    Future.successful(json.extract[Henkilo])
   }
 }
 

@@ -419,7 +419,7 @@ app.controller "HakeneetCtrl", [
 
     $scope.searchHenkilo = ->
       if $scope.oppijanumero and $scope.oppijanumero.trim().match(/[0-9.]{11,30}/)
-        $http.get(window.url("authentication-service.henkilo", $scope.oppijanumero.trim()),
+        $http.get(window.url("oppijanumerorekisteri-service.henkilo", $scope.oppijanumero.trim()),
           cache: true,
           headers: { 'External-Permission-Service': 'SURE' }
         ).then (res) ->
