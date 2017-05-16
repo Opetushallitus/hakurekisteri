@@ -114,6 +114,7 @@ object Timer {
 }
 
 trait Koe {
+  def isValinnainenRooli(aineyhdistelmarooli: String) = aineyhdistelmarooli != null && aineyhdistelmarooli.equals("optional-subject")
   def toArvosana(suoritus: Suoritus with Identified[UUID]): Arvosana
 }
 case class Aine(aine: String, lisatiedot: String)
@@ -223,22 +224,17 @@ object YoTutkinto {
 }
 private object Koe {
   private val ACCEPTED_ROLES = Set("mother-tongue", "mandatory-subject", "optional-subject")
-  def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[String]): Map[String, String] = {
+  def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int]): Map[String, String] = {
     if(!ACCEPTED_ROLES.contains(aineyhdistelmarooli)) {
       throw new RuntimeException(s"Invalid 'aineyhdistelmarooli' ${aineyhdistelmarooli}")
     }
-    aineyhdistelmarooliLegacy.foreach(role => {
-      Try(role.toInt).recoverWith {
-        throw new RuntimeException(s"Invalid 'aineyhdistelmarooliLegacy' ${aineyhdistelmarooliLegacy}")
-      }
-    })
-    val legacyArvot = aineyhdistelmarooliLegacy.map(rooli => Map("aineyhdistelmarooliLegacy" -> rooli)).getOrElse(Map())
+    val legacyArvot = aineyhdistelmarooliLegacy.map(rooli => Map("aineyhdistelmarooliLegacy" -> rooli.toString)).getOrElse(Map())
     Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli) ++ legacyArvot
   }
 }
-case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[String], myonnetty: LocalDate) extends Koe {
+case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
-  val isValinnainen = aineyhdistelmarooli != null && aineyhdistelmarooli.toInt >= 60
+  val isValinnainen = isValinnainenRooli(aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
     Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String,
@@ -250,9 +246,9 @@ case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, a
   }
 }
 
-case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[String], myonnetty: LocalDate) extends Koe {
+case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
-  val isValinnainen = aineyhdistelmarooli != null && aineyhdistelmarooli.toInt >= 60
+  val isValinnainen = isValinnainenRooli(aineyhdistelmarooli) //
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
     Arvosana(suoritus.id, arvio, aine.aine: String,

@@ -105,7 +105,7 @@ case class Student(ssn: String, lastname: String, firstnames: String,
                    exams: Seq[Exam])
 
 case class Exam(examId: String,
-                examRoleLegacy: Option[String],
+                examRoleLegacy: Option[Int],
                 examRoleShort: String,
                 period: Kausi,
                 grade: String,
