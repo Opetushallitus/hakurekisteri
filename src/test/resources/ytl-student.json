@@ -12,7 +12,8 @@
       "examId": "PS",
       "examNameFi": "Psykologia",
       "examNameSv": "Psykologi",
-      "examRole": "41",
+      "examRoleShort": "mother-tongue",
+      "examRoleLegacy": "41",
       "grade": "I",
       "points": 6,
       "sections": [
@@ -27,7 +28,8 @@
       "examId": "EA",
       "examNameFi": "Englanti, pitkä",
       "examNameSv": "Engelska, lång",
-      "examRole": "31",
+      "examRoleShort": "mother-tongue",
+      "examRoleLegacy": "31",
       "grade": "B",
       "points": 134,
       "sections": [
@@ -58,7 +60,8 @@
       "examId": "TE",
       "examNameFi": "Terveystieto",
       "examNameSv": "Hälsokunskap",
-      "examRole": "71",
+      "examRoleShort": "mother-tongue",
+      "examRoleLegacy": "71",
       "grade": "A",
       "points": 15,
       "sections": [

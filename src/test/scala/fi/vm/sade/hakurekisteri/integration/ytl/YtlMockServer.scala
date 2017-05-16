@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.UUID
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest, HttpServlet}
 
+import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.apache.commons.io.IOUtils
@@ -77,7 +78,8 @@ class YtlMockServlet extends HttpServlet {
         "status": null}""";
         resp.getWriter().print(s"$json\n")
       case downloadBulk(uuid) => {
-        val source = getClass.getResource("/student-results.zip").openStream()
+
+        val source = Zip.zipit(getClass.getResource("/s.json").openStream())
         val writer = resp.getOutputStream
         IOUtils.copy(source, writer)
         IOUtils.closeQuietly(source)
