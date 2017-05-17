@@ -87,7 +87,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     parser.feedChunk(data).flatMap {
       case (json, Success(student)) => Some(json, student)
       case (json, Failure(e)) =>
-        log.error(s"Unable to parse student from YTL data! ${e.getMessage}")
+        log.error(s"Unable to parse student from YTL data! ${e.getMessage} , json: $json")
         None
     }
   }
