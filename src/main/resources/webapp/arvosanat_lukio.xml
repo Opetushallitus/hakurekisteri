@@ -2,7 +2,7 @@
 <arvosanat xmlns:p="http://service.koodisto.sade.vm.fi/types/koodisto"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:noNamespaceSchemaLocation="arvosanat.xsd">
-    <eranTunniste>PKERA3_2015S_00256</eranTunniste>
+    <eranTunniste>PKERA3_2017S_00256</eranTunniste>
     <henkilot>
         <henkilo>
             <hetu>010101-XXXX</hetu>
@@ -13,7 +13,7 @@
                 <lukio>
                     <myontaja>00256</myontaja>
                     <suorituskieli>FI</suorituskieli>
-                    <valmistuminen>2015-06-01</valmistuminen>
+                    <valmistuminen>2017-06-03</valmistuminen>
                     <AI>
                         <yhteinen>5</yhteinen>
                         <tyyppi>FI</tyyppi>

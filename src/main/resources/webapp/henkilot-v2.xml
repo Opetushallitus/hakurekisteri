@@ -19,7 +19,7 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <perusopetus>
-                <valmistuminen>2016-05-30</valmistuminen>
+                <valmistuminen>2017-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>
@@ -41,7 +41,7 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <valma>
-                <valmistuminen>2016-06-04</valmistuminen>
+                <valmistuminen>2017-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>
@@ -64,19 +64,19 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <ulkomainen>
-                <valmistuminen>2014-06-04</valmistuminen>
+                <valmistuminen>2015-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>
             </ulkomainen>
             <maahanmuuttajienammvalmistava>
-                <valmistuminen>2015-06-04</valmistuminen>
+                <valmistuminen>2016-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>VALMIS</tila>
             </maahanmuuttajienammvalmistava>
             <valma>
-                <valmistuminen>2016-06-04</valmistuminen>
+                <valmistuminen>2017-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>
@@ -97,14 +97,14 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <perusopetus>
-                <valmistuminen>2015-06-04</valmistuminen>
+                <valmistuminen>2016-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>VALMIS</tila>
                 <yksilollistaminen>EI</yksilollistaminen>
             </perusopetus>
             <perusopetuksenlisaopetus>
-                <valmistuminen>2016-06-04</valmistuminen>
+                <valmistuminen>2017-06-03</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>

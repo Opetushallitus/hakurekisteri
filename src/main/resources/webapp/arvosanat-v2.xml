@@ -2,7 +2,7 @@
 <arvosanat xmlns:p="http://service.koodisto.sade.vm.fi/types/koodisto"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:noNamespaceSchemaLocation="arvosanat.xsd">
-    <eranTunniste>PKERA3_2016S_05127</eranTunniste>
+    <eranTunniste>PKERA3_2017S_05127</eranTunniste>
     <henkilot>
         <henkilo>
             <hetu>111111-XXXX</hetu>
@@ -13,7 +13,7 @@
                 <perusopetus>
                     <myontaja>05127</myontaja>
                     <suorituskieli>FI</suorituskieli>
-                    <valmistuminen>2015-05-30</valmistuminen>
+                    <valmistuminen>2016-05-30</valmistuminen>
                     <AI>
                         <yhteinen>5</yhteinen>
                         <tyyppi>FI</tyyppi>
@@ -77,7 +77,7 @@
                 <valma>
                     <myontaja>05127</myontaja>
                     <suorituskieli>FI</suorituskieli>
-                    <valmistuminen>2016-05-30</valmistuminen>
+                    <valmistuminen>2017-06-03</valmistuminen>
                     <AI>
                         <yhteinen>5</yhteinen>
                         <tyyppi>FI</tyyppi>
