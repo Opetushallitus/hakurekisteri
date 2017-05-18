@@ -216,13 +216,156 @@ object YoTutkinto {
   }
 }
 private object Koe {
-  private val ACCEPTED_ROLES = Set("mother-tongue", "mandatory-subject", "optional-subject")
+  private val EXAM_ROLE_CONVERTER: Map[String, Map[String, String]] = Map("mother-tongue" -> Map(
+    "A" -> "11",
+    "Z" -> "11",
+    "O" -> "11",
+    "W" -> "11",
+    "I" -> "11",
+    "J" -> "13",
+    "A5" -> "14",
+    "O5" -> "14"
+  ), "mandatory-subject" -> Map("CA" -> "21",
+    "S2" -> "21",
+    "T1" -> "21",
+    "E2" -> "21",
+    "P1" -> "21",
+    "F1" -> "21",
+    "CB" -> "21",
+    "V2" -> "21",
+    "S1" -> "21",
+    "P2" -> "21",
+    "V1" -> "21",
+    "G2" -> "21",
+    "F2" -> "21",
+    "T2" -> "21",
+    "E1" -> "21",
+    "H2" -> "21",
+    "BB" -> "21",
+    //"RR","21",
+    //"VC","21",
+    //"PA","21",
+    //"M","21",
+    //"FA","21",
+    //"N","21",
+    //"SC","21",
+    //"SA","21",
+    //"BA","21",
+    //"PC","21",
+    //"EA","21",
+    //"FC","21",
+    //"TC","21",
+    //"VA","21",
+    //"EC","21",
+    /* END OF 21 */
+
+    "O" -> "22",
+    "W" -> "22",
+    "Z" -> "22",
+    "A" -> "22",
+    /* END OF 22 */
+    "PC" -> "31",
+    "DC" -> "31",
+    "TC" -> "31",
+    "SC" -> "31",
+    "SA" -> "31",
+    "BA" -> "31",
+    //"BB","31",
+    "FC" -> "31",
+    "EA" -> "31",
+    "PA" -> "31",
+    "L1" -> "31",
+    "VC" -> "31",
+    "CC" -> "31",
+    "EB" -> "31",
+    "EC" -> "31",
+    "S9" -> "31",
+    "L7" -> "31",
+    "VA" -> "31",
+    "FA" -> "31",
+    /* END OF 31 */
+
+    "UE" -> "41",
+    "RY" -> "41",
+    "HI" -> "41",
+    "GE" -> "41",
+    "PS" -> "41",
+    "YH" -> "41",
+    "FY" -> "41",
+    "RO" -> "41",
+    "TE" -> "41",
+    "BI" -> "41",
+    "KE" -> "41",
+    "FF" -> "41",
+    "UO" -> "41",
+    "ET" -> "41",
+    "RR" -> "41",
+    "M" -> "41",
+    "N" -> "41"
+  ), "optional-subject" -> Map("A" -> "60",
+    "O" -> "60",
+    "Z" -> "60",
+    /* END OF 60 */
+    "L7" -> "61",
+    "VA" -> "61",
+    "IC" -> "61",
+    "L1" -> "61",
+    "VC" -> "61",
+    "EB" -> "61",
+    "PC" -> "61",
+    "DC" -> "61",
+    "SA" -> "61",
+    "S9" -> "61",
+    "EC" -> "61",
+    "FA" -> "61",
+    "KC" -> "61",
+    "TC" -> "61",
+    "GC" -> "61",
+    "QC" -> "61",
+    "P2" -> "61",
+    "EA" -> "61",
+    "FC" -> "61",
+    "PA" -> "61",
+    "SC" -> "61",
+    /* END OF 61 */
+    "CA" -> "62",
+    "BB" -> "62",
+    "A5" -> "62",
+    "BA" -> "62",
+    "CB" -> "62",
+    /* END OF 71 */
+    "RR" -> "71",
+    "PS" -> "71",
+    "UE" -> "71",
+    "GE" -> "71",
+    "RY" -> "71",
+    "KE" -> "71",
+    "FF" -> "71",
+    "YH" -> "71",
+    "HI" -> "71",
+    "ET" -> "71",
+    "TE" -> "71",
+    "RO" -> "71",
+    "FY" -> "71",
+    "UO" -> "71",
+    "BI" -> "71",
+    /* END OF 71 */
+    "M" -> "81",
+    "N" -> "81"
+  ))
+
+  private def convertToOldRole(id: String, newRole: String): String = {
+    val v: Map[String, String] = EXAM_ROLE_CONVERTER.getOrElse(newRole, throw new RuntimeException(s"Unrecognized examRole: ${newRole}"))
+    v.getOrElse(id, throw new RuntimeException(s"Unrecognized examRole and examId pair: ${newRole} => ${id}"))
+  }
+
   def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int]): Map[String, String] = {
-    if(!ACCEPTED_ROLES.contains(aineyhdistelmarooli)) {
-      throw new RuntimeException(s"Invalid 'aineyhdistelmarooli' ${aineyhdistelmarooli}")
+    aineyhdistelmarooliLegacy match {
+      case Some(oldRooli) =>
+        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> oldRooli.toString, "aineyhdistelmarooliShort" -> aineyhdistelmarooli)
+      case _ =>
+        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> convertToOldRole(koetunnus, aineyhdistelmarooli), "aineyhdistelmarooliShort" -> aineyhdistelmarooli)
     }
-    val legacyArvot = aineyhdistelmarooliLegacy.map(rooli => Map("aineyhdistelmarooliLegacy" -> rooli.toString)).getOrElse(Map())
-    Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli) ++ legacyArvot
   }
 }
 case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
