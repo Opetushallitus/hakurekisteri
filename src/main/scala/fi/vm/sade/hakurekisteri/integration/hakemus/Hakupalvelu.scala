@@ -81,9 +81,10 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
       case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
-          hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(hs => hs.filter(_.stateValid))
+          hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio)
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
-        } yield hakemukset.map { hakemus =>
+        } yield hakemukset.filter(_.stateValid)
+          .map { hakemus =>
               val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
               AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData)
           }
@@ -94,13 +95,12 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
           hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
           hakijat <- Future.sequence(for {
             (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
-            hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
+            f = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
-            suorituksetByOpiskelija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
-            hakijaSuorituksetMap <- suorituksetByOpiskelija
-            (haku, lisakysymykset) <- hakuJaLisakysymykset
+            hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid.get, hakemukset)
+            (haku, lisakysymykset) <- f
           } yield {
             val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
             AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)

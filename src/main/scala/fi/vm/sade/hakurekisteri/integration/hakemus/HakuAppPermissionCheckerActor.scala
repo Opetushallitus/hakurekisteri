@@ -33,12 +33,12 @@ class HakuAppPermissionCheckerActor(client: VirkailijaRestClient, organisaatioAc
 
       allOrgs.flatMap(orgs => {
         client.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
+          acceptedResponseCode,
           PermissionRequest(
             personOidsForSamePerson = Seq(forPerson),
             organisationOids = orgs.toSeq,
             loggedInUserRoles = Seq()
-          ),
-          acceptedResponseCode
+          )
         ).map(_.accessAllowed.getOrElse(false))
       }) pipeTo sender
   }

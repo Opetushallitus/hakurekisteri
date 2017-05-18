@@ -96,13 +96,13 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
 
   def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]] = {
     for (
-      hakemukset <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(Set(personOid))
+      hakemukset <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, Set(personOid))
     ) yield hakemukset.getOrElse(personOid, Seq[FullHakemus]())
   }
 
   def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]] = {
     for (
-      hakemuksetByPerson <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(personOids)
+      hakemuksetByPerson <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, personOids)
     ) yield hakemuksetByPerson.values.flatten.filter(_.applicationSystemId == hakuOid).toSeq
   }
 
@@ -121,19 +121,20 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
   }
 
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = {
-    restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(ListFullSearchDto.suoritusvuosi(hakukohdeOid, hakuOid))
+    restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
+      ListFullSearchDto.suoritusvuosi(hakukohdeOid, hakuOid))
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
-    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio.orNull)(Set(hakuOid))
+    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio.orNull)(200, Set(hakuOid))
   }
 
   def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]] = {
-    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(Set(hakukohdeOid))
+    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
   }
 
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]] =
-    restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(
+    restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
       ListFullSearchDto.hetuPersonOid(hakuOid)).flatMap { hakemukset =>
         Future {
           hakemukset
