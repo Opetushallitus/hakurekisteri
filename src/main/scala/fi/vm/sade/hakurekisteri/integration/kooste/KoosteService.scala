@@ -24,13 +24,13 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)
   def getSuoritukset(hakuOid: String, hakemus: FullHakemus): Future[Map[String,String]] = {
     val opiskelijaOid = hakemus.personOid.get
     logger.info(s"Get suoritukset for single hakemus for haku $hakuOid")
-    restClient.postObject[FullHakemus, Map[String,String]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid, opiskelijaOid)(200, hakemus)
+    restClient.postObject[FullHakemus, Map[String,String]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid, opiskelijaOid)(hakemus, 200, 204)
   }
 
   def getSuoritukset(hakuOid: String, hakemukset: Seq[FullHakemus]): Future[Map[String,Map[String,String]]] = {
     val hakemusHakijat: Seq[HakemusHakija] = hakemukset.map(h => HakemusHakija(h.personOid.get, h))
     logger.info(s"Get suoritukset for ${hakemukset.size} hakemukset for haku $hakuOid")
-    restClient.postObject[Seq[HakemusHakija], Map[String,Map[String,String]]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid)(200, hakemusHakijat)
+    restClient.postObject[Seq[HakemusHakija], Map[String,Map[String,String]]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid)(hakemusHakijat, 200, 204)
   }
 
   case class HakemusHakija(opiskelijaOid: String, hakemus: FullHakemus)

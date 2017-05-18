@@ -148,9 +148,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     result
   }
 
-  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
+  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(resource: A, acceptedResponseCodes: Int*): Future[B] = {
     val url = OphUrlProperties.url(uriKey, args:_*)
-    val result = Client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
+    val result = Client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource))
     logLongQuery(result, url)
     result
   }

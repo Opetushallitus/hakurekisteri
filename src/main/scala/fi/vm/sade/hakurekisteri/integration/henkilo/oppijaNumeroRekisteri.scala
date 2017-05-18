@@ -56,7 +56,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     val queryObject: Map[String, Set[String]] = Map("henkiloOids" -> henkiloOids)
     logger.debug(s"Querying with $queryObject")
 
-    client.postObject[Map[String, Set[String]], Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids")(resource = queryObject, acceptedResponseCode = HttpStatus.SC_OK).map(viitteet => {
+    client.postObject[Map[String, Set[String]], Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids")(resource = queryObject).map(viitteet => {
       val masterOids = viitteet.map(_.masterOid)
       val linkedOids = viitteet.map(_.henkiloOid)
       val viitteetByMasterOid = viitteet.groupBy(_.masterOid).map(kv => (kv._1, kv._2.map(_.henkiloOid)))

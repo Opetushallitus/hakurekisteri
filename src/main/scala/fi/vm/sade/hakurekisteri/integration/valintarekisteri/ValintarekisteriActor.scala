@@ -18,8 +18,6 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
 
   implicit val ec: ExecutionContext = context.dispatcher
 
-  private val ok = 200
-
   override def receive: Receive = {
     case LukuvuosimaksuQuery(hakukohdeOid, auditSession) =>
       fetchLukuvuosimaksut(hakukohdeOid, auditSession) pipeTo sender
@@ -28,10 +26,10 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
       fetchEnsimmainenVastaanotto(henkiloOids, koulutuksenAlkamiskausi) pipeTo sender
   }
   def fetchLukuvuosimaksut(hakukohdeOid: String, auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
-    restClient.postObject[Map[String, AuditSessionRequest], Seq[Lukuvuosimaksu]]("valinta-tulos-service.lukuvuosimaksu", hakukohdeOid)(ok, Map("auditSession" -> auditSession))
+    restClient.postObject[Map[String, AuditSessionRequest], Seq[Lukuvuosimaksu]]("valinta-tulos-service.lukuvuosimaksu", hakukohdeOid)(Map("auditSession" -> auditSession))
   }
   def fetchEnsimmainenVastaanotto(henkiloOids: Set[String], koulutuksenAlkamiskausi: String): Future[Seq[EnsimmainenVastaanotto]] = {
-    restClient.postObject[Set[String], Seq[EnsimmainenVastaanotto]]("valinta-tulos-service.ensikertalaisuus", koulutuksenAlkamiskausi)(ok, henkiloOids)
+    restClient.postObject[Set[String], Seq[EnsimmainenVastaanotto]]("valinta-tulos-service.ensikertalaisuus", koulutuksenAlkamiskausi)(henkiloOids)
   }
 }
 
