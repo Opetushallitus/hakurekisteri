@@ -8,6 +8,8 @@ import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, Executor
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, Security}
 import fi.vm.sade.scalaproperties.OphProperties
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -16,6 +18,7 @@ import org.scalatest.FlatSpec
 
 import scala.concurrent.Future
 
+@RunWith(classOf[JUnitRunner])
 class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMockFixture with MockFactory {
   implicit val system = ActorSystem()
   implicit val clientEc = ExecutorUtil.createExecutor(1, "ytl-resource-test-pool")

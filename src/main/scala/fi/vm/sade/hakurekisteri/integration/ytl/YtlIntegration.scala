@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.Set
 import scala.concurrent._
-import scala.util.{Failure, Success}
+import scala.util.{Try, Failure, Success}
 
 case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeeded: Option[Boolean]) {
   def inProgress = end.isEmpty
@@ -174,9 +174,14 @@ class YtlIntegration(config: OphProperties,
           logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count!")
           students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
             case Some(personOid) =>
-              Some(StudentToKokelas.convert(personOid, student))
+              Try(StudentToKokelas.convert(personOid, student)) match {
+                case Success(student) => Some(student)
+                case Failure(exception) =>
+                  logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}")
+                  None
+              }
             case None =>
-              logger.error(s"Skipping student as SSN didnt match any person OID")
+              logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
               None
           }
           ).foreach(persistKokelas)

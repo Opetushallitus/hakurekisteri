@@ -15,6 +15,7 @@ import org.joda.time._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.Try
 
 class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
@@ -106,6 +107,7 @@ object Timer {
 }
 
 trait Koe {
+  def isValinnainenRooli(aineyhdistelmarooli: String) = aineyhdistelmarooli != null && aineyhdistelmarooli.equals("optional-subject")
   def toArvosana(suoritus: Suoritus with Identified[UUID]): Arvosana
 }
 case class Aine(aine: String, lisatiedot: String)
@@ -213,23 +215,41 @@ object YoTutkinto {
       lahde = YTL)
   }
 }
-case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
+private object Koe {
+  private val ACCEPTED_ROLES = Set("mother-tongue", "mandatory-subject", "optional-subject")
+  def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int]): Map[String, String] = {
+    if(!ACCEPTED_ROLES.contains(aineyhdistelmarooli)) {
+      throw new RuntimeException(s"Invalid 'aineyhdistelmarooli' ${aineyhdistelmarooli}")
+    }
+    val legacyArvot = aineyhdistelmarooliLegacy.map(rooli => Map("aineyhdistelmarooliLegacy" -> rooli.toString)).getOrElse(Map())
+    Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli) ++ legacyArvot
+  }
+}
+case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
-  val isValinnainen = aineyhdistelmarooli != null && aineyhdistelmarooli.toInt >= 60
-  val lahdeArvot = Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli)
+  val isValinnainen = isValinnainenRooli(aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String, Some(aine.lisatiedot), isValinnainen: Boolean, Some(myonnetty), YoTutkinto.YTL, lahdeArvot)
+    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String,
+      Some(aine.lisatiedot),
+      isValinnainen: Boolean,
+      Some(myonnetty),
+      YoTutkinto.YTL,
+      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy))
   }
 }
 
-case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
+case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
-  val isValinnainen = aineyhdistelmarooli != null && aineyhdistelmarooli.toInt >= 60
-  val lahdeArvot = Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli)
+  val isValinnainen = isValinnainenRooli(aineyhdistelmarooli) //
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
-    Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), isValinnainen: Boolean, Some(myonnetty), YoTutkinto.YTL, lahdeArvot)
+    Arvosana(suoritus.id, arvio, aine.aine: String,
+      Some(aine.lisatiedot),
+      isValinnainen: Boolean,
+      Some(myonnetty),
+      YoTutkinto.YTL,
+      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy))
   }
 }
 
