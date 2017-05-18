@@ -81,9 +81,9 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
       case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
-          hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio)
+          hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
-        } yield hakemukset.filter(_.stateValid)
+        } yield hakemukset
           .map { hakemus =>
               val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
               AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData)
@@ -95,12 +95,13 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
           hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
           hakijat <- Future.sequence(for {
             (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
-            f = hakuAndLisakysymykset(hakuOid.get)
+            hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
+            suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
-            hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid.get, hakemukset)
-            (haku, lisakysymykset) <- f
+            hakijaSuorituksetMap <- suorituksetByOppija
+            (haku, lisakysymykset) <- hakuJaLisakysymykset
           } yield {
             val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
             AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)
