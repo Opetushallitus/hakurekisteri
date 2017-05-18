@@ -45,7 +45,8 @@ trait ArvosanaSwaggerModel extends OldSwaggerSyntax {
 
   val lahdeArvotFields = Seq(
     ModelField("koetunnus", "YTL koetunnus", DataType.String, required = false),
-    ModelField("aineyhdistelmarooli", "YTL aineyhdistelmarooli", DataType.String, required = false)
+    ModelField("aineyhdistelmarooli", "YTL aineyhdistelmarooli", DataType.String, required = false),
+    ModelField("aineyhdistelmarooliShort", "YTL aineyhdistelmarooli (uusi)", DataType.String, required = false)
   )
 
   def lahdeArvotModel = Model("LahdeArvot", "lähdejärjestelmän arvot", lahdeArvotFields.map(t => (t.name, t)).toMap)
