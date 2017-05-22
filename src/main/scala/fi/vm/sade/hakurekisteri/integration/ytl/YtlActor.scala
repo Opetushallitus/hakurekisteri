@@ -362,9 +362,9 @@ private object Koe {
   def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int]): Map[String, String] = {
     aineyhdistelmarooliLegacy match {
       case Some(oldRooli) =>
-        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> oldRooli.toString, "aineyhdistelmarooliShort" -> aineyhdistelmarooli)
+        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> oldRooli.toString)
       case _ =>
-        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> convertToOldRole(koetunnus, aineyhdistelmarooli), "aineyhdistelmarooliShort" -> aineyhdistelmarooli)
+        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> convertToOldRole(koetunnus, aineyhdistelmarooli))
     }
   }
 }
