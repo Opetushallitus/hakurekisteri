@@ -164,20 +164,22 @@ class KkHakijaService(hakemusService: IHakemusService,
       case (hakuOid, h) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
-            def valinnanTulosForOppijanumero(oppijanumero: Option[String]): Future[Option[SijoitteluTulos]] =
-              oppijanumero.map(_ => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))).getOrElse(Future.successful(None))
+            def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
+              case Some(_) => Future.successful(None)
+              case None => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))
+            }
 
             q.hakukohderyhma.map(hakupalvelu.getHakukohdeOids(_, haku.oid)).getOrElse(Future.successful(Seq())).flatMap(hakukohdeOids => {
               version match {
                 case 1 => {
-                  valinnanTulosForOppijanumero(q.oppijanumero).flatMap(kokoHaunTulos =>
+                  kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos =>
                     Future.sequence(h.map(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
                   )
                 }
                 case 2 => {
                   val allHakukohdeOids = q.hakukohde.toSet ++ hakukohdeOids
                   getLukuvuosimaksut(allHakukohdeOids.toSeq, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
-                    valinnanTulosForOppijanumero(q.oppijanumero).flatMap(kokoHaunTulos => {
+                    kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
                       Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                     }
                     )
