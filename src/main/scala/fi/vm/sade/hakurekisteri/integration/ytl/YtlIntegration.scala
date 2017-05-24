@@ -52,30 +52,36 @@ class YtlIntegration(config: OphProperties,
 
   def sync(hakemus: FullHakemus): Either[Throwable, Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
-      hakemus.personOid match {
-        case Some(personOid) =>
-          hakemus.hetu match {
-            case Some(hetu) =>
-              logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL")
-              ytlHttpClient.fetchOne(hetu) match {
-                case None =>
-                  val noData = s"No YTL data for hakemus ${hakemus.oid}"
-                  logger.debug(noData)
-                  Left(new RuntimeException(noData))
-                case Some((json, student)) =>
-                  val kokelas = StudentToKokelas.convert(personOid, student)
-                  persistKokelas(kokelas)
-                  Right(kokelas)
-              }
-            case None =>
-              val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
-              logger.debug(noHetu)
-              Left(new RuntimeException(noHetu))
-          }
-        case None =>
-          val noOid = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!"
-          logger.error(noOid)
-          Left(new RuntimeException(noOid))
+      if(hakemus.stateValid) {
+        hakemus.personOid match {
+          case Some(personOid) =>
+            hakemus.hetu match {
+              case Some(hetu) =>
+                logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+                ytlHttpClient.fetchOne(hetu) match {
+                  case None =>
+                    val noData = s"No YTL data for hakemus ${hakemus.oid}"
+                    logger.debug(noData)
+                    Left(new RuntimeException(noData))
+                  case Some((json, student)) =>
+                    val kokelas = StudentToKokelas.convert(personOid, student)
+                    persistKokelas(kokelas)
+                    Right(kokelas)
+                }
+              case None =>
+                val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
+                logger.debug(noHetu)
+                Left(new RuntimeException(noHetu))
+            }
+          case None =>
+            val noOid = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!"
+            logger.error(noOid)
+            Left(new RuntimeException(noOid))
+        }
+      } else {
+        val invalidState = s"Skipping YTL update as hakemus (${hakemus.oid}) is not in valid state!"
+        logger.debug(invalidState)
+        Left(new RuntimeException(invalidState))
       }
     } else {
       val notActiveHaku =s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!"
