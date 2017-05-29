@@ -177,8 +177,11 @@ class KkHakijaService(hakemusService: IHakemusService,
                   )
                 }
                 case 2 => {
-                  val allHakukohdeOids = q.hakukohde.toSet ++ hakukohdeOids
-                  getLukuvuosimaksut(allHakukohdeOids.toSeq, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
+                  def maksuvelvollisetHakutoiveet: Set[String] =
+                    h.flatMap(_.preferenceEligibilities.filter(_.maksuvelvollisuus.exists(_.equals("REQUIRED"))).map(_.aoId)).toSet
+                  val rajatutHakutoiveet: Option[Set[String]] = Option(q.hakukohde.toSet ++ hakukohdeOids).filter(_.isEmpty)
+                  val lukuvuosimaksullisetHakutoiveet: Set[String] = rajatutHakutoiveet.getOrElse(maksuvelvollisetHakutoiveet)
+                  getLukuvuosimaksut(lukuvuosimaksullisetHakutoiveet.toSeq, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
                     kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
                       Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                     }
