@@ -177,11 +177,11 @@ class KkHakijaService(hakemusService: IHakemusService,
                   )
                 }
                 case 2 => {
-                  def maksuvelvollisetHakutoiveet: Set[String] =
-                    h.flatMap(_.preferenceEligibilities.filter(_.maksuvelvollisuus.exists(_.equals("REQUIRED"))).map(_.aoId)).toSet
-                  val rajatutHakutoiveet: Option[Set[String]] = Option(q.hakukohde.toSet ++ hakukohdeOids).filter(_.isEmpty)
-                  val lukuvuosimaksullisetHakutoiveet: Set[String] = rajatutHakutoiveet.getOrElse(maksuvelvollisetHakutoiveet)
-                  getLukuvuosimaksut(lukuvuosimaksullisetHakutoiveet.toSeq, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
+                  def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.exists("REQUIRED" == _)
+                  def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[String] =
+                    preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus)).map(_.aoId)
+
+                  getLukuvuosimaksut(maksuvelvolliset(h.flatMap(_.preferenceEligibilities)).toSet, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
                     kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
                       Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head))).flatten).map(_.filter(_.hakemukset.nonEmpty))
                     }
@@ -258,8 +258,8 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
 
-  private def getLukuvuosimaksut(hakukohdeOids: Seq[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
-    val querys = hakukohdeOids.map(LukuvuosimaksuQuery(_, auditSession))
+  private def getLukuvuosimaksut(hakukohdeOids: Set[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
+    val querys = hakukohdeOids.toSeq.map(LukuvuosimaksuQuery(_, auditSession))
 
     val maksutByHakukohde: Seq[Future[Seq[Lukuvuosimaksu]]] = querys.map(q => (valintaRekisteri ? q).mapTo[Seq[Lukuvuosimaksu]])
     val sequenced: Future[Seq[Seq[Lukuvuosimaksu]]] = Future.sequence(maksutByHakukohde)
