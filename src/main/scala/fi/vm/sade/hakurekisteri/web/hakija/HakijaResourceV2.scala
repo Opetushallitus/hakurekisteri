@@ -43,16 +43,21 @@ class HakijaResourceV2(hakijaActor: ActorRef)
     if(params.get("haku").getOrElse("").isEmpty)
       throw new IllegalArgumentException(s"Haku can not be empty")
     val q = HakijaQuery(params, currentUser, 2)
-    val tyyppi = getFormatFromTypeParam()
-    val thisResponse = response
-    val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
-      case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
-        setContentDisposition(tyyppi, thisResponse, "hakijat")
-        Future.successful(result)
-      case result =>
-        Future.successful(result)
+        val tyyppi = getFormatFromTypeParam()
+    if(tyyppi == ApiFormat.Xml) {
+      prepareAsyncResult(tyyppi, Future.successful(new IllegalArgumentException("tyyppi Xml is not supported")))
     }
-    prepareAsyncResult(tyyppi, hakijatFuture)
+    else {
+      val thisResponse = response
+      val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
+        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+          setContentDisposition(tyyppi, thisResponse, "hakijat")
+          Future.successful(result)
+        case result =>
+          Future.successful(result)
+      }
+      prepareAsyncResult(tyyppi, hakijatFuture)
+    }
   }
 
   incident {
