@@ -5,7 +5,6 @@ package:
 	mvn clean package
 
 source-to-image:
-	echo '{ "allow_root": true }' >  /root/.bowerrc
 	mvn clean compile
 	npm run build
 	mvn package -DskipTests=true -DtestFailureIgnore=true
