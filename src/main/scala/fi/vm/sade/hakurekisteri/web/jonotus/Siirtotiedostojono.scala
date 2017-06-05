@@ -80,9 +80,20 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         if (hakijat.hakijat.isEmpty) {
           Array()
         } else {
-          val bytes = new ByteArrayOutputStream()
-          ExcelUtilV1.write(bytes, hakijat)
-          bytes.toByteArray
+          format match {
+            case ApiFormat.Excel =>
+              val bytes = new ByteArrayOutputStream()
+              ExcelUtilV1.write(bytes, hakijat)
+              bytes.toByteArray
+
+            case ApiFormat.Xml =>
+              val printer = new scala.xml.PrettyPrinter(120, 2)
+              val formattedXml = printer.format(hakijat.toXml)
+              val bytes = new ByteArrayOutputStream()
+              IOUtils.write(formattedXml, bytes)
+              bytes.toByteArray
+          }
+
         }
       case hakijat: JSONHakijat =>
         if (hakijat.hakijat.isEmpty) {
