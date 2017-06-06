@@ -38,16 +38,18 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
       .foreach(shortIds.remove)
   }
 
+  private type cacheKeyType = QueryAndFormat
+  private type cacheValueType = Either[Exception, Array[Byte]]
   private val asiakirjat = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .expireAfterWrite(1, TimeUnit.HOURS)
-    .removalListener(new RemovalListener[QueryAndFormat, Either[Exception, Array[Byte]]]() {
-      override def onRemoval(notification: RemovalNotification[QueryAndFormat, Either[Exception, Array[Byte]]]): Unit =
+    .removalListener(new RemovalListener[cacheKeyType, cacheValueType]() {
+      override def onRemoval(notification: RemovalNotification[cacheKeyType, cacheValueType]): Unit =
         eradicateAllShortUrlsToQuery(notification.getKey)
     })
-    .build(
-      new CacheLoader[QueryAndFormat, Either[Exception, Array[Byte]]] {
-        override def load(q: QueryAndFormat): Either[Exception, Array[Byte]] = {
+    .build[cacheKeyType, cacheValueType](
+      new CacheLoader[cacheKeyType, cacheValueType] {
+        override def load(q: cacheKeyType): cacheValueType = {
           Try(q.query match {
             case query:KkHakijaQuery =>
               kkQueryToAsiakirja(q.format, query)
@@ -141,7 +143,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     }
   }
 
-  def getAsiakirjaWithId(id: String): Option[(ApiFormat, Either[Exception, Array[Byte]], Option[User])] = {
+  def getAsiakirjaWithId(id: String): Option[(ApiFormat, cacheValueType, Option[User])] = {
     Option(shortIds.get(id)).map(q => (q.format, asiakirjat.getIfPresent(q), q.query.user))
   }
   private def submitNewAsiakirja(q: QueryAndFormat) {
