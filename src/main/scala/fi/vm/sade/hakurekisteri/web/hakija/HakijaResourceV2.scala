@@ -7,15 +7,14 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijat
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
-import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -43,16 +42,21 @@ class HakijaResourceV2(hakijaActor: ActorRef)
     if(params.get("haku").getOrElse("").isEmpty)
       throw new IllegalArgumentException(s"Haku can not be empty")
     val q = HakijaQuery(params, currentUser, 2)
-    val tyyppi = getFormatFromTypeParam()
-    val thisResponse = response
-    val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
-      case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
-        setContentDisposition(tyyppi, thisResponse, "hakijat")
-        Future.successful(result)
-      case result =>
-        Future.successful(result)
+        val tyyppi = getFormatFromTypeParam()
+    if(tyyppi == ApiFormat.Xml) {
+      prepareAsyncResult(tyyppi, Future.successful(new IllegalArgumentException("tyyppi Xml is not supported")))
     }
-    prepareAsyncResult(tyyppi, hakijatFuture)
+    else {
+      val thisResponse = response
+      val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
+        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+          setContentDisposition(tyyppi, thisResponse, "hakijat")
+          Future.successful(result)
+        case result =>
+          Future.successful(result)
+      }
+      prepareAsyncResult(tyyppi, hakijatFuture)
+    }
   }
 
   incident {

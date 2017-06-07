@@ -1,33 +1,27 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.{ActorLogging, ActorRef, Actor}
+import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.hakija.ForkedSeq._
+import fi.vm.sade.hakurekisteri.hakija.TupledFuture._
+import fi.vm.sade.hakurekisteri.hakija.representation._
 import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
-import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
-import fi.vm.sade.hakurekisteri.web.kkhakija.Query
-import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import scala.util.{Failure, Try}
-import akka.pattern.{pipe, ask}
-import ForkedSeq._
-import TupledFuture._
-import fi.vm.sade.hakurekisteri.rest.support.User
-import scala.xml.Node
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodiMetadata, Koodi, GetKoodi, GetRinnasteinenKoodiArvoQuery}
-import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
-import java.text.SimpleDateFormat
-import fi.vm.sade.hakurekisteri.tools.RicherString
+import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus}
+import fi.vm.sade.hakurekisteri.web.kkhakija.Query
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.matching.Regex
+import scala.util.{Failure, Try}
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
@@ -160,6 +154,20 @@ case class Peruuntunut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Bo
 case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Boolean, hakuOid: String, lisapistekoulutus: Option[String], liitteet: Seq[Liite], osaaminen: Osaaminen)
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
+object Hakija {
+  val mies: Regex = "\\d{6}[-A]\\d{2}[13579].".r
+  val nainen: Regex = "\\d{6}[-A]\\d{2}[24680].".r
+  val valid: Regex = "([12])".r
+
+  def resolveSukupuoli(hakija:Hakija):String = (hakija.henkilo.hetu, hakija.henkilo.sukupuoli) match {
+    case (mies(), _) => "1"
+    case (nainen(), _) => "2"
+    case (_, valid(sukupuoli)) => sukupuoli
+    case _ => "0"
+  }
+}
+
+
 
 case class Osaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_kielitutkinto_fi: Option[String],
                      yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String],
@@ -441,310 +449,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def JSONQuery(q: HakijaQuery): Future[JSONHakijat] = getHakijatV2(q).map((hakijat) => JSONHakijat(hakijat.filter(_.hakemus.hakutoiveet.nonEmpty)))
   def JSONQueryV3(q: HakijaQuery): Future[JSONHakijat] = getHakijatV3(q).map((hakijat) => JSONHakijat(hakijat.filter(_.hakemus.hakutoiveet.nonEmpty)))
 }
-
-
-
-object XMLUtil {
-  def toBooleanX(b: Boolean): String = if (b) "X" else ""
-  def toBoolean10(b: Boolean): String = if (b) "1" else "0"
-}
-
-
-import XMLUtil._
-
-case class XMLHakutoive(hakukohdeOid: String, hakujno: Short, oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], koulutus: String,
-                        harkinnanvaraisuusperuste: Option[String], urheilijanammatillinenkoulutus: Option[Boolean], yhteispisteet: Option[BigDecimal],
-                        valinta: Option[String], vastaanotto: Option[String], lasnaolo: Option[String], terveys: Option[Boolean], aiempiperuminen: Option[Boolean],
-                        kaksoistutkinto: Option[Boolean], koulutuksenKieli: Option[String]) {
-  def toXml: Node = {
-    <Hakutoive>
-      <Hakujno>{hakujno}</Hakujno>
-      <Oppilaitos>{oppilaitos}</Oppilaitos>
-      {if (opetuspiste.isDefined) <Opetuspiste>{opetuspiste.get}</Opetuspiste>}
-      {if (opetuspisteennimi.isDefined) <Opetuspisteennimi>{opetuspisteennimi.get}</Opetuspisteennimi>}
-      <Koulutus>{koulutus}</Koulutus>
-      {if (harkinnanvaraisuusperuste.isDefined) <Harkinnanvaraisuusperuste>{harkinnanvaraisuusperuste.get}</Harkinnanvaraisuusperuste>}
-      {if (urheilijanammatillinenkoulutus.isDefined) <Urheilijanammatillinenkoulutus>{toBoolean10(urheilijanammatillinenkoulutus.get)}</Urheilijanammatillinenkoulutus>}
-      {if (yhteispisteet.isDefined) <Yhteispisteet>{yhteispisteet.get}</Yhteispisteet>}
-      {if (valinta.isDefined) <Valinta>{valinta.get}</Valinta>}
-      {if (vastaanotto.isDefined) <Vastaanotto>{vastaanotto.get}</Vastaanotto>}
-      {if (lasnaolo.isDefined) <Lasnaolo>{lasnaolo.get}</Lasnaolo>}
-      {if (terveys.isDefined) <Terveys>{toBooleanX(terveys.get)}</Terveys>}
-      {if (aiempiperuminen.isDefined) <Aiempiperuminen>{toBooleanX(aiempiperuminen.get)}</Aiempiperuminen>}
-      {if (kaksoistutkinto.isDefined) <Kaksoistutkinto>{toBooleanX(kaksoistutkinto.get)}</Kaksoistutkinto>}
-      {if (koulutuksenKieli.isDefined) <KoulutuksenKieli>{koulutuksenKieli.get}</KoulutuksenKieli>}
-    </Hakutoive>
-  }
-}
-
-object XMLHakutoive {
-  def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.hakukohde.oid, ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
-    ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-    ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), lasnaolo(ht),
-    ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto, ht.koulutuksenKieli)
-
-  def ilmoittautumistilaToLasnaolo(ilmoittaumistila: Ilmoittautumistila): String = {
-    ilmoittaumistila match {
-      case EI_TEHTY => "1"
-      case LASNA_KOKO_LUKUVUOSI => "2"
-      case POISSA_KOKO_LUKUVUOSI => "3"
-      case EI_ILMOITTAUTUNUT => "4"
-      case LASNA_SYKSY => "5"
-      case POISSA_SYKSY => "6"
-      case LASNA => "7"
-      case POISSA => "8"
-    }
-  }
-
-  def lasnaolo(ht: Hakutoive): Option[String] = {
-    ht match {
-      case v: Vastaanottanut =>
-        v.ilmoittautumistila match {
-          case Some(ilmo) => Some(ilmoittautumistilaToLasnaolo(ilmo))
-          case _ => None
-        }
-      case _ => None
-    }
-  }
-
-  def valinta: PartialFunction[Hakutoive, String] = {
-    case v: Valittu     => "1"
-    case v: Varalla     => "2"
-    case v: Hylatty     => "3"
-    case v: Perunut     => "4"
-    case v: Peruuntunut => "4"
-    case v: Peruutettu  => "5"
-  }
-
-  def vastaanotto: PartialFunction[Hakutoive, String] = {
-    case v: Hyvaksytty        => "1"
-    case v: Vastaanottanut    => "3"
-    case v: PerunutValinnan   => "4"
-    case v: EiVastaanotettu   => "5"
-    case v: PeruutettuValinta => "6"
-  }
-}
-
-case class XMLOsaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_kielitutkinto_fi: Option[String],
-                        yleinen_kielitutkinto_sv: Option[String], valtionhallinnon_kielitutkinto_sv: Option[String],
-                        yleinen_kielitutkinto_en: Option[String], valtionhallinnon_kielitutkinto_en: Option[String],
-                        yleinen_kielitutkinto_se: Option[String], valtionhallinnon_kielitutkinto_se: Option[String]) {
-}
-
-case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
-                      luokkataso: Option[String], pohjakoulutus: String, todistusvuosi: Option[String], muukoulutus: Option[String], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
-                      lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
-                      painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive], osaaminen: Option[XMLOsaaminen]) {
-  def toXml: Node = {
-    <Hakemus>
-      <Vuosi>{vuosi}</Vuosi>
-      <Kausi>{kausi}</Kausi>
-      <Hakemusnumero>{hakemusnumero}</Hakemusnumero>
-      {if (lahtokoulu.isDefined) <Lahtokoulu>{lahtokoulu.get}</Lahtokoulu>}
-      {if (lahtokoulunnimi.isDefined) <Lahtokoulunnimi>{lahtokoulunnimi.get}</Lahtokoulunnimi>}
-      {if (luokka.isDefined) <Luokka>{luokka.get}</Luokka>}
-      {if (luokkataso.isDefined) <Luokkataso>{luokkataso.get}</Luokkataso>}
-      <Pohjakoulutus>{pohjakoulutus}</Pohjakoulutus>
-      {if (todistusvuosi.isDefined) <Todistusvuosi>{todistusvuosi.get}</Todistusvuosi>}
-      {if (muukoulutus.isDefined) <Muukoulutus>{muukoulutus.get}</Muukoulutus>}
-      {if (julkaisulupa.isDefined) <Julkaisulupa>{toBooleanX(julkaisulupa.get)}</Julkaisulupa>}
-      {if (yhteisetaineet.isDefined) <Yhteisetaineet>{yhteisetaineet.get}</Yhteisetaineet>}
-      {if (lukiontasapisteet.isDefined) <Lukiontasapisteet>{lukiontasapisteet.get}</Lukiontasapisteet>}
-      {if (lisapistekoulutus.isDefined) <Lisapistekoulutus>{lisapistekoulutus.get}</Lisapistekoulutus>}
-      {if (yleinenkoulumenestys.isDefined) <Yleinenkoulumenestys>{yleinenkoulumenestys.get}</Yleinenkoulumenestys>}
-      {if (painotettavataineet.isDefined) <Painotettavataineet>{painotettavataineet.get}</Painotettavataineet>}
-      <Hakutoiveet>
-        {hakutoiveet.map(_.toXml)}
-      </Hakutoiveet>
-    </Hakemus>
-  }
-}
-
-object XMLHakemus {
-  def resolvePohjakoulutus(suoritus: Option[VirallinenSuoritus]): String = suoritus match {
-    case Some(s) =>
-      s.komo match {
-        case "ulkomainen" => "0"
-        case "peruskoulu" => s.yksilollistaminen match {
-          case Ei => "1"
-          case Osittain => "2"
-          case Alueittain => "3"
-          case Kokonaan => "6"
-        }
-        case "lukio" => "9"
-      }
-    case None => "7"
-  }
-
-  def getRelevantSuoritus(suoritukset:Seq[Suoritus]): Option[VirallinenSuoritus] = {
-    suoritukset.collect{case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s)).toInt)}.sortBy(_._2).map(_._1).headOption
-  }
-
-  def resolveYear(suoritus: VirallinenSuoritus):Option[String] = suoritus match {
-    case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _) => None
-    case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _)  => Some(date.getYear.toString)
-  }
-
-  def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive], osaaminen: Option[XMLOsaaminen]): XMLHakemus =
-    XMLHakemus(vuosi = hakija.hakemus.hakutoiveet.headOption.flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamisvuosi)).getOrElse(""),
-      kausi = hakija.hakemus.hakutoiveet.headOption.flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamiskausi.map(_.toString))).getOrElse(""),
-      hakemusnumero = hakija.hakemus.hakemusnumero,
-      lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
-      lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
-      luokka = opiskelutieto.map(_.luokka),
-      luokkataso = opiskelutieto.map(_.luokkataso),
-      pohjakoulutus = resolvePohjakoulutus(getRelevantSuoritus(hakija.suoritukset)),
-      todistusvuosi = getRelevantSuoritus(hakija.suoritukset).flatMap(resolveYear),
-      muukoulutus = hakija.henkilo.muukoulutus,
-      julkaisulupa = Some(hakija.hakemus.julkaisulupa),
-      yhteisetaineet = None,
-      lukiontasapisteet = None,
-      lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
-      yleinenkoulumenestys = None,
-      painotettavataineet = None,
-      hakutoiveet = toiveet,
-      osaaminen = osaaminen)
-}
-
-case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                     postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
-                     muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
-                     aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
-  def toXml: Node = {
-    <Hakija>
-      <Hetu>{hetu}</Hetu>
-      <Oppijanumero>{oppijanumero}</Oppijanumero>
-      <Sukunimi>{sukunimi}</Sukunimi>
-      <Etunimet>{etunimet}</Etunimet>
-      {if (kutsumanimi.isDefined) <Kutsumanimi>{kutsumanimi.get}</Kutsumanimi>}
-      <Lahiosoite>{lahiosoite}</Lahiosoite>
-      <Postinumero>{postinumero}</Postinumero>
-      <Postitoimipaikka>{postitoimipaikka}</Postitoimipaikka>
-      <Maa>{maa}</Maa>
-      <Kansalaisuus>{kansalaisuus}</Kansalaisuus>
-      {if (matkapuhelin.isDefined) <Matkapuhelin>{matkapuhelin.get}</Matkapuhelin>}
-      {if (muupuhelin.isDefined) <Muupuhelin>{muupuhelin.get}</Muupuhelin>}
-      {if (sahkoposti.isDefined) <Sahkoposti>{sahkoposti.get}</Sahkoposti>}
-      {if (kotikunta.isDefined) <Kotikunta>{kotikunta.get}</Kotikunta>}
-      <Sukupuoli>{sukupuoli}</Sukupuoli>
-      <Aidinkieli>{aidinkieli}</Aidinkieli>
-      <Koulutusmarkkinointilupa>{toBooleanX(koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
-      {hakemus.toXml}
-    </Hakija>
-  }
-}
-
-case class JSONHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                      postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
-                      muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
-                      aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
-                      huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus, lisakysymykset: Seq[Lisakysymys])
-
-object XMLHakija {
-  val mies = "\\d{6}[-A]\\d{2}[13579].".r
-  val nainen = "\\d{6}[-A]\\d{2}[24680].".r
-  val valid = "([12])".r
-
-  def resolveSukupuoli(hakija:Hakija):String = (hakija.henkilo.hetu, hakija.henkilo.sukupuoli) match {
-    case (mies(), _) => "1"
-    case (nainen(), _) => "2"
-    case (_, valid(sukupuoli)) => sukupuoli
-    case _ => "0"
-  }
-
-
-  import RicherString._
-
-  def apply(hakija: Hakija, hakemus: XMLHakemus): XMLHakija =
-    XMLHakija(
-      hetu = hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
-      oppijanumero = hakija.henkilo.oppijanumero,
-      sukunimi = hakija.henkilo.sukunimi,
-      etunimet = hakija.henkilo.etunimet,
-      kutsumanimi = hakija.henkilo.kutsumanimi.blankOption,
-      lahiosoite = hakija.henkilo.lahiosoite,
-      postinumero = hakija.henkilo.postinumero,
-      postitoimipaikka = hakija.henkilo.postitoimipaikka,
-      maa = hakija.henkilo.maa,
-      kansalaisuus = hakija.henkilo.kansalaisuus,
-      matkapuhelin = hakija.henkilo.matkapuhelin.blankOption,
-      muupuhelin = hakija.henkilo.puhelin.blankOption,
-      sahkoposti = hakija.henkilo.sahkoposti.blankOption,
-      kotikunta = hakija.henkilo.kotikunta.blankOption,
-      sukupuoli = resolveSukupuoli(hakija),
-      aidinkieli = hakija.henkilo.asiointiKieli,
-      koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
-      hakemus = hakemus
-    )
-
-  def hetu(hetu: String, syntymaaika: String): String = hetu match {
-    case "" => Try(new SimpleDateFormat("ddMMyyyy").format(new SimpleDateFormat("dd.MM.yyyy").parse(syntymaaika))).getOrElse("")
-    case _ => hetu
-  }
-
-}
-
-object JSONHakija {
-  val mies = "\\d{6}[-A]\\d{2}[13579].".r
-  val nainen = "\\d{6}[-A]\\d{2}[24680].".r
-  val valid = "([12])".r
-
-  def resolveSukupuoli(hakija:Hakija):String = (hakija.henkilo.hetu, hakija.henkilo.sukupuoli) match {
-    case (mies(), _) => "1"
-    case (nainen(), _) => "2"
-    case (_, valid(sukupuoli)) => sukupuoli
-    case _ => "0"
-  }
-
-
-  import RicherString._
-
-  def apply(hakija: Hakija, hakemus: XMLHakemus): JSONHakija =
-    JSONHakija(
-      hetu = hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
-      oppijanumero = hakija.henkilo.oppijanumero,
-      sukunimi = hakija.henkilo.sukunimi,
-      etunimet = hakija.henkilo.etunimet,
-      kutsumanimi = hakija.henkilo.kutsumanimi.blankOption,
-      lahiosoite = hakija.henkilo.lahiosoite,
-      postinumero = hakija.henkilo.postinumero,
-      postitoimipaikka = hakija.henkilo.postitoimipaikka,
-      maa = hakija.henkilo.maa,
-      kansalaisuus = hakija.henkilo.kansalaisuus,
-      matkapuhelin = hakija.henkilo.matkapuhelin.blankOption,
-      muupuhelin = hakija.henkilo.puhelin.blankOption,
-      sahkoposti = hakija.henkilo.sahkoposti.blankOption,
-      kotikunta = hakija.henkilo.kotikunta.blankOption,
-      sukupuoli = resolveSukupuoli(hakija),
-      aidinkieli = hakija.henkilo.asiointiKieli,
-      koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
-      kiinnostunutoppisopimuksesta = hakija.henkilo.kiinnostunutoppisopimuksesta.getOrElse(false),
-      huoltajannimi = hakija.henkilo.huoltajannimi.blankOption,
-      huoltajanpuhelinnumero = hakija.henkilo.huoltajanpuhelinnumero.blankOption,
-      huoltajansahkoposti = hakija.henkilo.huoltajansahkoposti.blankOption,
-      hakemus = hakemus,
-      lisakysymykset = hakija.henkilo.lisakysymykset
-    )
-
-  def hetu(hetu: String, syntymaaika: String): String = hetu match {
-    case "" => Try(new SimpleDateFormat("ddMMyyyy").format(new SimpleDateFormat("dd.MM.yyyy").parse(syntymaaika))).getOrElse("")
-    case _ => hetu
-  }
-
-}
-
-
-case class XMLHakijat(hakijat: Seq[XMLHakija]) {
-  def toXml: Node = {
-    <Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
-      {hakijat.map(_.toXml)}
-    </Hakijat>
-  }
-}
-
-case class JSONHakijat(hakijat: Seq[JSONHakija])
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User], version: Int) extends Query
 

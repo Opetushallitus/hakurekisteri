@@ -3,10 +3,13 @@ package fi.vm.sade.hakurekisteri.acceptance
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto, XMLHakijat}
+import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.hakija.representation.XMLHakijat
+
 import scala.language.postfixOps
 
 class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with HakeneetSupport {

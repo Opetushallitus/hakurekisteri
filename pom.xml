@@ -6,7 +6,7 @@
     <artifactId>suoritusrekisteri</artifactId>
     <packaging>jar</packaging>
     <description>suoritusrekisteri</description>
-    <version>14.0-SNAPSHOT</version>
+    <version>15.0-SNAPSHOT</version>
     <name>suoritusrekisteri</name>
     <organization>
         <name>suoritusrekisteri</name>

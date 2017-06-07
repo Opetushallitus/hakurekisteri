@@ -42,9 +42,17 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
         if(isStatusCheck) {
           Ok()
         } else {
-          contentType = getContentType(format)
-          setContentDisposition(format, response, "hakijat")
-          response.outputStream.write(bytes)
+          getContentType(format) match {
+            case Left(ctype) =>
+              contentType = ctype
+              setContentDisposition(format, response, "hakijat")
+              response.outputStream.write(bytes)
+
+            case Right(ex) =>
+              logger.error("Unsupported content type", ex)
+              throw ex
+          }
+
         }
       case AsiakirjaWithExceptions(exception) =>
         if(isStatusCheck) {

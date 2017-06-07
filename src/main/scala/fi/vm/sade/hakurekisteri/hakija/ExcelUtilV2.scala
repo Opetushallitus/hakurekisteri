@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijat
 import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 

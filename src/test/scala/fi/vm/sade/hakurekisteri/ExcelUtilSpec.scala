@@ -2,7 +2,9 @@ package fi.vm.sade.hakurekisteri
 
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.hakija._
-import java.io.{ByteArrayInputStream,  ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+
+import fi.vm.sade.hakurekisteri.hakija.representation.{XMLHakemus, XMLHakija, XMLHakijat, XMLHakutoive}
 import org.apache.poi.ss.usermodel.{Workbook, WorkbookFactory}
 
 import scala.collection.immutable.IndexedSeq

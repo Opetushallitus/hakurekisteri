@@ -3,8 +3,9 @@ package fi.vm.sade.hakurekisteri.web.hakija
 
 import org.scalatra.swagger._
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import fi.vm.sade.hakurekisteri.web.rest.support.{ModelResponseMessage, IncidentReportSwaggerModel, OldSwaggerSyntax, ApiFormat}
-import fi.vm.sade.hakurekisteri.hakija.{JSONHakijat, Hakuehto, XMLHakijat}
+import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijat, XMLHakijat}
 
 trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
 

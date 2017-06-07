@@ -9,12 +9,12 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.google.common.cache.{CacheBuilder, CacheLoader, RemovalListener, RemovalNotification}
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.representation._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.kkhakija._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import org.apache.commons.io.IOUtils
-import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization.write
 import org.slf4j.LoggerFactory
 
@@ -38,16 +38,18 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
       .foreach(shortIds.remove)
   }
 
+  private type cacheKeyType = QueryAndFormat
+  private type cacheValueType = Either[Exception, Array[Byte]]
   private val asiakirjat = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .expireAfterWrite(1, TimeUnit.HOURS)
-    .removalListener(new RemovalListener[QueryAndFormat, Either[Exception, Array[Byte]]]() {
-      override def onRemoval(notification: RemovalNotification[QueryAndFormat, Either[Exception, Array[Byte]]]): Unit =
+    .removalListener(new RemovalListener[cacheKeyType, cacheValueType]() {
+      override def onRemoval(notification: RemovalNotification[cacheKeyType, cacheValueType]): Unit =
         eradicateAllShortUrlsToQuery(notification.getKey)
     })
-    .build(
-      new CacheLoader[QueryAndFormat, Either[Exception, Array[Byte]]] {
-        override def load(q: QueryAndFormat): Either[Exception, Array[Byte]] = {
+    .build[cacheKeyType, cacheValueType](
+      new CacheLoader[cacheKeyType, cacheValueType] {
+        override def load(q: cacheKeyType): cacheValueType = {
           Try(q.query match {
             case query:KkHakijaQuery =>
               kkQueryToAsiakirja(q.format, query)
@@ -80,9 +82,20 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         if (hakijat.hakijat.isEmpty) {
           Array()
         } else {
-          val bytes = new ByteArrayOutputStream()
-          ExcelUtilV1.write(bytes, hakijat)
-          bytes.toByteArray
+          format match {
+            case ApiFormat.Excel =>
+              val bytes = new ByteArrayOutputStream()
+              ExcelUtilV1.write(bytes, hakijat)
+              bytes.toByteArray
+
+            case ApiFormat.Xml =>
+              val printer = new scala.xml.PrettyPrinter(120, 2)
+              val formattedXml = printer.format(hakijat.toXml)
+              val bytes = new ByteArrayOutputStream()
+              IOUtils.write(formattedXml, bytes)
+              bytes.toByteArray
+          }
+
         }
       case hakijat: JSONHakijat =>
         if (hakijat.hakijat.isEmpty) {
@@ -130,7 +143,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     }
   }
 
-  def getAsiakirjaWithId(id: String): Option[(ApiFormat, Either[Exception, Array[Byte]], Option[User])] = {
+  def getAsiakirjaWithId(id: String): Option[(ApiFormat, cacheValueType, Option[User])] = {
     Option(shortIds.get(id)).map(q => (q.format, asiakirjat.getIfPresent(q), q.query.user))
   }
   private def submitNewAsiakirja(q: QueryAndFormat) {
