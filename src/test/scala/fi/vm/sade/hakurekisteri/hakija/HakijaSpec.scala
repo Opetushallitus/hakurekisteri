@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
-import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku}
+import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
+import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakija, XMLHakemus, XMLHakutoive}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.Future
 

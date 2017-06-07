@@ -2,7 +2,8 @@ package fi.vm.sade.hakurekisteri.acceptance
 
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto, JSONHakijat}
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijat
+import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
 import fi.vm.sade.hakurekisteri.integration.hakemus.ThemeQuestion
 import org.scalatest.GivenWhenThen
 import org.scalatra.test.scalatest.ScalatraFeatureSpec

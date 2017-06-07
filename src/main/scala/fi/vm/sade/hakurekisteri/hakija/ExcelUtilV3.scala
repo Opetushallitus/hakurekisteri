@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.hakija
 
 import java.io.OutputStream
 
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijat
 import fi.vm.sade.hakurekisteri.rest.support._
 
 

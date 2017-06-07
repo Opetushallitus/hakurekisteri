@@ -9,12 +9,12 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import com.google.common.cache.{CacheBuilder, CacheLoader, RemovalListener, RemovalNotification}
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.representation._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.kkhakija._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import org.apache.commons.io.IOUtils
-import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization.write
 import org.slf4j.LoggerFactory
 
