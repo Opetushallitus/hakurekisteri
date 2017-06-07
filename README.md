@@ -5,6 +5,9 @@
 
 Setup:
 
+Projekti ei näytä toimivan Node 6:tta uudemmilla versioilla (tulee `Error: Cannot find module 'internal/fs'`).
+Asenna Node 6 [N-työkalulla](https://www.npmjs.com/package/n) (asenna se globaalisti npm:llä). 
+
 1. Laita fronttikäännös pyörimään: `npm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
 2. Käynnistä serveri IDEAsta: `SureTestJettyWithMocks`, jolloin serveri toimii ilman ulkoisia depsuja
 3. Aja Mocha-testit selaimessa: http://localhost:8080/test/runner.html
