@@ -283,7 +283,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
     hakijat.last.aidinkieli should be ("99")
-    hakijat.last.asiointikieli should be ("99") // Default is not empty!
+    hakijat.last.asiointikieli should be ("9") // Default is not empty!
     hakijat.last.koulusivistyskieli should be ("99")
   }
 
