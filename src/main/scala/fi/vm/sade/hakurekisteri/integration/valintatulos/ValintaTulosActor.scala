@@ -99,8 +99,10 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     if (!initialLoadingDone) {
       Future.failed(InitialLoadingNotDone())
     } else {
-      if (q.cachedOk && cache.contains(q.hakuOid))
+      if (q.cachedOk && cache.contains(q.hakuOid)) {
+        log.info(s"Get sijoittelu from cache for haku ${q.hakuOid}")
         cache.get(q.hakuOid)
+      }
       else {
         if (q.hakemusOid.isEmpty) {
           queueForResult(q.hakuOid)
