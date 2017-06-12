@@ -18,6 +18,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
+import fi.vm.sade.utils.Timer.timed
+
 trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
   def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]]
@@ -72,41 +74,47 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
     implicit val timeout: Timeout = 120.seconds
 
     def hakuAndLisakysymykset(hakuOid: String): Future[(Haku, Map[String, ThemeQuestion])] = {
-      val hakuF = (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
-      val lisakysymyksetF = getLisakysymyksetForHaku(hakuOid)
-      for (haku <- hakuF; lisakysymykset <- lisakysymyksetF) yield (haku, lisakysymykset)
+      timed("Hakupalvelu -> hakuAndLisakysymykset", 100) {
+        val hakuF = (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
+        val lisakysymyksetF = getLisakysymyksetForHaku(hakuOid)
+        for (haku <- hakuF; lisakysymykset <- lisakysymyksetF) yield (haku, lisakysymykset)
+      }
     }
 
     q match {
       case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
-        for {
-          (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
-          hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
-          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
-        } yield hakemukset
-          .map { hakemus =>
+        timed("Hakupalvelu -> getHakijat -> HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _)", 100) {
+          for {
+            (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
+            hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
+            hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
+          } yield hakemukset
+            .map { hakemus =>
               val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData)
-          }
+              timed(s"Haetaan hakija hakemusOid: ${hakemus.oid}", 100) { AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData) }
+            }
+        }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
-        for {
-          hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
-          hakukohteittain <- Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, organisaatio)))
-          hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
-          hakijat <- Future.sequence(for {
-            (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
-            hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
-            (hakukohdeOid, hakemukset) <- hakukohteet
-            suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
-            hakemus <- hakemukset if hakemus.stateValid
-          } yield for {
-            hakijaSuorituksetMap <- suorituksetByOppija
-            (haku, lisakysymykset) <- hakuJaLisakysymykset
-          } yield {
-            val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)
-          })
-        } yield hakijat.toSeq
+        timed("Hakupalvelu -> getHakijat -> HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _)", 100) {
+          for {
+            hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
+            hakukohteittain <- Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, organisaatio)))
+            hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
+            hakijat <- Future.sequence(for {
+              (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
+              hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
+              (hakukohdeOid, hakemukset) <- hakukohteet
+              suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
+              hakemus <- hakemukset if hakemus.stateValid
+            } yield for {
+              hakijaSuorituksetMap <- suorituksetByOppija
+              (haku, lisakysymykset) <- hakuJaLisakysymykset
+            } yield {
+              val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
+              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)
+            })
+          } yield hakijat.toSeq
+        }
     }
   }
 }
