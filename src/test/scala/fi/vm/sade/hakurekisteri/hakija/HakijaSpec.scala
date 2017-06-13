@@ -176,13 +176,12 @@ class HakijaSpec extends FlatSpec with Matchers {
   behavior of "KoosteData"
 
   it should "resolve pohjakoulutus from KoosteData not from Hakemus" in {
-    val nonExistentKoosteData = None
-    val emptyKoosteData = Some(Map[String,String]())
-    val koosteData = Some(Map("POHJAKOULUTUS" -> "1"))
+    val noPohjakoulutus = None
+    val somePohjakoulutus = Some("1")
 
-    val hakija1 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, nonExistentKoosteData)
-    val hakija2 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, emptyKoosteData)
-    val hakija3 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, koosteData)
+    val hakija1 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, noPohjakoulutus)
+    val hakija2 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, noPohjakoulutus)
+    val hakija3 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, somePohjakoulutus)
 
     def getPohjaKoulutus(hakija: Hakija): String = {
       val hakemus: XMLHakemus = XMLHakemus.apply(hakija, opiskelutieto = None, lahtokoulu = None, toiveet = Seq(), osaaminen = None)
