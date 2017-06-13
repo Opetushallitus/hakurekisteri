@@ -5,6 +5,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.dto.SuoritusJaArvosanat
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -17,6 +18,7 @@ import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
@@ -82,11 +84,11 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
-          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
+          //hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset) // TODO
         } yield hakemukset
           .map { hakemus =>
-              val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData)
+              //val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
+              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, List()) // TODO
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
@@ -103,8 +105,8 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
             hakijaSuorituksetMap <- suorituksetByOppija
             (haku, lisakysymykset) <- hakuJaLisakysymykset
           } yield {
-            val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData)
+            // val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
+            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), List()) // TODO
           })
         } yield hakijat.toSeq
     }
@@ -299,12 +301,14 @@ object AkkaHakupalvelu {
     }
   }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], suoritusJaArvosanat: List[SuoritusJaArvosanat]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
     val lahtokoulu: Option[String] = for (k <- koulutustausta; l <- k.lahtokoulu) yield l
-    val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
+    val pohjakoulutus = Option(PohjakoulutusUtil.pohjakoulutus(haku.vuosi, haku.kohdejoukkoUri.get,
+      com.google.common.base.Optional.of(hakemus.answers.get.koulutustausta.get.POHJAKOULUTUS.get),
+      hakemus.personOid.getOrElse(""), suoritusJaArvosanat.asJava).get())
     val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
     val kieli = (for (a <- v; henkilotiedot: HakemusHenkilotiedot <- a.henkilotiedot; aidinkieli <- henkilotiedot.aidinkieli) yield aidinkieli).getOrElse("FI")
     val myontaja = lahtokoulu.getOrElse("")
