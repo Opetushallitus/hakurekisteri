@@ -1,17 +1,20 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.dto.SuoritusJaArvosanat
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
+import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Registers, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 
 import scala.collection.immutable.Iterable
@@ -40,8 +43,15 @@ case class HakukohdeSearchResultList(tulokset: Seq[HakukohdeSearchResultTarjoaja
 
 case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 
-class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IHakemusService, koosteService: IKoosteService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
-  extends Hakupalvelu {
+class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService: IHakemusService, koosteService: IKoosteService, hakuActor: ActorRef,
+                      val rekisterit: Registers, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
+                     )(implicit val ec: ExecutionContext, implicit val system: ActorSystem)
+  extends Hakupalvelu with OppijaFetcher {
+
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+  override val executor = ec
+  val defaultTimeout: Timeout = 500.seconds
+
   val Pattern = "preference(\\d+).*".r
 
   private val acceptedResponseCode: Int = 200
@@ -84,11 +94,12 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
-          //hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset) // TODO
+          //hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
+          oppijat <- fetchOppijat(persons = hakemukset.map(_.personOid.get).toSet, ensikertalaisuudet = false, q = HakemusQuery(q))(q.user.get)
         } yield hakemukset
           .map { hakemus =>
-              //val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, List()) // TODO
+            val suoritusJaArvosanat = oppijat.find(_.oppijanumero == hakemus.personOid.get).get.getSuorituksetJaArvosanat
+            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, suoritusJaArvosanat)
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
@@ -99,14 +110,17 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
             (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
             hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
-            suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
+            oppijatFuture = fetchOppijat(persons = hakemukset.map(_.personOid.get).toSet, ensikertalaisuudet = false, q = HakemusQuery(q))(q.user.get)
+            //suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
-            hakijaSuorituksetMap <- suorituksetByOppija
+            //hakijaSuorituksetMap <- suorituksetByOppija]
+            oppijat <- oppijatFuture
             (haku, lisakysymykset) <- hakuJaLisakysymykset
           } yield {
             // val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), List()) // TODO
+            val suoritusJaArvosanat = oppijat.find(_.oppijanumero == hakemus.personOid.get).get.getSuorituksetJaArvosanat
+            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, suoritusJaArvosanat)
           })
         } yield hakijat.toSeq
     }
@@ -301,7 +315,7 @@ object AkkaHakupalvelu {
     }
   }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], suoritusJaArvosanat: List[SuoritusJaArvosanat]): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], suoritusJaArvosanat: Seq[SuoritusJaArvosanat]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k

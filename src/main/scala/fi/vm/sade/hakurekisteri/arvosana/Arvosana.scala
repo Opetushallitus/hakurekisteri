@@ -1,7 +1,9 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
+import scala.collection.JavaConverters._
 import java.util.UUID
 
+import fi.vm.sade.hakurekisteri.integration.hakemus.dto
 import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.LocalDate
@@ -32,11 +34,20 @@ case class Arvosana(suoritus: UUID,
                                             jarjestys: Option[Int])
 
   override val core = ArvosanaCore(suoritus, aine, lisatieto, valinnainen, myonnetty, jarjestys)
+
+  def asJava = {
+    val uusiLahdeArvot: java.util.Map[String, String] = lahdeArvot.asJava
+    val uusiArvio = arvio.asJava
+    val r = new fi.vm.sade.hakurekisteri.integration.hakemus.dto.Arvosana()
+    new fi.vm.sade.hakurekisteri.integration.hakemus.dto.Arvosana("id", suoritus.toString, aine, valinnainen, myonnetty.get.toString, source, uusiLahdeArvot, uusiArvio, lisatieto.get)
+  }
 }
 
 class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source, a.lahdeArvot, a.jarjestys) with Identified[UUID]
 
-sealed abstract class Arvio
+sealed abstract class Arvio {
+  def asJava: dto.Arvio
+}
 
 object Arvio {
   val ASTEIKKO_4_10 = "4-10"
@@ -60,17 +71,24 @@ case class UnknownScaleException(scale: String) extends RuntimeException(s"unkno
 case class Arvio410(arvosana: String) extends Arvio {
   val allowable = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
+
+  override def asJava: dto.Arvio = new dto.Arvio(arvosana, null, null)
 }
 
 case class ArvioYo(arvosana: String, pisteet: Option[Int]) extends Arvio {
   val allowable = Set[String]("L", "E", "M", "C", "B", "A", "I+", "I", "I-", "I=", "K", "P" )
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
+
+  override def asJava: dto.Arvio = new dto.Arvio(arvosana, null, null)
 }
 
 case class ArvioOsakoe(arvosana: String) extends Arvio {
+  override def asJava: dto.Arvio = new dto.Arvio(arvosana, null, null)
 }
 
 case class ArvioHyvaksytty(arvosana: String) extends Arvio {
   val allowable = Set[String]("hyvaksytty", "hylatty", "ei_osallistunut")
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
+
+  override def asJava: dto.Arvio = new dto.Arvio(arvosana, null, null)
 }

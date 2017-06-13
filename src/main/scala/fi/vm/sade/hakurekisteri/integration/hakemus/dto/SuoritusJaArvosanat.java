@@ -19,6 +19,11 @@ public class SuoritusJaArvosanat implements Comparable<SuoritusJaArvosanat> {
     private Suoritus suoritus;
     private List<Arvosana> arvosanat = Lists.newArrayList();
 
+    public SuoritusJaArvosanat(Suoritus suoritus, List<Arvosana> arvosanat) {
+        this.suoritus = suoritus;
+        this.arvosanat = arvosanat;
+    }
+
     public List<Arvosana> getArvosanat() {
         return arvosanat;
     }

@@ -12,6 +12,12 @@ public class Suoritus {
     private String source;
     private boolean vahvistettu;
 
+    public Suoritus(String henkiloOid, boolean vahvistettu, String source) {
+        this.henkiloOid = henkiloOid;
+        this.vahvistettu = vahvistettu;
+        this.source = source;
+    }
+
     public void setHenkiloOid(String henkiloOid) {
         this.henkiloOid = henkiloOid;
     }

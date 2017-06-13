@@ -41,7 +41,7 @@ object Suoritus {
 }
 
 sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean, val source: String) extends UUIDResource[Suoritus]{
-
+    def asJava = new fi.vm.sade.hakurekisteri.integration.hakemus.dto.Suoritus(henkiloOid, vahvistettu, source)
 }
 
 case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {

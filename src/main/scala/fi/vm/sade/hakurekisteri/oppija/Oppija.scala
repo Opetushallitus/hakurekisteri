@@ -1,11 +1,13 @@
 package fi.vm.sade.hakurekisteri.oppija
 
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import scala.collection.JavaConverters._
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import fi.vm.sade.hakurekisteri.integration.hakemus.dto.SuoritusJaArvosanat
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 
 case class Oppija(oppijanumero: String,
@@ -22,6 +24,14 @@ case class Oppija(oppijanumero: String,
   def newId = oppijanumero
 
   override val core: AnyRef = oppijanumero
+
+  def getSuorituksetJaArvosanat: Seq[SuoritusJaArvosanat] = {
+    this.suoritukset.map { s =>
+      val suoritus = s.suoritus.asJava
+      val arvosanat = s.arvosanat.map(_.asJava).asJava
+      new SuoritusJaArvosanat(suoritus, arvosanat)
+    }
+  }
 }
 
 case class Todistus(suoritus: Suoritus, arvosanat: Seq[Arvosana])
