@@ -143,7 +143,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     "54c8e11ee4b03c06d74fc5cc" -> tq2,
     "54e30c41e4b08eed6d776189" -> tq3)
 
-  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), List()).hakemus.hakutoiveet.head // TODO
+  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), None).hakemus.hakutoiveet.head // TODO
 
 
   behavior of "Hakemuksen lasnaolotieto"
@@ -166,7 +166,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   }
 
   it should "have v2 fields" in {
-    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, List()) // TODO
+    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, None) // TODO
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardCodedLisakysymys.size)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
@@ -176,13 +176,10 @@ class HakijaSpec extends FlatSpec with Matchers {
   behavior of "KoosteData"
 
   it should "resolve pohjakoulutus from KoosteData not from Hakemus" in {
-    val nonExistentKoosteData = None
-    val emptyKoosteData = Some(Map[String,String]())
-    val koosteData = Some(Map("POHJAKOULUTUS" -> "1"))
 
-    val hakija1 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, List()) // TODO
-    val hakija2 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, List()) // TODO
-    val hakija3 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, List()) // TODO
+    val hakija1 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, None) // TODO
+    val hakija2 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, None) // TODO
+    val hakija3 = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, Some("1")) // TODO
 
     def getPohjaKoulutus(hakija: Hakija): String = {
       val hakemus: XMLHakemus = XMLHakemus.apply(hakija, opiskelutieto = None, lahtokoulu = None, toiveet = Seq(), osaaminen = None)

@@ -542,7 +542,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       Some(2015), kkHaku = false, None, None)
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty, List()))
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty, None))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
