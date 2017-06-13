@@ -2,13 +2,11 @@ package fi.vm.sade.hakurekisteri.integration.hakemus.dto;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.apache.commons.collections.comparators.BooleanComparator;
-import org.joda.time.DateTime;
 
 import java.util.List;
 import java.util.Map;
 
-public class SuoritusJaArvosanat implements Comparable<SuoritusJaArvosanat> {
+public class SuoritusJaArvosanat {
 
     private static final Map<String, Integer> tilaToPrioriteetti = ImmutableMap.of(
         "VALMIS", 1,
@@ -40,24 +38,4 @@ public class SuoritusJaArvosanat implements Comparable<SuoritusJaArvosanat> {
         this.suoritus = suoritus;
     }
 
-    @Override
-    public int compareTo(SuoritusJaArvosanat o) {
-        final int vahvistettu = BooleanComparator
-                .getTrueFirstComparator()
-                .compare(suoritus.isVahvistettu(), o.getSuoritus().isVahvistettu());
-
-        if (vahvistettu == 0) {
-            final int tila = tilaToPrioriteetti.get(suoritus.getTila()).compareTo(tilaToPrioriteetti.get(o.getSuoritus().getTila()));
-            if (tila == 0) {
-                final DateTime current = ArvosanaWrapper.ARVOSANA_DTF.parseDateTime(suoritus.getValmistuminen());
-                final DateTime oDate = ArvosanaWrapper.ARVOSANA_DTF.parseDateTime(o.getSuoritus().getValmistuminen());
-                return oDate.compareTo(current);
-            } else {
-                return tila;
-            }
-        } else {
-            return vahvistettu;
-        }
-
-    }
 }
