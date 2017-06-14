@@ -236,7 +236,7 @@
         },
         "lisatiedot":{
           "lupaJulkaisu":"true",
-          "asiointikieli":"englanti",
+          "asiointikieli":"",
           "lupatiedot-sahkoinen-viestinta":"true",
           "lupaSms":"true",
           "lupaMarkkinointi":"true"

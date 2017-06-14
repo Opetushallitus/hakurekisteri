@@ -416,7 +416,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("999"),
       sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
       aidinkieli = henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99"),
-      asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99")),
+      asiointikieli = getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
       koulusivistyskieli = henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
       koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Map()).get("lupaMarkkinointi").map(_ == "true"),
       onYlioppilas = isYlioppilas(suoritukset),
@@ -458,7 +458,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("999"),
       sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
       aidinkieli = henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99"),
-      asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99")),
+      asiointikieli = getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
       koulusivistyskieli = henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
       koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Map()).get("lupaMarkkinointi").map(_ == "true"),
       onYlioppilas = isYlioppilas(suoritukset),
@@ -502,10 +502,10 @@ object KkHakijaUtil {
   }
 
   def getAsiointikieli(kielikoodi: String): String = kielikoodi match {
-    case "FI" => "1"
-    case "SV" => "2"
-    case "EN" => "3"
-    case _ => "99"
+    case "suomi" => "1"
+    case "ruotsi" => "2"
+    case "englanti" => "3"
+    case _ => "9"
   }
 
   def getPostitoimipaikka(koodi: Option[Koodi]): String = koodi match {
