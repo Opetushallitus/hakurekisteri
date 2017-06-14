@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
+import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Registers, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -45,11 +45,11 @@ case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService: IHakemusService, koosteService: IKoosteService, hakuActor: ActorRef,
                       val rekisterit: Registers, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
                      )(implicit val ec: ExecutionContext, implicit val system: ActorSystem)
-  extends Hakupalvelu with OppijaFetcher {
+  extends Hakupalvelu {
 
-  override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  override val executor = ec
   val defaultTimeout: Timeout = 500.seconds
+
+  private val logger = Logging.getLogger(system, this)
 
   val Pattern = "preference(\\d+).*".r
 
@@ -94,7 +94,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
           //hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
-          oppijat <- fetchOppijat(persons = hakemukset.map(_.personOid.get).toSet, ensikertalaisuudet = false, q = HakemusQuery(q))(q.user.get)
+          oppijat <- fetchOppijat(hakemukset.map(_.personOid.get).toSet, hakuOid)
         } yield hakemukset
           .map { hakemus =>
             val suoritusJaArvosanat = oppijat.find(_.oppijanumero == hakemus.personOid.get).get.getSuorituksetJaArvosanat
@@ -112,7 +112,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService
             (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
             hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
-            oppijatFuture = fetchOppijat(persons = hakemukset.map(_.personOid.get).toSet, ensikertalaisuudet = false, q = HakemusQuery(q))(q.user.get)
+            oppijatFuture = fetchOppijat(hakemukset.map(_.personOid.get).toSet, hakuOid.get)
             //suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
@@ -129,6 +129,12 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService
           })
         } yield hakijat.toSeq
     }
+  }
+
+
+  private def fetchOppijat(oids: Set[String], hakuOid: String): Future[Seq[Oppija]] = {
+    logger.info(s"Get ${oids.size} oppijas for haku $hakuOid")
+    virkailijaClient.postObject[Seq[String], Seq[Oppija]]("suoritusrekisteri.oppijat", hakuOid)(200, oids.toSeq)
   }
 }
 
