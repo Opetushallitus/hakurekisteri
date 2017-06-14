@@ -49,6 +49,7 @@ trait Integrations {
   val valintarekisteri: ActorRef
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
+  val sureClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
 }
 
@@ -90,6 +91,8 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val proxies = new MockProxies
   override val hakemusClient = null
+  override val sureClient = null
+
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
@@ -129,6 +132,7 @@ class BaseIntegrations(rekisterit: Registers,
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
   private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(restEc, system)
   val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
+  val sureClient = new VirkailijaRestClient(config.integrations.sureConfig, None)(restEc, system)
   private val koosteClient = new VirkailijaRestClient(config.integrations.koosteConfig, None)(restEc, system)
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)

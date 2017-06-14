@@ -32,10 +32,10 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.valintarekisteri, integrations.tarjonta, haut, integrations.hakemusService, integrations.oppijaNumeroRekisteri, config)), "ensikertalainen")
 
   val hakupalvelu = new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, integrations.koosteService, haut,
-    rekisterit = registers, ensikertalaisuus = ensikertalainen, oppijaNumeroRekisteri = integrations.oppijaNumeroRekisteri)(ec, system)
+    integrations.sureClient)
   val hakijat = system.actorOf(Props(new HakijaActor(
     new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, integrations.koosteService, haut,
-      rekisterit = registers, ensikertalaisuus = ensikertalainen, oppijaNumeroRekisteri = integrations.oppijaNumeroRekisteri)(ec, system),
+      integrations.sureClient),
     integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   val kkHakijaService: KkHakijaService = new KkHakijaService(integrations.hakemusService,

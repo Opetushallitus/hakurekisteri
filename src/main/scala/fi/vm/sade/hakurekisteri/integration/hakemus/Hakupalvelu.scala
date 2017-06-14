@@ -1,17 +1,15 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.{Logging, LoggingAdapter}
+import akka.actor.ActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.oppija.Oppija
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Registers, Resource}
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{DateTime, LocalDate, MonthDay}
@@ -43,13 +41,11 @@ case class HakukohdeSearchResultList(tulokset: Seq[HakukohdeSearchResultTarjoaja
 case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 
 class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService: IHakemusService, koosteService: IKoosteService, hakuActor: ActorRef,
-                      val rekisterit: Registers, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
-                     )(implicit val ec: ExecutionContext, implicit val system: ActorSystem)
+                      sureClient: VirkailijaRestClient
+                     )(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
 
   val defaultTimeout: Timeout = 500.seconds
-
-  private val logger = Logging.getLogger(system, this)
 
   val Pattern = "preference(\\d+).*".r
 
@@ -133,8 +129,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, val hakemusService
 
 
   private def fetchOppijat(oids: Set[String], hakuOid: String): Future[Seq[Oppija]] = {
-    logger.info(s"Get ${oids.size} oppijas for haku $hakuOid")
-    virkailijaClient.postObject[Seq[String], Seq[Oppija]]("suoritusrekisteri.oppijat", hakuOid)(200, oids.toSeq)
+    sureClient.postObject[Seq[String], Seq[Oppija]]("suoritusrekisteri.oppijat", hakuOid)(200, oids.toSeq)
   }
 }
 
