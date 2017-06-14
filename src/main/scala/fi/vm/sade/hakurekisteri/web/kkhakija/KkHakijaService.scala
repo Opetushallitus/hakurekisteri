@@ -422,7 +422,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       onYlioppilas = isYlioppilas(suoritukset),
       yoSuoritusVuosi = None,
       turvakielto = henkilotiedot.turvakielto.contains("true"),
-      hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = None, julkaisulupa = None, hKelpoisuusMaksuvelvollisuus = None))
+      hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = None, julkaisulupa = hakemus.julkaisulupa, hKelpoisuusMaksuvelvollisuus = None))
     )
 
   private def getKkHakijaV2(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String], lukuvuosimaksut: Map[String, Lukuvuosimaksu])(hakemus: FullHakemus): Option[Future[Hakija]] =
