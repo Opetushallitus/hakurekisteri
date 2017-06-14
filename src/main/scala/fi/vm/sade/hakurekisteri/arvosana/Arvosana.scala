@@ -39,7 +39,7 @@ case class Arvosana(suoritus: UUID,
     val uusiLahdeArvot: java.util.Map[String, String] = lahdeArvot.asJava
     val uusiArvio = arvio.asJava
     val r = new fi.vm.sade.hakurekisteri.integration.hakemus.dto.Arvosana()
-    new fi.vm.sade.hakurekisteri.integration.hakemus.dto.Arvosana("id", suoritus.toString, aine, valinnainen, myonnetty.get.toString, source, uusiLahdeArvot, uusiArvio, lisatieto.get)
+    new fi.vm.sade.hakurekisteri.integration.hakemus.dto.Arvosana("id", suoritus.toString, aine, valinnainen, myonnetty.map(_.toString).orNull, source, uusiLahdeArvot, uusiArvio, lisatieto.orNull)
   }
 }
 
