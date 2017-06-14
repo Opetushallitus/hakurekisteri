@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.json4s.CustomSerializer
 import org.json4s.Extraction._
 import org.json4s.JsonAST.{JBool, JString, JValue}
@@ -37,4 +39,25 @@ class OppijaSerializer extends CustomSerializer[Oppija](ser = (formats) => (
         ("ensikertalainen" -> oppija.ensikertalainen.map(JBool(_)))
   }
   )
+)
+
+class TodistusSerializer extends CustomSerializer[Todistus](ser = (formats) => (
+  {
+    case todistus: JValue =>
+      implicit val f = formats
+      val arvosanat = extract[Seq[Arvosana]](todistus \ "arvosanat")
+      val suoritus = extract[Suoritus](todistus \ "suoritukset")
+
+      Todistus(suoritus, arvosanat)
+  },
+  {
+    case oppija: Oppija =>
+      ("id" -> oppija.oppijanumero) ~
+        ("oppijanumero" -> oppija.oppijanumero) ~
+        ("opiskelu" -> decompose(oppija.opiskelu)(formats)) ~
+        ("suoritukset" -> decompose(oppija.suoritukset)(formats)) ~
+        ("opiskeluoikeudet" -> decompose(oppija.opiskeluoikeudet)(formats)) ~
+        ("ensikertalainen" -> oppija.ensikertalainen.map(JBool(_)))
+  }
+)
 )

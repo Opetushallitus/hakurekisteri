@@ -1,8 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VapaamuotoinenSuoritus, VirallinenSuoritus}
 import org.joda.time.LocalDate
 import org.json4s.JsonAST._
@@ -23,8 +22,8 @@ class SuoritusSerializer extends CustomSerializer[Suoritus]((format: Formats) =>
       val JString(myontaja) = suoritus \ "myontaja"
       val JString(tila) = suoritus \ "tila"
       val valmistuminen = (suoritus \ "valmistuminen").extract[LocalDate]
-      val yksilollistaminen = (suoritus \ "yksilollistaminen").extract[Yksilollistetty]
-      val JString(suorituskieli) = suoritus \ "suorituskieli"
+      val yks = yksilollistaminen.withName((suoritus \ "yksilollistaminen").extract[String])
+      val JString(suorituskieli) = suoritus \ "suoritusKieli"
 
       new VirallinenSuoritus(
         komo = komo,
@@ -32,7 +31,7 @@ class SuoritusSerializer extends CustomSerializer[Suoritus]((format: Formats) =>
         myontaja = myontaja,
         valmistuminen = valmistuminen,
         lahde = source,
-        yksilollistaminen = yksilollistaminen,
+        yksilollistaminen = yks,
         suoritusKieli = suorituskieli,
         vahv = vahvistettu,
         tila = tila
