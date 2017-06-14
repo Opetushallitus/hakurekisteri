@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.tools.DurationHelper
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 trait OppijaFetcher {
 
@@ -61,31 +62,39 @@ trait OppijaFetcher {
   }
 
   def getRekisteriData(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Oppija]] = {
-    val logId = UUID.randomUUID()
-    def timed[A](msg: String, f: Future[A]): Future[A] =
-      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
+    try {
+      val logId = UUID.randomUUID()
 
-    val todistuksetF = timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOidsWithAliases))
-      .flatMap(suoritukset => timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset)))
-      .map(_.groupBy(_.suoritus.henkiloOid))
-    val opiskeluoikeudetF = timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOidsWithAliases))
-      .map(_.groupBy(_.henkiloOid))
-    val opiskelijatF = timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOidsWithAliases))
-      .map(_.groupBy(_.henkiloOid))
+      def timed[A](msg: String, f: Future[A]): Future[A] =
+        DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
-    for {
-      todistukset <- todistuksetF
-      opiskeluoikeudet <- opiskeluoikeudetF
-      opiskelijat <- opiskelijatF
-    } yield personOidsWithAliases.henkiloOids.map(henkiloOid =>
-      Oppija(
-        oppijanumero = henkiloOid,
-        opiskelu = opiskelijat.getOrElse(henkiloOid, Seq()),
-        opiskeluoikeudet = opiskeluoikeudet.getOrElse(henkiloOid, Seq()),
-        suoritukset = suorituksetWithAliases(personOidsWithAliases.intersect(Set(henkiloOid)), todistukset, henkiloOid),
-        ensikertalainen = None
-      )
-    ).toSeq
+      val todistuksetF = timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOidsWithAliases))
+        .flatMap(suoritukset => timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset)))
+        .map(_.groupBy(_.suoritus.henkiloOid))
+      val opiskeluoikeudetF = timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOidsWithAliases))
+        .map(_.groupBy(_.henkiloOid))
+      val opiskelijatF = timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOidsWithAliases))
+        .map(_.groupBy(_.henkiloOid))
+
+      for {
+        todistukset <- todistuksetF
+        opiskeluoikeudet <- opiskeluoikeudetF
+        opiskelijat <- opiskelijatF
+      } yield personOidsWithAliases.henkiloOids.map(henkiloOid =>
+        Oppija(
+          oppijanumero = henkiloOid,
+          opiskelu = opiskelijat.getOrElse(henkiloOid, Seq()),
+          opiskeluoikeudet = opiskeluoikeudet.getOrElse(henkiloOid, Seq()),
+          suoritukset = suorituksetWithAliases(personOidsWithAliases.intersect(Set(henkiloOid)), todistukset, henkiloOid),
+          ensikertalainen = None
+        )
+      ).toSeq
+    } catch {
+      case e: Exception => {
+        logger.error("getRekisteriData failed", e)
+        Future.failed(e)
+      }
+    }
   }
 
   private def suorituksetWithAliases(personOidsWithAliases: PersonOidsWithAliases, todistuksetByPersonOid: Map[String, Seq[Todistus]], oid: String): Seq[Todistus] = {
@@ -98,11 +107,15 @@ trait OppijaFetcher {
   }
 
   private def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Todistus]] =
-    for (
-      arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanatQuery(suoritukset.map(_.id).toSet), user))
-        .mapTo[Seq[Arvosana]]
-        .map(_.groupBy(_.suoritus))
-    ) yield suoritukset.map(suoritus => Todistus(suoritus, arvosanat.getOrElse(suoritus.id, Seq())))
+    try {
+      for (
+        arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanatQuery(suoritukset.map(_.id).toSet), user))
+          .mapTo[Seq[Arvosana]]
+          .map(_.groupBy(_.suoritus))
+      ) yield suoritukset.map(suoritus => Todistus(suoritus, arvosanat.getOrElse(suoritus.id, Seq())))
+    } catch {
+      case e: Exception => Future.failed(e)
+    }
 
   private def fetchEnsikertalaisuudet(q: HakemusQuery)
                                      (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {
@@ -120,13 +133,25 @@ trait OppijaFetcher {
   }
 
   private def fetchOpiskeluoikeudet(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Opiskeluoikeus]] =
-    splittedQuery[Opiskeluoikeus, Opiskeluoikeus](personOidsWithAliases, rekisterit.opiskeluoikeusRekisteri, (henkilot) => OpiskeluoikeusHenkilotQuery(henkilot))
+    try {
+      splittedQuery[Opiskeluoikeus, Opiskeluoikeus](personOidsWithAliases, rekisterit.opiskeluoikeusRekisteri, (henkilot) => OpiskeluoikeusHenkilotQuery(henkilot))
+    } catch {
+      case e: Exception => Future.failed(e)
+    }
 
   private def fetchOpiskelu(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Opiskelija]] =
-    splittedQuery[Opiskelija, Opiskelija](personOidsWithAliases, rekisterit.opiskelijaRekisteri, (henkilot) => OpiskelijaHenkilotQuery(henkilot))
+    try {
+      splittedQuery[Opiskelija, Opiskelija](personOidsWithAliases, rekisterit.opiskelijaRekisteri, (henkilot) => OpiskelijaHenkilotQuery(henkilot))
+    } catch {
+      case e: Exception => Future.failed(e)
+    }
 
   private def fetchSuoritukset(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] =
-    splittedQuery[Suoritus with Identified[UUID], Suoritus](personOidsWithAliases, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
+    try {
+      splittedQuery[Suoritus with Identified[UUID], Suoritus](personOidsWithAliases, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
+    } catch {
+      case e: Exception => Future.failed(e)
+    }
 
   private def splittedQuery[A, B](personOidsWithAliases: PersonOidsWithAliases, actor: ActorRef, q: (PersonOidsWithAliases) => Query[B])(implicit user: User): Future[Seq[A]] =
     Future.sequence(personOidsWithAliases.henkiloOids.grouped(singleSplitQuerySize).map(henkiloSubset =>
