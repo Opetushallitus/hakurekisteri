@@ -1,14 +1,42 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VapaamuotoinenSuoritus, VirallinenSuoritus}
+import org.joda.time.LocalDate
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
-import org.json4s.{CustomSerializer, Extraction, Formats}
+import org.json4s.{CustomSerializer, DefaultFormats, Extraction, Formats}
 
 class SuoritusSerializer extends CustomSerializer[Suoritus]((format: Formats) => (
   {
-    case suoritus:JObject  => ???
+    case suoritus:JObject  =>
+      implicit val localDateSerializer = new LocalDateSerializer()
+
+      implicit val formats = DefaultFormats + localDateSerializer
+
+      val JString(henkiloOid) = suoritus \ "henkiloOid"
+      val JString(source) = suoritus \ "source"
+      val JBool(vahvistettu) = suoritus \ "vahvistettu"
+      val JString(komo) = suoritus \ "komo"
+      val JString(myontaja) = suoritus \ "myontaja"
+      val JString(tila) = suoritus \ "tila"
+      val valmistuminen = (suoritus \ "valmistuminen").extract[LocalDate]
+      val yksilollistaminen = (suoritus \ "yksilollistaminen").extract[Yksilollistetty]
+      val JString(suorituskieli) = suoritus \ "suorituskieli"
+
+      new VirallinenSuoritus(
+        komo = komo,
+        henkilo = henkiloOid,
+        myontaja = myontaja,
+        valmistuminen = valmistuminen,
+        lahde = source,
+        yksilollistaminen = yksilollistaminen,
+        suoritusKieli = suorituskieli,
+        vahv = vahvistettu,
+        tila = tila
+      )
   },
   {
 
@@ -36,6 +64,8 @@ class SuoritusSerializer extends CustomSerializer[Suoritus]((format: Formats) =>
 
 
 object SuoritusSerializer {
+
+
 
   def suoritus(s: Suoritus) = {
     ("henkiloOid" -> s.henkiloOid) ~
