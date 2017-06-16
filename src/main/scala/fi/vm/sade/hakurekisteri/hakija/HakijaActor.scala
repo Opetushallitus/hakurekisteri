@@ -379,8 +379,18 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       hakutoives
   }
 
-  def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Hakija = {
-    hakija.copy(hakija.henkilo, hakija.suoritukset, hakija.opiskeluhistoria, hakemus = hakija.hakemus.copy(filterByQuery(q)(hakija.hakemus.hakutoiveet), hakija.hakemus.hakemusnumero, hakija.hakemus.julkaisulupa, hakija.hakemus.hakuOid, hakija.hakemus.lisapistekoulutus))
+  def filterHakijatHakutoiveetByQuery(q: HakijaQuery)(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
+    Future.successful(hakijat.flatMap(filterHakutoiveetByQuery(q)(_)))
+  }
+
+  def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Option[Hakija] = {
+    val filteredHakutoiveet = filterByQuery(q)(hakija.hakemus.hakutoiveet)
+    if(filteredHakutoiveet.nonEmpty) {
+      Some(hakija.copy(hakija.henkilo, hakija.suoritukset, hakija.opiskeluhistoria, hakemus =
+          hakija.hakemus.copy(hakutoiveet = filteredHakutoiveet)))
+    } else {
+      None
+    }
   }
 
   def enrichHakijat(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(for {
@@ -428,26 +438,20 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       )
     })
 
-  def getHakijat(q: HakijaQuery): Future[Seq[XMLHakija]] = {
-    hakupalvelu.getHakijat(q).flatMap(enrichHakijat).flatMap(combine2sijoittelunTulos(q.user)).flatMap(hakijat => hakijat2XmlHakijat(hakijat.map(filterHakutoiveetByQuery(q))))
-  }
-  def getHakijatV2(q: HakijaQuery): Future[Seq[JSONHakija]] = {
-    hakupalvelu.getHakijat(q).flatMap(enrichHakijat).flatMap(combine2sijoittelunTulos(q.user)).flatMap(hakijat => hakijat2JsonHakijatV2(hakijat.map(filterHakutoiveetByQuery(q))))
-  }
-  def getHakijatV3(q: HakijaQuery): Future[Seq[JSONHakija]] = {
+  def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     hakupalvelu.getHakijat(q)
       .flatMap(enrichHakijat)
       .flatMap(combine2sijoittelunTulos(q.user))
-      .flatMap(hakijat => hakijat2JsonHakijatV3(hakijat.map(filterHakutoiveetByQuery(q))))
+      .flatMap(filterHakijatHakutoiveetByQuery(q))
   }
 
   val hakijaWithValittu: (XMLHakija) => XMLHakija = hakutoiveFilter(_.valinta == Some("1"))
 
   val hakijaWithVastaanotettu = hakutoiveFilter(_.vastaanotto == Some("3")) _
 
-  def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = getHakijat(q).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.nonEmpty)))
-  def JSONQuery(q: HakijaQuery): Future[JSONHakijat] = getHakijatV2(q).map((hakijat) => JSONHakijat(hakijat.filter(_.hakemus.hakutoiveet.nonEmpty)))
-  def JSONQueryV3(q: HakijaQuery): Future[JSONHakijat] = getHakijatV3(q).map((hakijat) => JSONHakijat(hakijat.filter(_.hakemus.hakutoiveet.nonEmpty)))
+  def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = getHakijat(q).flatMap(hakijat2XmlHakijat).map(XMLHakijat)
+  def JSONQuery(q: HakijaQuery): Future[JSONHakijat] = getHakijat(q).flatMap(hakijat2JsonHakijatV2).map(JSONHakijat)
+  def JSONQueryV3(q: HakijaQuery): Future[JSONHakijat] = getHakijat(q).flatMap(hakijat2JsonHakijatV3).map(JSONHakijat)
 }
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User], version: Int) extends Query
