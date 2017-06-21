@@ -351,7 +351,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def matchHakukohdekoodi(koodi: Option[String], koulutuskoodi: String): Boolean = koodi match {
-    case Some(k) => koulutuskoodi == k
+    case Some(k) => koulutuskoodi == k || k.split('_').last == koulutuskoodi
     case None => true
   }
 
