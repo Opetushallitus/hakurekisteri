@@ -26,6 +26,13 @@ class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with Lo
     }
   }
 
+  test("JSON contains foreign huoltajan nimi") {
+    Hakupalvelu has FullHakemus5
+    get("/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json") {
+      body should include("\"sukunimi\":\"Hyvaksytty\"")
+    }
+  }
+
   override def stop(): Unit = {
     import scala.concurrent.duration._
     Await.result(system.terminate(), 15.seconds)
