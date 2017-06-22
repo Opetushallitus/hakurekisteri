@@ -346,12 +346,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def hakutoiveFilter(predicate: (XMLHakutoive) => Boolean)(xh: XMLHakija): XMLHakija = xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(predicate)))
 
   def matchOrganisaatio(oid: Option[String], parentOidPath: String): Boolean = oid match {
-    case Some(o) => parentOidPath.split(",").contains(o)
+    case Some(o) => parentOidPath.isEmpty || parentOidPath.split(",").contains(o)
     case None => true
   }
 
   def matchHakukohdekoodi(koodi: Option[String], koulutuskoodi: String): Boolean = koodi match {
-    case Some(k) => koulutuskoodi == k
+    case Some(k) => koulutuskoodi == k || k.split('_').last == koulutuskoodi
     case None => true
   }
 

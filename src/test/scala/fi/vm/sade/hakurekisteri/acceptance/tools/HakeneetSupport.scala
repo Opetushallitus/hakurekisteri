@@ -432,6 +432,96 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     attachmentRequests = Seq()
   )
 
+  object FullHakemus5 extends FullHakemus("1.24.5", Some("1.0.1"), "1.3",
+    answers = Some(
+      HakemusAnswers(
+        osaaminen = Some(Map("yleinen_kielitutkinto_fi" -> "true", "valtionhallinnon_kielitutkinto_fi" -> "true")),
+        henkilotiedot = Some(
+          HakemusHenkilotiedot(
+            kansalaisuus = Some("FIN"),
+            asuinmaa = Some("FIN"),
+            matkapuhelinnumero1 = Some("0401234567"),
+            matkapuhelinnumero2 = None,
+            Sukunimi = Some("Hyvaksytty"),
+            Henkilotunnus = Some("200394-9839"),
+            Postinumero = Some("00100"),
+            osoiteUlkomaa = None,
+            postinumeroUlkomaa = None,
+            kaupunkiUlkomaa = None,
+            lahiosoite = Some("Katu 1"),
+            sukupuoli = Some("1"),
+            Sähköposti = Some("mikko@testi.oph.fi"),
+            Kutsumanimi = Some("Mikko"),
+            Etunimet = Some("Mikko"),
+            kotikunta = Some("098"),
+            aidinkieli = Some("FI"),
+            syntymaaika = Some("20.03.1994"),
+            onkoSinullaSuomalainenHetu = Some("true"),
+            koulusivistyskieli = Some("FI"),
+            turvakielto = Some("true"))),
+        koulutustausta = Some(
+          Koulutustausta(
+            pohjakoulutus_muu_vuosi = None,
+            perusopetuksen_kieli = None,
+            lukion_kieli = None,
+            pohjakoulutus_yo_vuosi = None,
+            pohjakoulutus_am_vuosi = None,
+            pohjakoulutus_amt_vuosi = None,
+            pohjakoulutus_kk_pvm = None,
+            pohjakoulutus_ulk_vuosi = None,
+            PK_PAATTOTODISTUSVUOSI = Some("2014"),
+            KYMPPI_PAATTOTODISTUSVUOSI = None,
+            POHJAKOULUTUS = Some("1"),
+            lahtokoulu = Some(OppilaitosX.oid),
+            luokkataso = Some("9"),
+            LISAKOULUTUS_KYMPPI = None,
+            LISAKOULUTUS_VAMMAISTEN = None,
+            LISAKOULUTUS_TALOUS = None,
+            LISAKOULUTUS_AMMATTISTARTTI = None,
+            LISAKOULUTUS_KANSANOPISTO = None,
+            LISAKOULUTUS_MAAHANMUUTTO = None,
+            LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
+            lahtoluokka = Some("9A"),
+            lukioPaattotodistusVuosi = None,
+            pohjakoulutus_yo = Some("true"),
+            pohjakoulutus_am = None,
+            pohjakoulutus_amt = None,
+            pohjakoulutus_kk = None,
+            pohjakoulutus_avoin = None,
+            pohjakoulutus_ulk = None,
+            pohjakoulutus_muu = None,
+            aiempitutkinto_korkeakoulu = None,
+            aiempitutkinto_tutkinto = None,
+            aiempitutkinto_vuosi = None,
+            suoritusoikeus_tai_aiempi_tutkinto = None,
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None,
+            muukoulutus = None
+          )),
+        hakutoiveet =  Some(Map(
+          "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
+          "preference1-Opetuspiste-id" -> "1.10.3",
+          "preference1-Opetuspiste-id-parents" -> "",
+          "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
+          "preference1-Koulutus-id" -> "1.11.5",
+          "preference1-Koulutus-id-aoIdentifier" -> "460",
+          "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
+          "preference1-Koulutus-id-lang" -> "FI",
+          "preference1-Koulutus-id-sora" -> "true",
+          "preference1-Koulutus-id-vocational" -> "true",
+          "preference1_sora_terveys" -> "true",
+          "preference1_sora_oikeudenMenetys" -> "true",
+          "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
+          "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
+          "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
+    state = Some("ACTIVE"),
+    preferenceEligibilities = Seq(PreferenceEligibility("1.11.5", "NOT_CHECKED", Some("UNKNOWN"), Some("NOT_CHECKED"))),
+    attachmentRequests = Seq()
+  )
+
   object SynteettinenHakemus extends FullHakemus("1.25.3", Some("1.24.3"), "1.3",
     answers = Some(
       HakemusAnswers(
@@ -558,6 +648,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case "1.25.1" => Future(Some(FullHakemus1))
       case "1.25.2" => Future(Some(FullHakemus2))
       case "1.25.3" => Future(Some(SynteettinenHakemus))
+      case "1.25.5" => Future(Some(FullHakemus5))
       case "1.25.10" => Future(Some(VanhentuneenHaunHakemus))
       case default => Future(None)
     }
@@ -641,6 +732,19 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.10.4",
             Valintatila.KESKEN,
             Vastaanottotila.KESKEN,
+            HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
+            None
+          )
+        )
+      ),
+      ValintaTulos(
+        FullHakemus5.oid,
+        Seq(
+          ValintaTulosHakutoive(
+            "1.11.5",
+            "1.10.4",
+            Valintatila.HYVAKSYTTY,
+            Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None
           )
