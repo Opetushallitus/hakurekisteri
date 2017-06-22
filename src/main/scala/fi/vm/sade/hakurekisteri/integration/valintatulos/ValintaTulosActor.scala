@@ -33,6 +33,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   private val cache: FutureCache[String, SijoitteluTulos] = new FutureCache[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis))
   private var calling: Boolean = false
   private var initialLoadingDone = initOnStartup
+  private val startTimeMillis: Long = System.currentTimeMillis()
 
   case class CacheResponse(haku: String, response: SijoitteluTulos)
   case class UpdateFailed(haku: String, t: Throwable)
@@ -58,7 +59,8 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 
     case UpdateNext if !calling && updateRequestQueue.isEmpty && !initialLoadingDone =>
       initialLoadingDone = true
-      log.info("initial loading done")
+      val initialLoadingDurationS: Long = (System.currentTimeMillis() - startTimeMillis) / 1000
+      log.info(s"initial loading done in $initialLoadingDurationS seconds")
 
     case UpdateNext if !calling && updateRequestQueue.nonEmpty =>
       calling = true
