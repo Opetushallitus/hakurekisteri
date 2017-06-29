@@ -79,7 +79,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     zout.write("[")
     val last = 100000
     for (a <- 1 to last) {
-      val json: String = write(Student("050996-9574", "", "", None, None, None, None, "fi", Nil))
+      val json: String = write(Student("050996-9574", "", "", None, None, None, None, None, "fi", Nil))
       zout.write(json.getBytes)
       if(a != last) {
         zout.write(",")

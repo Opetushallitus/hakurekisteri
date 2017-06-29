@@ -101,6 +101,7 @@ case class Student(ssn: String, lastname: String, firstnames: String,
                    graduationDate: Option[LocalDate] = None,
                    graduationSchoolOphOid: Option[String] = None,
                    graduationSchoolYtlNumber: Option[String] = None,
+                   hasCompletedMandatoryExams: Option[Boolean] = None,
                    language: String,
                    exams: Seq[Exam])
 
@@ -148,9 +149,10 @@ object StudentToKokelas {
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
     val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(Student.parseKausi(Student.nextKausi).get)
-    val valmis = s.graduationPeriod.isDefined
+    val päättötodistus = s.graduationPeriod.isDefined
+    val `tutkinto valmis, päättötodistus puuttuu` = s.hasCompletedMandatoryExams.getOrElse(false) && !päättötodistus
     val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen,
-      kieli = s.language.toUpperCase, valmis = valmis)
+      kieli = s.language.toUpperCase, valmis = päättötodistus, `T-merkintä` = `tutkinto valmis, päättötodistus puuttuu`)
     suoritus
   }
 }
