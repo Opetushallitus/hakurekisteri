@@ -150,9 +150,8 @@ object StudentToKokelas {
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
     val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(Student.parseKausi(Student.nextKausi).get)
     val päättötodistus = s.graduationPeriod.isDefined
-    val `tutkinto valmis, päättötodistus puuttuu` = s.hasCompletedMandatoryExams.getOrElse(false) && !päättötodistus
     val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen,
-      kieli = s.language.toUpperCase, valmis = päättötodistus, `T-merkintä` = `tutkinto valmis, päättötodistus puuttuu`)
+      kieli = s.language.toUpperCase, valmis = päättötodistus, s.hasCompletedMandatoryExams.map(c => Map("hasCompletedMandatoryExams" -> c.toString)).getOrElse(Map.empty))
     suoritus
   }
 }

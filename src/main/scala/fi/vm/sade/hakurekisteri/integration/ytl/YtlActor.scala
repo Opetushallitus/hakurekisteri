@@ -202,7 +202,7 @@ object YoTutkinto {
   val YTL: String = Oids.ytlOrganisaatioOid
   val yotutkinto = Oids.yotutkintoKomoOid
 
-  def apply(suorittaja: String, valmistuminen: LocalDate, kieli: String, valmis: Boolean = true, `T-merkintä`: Boolean, vahvistettu: Boolean = true) = {
+  def apply(suorittaja: String, valmistuminen: LocalDate, kieli: String, valmis: Boolean = true, lahdeArvot: Map[String,String], vahvistettu: Boolean = true) = {
     VirallinenSuoritus(
       komo = yotutkinto,
       myontaja = YTL,
@@ -212,7 +212,8 @@ object YoTutkinto {
       yksilollistaminen = yksilollistaminen.Ei,
       suoritusKieli = kieli,
       vahv = vahvistettu,
-      lahde = YTL)
+      lahde = YTL,
+      lahdeArvot = lahdeArvot)
   }
 }
 private object Koe {

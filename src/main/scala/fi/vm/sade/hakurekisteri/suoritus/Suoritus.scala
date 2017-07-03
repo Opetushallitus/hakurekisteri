@@ -136,21 +136,23 @@ object ItseilmoitettuLukioTutkinto {
       suoritusKieli,
       opiskeluoikeus = None,
       vahv = false,
+
       lahde = hakijaOid
     )
 
 }
 
 case class VirallinenSuoritus(komo: String,
-                    myontaja: String,
-                    tila: String,
-                    valmistuminen: LocalDate,
-                    henkilo: String,
-                    yksilollistaminen: Yksilollistetty,
-                    suoritusKieli: String,
-                    opiskeluoikeus: Option[UUID] = None,
-                    vahv:Boolean = true,
-                    lahde: String) extends Suoritus(henkilo, vahv, lahde)  {
+                              myontaja: String,
+                              tila: String,
+                              valmistuminen: LocalDate,
+                              henkilo: String,
+                              yksilollistaminen: Yksilollistetty,
+                              suoritusKieli: String,
+                              opiskeluoikeus: Option[UUID] = None,
+                              vahv:Boolean = true,
+                              lahde: String,
+                              lahdeArvot: Map[String,String] = Map.empty) extends Suoritus(henkilo, vahv, lahde)  {
 
   private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean)
 

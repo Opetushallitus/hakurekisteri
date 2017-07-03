@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 
 
 object SuoritusRowTypes {
-  type SuoritusRow = (String, String, Option[Boolean], Option[String], Option[String], Option[LocalDate], Option[Yksilollistetty], Option[String], Option[String], Option[Int], Option[String], Option[Int], String)
+  type SuoritusRow = (String, String, Option[Boolean], Option[String], Option[String], Option[LocalDate], Option[Yksilollistetty], Option[String], Option[String], Option[Int], Option[String], Option[Int], String, Map[String,String])
 }
 
 import SuoritusRowTypes._
@@ -35,22 +35,24 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
   def tyyppi = column[Option[String]]("tyyppi")
   def index = column[Option[Int]]("index")
 
-  override def resourceShape = (myontaja, henkiloOid, vahvistettu, komo, tila, valmistuminen, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, index, source).shaped
+  def lahdeArvot: Rep[Map[String, String]] = column[Map[String,String]]("lahde_arvot", O.SqlType("TEXT"))
+
+  override def resourceShape = (myontaja, henkiloOid, vahvistettu, komo, tila, valmistuminen, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, index, source, lahdeArvot).shaped
 
   override def row(s: Suoritus): Option[SuoritusRow] = s match {
     case o: VirallinenSuoritus =>
-      Some( o.myontaja, o.henkiloOid, Some(o.vahvistettu), Some(o.komo),Some(o.tila), Some(o.valmistuminen), Some(o.yksilollistaminen), Some(o.suoritusKieli), None, None, None, None, o.source)
+      Some( o.myontaja, o.henkiloOid, Some(o.vahvistettu), Some(o.komo),Some(o.tila), Some(o.valmistuminen), Some(o.yksilollistaminen), Some(o.suoritusKieli), None, None, None, None, o.source, o.lahdeArvot)
     case s: VapaamuotoinenSuoritus =>
-      Some(s.myontaja, s.henkiloOid, Some(s.vahvistettu), None, None, None,  None, None, Some(s.kuvaus), Some(s.vuosi), Some(s.tyyppi), Some(s.index), s.source)
+      Some(s.myontaja, s.henkiloOid, Some(s.vahvistettu), None, None, None,  None, None, Some(s.kuvaus), Some(s.vuosi), Some(s.tyyppi), Some(s.index), s.source, Map.empty)
 
   }
 
-  override val deletedValues = (lahde: String) =>  ("", "", Some(true), None, None, None, None, None, None, None, None, None, lahde)
+  override val deletedValues: String => SuoritusRow = (lahde) =>  ("", "", Some(true), None, None, None, None, None, None, None, None, None, lahde, Map())
 
   override val resource: SuoritusRow => Suoritus = {
-    case (myontaja, henkiloOid, vahvistettu, Some(komo), Some(tila), Some(valmistuminen), Some(yks), Some(suoritusKieli), _, _, _, _,  source) =>
-      VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, vahv = vahvistettu.getOrElse(true), lahde = source)
-    case (myontaja, henkiloOid, vahvistettu, _, _, _, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), Some(index), source)  =>
+    case (myontaja, henkiloOid, vahvistettu, Some(komo), Some(tila), Some(valmistuminen), Some(yks), Some(suoritusKieli), _, _, _, _,  source, lahdeArvot) =>
+      VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, vahv = vahvistettu.getOrElse(true), lahde = source, lahdeArvot = lahdeArvot)
+    case (myontaja, henkiloOid, vahvistettu, _, _, _, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), Some(index), source, lahdeArvot)  =>
       VapaamuotoinenSuoritus(henkiloOid,kuvaus, myontaja, vuosi, tyyppi, index, source)
     case row => throw new InvalidSuoritusDataException(row)
   }
