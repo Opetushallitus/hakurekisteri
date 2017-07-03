@@ -158,7 +158,7 @@ case class VirallinenSuoritus(komo: String,
 
   override  val core = VirallinenSisalto(henkilo, komo, myontaja, vahv)
 
-  override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source) with Identified[UUID] {
+  override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source, lahdeArvot) with Identified[UUID] {
     val id: UUID = identity
   }
 }

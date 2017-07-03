@@ -22,7 +22,8 @@ class SuoritusSerializer extends CustomSerializer[Suoritus]((format: Formats) =>
     case s: VirallinenSuoritus with Identified[_] =>
       implicit val frmts = format
       SuoritusSerializer.virallinen(s) ~
-      ("id" -> Extraction.decompose(s.id))
+      ("id" -> Extraction.decompose(s.id)) ~
+      ("lahdeArvot" -> Extraction.decompose(s.lahdeArvot))
 
     case s: VirallinenSuoritus =>
       implicit val frmts = format

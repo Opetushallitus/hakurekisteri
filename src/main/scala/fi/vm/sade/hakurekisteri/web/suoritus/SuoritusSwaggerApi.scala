@@ -48,6 +48,12 @@ trait SuoritusSwaggerModel extends OldSwaggerSyntax {
 
   def suoritusModel = Model("Suoritus", "Suoritus", suoritusFields.map(t => (t.name, t)).toMap, discriminator = Some("suoritusTyyppi"))
 
+  val suoritusLahdeArvotFields = Seq(
+    ModelField("hasCompletedMandatoryExams", "Pakolliset kokeet suoritettu", DataType.String, required = false)
+  )
+
+  def suoritusLahdeArvotModel = Model("SuoritusLahdeArvot", "lähdejärjestelmän arvot", suoritusLahdeArvotFields.map(t => (t.name, t)).toMap)
+
   val virallinenSuoritusFields = Seq(
     ModelField("id", "suorituksen uuid", DataType.String),
     ModelField("tila", null, DataType.String),
@@ -57,7 +63,8 @@ trait SuoritusSwaggerModel extends OldSwaggerSyntax {
     ModelField("valmistuminen", null, DataType.Date),
     ModelField("suoritusKieli", null, DataType.String),
     ModelField("yksilollistaminen", null, DataType.String, None, AllowableValues(yksilollistaminen.values.map(v => v.toString).toList)),
-    ModelField("vahvistettu", null, DataType.Boolean, Some("true"), required = false))
+    ModelField("vahvistettu", null, DataType.Boolean, Some("true"), required = false),
+    ModelField("lahdeArvot", "lähdejärjestelmästä saadut alkuperäiset arvot", DataType("SuoritusLahdeArvot"), required = false))
 
   def virallinenSuoritusModel = Model("Suoritus", "Suoritus", virallinenSuoritusFields.map(t => (t.name, t)).toMap, Some("Suoritus"))
 
