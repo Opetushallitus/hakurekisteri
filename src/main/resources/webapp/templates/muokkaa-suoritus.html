@@ -76,13 +76,14 @@
         <div ng-hide="info.editable" class="test-suoritusValmistuminen">{{showValmistuminenFormatted()}}</div>
     </div>
     <div class="form-group col-sm-4">
-        <div><strong oph-msg="suoritusrekisteri.muokkaa.tila">Tila</strong>&nbsp;<span class="tmerkinta" ng-show="suoritus.tila == 'KESKEN' && suoritus.lahdeArvot.hasCompletedMandatoryExams">(T)</span></div>
+        <strong oph-msg="suoritusrekisteri.muokkaa.tila">Tila</strong>
+        <span class="tmerkinta" ng-show="suoritus.tila == 'KESKEN' && suoritus.lahdeArvot.hasCompletedMandatoryExams">(T)</span>
         <select ng-show="info.editable"
-                ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
-                ng-model="suoritus.tila"
-                required="required"
-                ng-options="t.value as t.text for t in tilat"
-                class="form-control input-sm test-suoritusTila"></select>
+            ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
+            ng-model="suoritus.tila"
+            required="required"
+            ng-options="t.value as t.text for t in tilat"
+            class="form-control input-sm test-suoritusTila"></select>
 
         <div ng-hide="info.editable" class="test-suoritusTila">{{resolveValueFromOptionArray(suoritus.tila, tilat)}}</div>
     </div>
