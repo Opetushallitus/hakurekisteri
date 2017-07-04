@@ -307,3 +307,7 @@ optgroup option {
 .validation-error .name:last-child .separator {
     display: none;
 }
+
+.tmerkinta {
+    font-size: 9px;
+}
