@@ -21,6 +21,12 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] with LocalDat
   val suoritusKieli: Field[String] = asType[String]("suoritusKieli").required.allowableValues(languages:_*)
   val vahvistettu: Field[Boolean] = asType[Boolean]("vahvistettu").optional(false)
 
-  override def toResource(user: String): Suoritus = VirallinenSuoritus(komo.value.get, myontaja.value.get, tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get, vahv = vahvistettu.value.get, lahde = user)}
+  override def toResource(user: String): Suoritus = VirallinenSuoritus(
+    komo.value.get,
+    myontaja.value.get,
+    tila.value.get,
+    valmistuminen.value.get,
+    henkiloOid.value.get,
+    yks.value.get, suoritusKieli.value.get, vahv = vahvistettu.value.get, lahde = user, lahdeArvot = Map())}
 
 
