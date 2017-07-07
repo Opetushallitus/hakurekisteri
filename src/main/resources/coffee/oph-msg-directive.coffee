@@ -64,6 +64,8 @@ app.factory "LokalisointiService", [
         addTranslations msgKey, elemText
         return elemText
       oldTranslation = xLangs[lang]
+      if !oldTranslation
+        return elemText
       x = oldTranslation.value
       if x is "" or not x
         addTranslations msgKey, elemText, oldTranslation
