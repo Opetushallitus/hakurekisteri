@@ -433,7 +433,8 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: A
 
 class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor {
   def isKorvaava(old: Arvosana) = (uusi: Arvosana) =>
-    uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto && uusi.lahdeArvot == old.lahdeArvot
+    uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto &&
+      (uusi.lahdeArvot == old.lahdeArvot || (uusi.lahdeArvot != old.lahdeArvot && uusi.valinnainen != old.valinnainen))
 
   override def receive: Actor.Receive = {
     case s: Seq[_] =>
