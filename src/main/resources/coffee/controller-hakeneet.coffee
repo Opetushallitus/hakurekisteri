@@ -119,7 +119,7 @@ app.controller "HakeneetCtrl", [
     )
 
     $('#oppijanumero').placeholder()
-    $('#hakukohde').placeholder()
+    $('#hakukohdekoodi').placeholder()
 
     isKk = ->
       aste is "kk"
