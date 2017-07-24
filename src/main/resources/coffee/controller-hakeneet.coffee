@@ -429,15 +429,14 @@ app.controller "HakeneetCtrl", [
       return
 
     $scope.searchHakukohdekoodi = (text) ->
+      return [] unless text
       $scope.hakukohteet.filter (h) ->
-        return false  unless text
         (h.koodi and h.koodi.indexOf(text) > -1) or (h.nimi and h.nimi.toLowerCase().indexOf(text.toLowerCase()) > -1)
 
     $scope.getHakukohdeWithKoodi = (koodi) ->
-      hakukohteet = $scope.hakukohteet.filter (h) ->
-        return false  unless koodi
-        h.koodi == koodi
-      hakukohteet[0]
+      return undefined unless koodi
+      ($scope.hakukohteet.filter (h) ->
+        h.koodi == koodi)[0]
 
 
     $scope.setHakukohdenimi = ->
