@@ -47,11 +47,11 @@ loadHakutiedot = (hautResponse, $scope) ->
   $scope.haut = haut
 
 
-loadHakukohdekoodit = (data, $scope) ->
-  $scope.hakukohdekoodit = data.map((koodi) ->
-    koodi: koodi.koodiArvo
-    koodiUri: koodi.koodiUri
-    nimi: koodi.metadata.sort((a, b) ->
+loadHakukohteet = (data, $scope) ->
+  $scope.hakukohteet = data.map((h) ->
+    koodi: h.koodiArvo
+    koodiUri: h.koodiUri
+    nimi: h.metadata.sort((a, b) ->
       if a.kieli and b.kieli and a.kieli isnt b.kieli
         (if a.kieli < b.kieli then -1 else 1)
       else
@@ -74,11 +74,11 @@ app.controller "HakeneetCtrl", [
   "MessageService"
   "aste"
   "haut"
-  "hakukohdekoodit"
-  "aikuhakukohdekoodit"
+  "hakukohdeData"
+  "aikuhakukohdeData"
   "$interval"
   "LokalisointiService"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit, aikuhakukohdekoodit, $interval, LokalisointiService) ->
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdeData, aikuhakukohdeData, $interval, LokalisointiService) ->
     pollInterval = 1 * 1500 # every second
 
     $scope.handlePoll = (reply) ->
@@ -119,7 +119,7 @@ app.controller "HakeneetCtrl", [
     )
 
     $('#oppijanumero').placeholder()
-    $('#hakukohde').placeholder()
+    $('#hakukohdekoodi').placeholder()
 
     isKk = ->
       aste is "kk"
@@ -223,7 +223,7 @@ app.controller "HakeneetCtrl", [
     $scope.search = ->
       MessageService.clearMessages()
       if isKk()
-        if not $scope.oppijanumero and not $scope.hakukohde and not ($scope.hakukohderyhma and $scope.haku)
+        if not $scope.oppijanumero and not $scope.hakukohdekoodi and not ($scope.hakukohderyhma and $scope.haku)
           unless $scope.oppijanumero
             MessageService.addMessage
               type: "danger"
@@ -232,7 +232,7 @@ app.controller "HakeneetCtrl", [
               description: "Syötä oppijanumero ja yritä uudelleen."
               descriptionKey: "suoritusrekisteri.hakeneet.hakunumeroaeisyotettyselite"
 
-          unless $scope.hakukohde
+          unless $scope.hakukohdekoodi
             MessageService.addMessage
               type: "danger"
               message: "Hakukohdetta ei ole valittu."
@@ -282,7 +282,7 @@ app.controller "HakeneetCtrl", [
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
-        hakukohde: (if $scope.hakukohde then $scope.hakukohde else null)
+        hakukohde: (if $scope.hakukohdekoodi then $scope.hakukohdekoodi else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
@@ -291,7 +291,7 @@ app.controller "HakeneetCtrl", [
       else {
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
-        hakukohdekoodi: (if $scope.hakukohde then $scope.hakukohdekoodiuri else null)
+        hakukohdekoodi: (if $scope.hakukohdekoodi then $scope.hakukohdekoodiuri else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
@@ -309,7 +309,7 @@ app.controller "HakeneetCtrl", [
 
       delete $scope.organisaatio
 
-      delete $scope.hakukohde
+      delete $scope.hakukohdekoodi
 
       $scope.hakukohdenimi = ""
       $scope.hakukohdekoodiuri = ""
@@ -338,7 +338,7 @@ app.controller "HakeneetCtrl", [
     $scope.clearHakukohde = ->
       delete $scope.hakukohdenimi
 
-      delete $scope.hakukohde
+      delete $scope.hakukohdekoodi
 
       $scope.updateHakukohteet()
 
@@ -347,15 +347,15 @@ app.controller "HakeneetCtrl", [
     $scope.updateHakukohteet = ->
       ## päivitetään hakukohteet listaan riippuen valitusta hausta
       if isAikuHaku()
-        loadHakukohdekoodit aikuhakukohdekoodit, $scope
+        loadHakukohteet aikuhakukohdeData, $scope
       else
-        loadHakukohdekoodit hakukohdekoodit, $scope
+        loadHakukohteet hakukohdeData, $scope
 
     isAikuHaku = ->
       return ($scope.haku && ($scope.haku.kohdejoukkoUri.indexOf("haunkohdejoukko_20") > -1))
 
 
-    $scope.hakukohdekoodit = []
+    $scope.hakukohteet = []
 
     $scope.updateHakukohteet()
 
@@ -414,7 +414,7 @@ app.controller "HakeneetCtrl", [
       return
 
     $scope.setHakukohde = (item) ->
-      $scope.hakukohde = item.oid
+      $scope.hakukohdekoodi = item.oid
       return
 
     $scope.searchHenkilo = ->
@@ -429,17 +429,22 @@ app.controller "HakeneetCtrl", [
       return
 
     $scope.searchHakukohdekoodi = (text) ->
-      $scope.hakukohdekoodit.filter (h) ->
-        return false  unless text
+      return [] unless text
+      $scope.hakukohteet.filter (h) ->
         (h.koodi and h.koodi.indexOf(text) > -1) or (h.nimi and h.nimi.toLowerCase().indexOf(text.toLowerCase()) > -1)
+
+    $scope.getHakukohdeWithKoodi = (koodi) ->
+      return undefined unless koodi
+      ($scope.hakukohteet.filter (h) ->
+        h.koodi == koodi)[0]
 
 
     $scope.setHakukohdenimi = ->
-      if $scope.hakukohde
-        hakukohteet = $scope.searchHakukohdekoodi($scope.hakukohde)
-        if hakukohteet.length is 1
-          $scope.hakukohdenimi = hakukohteet[0].nimi
-          $scope.hakukohdekoodiuri = hakukohteet[0].koodiUri
+      if $scope.hakukohdekoodi
+        hakukohde = $scope.getHakukohdeWithKoodi($scope.hakukohdekoodi)
+        if hakukohde
+          $scope.hakukohdenimi = hakukohde.nimi
+          $scope.hakukohdekoodiuri = hakukohde.koodiUri
         else
           $scope.hakukohdenimi = ""
           $scope.hakukohdekoodiuri = ""

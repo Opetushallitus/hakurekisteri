@@ -33,7 +33,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
             description: "Päivitä näyttö tai navigoi sille uudelleen."
           []
         )
-      hakukohdekoodit: ($http, MessageService) ->
+      hakukohdeData: ($http, MessageService) ->
         $http.get(window.url("koodisto-service.koodisByKoodisto","hakukohteet"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
@@ -41,7 +41,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
             description: "Päivitä näyttö tai navigoi sille uudelleen."
           []
         )
-      aikuhakukohdekoodit: ($http, MessageService) ->
+      aikuhakukohdeData: ($http, MessageService) ->
         $http.get(window.url("koodisto-service.koodisByKoodisto","aikuhakukohteet"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
@@ -69,9 +69,9 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
             description: "Päivitä näyttö tai navigoi sille uudelleen."
           []
         )
-      hakukohdekoodit: ->
+      hakukohdeData: ->
         []
-      aikuhakukohdekoodit: ->
+      aikuhakukohdeData: ->
         []
 
   $routeProvider.otherwise
