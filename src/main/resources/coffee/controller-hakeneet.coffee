@@ -84,22 +84,24 @@ app.controller "HakeneetCtrl", [
     $scope.handlePoll = (reply) ->
       if(reply.asiakirjaId)
         statusUrl = plainUrls.url("suoritusrekisteri.asiakirja.status",reply.asiakirjaId)
-        $http.get(statusUrl).then((response) ->
+        $http.get(statusUrl).then ((response) ->
           status = response.status
           $scope.query = null
           if(status == 200)
             $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
-          else
-            body = JSON.parse(response.data) if (response.data)
-            messageKey = if (status == 204) then "suoritusrekisteri.poikkeus.eisisaltoa" else body.message
-            asiakirjaError = LokalisointiService.getTranslation(messageKey)
-            if(asiakirjaError)
-              if (body and body.parameter)
-                asiakirjaError = asiakirjaError + " " + body.parameter
-              $scope.asiakirjaError = asiakirjaError
-            else
-              $scope.asiakirjaError = "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
-        )
+          else if (status == 204)
+            messageKey = "suoritusrekisteri.poikkeus.eisisaltoa"
+            asiakirjaError = LokalisointiService.getTranslation(messageKey) || "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
+            $scope.asiakirjaError = asiakirjaError
+          ), ((error, status) ->
+            body = JSON.parse(error.data)
+            messageKey = body.message
+            $scope.query = null
+            asiakirjaError = LokalisointiService.getTranslation(messageKey) || "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
+            if (body.parameter)
+              asiakirjaError = asiakirjaError + " " + body.parameter
+            $scope.asiakirjaError = asiakirjaError
+          )
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
         $scope.tyonalla = reply.tyonalla == true
