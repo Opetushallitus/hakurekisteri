@@ -93,15 +93,17 @@ app.controller "HakeneetCtrl", [
             messageKey = "suoritusrekisteri.poikkeus.eisisaltoa"
             asiakirjaError = LokalisointiService.getTranslation(messageKey) || "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
             $scope.asiakirjaError = asiakirjaError
-          ), ((error, status) ->
-            body = JSON.parse(error.data)
-            messageKey = body.message
-            $scope.query = null
-            asiakirjaError = LokalisointiService.getTranslation(messageKey) || "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
-            if (body.parameter)
-              asiakirjaError = asiakirjaError + " " + body.parameter
-            $scope.asiakirjaError = asiakirjaError
-          )
+          return
+        ), ((error, status) ->
+          body = error.data
+          messageKey = body.message
+          $scope.query = null
+          asiakirjaError = LokalisointiService.getTranslation(messageKey) || "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
+          if (body.parameter)
+            asiakirjaError = asiakirjaError + " " + body.parameter
+          $scope.asiakirjaError = asiakirjaError
+          return
+        )
       else if(reply.sijoitus)
         $scope.sijoitus = reply.sijoitus
         $scope.tyonalla = reply.tyonalla == true
