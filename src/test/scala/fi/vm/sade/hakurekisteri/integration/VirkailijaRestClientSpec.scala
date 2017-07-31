@@ -40,7 +40,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
     val thrown = intercept[PreconditionFailedException] {
       Await.result(response, 10.seconds)
     }
-    assert(thrown.getMessage === "precondition failed for url: http://localhost/test/rest, response code: 404, text: ")
+    assert(thrown.getMessage === "precondition failed for url: http://localhost/test/rest, status code: 404, body: Not Found")
   }
 
   it should "throw Exception if invalid content was returned from the remote service" in {
