@@ -219,7 +219,7 @@ object JsonExtractor extends HakurekisteriJsonSupport {
         if (codes.contains(response.getStatusCode))
           super.onCompleted(response)
         else {
-          throw PreconditionFailedException(s"precondition failed for uri: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody}", response.getStatusCode)
+          throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody}", response.getStatusCode)
         }
       }
     }
