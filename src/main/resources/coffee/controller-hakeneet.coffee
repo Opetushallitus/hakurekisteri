@@ -86,16 +86,16 @@ app.controller "HakeneetCtrl", [
         statusUrl = plainUrls.url("suoritusrekisteri.asiakirja.status",reply.asiakirjaId)
         $http.get(statusUrl).then((response) ->
           status = response.status
+          $scope.query = null
           if(status == 200)
-            $scope.query = null
             $scope.asiakirja = plainUrls.url("suoritusrekisteri.asiakirja",reply.asiakirjaId)
           else
-            $scope.query = null
-            reason = JSON.parse(response.statusText)
-            asiakirjaError = LokalisointiService.getTranslation(reason.message)
+            body = JSON.parse(response.data) if (response.data)
+            messageKey = if (status == 204) then "suoritusrekisteri.poikkeus.eisisaltoa" else body.message
+            asiakirjaError = LokalisointiService.getTranslation(messageKey)
             if(asiakirjaError)
-              if(reason.parameter)
-                asiakirjaError = asiakirjaError + " " + reason.parameter
+              if (body and body.parameter)
+                asiakirjaError = asiakirjaError + " " + body.parameter
               $scope.asiakirjaError = asiakirjaError
             else
               $scope.asiakirjaError = "Siirtotiedoston luonnissa tapahtui odottamaton virhe!"
