@@ -20,15 +20,15 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
   extends ResourceActor[Arvosana, UUID] with JDBCRepository[Arvosana, UUID, ArvosanaTable] with JDBCService[Arvosana, UUID, ArvosanaTable] {
 
   override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = {
-    val tableLahdearvot: Map[String, String] = t.lahdeArvot.asInstanceOf[Map[String, String]]
-    val arvosanaLahdearvot: Map[String, String] = i.lahdeArvot
+//    val tableLahdearvot: Map[String, String] = t.lahdeArvot.asInstanceOf[Map[String, String]]
+//    val arvosanaLahdearvot: Map[String, String] = i.lahdeArvot
 
     t.suoritus === i.suoritus &&
       t.aine === i.aine &&
       t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
       t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
-      (!compareLahdearvot(tableLahdearvot, arvosanaLahdearvot) ||
-        (compareLahdearvot(tableLahdearvot, arvosanaLahdearvot) && t.valinnainen.asInstanceOf[Boolean] != i.valinnainen)) &&
+//      (!compareLahdearvot(tableLahdearvot, arvosanaLahdearvot) ||
+//        (compareLahdearvot(tableLahdearvot, arvosanaLahdearvot) && t.valinnainen.asInstanceOf[Boolean] != i.valinnainen)) &&
       t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
   }
 
@@ -40,24 +40,24 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
     case ArvosanatQuery(suoritukset) => Right(all.filter(t => t.suoritus.inSet(suoritukset)).result)
   }
 
-  private def compareLahdearvot(tableLahdearvot: Map[String, String], arvosanaLahdearvot: Map[String, String]): Boolean = {
-    keySetDiffers(tableLahdearvot, arvosanaLahdearvot) && valueDiffers(tableLahdearvot, arvosanaLahdearvot)
-  }
-
-  private def keySetDiffers(tableLahdearvot: Map[String, String], arvosanaLahdearvot: Map[String, String]): Boolean = {
-    ((tableLahdearvot.keySet -- arvosanaLahdearvot.keySet) ++ (arvosanaLahdearvot.keySet -- tableLahdearvot.keySet)).nonEmpty
-  }
-
-  private def valueDiffers(tableLahdearvot: Map[String, String], arvosanaLahdearvot: Map[String, String]): Boolean = {
-    var valueDifference = false
-
-    for ((tableLahdearvotKey, tableLahdearvotValue) <- tableLahdearvot) {
-      for ((arvosanatLahdearvotKey, arvosanatLahdearvotValue) <- arvosanaLahdearvot) {
-        if (tableLahdearvotKey == arvosanatLahdearvotKey && tableLahdearvotValue != arvosanatLahdearvotValue) {
-          valueDifference = true
-        }
-      }
-    }
-    valueDifference
-  }
+//  private def compareLahdearvot(tableLahdearvot: Map[String, String], arvosanaLahdearvot: Map[String, String]): Boolean = {
+//    keySetDiffers(tableLahdearvot, arvosanaLahdearvot) && valueDiffers(tableLahdearvot, arvosanaLahdearvot)
+//  }
+//
+//  private def keySetDiffers(tableLahdearvot: Map[String, String], arvosanaLahdearvot: Map[String, String]): Boolean = {
+//    ((tableLahdearvot.keySet -- arvosanaLahdearvot.keySet) ++ (arvosanaLahdearvot.keySet -- tableLahdearvot.keySet)).nonEmpty
+//  }
+//
+//  private def valueDiffers(tableLahdearvot: Map[String, String], arvosanaLahdearvot: Map[String, String]): Boolean = {
+//    var valueDifference = false
+//
+//    for ((tableLahdearvotKey, tableLahdearvotValue) <- tableLahdearvot) {
+//      for ((arvosanatLahdearvotKey, arvosanatLahdearvotValue) <- arvosanaLahdearvot) {
+//        if (tableLahdearvotKey == arvosanatLahdearvotKey && tableLahdearvotValue != arvosanatLahdearvotValue) {
+//          valueDifference = true
+//        }
+//      }
+//    }
+//    valueDifference
+//  }
 }
