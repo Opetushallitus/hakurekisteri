@@ -31,8 +31,8 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
         t.aine === i.aine &&
         t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
         t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
-        (tableLahdearvot == arvosanaLahdearvot ||
-          (tableLahdearvot != arvosanaLahdearvot && tableValinnainen != arvosanaValinnainen)) &&
+//        (tableLahdearvot == arvosanaLahdearvot ||
+//          (tableLahdearvot != arvosanaLahdearvot && tableValinnainen != arvosanaValinnainen)) &&
         t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
       case(_) => t.suoritus === i.suoritus &&
         t.aine === i.aine &&
