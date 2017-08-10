@@ -25,15 +25,22 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
     val arvosanaLahdearvot: Node = i.lahdeArvot.toNode
     val tableValinnainen = t.valinnainen.toNode
     val arvosanaValinnainen = i.valinnainen.toNode
-    log.info(s"tableLahdearvot: ($tableLahdearvot), arvosanaLahdearvot: ($arvosanaLahdearvot), tableValinnainen: ($tableValinnainen), arvosanaValinnainen: ($arvosanaValinnainen)")
 
-    t.suoritus === i.suoritus &&
-      t.aine === i.aine &&
-      t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
-      t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
-      (tableLahdearvot == arvosanaLahdearvot ||
-        (tableLahdearvot != arvosanaLahdearvot && tableValinnainen != arvosanaValinnainen)) &&
-      t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
+    i.arvio match {
+      case(arvioYo: ArvioYo) => t.suoritus === i.suoritus &&
+        t.aine === i.aine &&
+        t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
+        t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
+        (tableLahdearvot == arvosanaLahdearvot ||
+          (tableLahdearvot != arvosanaLahdearvot && tableValinnainen != arvosanaValinnainen)) &&
+        t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
+      case(_) => t.suoritus === i.suoritus &&
+        t.aine === i.aine &&
+        t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
+        t.valinnainen === i.valinnainen &&
+        t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
+        t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
+    }
   }
 
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
