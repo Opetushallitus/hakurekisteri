@@ -23,13 +23,16 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
   override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = {
     val tableLahdearvot: Node = t.lahdeArvot.toNode
     val arvosanaLahdearvot: Node = i.lahdeArvot.toNode
+    val tableValinnainen = t.valinnainen.toNode
+    val arvosanaValinnainen = i.valinnainen.toNode
+    log.info(s"tableLahdearvot: ($tableLahdearvot), arvosanaLahdearvot: ($arvosanaLahdearvot), tableValinnainen: ($tableValinnainen), arvosanaValinnainen: ($arvosanaValinnainen)")
 
     t.suoritus === i.suoritus &&
       t.aine === i.aine &&
       t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
       t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
       (tableLahdearvot == arvosanaLahdearvot ||
-        (tableLahdearvot != arvosanaLahdearvot && t.valinnainen.toNode != i.valinnainen.toNode)) &&
+        (tableLahdearvot != arvosanaLahdearvot && tableValinnainen != arvosanaValinnainen)) &&
       t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
   }
 
