@@ -7,8 +7,6 @@ app.controller "MuokkaaArvosanatYo", [
   "LokalisointiService"
   ($scope, $q, $log, Arvosanat, MessageService, LokalisointiService) ->
     suoritusId = $scope.suoritus.id
-    isEditable = (myonnetty) ->
-      not myonnetty or myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
     tutkintokerrat = ->
       kerrat = []
       for i in [1989..1900]
@@ -30,20 +28,24 @@ app.controller "MuokkaaArvosanatYo", [
 
     arvosanatModified = []
     $scope.koetaulukko = []
-    $scope.loading = true
-    Arvosanat.query { suoritus: suoritusId }, ((arvosanat) ->
-      $scope.koetaulukko = arvosanat.filter((a) ->
-        a.arvio.asteikko is "YO"
-      ).map((a) ->
-        arvosanatModified.push changeDetection(a)
-        {
-          arvosana: a
-          editable: isEditable(a.myonnetty)
-        }
+    $scope.populateKoetaulukkoAndModified = (arvosanatModified) ->
+      ((arvosanat) ->
+        isEditable = (myonnetty) ->
+          not myonnetty or myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
+        $scope.koetaulukko = arvosanat.filter((a) ->
+          a.arvio.asteikko is "YO"
+        ).map((a) ->
+          arvosanatModified.push changeDetection(a)
+          {
+            arvosana: a
+            editable: isEditable(a.myonnetty)
+          }
+        )
+        $scope.loading = false
+        return
       )
-      $scope.loading = false
-      return
-    ), ->
+    $scope.loading = true
+    Arvosanat.query { suoritus: suoritusId }, $scope.populateKoetaulukkoAndModified(arvosanatModified), ->
       $scope.loading = false
       MessageService.addMessage
         type: "danger"
@@ -90,6 +92,12 @@ app.controller "MuokkaaArvosanatYo", [
           d.promise
       arvosanat = arvosanatModified.filter((arvosanaModified) -> arvosanaModified.hasChanged())
       p = $q.all(saveArvosanat(arvosanat)).then (->
+        Arvosanat.query { suoritus: suoritusId }, $scope.populateKoetaulukkoAndModified(arvosanatModified), ->
+          MessageService.addMessage
+            type: "danger"
+            messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.arvosanapalveluongelma"
+            message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+          return
       ), ->
         MessageService.addMessage
           type: "danger"
