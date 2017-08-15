@@ -19,12 +19,23 @@ case class EmptyLisatiedot() extends Query[Arvosana]
 class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable], poolSize: Int)
   extends ResourceActor[Arvosana, UUID] with JDBCRepository[Arvosana, UUID, ArvosanaTable] with JDBCService[Arvosana, UUID, ArvosanaTable] {
 
-  override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = t.suoritus === i.suoritus &&
-    t.aine === i.aine &&
-    t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
-    t.valinnainen === i.valinnainen &&
-    t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
-    t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
+  override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = {
+    def compareCommonFields: Rep[Boolean] = {
+      t.suoritus === i.suoritus &&
+        t.aine === i.aine &&
+        t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
+        t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
+        t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
+    }
+
+    i.arvio match {
+      case(arvioYo: ArvioYo) => compareCommonFields &&
+        (t.valinnainen.toNode == i.valinnainen.toNode ||
+          (t.valinnainen.toNode != i.valinnainen.toNode && t.lahdeArvot.toNode != i.lahdeArvot.toNode))
+      case(_) => compareCommonFields &&
+        t.valinnainen === i.valinnainen
+    }
+  }
 
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
