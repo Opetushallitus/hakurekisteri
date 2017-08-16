@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 
 import java.io.OutputStream
 import java.text.{ParseException, SimpleDateFormat}
+import java.time.Instant
 import java.util.{Calendar, Date}
 
 import akka.actor.{ActorRef, ActorSystem}
@@ -14,7 +15,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.Maksuntila.Maksuntila
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, SijoitteluTulos, ValintaTulosQuery, Valintatila}
@@ -34,7 +36,7 @@ import org.scalatra.util.RicherString._
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 import org.slf4j.LoggerFactory
@@ -154,6 +156,8 @@ class KkHakijaService(hakemusService: IHakemusService,
     ) yield hakijat
   }
 
+  private val logger = LoggerFactory.getLogger(this.getClass)
+
   private def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus], version: Int)(q: KkHakijaQuery): Future[Seq[Hakija]] = {
     val byHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
 
@@ -161,7 +165,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
 
     Future.sequence(byHakuOid.map {
-      case (hakuOid, h) =>
+      case (hakuOid, fullhakemus) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
             def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
@@ -173,17 +177,52 @@ class KkHakijaService(hakemusService: IHakemusService,
               version match {
                 case 1 => {
                   kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos =>
-                    Future.sequence(h.map(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                    Future.sequence(fullhakemus.flatMap(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids))).map(_.filter(_.hakemukset.nonEmpty))
                   )
                 }
                 case 2 => {
-                  def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.exists("REQUIRED" == _)
-                  def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[String] =
-                    preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus)).map(_.aoId)
+                  def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.contains("REQUIRED")
 
-                  getLukuvuosimaksut(maksuvelvolliset(h.flatMap(_.preferenceEligibilities)).toSet, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
+                  def isMaksuvelvollinenHakemus(h: FullHakemus): Boolean = {
+                    maksuvelvolliset(h.preferenceEligibilities).nonEmpty
+                  }
+
+                  def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
+                    preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
+
+                  def isRequiredMissingPaymentInfo(hakemus: FullHakemus, maksut: Seq[Lukuvuosimaksu]): Boolean = {
+                    false
+                  }
+
+                  val maksullisetHakemukset: Seq[FullHakemus] = fullhakemus.filter(isMaksuvelvollinenHakemus)
+                  val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullhakemus.flatMap(_.preferenceEligibilities)).toSet
+                  var maksutFuture: Future[Seq[Lukuvuosimaksu]] = getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession())
+                  var maksut: Seq[Lukuvuosimaksu] = Await.result(getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()), 10 second)
+
+                  def maksutContainspersonsApplication(h: FullHakemus): Boolean = {
+                    maksutFuture.foreach(asd => {
+                      asd.exists(lmaksu => {
+                        h.personOid.contains(lmaksu.personOid) && lmaksu.hakukohdeOid == h.applicationSystemId
+                      })
+                    })
+                    false
+                  }
+
+                  for(maksullinenHakemus <- maksullisetHakemukset) {
+                    if(!maksutContainspersonsApplication(maksullinenHakemus)) {
+                      logger.info(s"""Payment required for application yet no payment information found for application ${maksullinenHakemus.oid}""")
+                      val maksu = Lukuvuosimaksu(maksullinenHakemus.personOid.get, maksullinenHakemus.applicationSystemId, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
+                      maksut:+=maksu
+                    }
+                  }
+                  maksutFuture = Future.successful(maksut)
+                  maksutFuture.flatMap(lukuvuosimaksut => {
                     kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
-                      Future.sequence(h.map(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head))).flatten).map(_.filter(_.hakemukset.nonEmpty))
+                      Future.sequence(
+                        fullhakemus.flatMap(
+                          getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.head)
+                          )))
+                        .map(_.filter(_.hakemukset.nonEmpty))
                     }
                     )
                   })
@@ -325,7 +364,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     val hakemusOid = hakemus.oid
     val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
     val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
-
+    //val defaultMaksu = Lukuvuosimaksu("personoid", "hakukohdeoid", Maksuntila.maksamatta, "System", Date.from(Instant.now()))
     for {
       hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
       kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
