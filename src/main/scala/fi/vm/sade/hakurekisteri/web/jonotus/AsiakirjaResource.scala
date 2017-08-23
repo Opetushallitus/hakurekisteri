@@ -65,26 +65,26 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
   def exceptionToNoContentResponse(exception: Exception): ActionResult = {
     exception match {
       case t: TimeoutException =>
-        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.aikakatkaisu")))
+        InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.aikakatkaisu")))
       case e: ExecutionException =>
         e.getCause match {
           case p: PreconditionFailedException =>
             val KoodistoUrl = ".*koodisto-service/rest/json/relaatio/rinnasteinen/([^,]*).*".r
             p.message match {
               case KoodistoUrl(koodi) =>
-                NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.koodisto", Some(koodi))))
+                InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.koodisto", Some(koodi))))
               case _ =>
-                NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.taustapalveluvirhe")))
+                InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.taustapalveluvirhe", Some(p.message))))
             }
           case _ =>
-            NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
+            InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
         }
       case i: InitialLoadingNotDone =>
-        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.alustuskesken")))
+        InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.alustuskesken")))
       case e: EmptyAsiakirjaException =>
-        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.eisisaltoa")))
+        NoContent()
       case _ =>
-        NoContent(reason = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
+        InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
     }
   }
 

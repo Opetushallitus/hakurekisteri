@@ -28,9 +28,13 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)
   }
 
   def getSuoritukset(hakuOid: String, hakemukset: Seq[FullHakemus]): Future[Map[String,Map[String,String]]] = {
-    val hakemusHakijat: Seq[HakemusHakija] = hakemukset.map(h => HakemusHakija(h.personOid.get, h))
-    logger.info(s"Get suoritukset for ${hakemukset.size} hakemukset for haku $hakuOid")
-    restClient.postObject[Seq[HakemusHakija], Map[String,Map[String,String]]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid)(200, hakemusHakijat)
+    if (hakemukset.nonEmpty) {
+      val hakemusHakijat: Seq[HakemusHakija] = hakemukset.map(h => HakemusHakija(h.personOid.get, h))
+      logger.info(s"Get suoritukset for ${hakemukset.size} hakemukset for haku $hakuOid")
+      restClient.postObject[Seq[HakemusHakija], Map[String,Map[String,String]]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid)(200, hakemusHakijat)
+    } else {
+      Future.successful(Map.empty)
+    }
   }
 
   case class HakemusHakija(opiskelijaOid: String, hakemus: FullHakemus)

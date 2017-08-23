@@ -215,11 +215,11 @@ object JsonExtractor extends HakurekisteriJsonSupport {
       }
     }
     new FunctionHandler[T](f) {
-      override def onStatusReceived(status: HttpResponseStatus) = {
-        if (codes.contains(status.getStatusCode))
-          super.onStatusReceived(status)
+      override def onCompleted(response: Res): T = {
+        if (codes.contains(response.getStatusCode))
+          super.onCompleted(response)
         else {
-          throw PreconditionFailedException(s"precondition failed for url: ${status.getUrl}, response code: ${status.getStatusCode}, text: ${status.getStatusText}", status.getStatusCode)
+          throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody("utf-8")}", response.getStatusCode)
         }
       }
     }
