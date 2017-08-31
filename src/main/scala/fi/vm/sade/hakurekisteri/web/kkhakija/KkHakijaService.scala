@@ -190,27 +190,24 @@ class KkHakijaService(hakemusService: IHakemusService,
                   def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
                     preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
 
-                  def isRequiredMissingPaymentInfo(hakemus: FullHakemus, maksut: Seq[Lukuvuosimaksu]): Boolean = {
-                    false
-                  }
-
                   val maksullisetHakemukset: Seq[FullHakemus] = fullhakemus.filter(isMaksuvelvollinenHakemus)
                   val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullhakemus.flatMap(_.preferenceEligibilities)).toSet
                   var maksutFuture: Future[Seq[Lukuvuosimaksu]] = getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession())
                   var maksut: Seq[Lukuvuosimaksu] = Await.result(getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()), 10 second)
 
                   def maksutContainspersonsApplication(h: FullHakemus): Boolean = {
+                    var contains = false
                     maksutFuture.foreach(asd => {
-                      asd.exists(lmaksu => {
-                        h.personOid.contains(lmaksu.personOid) && lmaksu.hakukohdeOid == h.applicationSystemId
+                      contains = asd.exists(lmaksu => {
+                         h.personOid.contains(lmaksu.personOid) && lmaksu.hakukohdeOid == h.applicationSystemId
                       })
                     })
-                    false
+                    contains
                   }
 
                   for(maksullinenHakemus <- maksullisetHakemukset) {
                     if(!maksutContainspersonsApplication(maksullinenHakemus)) {
-                      logger.info(s"""Payment required for application yet no payment information found for application ${maksullinenHakemus.oid}""")
+                      logger.info(s"""Payment required for application yet no payment information found for application ${maksullinenHakemus.oid}, defaulting to ${Maksuntila.maksamatta.toString}""")
                       val maksu = Lukuvuosimaksu(maksullinenHakemus.personOid.get, maksullinenHakemus.applicationSystemId, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
                       maksut:+=maksu
                     }
@@ -364,12 +361,13 @@ class KkHakijaService(hakemusService: IHakemusService,
     val hakemusOid = hakemus.oid
     val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
     val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
-    //val defaultMaksu = Lukuvuosimaksu("personoid", "hakukohdeoid", Maksuntila.maksamatta, "System", Date.from(Instant.now()))
     for {
       hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
       kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
       lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
     } yield {
+      val isRequiredPayment = hakukelpoisuus.maksuvelvollisuus.contains("REQUIRED")
+      val maksuStatus = lukuvuosimaksu.getOrElse(Lukuvuosimaksu(hakemus.personOid.get, hakukohdeOid, Maksuntila.maksamatta, "System", Date.from(Instant.now()))).toString
       if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
         Some(Hakemus(
           haku = hakemus.applicationSystemId,
@@ -388,7 +386,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           hKelpoisuus = hakukelpoisuus.status,
           hKelpoisuusLahde = hakukelpoisuus.source,
           hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
-          lukuvuosimaksu = lukuvuosimaksu.map(_.maksuntila.toString),
+          lukuvuosimaksu = if (isRequiredPayment) Some(maksuStatus) else None,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
             .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
           liitteet = attachmentToLiite(hakemus.attachmentRequests)
