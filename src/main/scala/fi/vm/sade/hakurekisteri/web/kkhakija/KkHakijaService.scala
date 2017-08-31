@@ -212,7 +212,8 @@ class KkHakijaService(hakemusService: IHakemusService,
                       maksut:+=maksu
                     }
                   }
-                  maksutFuture = Future.successful(maksut)
+                  val queriedMaksut: Seq[Lukuvuosimaksu] = maksutFuture.result(10 seconds)
+                  maksutFuture = Future.successful(queriedMaksut ++ maksut)
                   maksutFuture.flatMap(lukuvuosimaksut => {
                     kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
                       Future.sequence(
