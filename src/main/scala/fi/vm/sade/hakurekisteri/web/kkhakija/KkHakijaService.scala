@@ -368,7 +368,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
     } yield {
       val isRequiredPayment = hakukelpoisuus.maksuvelvollisuus.contains("REQUIRED")
-      val maksuStatus = lukuvuosimaksu.getOrElse(Lukuvuosimaksu(hakemus.personOid.get, hakukohdeOid, Maksuntila.maksamatta, "System", Date.from(Instant.now()))).toString
+      val maksuStatus = lukuvuosimaksu.getOrElse(Lukuvuosimaksu(hakemus.personOid.get, hakukohdeOid, Maksuntila.maksamatta, "System", Date.from(Instant.now()))).maksuntila.toString
       if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
         Some(Hakemus(
           haku = hakemus.applicationSystemId,
