@@ -148,72 +148,19 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus], version: Int)(q: KkHakijaQuery): Future[Seq[Hakija]] = {
     val byHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
-
-
-
-
     Future.sequence(byHakuOid.map {
       case (hakuOid, fullHakemuses) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
-            def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
-              case Some(_) => Future.successful(None)
-              case None => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))
-            }
 
             q.hakukohderyhma.map(hakupalvelu.getHakukohdeOids(_, haku.oid)).getOrElse(Future.successful(Seq())).flatMap(hakukohdeOids => {
               version match {
-                case 1 => {
-                  kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos =>
+                case 1 =>
+                  kokoHaunTulosIfNoOppijanumero(q, hakuOid).flatMap { kokoHaunTulos =>
                     Future.sequence(fullHakemuses.flatMap(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids))).map(_.filter(_.hakemukset.nonEmpty))
-                  )
-                }
-                case 2 => {
-                  def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.contains("REQUIRED")
-
-                  def isMaksuvelvollinenHakemus(h: FullHakemus): Boolean = {
-                    maksuvelvolliset(h.preferenceEligibilities).nonEmpty
                   }
-
-                  def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
-                    preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
-
-                  val maksullisetHakemukset: Seq[FullHakemus] = fullHakemuses.filter(isMaksuvelvollinenHakemus)
-                  val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullHakemuses.flatMap(_.preferenceEligibilities)).toSet
-                  var maksutFuture: Future[Seq[Lukuvuosimaksu]] = getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession())
-                  var maksut: Seq[Lukuvuosimaksu] = Await.result(getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()), 10 second)
-
-                  def maksutContainspersonsApplication(h: FullHakemus): Boolean = {
-                    var contains = false
-                    maksutFuture.foreach(asd => {
-                      contains = asd.exists(lmaksu => {
-                         h.personOid.contains(lmaksu.personOid) && lmaksu.hakukohdeOid == h.applicationSystemId
-                      })
-                    })
-                    contains
-                  }
-
-                  for(maksullinenHakemus <- maksullisetHakemukset) {
-                    if(!maksutContainspersonsApplication(maksullinenHakemus)) {
-                      logger.info(s"""Payment required for application yet no payment information found for application ${maksullinenHakemus.oid}, defaulting to ${Maksuntila.maksamatta.toString}""")
-                      val maksu = Lukuvuosimaksu(maksullinenHakemus.personOid.get, maksullinenHakemus.applicationSystemId, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
-                      maksut:+=maksu
-                    }
-                  }
-                  val queriedMaksut: Seq[Lukuvuosimaksu] = Await.result(maksutFuture, 10 seconds)
-                  maksutFuture = Future.successful(queriedMaksut ++ maksut)
-                  maksutFuture.flatMap(lukuvuosimaksut => {
-                    kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
-                      Future.sequence(
-                        fullHakemuses.flatMap(
-                          getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.groupBy(_.hakukohdeOid))
-                          )))
-                        .map(_.filter(_.hakemukset.nonEmpty))
-                    }
-                    )
-                  })
-
-                }
+                case 2 =>
+                  createV2Hakijas(q, fullHakemuses, haku, hakukohdeOids)
               }
             })
           } else {
@@ -225,6 +172,57 @@ class KkHakijaService(hakemusService: IHakemusService,
     }.toSeq).map(_.foldLeft(Seq[Hakija]())(_ ++ _)).map(_.filter(_.hakemukset.nonEmpty))
   }
 
+
+  private def createV2Hakijas(q: KkHakijaQuery, fullHakemuses: Seq[FullHakemus], haku: Haku, hakukohdeOids: Seq[String]) = {
+    def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.contains("REQUIRED")
+
+    def isMaksuvelvollinenHakemus(h: FullHakemus): Boolean = {
+      maksuvelvolliset(h.preferenceEligibilities).nonEmpty
+    }
+
+    def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
+      preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
+
+    val maksullisetHakemukset: Seq[FullHakemus] = fullHakemuses.filter(isMaksuvelvollinenHakemus)
+    val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullHakemuses.flatMap(_.preferenceEligibilities)).toSet
+    var maksutFuture: Future[Seq[Lukuvuosimaksu]] = getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession())
+    var maksut: Seq[Lukuvuosimaksu] = Await.result(getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()), 10.seconds)
+
+    def maksutContainspersonsApplication(h: FullHakemus): Boolean = {
+      var contains = false
+      maksutFuture.foreach(asd => {
+        contains = asd.exists(lmaksu => {
+          h.personOid.contains(lmaksu.personOid) && lmaksu.hakukohdeOid == h.applicationSystemId
+        })
+      })
+      contains
+    }
+
+    for (maksullinenHakemus <- maksullisetHakemukset) {
+      if (!maksutContainspersonsApplication(maksullinenHakemus)) {
+        logger.info(s"""Payment required for application yet no payment information found for application ${maksullinenHakemus.oid}, defaulting to ${Maksuntila.maksamatta.toString}""")
+        val maksu = Lukuvuosimaksu(maksullinenHakemus.personOid.get, maksullinenHakemus.applicationSystemId, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
+        maksut :+= maksu
+      }
+    }
+    val queriedMaksut: Seq[Lukuvuosimaksu] = Await.result(maksutFuture, 10.seconds)
+    maksutFuture = Future.successful(queriedMaksut ++ maksut)
+    maksutFuture.flatMap(lukuvuosimaksut => {
+      kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap(kokoHaunTulos => {
+        Future.sequence(
+          fullHakemuses.flatMap(
+            getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.groupBy(_.hakukohdeOid))
+            )))
+          .map(_.filter(_.hakemukset.nonEmpty))
+      }
+      )
+    })
+  }
+
+  private def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery, hakuOid: String): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
+    case Some(_) => Future.successful(None)
+    case None => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))
+  }
 
   private def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
     kelpoisuudet.find(_.aoId == hakukohdeOid) match {
