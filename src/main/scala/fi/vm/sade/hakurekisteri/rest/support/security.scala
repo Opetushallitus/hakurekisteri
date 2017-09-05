@@ -88,7 +88,7 @@ trait RoleUser extends User with Roles {
 case class AuditSessionRequest(personOid: String, roles: Set[String], userAgent: String, inetAddress: String)
 
 case class OPHUser(username: String, authorities: Set[String], userAgent: String, inetAddress: String) extends RoleUser {
-  override val auditSession = AuditSessionRequest(username, authorities, userAgent, inetAddress)
+  override val auditSession = AuditSessionRequest("1.2.246.562.24.00000000001", authorities, userAgent, inetAddress)
   override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }

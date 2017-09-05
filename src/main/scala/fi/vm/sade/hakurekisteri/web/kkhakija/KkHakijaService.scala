@@ -153,7 +153,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
 
     Future.sequence(byHakuOid.map {
-      case (hakuOid, fullhakemus) =>
+      case (hakuOid, fullHakemuses) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
             def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
@@ -165,7 +165,7 @@ class KkHakijaService(hakemusService: IHakemusService,
               version match {
                 case 1 => {
                   kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos =>
-                    Future.sequence(fullhakemus.flatMap(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids))).map(_.filter(_.hakemukset.nonEmpty))
+                    Future.sequence(fullHakemuses.flatMap(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids))).map(_.filter(_.hakemukset.nonEmpty))
                   )
                 }
                 case 2 => {
@@ -178,8 +178,8 @@ class KkHakijaService(hakemusService: IHakemusService,
                   def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
                     preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
 
-                  val maksullisetHakemukset: Seq[FullHakemus] = fullhakemus.filter(isMaksuvelvollinenHakemus)
-                  val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullhakemus.flatMap(_.preferenceEligibilities)).toSet
+                  val maksullisetHakemukset: Seq[FullHakemus] = fullHakemuses.filter(isMaksuvelvollinenHakemus)
+                  val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullHakemuses.flatMap(_.preferenceEligibilities)).toSet
                   var maksutFuture: Future[Seq[Lukuvuosimaksu]] = getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession())
                   var maksut: Seq[Lukuvuosimaksu] = Await.result(getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()), 10 second)
 
@@ -205,7 +205,7 @@ class KkHakijaService(hakemusService: IHakemusService,
                   maksutFuture.flatMap(lukuvuosimaksut => {
                     kokoHaunTulosIfNoOppijanumero(q).flatMap(kokoHaunTulos => {
                       Future.sequence(
-                        fullhakemus.flatMap(
+                        fullHakemuses.flatMap(
                           getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.groupBy(_.hakukohdeOid))
                           )))
                         .map(_.filter(_.hakemukset.nonEmpty))
