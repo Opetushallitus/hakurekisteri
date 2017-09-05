@@ -176,46 +176,17 @@ class KkHakijaService(hakemusService: IHakemusService,
   private def createV2Hakijas(q: KkHakijaQuery, fullHakemuses: Seq[FullHakemus], haku: Haku, hakukohdeOids: Seq[String]) = {
     def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.contains("REQUIRED")
 
-    def isMaksuvelvollinenHakemus(h: FullHakemus): Boolean = {
-      maksuvelvolliset(h.preferenceEligibilities).nonEmpty
-    }
-
     def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
       preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
 
-    val maksullisetHakemukset: Seq[FullHakemus] = fullHakemuses.filter(isMaksuvelvollinenHakemus)
     val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullHakemuses.flatMap(_.preferenceEligibilities)).toSet
-    var maksutFuture: Future[Seq[Lukuvuosimaksu]] = getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession())
-    var maksut: Seq[Lukuvuosimaksu] = Await.result(getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()), 10.seconds)
 
-    def maksutContainspersonsApplication(h: FullHakemus): Boolean = {
-      var contains = false
-      maksutFuture.foreach(asd => {
-        contains = asd.exists(lmaksu => {
-          h.personOid.contains(lmaksu.personOid) && lmaksu.hakukohdeOid == h.applicationSystemId
-        })
-      })
-      contains
-    }
-
-    for (maksullinenHakemus <- maksullisetHakemukset) {
-      if (!maksutContainspersonsApplication(maksullinenHakemus)) {
-        logger.info(s"""Payment required for application yet no payment information found for application ${maksullinenHakemus.oid}, defaulting to ${Maksuntila.maksamatta.toString}""")
-        val maksu = Lukuvuosimaksu(maksullinenHakemus.personOid.get, maksullinenHakemus.applicationSystemId, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
-        maksut :+= maksu
-      }
-    }
-    val queriedMaksut: Seq[Lukuvuosimaksu] = Await.result(maksutFuture, 10.seconds)
-    maksutFuture = Future.successful(queriedMaksut ++ maksut)
-    maksutFuture.flatMap(lukuvuosimaksut => {
-      kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap(kokoHaunTulos => {
-        Future.sequence(
-          fullHakemuses.flatMap(
-            getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, lukuvuosimaksut.groupBy(_.personOid).mapValues(_.groupBy(_.hakukohdeOid))
-            )))
+    getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
+      kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos =>
+        val maksusByHakijaAndHakukohde = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
+        Future.sequence(fullHakemuses.flatMap(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, maksusByHakijaAndHakukohde)))
           .map(_.filter(_.hakemukset.nonEmpty))
       }
-      )
     })
   }
 
@@ -289,7 +260,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     sequenced.map[Seq[Lukuvuosimaksu]](_.flatten)
   }
 
-  private def getHakemukset(haku: Haku, hakemus: FullHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, Seq[Lukuvuosimaksu]], q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
+  private def getHakemukset(haku: Haku, hakemus: FullHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {
       case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
       case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
@@ -301,7 +272,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def extractHakemukset(hakemus: FullHakemus,
-                                lukuvuosimaksutByHakukohdeOid: Map[String, Seq[Lukuvuosimaksu]],
+                                lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                 q: KkHakijaQuery,
                                 haku: Haku,
                                 sijoitteluTulos: SijoitteluTulos,
@@ -337,7 +308,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def extractSingleHakemus(hakemus: FullHakemus,
-                                   lukuvuosimaksutByHakukohdeOid: Map[String, Seq[Lukuvuosimaksu]],
+                                   lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                    q: KkHakijaQuery,
                                    hakutoiveet: Map[String, String],
                                    lisatiedot: Map[String, String],
@@ -353,16 +324,6 @@ class KkHakijaService(hakemusService: IHakemusService,
       kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
       lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
     } yield {
-      val isRequiredPayment = hakukelpoisuus.maksuvelvollisuus.contains("REQUIRED")
-      val hakukohteenMaksut = lukuvuosimaksutByHakukohdeOid.get(hakukohdeOid)
-      val maksuStatus = hakukohteenMaksut match {
-        case None => Lukuvuosimaksu(hakemus.personOid.get, hakukohdeOid, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
-        case Some(ainoaMaksu :: Nil) => ainoaMaksu
-        case Some(montaMaksua) =>
-          logger.warn(s"Löytyi monta lukuvuosimaksua hakemuksen $hakemusOid hakukohteelle $hakukohdeOid , valitaan ensimmäinen: $montaMaksua")
-          montaMaksua.head
-      }
-
       if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
         Some(Hakemus(
           haku = hakemus.applicationSystemId,
@@ -381,7 +342,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           hKelpoisuus = hakukelpoisuus.status,
           hKelpoisuusLahde = hakukelpoisuus.source,
           hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
-          lukuvuosimaksu = if (isRequiredPayment) Some(maksuStatus.maksuntila.toString) else None,
+          lukuvuosimaksu = resolveLukuvuosiMaksu(hakemus, hakukelpoisuus, lukuvuosimaksutByHakukohdeOid, hakukohdeOid),
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
             .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
           liitteet = attachmentToLiite(hakemus.attachmentRequests)
@@ -389,6 +350,30 @@ class KkHakijaService(hakemusService: IHakemusService,
       } else {
         None
       }
+    }
+  }
+
+  private def resolveLukuvuosiMaksu(hakemus: FullHakemus,
+                                    hakukelpoisuus: PreferenceEligibility,
+                                    lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
+                                    hakukohdeOid: String): Option[String] = {
+    if (hakukelpoisuus.maksuvelvollisuus.contains("REQUIRED")) {
+      val hakukohteenMaksut = lukuvuosimaksutByHakukohdeOid.get(hakukohdeOid)
+      val maksuStatus = hakukohteenMaksut match {
+        case None =>
+          logger.info(
+            s"Payment required for application yet no payment information found for application option "
+              + s"$hakukohdeOid of application ${hakemus.oid}, defaulting to ${Maksuntila.maksamatta.toString}")
+          Lukuvuosimaksu(hakemus.personOid.get, hakukohdeOid, Maksuntila.maksamatta, "System", Date.from(Instant.now()))
+        case Some(ainoaMaksu :: Nil) => ainoaMaksu
+        case Some(montaMaksua) if montaMaksua.size > 1 =>
+          logger.warn(s"Found several lukuvuosimaksus for application option $hakukohdeOid of application ${hakemus.oid}, " +
+            s"picking the first one: $montaMaksua")
+          montaMaksua.head
+      }
+      Some(maksuStatus.maksuntila.toString)
+    } else {
+      None
     }
   }
 
@@ -457,7 +442,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       hakemukset = hakemukset.map(hakemus => hakemus.copy(liitteet = None, julkaisulupa = hakemus.julkaisulupa, hKelpoisuusMaksuvelvollisuus = None))
     )
 
-  private def getKkHakijaV2(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String], lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, Seq[Lukuvuosimaksu]]])(hakemus: FullHakemus): Option[Future[Hakija]] =
+  private def getKkHakijaV2(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String], lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]])(hakemus: FullHakemus): Option[Future[Hakija]] =
     for {
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
