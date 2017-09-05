@@ -147,8 +147,8 @@ class KkHakijaService(hakemusService: IHakemusService,
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   private def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus], version: Int)(q: KkHakijaQuery): Future[Seq[Hakija]] = {
-    val byHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
-    Future.sequence(byHakuOid.map {
+    val fullHakemusesByHakuOid: Map[String, Seq[FullHakemus]] = hakemukset.groupBy(_.applicationSystemId)
+    Future.sequence(fullHakemusesByHakuOid.map {
       case (hakuOid, fullHakemuses) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
