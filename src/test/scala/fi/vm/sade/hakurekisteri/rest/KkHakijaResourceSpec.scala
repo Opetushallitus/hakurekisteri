@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest
 
+import java.util.Date
+
 import akka.actor.{Actor, Props}
 import akka.pattern.pipe
 import com.ning.http.client.AsyncHttpClient
@@ -12,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundExc
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
@@ -20,7 +23,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaService, KkHakijaQuery, KkHakijaResource, KkHakijaUtil}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource, KkHakijaService, KkHakijaUtil}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.{DateTime, LocalDate}
 import org.mockito.Mockito._
@@ -45,6 +48,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
   val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
   val valintaRekisteri = system.actorOf(Props(new MockedValintarekisteriActor()))
+  private val personOidWithLukuvuosimaksu = "1.2.246.562.20.96296215716"
+  private val hakukohdeOidWithMaksettu = "1.2.246.562.20.49219384432"
   val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
   val hakupalvelu = new Hakupalvelu() {
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
@@ -298,6 +303,16 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.head.kotikunta should be ("999")
   }
 
+  test("v2 call to service should return lukuvuosimaksu by hakukohde") {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), getJson("applicationByPersonOidWithMaksuvelvollisuus")))
+
+    val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
+    hakijat should have size 1
+    val hakijaWithMaksu = hakijat.head
+    hakijaWithMaksu.hakemukset.find(h => h.hakukohde == hakukohdeOidWithMaksettu).flatMap(_.lukuvuosimaksu) should be (Some(Maksuntila.maksettu.toString))
+    hakijaWithMaksu.hakemukset.find(h => h.hakukohde != hakukohdeOidWithMaksettu).flatMap(_.lukuvuosimaksu) should be (Some(Maksuntila.maksamatta.toString))
+  }
 
   def testUser(user: String, organisaatioOid: String) = new User {
     override val username: String = user
@@ -343,8 +358,10 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   class MockedValintarekisteriActor extends Actor {
     override def receive: Actor.Receive = {
+      case LukuvuosimaksuQuery(hakukohdeOid, _) if hakukohdeOid == hakukohdeOidWithMaksettu =>
+        sender ! Seq(Lukuvuosimaksu(personOidWithLukuvuosimaksu, hakukohdeOidWithMaksettu, Maksuntila.maksettu, "muokkaaja", new Date()))
       case _ =>
-        sender ! Seq.empty
+        sender ! Nil
     }
   }
   class MockedValintaTulosActor extends Actor {
