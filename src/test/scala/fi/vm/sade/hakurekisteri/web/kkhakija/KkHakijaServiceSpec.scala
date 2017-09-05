@@ -43,7 +43,9 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
   private val valintaRekisteri = system.actorOf(Props(new MockedValintarekisteriActor()))
   private val personOidWithLukuvuosimaksu = "1.2.246.562.20.96296215716"
-  private val hakukohdeOidWithMaksettu = "1.2.246.562.20.49219384432"
+  private val paymentRequiredHakukohdeWithMaksettu = "1.2.246.562.20.49219384432"
+  private val paymentRquiredHakukohdeWithoutPayment = "1.2.246.562.20.95810447722"
+  private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
 
   private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri)
@@ -281,8 +283,16 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
     hakijat should have size 1
     val hakijaWithMaksu = hakijat.head
-    hakijaWithMaksu.hakemukset.find(h => h.hakukohde == hakukohdeOidWithMaksettu).flatMap(_.lukuvuosimaksu) should be (Some(Maksuntila.maksettu.toString))
-    hakijaWithMaksu.hakemukset.find(h => h.hakukohde != hakukohdeOidWithMaksettu).flatMap(_.lukuvuosimaksu) should be (Some(Maksuntila.maksamatta.toString))
+    val hakemuksetByHakukohdeOid = hakijaWithMaksu.hakemukset.groupBy(_.hakukohde)
+    hakemuksetByHakukohdeOid should have size 3
+
+    val lukuvuosiMaksuForPaymentRequiredHakukohde = hakemuksetByHakukohdeOid.get(paymentRequiredHakukohdeWithMaksettu).flatMap(_.head.lukuvuosimaksu)
+    val lukuvuosimaksuForNotPaidHakukohde = hakemuksetByHakukohdeOid.get(paymentRquiredHakukohdeWithoutPayment).flatMap(_.head.lukuvuosimaksu)
+    val lukuvuosimaksuForNoPaymentRequiredButAnywayPaidHakukohde = hakemuksetByHakukohdeOid.get(noPaymentRequiredHakukohdeButMaksettu).flatMap(_.head.lukuvuosimaksu)
+
+    lukuvuosiMaksuForPaymentRequiredHakukohde should be (Some(Maksuntila.maksettu.toString))
+    lukuvuosimaksuForNotPaidHakukohde should be (Some(Maksuntila.maksamatta.toString))
+    lukuvuosimaksuForNoPaymentRequiredButAnywayPaidHakukohde should be (Some(Maksuntila.maksettu.toString))
   }
 
   def testUser(user: String, organisaatioOid: String) = new User {
@@ -329,8 +339,10 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
 
   class MockedValintarekisteriActor extends Actor {
     override def receive: Actor.Receive = {
-      case LukuvuosimaksuQuery(hakukohdeOid, _) if hakukohdeOid == hakukohdeOidWithMaksettu =>
-        sender ! Seq(Lukuvuosimaksu(personOidWithLukuvuosimaksu, hakukohdeOidWithMaksettu, Maksuntila.maksettu, "muokkaaja", new Date()))
+      case LukuvuosimaksuQuery(hakukohdeOid, _) if hakukohdeOid == paymentRequiredHakukohdeWithMaksettu =>
+        sender ! Seq(Lukuvuosimaksu(personOidWithLukuvuosimaksu, paymentRequiredHakukohdeWithMaksettu, Maksuntila.maksettu, "muokkaaja", new Date()))
+      case LukuvuosimaksuQuery(hakukohdeOid, _) if hakukohdeOid == noPaymentRequiredHakukohdeButMaksettu =>
+        sender ! Seq(Lukuvuosimaksu(personOidWithLukuvuosimaksu, noPaymentRequiredHakukohdeButMaksettu, Maksuntila.maksettu, "muokkaaja2", new LocalDate().minusDays(1).toDate))
       case _ =>
         sender ! Nil
     }

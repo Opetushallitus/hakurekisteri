@@ -174,12 +174,12 @@ class KkHakijaService(hakemusService: IHakemusService,
 
 
   private def createV2Hakijas(q: KkHakijaQuery, fullHakemuses: Seq[FullHakemus], haku: Haku, hakukohdeOids: Seq[String]) = {
-    def isMaksuvelvollinen(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.contains("REQUIRED")
+    def hasMaksuvelvollisuusData(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.isDefined
 
-    def maksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
-      preferenceEligibilities.filter(e => isMaksuvelvollinen(e.maksuvelvollisuus))
+    def potentiallyMaksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
+      preferenceEligibilities.filter(e => hasMaksuvelvollisuusData(e.maksuvelvollisuus))
 
-    val maksuvelvollisuudet: Set[PreferenceEligibility] = maksuvelvolliset(fullHakemuses.flatMap(_.preferenceEligibilities)).toSet
+    val maksuvelvollisuudet: Set[PreferenceEligibility] = potentiallyMaksuvelvolliset(fullHakemuses.flatMap(_.preferenceEligibilities)).toSet
 
     getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos =>
@@ -357,8 +357,8 @@ class KkHakijaService(hakemusService: IHakemusService,
                                     hakukelpoisuus: PreferenceEligibility,
                                     lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                     hakukohdeOid: String): Option[String] = {
-    if (hakukelpoisuus.maksuvelvollisuus.contains("REQUIRED")) {
-      val hakukohteenMaksut = lukuvuosimaksutByHakukohdeOid.get(hakukohdeOid)
+    val hakukohteenMaksut = lukuvuosimaksutByHakukohdeOid.get(hakukohdeOid)
+    if (hakukelpoisuus.maksuvelvollisuus.contains("REQUIRED") || hakukohteenMaksut.isDefined) {
       val maksuStatus = hakukohteenMaksut match {
         case None =>
           logger.info(
