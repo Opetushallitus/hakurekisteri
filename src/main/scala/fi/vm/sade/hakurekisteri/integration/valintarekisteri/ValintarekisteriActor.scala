@@ -46,7 +46,7 @@ object Maksuntila extends Enumeration {
 
 case class Lukuvuosimaksu(personOid: String, hakukohdeOid: String, maksuntila: Maksuntila, muokkaaja: String, luotu: Date)
 
-case class LukuvuosimaksuQuery(personOid: String, auditSession: AuditSessionRequest)
+case class LukuvuosimaksuQuery(hakukohdeOid: String, auditSession: AuditSessionRequest)
 
 case class ValintarekisteriQuery(personOidsWithAliases: PersonOidsWithAliases, koulutuksenAlkamiskausi: String)
 
