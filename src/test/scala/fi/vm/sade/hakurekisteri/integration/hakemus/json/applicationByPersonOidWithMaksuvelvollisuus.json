@@ -1,0 +1,224 @@
+{
+  "1.2.246.562.20.96296215716":[
+    {
+      "applicationSystemId":"1.2.246.562.29.75203638285",
+      "answers":{
+        "henkilotiedot":{
+          "onkosinullakaksoiskansallisuus":"true",
+          "koulusivistyskieli":"XX",
+          "kansalaisuus":"FIN",
+          "asuinmaa":"FIN",
+          "Sukunimi":"Maksavainen-Testi",
+          "matkapuhelinnumero1":"050 94787511",
+          "Henkilotunnus":"260175-975C",
+          "Henkilotunnus_digest":"479da7c28c78a9a8510095bee890bc1615d0bdf5c3ea5ca19b6e7a6092f3d6eb",
+          "Postinumero":"02140",
+          "sukupuoli":"1",
+          "lahiosoite":"Hohokatu 788",
+          "turvakielto":"true",
+          "Kutsumanimi":"Max",
+          "Sähköposti":"hakija-1273387@oph.fi",
+          "kaksoiskansalaisuus":"GRC",
+          "Etunimet":"Max U Velvollinen",
+          "onkoSinullaSuomalainenHetu":"false",
+          "aidinkieli":"FI",
+          "syntymaaika":"26.01.1975",
+          "Henkilotunnus_plain":"260175-975C",
+          "SUKUPUOLI":"1",
+          "passinnumero":"",
+          "kansallinenIdTunnus":""
+        },
+        "lisatiedot":{
+          "lupaJulkaisu":"true",
+          "asiointikieli":"suomi",
+          "lupatiedot-sahkoinen-viestinta":"true",
+          "lupaSms":"true",
+          "lupaMarkkinointi":"true"
+        },
+        "hakutoiveet":{
+          "preference1-Koulutus-educationDegree":"koulutusasteoph2002_62",
+          "preference1-Koulutus-id":"1.2.246.562.20.49219384432",
+          "preference1-Koulutus-id-ao-groups":"1.2.246.562.28.74698945408,1.2.246.562.28.24712637358,1.2.246.562.28.33252213316",
+          "preference1-Koulutus-id-aoIdentifier":"",
+          "preference1-Koulutus-id-athlete":"false",
+          "preference1-Koulutus-id-attachmentgroups":"1.2.246.562.28.24712637358",
+          "preference1-Koulutus-id-attachments":"true",
+          "preference1-Koulutus-id-educationcode":"koulutus_651301",
+          "preference1-Koulutus-id-kaksoistutkinto":"false",
+          "preference1-Koulutus-id-lang":"EN",
+          "preference1-Koulutus-id-sora":"false",
+          "preference1-Koulutus-id-vocational":"false",
+          "preference1-Koulutus":"Insinööri (AMK), Information Technology, päivätoteutus",
+          "preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_100",
+          "preference1-Opetuspiste-id":"1.2.246.562.10.67476956288",
+          "preference1-Opetuspiste-id-parents":"1.2.246.562.10.60198812368,1.2.246.562.10.00000000001,1.2.246.562.10.67476956288",
+          "preference1-Opetuspiste":"Metropolia Ammattikorkeakoulu",
+          "preference2-Koulutus":"Bachelor of Business Administration, Degree programme in Business Information Technology, full-time studies",
+          "preference2-Koulutus-educationDegree":"koulutusasteoph2002_62",
+          "preference2-Koulutus-id":"1.2.246.562.20.95810447722",
+          "preference2-Koulutus-id-ao-groups":"1.2.246.562.28.74698945408,1.2.246.562.28.24712637358",
+          "preference2-Koulutus-id-aoIdentifier":"",
+          "preference2-Koulutus-id-athlete":"false",
+          "preference2-Koulutus-id-attachmentgroups":"1.2.246.562.28.24712637358",
+          "preference2-Koulutus-id-attachments":"false",
+          "preference2-Koulutus-id-educationcode":"koulutus_631107",
+          "preference2-Koulutus-id-kaksoistutkinto":"false",
+          "preference2-Koulutus-id-lang":"EN",
+          "preference2-Koulutus-id-sora":"false",
+          "preference2-Koulutus-id-vocational":"false",
+          "preference2-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_100",
+          "preference2-Opetuspiste-id":"1.2.246.562.10.57531791028",
+          "preference2-Opetuspiste-id-parents":"1.2.246.562.10.13803815193,1.2.246.562.10.57531791028,1.2.246.562.10.00000000001,1.2.246.562.10.98188511467",
+          "preference2-Opetuspiste":"Laurea-ammattikorkeakoulu, Laurea Leppävaara",
+          "preference3-Koulutus":"Bachelor of All the Arts, Thinking and Other Cognitive Captabilities, full-time studies",
+          "preference3-Koulutus-educationDegree":"koulutusasteoph2002_62",
+          "preference3-Koulutus-id":"1.2.246.562.20.95810998877",
+          "preference3-Koulutus-id-ao-groups":"1.2.246.562.28.74698945408,1.2.246.562.28.24712637358",
+          "preference3-Koulutus-id-aoIdentifier":"",
+          "preference3-Koulutus-id-athlete":"false",
+          "preference3-Koulutus-id-attachmentgroups":"1.2.246.562.28.24712637358",
+          "preference3-Koulutus-id-attachments":"false",
+          "preference3-Koulutus-id-educationcode":"koulutus_631107",
+          "preference3-Koulutus-id-kaksoistutkinto":"false",
+          "preference3-Koulutus-id-lang":"EN",
+          "preference3-Koulutus-id-sora":"false",
+          "preference3-Koulutus-id-vocational":"false",
+          "preference3-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_100",
+          "preference3-Opetuspiste-id":"1.2.246.562.10.57531791028",
+          "preference3-Opetuspiste-id-parents":"1.2.246.562.10.13803815193,1.2.246.562.10.57531791028,1.2.246.562.10.00000000001,1.2.246.562.10.98188511467",
+          "preference3-Opetuspiste":"Laurea-ammattikorkeakoulu, Laurea Leppävaara",
+          "preference4-Koulutus-educationDegree":"",
+          "preference4-Koulutus-id":"",
+          "preference4-Koulutus-id-ao-groups":"",
+          "preference4-Koulutus-id-aoIdentifier":"",
+          "preference4-Koulutus-id-athlete":"",
+          "preference4-Koulutus-id-attachmentgroups":"",
+          "preference4-Koulutus-id-attachments":"",
+          "preference4-Koulutus-id-educationcode":"",
+          "preference4-Koulutus-id-kaksoistutkinto":"",
+          "preference4-Koulutus-id-lang":"",
+          "preference4-Koulutus-id-sora":"",
+          "preference4-Koulutus-id-vocational":"",
+          "preference4-Koulutus-requiredBaseEducations":"",
+          "preference4-Opetuspiste":"",
+          "preference4-Opetuspiste-id":"",
+          "preference5-Koulutus-educationDegree":"",
+          "preference5-Koulutus-id":"",
+          "preference5-Koulutus-id-ao-groups":"",
+          "preference5-Koulutus-id-aoIdentifier":"",
+          "preference5-Koulutus-id-athlete":"",
+          "preference5-Koulutus-id-attachmentgroups":"",
+          "preference5-Koulutus-id-attachments":"",
+          "preference5-Koulutus-id-educationcode":"",
+          "preference5-Koulutus-id-kaksoistutkinto":"",
+          "preference5-Koulutus-id-lang":"",
+          "preference5-Koulutus-id-sora":"",
+          "preference5-Koulutus-id-vocational":"",
+          "preference5-Koulutus-requiredBaseEducations":"",
+          "preference5-Opetuspiste":"",
+          "preference5-Opetuspiste-id":"",
+          "preference6-Koulutus-educationDegree":"",
+          "preference6-Koulutus-id":"",
+          "preference6-Koulutus-id-ao-groups":"",
+          "preference6-Koulutus-id-aoIdentifier":"",
+          "preference6-Koulutus-id-athlete":"",
+          "preference6-Koulutus-id-attachmentgroups":"",
+          "preference6-Koulutus-id-attachments":"",
+          "preference6-Koulutus-id-educationcode":"",
+          "preference6-Koulutus-id-kaksoistutkinto":"",
+          "preference6-Koulutus-id-lang":"",
+          "preference6-Koulutus-id-sora":"",
+          "preference6-Koulutus-id-vocational":"",
+          "preference6-Koulutus-requiredBaseEducations":"",
+          "preference6-Opetuspiste":"",
+          "preference6-Opetuspiste-id":"",
+          "preferencesVisible":"6"
+        },
+        "koulutustausta":{
+          "pohjakoulutus_ulk":"true",
+          "pohjakoulutus_yo_tutkinto":"lk",
+          "pohjakoulutus_yo_vuosi":"2009",
+          "pohjakoulutus_ulk_vuosi":"2008",
+          "pohjakoulutus_ulk_nimike":"Lukion Tutkinto (Apolytirio)",
+          "pohjakoulutus_yo":"true",
+          "pohjakoulutus_ulk_suoritusmaa":"GRC",
+          "suoritusoikeus_tai_aiempi_tutkinto":"false",
+          "pohjakoulutus_ulk_oppilaitos":"Lukio Kreikassa"
+        },
+        "osaaminen":{
+          "56405ffae4b0055cd4ba7f2e":"option_12"
+        }
+      },
+      "additionalInfo":{
+        "BIT_matloog-OSALLISTUMINEN":"OSALLISTUI",
+        "BIT_haastattelu":"8.00",
+        "BIT_kielikoe-OSALLISTUMINEN":"OSALLISTUI",
+        "BIT_haastattelu-OSALLISTUMINEN":"OSALLISTUI",
+        "BIT_kirjallinen-OSALLISTUMINEN":"OSALLISTUI",
+        "BIT_kielikoe":"1",
+        "BIT_matloog":"14.00",
+        "BIT_kirjallinen":"9.00",
+        "ed9a5c5a-8c0a-01b4-19df-184ab2eae33a":"8.00",
+        "ed9a5c5a-8c0a-01b4-19df-184ab2eae33a-OSALLISTUMINEN":"OSALLISTUI",
+        "b024c5fb-e44f-ea69-aded-ca53d1830ff3":"1",
+        "b024c5fb-e44f-ea69-aded-ca53d1830ff3-OSALLISTUMINEN":"OSALLISTUI"
+      },
+      "oid":"1.2.246.562.11.00004789217",
+      "state":"ACTIVE",
+      "personOid":"1.2.246.562.20.96296215716",
+      "studentOid":"1.2.246.562.20.96296215716",
+      "received":1453633985457,
+      "preferenceEligibilities":[
+        {
+          "aoId":"1.2.246.562.20.49219384432",
+          "status":"NOT_CHECKED",
+          "source":"REGISTER",
+          "maksuvelvollisuus": "REQUIRED"
+        },
+        {
+          "aoId":"1.2.246.562.20.95810447722",
+          "status":"NOT_CHECKED",
+          "source":"REGISTER",
+          "maksuvelvollisuus": "REQUIRED"
+        },
+        {
+          "aoId":"1.2.246.562.20.95810998877",
+          "status":"NOT_CHECKED",
+          "source":"REGISTER",
+          "maksuvelvollisuus": "NOT_CHECKED"
+        }
+      ],
+      "attachmentRequests":[
+        {
+          "id":"form.valmis.todistus.ulk_group_1.2.246.562.28.24712637358",
+          "preferenceAoGroupId":"1.2.246.562.28.24712637358",
+          "processingStatus":"NOT_CHECKED",
+          "applicationAttachment":{
+            "name":{
+              "translations":{
+                "fi":"Todistuskopio ulkomailla suoritetusta tutkinnosta",
+                "sv":"Betygskopia av din examen avlagd utomlands",
+                "en":"Copy of your foreign qualification certificate"
+              }
+            },
+            "description":{
+              "translations":{
+                "fi":"Metropolia Ammattikorkeakoulu",
+                "sv":"Metropolia Ammattikorkeakoulu",
+                "en":"Metropolia Ammattikorkeakoulu"
+              }
+            },
+            "deadline":1455109200000,
+            "address":{
+              "recipient":"Hakijapalvelut",
+              "streetAddress":"PL 4011",
+              "postalCode":"00079",
+              "postOffice":"METROPOLIA"
+            }
+          },
+          "receptionStatus":"NOT_RECEIVED"
+        }
+      ]
+    }
+  ]
+}
