@@ -204,15 +204,15 @@ app.controller "HakeneetCtrl", [
     $scope.hakuehdot = [
       {
         value: "Kaikki"
-        text: "Kaikki hakeneet"
+        text: LokalisointiService.getTranslation("suoritusrekisteri.tiedonsiirto.kaikkihakeneet") || "Kaikki hakeneet"
       }
       {
         value: "Hyvaksytyt"
-        text: "Hyväksytyt"
+        text: LokalisointiService.getTranslation("suoritusrekisteri.tiedonsiirto.hyvaksytyt") || "Hyväksytyt"
       }
       {
         value: "Vastaanottaneet"
-        text: "Paikan vastaanottaneet"
+        text: LokalisointiService.getTranslation("suoritusrekisteri.tiedonsiirto.vastaanottaneet") || "Paikan vastaanottaneet"
       }
     ]
     $scope.$watch("rajapinnanVersio", -> $scope.tiedostotyypit = tiedostotyypit())
@@ -461,4 +461,5 @@ app.controller "HakeneetCtrl", [
       return true  if !$scope.kausi or ($scope.kausi and !$scope.kausi.kausi and !$scope.kausi.vuosi)
       $scope.kausi and haku.kausi is $scope.kausi.kausi and haku.vuosi is $scope.kausi.vuosi
 
+    $scope.t = LokalisointiService.getTranslation
 ]
