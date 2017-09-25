@@ -30,7 +30,7 @@
                             </div>
                             <div>{{b.externalId}}</div>
                         </td>
-                        <td>{{b.batchType}}</td>
+                        <td>{{ t(b.batchType) || b.batchType }}</td>
                         <td>{{b.lahettaja || b.source}}</td>
                         <td>{{b.status.sentTime | date:'medium'}}</td>
                         <td>{{b.status.processedTime | date:'medium'}}</td>

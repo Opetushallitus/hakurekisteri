@@ -150,4 +150,5 @@ app.controller "TiedonsiirtotilaCtrl", [
         getBatches()
       )
 
+    $scope.t = LokalisointiService.getTranslation
 ]
