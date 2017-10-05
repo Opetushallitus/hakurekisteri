@@ -29,26 +29,15 @@ case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeed
 
 class YtlIntegration(config: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
-                     ytlFileSystem: YtlFileSystem,
                      hakemusService: IHakemusService,
                      ytlActor: ActorRef) {
   private val logger = LoggerFactory.getLogger(getClass)
-  val kokelaatDownloadDirectory = ytlFileSystem.directoryPath
-  val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json").getAbsolutePath
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
   private val lastFetchStatus = new AtomicReference[LastFetchStatus]();
   private def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
-
-  private def writeToFile(prefix: String, postfix: String, bytes: Array[Byte]) {
-    val timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date())
-    val file = s"${prefix}_${timestamp}_$postfix";
-    val output= new FileOutputStream(new File(kokelaatDownloadDirectory,file))
-    IOUtils.write(bytes, output)
-    IOUtils.closeQuietly(output)
-  }
 
   def sync(hakemus: FullHakemus): Either[Throwable, Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
