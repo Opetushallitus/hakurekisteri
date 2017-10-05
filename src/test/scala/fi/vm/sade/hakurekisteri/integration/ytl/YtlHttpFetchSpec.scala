@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   private val logger = LoggerFactory.getLogger(getClass)
   val config = ytlProperties.addDefault("ytl.http.buffersize", "128")
-  val fileSystem = new YtlFileSystem(config)
+  val fileSystem = YtlFileSystem(config)
   val ytlHttpFetch = new YtlHttpFetch(config,fileSystem)
 
   test("zip to students") {
@@ -35,7 +35,6 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
         logger.info(s"Bytes read from ${lastReadBytes} -> $bytesRead while getting ${student.firstnames}")
         lastReadBytes = bytesRead
       })
-
   }
 
   test("Fetch one with basic auth") {
@@ -70,7 +69,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   }
 
   def createVeryLargeZip(groupUuid: String, uuid: String): Unit = {
-    val output = fileSystem.write(groupUuid, uuid)
+    val output = fileSystem.asInstanceOf[YtlFileFileSystem].getOutputStream(groupUuid, uuid)
     val zout = new ZipOutputStream(output)
     val entry = new ZipEntry("verylarge.json")
     zout.putNextEntry(entry)

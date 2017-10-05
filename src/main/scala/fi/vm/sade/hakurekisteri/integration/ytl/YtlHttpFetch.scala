@@ -139,11 +139,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
 
   def downloadZip(groupUuid: String)(uuid: String): Either[Throwable, InputStream] = {
     Try(client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
-      val output = fileSystem.write(groupUuid, uuid)
-      val input = r.asInputStream()
-      IOUtils.copyLarge(input,output)
-      IOUtils.closeQuietly(input)
-      IOUtils.closeQuietly(output)
+      fileSystem.write(groupUuid, uuid)(r.asInputStream())
       fileSystem.read(uuid).toList
     })) match {
       case Success(e :: Nil) => Right(e)
