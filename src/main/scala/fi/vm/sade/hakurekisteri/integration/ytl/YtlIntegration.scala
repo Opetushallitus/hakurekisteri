@@ -162,7 +162,7 @@ class YtlIntegration(config: OphProperties,
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
-          logger.error(s"failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}")
+          logger.error(s"failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}", e)
           audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}"))
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
@@ -172,7 +172,7 @@ class YtlIntegration(config: OphProperties,
               Try(StudentToKokelas.convert(personOid, student)) match {
                 case Success(student) => Some(student)
                 case Failure(exception) =>
-                  logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}")
+                  logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
                   None
               }
             case None =>
