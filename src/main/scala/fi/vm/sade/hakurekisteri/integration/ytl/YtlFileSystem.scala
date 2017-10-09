@@ -93,8 +93,9 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends
   def this(config: OphProperties) =
     this(config, AmazonS3ClientBuilder.standard
       .withCredentials(InstanceProfileCredentialsProvider.createAsyncRefreshingProvider(true))
-      .withRegion(Regions.EU_WEST_1)
-      .build())
+      .withRegion(Option(config.getOrElse("ytl.s3.region", null)).getOrElse(
+        throw new RuntimeException(s"S3 region configuration 'ytl.s3.region' is missing!")
+      )).build())
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
 

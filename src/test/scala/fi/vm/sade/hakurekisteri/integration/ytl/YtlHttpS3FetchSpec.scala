@@ -21,12 +21,13 @@ class YtlHttpS3FetchSpec extends ScalatraFunSuite with YtlMockFixture {
   val config = ytlProperties.addDefault("ytl.http.buffersize", "128")
     .addOverride("ytl.s3.enabled", "true")
     .addOverride("ytl.s3.bucket.name", s3Bucket)
+    .addOverride("ytl.s3.region", Regions.EU_WEST_1.getName)
 
   def ytlHttpFetchWithMockedS3 = {
 
     val s3client: AmazonS3 = AmazonS3ClientBuilder.standard
         .withPathStyleAccessEnabled(true)
-        .withEndpointConfiguration(new EndpointConfiguration("http://localhost:" + s3Port, s3Region.toString))
+        .withEndpointConfiguration(new EndpointConfiguration("http://localhost:" + s3Port, s3Region.getName))
         .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
         .build
 
@@ -34,7 +35,7 @@ class YtlHttpS3FetchSpec extends ScalatraFunSuite with YtlMockFixture {
     api.start
 
     val fileSystem = new YtlS3FileSystem(config, s3client)
-    fileSystem.s3client.createBucket(new CreateBucketRequest(s3Bucket, s3Region.toString))
+    fileSystem.s3client.createBucket(new CreateBucketRequest(s3Bucket, s3Region.getName))
     new YtlHttpFetch(config, fileSystem)
   }
 
