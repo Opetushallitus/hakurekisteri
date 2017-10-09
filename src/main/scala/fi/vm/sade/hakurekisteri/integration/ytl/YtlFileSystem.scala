@@ -26,6 +26,14 @@ trait FileAccess {
 
   def read(uuid: String): Iterator[InputStream]
   def write(groupUuid: String, uuid: String)(input:InputStream)
+
+  protected def closeInCaseOfFailure[T <: Closeable](ci:List[Try[T]]): List[T] = ci match {
+    case i if i.find(_.isFailure).isDefined => {
+      i.filter(_.isSuccess).foreach(s => IOUtils.closeQuietly(s.get))
+      throw i.find(_.isFailure).get.failed.get
+    }
+    case i => i.map(_.get)
+  }
 }
 
 object YtlFileSystem {
@@ -50,9 +58,17 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
       }
 
   override def read(uuid: String): Iterator[InputStream] = {
-    Files.newDirectoryStream(directoryPath.toPath).iterator()
-      .filter(!_.toFile.isDirectory)
-      .filter(_.toString.contains(uuid)).map(file => new FileInputStream(file.toFile))
+    Try(Files.newDirectoryStream(directoryPath.toPath)) match {
+      case Failure(f) => throw f;
+      case Success(s) => try {
+        closeInCaseOfFailure(s
+          .filter(!_.toFile.isDirectory)
+          .filter(_.toString.contains(uuid))
+          .map(f => Try(new FileInputStream(f.toFile))).toList).iterator
+      } finally {
+        IOUtils.closeQuietly(s)
+      }
+    }
   }
 
   def getOutputStream(groupUuid: String, uuid: String): OutputStream = {
@@ -62,10 +78,13 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
   }
 
   override def write(groupUuid: String, uuid: String)(input:InputStream) = {
-    val output = getOutputStream(groupUuid, uuid)
-    IOUtils.copyLarge(input, output)
-    IOUtils.closeQuietly(input)
-    IOUtils.closeQuietly(output)
+    val output = Try(getOutputStream(groupUuid, uuid)).toOption
+    try {
+      output.foreach(s => Try(IOUtils.copyLarge(input, s)))
+    } finally {
+      IOUtils.closeQuietly(input)
+      output.foreach(IOUtils.closeQuietly)
+    }
   }
 }
 
@@ -85,9 +104,10 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends
 
   override def read(uuid: String): Iterator[InputStream] = {
     Try(
-      s3client.listObjectsV2(bucket).getObjectSummaries.asScala
-          .map(_.getKey).filter(_.contains(uuid)).map(s3client.getObject(bucket,_))
-          .map(_.getObjectContent).iterator
+      closeInCaseOfFailure(s3client.listObjectsV2(bucket).getObjectSummaries.asScala
+        .map(_.getKey).filter(_.contains(uuid)).toList
+        .map(key => Try(s3client.getObject(bucket, key)))
+      ).map(_.getObjectContent).iterator
     ) match {
       case Success(x) => x
       case Failure(t) => logAndThrowS3Exception(t)
@@ -104,7 +124,7 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends
     }
   }
 
-  def logAndThrowS3Exception(t:Throwable) = {
+  private def logAndThrowS3Exception(t:Throwable) = {
     t match {
       case e:AmazonServiceException => logger.error(
         s"""Got error from Amazon s3. HTTP status code ${e.getStatusCode}, AWS Error Code ${e.getErrorCode},

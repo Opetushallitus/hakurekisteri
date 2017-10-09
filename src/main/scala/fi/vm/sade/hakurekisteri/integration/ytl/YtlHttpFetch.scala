@@ -143,7 +143,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
       fileSystem.read(uuid).toList
     })) match {
       case Success(e :: Nil) => Right(e)
-      case Success(_) => Left(new RuntimeException(s"File not found with UUID $uuid"))
+      case Success(l) => Left(new RuntimeException(s"Wrong number of files found with uuid ${uuid}. Expected 1, got ${l.size}"))
       case Failure(e) => Left(e)
     }
   }
