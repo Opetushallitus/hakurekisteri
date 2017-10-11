@@ -139,15 +139,11 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
 
   def downloadZip(groupUuid: String)(uuid: String): Either[Throwable, InputStream] = {
     Try(client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
-      val output = fileSystem.write(groupUuid, uuid)
-      val input = r.asInputStream()
-      IOUtils.copyLarge(input,output)
-      IOUtils.closeQuietly(input)
-      IOUtils.closeQuietly(output)
+      fileSystem.write(groupUuid, uuid)(r.asInputStream())
       fileSystem.read(uuid).toList
     })) match {
       case Success(e :: Nil) => Right(e)
-      case Success(_) => Left(new RuntimeException(s"File not found with UUID $uuid"))
+      case Success(l) => Left(new RuntimeException(s"Wrong number of files found with uuid ${uuid}. Expected 1, got ${l.size}"))
       case Failure(e) => Left(e)
     }
   }

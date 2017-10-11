@@ -25,9 +25,9 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
   val hakemusService = stub[IHakemusService]
-  val fileSystem = new YtlFileSystem(ytlProperties)
+  val fileSystem = YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, fileSystem, hakemusService, new TestProbe(system).ref)
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, new TestProbe(system).ref)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
