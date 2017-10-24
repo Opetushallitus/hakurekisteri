@@ -130,6 +130,8 @@ class BaseIntegrations(rekisterit: Registers,
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
   private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(restEc, system)
   val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
+  val ataruHakemusClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas")(restEc, system)
   private val koosteClient = new VirkailijaRestClient(config.integrations.koosteConfig, None)(restEc, system)
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
