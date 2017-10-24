@@ -19,8 +19,6 @@ import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.tools.LambdaJob.lambdaJob
-import fi.vm.sade.hakurekisteri.web.jonotus.Siirtotiedostojono
-import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
 import org.quartz.CronScheduleBuilder._
 import org.quartz.TriggerBuilder._

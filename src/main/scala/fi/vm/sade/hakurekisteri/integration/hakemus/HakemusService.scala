@@ -68,14 +68,14 @@ object ListFullSearchDto {
 }
 
 trait IHakemusService {
-  def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]]
-  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]]
-  def hakemuksetForHakukohdes(hakukohdeOid: Set[String], organisaatio: Option[String]): Future[Seq[FullHakemus]]
+  def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]]
+  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
+  def hakemuksetForHakukohdes(hakukohdeOid: Set[String], organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
   def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]]
-  def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]]
-  def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]]
-  def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]]
+  def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
+  def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[HakijaHakemus]]
+  def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[HakijaHakemus]]
   def addTrigger(trigger: Trigger): Unit
   def reprocessHaunHakemukset(hakuOid: String): Unit
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
@@ -94,9 +94,9 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[Trigger] = Seq()
 
-  def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]] = {
+  def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
     for (
-      hakemukset <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, Set(personOid))
+      hakemukset: Map[String, Seq[FullHakemus]] <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, Set(personOid))
     ) yield hakemukset.getOrElse(personOid, Seq[FullHakemus]())
   }
 
@@ -106,10 +106,10 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
     ) yield hakemuksetByPerson.values.flatten.filter(_.applicationSystemId == hakuOid).toSeq
   }
 
-  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
+  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
     fetchHakemukset(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
   }
-  def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
+  def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
     if(hakukohdeOids.isEmpty) {
       Future.successful(Seq())
     } else {
@@ -166,7 +166,7 @@ class HakemusService(restClient: VirkailijaRestClient, oppijaNumeroRekisteri: IO
         case Success((hakemukset, personOidsWithAliases)) =>
           Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
             case Failure(e) => logger.error(e, "Exception in trigger!")
-            case _ => 
+            case _ =>
           }
           processModifiedHakemukset(lastChecked, refreshFrequency)
         case Failure(t) =>
