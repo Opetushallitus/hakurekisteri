@@ -555,10 +555,10 @@ sealed trait HakijaHakemus {
   def personOid: Option[String]
   def oid: String
   def applicationSystemId: String
-  def hetu: Option[String]
   def stateValid: Boolean
   def answers: Option[HakemusAnswers]
   def henkilotiedot: Option[HakemusHenkilotiedot]
+  def hetu: Option[String]
   def hakutoiveet: Option[Map[String, String]]
   def koulutustausta: Option[Koulutustausta]
   def lahtokoulu: Option[String]
@@ -571,11 +571,11 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
   // Resource stuff
   override def identify(identity: String): FullHakemus with Identified[String] = this
   override val core: AnyRef = oid
-  def newId = oid
-  val source = Oids.ophOrganisaatioOid
+  def newId: String = oid
+  val source: String = Oids.ophOrganisaatioOid
 
   // Identified stuff
-  val id = oid
+  val id: String = oid
 
   // Hakemus stuff
   val stateValid: Boolean = state.exists(s => Seq("ACTIVE", "INCOMPLETE").contains(s))
@@ -585,16 +585,16 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = koulutustausta.flatMap(_.lahtokoulu)
   val kieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
-  val julkaisulupa = (answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu)))).getOrElse("false").toBoolean
+  val julkaisulupa: Boolean = answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu))).getOrElse("false").toBoolean
 }
 
 case class AtaruHakemus(oid: String, personOid: Option[String], applicationSystemId: String, hetu: Option[String]) extends HakijaHakemus {
-  val stateValid = ???
-  val answers = ???
-  val henkilotiedot = ???
-  val hakutoiveet = ???
-  val koulutustausta = ???
-  val lahtokoulu = ???
-  val kieli = ???
-  val julkaisulupa = ???
+  val stateValid: Nothing = ???
+  val answers: Nothing = ???
+  val henkilotiedot: Nothing = ???
+  val hakutoiveet: Nothing = ???
+  val koulutustausta: Nothing = ???
+  val lahtokoulu: Nothing = ???
+  val kieli: Nothing = ???
+  val julkaisulupa: Nothing = ???
 }
