@@ -150,7 +150,7 @@ class BaseIntegrations(rekisterit: Registers,
   val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
-  val hakemusService = new HakemusService(hakemusClient, oppijaNumeroRekisteri)(system)
+  val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, oppijaNumeroRekisteri)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")

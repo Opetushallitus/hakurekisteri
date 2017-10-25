@@ -159,6 +159,8 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     val endpoint = mock[Endpoint]
     when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
       thenReturn((200, List(), "[]"))
+    when(endpoint.request(forPattern(".*/lomake-editori/api/external/applications.*")))
+      .thenReturn((200, List(), "[]"))
     val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(
       rekisterit.suoritusRekisteri,
       rekisterit.opiskeluoikeusRekisteri,
