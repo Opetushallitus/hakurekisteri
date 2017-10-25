@@ -578,18 +578,9 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
   val id = oid
 
   // Hakemus stuff
-  def hetu: Option[String] = for (
-    foundAnswers <- answers;
-    henkilo <- foundAnswers.henkilotiedot;
-    henkiloHetu <- henkilo.Henkilotunnus
-  ) yield henkiloHetu
-
-  def stateValid: Boolean = state match {
-    case Some(s) if Seq("ACTIVE", "INCOMPLETE").contains(s) => true
-    case _ => false
-  }
-
+  val stateValid: Boolean = state.exists(s => Seq("ACTIVE", "INCOMPLETE").contains(s))
   val henkilotiedot: Option[HakemusHenkilotiedot] = answers.flatMap(_.henkilotiedot)
+  val hetu: Option[String] = henkilotiedot.flatMap(henkilo => henkilo.Henkilotunnus.map(henkiloHetu => henkiloHetu))
   val hakutoiveet: Option[Map[String, String]] = answers.flatMap(_.hakutoiveet)
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = koulutustausta.flatMap(_.lahtokoulu)
