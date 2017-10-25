@@ -566,7 +566,14 @@ sealed trait HakijaHakemus {
   def julkaisulupa: Boolean
 }
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility], attachmentRequests: Seq[HakemusAttachmentRequest] = Seq()) extends Resource[String, FullHakemus] with Identified[String] with HakijaHakemus {
+case class FullHakemus(oid: String,
+                       personOid: Option[String],
+                       applicationSystemId: String,
+                       answers: Option[HakemusAnswers],
+                       state: Option[String],
+                       preferenceEligibilities: Seq[PreferenceEligibility],
+                       attachmentRequests: Seq[HakemusAttachmentRequest] = Seq())
+  extends Resource[String, FullHakemus] with Identified[String] with HakijaHakemus {
 
   // Resource stuff
   override def identify(identity: String): FullHakemus with Identified[String] = this
@@ -588,13 +595,23 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
   val julkaisulupa: Boolean = answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu))).getOrElse("false").toBoolean
 }
 
-case class AtaruHakemus(oid: String, personOid: Option[String], applicationSystemId: String, hetu: Option[String]) extends HakijaHakemus {
-  val stateValid: Nothing = ???
+case class AtaruHakemus(oid: String,
+                        henkiloOid: String,
+                        hakuOid: String,
+                        asiointikieli: String,
+                        hakukohteet: Set[String]) extends HakijaHakemus {
+  // Ataru response fields to desired names
+  val personOid: Option[String] = Some(henkiloOid)
+  val applicationSystemId: String = hakuOid
+  val kieli: String = asiointikieli
+
+  // Other fields
   val answers: Nothing = ???
+  val stateValid: Nothing = ???
   val henkilotiedot: Nothing = ???
+  val hetu: Nothing = ???
   val hakutoiveet: Nothing = ???
   val koulutustausta: Nothing = ???
   val lahtokoulu: Nothing = ???
-  val kieli: Nothing = ???
   val julkaisulupa: Nothing = ???
 }
