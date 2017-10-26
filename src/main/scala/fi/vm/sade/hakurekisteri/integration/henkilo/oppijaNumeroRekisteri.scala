@@ -30,6 +30,8 @@ trait IOppijaNumeroRekisteri {
   }
 
   def getByHetu(hetu: String): Future[Henkilo]
+
+  def getByOids(oids: Set[String]): Future[Seq[Henkilo]]
 }
 
 object IOppijaNumeroRekisteri {
@@ -73,6 +75,10 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     logger.debug(s"Querying with hetu ${hetu.substring(0, 6)}XXXX")
     client.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(acceptedResponseCode = HttpStatus.SC_OK)
   }
+
+  override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = {
+    client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oids, acceptedResponseCode = HttpStatus.SC_OK)
+  }
 }
 
 object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
@@ -93,6 +99,8 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
     val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
     Future.successful(json.extract[Henkilo])
   }
+
+  def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future(Seq())
 }
 
 object MockPersonAliasesProvider extends PersonAliasesProvider {

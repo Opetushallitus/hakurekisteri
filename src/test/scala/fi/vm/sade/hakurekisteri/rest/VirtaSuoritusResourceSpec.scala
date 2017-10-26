@@ -59,6 +59,8 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
         None
       ))
     }
+
+    override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = ???
   }
 
 

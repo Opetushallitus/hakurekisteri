@@ -587,18 +587,24 @@ case class FullHakemus(oid: String,
   val julkaisulupa: Boolean = answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu))).getOrElse("false").toBoolean
 }
 
+case class AtaruHakemusDto(oid: String,
+                           personOid: Option[String],
+                           applicationSystemId: String,
+                           kieli: String,
+                           hakukohteet: Set[String])
+
 case class AtaruHakemus(oid: String,
                         personOid: Option[String],
                         applicationSystemId: String,
+                        answers: Option[HakemusAnswers],
                         kieli: String,
-                        hakukohteet: Set[String]) extends HakijaHakemus {
+                        hetu: Option[String]) extends HakijaHakemus {
 
-  val answers: Option[HakemusAnswers] = None
   val stateValid: Boolean = true
-  val henkilotiedot: Option[HakemusHenkilotiedot] = None
-  val hetu: Option[String] = None
-  val hakutoiveet: Option[Map[String,String]] = None
-  val koulutustausta: Option[Koulutustausta] = None
+  val state: Option[String] = None
+  val henkilotiedot: Option[HakemusHenkilotiedot] = answers.flatMap(_.henkilotiedot)
+  val hakutoiveet: Option[Map[String,String]] = answers.flatMap(_.hakutoiveet)
+  val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = None
   val julkaisulupa: Boolean = false
   val attachmentRequests = Seq()
