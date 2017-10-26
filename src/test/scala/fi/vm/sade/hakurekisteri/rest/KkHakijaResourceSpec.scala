@@ -44,7 +44,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   test("should return 200 OK") {
     when(endPoint.request(forPattern(".*listfull.*"))).thenReturn((200, List(), "[]"))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/applications.*")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
       .thenReturn((200, List(), "[]"))
     Thread.sleep(2000)
 
