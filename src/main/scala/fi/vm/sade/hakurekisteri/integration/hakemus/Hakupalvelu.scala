@@ -193,13 +193,6 @@ object AkkaHakupalvelu {
     Liite(prefAoId, prefAoGroupId, har.receptionStatus, har.processingStatus, name, har.applicationAttachment.address.recipient)
   }
 
-  def getLiitteet(hakemus: HakijaHakemus): Seq[Liite] = {
-    hakemus match {
-      case h:FullHakemus => h.attachmentRequests.map(a=> attachmentRequestToLiite(a))
-      case h:AtaruHakemus => ???
-    }
-  }
-
   def getLisakysymykset(hakemus: HakijaHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
 
     case class CompositeId(questionId: String, answerId: Option[String])
@@ -367,7 +360,7 @@ object AkkaHakupalvelu {
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
         lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
-        liitteet = getLiitteet(hakemus),
+        liitteet = hakemus.attachmentRequests.map(a=> attachmentRequestToLiite(a)),
         muukoulutus = getMuukoulutus(hakemus)
 
       ),
@@ -564,6 +557,8 @@ sealed trait HakijaHakemus {
   def lahtokoulu: Option[String]
   def kieli: String
   def julkaisulupa: Boolean
+  def attachmentRequests: Seq[HakemusAttachmentRequest]
+  def preferenceEligibilities: Seq[PreferenceEligibility]
 }
 
 case class FullHakemus(oid: String,
@@ -596,22 +591,19 @@ case class FullHakemus(oid: String,
 }
 
 case class AtaruHakemus(oid: String,
-                        henkiloOid: String,
-                        hakuOid: String,
-                        asiointikieli: String,
+                        personOid: Option[String],
+                        applicationSystemId: String,
+                        kieli: String,
                         hakukohteet: Set[String]) extends HakijaHakemus {
-  // Ataru response fields to desired names
-  val personOid: Option[String] = Some(henkiloOid)
-  val applicationSystemId: String = hakuOid
-  val kieli: String = asiointikieli
 
-  // Other fields
-  val answers: Nothing = ???
-  val stateValid: Nothing = ???
-  val henkilotiedot: Nothing = ???
-  val hetu: Nothing = ???
-  val hakutoiveet: Nothing = ???
-  val koulutustausta: Nothing = ???
-  val lahtokoulu: Nothing = ???
-  val julkaisulupa: Nothing = ???
+  val answers: Option[HakemusAnswers] = None
+  val stateValid: Boolean = true
+  val henkilotiedot: Option[HakemusHenkilotiedot] = None
+  val hetu: Option[String] = None
+  val hakutoiveet: Option[Map[String,String]] = None
+  val koulutustausta: Option[Koulutustausta] = None
+  val lahtokoulu: Option[String] = None
+  val julkaisulupa: Boolean = false
+  val attachmentRequests = Seq()
+  val preferenceEligibilities = Seq()
 }

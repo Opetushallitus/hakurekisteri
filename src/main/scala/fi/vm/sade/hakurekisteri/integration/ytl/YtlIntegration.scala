@@ -87,16 +87,8 @@ class YtlIntegration(config: OphProperties,
           logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
           throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
         }
-        val hakemuksetInCorrectStateAndWithPersonOid: Seq[HakijaHakemus] = hakemukset.filter {
-          _ match {
-            case h:FullHakemus => h.state match {
-              case Some("ACTIVE") => true
-              case Some("INCOMPLETE") => true
-              case _ => false
-            }
-            case h:AtaruHakemus => ???
-          }
-        }.filter(_.personOid.isDefined)
+        val hakemuksetInCorrectStateAndWithPersonOid: Seq[HakijaHakemus] =
+          hakemukset.filter(h => h.stateValid && h.personOid.isDefined)
         if(hakemuksetInCorrectStateAndWithPersonOid.isEmpty) {
           logger.error(s"Hakemukset with person OID $personOid in wrong state!")
           Future.failed(new RuntimeException(s"Hakemukset with person OID $personOid in wrong state!"))

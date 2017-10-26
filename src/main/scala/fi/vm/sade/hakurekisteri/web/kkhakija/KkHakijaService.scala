@@ -179,10 +179,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     def potentiallyMaksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
       preferenceEligibilities.filter(e => hasMaksuvelvollisuusData(e.maksuvelvollisuus))
 
-    val maksuvelvollisuudet: Set[PreferenceEligibility] = potentiallyMaksuvelvolliset(hakemukset.flatMap(_ match {
-      case h:FullHakemus => h.preferenceEligibilities
-      case h:AtaruHakemus => ???
-    })).toSet
+    val maksuvelvollisuudet: Set[PreferenceEligibility] = potentiallyMaksuvelvolliset(hakemukset.flatMap(_.preferenceEligibilities)).toSet
 
     getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos =>
@@ -321,14 +318,7 @@ class KkHakijaService(hakemusService: IHakemusService,
                                    sijoitteluTulos: SijoitteluTulos): Future[Option[Hakemus]] = {
     val hakemusOid = hakemus.oid
     val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
-    val preferenceEligibilities = hakemus match {
-      case h:FullHakemus => h.preferenceEligibilities
-      case h:AtaruHakemus => ???
-    }
-    val attachmentRequests = hakemus match {
-      case h:FullHakemus => h.attachmentRequests
-      case h:AtaruHakemus => ???
-    }
+    val preferenceEligibilities = hakemus.preferenceEligibilities
     val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
     for {
       hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
@@ -356,7 +346,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           lukuvuosimaksu = resolveLukuvuosiMaksu(hakemus, hakukelpoisuus, lukuvuosimaksutByHakukohdeOid, hakukohdeOid),
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
             .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
-          liitteet = attachmentToLiite(attachmentRequests)
+          liitteet = attachmentToLiite(hakemus.attachmentRequests)
         ))
       } else {
         None
