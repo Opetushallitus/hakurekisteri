@@ -81,7 +81,7 @@ trait IHakemusService {
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
-class HakemusService(hakuappRestClient: VirkailijaRestClient, ataruHAkemusClient: VirkailijaRestClient,
+class HakemusService(hakuappRestClient: VirkailijaRestClient, ataruHakemusClient: VirkailijaRestClient,
                      oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
                     (implicit val system: ActorSystem) extends IHakemusService {
   val fetchPersonAliases: (Seq[FullHakemus]) => Future[(Seq[FullHakemus], PersonOidsWithAliases)] = { hs: Seq[FullHakemus] =>
@@ -99,8 +99,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient, ataruHAkemusClient
     for (
       hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuappRestClient
         .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, Set(personOid));
-      ataruHakemukset: Seq[AtaruHakemus] <- ataruHAkemusClient
-        .readObject[List[AtaruHakemus]]("ataru.applications", Map("personOid" -> personOid))(acceptedResponseCode = 200, maxRetries = 2)
+      ataruHakemukset: Seq[AtaruHakemus] <- ataruHakemusClient
+        .readObject[List[AtaruHakemus]]("ataru.applications", Map("hakijaOids" -> personOid))(acceptedResponseCode = 200, maxRetries = 2)
     ) yield hakuappHakemukset.getOrElse(personOid, Seq[FullHakemus]()) ++ ataruHakemukset
   }
 
