@@ -289,10 +289,7 @@ object AkkaHakupalvelu {
   }
 
   def getOsaaminenOsaalue(hakemus: HakijaHakemus, key: String): Option[String] = {
-    hakemus match {
-      case h:FullHakemus => h.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
-      case h:AtaruHakemus => ???
-    }
+    hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
   }
 
   def getHakija(hakemus: HakijaHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
