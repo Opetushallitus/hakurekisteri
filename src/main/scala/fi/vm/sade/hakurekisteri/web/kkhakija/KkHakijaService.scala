@@ -127,11 +127,12 @@ class KkHakijaService(hakemusService: IHakemusService,
       hakemusService.hakemuksetForHakukohdes(hakukohdeOids.toSet, q.organisaatio)
     }
 
-    def matchHakemusToQuery(hakemus: HakijaHakemus) : Boolean = {
+    def matchHakemusToQuery(hakemus: HakijaHakemus): Boolean = {
       hakemus.personOid.isDefined && hakemus.stateValid &&
         q.oppijanumero.forall(hakemus.personOid.contains(_)) &&
         q.haku.forall(_ == hakemus.applicationSystemId)
     }
+
     for (
       hakemukset <- q match {
         case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
@@ -152,7 +153,6 @@ class KkHakijaService(hakemusService: IHakemusService,
       case (hakuOid, fullHakemuses) =>
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
-
             q.hakukohderyhma.map(hakupalvelu.getHakukohdeOids(_, haku.oid)).getOrElse(Future.successful(Seq())).flatMap(hakukohdeOids => {
               version match {
                 case 1 =>
@@ -211,7 +211,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     case Some(o) => parents.getOrElse("").split(",").toSet.contains(o)
   }
 
-  private def getKnownOrganizations(user: Option[User]):Set[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Set())
+  private def getKnownOrganizations(user: Option[User]): Set[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Set())
 
   private def isAuthorized(parents: Option[String], oids: Set[String]): Boolean = {
     oids.map(o => parents.getOrElse("").split(",").toSet.contains(o)).find(_ == true).getOrElse(false)
@@ -379,8 +379,9 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   def attachmentToLiite(attachments: Seq[HakemusAttachmentRequest]): Option[Seq[Liite]] = {
-    var liitteet: Seq[Liite] = attachments.map(a => Liite(a.preferenceAoId.getOrElse(""), a.preferenceAoGroupId.getOrElse(""), a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
-    (liitteet) match {
+    var liitteet: Seq[Liite] = attachments.map(a => Liite(a.preferenceAoId.getOrElse(""), a.preferenceAoGroupId.getOrElse(""),
+      a.receptionStatus, a.processingStatus, getLiitteenNimi(a.applicationAttachment), a.applicationAttachment.address.recipient))
+    liitteet match {
       case Seq() => None
       case _ => Some(liitteet)
     }
@@ -388,7 +389,10 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   def getOsaaminenOsaalue(hakemusAnswers: Option[HakemusAnswers], key: String): String = {
     hakemusAnswers match {
-      case Some(ha) => ha.osaaminen match { case Some(a) => a.getOrElse(key, "") case None => "" }
+      case Some(ha) => ha.osaaminen match {
+        case Some(a) => a.getOrElse(key, "")
+        case None => ""
+      }
       case None => ""
     }
   }
