@@ -189,6 +189,10 @@ app.controller "HakeneetCtrl", [
             text: "3"
           }
           {
+            value: 4,
+            text: "4"
+          }
+          {
             value: 3,
             text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
           }
@@ -199,7 +203,7 @@ app.controller "HakeneetCtrl", [
     if(isKk())
       $scope.rajapinnanVersio = 2
     else
-      $scope.rajapinnanVersio = 3
+      $scope.rajapinnanVersio = 4
 
     $scope.hakuehdot = [
       {

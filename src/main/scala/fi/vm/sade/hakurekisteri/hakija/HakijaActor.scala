@@ -188,6 +188,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
         case 1 => XMLQuery(q) pipeTo sender
         case 2 => JSONQuery(q) pipeTo sender
         case 3 => JSONQueryV3(q) pipeTo sender
+        case 4 => JSONQueryV3(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
