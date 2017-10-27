@@ -178,7 +178,9 @@ object AkkaHakupalvelu {
       "LISAKOULUTUS_AMMATTISTARTTI" -> tausta.LISAKOULUTUS_AMMATTISTARTTI,
       "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
       "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO,
-      "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO
+      "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO,
+      "LISAKOULUTUS_TELMA" -> tausta.LISAKOULUTUS_TELMA,
+      "LISAKOULUTUS_VALMA" -> tausta.LISAKOULUTUS_VALMA
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
@@ -443,6 +445,7 @@ object AkkaHakupalvelu {
         case "sosiaalisetsyyt" => Some("2")
         case "todistustenvertailuvaikeudet" => Some("3")
         case "todistustenpuuttuminen" => Some("4")
+        case "riittamatonkielitaito" => Some("5")
         case s => //logger.error(s"invalid discretionary-follow-up value $s");
           None
       }
@@ -500,6 +503,10 @@ case class Koulutustausta(lahtokoulu: Option[String],
                           lukioPaattotodistusVuosi: Option[String],
                           PK_PAATTOTODISTUSVUOSI: Option[String],
                           KYMPPI_PAATTOTODISTUSVUOSI: Option[String],
+                          KANSANOPISTO_PAATTOTODISTUSVUOSI: Option[String],
+                          LUVA_PAATTOTODISTUSVUOSI: Option[String],
+                          VALMA_PAATTOTODISTUSVUOSI: Option[String],
+                          TELMA_PAATTOTODISTUSVUOSI: Option[String],
                           LISAKOULUTUS_KYMPPI: Option[String],
                           LISAKOULUTUS_VAMMAISTEN: Option[String],
                           LISAKOULUTUS_TALOUS: Option[String],
@@ -507,6 +514,8 @@ case class Koulutustausta(lahtokoulu: Option[String],
                           LISAKOULUTUS_KANSANOPISTO: Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO: Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO_LUKIO: Option[String],
+                          LISAKOULUTUS_VALMA: Option[String],
+                          LISAKOULUTUS_TELMA: Option[String],
                           luokkataso: Option[String],
                           lahtoluokka: Option[String],
                           perusopetuksen_kieli: Option[String],
@@ -532,8 +541,7 @@ case class Koulutustausta(lahtokoulu: Option[String],
                           muukoulutus: Option[String])
 
 object Koulutustausta {
-  def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None, None,
-    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+  def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Map[String, String]] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)

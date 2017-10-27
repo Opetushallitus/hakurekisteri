@@ -200,6 +200,54 @@ object IlmoitetutArvosanatTrigger {
             } else {
               Seq.empty
             }
+          }).getOrElse(Seq.empty),
+          koulutustausta.LISAKOULUTUS_KANSANOPISTO.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.kansanopistoKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                koulutustausta.KANSANOPISTO_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty),
+          koulutustausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.lukioonvalmistavaKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                koulutustausta.LUVA_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty),
+          koulutustausta.LISAKOULUTUS_VALMA.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.valmaKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                koulutustausta.VALMA_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty),
+          koulutustausta.LISAKOULUTUS_TELMA.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.telmaKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                koulutustausta.TELMA_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
           }).getOrElse(Seq.empty)
         ).flatMap(s => s)
       }).getOrElse(Seq.empty).map(s => (s, Seq.empty))
@@ -265,25 +313,21 @@ case class RicherKoulutustausta(koulutustausta: Map[String, String]) {
     None
   }
   def valmentavaVuosi: Option[Int] = {
-
     None
   }
   def ammatilliseenvalmistavaVuosi: Option[Int] = {
-
     None
   }
   def ulkomainenkorvaavaVuosi: Option[Int] = {
     None
   }
   def lukioVuosi: Option[Int] = {
-
     koulutustausta.get("lukioPaattotodistusVuosi").map(_.toInt)
   }
   def ammatillinenVuosi: Option[Int] = {
     koulutustausta.get("pohjakoulutus_am_vuosi").map(_.toInt)
   }
   def lukioonvalmistavaVuosi: Option[Int] = {
-
     None
   }
 }
