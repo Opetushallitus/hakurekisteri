@@ -273,6 +273,39 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     )
   }
 
+  it should "create suoritus with the years entered in the application" in {
+    val pkVuosi = 2009
+    val kymppiVuosi = 2010
+    val kansanopistoVuosi = 2011
+    val luvaVuosi = 2012
+    val telmaVuosi = 2013
+    val valmaVuosi = 2014
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(pkVuosi)
+        .setLisaopetusKymppi("true")
+        .setLisaopetusKansanopisto("true")
+        .setLisaopetusMaahanmuuttoLukio("true")
+        .setLisaopetusTelma("true")
+        .setLisaopetusValma("true")
+        .setKymppiVuosi(kymppiVuosi)
+        .setKansanopistoVuosi(kansanopistoVuosi)
+        .setMaahanmuuttoLukioVuosi(luvaVuosi)
+        .setTelmaVuosi(telmaVuosi)
+        .setValmaVuosi(valmaVuosi)
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", pkVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.lisaopetusKomoOid, "hakemus1", "person1", kymppiVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.kansanopistoKomoOid, "hakemus1", "person1", kansanopistoVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.lukioonvalmistavaKomoOid, "hakemus1", "person1", luvaVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.telmaKomoOid, "hakemus1", "person1", telmaVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.valmaKomoOid, "hakemus1", "person1", valmaVuosi, "FI"), List())
+    )
+  }
+
   it should "create kymppisuoritus with perusopetus year if kymppi year not available" in {
     val pkVuosi = 2009
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
@@ -380,7 +413,7 @@ class TestActor(handler: PartialFunction[Any, Unit]) extends Actor {
 object Triggered
 
 object Hakemus {
-  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, "", None, None, None, None, None, None, None, "")
+  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, "", None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, "")
 }
 
 case class HakemusBuilder(osaaminen: Map[String, String],
@@ -388,7 +421,15 @@ case class HakemusBuilder(osaaminen: Map[String, String],
                           personOid: Option[String],
                           PK_PAATTOTODISTUSVUOSI: Option[String],
                           LISAKOULUTUS_KYMPPI: Option[String],
+                          LISAKOULUTUS_KANSANOPISTO: Option[String],
+                          LISAKOULUTUS_MAAHANMUUTTO_LUKIO: Option[String],
+                          LISAKOULUTUS_TELMA: Option[String],
+                          LISAKOULUTUS_VALMA: Option[String],
                           KYMPPI_PAATTOTODISTUSVUOSI: Option[String],
+                          KANSANOPISTO_PAATTOTODISTUSVUOSI: Option[String],
+                          LUVA_PAATTOTODISTUSVUOSI: Option[String],
+                          TELMA_PAATTOTODISTUSVUOSI: Option[String],
+                          VALMA_PAATTOTODISTUSVUOSI: Option[String],
                           lukioPaattotodistusVuosi: Option[String],
                           lahtokoulu: Option[String],
                           suoritusoikeus_tai_aiempi_tutkinto_vuosi: Option[String],
@@ -423,8 +464,32 @@ case class HakemusBuilder(osaaminen: Map[String, String],
   def setLisaopetusKymppi(bool: String): HakemusBuilder =
     this.copy(LISAKOULUTUS_KYMPPI = Some(bool))
 
+  def setLisaopetusKansanopisto(bool: String): HakemusBuilder =
+    this.copy(LISAKOULUTUS_KANSANOPISTO = Some(bool))
+
+  def setLisaopetusMaahanmuuttoLukio(bool: String): HakemusBuilder =
+    this.copy(LISAKOULUTUS_MAAHANMUUTTO_LUKIO = Some(bool))
+
+  def setLisaopetusValma(bool: String): HakemusBuilder =
+    this.copy(LISAKOULUTUS_VALMA = Some(bool))
+
+  def setLisaopetusTelma(bool: String): HakemusBuilder =
+    this.copy(LISAKOULUTUS_TELMA = Some(bool))
+
   def setKymppiVuosi(vuosi: Int): HakemusBuilder =
     this.copy(KYMPPI_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
+
+  def setKansanopistoVuosi(vuosi: Int): HakemusBuilder =
+    this.copy(KANSANOPISTO_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
+
+  def setMaahanmuuttoLukioVuosi(vuosi: Int): HakemusBuilder =
+    this.copy(LUVA_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
+
+  def setTelmaVuosi(vuosi: Int): HakemusBuilder =
+    this.copy(TELMA_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
+
+  def setValmaVuosi(vuosi: Int): HakemusBuilder =
+    this.copy(VALMA_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
 
   def putArvosana(aine: String, arvosana: String): HakemusBuilder =
     this.copy(osaaminen = osaaminen + (aine -> arvosana))
@@ -445,13 +510,13 @@ case class HakemusBuilder(osaaminen: Map[String, String],
     )), Some(Koulutustausta(
       lahtokoulu = lahtokoulu, POHJAKOULUTUS = None,
       lukioPaattotodistusVuosi, PK_PAATTOTODISTUSVUOSI,
-      KYMPPI_PAATTOTODISTUSVUOSI, KANSANOPISTO_PAATTOTODISTUSVUOSI = None,
-      LUVA_PAATTOTODISTUSVUOSI= None, VALMA_PAATTOTODISTUSVUOSI = None,
-      TELMA_PAATTOTODISTUSVUOSI = None, LISAKOULUTUS_KYMPPI,
+      KYMPPI_PAATTOTODISTUSVUOSI, KANSANOPISTO_PAATTOTODISTUSVUOSI,
+      LUVA_PAATTOTODISTUSVUOSI, VALMA_PAATTOTODISTUSVUOSI,
+      TELMA_PAATTOTODISTUSVUOSI, LISAKOULUTUS_KYMPPI,
       LISAKOULUTUS_VAMMAISTEN = None, LISAKOULUTUS_TALOUS = None,
-      LISAKOULUTUS_AMMATTISTARTTI = None, LISAKOULUTUS_KANSANOPISTO = None,
-      LISAKOULUTUS_MAAHANMUUTTO = None, LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
-      LISAKOULUTUS_VALMA = None, LISAKOULUTUS_TELMA = None,
+      LISAKOULUTUS_AMMATTISTARTTI = None, LISAKOULUTUS_KANSANOPISTO,
+      LISAKOULUTUS_MAAHANMUUTTO = None, LISAKOULUTUS_MAAHANMUUTTO_LUKIO,
+      LISAKOULUTUS_VALMA, LISAKOULUTUS_TELMA,
       luokkataso = None, lahtoluokka = None,
       perusopetuksen_kieli = None, lukion_kieli = None,
       pohjakoulutus_yo = None, pohjakoulutus_yo_vuosi = None,
