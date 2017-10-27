@@ -193,7 +193,7 @@ app.controller "HakeneetCtrl", [
             text: "4"
           }
           {
-            value: 3,
+            value: 4,
             text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
           }
         ]

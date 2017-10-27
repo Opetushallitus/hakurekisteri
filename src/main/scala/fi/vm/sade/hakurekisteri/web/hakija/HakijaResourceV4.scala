@@ -58,7 +58,3 @@ class HakijaResourceV4(hakijaActor: ActorRef)
     case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }
-
-
-
-
