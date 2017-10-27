@@ -225,18 +225,6 @@ object IlmoitetutArvosanatTrigger {
               Seq.empty
             }
           }).getOrElse(Seq.empty),
-          koulutustausta.LISAKOULUTUS_VALMA.map(lk => {
-            if ("true".equals(lk)) {
-              Seq(ItseilmoitettuTutkinto(
-                komoOid = Oids.valmaKomoOid,
-                hakemusOid = hakemus.oid,
-                hakijaOid = personOid,
-                koulutustausta.VALMA_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
-                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-            } else {
-              Seq.empty
-            }
-          }).getOrElse(Seq.empty),
           koulutustausta.LISAKOULUTUS_TELMA.map(lk => {
             if ("true".equals(lk)) {
               Seq(ItseilmoitettuTutkinto(
@@ -244,6 +232,18 @@ object IlmoitetutArvosanatTrigger {
                 hakemusOid = hakemus.oid,
                 hakijaOid = personOid,
                 koulutustausta.TELMA_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty),
+          koulutustausta.LISAKOULUTUS_VALMA.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.valmaKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                koulutustausta.VALMA_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
                 suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
             } else {
               Seq.empty
