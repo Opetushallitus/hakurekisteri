@@ -184,6 +184,19 @@ object AkkaHakupalvelu {
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
+  def kaydytLisapisteVuodet(tausta: Koulutustausta): Map[String, String] = {
+    def checkVuosi(lisakoulutus: Option[String]): String = {
+      Try(lisakoulutus.getOrElse("1970").toString).getOrElse("1970")
+    }
+    Map(
+      "KYMPPI_PAATTOTODISTUSVUOSI" -> tausta.KYMPPI_PAATTOTODISTUSVUOSI,
+      "KANSANOPISTO_PAATTOTODISTUSVUOSI" -> tausta.KANSANOPISTO_PAATTOTODISTUSVUOSI,
+      "LUVA_PAATTOTODISTUSVUOSI" -> tausta.LUVA_PAATTOTODISTUSVUOSI,
+      "TELMA_PAATTOTODISTUSVUOSI" -> tausta.TELMA_PAATTOTODISTUSVUOSI,
+      "VALMA_PAATTOTODISTUSVUOSI" -> tausta.VALMA_PAATTOTODISTUSVUOSI
+    ).mapValues(checkVuosi).filter((t) => t._2 != "1970");
+  }
+
   def attachmentRequestToLiite(har: HakemusAttachmentRequest): Liite = {
     val name = (har.applicationAttachment.name, har.applicationAttachment.header) match {
       case (Some(name), _) => name.translations.fi
@@ -332,10 +345,14 @@ object AkkaHakupalvelu {
                           yleinen_kielitutkinto_en, valtionhallinnon_kielitutkinto_en,
                           yleinen_kielitutkinto_se, valtionhallinnon_kielitutkinto_se)
 
-    val lisapistekoulutus = for (
-      tausta <- koulutustausta;
-      lisatausta <- kaydytLisapisteKoulutukset(tausta).headOption
-    ) yield lisatausta
+    val lisapistekoulutus = koulutustausta match {
+      case Some(tausta: Koulutustausta) => kaydytLisapisteKoulutukset(tausta)
+      case _ => Seq.empty[String]
+    }
+    val lisapisteVuodet = koulutustausta match {
+      case Some(tausta: Koulutustausta) => kaydytLisapisteVuodet(tausta)
+      case _ => Map.empty[String, String]
+    }
     val henkilotiedot: Option[HakemusHenkilotiedot] = for (a <- v; henkilotiedot <- a.henkilotiedot) yield henkilotiedot
     def getHenkiloTietoOrElse(f: (HakemusHenkilotiedot) => Option[String], orElse: String) =
       (for (h <- henkilotiedot; osoite <- f(h)) yield osoite).getOrElse(orElse)
@@ -387,7 +404,7 @@ object AkkaHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
+      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, lisapisteVuodet, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, lisapisteVuodet, Seq(), osaaminen)))
   }
 
 

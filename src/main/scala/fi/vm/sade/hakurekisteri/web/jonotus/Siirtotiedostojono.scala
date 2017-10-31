@@ -112,8 +112,10 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
             case ApiFormat.Excel =>
               if(query.version == 2) {
                 ExcelUtilV2.write(bytes, hakijat)
-              } else {
+              } else if(query.version == 3) {
                 ExcelUtilV3.write(bytes, hakijat)
+              } else {
+                ExcelUtilV4.write(bytes, hakijat)
               }
               bytes.toByteArray
           }

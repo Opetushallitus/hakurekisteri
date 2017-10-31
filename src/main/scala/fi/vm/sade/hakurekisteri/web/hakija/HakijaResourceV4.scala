@@ -41,7 +41,7 @@ class HakijaResourceV4(hakijaActor: ActorRef)
   get("/", operation(queryV2)) {
     if(params.get("haku").getOrElse("").isEmpty)
       throw new IllegalArgumentException(s"Haku can not be empty")
-    val q = HakijaQuery(params, currentUser, 3)
+    val q = HakijaQuery(params, currentUser, 4)
     val tyyppi = getFormatFromTypeParam()
     val thisResponse = response
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
