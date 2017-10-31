@@ -44,7 +44,8 @@ class ExcelUtilSpec extends ScalatraFunSuite {
         julkaisulupa = None,
         yhteisetaineet = None,
         lukiontasapisteet = None,
-        lisapistekoulutus = None,
+        lisapistekoulutus = Seq.empty[String],
+        lisapistevuosi = Map.empty[String, String],
         yleinenkoulumenestys = None,
         painotettavataineet = None,
         hakutoiveet = Seq(XMLHakutoive(

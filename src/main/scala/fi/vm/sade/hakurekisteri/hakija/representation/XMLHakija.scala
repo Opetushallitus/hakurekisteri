@@ -126,6 +126,7 @@ object XMLHakemus {
       yhteisetaineet = None,
       lukiontasapisteet = None,
       lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
+      lisapistevuosi = hakija.hakemus.lisapistevuosi,
       yleinenkoulumenestys = None,
       painotettavataineet = None,
       hakutoiveet = toiveet,
@@ -189,7 +190,7 @@ case class XMLOsaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinn
 
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
                       luokkataso: Option[String], pohjakoulutus: String, todistusvuosi: Option[String], muukoulutus: Option[String], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
-                      lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
+                      lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Iterable[String], lisapistevuosi: Map[String, String], yleinenkoulumenestys: Option[BigDecimal],
                       painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive], osaaminen: Option[XMLOsaaminen]) {
   import XMLUtil._
   def toXml: Node = {
@@ -207,7 +208,7 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
       {if (julkaisulupa.isDefined) <Julkaisulupa>{toBooleanX(julkaisulupa.get)}</Julkaisulupa>}
       {if (yhteisetaineet.isDefined) <Yhteisetaineet>{yhteisetaineet.get}</Yhteisetaineet>}
       {if (lukiontasapisteet.isDefined) <Lukiontasapisteet>{lukiontasapisteet.get}</Lukiontasapisteet>}
-      {if (lisapistekoulutus.isDefined) <Lisapistekoulutus>{lisapistekoulutus.get}</Lisapistekoulutus>}
+      {if (lisapistekoulutus.nonEmpty) <Lisapistekoulutus>{lisapistekoulutus.headOption}</Lisapistekoulutus>}
       {if (yleinenkoulumenestys.isDefined) <Yleinenkoulumenestys>{yleinenkoulumenestys.get}</Yleinenkoulumenestys>}
       {if (painotettavataineet.isDefined) <Painotettavataineet>{painotettavataineet.get}</Painotettavataineet>}
       <Hakutoiveet>

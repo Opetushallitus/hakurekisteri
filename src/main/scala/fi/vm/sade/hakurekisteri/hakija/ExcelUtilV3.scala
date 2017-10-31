@@ -79,7 +79,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         h.hakemus.yhteisetaineet.getOrElse(zero).toString(),
         h.hakemus.lukiontasapisteet.getOrElse(zero).toString(),
         h.hakemus.yleinenkoulumenestys.getOrElse(zero).toString(),
-        h.hakemus.lisapistekoulutus.getOrElse(""),
+        h.hakemus.lisapistekoulutus.headOption.getOrElse(""),
         h.hakemus.painotettavataineet.getOrElse(zero).toString(),
         ht.hakujno.toString,
         ht.oppilaitos,

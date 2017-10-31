@@ -87,7 +87,7 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
 
         QueryAndFormat(KkHakijaQuery(params, Some(u)),tyyppi)
       } else {
-        QueryAndFormat(HakijaQuery(params, Some(u), params.get("version").map(_.toInt).getOrElse(3)),tyyppi)
+        QueryAndFormat(HakijaQuery(params, Some(u), params.get("version").map(_.toInt).getOrElse(4)),tyyppi)
       }
     }
     Try(act).toOption
