@@ -19,23 +19,6 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
   )
 
-  private def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String): Seq[lisakysymysHeader] = {
-    val raw: Seq[(String, String)] = hakijat.hakijat
-      .flatMap(_.lisakysymykset
-        .filter(lk => lk.hakukohdeOids.isEmpty || lk.hakukohdeOids.contains(hakukohdeOid))
-        .map(lk => lk.kysymysid -> lk.kysymysteksti))
-      .distinct.sortBy(_._2)
-    raw.map(t => lisakysymysHeader(t._1, t._2))
-  }
-
-  case class lisakysymysHeader(id: String, header: String)
-
-  def kieleistys(totuusArvo: Option[String]): String = totuusArvo match {
-    case Some("true") => "Kyllä"
-    case Some("false") => "Ei"
-    case _ => ""
-  }
-
   override def getRows(hakijat: JSONHakijat): Set[Row] = {
     val hakutoiveet = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet)
 

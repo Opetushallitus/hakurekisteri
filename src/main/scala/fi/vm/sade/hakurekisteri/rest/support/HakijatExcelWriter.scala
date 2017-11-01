@@ -2,9 +2,9 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import java.io.OutputStream
 
+import fi.vm.sade.hakurekisteri.hakija.ExcelUtilV3.lisakysymysHeader
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijat
 import org.apache.poi.hssf.{usermodel => hssf}
-
-
 import org.apache.poi.ss.{usermodel => poi}
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
@@ -94,9 +94,6 @@ trait HakijatExcelWriter[T] {
 
   val zero = BigDecimal.valueOf(0)
 
-
-
-
   def getHeaders(hakijat: T): Set[Row]
 
   def getRows(hakijat: T): Set[Row]
@@ -128,5 +125,22 @@ trait HakijatExcelWriterV3[T] {
   def toBooleanX(v: Boolean): String = if (v) "X" else ""
 
   def toBooleanX(v: Option[Boolean]): String = if (v.getOrElse(false)) "X" else ""
+
+  protected def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String): Seq[lisakysymysHeader] = {
+    val raw: Seq[(String, String)] = hakijat.hakijat
+      .flatMap(_.lisakysymykset
+        .filter(lk => lk.hakukohdeOids.isEmpty || lk.hakukohdeOids.contains(hakukohdeOid))
+        .map(lk => lk.kysymysid -> lk.kysymysteksti))
+      .distinct.sortBy(_._2)
+    raw.map(t => lisakysymysHeader(t._1, t._2))
+  }
+
+  case class lisakysymysHeader(id: String, header: String)
+
+  protected def kieleistys(totuusArvo: Option[String]): String = totuusArvo match {
+    case Some("true") => "Kyllä"
+    case Some("false") => "Ei"
+    case _ => ""
+  }
 
 }
