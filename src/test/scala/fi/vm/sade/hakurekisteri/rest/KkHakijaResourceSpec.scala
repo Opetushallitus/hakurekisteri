@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, Props}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
@@ -25,8 +25,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   private val asyncProvider = new CapturingProvider(endPoint)
   private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  private val hakemusService = new HakemusService(hakuappClient, ataruClient, MockOppijaNumeroRekisteri)
+  private val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
   private val tarjontaMock = mock[ActorRef]
+  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
   private val hakuMock = mock[ActorRef]
   private val suoritusMock = mock[ActorRef]
   private val valintaTulosMock = mock[ActorRef]

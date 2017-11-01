@@ -16,6 +16,8 @@ case class SearchKomoQuery(koulutus: String)
 
 case class GetKomoQuery(oid: String)
 
+case class HakukohdeQuery(oid: String)
+
 object GetHautQuery
 
 case class RestHakuResult(result: List[RestHaku])
@@ -56,7 +58,8 @@ case class HakukohdeOid(oid: String)
 
 case class Hakukohde(oid: String,
                      hakukohdeKoulutusOids: Seq[String],
-                     ulkoinenTunniste: Option[String])
+                     ulkoinenTunniste: Option[String],
+                     tarjoajaOids: Option[Set[String]])
 
 case class Hakukohteenkoulutus(komoOid: String,
                                tkKoulutuskoodi: String,
@@ -77,12 +80,15 @@ case class KomoNotFoundException(message: String) extends TarjontaException(mess
 class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
   private val koulutusCache = cacheFactory.getInstance[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "koulutus")
   private val komoCache = cacheFactory.getInstance[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "komo")
+  private val hakukohdeCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "hakukohde")
+
   val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
   implicit val ec: ExecutionContext = context.dispatcher
 
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender
     case q: GetKomoQuery => getKomo(q.oid) pipeTo sender
+    case q: HakukohdeQuery => getHakukohde(q.oid) pipeTo sender
     case GetHautQuery => getHaut pipeTo sender
     case oid: HakukohdeOid => getHakukohteenKoulutukset(oid) pipeTo sender
   }
@@ -125,6 +131,17 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
         }
     }
   }
+
+  def getHakukohde(oid: String): Future[Option[Hakukohde]] = {
+    if (hakukohdeCache.contains(oid)) {
+      hakukohdeCache.get(oid)
+    } else {
+      val hakukohde = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", oid)(200, maxRetries).map(r => r.result)
+      hakukohdeCache + (oid, hakukohde)
+      hakukohde
+    }
+  }
+
   def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus)).map(_.foldLeft(Seq[Hakukohteenkoulutus]())(_ ++ _))
 
   def getHakukohteenKoulutukset(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {

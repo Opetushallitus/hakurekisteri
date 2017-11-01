@@ -93,6 +93,7 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       toimipistekoodi = None,
       oppilaitosKoodi = Some("01901"),
       parentOid = None,
+      parentOidPath = None,
       children = Seq()
     )
 
