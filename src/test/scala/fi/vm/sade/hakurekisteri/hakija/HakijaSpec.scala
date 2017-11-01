@@ -14,7 +14,7 @@ import scala.concurrent.Future
 
 class HakijaSpec extends FlatSpec with Matchers {
 
-  object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, Seq())
+  object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, None, Seq())
 
   object FullHakemus1 extends FullHakemus("1.25.1", None, "1.1",
     answers = Some(

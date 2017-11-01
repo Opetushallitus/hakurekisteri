@@ -397,37 +397,28 @@ object AkkaHakupalvelu {
     }.headOption
   }
 
-  def findEnsimmainenAmmatillinenKielinenHakukohde(toiveet: Map[String, String], kieli: String): Int = {
-    var x: Int = 0
-    for{
-      a <- 1 to 6
-      if x == 0
-    } (toiveet.getOrElse(s"preference${a}-Koulutus-id-lang", "") == kieli, toiveet.getOrElse(s"preference${a}-Koulutus-id-vocational", "")) match {
-      case (true, "true") => x = a.toInt
-      case _ =>
-    }
-    x
+  def findEnsimmainenAmmatillinenKielinenHakukohde(toiveet: List[HakutoiveDTO], kieli: String): Int = {
+    toiveet.find(t => t.koulutusIdLang.getOrElse("") == kieli && t.koulutusIdVocational.getOrElse("") == "true")
+      .map(_.preferenceNumber).getOrElse(0)
   }
 
-  def convertToiveet(toiveet: Map[String, String], haku: Haku): Seq[Hakutoive] = {
-    val Pattern = "preference(\\d+)-Opetuspiste-id".r
-    val notEmpty = "(.+)".r
-    var ensimmainenSuomenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "FI")
-    var ensimmainenRuotsinkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SV")
-    var ensimmainenEnglanninkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "EN")
-    var ensimmainenSaamenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SE")
+  def convertToiveet(toiveet: List[HakutoiveDTO], haku: Haku): Seq[Hakutoive] = {
+    val ensimmainenSuomenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "FI")
+    val ensimmainenRuotsinkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SV")
+    val ensimmainenEnglanninkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "EN")
+    val ensimmainenSaamenkielinenHakukohde: Int = findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "SE")
 
     val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
-      case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
-    }.toSeq
+      case toive if toive.organizationOid.isDefined => (toive.preferenceNumber.toShort, toive.organizationOid.get)
+    }
 
     opetusPisteet.sortBy(_._1).map { case (jno, tarjoajaoid) =>
+      val toive = toiveet.find(_.preferenceNumber == jno).get
       val koulutukset = Set(Komoto("", "", tarjoajaoid, haku.koulutuksenAlkamisvuosi.map(_.toString), haku.koulutuksenAlkamiskausi.map(Kausi.fromKoodiUri)))
-      val hakukohdekoodi = toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "hakukohdekoodi")
-      val kaksoistutkinto = toiveet.get(s"preference${jno}_kaksoistutkinnon_lisakysymys").map(s => Try(s.toBoolean).getOrElse(false))
-      val urheilijanammatillinenkoulutus = toiveet.get(s"preference${jno}_urheilijan_ammatillisen_koulutuksen_lisakysymys").
-        map(s => Try(s.toBoolean).getOrElse(false))
-      val harkinnanvaraisuusperuste: Option[String] = toiveet.get(s"preference$jno-discretionary-follow-up").flatMap {
+      val hakukohdekoodi = toive.koulutusIdAoIdentifier.getOrElse("hakukohdekoodi")
+      val kaksoistutkinto = toive.kaksoistutkinnonLisakysymys.map(s => Try(s.toBoolean).getOrElse(false))
+      val urheilijanammatillinenkoulutus = toive.urheilijanAmmatillisenLisakysymys.map(s => Try(s.toBoolean).getOrElse(false))
+      val harkinnanvaraisuusperuste: Option[String] = toive.discretionaryFollowUp.flatMap {
         case "oppimisvaikudet" => Some("1")
         case "sosiaalisetsyyt" => Some("2")
         case "todistustenvertailuvaikeudet" => Some("3")
@@ -435,10 +426,10 @@ object AkkaHakupalvelu {
         case s => //logger.error(s"invalid discretionary-follow-up value $s");
           None
       }
-      val aiempiperuminen = toiveet.get(s"preference${jno}_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
-      val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
-      val organisaatioParentOidPath = toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "")
-      val hakukohdeOid = toiveet.getOrElse(s"preference$jno-Koulutus-id", "")
+      val aiempiperuminen = toive.soraOikeudenMenetys.map(s => Try(s.toBoolean).getOrElse(false))
+      val terveys = toive.soraTerveys.map(s => Try(s.toBoolean).getOrElse(false))
+      val organisaatioParentOidPath = toive.organizationParentOids.getOrElse("")
+      val hakukohdeOid = toive.koulutusId.getOrElse("")
       val koulutuksenKieli: Option[String] = (jno == ensimmainenSuomenkielinenHakukohde, jno == ensimmainenRuotsinkielinenHakukohde, jno == ensimmainenEnglanninkielinenHakukohde, jno == ensimmainenSaamenkielinenHakukohde) match {
         case (true, false, false, false) => Some("FI")
         case (false, true, false, false) => Some("SV")
@@ -549,7 +540,7 @@ sealed trait HakijaHakemus {
   def answers: Option[HakemusAnswers]
   def henkilotiedot: Option[HakemusHenkilotiedot]
   def hetu: Option[String]
-  def hakutoiveet: Option[Map[String, String]]
+  def hakutoiveet: Option[List[HakutoiveDTO]]
   def koulutustausta: Option[Koulutustausta]
   def lahtokoulu: Option[String]
   def kieli: String
@@ -557,6 +548,20 @@ sealed trait HakijaHakemus {
   def attachmentRequests: Seq[HakemusAttachmentRequest]
   def preferenceEligibilities: Seq[PreferenceEligibility]
 }
+
+
+case class HakutoiveDTO(preferenceNumber: Int,
+                        koulutusId: Option[String],
+                        koulutusIdAoIdentifier: Option[String],
+                        koulutusIdLang: Option[String],
+                        koulutusIdVocational: Option[String],
+                        organizationOid: Option[String],
+                        organizationParentOids: Option[String],
+                        kaksoistutkinnonLisakysymys: Option[String],
+                        soraOikeudenMenetys: Option[String],
+                        soraTerveys: Option[String],
+                        urheilijanAmmatillisenLisakysymys: Option[String],
+                        discretionaryFollowUp: Option[String])
 
 case class FullHakemus(oid: String,
                        personOid: Option[String],
@@ -580,7 +585,35 @@ case class FullHakemus(oid: String,
   val stateValid: Boolean = state.exists(s => Seq("ACTIVE", "INCOMPLETE").contains(s))
   val henkilotiedot: Option[HakemusHenkilotiedot] = answers.flatMap(_.henkilotiedot)
   val hetu: Option[String] = henkilotiedot.flatMap(henkilo => henkilo.Henkilotunnus.map(henkiloHetu => henkiloHetu))
-  val hakutoiveet: Option[Map[String, String]] = answers.flatMap(_.hakutoiveet)
+  val hakutoiveet: Option[List[HakutoiveDTO]] = {
+    val preferencesGroupedByOrder: Option[Map[Int, Map[String, String]]] = answers.flatMap(_.hakutoiveet).map(
+      _.filter(p => "^preference[0-9]".r.findFirstIn(p._1).isDefined) // Only take actual preference data into account
+       .groupBy(m => { // Group preferences into map by preference index
+          val preferencePrefix: String = m._1.split(s"-|_").head
+          val preferenceNumber: Int = "\\d+$".r.findFirstIn(preferencePrefix).map(_.toInt)
+            .getOrElse(throw new IllegalArgumentException(s"Could not parse hakukutoive preference number from $preferencePrefix"))
+          preferenceNumber
+        }))
+
+    preferencesGroupedByOrder.map(_.map {
+      case(index, preference) =>
+        HakutoiveDTO(
+          index,
+          preference.get(s"preference${index}-Koulutus-id"),
+          preference.get(s"preference${index}-Koulutus-id-aoIdentifier"),
+          preference.get(s"preference${index}-Koulutus-id-lang"),
+          preference.get(s"preference${index}-Koulutus-id-vocational"),
+          preference.get(s"preference${index}-Opetuspiste-id"),
+          preference.get(s"preference${index}-Opetuspiste-id-parents"),
+          preference.get(s"preference${index}_kaksoistutkinnon_lisakysymys"),
+          preference.get(s"preference${index}_sora_oikeudenMenetys"),
+          preference.get(s"preference${index}_sora_terveys"),
+          preference.get(s"preference${index}_urheilijan_ammatillisenLisakysymys"),
+          preference.get(s"preference${index}-discretionary-follow-up")
+        )
+    }.toList)
+  }
+
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = koulutustausta.flatMap(_.lahtokoulu)
   val kieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
@@ -597,13 +630,13 @@ case class AtaruHakemus(oid: String,
                         personOid: Option[String],
                         applicationSystemId: String,
                         answers: Option[HakemusAnswers],
+                        hakutoiveet: Option[List[HakutoiveDTO]],
                         kieli: String,
                         hetu: Option[String]) extends HakijaHakemus {
 
   val stateValid: Boolean = true
-  val state: Option[String] = None
+//  val state: Option[String] = None
   val henkilotiedot: Option[HakemusHenkilotiedot] = answers.flatMap(_.henkilotiedot)
-  val hakutoiveet: Option[Map[String,String]] = answers.flatMap(_.hakutoiveet)
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = None
   val julkaisulupa: Boolean = false

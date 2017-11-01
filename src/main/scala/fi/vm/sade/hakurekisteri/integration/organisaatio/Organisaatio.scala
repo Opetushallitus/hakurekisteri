@@ -6,6 +6,7 @@ Organisaatio(oid: String,
              toimipistekoodi: Option[String],
              oppilaitosKoodi: Option[String],
              parentOid: Option[String],
+             parentOidPath: Option[String],
              children: Seq[Organisaatio])
 
 

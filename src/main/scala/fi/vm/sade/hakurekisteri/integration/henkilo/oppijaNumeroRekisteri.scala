@@ -77,7 +77,11 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   }
 
   override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = {
-    client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oids, acceptedResponseCode = HttpStatus.SC_OK)
+    if (oids.nonEmpty) {
+      client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oids, acceptedResponseCode = HttpStatus.SC_OK)
+    } else {
+      Future.successful(Seq.empty)
+    }
   }
 }
 

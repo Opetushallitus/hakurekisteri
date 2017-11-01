@@ -208,7 +208,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def isAuthorized(parents: Option[String], oid: Option[String]): Boolean = oid match {
     case None => true
-    case Some(o) => parents.getOrElse("").split(",").toSet.contains(o)
+    case Some(o) => parents.exists(_.contains(o))
   }
 
   private def getKnownOrganizations(user: Option[User]): Set[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Set())
@@ -260,7 +260,8 @@ class KkHakijaService(hakemusService: IHakemusService,
     sequenced.map[Seq[Lukuvuosimaksu]](_.flatten)
   }
 
-  private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
+  private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,
+                            kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {
       case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
       case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
@@ -279,45 +280,42 @@ class KkHakijaService(hakemusService: IHakemusService,
                                 hakukohdeOids: Seq[String]): Seq[Future[Option[Hakemus]]] = {
     (for {
       answers: HakemusAnswers <- hakemus.answers
-      hakutoiveet: Map[String, String] <- answers.hakutoiveet
-    } yield hakutoiveet.keys.map {
-      case Pattern(jno: String) if hakutoiveet(s"preference$jno-Koulutus-id") != "" && queryMatches(q, hakutoiveet, hakukohdeOids ++ q.hakukohde.toSeq, jno) =>
+      hakutoiveet: Seq[HakutoiveDTO] <- hakemus.hakutoiveet
+    } yield hakutoiveet.map(toive =>
+      if (toive.koulutusId.isDefined && queryMatches(q, toive, hakukohdeOids ++ q.hakukohde.toSeq))
         extractSingleHakemus(
           hakemus,
           lukuvuosimaksutByHakukohdeOid,
           q,
-          hakutoiveet,
+          toive,
           answers.lisatiedot.getOrElse(Map()),
           answers.koulutustausta.getOrElse(Koulutustausta()),
-          jno,
           haku,
           sijoitteluTulos
         )
-      case _ =>
-        Future.successful(None)
-    }.toSeq).getOrElse(Seq())
+      else Future.successful(None)
+    )).getOrElse(Seq.empty)
   }
 
-  private def queryMatches(q: KkHakijaQuery, hakutoiveet: Map[String, String], hakukohdeOids: Seq[String], jno: String): Boolean = {
+  private def queryMatches(q: KkHakijaQuery, toive: HakutoiveDTO, hakukohdeOids: Seq[String]): Boolean = {
     def anyHakukohdeMatch(hakutoive: String, hakukohdes: Seq[String]) =
-      hakukohdes.isEmpty || hakukohdes.exists(oid => hakutoive == oid)
+      hakukohdes.isEmpty || hakukohdes.contains(hakutoive)
 
-    anyHakukohdeMatch(hakutoiveet(s"preference$jno-Koulutus-id"), hakukohdeOids) &&
-      isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), q.organisaatio) &&
-      isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user))
+    anyHakukohdeMatch(toive.koulutusId.getOrElse(""), hakukohdeOids) &&
+      isAuthorized(toive.organizationParentOids, q.organisaatio) &&
+      isAuthorized(toive.organizationParentOids, getKnownOrganizations(q.user))
   }
 
   private def extractSingleHakemus(hakemus: HakijaHakemus,
                                    lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                    q: KkHakijaQuery,
-                                   hakutoiveet: Map[String, String],
+                                   toive: HakutoiveDTO,
                                    lisatiedot: Map[String, String],
                                    koulutustausta: Koulutustausta,
-                                   jno: String,
                                    haku: Haku,
                                    sijoitteluTulos: SijoitteluTulos): Future[Option[Hakemus]] = {
     val hakemusOid = hakemus.oid
-    val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
+    val hakukohdeOid = toive.koulutusId.getOrElse("")
     val preferenceEligibilities = hakemus.preferenceEligibilities
     val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
     for {
@@ -331,8 +329,8 @@ class KkHakijaService(hakemusService: IHakemusService,
           hakuVuosi = haku.vuosi,
           hakuKausi = kausi,
           hakemusnumero = hakemusOid,
-          organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
-          hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
+          organisaatio = toive.organizationOid.getOrElse(""),
+          hakukohde = toive.koulutusId.getOrElse(""),
           hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
           avoinVayla = None, // TODO valinnoista?
           valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
@@ -409,7 +407,6 @@ class KkHakijaService(hakemusService: IHakemusService,
     for {
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
-      hakutoiveet: Map[String, String] <- answers.hakutoiveet
       henkiloOid <- hakemus.personOid
     } yield for {
       hakemukset <- getHakemukset(haku, hakemus, Map(), q, kokoHaunTulos, hakukohdeOids)
@@ -452,7 +449,6 @@ class KkHakijaService(hakemusService: IHakemusService,
     for {
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
-      hakutoiveet: Map[String, String] <- answers.hakutoiveet
       henkiloOid <- hakemus.personOid
     } yield for {
       hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(henkiloOid, Map()), q, kokoHaunTulos, hakukohdeOids)

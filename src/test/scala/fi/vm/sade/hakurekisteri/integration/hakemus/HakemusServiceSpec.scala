@@ -1,26 +1,26 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, PersonOidsWithAliases}
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
 
-import scala.compat.Platform
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
 
-class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with LocalhostProperties {
+class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with LocalhostProperties with HakeneetSupport {
 
-  implicit val system = ActorSystem(s"test-system-${Platform.currentTime.toString}")
-  implicit def executor: ExecutionContext = system.dispatcher
   val endPoint = mock[Endpoint]
   val asyncProvider = new CapturingProvider(endPoint)
   val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val hakemusService = new HakemusService(hakuappClient, ataruClient, MockOppijaNumeroRekisteri, pageSize = 10)
+  val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
+  val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
+  val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri, pageSize = 10)
 
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))

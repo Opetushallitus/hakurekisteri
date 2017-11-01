@@ -37,8 +37,9 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val asyncProvider = new CapturingProvider(endPoint)
   private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  private val hakemusService = new HakemusService(hakuappClient, ataruClient, MockOppijaNumeroRekisteri)
   private val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
+  private val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
+  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
   private val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   private val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
   private val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
@@ -335,9 +336,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
   val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
-  val kausiKoodiK = TarjontaKoodi(Some("K"))
   val kausiKoodiS = TarjontaKoodi(Some("S"))
-  val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
   val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
   val suoritus1 = VirallinenSuoritus(YoTutkinto.yotutkinto, YoTutkinto.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
 
@@ -347,12 +346,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       journal.addModification(Updated[FullHakemus, String](h.identify(h.oid)))
     })
     journal
-  }
-
-  class MockedTarjontaActor extends Actor {
-    override def receive: Actor.Receive = {
-      case oid: HakukohdeOid =>  sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
-    }
   }
 
   class MockedHakuActor extends Actor {
