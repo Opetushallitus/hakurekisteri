@@ -293,7 +293,6 @@ object AkkaHakupalvelu {
   }
 
   def getHakija(hakemus: HakijaHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
-    implicit val answers = hakemus.answers
     val kesa: MonthDay = new MonthDay(6, 4)
     val koulutustausta: Option[Koulutustausta] = hakemus.koulutustausta
     val lahtokoulu: Option[String] = hakemus.lahtokoulu
@@ -351,8 +350,8 @@ object AkkaHakupalvelu {
         sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
         hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
         syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
-        markkinointilupa = Some(getValue(_.lisatiedot, (l: Map[String, String]) => l.get("lupaMarkkinointi"), "false").toBoolean),
-        kiinnostunutoppisopimuksesta = Some(getValue(_.lisatiedot, (l: Map[String, String]) => l.get("kiinnostunutoppisopimuksesta").filter(_.trim.nonEmpty), "false").toBoolean),
+        markkinointilupa = Some(hakemus.answers.flatMap(_.lisatiedot.flatMap(_.get("lupaMarkkinointi"))).getOrElse("false").toBoolean),
+        kiinnostunutoppisopimuksesta = Some(hakemus.answers.flatMap(_.lisatiedot.flatMap(_.get("kiinnostunutoppisopimuksesta").filter(_.trim.nonEmpty))).getOrElse("false").toBoolean),
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
@@ -366,8 +365,8 @@ object AkkaHakupalvelu {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
           henkiloOid = hakemus.personOid.getOrElse(""),
-          luokkataso = getValue(_.koulutustausta, (k: Koulutustausta) => k.luokkataso),
-          luokka = getValue(_.koulutustausta, (k: Koulutustausta) => k.lahtoluokka),
+          luokkataso = hakemus.answers.flatMap(_.koulutustausta.flatMap(_.luokkataso)).getOrElse(""),
+          luokka = hakemus.answers.flatMap(_.koulutustausta.flatMap(_.lahtoluokka)).getOrElse(""),
           alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
           loppuPaiva = None,
           source = Oids.ophOrganisaatioOid
@@ -375,11 +374,6 @@ object AkkaHakupalvelu {
         case _ => Seq()
       },
       hakemus.hakutoiveet.map(toiveet => Hakemus(convertToiveet(toiveet, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
-  }
-
-
-  def getValue[A](key: (HakemusAnswers) => Option[A], subKey: (A) => Option[String], default: String = "")(implicit answers: Option[HakemusAnswers]): String = {
-    (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
 
   def getMuukoulutus(hakemus: HakijaHakemus): Option[String] = {
