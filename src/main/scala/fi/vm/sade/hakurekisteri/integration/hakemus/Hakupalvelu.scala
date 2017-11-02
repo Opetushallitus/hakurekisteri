@@ -357,7 +357,7 @@ object AkkaHakupalvelu {
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
         lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
         liitteet = hakemus.attachmentRequests.map(a=> attachmentRequestToLiite(a)),
-        muukoulutus = getMuukoulutus(hakemus)
+        muukoulutus = hakemus.koulutustausta.flatMap(_.muukoulutus)
 
       ),
       getSuoritus(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid).toSeq,
@@ -374,10 +374,6 @@ object AkkaHakupalvelu {
         case _ => Seq()
       },
       hakemus.hakutoiveet.map(toiveet => Hakemus(convertToiveet(toiveet, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
-  }
-
-  def getMuukoulutus(hakemus: HakijaHakemus): Option[String] = {
-    hakemus.koulutustausta.flatMap(_.muukoulutus)
   }
 
   def getSuoritus(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Option[Suoritus] = {
