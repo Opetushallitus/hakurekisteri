@@ -288,92 +288,95 @@ object AkkaHakupalvelu {
     finalanswers
   }
 
-  def getHakija(hakemus: HakijaHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
-    def getOsaaminenOsaalue(key: String): Option[String] = {
-      hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
-    }
+  def getHakija(h: HakijaHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = h match {
+    case hakemus: FullHakemus =>
+      def getOsaaminenOsaalue(key: String): Option[String] = {
+        hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
+      }
 
-    val kesa: MonthDay = new MonthDay(6, 4)
-    val koulutustausta: Option[Koulutustausta] = hakemus.koulutustausta
-    val lahtokoulu: Option[String] = hakemus.lahtokoulu
-    val myontaja: String = lahtokoulu.getOrElse("")
-    val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
-    val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
-    val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
-    val kieli: String = hakemus.kieli
-    val suorittaja: String = hakemus.personOid.getOrElse("")
-    val julkaisulupa: Boolean = hakemus.julkaisulupa
+      val kesa: MonthDay = new MonthDay(6, 4)
+      val koulutustausta: Option[Koulutustausta] = hakemus.koulutustausta
+      val lahtokoulu: Option[String] = hakemus.lahtokoulu
+      val myontaja: String = lahtokoulu.getOrElse("")
+      val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
+      val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
+      val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
+      val kieli: String = hakemus.kieli
+      val suorittaja: String = hakemus.personOid.getOrElse("")
+      val julkaisulupa: Boolean = hakemus.julkaisulupa
 
-    val yleinen_kielitutkinto_fi = getOsaaminenOsaalue("yleinen_kielitutkinto_fi")
-    val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_fi")
-    val yleinen_kielitutkinto_sv = getOsaaminenOsaalue("yleinen_kielitutkinto_sv")
-    val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_sv")
-    val yleinen_kielitutkinto_en = getOsaaminenOsaalue("yleinen_kielitutkinto_en")
-    val valtionhallinnon_kielitutkinto_en = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_en")
-    val yleinen_kielitutkinto_se = getOsaaminenOsaalue("yleinen_kielitutkinto_se")
-    val valtionhallinnon_kielitutkinto_se = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_se")
+      val yleinen_kielitutkinto_fi = getOsaaminenOsaalue("yleinen_kielitutkinto_fi")
+      val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_fi")
+      val yleinen_kielitutkinto_sv = getOsaaminenOsaalue("yleinen_kielitutkinto_sv")
+      val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_sv")
+      val yleinen_kielitutkinto_en = getOsaaminenOsaalue("yleinen_kielitutkinto_en")
+      val valtionhallinnon_kielitutkinto_en = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_en")
+      val yleinen_kielitutkinto_se = getOsaaminenOsaalue("yleinen_kielitutkinto_se")
+      val valtionhallinnon_kielitutkinto_se = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_se")
 
-    val osaaminen = Osaaminen(yleinen_kielitutkinto_fi, valtionhallinnon_kielitutkinto_fi,
-                          yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv,
-                          yleinen_kielitutkinto_en, valtionhallinnon_kielitutkinto_en,
-                          yleinen_kielitutkinto_se, valtionhallinnon_kielitutkinto_se)
+      val osaaminen = Osaaminen(yleinen_kielitutkinto_fi, valtionhallinnon_kielitutkinto_fi,
+        yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv,
+        yleinen_kielitutkinto_en, valtionhallinnon_kielitutkinto_en,
+        yleinen_kielitutkinto_se, valtionhallinnon_kielitutkinto_se)
 
-    val lisapistekoulutus = for (
-      tausta <- koulutustausta;
-      lisatausta <- kaydytLisapisteKoulutukset(tausta).headOption
-    ) yield lisatausta
-    val henkilotiedot: Option[HakemusHenkilotiedot] = hakemus.henkilotiedot
-    def getHenkiloTietoOrElse(f: (HakemusHenkilotiedot) => Option[String], orElse: String) =
-      (for (h <- henkilotiedot; osoite <- f(h)) yield osoite).getOrElse(orElse)
+      val lisapistekoulutus = for (
+        tausta <- koulutustausta;
+        lisatausta <- kaydytLisapisteKoulutukset(tausta).headOption
+      ) yield lisatausta
+      val henkilotiedot: Option[HakemusHenkilotiedot] = hakemus.henkilotiedot
 
-    def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
+      def getHenkiloTietoOrElse(f: (HakemusHenkilotiedot) => Option[String], orElse: String) =
+        (for (h <- henkilotiedot; osoite <- f(h)) yield osoite).getOrElse(orElse)
 
-    Hakija(
-      Henkilo(
-        lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
-        postinumero = getHenkiloTietoOrElse(_.Postinumero, "00000"),
-        postitoimipaikka = getHenkiloTietoOrElse(_.Postitoimipaikka, getHenkiloTietoOrBlank(_.kaupunkiUlkomaa)),
-        maa = getHenkiloTietoOrElse(_.asuinmaa, "FIN"),
-        matkapuhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero1),
-        puhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero2),
-        sahkoposti = getHenkiloTietoOrBlank(_.Sähköposti),
-        kotikunta = getHenkiloTietoOrBlank(_.kotikunta),
-        sukunimi = getHenkiloTietoOrBlank(_.Sukunimi),
-        etunimet = getHenkiloTietoOrBlank(_.Etunimet),
-        kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
-        turvakielto = getHenkiloTietoOrBlank(_.Turvakielto),
-        oppijanumero = hakemus.personOid.getOrElse(""),
-        kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
-        kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
-        asiointiKieli = kieli,
-        eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
-        sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
-        hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
-        syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
-        markkinointilupa = Some(hakemus.answers.flatMap(_.lisatiedot.flatMap(_.get("lupaMarkkinointi"))).getOrElse("false").toBoolean),
-        kiinnostunutoppisopimuksesta = Some(hakemus.answers.flatMap(_.lisatiedot.flatMap(_.get("kiinnostunutoppisopimuksesta").filter(_.trim.nonEmpty))).getOrElse("false").toBoolean),
-        huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
-        huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
-        huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
-        liitteet = hakemus.attachmentRequests.map(a=> attachmentRequestToLiite(a)),
-        muukoulutus = hakemus.koulutustausta.flatMap(_.muukoulutus)
+      def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
 
-      ),
-      getSuoritus(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid).toSeq,
-      lahtokoulu match {
-        case Some(oid) => Seq(Opiskelija(
-          oppilaitosOid = lahtokoulu.get,
-          henkiloOid = hakemus.personOid.getOrElse(""),
-          luokkataso = hakemus.answers.flatMap(_.koulutustausta.flatMap(_.luokkataso)).getOrElse(""),
-          luokka = hakemus.answers.flatMap(_.koulutustausta.flatMap(_.lahtoluokka)).getOrElse(""),
-          alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
-          loppuPaiva = None,
-          source = Oids.ophOrganisaatioOid
-        ))
-        case _ => Seq()
-      },
-      hakemus.hakutoiveet.map(toiveet => Hakemus(convertToiveet(toiveet, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
+      Hakija(
+        Henkilo(
+          lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
+          postinumero = getHenkiloTietoOrElse(_.Postinumero, "00000"),
+          postitoimipaikka = getHenkiloTietoOrElse(_.Postitoimipaikka, getHenkiloTietoOrBlank(_.kaupunkiUlkomaa)),
+          maa = getHenkiloTietoOrElse(_.asuinmaa, "FIN"),
+          matkapuhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero1),
+          puhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero2),
+          sahkoposti = getHenkiloTietoOrBlank(_.Sähköposti),
+          kotikunta = getHenkiloTietoOrBlank(_.kotikunta),
+          sukunimi = getHenkiloTietoOrBlank(_.Sukunimi),
+          etunimet = getHenkiloTietoOrBlank(_.Etunimet),
+          kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
+          turvakielto = getHenkiloTietoOrBlank(_.Turvakielto),
+          oppijanumero = hakemus.personOid.getOrElse(""),
+          kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
+          kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
+          asiointiKieli = kieli,
+          eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
+          sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
+          hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
+          syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
+          markkinointilupa = Some(hakemus.answers.flatMap(_.lisatiedot.flatMap(_.get("lupaMarkkinointi"))).getOrElse("false").toBoolean),
+          kiinnostunutoppisopimuksesta = Some(hakemus.answers.flatMap(_.lisatiedot.flatMap(_.get("kiinnostunutoppisopimuksesta").filter(_.trim.nonEmpty))).getOrElse("false").toBoolean),
+          huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
+          huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
+          huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
+          lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
+          liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
+          muukoulutus = hakemus.koulutustausta.flatMap(_.muukoulutus)
+
+        ),
+        getSuoritus(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid).toSeq,
+        lahtokoulu match {
+          case Some(oid) => Seq(Opiskelija(
+            oppilaitosOid = lahtokoulu.get,
+            henkiloOid = hakemus.personOid.getOrElse(""),
+            luokkataso = hakemus.answers.flatMap(_.koulutustausta.flatMap(_.luokkataso)).getOrElse(""),
+            luokka = hakemus.answers.flatMap(_.koulutustausta.flatMap(_.lahtoluokka)).getOrElse(""),
+            alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
+            loppuPaiva = None,
+            source = Oids.ophOrganisaatioOid
+          ))
+          case _ => Seq()
+        },
+        hakemus.hakutoiveet.map(toiveet => Hakemus(convertToiveet(toiveet, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
+    case _: AtaruHakemus => throw new UnsupportedOperationException
   }
 
   def getSuoritus(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Option[Suoritus] = {
