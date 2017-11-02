@@ -1,32 +1,28 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig, SpecsLikeMockito}
-import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
-import fi.vm.sade.hakurekisteri.integration.koodisto._
-import fi.vm.sade.hakurekisteri.integration.valintatulos._
-import org.joda.time.DateTime
-import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import akka.actor.{Actor, ActorSystem, Props}
-import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 
+import akka.actor.{Actor, ActorSystem, Props}
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
+import fi.vm.sade.hakurekisteri.hakija.{Hakija, _}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, _}
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
+import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig, SpecsLikeMockito}
+import org.joda.time.DateTime
 import org.scalatest.Suite
+import org.scalatra.swagger.Swagger
 
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaKoodi}
-import fi.vm.sade.hakurekisteri.rest.support.User
-
 import scala.language.implicitConversions
-import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLikeMockito {
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, None, Seq())
@@ -36,6 +32,11 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), Some("0000101"), None, Some("1.10.1"), None, Seq())
   object OpetuspisteZ extends Organisaatio("1.10.5", Map("fi" -> "Opetuspiste Z"), Some("0000101"), None, Some("1.10.1"), None, Seq())
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"), None, Seq())
+
+  object AtaruOpetuspiste1 extends Organisaatio("1.2.246.562.10.39920288212", Map("fi" -> "AtaruOpetuspiste1"), None, None, None,
+    Some("1.2.246.562.10.00000000001,1.2.246.562.10.82388989657,1.2.246.562.10.56753942459"), Seq())
+  object AtaruOpetuspiste2 extends Organisaatio("1.2.246.562.10.2014041814420657444022", Map("fi" -> "AtaruOpetuspiste2"), None, None, None,
+    Some("1.2.246.562.10.00000000001,1.2.246.562.10.240484683010,1.2.246.562.10.38515028629,1.2.246.562.10.665851030310"), Seq())
 
   object FullHakemus1 extends FullHakemus("1.25.1", Some("1.24.1"), "1.1",
     answers = Some(
@@ -621,8 +622,6 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       case _ => Future(hakijat)
     }
 
-
-
     val haku = Haku(
       Kieliversiot(Some("haku"), None, None),
       "1.2",
@@ -665,7 +664,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       this.lisakysymykset = lisakysymykset
     }
 
-    override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
+    override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq("1.2.246.562.20.14800254899", "1.2.246.562.20.44085996724"))
   }
 
   class MockedOrganisaatioActor extends Actor {
@@ -676,6 +675,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       case OppilaitosZ.oid => Future.successful(Some(OppilaitosZ)) pipeTo sender
       case OpetuspisteX.oid => Future.successful(Some(OpetuspisteX)) pipeTo sender
       case OpetuspisteY.oid => Future.successful(Some(OpetuspisteY)) pipeTo sender
+      case AtaruOpetuspiste1.oid => Future.successful(Some(AtaruOpetuspiste1)) pipeTo sender
+      case AtaruOpetuspiste2.oid => Future.successful(Some(AtaruOpetuspiste2)) pipeTo sender
       case default => Future.successful(None) pipeTo sender
     }
   }
@@ -684,10 +685,18 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   val kausiKoodiK = TarjontaKoodi(Some("K"))
   val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
+  val ataruHakukohde1 = Hakukohde("1.2.246.562.20.14800254899", Seq(), None, Some(Set("1.2.246.562.10.39920288212")))
+  val ataruHakukohde2 = Hakukohde("1.2.246.562.20.44085996724", Seq(), None, Some(Set("1.2.246.562.10.2014041814420657444022")))
+
+  def getHakukohde(oid: String): Option[Hakukohde] = oid match {
+    case "1.2.246.562.20.14800254899" => Some(ataruHakukohde1)
+    case "1.2.246.562.20.44085996724" => Some(ataruHakukohde2)
+  }
 
   class MockedTarjontaActor extends Actor {
     override def receive: Actor.Receive = {
-      case oid: HakukohdeOid =>  sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
+      case oid: HakukohdeOid => sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
+      case q: HakukohdeQuery => sender ! getHakukohde(q.oid)
     }
   }
 

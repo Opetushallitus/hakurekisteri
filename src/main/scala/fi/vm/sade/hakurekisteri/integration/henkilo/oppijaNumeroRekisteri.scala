@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import org.apache.commons.httpclient.HttpStatus
 import org.json4s.jackson.JsonMethods._
@@ -104,7 +105,9 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
     Future.successful(json.extract[Henkilo])
   }
 
-  def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future(Seq())
+  def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future.successful(oids.zipWithIndex.map {
+    case (oid:String, i:Int) => Henkilo(oid, Some(s"Hetu$i"), "OPPIJA", Some(s"Etunimi$i"), Some(s"Kutsumanimi$i"), Some(s"Sukunimi$i"), None, Some(Kieli("fi")))
+  }.toSeq)
 }
 
 object MockPersonAliasesProvider extends PersonAliasesProvider {
