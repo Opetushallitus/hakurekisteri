@@ -184,11 +184,11 @@ class BaseIntegrations(rekisterit: Registers,
       case _ => // pass
     }
   }
-  hakemusService.addTrigger(arvosanaTrigger)
-  hakemusService.addTrigger(ytlTrigger)
+//  hakemusService.addTrigger(arvosanaTrigger)
+//  hakemusService.addTrigger(ytlTrigger)
 
   implicit val scheduler = system.scheduler
-  hakemusService.processModifiedHakemukset()
+//  hakemusService.processModifiedHakemukset()
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()

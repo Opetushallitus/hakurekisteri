@@ -70,6 +70,19 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     hakijat.size should be (0)
   }
 
+  test("should return ataru hakijas") {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), "{}"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), getJson("ataruApplications")))
+
+    val hakijat = Await.result(
+      service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.91842462815"), None, None, None, Some("ryhma"), Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds
+    )
+
+    hakijat.size should be (2)
+  }
+
   test("should return five hakijas") {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
@@ -371,9 +384,12 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
         sender ! Nil
     }
   }
+
+  val hakuOids = Set("1.2.246.562.29.64944541586", "1.2.246.562.29.31587915971", FullHakemus1.applicationSystemId)
+
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>
+      case q: ValintaTulosQuery if hakuOids.contains(q.hakuOid) =>
         sender ! new SijoitteluTulos {
           override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
           override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
