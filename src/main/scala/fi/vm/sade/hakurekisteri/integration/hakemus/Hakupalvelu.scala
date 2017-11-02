@@ -288,11 +288,11 @@ object AkkaHakupalvelu {
     finalanswers
   }
 
-  def getOsaaminenOsaalue(hakemus: HakijaHakemus, key: String): Option[String] = {
-    hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
-  }
-
   def getHakija(hakemus: HakijaHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], koosteData: Option[Map[String,String]]): Hakija = {
+    def getOsaaminenOsaalue(key: String): Option[String] = {
+      hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
+    }
+
     val kesa: MonthDay = new MonthDay(6, 4)
     val koulutustausta: Option[Koulutustausta] = hakemus.koulutustausta
     val lahtokoulu: Option[String] = hakemus.lahtokoulu
@@ -304,14 +304,14 @@ object AkkaHakupalvelu {
     val suorittaja: String = hakemus.personOid.getOrElse("")
     val julkaisulupa: Boolean = hakemus.julkaisulupa
 
-    val yleinen_kielitutkinto_fi = getOsaaminenOsaalue(hakemus, "yleinen_kielitutkinto_fi")
-    val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue(hakemus, "valtionhallinnon_kielitutkinto_fi")
-    val yleinen_kielitutkinto_sv = getOsaaminenOsaalue(hakemus, "yleinen_kielitutkinto_sv")
-    val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue(hakemus, "valtionhallinnon_kielitutkinto_sv")
-    val yleinen_kielitutkinto_en = getOsaaminenOsaalue(hakemus, "yleinen_kielitutkinto_en")
-    val valtionhallinnon_kielitutkinto_en = getOsaaminenOsaalue(hakemus, "valtionhallinnon_kielitutkinto_en")
-    val yleinen_kielitutkinto_se = getOsaaminenOsaalue(hakemus, "yleinen_kielitutkinto_se")
-    val valtionhallinnon_kielitutkinto_se = getOsaaminenOsaalue(hakemus, "valtionhallinnon_kielitutkinto_se")
+    val yleinen_kielitutkinto_fi = getOsaaminenOsaalue("yleinen_kielitutkinto_fi")
+    val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_fi")
+    val yleinen_kielitutkinto_sv = getOsaaminenOsaalue("yleinen_kielitutkinto_sv")
+    val valtionhallinnon_kielitutkinto_sv = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_sv")
+    val yleinen_kielitutkinto_en = getOsaaminenOsaalue("yleinen_kielitutkinto_en")
+    val valtionhallinnon_kielitutkinto_en = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_en")
+    val yleinen_kielitutkinto_se = getOsaaminenOsaalue("yleinen_kielitutkinto_se")
+    val valtionhallinnon_kielitutkinto_se = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_se")
 
     val osaaminen = Osaaminen(yleinen_kielitutkinto_fi, valtionhallinnon_kielitutkinto_fi,
                           yleinen_kielitutkinto_sv, valtionhallinnon_kielitutkinto_sv,
