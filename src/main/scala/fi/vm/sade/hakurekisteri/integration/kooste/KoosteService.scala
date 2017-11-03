@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.kooste
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakijaHakemus}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakijaHakemus}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.Future
@@ -21,13 +21,19 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)
 
   private val logger = Logging.getLogger(system, this)
 
-  def getSuoritukset(hakuOid: String, hakemus: HakijaHakemus): Future[Map[String,String]] = {
-    val opiskelijaOid = hakemus.personOid.get
-    logger.info(s"Get suoritukset for single hakemus for haku $hakuOid")
-    restClient.postObject[HakijaHakemus, Map[String,String]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid, opiskelijaOid)(200, hakemus)
+  def getSuoritukset(hakuOid: String, h: HakijaHakemus): Future[Map[String,String]] = h match {
+    case hakemus: FullHakemus =>
+      val opiskelijaOid = hakemus.personOid.get
+      logger.info(s"Get suoritukset for single hakemus for haku $hakuOid")
+      restClient.postObject[FullHakemus, Map[String,String]]("valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid", hakuOid, opiskelijaOid)(200, hakemus)
+    case _: AtaruHakemus => throw new UnsupportedOperationException
   }
 
-  def getSuoritukset(hakuOid: String, hakemukset: Seq[HakijaHakemus]): Future[Map[String,Map[String,String]]] = {
+  def getSuoritukset(hakuOid: String, hs: Seq[HakijaHakemus]): Future[Map[String,Map[String,String]]] = {
+    val hakemukset: Seq[FullHakemus] = hs.map {
+      case h: FullHakemus => h
+      case _: AtaruHakemus => throw new UnsupportedOperationException
+    }
     if (hakemukset.nonEmpty) {
       val hakemusHakijat: Seq[HakemusHakija] = hakemukset.map(h => HakemusHakija(h.personOid.get, h))
       logger.info(s"Get suoritukset for ${hakemukset.size} hakemukset for haku $hakuOid")
@@ -37,7 +43,7 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)
     }
   }
 
-  case class HakemusHakija(opiskelijaOid: String, hakemus: HakijaHakemus)
+  case class HakemusHakija(opiskelijaOid: String, hakemus: FullHakemus)
 }
 
 class KoosteServiceMock extends IKoosteService {
