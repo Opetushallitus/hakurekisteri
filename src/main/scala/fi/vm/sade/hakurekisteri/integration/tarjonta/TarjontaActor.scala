@@ -1,13 +1,15 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorSystem}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
-import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.tools.RicherString._
+import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
 
 case class SearchKomoQuery(koulutus: String)
@@ -72,9 +74,9 @@ case class HakukohdeNotFoundException(message: String) extends TarjontaException
 case class KoulutusNotFoundException(message: String) extends TarjontaException(message)
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
-class TarjontaActor(restClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
-  private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis)
-  private val komoCache = new FutureCache[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis)
+class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
+  private val koulutusCache = cacheFactory.getInstance[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "koulutus")
+  private val komoCache = cacheFactory.getInstance[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "komo")
   val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
   implicit val ec: ExecutionContext = context.dispatcher
 
@@ -141,7 +143,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   }
 }
 
-class MockTarjontaActor(config: Config) extends TarjontaActor(null, config) {
+class MockTarjontaActor(config: Config)(implicit val system:ActorSystem) extends TarjontaActor(null, config, CacheFactory.apply(new OphProperties().addDefault("redis_suoritusrekisteri_enabled", "false"))) {
 
   override def receive: Receive = {
     case GetKomoQuery(oid) =>

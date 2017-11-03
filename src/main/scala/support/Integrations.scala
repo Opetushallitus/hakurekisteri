@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
@@ -75,9 +76,9 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val koosteService = new KoosteServiceMock
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
-  override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor)
+  override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor()(system))
   override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
-  override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config))
+  override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config)(system))
   override val ytl: ActorRef = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
@@ -146,15 +147,16 @@ class BaseIntegrations(rekisterit: Registers,
       randomFactor = 0.2
     )), name)
 
-  val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
-  val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
+  val cacheFactory = CacheFactory.apply(OphUrlProperties)(system)
+  val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config, cacheFactory)), "tarjonta")
+  val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
   val hakemusService = new HakemusService(hakemusClient, oppijaNumeroRekisteri)(system)
   val koosteService = new KoosteService(koosteClient)(system)
-  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
-  val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
-  val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
+  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
+  val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient, cacheFactory)), "parametrit")
+  val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config, cacheFactory)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,

@@ -3,12 +3,13 @@ package fi.vm.sade.hakurekisteri.integration.koodisto
 import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, FutureCache, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, PreconditionFailedException, VirkailijaRestClient}
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 case class GetRinnasteinenKoodiArvoQuery(koodisto: String, arvo: String, rinnasteinenKoodistoUri: String)
@@ -22,13 +23,13 @@ case class GetKoodi(koodistoUri: String, koodiUri: String)
 case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
 case class GetKoodistoKoodiArvot(koodistoUri: String)
 
-class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
+class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext =  context.dispatcher
 
-  private val koodiCache = new FutureCache[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis)
-  private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis)
-  private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot](config.integrations.koodistoCacheHours.hours.toMillis)
+  private val koodiCache = cacheFactory.getInstance[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis, getClass, "koodi")
+  private val relaatioCache = cacheFactory.getInstance[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis, getClass, "relaatio")
+  private val koodiArvotCache = cacheFactory.getInstance[String, KoodistoKoodiArvot](config.integrations.koodistoCacheHours.hours.toMillis, getClass, "koodi-arvo")
   val maxRetries = config.integrations.koodistoConfig.httpClientMaxRetries
 
   override def receive: Receive = {
