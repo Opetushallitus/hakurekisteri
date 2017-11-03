@@ -272,29 +272,48 @@ class KkHakijaService(hakemusService: IHakemusService,
       .flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids)).map(_.flatten))
   }
 
-  private def extractHakemukset(hakemus: HakijaHakemus,
+  private def extractHakemukset(h: HakijaHakemus,
                                 lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                 q: KkHakijaQuery,
                                 haku: Haku,
                                 sijoitteluTulos: SijoitteluTulos,
-                                hakukohdeOids: Seq[String]): Seq[Future[Option[Hakemus]]] = {
-    (for {
-      answers: HakemusAnswers <- hakemus.answers
-      hakutoiveet: Seq[HakutoiveDTO] <- hakemus.hakutoiveet
-    } yield hakutoiveet.map(toive =>
-      if (toive.koulutusId.isDefined && queryMatches(q, toive, hakukohdeOids ++ q.hakukohde.toSeq))
-        extractSingleHakemus(
-          hakemus,
-          lukuvuosimaksutByHakukohdeOid,
-          q,
-          toive,
-          answers.lisatiedot.getOrElse(Map()),
-          answers.koulutustausta.getOrElse(Koulutustausta()),
-          haku,
-          sijoitteluTulos
-        )
-      else Future.successful(None)
-    )).getOrElse(Seq.empty)
+                                hakukohdeOids: Seq[String]): Seq[Future[Option[Hakemus]]] = h match {
+    case hakemus: FullHakemus =>
+      (for {
+        answers: HakemusAnswers <- hakemus.answers
+        hakutoiveet: Seq[HakutoiveDTO] <- hakemus.hakutoiveet
+      } yield hakutoiveet.map(toive =>
+        if (toive.koulutusId.isDefined && queryMatches(q, toive, hakukohdeOids ++ q.hakukohde.toSeq))
+          extractSingleHakemus(
+            hakemus,
+            lukuvuosimaksutByHakukohdeOid,
+            q,
+            toive,
+            answers.lisatiedot.getOrElse(Map()),
+            answers.koulutustausta.getOrElse(Koulutustausta()),
+            haku,
+            sijoitteluTulos
+          )
+        else Future.successful(None)
+      )).getOrElse(Seq.empty)
+    case hakemus: AtaruHakemus =>
+      (for {
+        answers: HakemusAnswers <- hakemus.answers
+        hakutoiveet: Seq[HakutoiveDTO] <- hakemus.hakutoiveet
+      } yield hakutoiveet.map(toive =>
+        if (toive.koulutusId.isDefined && queryMatches(q, toive, hakukohdeOids ++ q.hakukohde.toSeq))
+          extractSingleHakemus(
+            hakemus,
+            lukuvuosimaksutByHakukohdeOid,
+            q,
+            toive,
+            answers.lisatiedot.getOrElse(Map()),
+            answers.koulutustausta.getOrElse(Koulutustausta()),
+            haku,
+            sijoitteluTulos
+          )
+        else Future.successful(None)
+      )).getOrElse(Seq.empty)
   }
 
   private def queryMatches(q: KkHakijaQuery, toive: HakutoiveDTO, hakukohdeOids: Seq[String]): Boolean = {
@@ -306,50 +325,88 @@ class KkHakijaService(hakemusService: IHakemusService,
       isAuthorized(toive.organizationParentOids, getKnownOrganizations(q.user))
   }
 
-  private def extractSingleHakemus(hakemus: HakijaHakemus,
+  private def extractSingleHakemus(h: HakijaHakemus,
                                    lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                    q: KkHakijaQuery,
                                    toive: HakutoiveDTO,
                                    lisatiedot: Map[String, String],
                                    koulutustausta: Koulutustausta,
                                    haku: Haku,
-                                   sijoitteluTulos: SijoitteluTulos): Future[Option[Hakemus]] = {
-    val hakemusOid = hakemus.oid
-    val hakukohdeOid = toive.koulutusId.getOrElse("")
-    val preferenceEligibilities = hakemus.preferenceEligibilities
-    val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
-    for {
-      hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
-      kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
-      lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
-    } yield {
-      if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
-        Some(Hakemus(
-          haku = hakemus.applicationSystemId,
-          hakuVuosi = haku.vuosi,
-          hakuKausi = kausi,
-          hakemusnumero = hakemusOid,
-          organisaatio = toive.organizationOid.getOrElse(""),
-          hakukohde = toive.koulutusId.getOrElse(""),
-          hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
-          avoinVayla = None, // TODO valinnoista?
-          valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
-          vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
-          ilmoittautumiset = lasnaolot,
-          pohjakoulutus = getPohjakoulutukset(koulutustausta),
-          julkaisulupa = lisatiedot.get("lupaJulkaisu").map(_ == "true"),
-          hKelpoisuus = hakukelpoisuus.status,
-          hKelpoisuusLahde = hakukelpoisuus.source,
-          hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
-          lukuvuosimaksu = resolveLukuvuosiMaksu(hakemus, hakukelpoisuus, lukuvuosimaksutByHakukohdeOid, hakukohdeOid),
-          hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
-            .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
-          liitteet = attachmentToLiite(hakemus.attachmentRequests)
-        ))
-      } else {
-        None
+                                   sijoitteluTulos: SijoitteluTulos): Future[Option[Hakemus]] = h match {
+    case hakemus: FullHakemus =>
+      val hakemusOid = hakemus.oid
+      val hakukohdeOid = toive.koulutusId.getOrElse("")
+      val preferenceEligibilities = hakemus.preferenceEligibilities
+      val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
+      for {
+        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
+        kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
+        lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
+      } yield {
+        if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
+          Some(Hakemus(
+            haku = hakemus.applicationSystemId,
+            hakuVuosi = haku.vuosi,
+            hakuKausi = kausi,
+            hakemusnumero = hakemusOid,
+            organisaatio = toive.organizationOid.getOrElse(""),
+            hakukohde = toive.koulutusId.getOrElse(""),
+            hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
+            avoinVayla = None, // TODO valinnoista?
+            valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
+            ilmoittautumiset = lasnaolot,
+            pohjakoulutus = getPohjakoulutukset(koulutustausta),
+            julkaisulupa = lisatiedot.get("lupaJulkaisu").map(_ == "true"),
+            hKelpoisuus = hakukelpoisuus.status,
+            hKelpoisuusLahde = hakukelpoisuus.source,
+            hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
+            lukuvuosimaksu = resolveLukuvuosiMaksu(hakemus, hakukelpoisuus, lukuvuosimaksutByHakukohdeOid, hakukohdeOid),
+            hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
+              .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
+            liitteet = attachmentToLiite(hakemus.attachmentRequests)
+          ))
+        } else {
+          None
+        }
       }
-    }
+    case hakemus: AtaruHakemus =>
+      val hakemusOid = hakemus.oid
+      val hakukohdeOid = toive.koulutusId.getOrElse("")
+      val preferenceEligibilities = hakemus.preferenceEligibilities
+      val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
+      for {
+        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
+        kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
+        lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
+      } yield {
+        if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
+          Some(Hakemus(
+            haku = hakemus.applicationSystemId,
+            hakuVuosi = haku.vuosi,
+            hakuKausi = kausi,
+            hakemusnumero = hakemusOid,
+            organisaatio = toive.organizationOid.getOrElse(""),
+            hakukohde = toive.koulutusId.getOrElse(""),
+            hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
+            avoinVayla = None, // TODO valinnoista?
+            valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
+            ilmoittautumiset = lasnaolot,
+            pohjakoulutus = getPohjakoulutukset(koulutustausta),
+            julkaisulupa = lisatiedot.get("lupaJulkaisu").map(_ == "true"),
+            hKelpoisuus = hakukelpoisuus.status,
+            hKelpoisuusLahde = hakukelpoisuus.source,
+            hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
+            lukuvuosimaksu = resolveLukuvuosiMaksu(hakemus, hakukelpoisuus, lukuvuosimaksutByHakukohdeOid, hakukohdeOid),
+            hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
+              .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
+            liitteet = attachmentToLiite(hakemus.attachmentRequests)
+          ))
+        } else {
+          None
+        }
+      }
   }
 
   private def resolveLukuvuosiMaksu(hakemus: HakijaHakemus,
