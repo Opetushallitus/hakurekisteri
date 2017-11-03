@@ -193,7 +193,7 @@ object AkkaHakupalvelu {
     Liite(prefAoId, prefAoGroupId, har.receptionStatus, har.processingStatus, name, har.applicationAttachment.address.recipient)
   }
 
-  def getLisakysymykset(hakemus: HakijaHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
+  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
 
     case class CompositeId(questionId: String, answerId: Option[String])
 
@@ -530,16 +530,7 @@ sealed trait HakijaHakemus {
   def oid: String
   def applicationSystemId: String
   def stateValid: Boolean
-  def answers: Option[HakemusAnswers]
-  def henkilotiedot: Option[HakemusHenkilotiedot]
-  def hetu: Option[String]
   def hakutoiveet: Option[List[HakutoiveDTO]]
-  def koulutustausta: Option[Koulutustausta]
-  def lahtokoulu: Option[String]
-  def kieli: String
-  def julkaisulupa: Boolean
-  def attachmentRequests: Seq[HakemusAttachmentRequest]
-  def preferenceEligibilities: Seq[PreferenceEligibility]
 }
 
 
@@ -614,7 +605,7 @@ case class FullHakemus(oid: String,
 }
 
 case class AtaruHakemusDto(oid: String,
-                           personOid: Option[String],
+                           personOid: String,
                            applicationSystemId: String,
                            kieli: String,
                            hakukohteet: Set[String])
@@ -622,17 +613,7 @@ case class AtaruHakemusDto(oid: String,
 case class AtaruHakemus(oid: String,
                         personOid: Option[String],
                         applicationSystemId: String,
-                        answers: Option[HakemusAnswers],
                         hakutoiveet: Option[List[HakutoiveDTO]],
-                        kieli: String,
-                        hetu: Option[String]) extends HakijaHakemus {
-
+                        henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo) extends HakijaHakemus {
   val stateValid: Boolean = true
-//  val state: Option[String] = None
-  val henkilotiedot: Option[HakemusHenkilotiedot] = answers.flatMap(_.henkilotiedot)
-  val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
-  val lahtokoulu: Option[String] = None
-  val julkaisulupa: Boolean = false
-  val attachmentRequests = Seq()
-  val preferenceEligibilities = Seq()
 }

@@ -39,7 +39,7 @@ class YtlIntegration(config: OphProperties,
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
 
-  def sync(hakemus: HakijaHakemus): Either[Throwable, Kokelas] = {
+  def sync(hakemus: FullHakemus): Either[Throwable, Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       if(hakemus.stateValid) {
         hakemus.personOid match {
@@ -80,20 +80,16 @@ class YtlIntegration(config: OphProperties,
   }
 
   def sync(personOid: String): Future[Seq[Either[Throwable, Kokelas]]] = {
-    val hakemusForPerson: Future[Seq[HakijaHakemus]] = hakemusService.hakemuksetForPerson(personOid)
-    hakemusForPerson.flatMap {
+    hakemusService.hakemuksetForPerson(personOid)
+      .map(_.collect {
+        case h: FullHakemus if h.stateValid && h.personOid.isDefined => h
+      }).flatMap {
       hakemukset =>
         if(hakemukset.isEmpty) {
           logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
-          throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
-        }
-        val hakemuksetInCorrectStateAndWithPersonOid: Seq[HakijaHakemus] =
-          hakemukset.filter(h => h.stateValid && h.personOid.isDefined)
-        if(hakemuksetInCorrectStateAndWithPersonOid.isEmpty) {
-          logger.error(s"Hakemukset with person OID $personOid in wrong state!")
-          Future.failed(new RuntimeException(s"Hakemukset with person OID $personOid in wrong state!"))
+          Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
         } else {
-          Future.successful(hakemuksetInCorrectStateAndWithPersonOid.map(sync))
+          Future.successful(hakemukset.map(sync))
         }
     }
   }
