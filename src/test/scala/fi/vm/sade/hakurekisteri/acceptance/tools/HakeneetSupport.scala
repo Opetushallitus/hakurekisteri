@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import fi.vm.sade.hakurekisteri.{Config, MockConfig, SpecsLikeMockito}
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
@@ -758,7 +758,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.2")(200) returns valintatulokset
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.3")(200) returns valintatulokset
 
-  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, new MockConfig, initOnStartup = true)))
+  val cacheFactory = MockCacheFactory.get
+
+  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, new MockConfig, cacheFactory, initOnStartup = true)))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger

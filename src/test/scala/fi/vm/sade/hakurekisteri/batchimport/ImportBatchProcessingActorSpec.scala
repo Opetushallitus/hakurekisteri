@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, KomoOids, MockConfig}
+import fi.vm.sade.hakurekisteri.{Config, KomoOids, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HttpHenkiloActor}
@@ -130,7 +130,8 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = suoritusHandler, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(httpProvider)))
-    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)))
+    val cacheFactory = MockCacheFactory.get
+    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {r => }, query = { (q) => Seq() })))
 

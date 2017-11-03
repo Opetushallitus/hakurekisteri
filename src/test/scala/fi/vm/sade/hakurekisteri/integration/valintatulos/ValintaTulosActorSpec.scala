@@ -6,7 +6,7 @@ import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, MockConfig}
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.mockito.Mockito._
@@ -21,6 +21,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
   implicit val timeout: Timeout = 60.seconds
   val vtsConfig = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")
   val config = new MockConfig
+  val cacheFactory = MockCacheFactory.get
 
   def createEndPoint = {
     val e = mock[Endpoint]
@@ -37,7 +38,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(config = config, client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(config = config, cacheFactory = cacheFactory, client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
 
@@ -64,6 +65,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         val endPoint = createEndPoint
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
+          cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
           refetchTime = Some(1000),
           cacheTime = Some(2000)
@@ -85,6 +87,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         val endPoint = createEndPoint
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
+          cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
           refetchTime = Some(500),
           cacheTime = Some(1000)
@@ -115,6 +118,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         val endPoint = createEndPoint
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
+          cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
           refetchTime = Some(500),
           cacheTime = Some(1000),
@@ -137,6 +141,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         val endPoint = createEndPoint
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
+          cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
           refetchTime = Some(500),
           cacheTime = Some(1000),

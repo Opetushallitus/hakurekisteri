@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, MockConfig}
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
 import org.mockito.Mockito._
 import org.scalatest.Matchers
@@ -135,7 +135,9 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 
   def initOrganisaatioActor(ttl: Option[FiniteDuration] = None)(implicit system: ActorSystem, ec: ExecutionContext): (Endpoint, ActorRef) = {
     val endPoint = createEndPoint
-    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), new MockConfig, initDuringStartup = false, ttl)))
+    val organisaatioActor = system.actorOf(Props(
+      new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), new MockConfig,
+        MockCacheFactory.get, initDuringStartup = false, ttl)))
 
     Await.result((organisaatioActor ? RefreshOrganisaatioCache).mapTo[Boolean], Duration(10, TimeUnit.SECONDS))
 
