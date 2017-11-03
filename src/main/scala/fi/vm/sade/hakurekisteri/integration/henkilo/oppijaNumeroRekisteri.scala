@@ -106,7 +106,20 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
   }
 
   def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future.successful(oids.zipWithIndex.map {
-    case (oid:String, i:Int) => Henkilo(oid, Some(s"Hetu$i"), "OPPIJA", Some(s"Etunimi$i"), Some(s"Kutsumanimi$i"), Some(s"Sukunimi$i"), None, Some(Kieli("fi")))
+    case (oid:String, i:Int) => Henkilo(
+      oidHenkilo = oid,
+      hetu = Some(s"Hetu$i"),
+      henkiloTyyppi = "OPPIJA",
+      etunimet = Some(s"Etunimi$i"),
+      kutsumanimi = Some(s"Kutsumanimi$i"),
+      sukunimi = Some(s"Sukunimi$i"),
+      aidinkieli = Some(Kieli("fi")),
+      kansalaisuus = List(Kansalaisuus("246")),
+      syntymaaika = Some("1989-09-24"),
+      sukupuoli = Some("1"),
+      asiointiKieli = Some(Kieli("fi")),
+      turvakielto = false
+    )
   }.toSeq)
 }
 
