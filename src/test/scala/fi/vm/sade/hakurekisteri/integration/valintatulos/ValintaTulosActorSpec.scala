@@ -8,13 +8,18 @@ import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import fi.vm.sade.scalaproperties.OphProperties
+import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import redis.embedded.RedisServer
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Try
 
 class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties {
 
@@ -154,6 +159,54 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
       }
     )
   }
+
+  test("ValintaTulosActor should use Redis cache if configured") {
+    val port = PortChecker.findFreeLocalPort
+    val redisServer = Try(new RedisServer(port)).toOption
+    redisServer.isDefined should be(true)
+    try {
+      redisServer.get.start
+      redisServer.get.isActive should be(true)
+      withSystem(
+        implicit system => {
+          implicit val ec = system.dispatcher
+          val endPoint = createEndPoint
+
+          val redisCacheFactory = CacheFactory.apply(new OphProperties()
+            .addDefault("redis_suoritusrekisteri_enabled", "true")
+            .addDefault("redis_suoritusrekisteri_host", "localhost")
+            .addDefault("redis_suoritusrekisteri_port", s"${port}")
+          )(system)
+
+          val valintaTulosActor = system.actorOf(Props(
+            new ValintaTulosActor(config = config, cacheFactory = redisCacheFactory, client =
+              new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+
+          valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
+
+          Thread.sleep(3000)
+
+          valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
+          valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
+          valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
+          valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
+
+          waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
+            t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+          })
+
+          val cached = Await.result(redisCacheFactory.getInstance[String, SijoitteluTulos](1111,
+            classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286251"), 10.seconds)
+          cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+
+          verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
+        }
+      )
+    } finally {
+      redisServer.get.stop
+    }
+  }
+
 }
 
 object ValintaTulosResults {
