@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
+import java.text.SimpleDateFormat
+
 import akka.actor.ActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
@@ -384,7 +386,58 @@ object AkkaHakupalvelu {
           Seq(),
           osaaminen
         ))
-    case _: AtaruHakemus => throw new UnsupportedOperationException
+    case hakemus: AtaruHakemus =>
+      Hakija(
+        Henkilo(
+          lahiosoite = "",
+          postinumero = "00000",
+          postitoimipaikka = "",
+          maa = "FIN",
+          matkapuhelin = "",
+          puhelin = "",
+          sahkoposti = "",
+          kotikunta = "",
+          sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
+          etunimet = hakemus.henkilo.etunimet.getOrElse(""),
+          kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
+          turvakielto = hakemus.henkilo.turvakielto.toString,
+          oppijanumero = hakemus.henkilo.oidHenkilo,
+          kansalaisuus = "FIN", // FIXME
+          kaksoiskansalaisuus = "",
+          asiointiKieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi.toUpperCase).getOrElse("FI"),
+          eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,
+          sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
+          hetu = hakemus.henkilo.hetu.getOrElse(""),
+          syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))).getOrElse(""),
+          markkinointilupa = None,
+          kiinnostunutoppisopimuksesta = None,
+          huoltajannimi = "",
+          huoltajanpuhelinnumero = "",
+          huoltajansahkoposti = "",
+          lisakysymykset = Seq.empty,
+          liitteet = Seq.empty,
+          muukoulutus = None
+        ),
+        Seq.empty,
+        Seq.empty,
+        Hakemus(
+          hakutoiveet = hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
+          hakemusnumero = hakemus.oid,
+          julkaisulupa = false,
+          hakuOid = hakemus.applicationSystemId,
+          lisapistekoulutus = None,
+          liitteet = Seq.empty,
+          osaaminen = Osaaminen(
+            yleinen_kielitutkinto_fi = None,
+            valtionhallinnon_kielitutkinto_fi = None,
+            yleinen_kielitutkinto_sv = None,
+            valtionhallinnon_kielitutkinto_sv = None,
+            yleinen_kielitutkinto_en = None,
+            valtionhallinnon_kielitutkinto_en = None,
+            yleinen_kielitutkinto_se = None,
+            valtionhallinnon_kielitutkinto_se = None
+          )
+        ))
   }
 
   def getSuoritus(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Option[Suoritus] = {
