@@ -173,9 +173,9 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           val endPoint = createEndPoint
 
           val redisCacheFactory = CacheFactory.apply(new OphProperties()
-            .addDefault("redis_suoritusrekisteri_enabled", "true")
-            .addDefault("redis_suoritusrekisteri_host", "localhost")
-            .addDefault("redis_suoritusrekisteri_port", s"${port}")
+            .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
+            .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
+            .addDefault("suoritusrekisteri.cache.redis.port", s"${port}")
           )(system)
 
           val valintaTulosActor = system.actorOf(Props(

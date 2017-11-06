@@ -42,7 +42,7 @@ trait CacheFactory {
 }
 
 object CacheFactory {
-  def apply(config: OphProperties)(implicit system:ActorSystem): CacheFactory = config.getOrElse("redis_suoritusrekisteri_enabled", "false") match {
+  def apply(config: OphProperties)(implicit system:ActorSystem): CacheFactory = config.getOrElse("suoritusrekisteri.cache.redis.enabled", "false") match {
     case p if "TRUE".equalsIgnoreCase(p) => new RedisCacheFactory(config)
     case _ => new InMemoryCacheFactory
   }
@@ -87,9 +87,9 @@ object CacheFactory {
   class RedisCacheFactory(config: OphProperties)(implicit system:ActorSystem) extends CacheFactory {
 
     val r = {
-      val host = config.getOrElse("redis_suoritusrekisteri_host", "")
+      val host = config.getOrElse("suoritusrekisteri.cache.redis.host", "")
       if("".equals(host)) throw new RuntimeException(s"No configuration for Redis host found")
-      val port = config.getOrElse("redis_suoritusrekisteri_port", "6379").toInt
+      val port = config.getOrElse("suoritusrekisteri.cache.redis.port", "6379").toInt
       org.slf4j.LoggerFactory.getLogger(getClass).info(s"Using redis cache ${host}:${port}")
       RedisClient(host = host, port = port)
     }

@@ -143,7 +143,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 }
 
-class MockTarjontaActor(config: Config)(implicit val system:ActorSystem) extends TarjontaActor(null, config, CacheFactory.apply(new OphProperties().addDefault("redis_suoritusrekisteri_enabled", "false"))) {
+class MockTarjontaActor(config: Config)(implicit val system:ActorSystem) extends TarjontaActor(null, config, CacheFactory.apply(new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false"))) {
 
   override def receive: Receive = {
     case GetKomoQuery(oid) =>

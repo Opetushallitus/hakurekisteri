@@ -24,9 +24,9 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   val redisServer = new RedisServer(port)
 
   def redisCacheFactory(implicit system:ActorSystem) = CacheFactory.apply(new OphProperties()
-    .addDefault("redis_suoritusrekisteri_enabled", "true")
-    .addDefault("redis_suoritusrekisteri_host", "localhost")
-    .addDefault("redis_suoritusrekisteri_port", s"${port}"))(system)
+    .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
+    .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
+    .addDefault("suoritusrekisteri.cache.redis.port", s"${port}"))(system)
 
   override def beforeAll() = {
     redisServer.start

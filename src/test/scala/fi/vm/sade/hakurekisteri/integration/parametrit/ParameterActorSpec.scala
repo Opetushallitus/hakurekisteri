@@ -97,7 +97,7 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
         val endPoint = createEndPoint
         val parameterActor = system.actorOf(Props(new HttpParameterActor(
           new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
-          CacheFactory.apply(new OphProperties().addDefault("redis_suoritusrekisteri_enabled", "false")))))
+          CacheFactory.apply(new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false")))))
 
         expectFailure[NoParamFoundException](parameterActor ? KierrosRequest("1.2.246.562.29.foobar"))
 

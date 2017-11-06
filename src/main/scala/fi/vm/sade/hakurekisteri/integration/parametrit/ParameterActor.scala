@@ -111,7 +111,7 @@ class HttpParameterActor(restClient: VirkailijaRestClient, override val cacheFac
 }
 
 class MockParameterActor(active: Boolean = false)(implicit val system:ActorSystem) extends
-  ParameterActor(CacheFactory.apply(new OphProperties().addDefault("redis_suoritusrekisteri_enabled", "false"))) {
+  ParameterActor(CacheFactory.apply(new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false"))) {
 
   override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 
