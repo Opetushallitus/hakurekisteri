@@ -375,7 +375,15 @@ object AkkaHakupalvelu {
           ))
           case _ => Seq()
         },
-        hakemus.hakutoiveet.map(toiveet => Hakemus(convertToiveet(toiveet, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus, Seq(), osaaminen)))
+        Hakemus(
+          hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
+          hakemus.oid,
+          julkaisulupa,
+          hakemus.applicationSystemId,
+          lisapistekoulutus,
+          Seq(),
+          osaaminen
+        ))
     case _: AtaruHakemus => throw new UnsupportedOperationException
   }
 
