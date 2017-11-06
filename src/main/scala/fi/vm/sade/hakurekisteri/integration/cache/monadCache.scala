@@ -99,24 +99,32 @@ object CacheFactory {
     class RedisCache[K, T](val r:RedisClient,
                            val expirationDurationMillis:Long,
                            val cacheKeyPrefix:String) extends MonadCache[Future, K, T] {
+
+      val logger = org.slf4j.LoggerFactory.getLogger(getClass)
+
       import scala.concurrent.ExecutionContext.Implicits.global
       implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
 
       def +(key: K, f: Future[T]): Unit = f onSuccess {
-        case t => r.set[T](k(key), t)
+        case t => {
+          val pefixKey = k(key)
+          logger.info(s"Adding value with key ${pefixKey} to Redis cache")
+          r.set[T](pefixKey, t)
+        }
       }
 
       def -(key: K): Unit = r.del(k(key))
 
       def contains(key: K): Boolean = Await.result(r.exists(k(key)), 60.seconds)
 
-      def get(key: K): Future[T] = r.get[T](k(key)).collect{ case Some(x) => x }
-
-      private def k(key: K):String = {
-        val moi = k(key, cacheKeyPrefix)
-        println(moi)
-        moi
+      def get(key: K): Future[T] = {
+        val pefixKey = k(key)
+        logger.info(s"Getting value with key ${pefixKey} from Redis cache")
+        r.get[T](pefixKey).collect{ case Some(x) => x }
       }
+
+      private def k(key: K):String = k(key, cacheKeyPrefix)
+
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
