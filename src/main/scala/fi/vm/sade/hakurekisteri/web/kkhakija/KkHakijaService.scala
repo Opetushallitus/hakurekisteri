@@ -483,38 +483,41 @@ class KkHakijaService(hakemusService: IHakemusService,
       Some(for {
         hakemukset <- getHakemukset(haku, hakemus, Map(), q, kokoHaunTulos, hakukohdeOids)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = hakemus.henkilo.oidHenkilo, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
-      } yield Hakija(
-        hetu = getHetu(hakemus.henkilo.hetu, hakemus.henkilo.syntymaaika, hakemus.oid),
-        oppijanumero = hakemus.henkilo.oidHenkilo,
-        sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
-        etunimet = hakemus.henkilo.etunimet.getOrElse(""),
-        kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
-        lahiosoite = "",
-        postinumero = "",
-        postitoimipaikka = "",
-        maa = "999",
-        kansalaisuus = hakemus.henkilo.kansalaisuus.headOption.map(_.kansalaisuusKoodi).getOrElse("999"),
-        kaksoiskansalaisuus = None,
-        syntymaaika = None,
-        matkapuhelin = None,
-        puhelin = None,
-        sahkoposti = None,
-        kotikunta = "999",
-        sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
-        aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
-        asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
-          case Some("fi") => "1"
-          case Some("sv") => "2"
-          case Some("en") => "3"
-          case _ => "9"
-        },
-        koulusivistyskieli = "99",
-        koulutusmarkkinointilupa = None,
-        onYlioppilas = isYlioppilas(suoritukset),
-        yoSuoritusVuosi = None,
-        turvakielto = hakemus.henkilo.turvakielto,
-        hakemukset = hakemukset
-      ))
+      } yield {
+        val syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s)))
+        Hakija(
+          hetu = getHetu(hakemus.henkilo.hetu, syntymaaika, hakemus.oid),
+          oppijanumero = hakemus.henkilo.oidHenkilo,
+          sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
+          etunimet = hakemus.henkilo.etunimet.getOrElse(""),
+          kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
+          lahiosoite = "",
+          postinumero = "",
+          postitoimipaikka = "",
+          maa = "999",
+          kansalaisuus = hakemus.henkilo.kansalaisuus.headOption.map(_.kansalaisuusKoodi).getOrElse("999"),
+          kaksoiskansalaisuus = None,
+          syntymaaika = None,
+          matkapuhelin = None,
+          puhelin = None,
+          sahkoposti = None,
+          kotikunta = "999",
+          sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
+          aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
+          asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
+            case Some("fi") => "1"
+            case Some("sv") => "2"
+            case Some("en") => "3"
+            case _ => "9"
+          },
+          koulusivistyskieli = "99",
+          koulutusmarkkinointilupa = None,
+          onYlioppilas = isYlioppilas(suoritukset),
+          yoSuoritusVuosi = None,
+          turvakielto = hakemus.henkilo.turvakielto,
+          hakemukset = hakemukset
+        )
+      })
   }
 
   private def getKkHakijaV2(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String],
@@ -563,38 +566,41 @@ class KkHakijaService(hakemusService: IHakemusService,
       Some(for {
         hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.henkilo.oidHenkilo, Map()), q, kokoHaunTulos, hakukohdeOids)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = hakemus.henkilo.oidHenkilo, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
-      } yield Hakija(
-        hetu = getHetu(hakemus.henkilo.hetu, hakemus.henkilo.syntymaaika, hakemus.oid),
-        oppijanumero = hakemus.henkilo.oidHenkilo,
-        sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
-        etunimet = hakemus.henkilo.etunimet.getOrElse(""),
-        kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
-        lahiosoite = "",
-        postinumero = "",
-        postitoimipaikka = "",
-        maa = "999",
-        kansalaisuus = hakemus.henkilo.kansalaisuus.headOption.map(_.kansalaisuusKoodi).getOrElse("999"),
-        kaksoiskansalaisuus = None,
-        syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))),
-        matkapuhelin = None,
-        puhelin = None,
-        sahkoposti = None,
-        kotikunta = "999",
-        sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
-        aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
-        asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
-          case Some("fi") => "1"
-          case Some("sv") => "2"
-          case Some("en") => "3"
-          case _ => "9"
-        },
-        koulusivistyskieli = "99",
-        koulutusmarkkinointilupa = None,
-        onYlioppilas = isYlioppilas(suoritukset),
-        yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
-        turvakielto = hakemus.henkilo.turvakielto,
-        hakemukset = hakemukset
-      ))
+      } yield {
+        val syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s)))
+        Hakija(
+          hetu = getHetu(hakemus.henkilo.hetu, syntymaaika, hakemus.oid),
+          oppijanumero = hakemus.henkilo.oidHenkilo,
+          sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
+          etunimet = hakemus.henkilo.etunimet.getOrElse(""),
+          kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
+          lahiosoite = "",
+          postinumero = "",
+          postitoimipaikka = "",
+          maa = "999",
+          kansalaisuus = hakemus.henkilo.kansalaisuus.headOption.map(_.kansalaisuusKoodi).getOrElse("999"),
+          kaksoiskansalaisuus = None,
+          syntymaaika = syntymaaika,
+          matkapuhelin = None,
+          puhelin = None,
+          sahkoposti = None,
+          kotikunta = "999",
+          sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
+          aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
+          asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
+            case Some("fi") => "1"
+            case Some("sv") => "2"
+            case Some("en") => "3"
+            case _ => "9"
+          },
+          koulusivistyskieli = "99",
+          koulutusmarkkinointilupa = None,
+          onYlioppilas = isYlioppilas(suoritukset),
+          yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
+          turvakielto = hakemus.henkilo.turvakielto,
+          hakemukset = hakemukset
+        )
+      })
   }
 }
 
@@ -615,17 +621,19 @@ object KkHakijaUtil {
 
   def getHetu(hetu: Option[String], syntymaaika: Option[String], hakemusnumero: String): String = hetu match {
     case Some(h) => h
+
     case None => syntymaaika match {
       case Some(s) =>
-        Try(new SimpleDateFormat("dd.MM.yyyy").parse(s))
-          .recoverWith {
-            case _: ParseException => Try(new SimpleDateFormat("yyyy-MM-dd").parse(s))
-          }
-          .recoverWith {
-            case _: ParseException => Failure(InvalidSyntymaaikaException(s"could not parse syntymäaika $s in hakemus $hakemusnumero"))
-          }.map(toKkSyntymaaika).get
+        try {
+          toKkSyntymaaika(new SimpleDateFormat("dd.MM.yyyy").parse(s))
+        } catch {
+          case t: ParseException =>
+            throw InvalidSyntymaaikaException(s"could not parse syntymäaika $s in hakemus $hakemusnumero")
+        }
+
       case None =>
         throw InvalidSyntymaaikaException(s"syntymäaika and hetu missing from hakemus $hakemusnumero")
+
     }
   }
 
