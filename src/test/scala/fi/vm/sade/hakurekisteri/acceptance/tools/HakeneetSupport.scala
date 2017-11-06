@@ -631,8 +631,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       Some("kausi_k#1"),
       Some(2015), kkHaku = false, None, None)
 
+    private val kansalaisuuskoodit = Map("246" -> "FIN")
+
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty, koosteData))
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty, koosteData, kansalaisuuskoodit))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
@@ -703,6 +705,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   class MockedKoodistoActor extends Actor {
     override def receive: Actor.Receive = {
       case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "fin", _) => sender ! "246"
+      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot2", "246", _) => sender ! "FIN"
       case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "nan", _) => sender ! "999"
       case q: GetKoodi =>
         sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))))
