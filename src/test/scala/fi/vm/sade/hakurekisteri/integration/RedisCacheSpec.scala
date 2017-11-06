@@ -4,12 +4,20 @@ import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Ignore, Matchers}
 import redis.embedded.RedisServer
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
+/*
+ * This test can be run locally to test resis cache implementation.
+ * However, currently in Bamboo RedisServer cannot be started
+ * due to libc incompatibility issue!
+ * /tmp/1509711535309-0/redis-server-2.8.19: /lib64/libc.so.6: version
+ * `GLIBC_2.14' not found (required by /tmp/1509711535309-0/redis-server-2.8.19)
+ */
+@Ignore
 class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with BeforeAndAfterAll {
 
   val port = PortChecker.findFreeLocalPort
@@ -28,7 +36,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   val cacheEntry = "bar"
   val cacheEntryF = Future.successful(cacheEntry)
 
-  it should "add an entry to cache" in {
+  ignore should "add an entry to cache" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix1")
@@ -44,7 +52,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  it should "remove an entry from cache" in {
+  ignore should "remove an entry from cache" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String, String](60, getClass, "prefix2")
@@ -64,7 +72,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  it should "be usable from multiple actor systems" in {
+  ignore should "be usable from multiple actor systems" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix3")
@@ -83,7 +91,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  it should "use prefixes" in {
+  ignore should "use prefixes" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix4")
