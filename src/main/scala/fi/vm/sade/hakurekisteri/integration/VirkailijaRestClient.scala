@@ -43,7 +43,9 @@ object OphUrlProperties extends OphProperties("/suoritusrekisteri-oph.properties
   addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
 }
 
-class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
+class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None,
+                           jSessionName: String = "JSESSIONID", serviceUrlSuffix: String = "/j_spring_cas_security_check")
+                          (implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
   private implicit val defaultTimeout: Timeout = 60.seconds
 
   private val serviceUrl: String = config.serviceUrl
@@ -59,7 +61,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   ))
-  private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
+  private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient, jSessionName, serviceUrlSuffix)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
 
   object Client {
     private def jSessionId: Future[JSessionId] = (casActor ? GetJSession).mapTo[JSessionId]
@@ -90,7 +92,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
           for (
             jsession <- jSessionId;
             result <- {
-              cookies += s"${JSessionIdCookieParser.name}=${jsession.sessionId}"
+              cookies += s"${jSessionName}=${jsession.sessionId}"
               internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
             }
           ) yield result
@@ -160,14 +162,13 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 case class JSessionIdCookieException(m: String) extends Exception(m)
 
 object JSessionIdCookieParser {
-  val name = "JSESSIONID"
 
-  def isJSessionIdCookie(cookie: String): Boolean = {
-    cookie.startsWith(name)
+  def isJSessionIdCookie(cookie: String, jSessionName: String): Boolean = {
+    cookie.startsWith(jSessionName)
   }
 
-  def fromString(cookie: String): JSessionId = {
-    if (!isJSessionIdCookie(cookie)) throw JSessionIdCookieException(s"not a JSESSIONID cookie: $cookie")
+  def fromString(cookie: String, jSessionName: String): JSessionId = {
+    if (!isJSessionIdCookie(cookie, jSessionName)) throw JSessionIdCookieException(s"not a JSESSIONID cookie: $cookie")
 
     val value = cookie.split(";").headOption match {
       case Some(c) => c.split("=").lastOption match {

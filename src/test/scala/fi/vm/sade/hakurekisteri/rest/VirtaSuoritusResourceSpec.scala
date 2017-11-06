@@ -49,16 +49,22 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
     }
     override def getByHetu(hetu: String): Future[Henkilo] = {
       Future.successful(Henkilo(
-        "1.2.4",
-        Some("111111-1975"),
-        "OPPIJA",
-        None,
-        None,
-        None,
-        None,
-        None
+        oidHenkilo = "1.2.4",
+        hetu = Some("111111-1975"),
+        henkiloTyyppi = "OPPIJA",
+        etunimet = None,
+        kutsumanimi = None,
+        sukunimi = None,
+        aidinkieli = None,
+        kansalaisuus = List.empty,
+        syntymaaika = None,
+        sukupuoli = None,
+        asiointiKieli = None,
+        turvakielto = false
       ))
     }
+
+    override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = ???
   }
 
 

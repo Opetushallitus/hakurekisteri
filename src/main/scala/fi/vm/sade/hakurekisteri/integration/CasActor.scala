@@ -18,9 +18,9 @@ case object GetJSession
 case object ClearJSession
 case class JSessionId(sessionId: String)
 
-class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], jSessionName: String,
+               serviceUrlSuffix: String)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
   private val jSessionTtl = Duration(5, TimeUnit.MINUTES)
-  private val serviceUrlSuffix = "/j_spring_cas_security_check"
   private val serviceUrl = serviceConfig.serviceUrl match {
     case s if !s.endsWith(serviceUrlSuffix) => s"${serviceConfig.serviceUrl}$serviceUrlSuffix"
     case s => s
@@ -95,9 +95,9 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient])(i
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
       internalClient((request <<? Map("ticket" -> ticket)) > ((r: Response) =>
-        (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie))) match {
+        (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie(_, jSessionName)))) match {
           case (200 | 302 | 404, Some(cookie)) =>
-            val id = JSessionIdCookieParser.fromString(cookie)
+            val id = JSessionIdCookieParser.fromString(cookie, jSessionName)
             log.debug(s"call to $serviceUrl was successful")
             log.debug(s"got jsession $id")
             id

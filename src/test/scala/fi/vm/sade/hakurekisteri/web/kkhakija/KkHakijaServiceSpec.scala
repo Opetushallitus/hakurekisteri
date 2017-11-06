@@ -35,9 +35,11 @@ import scala.concurrent.{Await, Future}
 class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions with LocalhostProperties {
   private val endPoint = mock[Endpoint]
   private val asyncProvider = new CapturingProvider(endPoint)
-  private val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  private val hakemusService = new HakemusService(client, MockOppijaNumeroRekisteri)
+  private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
+  private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   private val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
+  private val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
+  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
   private val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   private val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
   private val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
@@ -58,6 +60,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should not return results if user not in hakukohde organization hierarchy") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(
       service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.1"))), 1), 15.seconds
@@ -66,9 +70,24 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     hakijat.size should be (0)
   }
 
+  test("should return ataru hakijas") {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), "{}"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), getJson("ataruApplications")))
+
+    val hakijat = Await.result(
+      service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.91842462815"), None, None, None, Some("ryhma"), Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds
+    )
+
+    hakijat.size should be (2)
+  }
+
   test("should return five hakijas") {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(
       service.getKkHakijat(KkHakijaQuery(None, None, None, Some("1.2.246.562.20.649956391810"), None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 150.seconds
@@ -80,6 +99,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return one hyvaksytty hakija") {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(
       service.getKkHakijat(KkHakijaQuery(None, None, None, Some("1.11.2"), None, Hakuehto.Hyvaksytyt, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds
@@ -173,6 +194,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should show turvakielto true from hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -182,6 +205,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return turvakielto false from hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -191,6 +216,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return empty hakukelpoisuus by default") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -200,6 +227,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return hakukelpoisuus from hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -209,6 +238,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return kotikunta default if it is not defined in hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -218,6 +249,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return kotikunta from hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -227,6 +260,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return postitoimipaikka") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -236,6 +271,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should not return koulutuksenAlkamiskausi, koulutuksenAlkamisvuosi, koulutuksenAlkamisPvms") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -248,6 +285,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should not return hakemus of expired haku") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -257,6 +296,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should not have FI as default aidinkieli, asiointikieli or koulusivistyskieli") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -268,6 +309,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("should return default kansalaisuus, asuinmaa, kotikunta") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
@@ -279,6 +322,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   test("v2 call to service should return lukuvuosimaksu by hakukohde") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationByPersonOidWithMaksuvelvollisuus")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+      .thenReturn((200, List(), "[]"))
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
     hakijat should have size 1
@@ -304,9 +349,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
   val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
-  val kausiKoodiK = TarjontaKoodi(Some("K"))
   val kausiKoodiS = TarjontaKoodi(Some("S"))
-  val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
   val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
   val suoritus1 = VirallinenSuoritus(YoTutkinto.yotutkinto, YoTutkinto.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
 
@@ -316,12 +359,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       journal.addModification(Updated[FullHakemus, String](h.identify(h.oid)))
     })
     journal
-  }
-
-  class MockedTarjontaActor extends Actor {
-    override def receive: Actor.Receive = {
-      case oid: HakukohdeOid =>  sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
-    }
   }
 
   class MockedHakuActor extends Actor {
@@ -347,9 +384,12 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
         sender ! Nil
     }
   }
+
+  val hakuOids = Set("1.2.246.562.29.64944541586", "1.2.246.562.29.31587915971", FullHakemus1.applicationSystemId)
+
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>
+      case q: ValintaTulosQuery if hakuOids.contains(q.hakuOid) =>
         sender ! new SijoitteluTulos {
           override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
           override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)

@@ -19,8 +19,6 @@ import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.tools.LambdaJob.lambdaJob
-import fi.vm.sade.hakurekisteri.web.jonotus.Siirtotiedostojono
-import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
 import org.quartz.CronScheduleBuilder._
 import org.quartz.TriggerBuilder._
@@ -129,6 +127,8 @@ class BaseIntegrations(rekisterit: Registers,
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
   private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(restEc, system)
   val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
+  val ataruHakemusClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas")(restEc, system)
   private val koosteClient = new VirkailijaRestClient(config.integrations.koosteConfig, None)(restEc, system)
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
@@ -147,10 +147,10 @@ class BaseIntegrations(rekisterit: Registers,
     )), name)
 
   val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
-  val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
+  val organisaatiot: ActorRef = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
-  val hakemusService = new HakemusService(hakemusClient, oppijaNumeroRekisteri)(system)
+  val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
@@ -184,11 +184,11 @@ class BaseIntegrations(rekisterit: Registers,
       case _ => // pass
     }
   }
-  hakemusService.addTrigger(arvosanaTrigger)
-  hakemusService.addTrigger(ytlTrigger)
+//  hakemusService.addTrigger(arvosanaTrigger)
+//  hakemusService.addTrigger(ytlTrigger)
 
   implicit val scheduler = system.scheduler
-  hakemusService.processModifiedHakemukset()
+//  hakemusService.processModifiedHakemukset()
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()

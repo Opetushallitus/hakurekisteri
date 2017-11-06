@@ -6,7 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakijaHakemus, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
@@ -180,7 +180,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }.toMap)
   }
 
-  private def findCasesWithSuoritusoikeusTaiAiempiTutkinto: Seq[FullHakemus] => Seq[(String, Option[Int])] = { hakemukset =>
+  private def findCasesWithSuoritusoikeusTaiAiempiTutkinto: Seq[HakijaHakemus] => Seq[(String, Option[Int])] = { hakemukset =>
     hakemukset.collect {
       case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _, _)
         if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") &&
