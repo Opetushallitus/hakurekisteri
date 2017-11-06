@@ -6,7 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakijaHakemus, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakemusAnswers, HakijaHakemus, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
@@ -188,6 +188,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         (personOid, Some(koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt))
       case FullHakemus(_, Some(personOid), _, _, _, _, _) =>
         (personOid, None)
+      case h: AtaruHakemus =>
+        (h.henkilo.oidHenkilo, None)
     }
   }
 

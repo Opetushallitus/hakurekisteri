@@ -91,7 +91,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
                      organisaatioActor: ActorRef,
                      oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
                     (implicit val system: ActorSystem) extends IHakemusService {
-  val fetchPersonAliases: (Seq[FullHakemus]) => Future[(Seq[FullHakemus], PersonOidsWithAliases)] = { hs: Seq[FullHakemus] =>
+  val fetchPersonAliases: (Seq[HakijaHakemus]) => Future[(Seq[HakijaHakemus], PersonOidsWithAliases)] = { hs: Seq[HakijaHakemus] =>
     val personOids: Seq[String] = hs.flatMap(_.personOid)
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
@@ -99,11 +99,16 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   case class SearchParams(aoOids: Seq[String] = null, asId: String = null, organizationFilter: String = null,
                           updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)
 
+  case class AtaruSearchParams(hakijaOids: Option[List[String]],
+                               hakukohdeOids: Option[List[String]],
+                               hakuOid: Option[String],
+                               organizationOid: Option[String])
+
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
 
-  def enrichAtaruHakemukset(hakemukset: Seq[AtaruHakemusDto], henkilot: Seq[Henkilo]): Future[Seq[AtaruHakemus]] = {
+  def enrichAtaruHakemukset(hakemukset: List[AtaruHakemusDto], henkilot: Seq[Henkilo]): Future[List[AtaruHakemus]] = {
     val henkilotByOid = henkilot.map(h => h.oidHenkilo -> h).toMap
 
     def getHakukohdeTarjoajaOid(hakukohdeOid: String): Future[Option[String]] = {
@@ -111,7 +116,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     }
 
     Future.sequence(hakemukset.map(hakemus => {
-      val hakutoiveet: Future[List[HakutoiveDTO]] = Future.sequence(hakemus.hakukohteet.zipWithIndex.map {
+      val hakutoiveet = Future.sequence(hakemus.hakukohteet.zipWithIndex.map {
         case (hakukohdeOid: String, index: Int) =>
           for {
             organizationOid: Option[String] <- getHakukohdeTarjoajaOid(hakukohdeOid)
@@ -131,65 +136,141 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     }))
   }
 
-  private def getAtaruhakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
+  private def ataruhakemukset(params: AtaruSearchParams): Future[List[HakijaHakemus]] = {
+    val p = params.hakuOid.fold[Map[String, String]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
+      params.hakukohdeOids.fold[Map[String, String]](Map.empty)(oids => Map("hakukohdeOids" -> oids.mkString(","))) ++
+      params.hakijaOids.fold[Map[String, String]](Map.empty)(oids => Map("hakijaOids" -> oids.mkString(",")))
     for {
-      ataruHakemusDtos: Seq[AtaruHakemusDto] <- ataruHakemusClient
-        .readObject[List[AtaruHakemusDto]]("ataru.applications", Map("hakijaOids" -> personOid))(acceptedResponseCode = 200, maxRetries = 2)
-      ataruHenkilot: Seq[Henkilo] <- oppijaNumeroRekisteri.getByOids(ataruHakemusDtos.map(_.personOid).toSet)
-      ataruHakemukset: Seq[HakijaHakemus] <- enrichAtaruHakemukset(ataruHakemusDtos, ataruHenkilot)
-    } yield ataruHakemukset
+      ataruHakemusDtos <- ataruHakemusClient
+        .readObject[List[AtaruHakemusDto]]("ataru.applications", p)(acceptedResponseCode = 200, maxRetries = 2)
+      ataruHenkilot <- oppijaNumeroRekisteri.getByOids(ataruHakemusDtos.map(_.personOid).toSet)
+      ataruHakemukset <- enrichAtaruHakemukset(ataruHakemusDtos, ataruHenkilot)
+    } yield params.organizationOid.fold(ataruHakemukset)(oid => ataruHakemukset.filter(hasAppliedToOrganization(_, oid)))
+  }
+
+  private def hasAppliedToOrganization(hakemus: HakijaHakemus, organisaatio: String): Boolean = {
+    hakemus.hakutoiveet.forall(_.exists(_.organizationParentOids.forall(_.contains(organisaatio))))
   }
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
     for {
       hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuappRestClient
         .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, Set(personOid))
-      ataruHakemukset: Seq[HakijaHakemus] <- getAtaruhakemuksetForPerson(personOid)
+      ataruHakemukset: Seq[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = Some(List(personOid)),
+        hakukohdeOids = None,
+        hakuOid = None,
+        organizationOid = None
+      ))
     } yield hakuappHakemukset.getOrElse(personOid, Seq[FullHakemus]()) ++ ataruHakemukset
   }
 
-  def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]] = {
-    for (
-      hakemuksetByPerson <- hakuappRestClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, personOids)
-    ) yield hakemuksetByPerson.values.flatten.filter(_.applicationSystemId == hakuOid).toSeq
+  def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[HakijaHakemus]] = {
+    for {
+      hakuappHakemukset <- hakuappRestClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, personOids)
+        .map(_.values.flatten.filter(_.applicationSystemId == hakuOid).toSeq)
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = Some(personOids.toList),
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = None
+      ))
+    } yield hakuappHakemukset ++ ataruHakemukset
   }
 
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
-    fetchHakemukset(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
-  }
-  def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
-    if(hakukohdeOids.isEmpty) {
-      Future.successful(Seq())
-    } else {
-      fetchHakemukset(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
-    }
-  }
-  def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
+    for {
+      hakuappHakemukset <- fetchHakemukset(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = Some(List(hakukohdeOid)),
+        hakuOid = None,
+        organizationOid = organisaatio
+      ))
+    } yield hakuappHakemukset ++ ataruHakemukset
   }
 
-  def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = {
-    hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
-      ListFullSearchDto.suoritusvuosi(hakukohdeOid, hakuOid))
+  def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
+    if (hakukohdeOids.isEmpty) {
+      Future.successful(Seq())
+    } else {
+      for {
+        hakuappHakemukset <- fetchHakemukset(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
+        ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+          hakijaOids = None,
+          hakukohdeOids = Some(hakukohdeOids.toList),
+          hakuOid = None,
+          organizationOid = organisaatio
+        ))
+      } yield hakuappHakemukset ++ ataruHakemukset
+    }
+  }
+  def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
+    for {
+      hakuappHakemukset <- fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = organisaatio
+      ))
+    } yield hakuappHakemukset ++ ataruHakemukset
+  }
+
+  def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[HakijaHakemus]] = {
+    for {
+      hakuappHakemukset <- hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
+        ListFullSearchDto.suoritusvuosi(hakukohdeOid, hakuOid))
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = hakukohdeOid.map(List(_)),
+        hakuOid = Some(hakuOid),
+        organizationOid = None
+      ))
+    } yield hakuappHakemukset ++ ataruHakemukset
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
-    hakuappRestClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio.orNull)(200, Set(hakuOid))
+    for {
+      hakuappPersonOids <- hakuappRestClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio.orNull)(200, Set(hakuOid))
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = organisaatio
+      ))
+    } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
   }
 
   def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]] = {
-    hakuappRestClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
+    for {
+      hakuappPersonOids <- hakuappRestClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = Some(List(hakukohdeOid)),
+        hakuOid = None,
+        organizationOid = organisaatio
+      ))
+    } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
   }
 
-  def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]] =
-    hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
-      ListFullSearchDto.hetuPersonOid(hakuOid)).flatMap { hakemukset =>
-        Future {
-          hakemukset
-            .filter(hakemus => hakemus.hetu.isDefined && hakemus.personOid.isDefined)
-            .map(hakemus => HetuPersonOid(hakemus.hetu.get, hakemus.personOid.get))
-        }
-      }
+  def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]] = {
+    for {
+      hakuappHakemukset <- hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
+        ListFullSearchDto.hetuPersonOid(hakuOid))
+      ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = None
+      ))
+    } yield (hakuappHakemukset ++ ataruHakemukset).collect({
+      case h: FullHakemus if h.hetu.isDefined && h.personOid.isDefined =>
+        HetuPersonOid(hetu = h.hetu.get, personOid = h.personOid.get)
+      case h: AtaruHakemus if h.henkilo.hetu.isDefined =>
+        HetuPersonOid(hetu = h.henkilo.hetu.get, personOid = h.henkilo.oidHenkilo)
+    })
+  }
 
   def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
 
@@ -224,8 +305,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     })
   }
 
-  private def triggerHakemukset(hakemukset: Seq[FullHakemus], personOidsWithAliases: PersonOidsWithAliases) =
-    hakemukset.foreach(hakemus =>
+  private def triggerHakemukset(hakemukset: Seq[HakijaHakemus], personOidsWithAliases: PersonOidsWithAliases): Unit =
+    hakemukset.collect({ case h: FullHakemus => h }).foreach(hakemus =>
       triggers.foreach(trigger => trigger.f(hakemus, personOidsWithAliases))
     )
 
