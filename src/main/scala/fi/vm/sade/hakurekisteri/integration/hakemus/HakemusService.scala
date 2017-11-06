@@ -91,10 +91,6 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
                      organisaatioActor: ActorRef,
                      oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
                     (implicit val system: ActorSystem) extends IHakemusService {
-  val fetchPersonAliases: (Seq[HakijaHakemus]) => Future[(Seq[HakijaHakemus], PersonOidsWithAliases)] = { hs: Seq[HakijaHakemus] =>
-    val personOids: Seq[String] = hs.flatMap(_.personOid)
-    oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
-  }
 
   case class SearchParams(aoOids: Seq[String] = null, asId: String = null, organizationFilter: String = null,
                           updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)
@@ -303,6 +299,10 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           processModifiedHakemukset(modifiedAfter, refreshFrequency)
       }
     })
+  }
+
+  private def fetchPersonAliases(hs: Seq[HakijaHakemus]): Future[(Seq[HakijaHakemus], PersonOidsWithAliases)] = {
+    oppijaNumeroRekisteri.enrichWithAliases(hs.flatMap(_.personOid).toSet).map((hs, _))
   }
 
   private def triggerHakemukset(hakemukset: Seq[HakijaHakemus], personOidsWithAliases: PersonOidsWithAliases): Unit =
