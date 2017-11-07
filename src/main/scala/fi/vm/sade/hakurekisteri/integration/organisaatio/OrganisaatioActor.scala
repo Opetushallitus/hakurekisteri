@@ -39,7 +39,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
-      cache + (org.oid, Future.successful(org))
+      if(!cache.contains(org.oid))
+        cache + (org.oid, Future.successful(org))
 
       if (org.oppilaitosKoodi.isDefined)
         oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
@@ -108,7 +109,6 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     val all = organisaatioClient.readObject[OrganisaatioResponse]("organisaatio-service.hierarkia.hae")(200).recoverWith {
       case t: Throwable => Future.failed(OrganisaatioFetchFailedException(t))
     }
-
     all.map(r => CacheOrganisaatiot(r.organisaatiot)).pipeTo(self)(actor)
   }
 
