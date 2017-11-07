@@ -160,7 +160,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
     )
   }
 
-  ignore("ValintaTulosActor should use Redis cache if configured") {
+  test("ValintaTulosActor should use Redis cache if configured") {
     val port = PortChecker.findFreeLocalPort
     val redisServer = Try(new RedisServer(port)).toOption
     redisServer.isDefined should be(true)

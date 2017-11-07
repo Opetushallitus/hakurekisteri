@@ -17,8 +17,7 @@ import scala.concurrent.duration._
  * /tmp/1509711535309-0/redis-server-2.8.19: /lib64/libc.so.6: version
  * `GLIBC_2.14' not found (required by /tmp/1509711535309-0/redis-server-2.8.19)
  */
-@Ignore
-class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with BeforeAndAfterAll {
+class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with BeforeAndAfterAll with DispatchSupport {
 
   val port = PortChecker.findFreeLocalPort
   val redisServer = new RedisServer(port)
@@ -36,8 +35,8 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   val cacheEntry = "bar"
   val cacheEntryF = Future.successful(cacheEntry)
 
-  ignore should "add an entry to cache" in {
-    withSystem(
+  it should "add an entry to cache" in {
+   withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix1")
 
@@ -52,7 +51,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  ignore should "remove an entry from cache" in {
+  it should "remove an entry from cache" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String, String](60, getClass, "prefix2")
@@ -72,7 +71,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  ignore should "be usable from multiple actor systems" in {
+  it should "be usable from multiple actor systems" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix3")
@@ -91,7 +90,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  ignore should "use prefixes" in {
+  it should "use prefixes" in {
     withSystem(
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix4")
