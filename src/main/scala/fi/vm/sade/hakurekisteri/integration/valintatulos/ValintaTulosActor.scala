@@ -50,7 +50,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case BatchUpdateValintatulos(haut) =>
-      haut.foreach(haku => if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
+      val hautCachessa = haut.filter(h => cache.contains(h.haku))
+      log.info(s"Skipping ${hautCachessa.size} hakus (${hautCachessa.map(_.haku).mkString(", ")}) from initial loading.")
+      haut.diff(hautCachessa).foreach(haku => if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
       self ! UpdateNext
 
     case UpdateValintatulos(haku) =>

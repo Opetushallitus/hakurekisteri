@@ -181,6 +181,65 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
     )
   }
 
+  test("ValintaTulosActor should skip initial loading if data is already in redis") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
+          config = config,
+          cacheFactory = cacheFactory,
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          refetchTime = Some(500),
+          cacheTime = Some(1000),
+          retryTime = Some(100)
+        )))
+
+        valintaTulosActor ! BatchUpdateValintatulos((11 to 12).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+
+        Thread.sleep(300)
+
+        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
+        cache.contains("1.2.246.562.29.11") should be(true)
+        cache.contains("1.2.246.562.29.12") should be(true)
+        cache.contains("1.2.246.562.29.13") should be(false)
+        cache.contains("1.2.246.562.29.14") should be(false)
+
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+      }
+    )
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
+          config = config,
+          cacheFactory = cacheFactory,
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          refetchTime = Some(500),
+          cacheTime = Some(1000),
+          retryTime = Some(100)
+        )))
+
+        valintaTulosActor ! BatchUpdateValintatulos((11 to 14).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+
+        Thread.sleep(300)
+
+        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
+        cache.contains("1.2.246.562.29.11") should be(true)
+        cache.contains("1.2.246.562.29.12") should be(true)
+        cache.contains("1.2.246.562.29.13") should be(true)
+        cache.contains("1.2.246.562.29.14") should be(true)
+
+        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
+        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.13"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.14"))
+      }
+    )
+  }
+
   override def afterAll() = {
     redisServer.stop
   }
