@@ -10,13 +10,6 @@ import redis.embedded.RedisServer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
-/*
- * This test can be run locally to test resis cache implementation.
- * However, currently in Bamboo RedisServer cannot be started
- * due to libc incompatibility issue!
- * /tmp/1509711535309-0/redis-server-2.8.19: /lib64/libc.so.6: version
- * `GLIBC_2.14' not found (required by /tmp/1509711535309-0/redis-server-2.8.19)
- */
 class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with BeforeAndAfterAll with DispatchSupport {
 
   val port = PortChecker.findFreeLocalPort
@@ -42,7 +35,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         cache + (cacheKey, cacheEntryF)
 
-        Thread.sleep(100)
+        Thread.sleep(500)
 
         cache contains(cacheKey) should be(true)
 
@@ -58,13 +51,13 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         cache + (cacheKey, cacheEntryF)
 
-        Thread.sleep(100)
+        Thread.sleep(500)
 
         cache contains(cacheKey) should be(true)
 
         cache - cacheKey
 
-        Thread.sleep(100)
+        Thread.sleep(500)
 
         cache contains(cacheKey) should be(false)
       }
@@ -78,7 +71,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         cache + (cacheKey, cacheEntryF)
 
-        Thread.sleep(100)
+        Thread.sleep(500)
       }
     )
     withSystem(
@@ -97,7 +90,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         cache + (cacheKey, cacheEntryF)
 
-        Thread.sleep(100)
+        Thread.sleep(500)
       }
     )
     withSystem(
