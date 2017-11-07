@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import fi.vm.sade.hakurekisteri.MockCacheFactory
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.compat.Platform
@@ -13,7 +13,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   val cacheFactory = MockCacheFactory.get
 
   def newCache(ttl: Long = 10.seconds.toMillis) = cacheFactory.getInstance[String, String](ttl, getClass, "moi")
-    .asInstanceOf[CacheFactory.InMemoryCacheFactory#InMemoryFutureCache[String,String]]
+    .asInstanceOf[InMemoryFutureCache[String,String]]
 
   behavior of "FutureCache"
 

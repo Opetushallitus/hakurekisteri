@@ -4,8 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.scalaproperties.OphProperties
+import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.joda.time.DateTime
 
 import scala.compat.Platform
@@ -19,9 +18,9 @@ object ParameterActor {
   val opoUpdateGraduation = "opoUpdateGraduation"
 }
 
-abstract class ParameterActor(val cacheFactory:CacheFactory) extends Actor with ActorLogging {
+abstract class ParameterActor() extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-  private val tiedonsiirtoSendingPeriodCache = cacheFactory.getInstance[String, Boolean](2.minute.toMillis, getClass, "tiedonsiirto")
+  private val tiedonsiirtoSendingPeriodCache = new InMemoryFutureCache[String, Boolean](2.minute.toMillis)
   protected val HTTP_OK = 200
 
   object ProcessNext
@@ -64,8 +63,8 @@ abstract class ParameterActor(val cacheFactory:CacheFactory) extends Actor with 
   protected def isRestrictionActive(restriction: String): Future[Boolean]
 }
 
-class HttpParameterActor(restClient: VirkailijaRestClient, override val cacheFactory: CacheFactory) extends ParameterActor(cacheFactory) {
-  private val allResponseCache = cacheFactory.getInstance[String, Map[String, KierrosParams]](1.minute.toMillis, getClass, "all-responses")
+class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActor() {
+  private val allResponseCache = new InMemoryFutureCache[String, Map[String, KierrosParams]](1.minute.toMillis)
   private val all = "ALL"
 
   private def getAll: Future[Map[String, KierrosParams]] = {
@@ -110,8 +109,7 @@ class HttpParameterActor(restClient: VirkailijaRestClient, override val cacheFac
   }
 }
 
-class MockParameterActor(active: Boolean = false)(implicit val system:ActorSystem) extends
-  ParameterActor(CacheFactory.apply(new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false"))) {
+class MockParameterActor(active: Boolean = false)(implicit val system:ActorSystem) extends ParameterActor {
 
   override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 

@@ -155,7 +155,7 @@ class BaseIntegrations(rekisterit: Registers,
   val hakemusService = new HakemusService(hakemusClient, oppijaNumeroRekisteri)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
-  val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient, cacheFactory)), "parametrit")
+  val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config, cacheFactory)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(

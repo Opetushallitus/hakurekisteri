@@ -1,19 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.cache
 
-import java.io._
-
-import akka.actor.ActorSystem
-import akka.util.ByteString
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory.RedisCacheFactory
-import fi.vm.sade.properties.OphProperties
-import org.apache.commons.io.IOUtils
-import redis.{ByteStringFormatter, RedisClient}
-
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.language.higherKinds
-import scala.util.{Failure, Success, Try}
 
 trait MonadCache[F[_], K, T] {
 
@@ -28,133 +18,35 @@ trait MonadCache[F[_], K, T] {
   protected def k(key: K, prefix:String) = s"${prefix}:${key}"
 }
 
-trait CacheFactory {
+class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InMemoryMonadCache[Future, K, T](exp)
 
-  val defaultExpirationDuration: Long = 60.minutes.toMillis
-  def prefix(clazz:Class[_], prefix:String) = s"${clazz.getName}:${prefix}"
+case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, accessed: Long = Platform.currentTime, f: F[T])
 
-  def getInstance[K, T](expirationDurationMillis:Long,
-                        clazz:Class[_],
-                        cacheKeyPrefix:String):MonadCache[Future, K, T] = getInstance[K, T](expirationDurationMillis, prefix(clazz, cacheKeyPrefix))
+class InMemoryMonadCache[F[_], K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[F, K, T] {
 
-  def getInstance[K, T](expirationDurationMillis:Long,
-                        cacheKeyPrefix:String):MonadCache[Future, K, T]
-}
+  private var cache: Map[K, Cacheable[F, T]] = Map()
 
-object CacheFactory {
-  def apply(config: OphProperties)(implicit system:ActorSystem): CacheFactory = config.getOrElse("suoritusrekisteri.cache.redis.enabled", "false") match {
-    case p if "TRUE".equalsIgnoreCase(p) => new RedisCacheFactory(config)
-    case _ => new InMemoryCacheFactory
+  def +(key: K, f: F[T]) = cache = cache + (key -> cacheable(key, f))
+
+  def cacheable(key: K, f: F[T]): Cacheable[F, T] = {
+    Cacheable[F, T](f = f, accessed = getAccessed(key))
   }
 
-  class InMemoryCacheFactory extends CacheFactory {
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new InMemoryFutureCache[K, T](expirationDurationMillis)
+  def -(key: K) = if (cache.contains(key)) cache = cache - key
 
-    class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InMemoryMonadCache[Future, K, T](exp)
+  def contains(key: K): Boolean = cache.contains(key) && (cache(key).inserted + expirationDurationMillis) > Platform.currentTime
 
-    case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, accessed: Long = Platform.currentTime, f: F[T])
-
-    class InMemoryMonadCache[F[_], K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[F, K, T] {
-
-      private var cache: Map[K, Cacheable[F, T]] = Map()
-
-      def +(key: K, f: F[T]) = cache = cache + (key -> cacheable(key, f))
-
-      def cacheable(key: K, f: F[T]): Cacheable[F, T] = {
-        Cacheable[F, T](f = f, accessed = getAccessed(key))
-      }
-
-      def -(key: K) = if (cache.contains(key)) cache = cache - key
-
-      def contains(key: K): Boolean = cache.contains(key) && (cache(key).inserted + expirationDurationMillis) > Platform.currentTime
-
-      def get(key: K): F[T] = {
-        val cached = cache(key)
-        cache = cache + (key -> Cacheable[F, T](inserted = cached.inserted, f = cached.f))
-        cached.f
-      }
-
-      def inUse(key: K): Boolean = cache.contains(key) && (cache(key).accessed + expirationDurationMillis) > Platform.currentTime
-
-      private def getAccessed(key: K): Long = cache.get(key).map(_.accessed).getOrElse(Platform.currentTime)
-
-      def size: Int = cache.size
-
-      def getCache: Map[K, Cacheable[F, T]] = cache
-    }
+  def get(key: K): F[T] = {
+    val cached = cache(key)
+    cache = cache + (key -> Cacheable[F, T](inserted = cached.inserted, f = cached.f))
+    cached.f
   }
 
-  class RedisCacheFactory(config: OphProperties)(implicit system:ActorSystem) extends CacheFactory {
+  def inUse(key: K): Boolean = cache.contains(key) && (cache(key).accessed + expirationDurationMillis) > Platform.currentTime
 
-    val r = {
-      val host = config.getOrElse("suoritusrekisteri.cache.redis.host", "")
-      if("".equals(host)) throw new RuntimeException(s"No configuration for Redis host found")
-      val port = config.getOrElse("suoritusrekisteri.cache.redis.port", "6379").toInt
-      org.slf4j.LoggerFactory.getLogger(getClass).info(s"Using redis cache ${host}:${port}")
-      RedisClient(host = host, port = port)
-    }
+  private def getAccessed(key: K): Long = cache.get(key).map(_.accessed).getOrElse(Platform.currentTime)
 
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new RedisCache[K, T](r, expirationDurationMillis, cacheKeyPrefix)
+  def size: Int = cache.size
 
-    class RedisCache[K, T](val r:RedisClient,
-                           val expirationDurationMillis:Long,
-                           val cacheKeyPrefix:String) extends MonadCache[Future, K, T] {
-
-      val logger = org.slf4j.LoggerFactory.getLogger(getClass)
-
-      import scala.concurrent.ExecutionContext.Implicits.global
-      implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
-
-      def +(key: K, f: Future[T]): Unit = f onSuccess {
-        case t => {
-          val pefixKey = k(key)
-          logger.info(s"Adding value with key ${pefixKey} to Redis cache")
-          r.set[T](pefixKey, t)
-        }
-      }
-
-      def -(key: K): Unit = r.del(k(key))
-
-      def contains(key: K): Boolean = Await.result(r.exists(k(key)), 60.seconds)
-
-      def get(key: K): Future[T] = {
-        val pefixKey = k(key)
-        logger.info(s"Getting value with key ${pefixKey} from Redis cache")
-        r.get[T](pefixKey).collect{ case Some(x) => x }
-      }
-
-      private def k(key: K):String = k(key, cacheKeyPrefix)
-
-    }
-
-    class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
-
-      def close(c:Try[Closeable]) = c.foreach(IOUtils.closeQuietly(_))
-
-      def resultOrFailure[T](t:Try[T]): T = t match {
-        case Success(s) => s
-        case Failure(t) => throw t
-      }
-
-      def tryFinally[T](t:Try[T], resources:Try[Closeable]*) = try { resultOrFailure(t) } finally { resources.foreach(close) }
-
-      def serialize(data: T): ByteString = {
-        val baos = new ByteArrayOutputStream
-        val oos = Try(new ObjectOutputStream(baos))
-
-        def ser: Try[ByteString] = oos.map { o =>
-          o.writeObject(data)
-          ByteString(baos.toByteArray)
-        }
-
-        tryFinally[ByteString](ser, oos)
-      }
-
-      def deserialize(bs: ByteString): T = {
-        val ois = Try(new ObjectInputStream(new ByteArrayInputStream(bs.toArray)))
-        def des: Try[T] = ois.map(_.readObject.asInstanceOf[T])
-        tryFinally[T](des, ois)
-      }
-    }
-  }
+  def getCache: Map[K, Cacheable[F, T]] = cache
 }
