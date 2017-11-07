@@ -31,7 +31,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "add an entry to cache" in {
    withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix1")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix1")
 
         cache + (cacheKey, cacheEntryF)
 
@@ -47,7 +47,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "remove an entry from cache" in {
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String, String](60, getClass, "prefix2")
+        val cache = redisCacheFactory.getInstance[String, String](3.minutes.toMillis, getClass, "prefix2")
 
         cache + (cacheKey, cacheEntryF)
 
@@ -67,7 +67,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "be usable from multiple actor systems" in {
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix3")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
 
         cache + (cacheKey, cacheEntryF)
 
@@ -76,7 +76,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix3")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
 
         cache contains(cacheKey) should be(true)
       }
@@ -86,7 +86,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "use prefixes" in {
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](60, getClass, "prefix4")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
 
         cache + (cacheKey, cacheEntryF)
 
@@ -95,8 +95,8 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
     withSystem(
       implicit system => {
-        val cache4 = redisCacheFactory.getInstance[String,String](60, getClass, "prefix4")
-        val cache5 =  redisCacheFactory.getInstance[String,String](60, getClass, "prefix5")
+        val cache4 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
+        val cache5 =  redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix5")
 
         cache5 contains(cacheKey) should be(false)
         cache4 contains(cacheKey) should be(true)

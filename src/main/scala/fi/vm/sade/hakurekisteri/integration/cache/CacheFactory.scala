@@ -62,7 +62,7 @@ object CacheFactory {
         case t => {
           val pefixKey = k(key)
           logger.info(s"Adding value with key ${pefixKey} to Redis cache")
-          r.set[T](pefixKey, t, exSeconds = Some(60), pxMilliseconds = Some(expirationDurationMillis))
+          r.set[T](pefixKey, t, pxMilliseconds = Some(expirationDurationMillis))
         }
       }
 
