@@ -81,6 +81,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     )
 
     hakijat.size should be (2)
+    hakijat.last.hakemukset.head.hKelpoisuusMaksuvelvollisuus.get should be ("REQUIRED")
   }
 
   test("should return five hakijas") {
