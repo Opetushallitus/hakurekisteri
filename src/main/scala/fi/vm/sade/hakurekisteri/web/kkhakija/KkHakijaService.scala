@@ -359,6 +359,7 @@ class KkHakijaService(hakemusService: IHakemusService,
         lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemus.oid, hakukohteenkoulutukset.koulutukset)
       } yield {
         if (matchHakuehto(sijoitteluTulos, hakemus.oid, hakukohdeOid)(q.hakuehto)) {
+          val hakukelpoisuus = PreferenceEligibility(hakukohdeOid, "", None, Some(hakemus.paymentObligations.getOrElse(hakukohdeOid, "NOT_CHECKED")))
           Some(Hakemus(
             haku = hakemus.applicationSystemId,
             hakuVuosi = haku.vuosi,
@@ -373,10 +374,10 @@ class KkHakijaService(hakemusService: IHakemusService,
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = Seq.empty,
             julkaisulupa = None,
-            hKelpoisuus = "",
-            hKelpoisuusLahde = None,
-            hKelpoisuusMaksuvelvollisuus = None,
-            lukuvuosimaksu = None,
+            hKelpoisuus = hakukelpoisuus.status,
+            hKelpoisuusLahde = hakukelpoisuus.source,
+            hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
+            lukuvuosimaksu = resolveLukuvuosiMaksu(hakemus, hakukelpoisuus, lukuvuosimaksutByHakukohdeOid, hakukohdeOid),
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
               .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None)),
             liitteet = None

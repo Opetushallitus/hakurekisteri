@@ -111,6 +111,12 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       (tarjontaActor ? HakukohdeQuery(hakukohdeOid)).mapTo[Option[Hakukohde]].map(_.flatMap(_.tarjoajaOids.flatMap(_.headOption)))
     }
 
+    def translateAtaruMaksuvelvollisuus(ataruMaksuvelvollsisuus: String): String = ataruMaksuvelvollsisuus match {
+      case "obligated" => "REQUIRED"
+      case "not-obligated" => "NOT_REQUIRED"
+      case _ => "NOT_CHECKED"
+    }
+
     Future.sequence(hakemukset.map(hakemus => {
       val hakutoiveet = Future.sequence(hakemus.hakukohteet.zipWithIndex.map {
         case (hakukohdeOid: String, index: Int) =>
@@ -127,7 +133,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           Some(hakemus.personOid),
           hakemus.applicationSystemId,
           Some(toiveet),
-          henkilotByOid(hakemus.personOid))
+          henkilotByOid(hakemus.personOid),
+          hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus))
       )
     }))
   }
