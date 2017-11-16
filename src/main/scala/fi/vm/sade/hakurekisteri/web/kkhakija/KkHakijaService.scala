@@ -174,17 +174,12 @@ class KkHakijaService(hakemusService: IHakemusService,
 
 
   private def createV2Hakijas(q: KkHakijaQuery, hakemukset: Seq[HakijaHakemus], haku: Haku, hakukohdeOids: Seq[String]) = {
-    def hasMaksuvelvollisuusData(maksuvelvollisuus: Option[String]) = maksuvelvollisuus.isDefined
+    val maksuvelvollisuudet: Set[String] = hakemukset.flatMap(_ match {
+      case h: FullHakemus => h.preferenceEligibilities.filter(_.maksuvelvollisuus.isDefined).map(_.aoId)
+      case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED ").keys
+    }).toSet
 
-    def potentiallyMaksuvelvolliset(preferenceEligibilities: Seq[PreferenceEligibility]): Seq[PreferenceEligibility] =
-      preferenceEligibilities.filter(e => hasMaksuvelvollisuusData(e.maksuvelvollisuus))
-
-    val maksuvelvollisuudet: Set[PreferenceEligibility] = potentiallyMaksuvelvolliset(hakemukset.flatMap(_ match {
-      case h: FullHakemus => h.preferenceEligibilities
-      case _: AtaruHakemus => Seq.empty
-    })).toSet
-
-    getLukuvuosimaksut(maksuvelvollisuudet.map(_.aoId), q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
+    getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos =>
         val maksusByHakijaAndHakukohde = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
         Future.sequence(hakemukset.flatMap(getKkHakijaV2(haku, q, kokoHaunTulos, hakukohdeOids, maksusByHakijaAndHakukohde)))
