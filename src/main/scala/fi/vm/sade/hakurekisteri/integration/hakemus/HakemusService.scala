@@ -134,6 +134,12 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           hakemus.applicationSystemId,
           Some(toiveet),
           henkilotByOid(hakemus.personOid),
+          hakemus.email,
+          hakemus.lahiosoite,
+          hakemus.postinumero,
+          hakemus.postitoimipaikka,
+          hakemus.kotikunta,
+          hakemus.asuinmaa,
           hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus))
       )
     }))

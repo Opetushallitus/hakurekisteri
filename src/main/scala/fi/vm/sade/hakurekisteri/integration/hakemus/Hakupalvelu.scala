@@ -413,14 +413,14 @@ object AkkaHakupalvelu {
     case hakemus: AtaruHakemus =>
       Hakija(
         Henkilo(
-          lahiosoite = "",
-          postinumero = "00000",
-          postitoimipaikka = "",
-          maa = "FIN",
+          lahiosoite = hakemus.lahiosoite,
+          postinumero = hakemus.postinumero,
+          postitoimipaikka = hakemus.postitoimipaikka,
+          maa = hakemus.asuinmaa,
           matkapuhelin = "",
           puhelin = "",
-          sahkoposti = "",
-          kotikunta = "",
+          sahkoposti = hakemus.email,
+          kotikunta = hakemus.kotikunta,
           sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
           etunimet = hakemus.henkilo.etunimet.getOrElse(""),
           kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
@@ -696,6 +696,12 @@ case class AtaruHakemusDto(oid: String,
                            applicationSystemId: String,
                            kieli: String,
                            hakukohteet: Set[String],
+                           email: String,
+                           lahiosoite: String,
+                           postinumero: String,
+                           postitoimipaikka:String,
+                           kotikunta: String,
+                           asuinmaa: String,
                            paymentObligations: Map[String, String])
 
 case class AtaruHakemus(oid: String,
@@ -703,6 +709,12 @@ case class AtaruHakemus(oid: String,
                         applicationSystemId: String,
                         hakutoiveet: Option[List[HakutoiveDTO]],
                         henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,
+                        email: String,
+                        lahiosoite: String,
+                        postinumero: String,
+                        postitoimipaikka:String,
+                        kotikunta: String,
+                        asuinmaa: String,
                         paymentObligations: Map[String, String]) extends HakijaHakemus {
   val stateValid: Boolean = true
 }
