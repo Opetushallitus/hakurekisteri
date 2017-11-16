@@ -9,7 +9,13 @@
     ],
     "paymentObligations": {
       "1.2.246.562.20.14800254899": "obligated"
-    }
+    },
+    "asuinmaa": "Suomi",
+    "email": "lslsl@ldldl.com",
+    "postitoimipaikka": "HELSINKI",
+    "postinumero": "00100",
+    "kotikunta": "lsldf",
+    "lahiosoite": "lslsl"
   },
   {
     "oid": "1.2.246.562.11.00000000000000005224",
@@ -21,6 +27,12 @@
     ],
     "paymentObligations": {
       "1.2.246.562.20.14800254899": "not-checked"
-    }
+    },
+    "asuinmaa": "Suomi",
+    "email": "lslsl@ldldl.com",
+    "postitoimipaikka": "HELSINKI",
+    "postinumero": "00100",
+    "kotikunta": "lsldf",
+    "lahiosoite": "lslsl"
   }
 ]
