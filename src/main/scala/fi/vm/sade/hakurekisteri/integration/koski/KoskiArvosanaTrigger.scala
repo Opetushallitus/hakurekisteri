@@ -29,7 +29,7 @@ object KoskiArvosanaTrigger {
 
 //   def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = { arvosana.copy(suoritus = s.id) }
 
-  def muodostaSuorituksetJaArvosanat(henkilo: KoskiHenkilo, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
+  def muodostaSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
                                      personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
                                     (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
@@ -48,7 +48,7 @@ object KoskiArvosanaTrigger {
       case _ => false
     }
 
-    henkilo.oid.foreach(henkiloOid => {
+    henkilo.henkilö.oid.foreach(henkiloOid => {
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromKoski(henkilo).foreach {
           case (suor: VirallinenSuoritus) =>
@@ -71,8 +71,8 @@ object KoskiArvosanaTrigger {
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
     KoskiTrigger {
-      (koskiHenkilo: KoskiHenkilo, personOidsWithAliases: PersonOidsWithAliases) => {
-        muodostaSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.oid.toSet))
+      (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases) => {
+        muodostaSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
       }
     }
   }
@@ -81,9 +81,9 @@ object KoskiArvosanaTrigger {
     Arvosana(suoritus = null, arvio = Arvio410(arvo), aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
   }
 
-  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkilo): Seq[(Suoritus)] = {
+  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus)] = {
     val retVal = Seq.empty
-    getSuoritusArvosanatFromOpiskeluoikeus(henkilo.oid.getOrElse(""), henkilo.opiskeluoikeudet.getOrElse(Seq.empty))
+    getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
 
   import fi.vm.sade.hakurekisteri.tools.RicherString._
@@ -99,7 +99,7 @@ object KoskiArvosanaTrigger {
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
-      suoritukset ++ createPkSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset.getOrElse(Seq()));
+      suoritukset ++ createPkSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset);
     })
     suoritukset
   }

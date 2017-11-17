@@ -9,7 +9,7 @@ import akka.event.Logging
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.Hyvaksytty
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri,PersonOidsWithAliases,OppijaNumeroRekisteri}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,36 +22,39 @@ trait IKoskiService {
   def fetchChanged(personOid: String): Future[Seq[KoskiHenkilo]]
 }
 
-case class KoskiTrigger(f: (KoskiHenkilo, PersonOidsWithAliases) => Unit)
+case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases) => Unit)
 
-class KoskiService(virkailijaRestClient: VirkailijaRestClient, pageSize: Int = 200)(implicit val system: ActorSystem)  {
+class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)(implicit val system: ActorSystem)  {
+
+  val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
+    val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
+//    logger.error(hs.toString())
+    oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
+  }
 
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[KoskiTrigger] = Seq()
 
   case class SearchParams(muuttunutJälkeen: String = null)
 
-  def fetchChanged(): Future[Seq[KoskiHenkilo]] = {
+  def fetchChanged(): Future[Seq[KoskiHenkiloContainer]] = {
     fetchChanged(0, params = SearchParams())
   }
 
-  def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkilo]] = {
-    virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkilo]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
+  def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
+    virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
       .flatMap(henkilot =>
-        if (henkilot.length < pageSize) {
           Future.successful(henkilot)
-        } else {
-          fetchChanged(page + 1, params).map(henkilot ++ _)
-        })
+        )
   }
 
-  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
+  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
       fetchChanged(
         params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter))
-      ).onComplete {
+      ).flatMap(fetchPersonAliases).onComplete {
         case Success((hakemukset)) =>
           processModifiedKoski(lastChecked, refreshFrequency)
         case Failure(t) =>
@@ -67,33 +70,36 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, pageSize: Int = 2
 
 
 
-case class Tila(alku: Long, tila: Lasnaolo, loppu: Option[Long])
+case class Tila(alku: String, tila: KoskiKoodi, loppu: Option[String])
 
-sealed trait Lasnaolo
-case class Lasna() extends Lasnaolo
-case class Poissa() extends Lasnaolo
-case class PoissaEiKulutaOpintoaikaa() extends Lasnaolo
-case class Puuttuu() extends Lasnaolo
+case class KoskiHenkiloContainer(
+                        henkilö: KoskiHenkilo,
+                        opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
+                        )
 
 case class KoskiHenkilo(
                          oid: Option[String],
                          hetu: String,
-                         syntymaaika: String,
+                         syntymäaika: String,
                          etunimet: String,
-                         kutsumanimi: Option[String],
-                         sukunimi: Option[String],
-                         opiskeluoikeudet: Option[Seq[KoskiOpiskeluoikeus]]) {
+                         kutsumanimi: String,
+                         sukunimi: String) {
 }
 case class KoskiOpiskeluoikeus(
-                 oid: String, oppilaitos: KoskiOrganisaatio, tila: Tila, suoritukset: Option[Seq[KoskiSuoritus]])
+                 oid: String,
+                 oppilaitos: KoskiOrganisaatio,
+                 tila: KoskiOpiskeluoikeusjakso,
+                 suoritukset: Seq[KoskiSuoritus])
+
+case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[Tila])
 
 // toimipiste, myöntäjäOrganisaatio, oppilaitos
 case class KoskiOrganisaatio(oid: String)
 
 case class KoskiSuoritus(
                   koulutusmoduuli: KoskiKoulutusmoduuli,
-                  tyyppi: KoskiKoodi,
-                  toimipiste: Option[KoskiOrganisaatio],
+                  tyyppi: Option[KoskiKoodi],
+                  toimipiste: KoskiOrganisaatio,
                   vahvistus: Option[KoskiVahvistus],
                   suorituskieli: Option[KoskiKieli],
                   arviointi: Option[KoskiArviointi],
@@ -102,9 +108,7 @@ case class KoskiSuoritus(
 
 case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Boolean)
 
-case class KoskiKoulutusmoduuli(koulutustyyppi: KoskiTunniste)
-
-case class KoskiTunniste(tunniste: KoskiKoodi, kieli: KoskiKieli)
+case class KoskiKoulutusmoduuli(tunniste: KoskiKoodi, koulutustyyppi: Option[KoskiKoodi])
 
 // koulutustyyppi, tyyppi
 case class KoskiKoodi(koodiarvo: String, koodistoUri: String)
