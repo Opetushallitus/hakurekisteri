@@ -76,10 +76,10 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
       .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
-  private def kansalaisuusToMaa1(hakemukset: Seq[HakijaHakemus]): Future[Map[String, String]] = {
+  private def maatjavaltiot2To1(hakemukset: Seq[HakijaHakemus]): Future[Map[String, String]] = {
     Future.sequence(hakemukset
       .collect({ case h: AtaruHakemus => h })
-      .flatMap(_.henkilo.kansalaisuus.map(_.kansalaisuusKoodi))
+      .flatMap(h => h.asuinmaa :: h.henkilo.kansalaisuus.map(_.kansalaisuusKoodi))
       .distinct
       .map({
         case "246" => Future.successful("246" -> "FIN")
@@ -101,11 +101,11 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
-          kansalaisuuskoodit <- kansalaisuusToMaa1(hakemukset)
+          maakoodit <- maatjavaltiot2To1(hakemukset)
         } yield hakemukset
           .map { hakemus =>
               val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData, kansalaisuuskoodit)
+              AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData, maakoodit)
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
@@ -116,16 +116,16 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
             (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?
             hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
-            kansalaisuuskooditF = kansalaisuusToMaa1(hakemukset)
+            maakooditF = maatjavaltiot2To1(hakemukset)
             suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
             hakijaSuorituksetMap <- suorituksetByOppija
             (haku, lisakysymykset) <- hakuJaLisakysymykset
-            kansalaisuuskoodit <- kansalaisuuskooditF
+            maakoodit <- maakooditF
           } yield {
             val koosteData: Option[Map[String, String]] = hakijaSuorituksetMap.get(hakemus.personOid.get)
-            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData, kansalaisuuskoodit)
+            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid), koosteData, maakoodit)
           })
         } yield hakijat.toSeq
     }
@@ -314,7 +314,7 @@ object AkkaHakupalvelu {
                 lisakysymykset: Map[String, ThemeQuestion],
                 hakukohdeOid: Option[String],
                 koosteData: Option[Map[String,String]],
-                kansalaisuuskoodit: Map[String, String]): Hakija = h match {
+                maakoodit: Map[String, String]): Hakija = h match {
     case hakemus: FullHakemus =>
       def getOsaaminenOsaalue(key: String): Option[String] = {
         hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
@@ -416,7 +416,7 @@ object AkkaHakupalvelu {
           lahiosoite = hakemus.lahiosoite,
           postinumero = hakemus.postinumero,
           postitoimipaikka = hakemus.postitoimipaikka,
-          maa = hakemus.asuinmaa,
+          maa = maakoodit.getOrElse(hakemus.asuinmaa, "FIN"),
           matkapuhelin = "",
           puhelin = "",
           sahkoposti = hakemus.email,
@@ -427,7 +427,7 @@ object AkkaHakupalvelu {
           turvakielto = hakemus.henkilo.turvakielto.toString,
           oppijanumero = hakemus.henkilo.oidHenkilo,
           kansalaisuus = hakemus.henkilo.kansalaisuus.headOption
-            .flatMap(k => kansalaisuuskoodit.get(k.kansalaisuusKoodi))
+            .flatMap(k => maakoodit.get(k.kansalaisuusKoodi))
             .getOrElse("FIN"),
           kaksoiskansalaisuus = "",
           asiointiKieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi.toUpperCase).getOrElse("FI"),
