@@ -8,12 +8,9 @@ import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
-import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, LocalDate}
 
@@ -23,12 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object KoskiArvosanaTrigger {
 
   import scala.language.implicitConversions
-
-//  implicit def osaaminen2RicherOsaaminen(osaaminen:Map[String,String]):RicherOsaaminen = RicherOsaaminen(osaaminen)
-//   implicit def koulutustausta2RicherKoulutustausta(koulutustausta:Map[String,String]):RicherKoulutustausta = RicherKoulutustausta(koulutustausta)
-
-//   def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = { arvosana.copy(suoritus = s.id) }
-
+  
   def muodostaSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
                                      personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
                                     (implicit ec: ExecutionContext): Unit = {
@@ -51,18 +43,18 @@ object KoskiArvosanaTrigger {
     henkilo.henkilö.oid.foreach(henkiloOid => {
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromKoski(henkilo).foreach {
-          case (suor: VirallinenSuoritus) =>
+
+          case (suor: VirallinenSuoritus, arvosanat) =>
             if (!suoritusExists(suor, suoritukset)) {
               for (
                 suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suor)
-              ){};
-//              ) arvosanat.foreach(arvosana =>
-//                arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
-//              )
+              ) arvosanat.foreach(arvosana =>
+                arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
+              )
             } else if (logBypassed) {
               suoritusRekisteri ! LogMessage(s"suoritus already exists: $suor", Logging.DebugLevel)
             }
-          case (_) =>
+          case (_, _) =>
           // VapaamuotoinenSuoritus will not be saved
         }
       })
@@ -81,7 +73,7 @@ object KoskiArvosanaTrigger {
     Arvosana(suoritus = null, arvio = Arvio410(arvo), aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
   }
 
-  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus)] = {
+  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus, Seq[Arvosana])] = {
     val retVal = Seq.empty
     getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
@@ -94,200 +86,84 @@ object KoskiArvosanaTrigger {
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
 
-  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[(Suoritus)] = {
+  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[(Suoritus, Seq[Arvosana])] = {
     val suoritukset = Seq.empty;
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
-      suoritukset ++ createPkSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset);
+      suoritukset ++ createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset);
     })
     suoritukset
   }
 
-  def createPkSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[(Suoritus)] = {
-    val result = Seq.empty;
-    for (
-      suoritus <- suoritukset;
-      vahvistus <- suoritus.vahvistus;
-      suorituskieli <- suoritus.suorituskieli
-    ) yield {
-        val valmistumisvuosiStr = vahvistus.päivä
+  def parseYear(dateStr: String): Int = {
+    val dateFormat = "yyyy-MM-dd"
+    val dtf = java.time.format.DateTimeFormatter.ofPattern(dateFormat)
+    val d = java.time.LocalDate.parse(dateStr, dtf)
+    d.getYear
+  }
+
+  def matchOpetusOid(koulutusmoduuliTunnisteKoodiarvo: String): String = {
+    koulutusmoduuliTunnisteKoodiarvo match {
+      case "201101" => Oids.perusopetusKomoOid
+      case "039993" | "039994" | "999901" | "999902" => Oids.valmaKomoOid
+      case "039999" | "999903" => Oids.telmaKomoOid
+      case "039997" | "999906" => Oids.lukioonvalmistavaKomoOid
+      case "020075" => Oids.lisaopetusKomoOid
+      case _ => "999999"
+    }
+  }
+
+  def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = {
+    arvosana.copy(suoritus = s.id)
+  }
+
+  def osasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[Arvosana] = {
+    val result = Seq()
+    for(
+      suoritus <- suoritukset
+    ){
+      val arviointi = suoritus.arviointi
+      val arvosana = arviointi match {
+        case None => ""
+        case Some(arviointi: KoskiArviointi) => arviointi.arvosana.koodiarvo
+      }
+      result ++ Seq(createArvosana(personOid, arvosana, suoritus.koulutusmoduuli.tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), None))
+    }
+    result
+  }
+
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[(Suoritus, Seq[Arvosana])] = {
+    val result = Seq.empty
+    for ( suoritus <- suoritukset ) {
+        val vahvistus = suoritus.vahvistus.getOrElse(KoskiVahvistus("1970-01-01", KoskiOrganisaatio("")))
+        val suorituskieli = suoritus.suorituskieli
+        val valmistuminen = vahvistus.päivä
+        val valmistumisvuosiStr = parseYear(valmistuminen)
         val currentYear = new DateTime().year().get()
-        if (currentYear != valmistumisvuosiStr.toInt) {
-          result ++ Seq(
-            (VirallinenSuoritus(
-              "",
+        // ei tämän vuoden suorituksia
+        val oid = matchOpetusOid(suoritus.koulutusmoduuli.tunniste.koodiarvo);
+        val arvosanat: Seq[Arvosana] = osasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset.getOrElse(Seq()))
+
+        if ((arvosanat.nonEmpty || currentYear != valmistumisvuosiStr.toInt) && oid != "999999") {
+          val suor = VirallinenSuoritus(
+              oid,
               vahvistus.myöntäjäOrganisaatio.oid,
               "VALMIS",
-              parseLocalDate(valmistumisvuosiStr.toString()),
+              parseLocalDate(valmistuminen),
               personOid,
               suoritus.yksilöllistettyOppimäärä match {
-                  case Some(true) => yksilollistaminen.Alueittain
-                  case _ => yksilollistaminen.Ei
+                case Some(true) => yksilollistaminen.Alueittain
+                case _ => yksilollistaminen.Ei
               },
-              suorituskieli.koodiarvo,
+              "", //suorituskieli.koodiarvo,
               None,
               true,
-              "Koski"))
-          )
+              "Koski");
+          LogMessage(suor.toString(), Logging.ErrorLevel)
+          result ++ Seq(suor, arvosanat)
         }
       }
       result
-  }
-/*
-  def createLukioSuoritusArvosanat(hakemus: FullHakemus, personOid: String, answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
-    (for (
-      valmistumisvuosiStr <- koulutustausta.lukioPaattotodistusVuosi;
-      valmistumisvuosi <- valmistumisvuosiStr.blankOption
-    ) yield {
-        val arvosanat: Seq[Arvosana] = answers.osaaminen match {
-          case Some(osaaminen) => osaaminen.getLukio.map({ case (aine, arvot) => aineArvotToArvosanat(personOid, aine, arvot) }).flatten.toSeq
-          case None => Seq.empty
-        }
-        val currentYear = new LocalDate().getYear.toString
-        val lahtokoulu = koulutustausta.lahtokoulu.flatMap(_.blankOption)
-        if (arvosanat.nonEmpty || (valmistumisvuosi == currentYear && lahtokoulu.isDefined) || valmistumisvuosi != currentYear) {
-          val tutkinto = ItseilmoitettuLukioTutkinto(
-            myontaja = lahtokoulu.getOrElse(hakemus.oid),
-            hakijaOid = personOid,
-            valmistumisvuosi.toInt,
-            suoritusKieli = koulutustausta.lukion_kieli.getOrElse("FI")
-          )
-          Seq((tutkinto, arvosanat))
-        } else Seq.empty
-      }).getOrElse(Seq.empty)
-  }
-
-  def createPkLisapisteSuoritukset(hakemus: FullHakemus, personOid: String,
-                                   answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
-    (for (
-      valmistumisvuosiStr <- koulutustausta.PK_PAATTOTODISTUSVUOSI;
-      valmistumisvuosi <- valmistumisvuosiStr.blankOption
-    ) yield {
-        val pkVuosi = valmistumisvuosi.toInt
-        Seq(
-          // AMMATTISTARTTI
-          koulutustausta.LISAKOULUTUS_AMMATTISTARTTI.map(lk => {
-            if ("true".equals(lk)) {
-              Seq(ItseilmoitettuTutkinto(
-                komoOid = Oids.ammattistarttiKomoOid,
-                hakemusOid = hakemus.oid,
-                hakijaOid = personOid,
-                pkVuosi,
-                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-            } else {
-              Seq.empty
-            }
-          }).getOrElse(Seq.empty),
-          // LISÄOPETUSTALOUS
-          koulutustausta.LISAKOULUTUS_TALOUS.map(lk => {
-            if ("true".equals(lk)) {
-              Seq(ItseilmoitettuTutkinto(
-                komoOid = Oids.lisaopetusTalousKomoOid,
-                hakemusOid = hakemus.oid,
-                hakijaOid = personOid,
-                pkVuosi,
-                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-            } else {
-              Seq.empty
-            }
-          }).getOrElse(Seq.empty),
-          // LISAOPETUSTUTKINTO
-          koulutustausta.LISAKOULUTUS_KYMPPI.map(lk => {
-            if ("true".equals(lk)) {
-              Seq(ItseilmoitettuTutkinto(
-                komoOid = Oids.lisaopetusKomoOid,
-                hakemusOid = hakemus.oid,
-                hakijaOid = personOid,
-                koulutustausta.KYMPPI_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
-                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-            } else {
-              Seq.empty
-            }
-          }).getOrElse(Seq.empty)
-        ).flatMap(s => s)
-      }).getOrElse(Seq.empty).map(s => (s, Seq.empty))
-  }
-*/
-}
-
-case class RicherOsaaminen(osaaminen: Map[String, String]) {
-  val groupByKomoAndGroupByAine = osaaminen.filterKeys(_.contains("_")).filterKeys(!_.last.equals('_'))
-    .groupBy({case (key,value) => key.split("_").head})
-    .map({case (key,value) => (key, value.map({case (k,v) => (k.split(key + "_")(1),v) }) )})
-    .map({
-      case (key,value) => (key, value.groupBy({ case (k, v) => k.split("_").head })
-        .mapValues(vals => vals.map({
-          case (kxx, vxx) => (stringAfterFirstUnderscore(kxx), vxx)
-        }).filter(v => {
-          if (v._1.equals("")) {
-            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-          } else if (v._1.equals("VAL1")) {
-            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-          } else if (v._1.equals("VAL2")) {
-            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-          } else if (v._1.equals("VAL3")) {
-            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-          } else {
-            true
-          }
-        }))
-        .filter(v => {
-          v._2.contains("") || v._2.contains("VAL1") || v._2.contains("VAL2") || v._2.contains("VAL3")
-        }))
-  })
-  .filter(w => !w._2.isEmpty);
-
-  private def stringAfterFirstUnderscore(source: String): String = if (!source.contains("_")) "" else source.substring(source.indexOf("_") + 1)
-  private def isAllDigits(x: Option[String]) = if (x.isEmpty) true else x.get forall Character.isDigit
-  private def isAllDigits(x: String) = x forall Character.isDigit
-
-  def getLukio: Map[String,Map[String, String]] = {
-    groupByKomoAndGroupByAine.get("LK").getOrElse(Map.empty)
-  }
-  def getPeruskoulu: Map[String,Map[String, String]] = {
-    groupByKomoAndGroupByAine.get("PK").getOrElse(Map.empty)
-  }
-
-}
-
-case class RicherKoulutustausta(koulutustausta: Map[String, String]) {
-
-  def yotutkintoVuosi: Option[Int] = {
-    koulutustausta.get("pohjakoulutus_yo_vuosi").map(_.toInt)
-  }
-  def perusopetusVuosi: Option[Int] = {
-    koulutustausta.get("PK_PAATTOTODISTUSVUOSI").map(_.toInt)
-  }
-  def lisaopetusVuosi: Option[Int] = {
-    None
-  }
-  def lisaopetusTalousVuosi: Option[Int] = {
-    None
-  }
-  def ammattistarttiVuosi: Option[Int] = {
-    None
-  }
-  def valmentavaVuosi: Option[Int] = {
-
-    None
-  }
-  def ammatilliseenvalmistavaVuosi: Option[Int] = {
-
-    None
-  }
-  def ulkomainenkorvaavaVuosi: Option[Int] = {
-    None
-  }
-  def lukioVuosi: Option[Int] = {
-
-    koulutustausta.get("lukioPaattotodistusVuosi").map(_.toInt)
-  }
-  def ammatillinenVuosi: Option[Int] = {
-    koulutustausta.get("pohjakoulutus_am_vuosi").map(_.toInt)
-  }
-  def lukioonvalmistavaVuosi: Option[Int] = {
-
-    None
   }
 }

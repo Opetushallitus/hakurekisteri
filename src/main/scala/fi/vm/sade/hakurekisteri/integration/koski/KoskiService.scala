@@ -28,7 +28,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
-//    logger.error(hs.toString())
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
 
@@ -48,21 +47,30 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
         )
   }
 
-  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
+  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(16)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
       fetchChanged(
         params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter))
       ).flatMap(fetchPersonAliases).onComplete {
-        case Success((hakemukset)) =>
+        case Success((henkilot, personOidsWithAliases)) =>
+          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+            case Failure(e) => logger.error(e, "Exception in trigger!")
+            case _ =>
+          }
           processModifiedKoski(lastChecked, refreshFrequency)
         case Failure(t) =>
-          logger.error(t, "Fetching modified hakemukset failed, retrying")
+          logger.error(t, "Fetching modified henkilot failed, retrying")
           processModifiedKoski(modifiedAfter, refreshFrequency)
       }
     })
   }
+
+  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases) =
+    henkilot.foreach(henkilo =>
+      triggers.foreach(trigger => trigger.f(henkilo, personOidsWithAliases))
+    )
 
   def addTrigger(trigger: KoskiTrigger) = triggers = triggers :+ trigger
 }
@@ -99,6 +107,8 @@ case class KoskiOrganisaatio(oid: String)
 case class KoskiSuoritus(
                   koulutusmoduuli: KoskiKoulutusmoduuli,
                   tyyppi: Option[KoskiKoodi],
+                  kieli: Option[KoskiKieli],
+                  pakollinen: Option[Boolean],
                   toimipiste: KoskiOrganisaatio,
                   vahvistus: Option[KoskiVahvistus],
                   suorituskieli: Option[KoskiKieli],
@@ -110,7 +120,7 @@ case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Boolean)
 
 case class KoskiKoulutusmoduuli(tunniste: KoskiKoodi, koulutustyyppi: Option[KoskiKoodi])
 
-// koulutustyyppi, tyyppi
+// koulutustyyppi, tyyppi, arvosana
 case class KoskiKoodi(koodiarvo: String, koodistoUri: String)
 
 case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganisaatio)
