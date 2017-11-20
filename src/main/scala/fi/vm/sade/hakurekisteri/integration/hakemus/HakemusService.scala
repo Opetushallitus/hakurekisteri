@@ -141,7 +141,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           hakemus.postitoimipaikka,
           hakemus.kotikunta,
           hakemus.asuinmaa,
-          hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus))
+          hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
+          hakemus.kkPohjakoulutus)
       )
     }))
   }
