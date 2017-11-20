@@ -16,7 +16,8 @@
     "postitoimipaikka": "HELSINKI",
     "postinumero": "00100",
     "kotikunta": "lsldf",
-    "lahiosoite": "lslsl"
+    "lahiosoite": "lslsl",
+    "kkPohjakoulutus": ["kk"]
   },
   {
     "oid": "1.2.246.562.11.00000000000000005224",
@@ -35,6 +36,7 @@
     "postitoimipaikka": "HELSINKI",
     "postinumero": "00100",
     "kotikunta": "lsldf",
-    "lahiosoite": "lslsl"
+    "lahiosoite": "lslsl",
+    "kkPohjakoulutus": []
   }
 ]
