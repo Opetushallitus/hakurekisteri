@@ -60,9 +60,9 @@ object CacheFactory {
 
       def +(key: K, f: Future[T]): Unit = f onSuccess {
         case t => {
-          val pefixKey = k(key)
-          logger.info(s"Adding value with key ${pefixKey} to Redis cache")
-          r.set[T](pefixKey, t, pxMilliseconds = Some(expirationDurationMillis))
+          val prefixKey = k(key)
+          logger.info(s"Adding value with key ${prefixKey} to Redis cache")
+          r.set[T](prefixKey, t, pxMilliseconds = Some(expirationDurationMillis))
         }
       }
 
@@ -71,9 +71,9 @@ object CacheFactory {
       def contains(key: K): Boolean = Await.result(r.exists(k(key)), 60.seconds)
 
       def get(key: K): Future[T] = {
-        val pefixKey = k(key)
-        logger.info(s"Getting value with key ${pefixKey} from Redis cache")
-        r.get[T](pefixKey).collect { case Some(x) => x }
+        val prefixKey = k(key)
+        logger.info(s"Getting value with key ${prefixKey} from Redis cache")
+        r.get[T](prefixKey).collect { case Some(x) => x }
       }
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
@@ -82,14 +82,14 @@ object CacheFactory {
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
 
-      def close(c: Try[Closeable]) = c.foreach(IOUtils.closeQuietly(_))
+      private def close(c: Try[Closeable]) = c.foreach(IOUtils.closeQuietly(_))
 
-      def resultOrFailure[T](t: Try[T]): T = t match {
+      private def resultOrFailure[T](t: Try[T]): T = t match {
         case Success(s) => s
         case Failure(t) => throw t
       }
 
-      def tryFinally[T](t: Try[T], resources: Try[Closeable]*) = try {
+      private def tryFinally[T](t: Try[T], resources: Try[Closeable]*) = try {
         resultOrFailure(t)
       } finally {
         resources.foreach(close)

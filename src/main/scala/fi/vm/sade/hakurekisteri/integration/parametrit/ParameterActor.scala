@@ -18,7 +18,7 @@ object ParameterActor {
   val opoUpdateGraduation = "opoUpdateGraduation"
 }
 
-abstract class ParameterActor() extends Actor with ActorLogging {
+abstract class ParameterActor extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
   private val tiedonsiirtoSendingPeriodCache = new InMemoryFutureCache[String, Boolean](2.minute.toMillis)
   protected val HTTP_OK = 200
