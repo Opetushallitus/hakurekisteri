@@ -6,10 +6,8 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.hakija.Hyvaksytty
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri,PersonOidsWithAliases,OppijaNumeroRekisteri}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,7 +45,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
         )
   }
 
-  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(16)),
+  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
@@ -69,7 +67,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
 
   private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases) =
     henkilot.foreach(henkilo =>
-      triggers.foreach(trigger => trigger.f(henkilo, personOidsWithAliases))
+      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases))
     )
 
   def addTrigger(trigger: KoskiTrigger) = triggers = triggers :+ trigger
@@ -88,7 +86,7 @@ case class KoskiHenkiloContainer(
 case class KoskiHenkilo(
                          oid: Option[String],
                          hetu: String,
-                         syntymäaika: String,
+                         syntymäaika: Option[String],
                          etunimet: String,
                          kutsumanimi: String,
                          sukunimi: String) {
@@ -109,16 +107,24 @@ case class KoskiSuoritus(
                   tyyppi: Option[KoskiKoodi],
                   kieli: Option[KoskiKieli],
                   pakollinen: Option[Boolean],
-                  toimipiste: KoskiOrganisaatio,
+                  toimipiste: Option[KoskiOrganisaatio],
                   vahvistus: Option[KoskiVahvistus],
                   suorituskieli: Option[KoskiKieli],
-                  arviointi: Option[KoskiArviointi],
+                  arviointi: Option[Seq[KoskiArviointi]],
                   yksilöllistettyOppimäärä: Option[Boolean],
-                  osasuoritukset: Option[Seq[KoskiSuoritus]])
+                  osasuoritukset: Seq[KoskiOsasuoritus])
 
-case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Boolean)
+case class KoskiOsasuoritus(
+                 koulutusmoduuli: KoskiKoulutusmoduuli,
+                 tyyppi: KoskiKoodi,
+                 arviointi: Seq[KoskiArviointi],
+                 pakollinen: Option[Boolean],
+                 yksilöllistettyOppimäärä: Option[Boolean]
+             )
 
-case class KoskiKoulutusmoduuli(tunniste: KoskiKoodi, koulutustyyppi: Option[KoskiKoodi])
+case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean])
+
+case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi], kieli: Option[KoskiKieli], koulutustyyppi: Option[KoskiKoodi])
 
 // koulutustyyppi, tyyppi, arvosana
 case class KoskiKoodi(koodiarvo: String, koodistoUri: String)

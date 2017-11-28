@@ -7,12 +7,13 @@ import akka.event.Logging
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, LocalDate}
+import org.json4s.DefaultFormats
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -20,8 +21,9 @@ import scala.concurrent.{ExecutionContext, Future}
 object KoskiArvosanaTrigger {
 
   import scala.language.implicitConversions
-  
-  def muodostaSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
+  implicit val formats = DefaultFormats
+
+  def muodostaKoskiSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
                                      personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
                                     (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
@@ -39,12 +41,10 @@ object KoskiArvosanaTrigger {
       case s: VirallinenSuoritus => s.core == suor.core
       case _ => false
     }
-
     henkilo.henkilö.oid.foreach(henkiloOid => {
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromKoski(henkilo).foreach {
-
-          case (suor: VirallinenSuoritus, arvosanat) =>
+          case (suor: VirallinenSuoritus, arvosanat:Seq[Arvosana]) =>
             if (!suoritusExists(suor, suoritukset)) {
               for (
                 suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suor)
@@ -64,17 +64,16 @@ object KoskiArvosanaTrigger {
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
     KoskiTrigger {
       (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases) => {
-        muodostaSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
+        muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
       }
     }
   }
 
-  def createArvosana(personOid: String, arvo: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None): Arvosana = {
-    Arvosana(suoritus = null, arvio = Arvio410(arvo), aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
+  def createArvosana(personOid: String, arvo: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None): Arvosana = {
+    Arvosana(suoritus = null, arvio = arvo, aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
   }
 
   def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus, Seq[Arvosana])] = {
-    val retVal = Seq.empty
     getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
 
@@ -87,13 +86,11 @@ object KoskiArvosanaTrigger {
     }
 
   def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[(Suoritus, Seq[Arvosana])] = {
-    val suoritukset = Seq.empty;
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
-      suoritukset ++ createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset);
-    })
-    suoritukset
+      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset)
+    }).flatten
   }
 
   def parseYear(dateStr: String): Int = {
@@ -105,11 +102,13 @@ object KoskiArvosanaTrigger {
 
   def matchOpetusOid(koulutusmoduuliTunnisteKoodiarvo: String): String = {
     koulutusmoduuliTunnisteKoodiarvo match {
-      case "201101" => Oids.perusopetusKomoOid
-      case "039993" | "039994" | "999901" | "999902" => Oids.valmaKomoOid
-      case "039999" | "999903" => Oids.telmaKomoOid
-      case "039997" | "999906" => Oids.lukioonvalmistavaKomoOid
+      case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
+      case "valma" => Oids.valmaKomoOid
+      case "telma" => Oids.telmaKomoOid
+      case "luva" => Oids.lukioonvalmistavaKomoOid
       case "020075" => Oids.lisaopetusKomoOid
+      case "ylioppilastutkinto" => Oids.yotutkintoKomoOid
+      case "ammatillinentutkinto" => Oids.ammatillinenKomoOid
       case _ => "999999"
     }
   }
@@ -118,50 +117,78 @@ object KoskiArvosanaTrigger {
     arvosana.copy(suoritus = s.id)
   }
 
-  def osasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[Arvosana] = {
-    val result = Seq()
-    for(
-      suoritus <- suoritukset
-    ){
-      val arviointi = suoritus.arviointi
-      val arvosana = arviointi match {
-        case None => ""
-        case Some(arviointi: KoskiArviointi) => arviointi.arvosana.koodiarvo
-      }
-      result ++ Seq(createArvosana(personOid, arvosana, suoritus.koulutusmoduuli.tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), None))
+  def pkOsasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
+    var res = for (
+      suoritus <- osasuoritukset;
+      arviointi <- suoritus.arviointi
+    ) yield {
+      val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), Some(0))
     }
-    result
+    res
   }
 
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[(Suoritus, Seq[Arvosana])] = {
-    val result = Seq.empty
-    for ( suoritus <- suoritukset ) {
-        val vahvistus = suoritus.vahvistus.getOrElse(KoskiVahvistus("1970-01-01", KoskiOrganisaatio("")))
-        val suorituskieli = suoritus.suorituskieli
-        val valmistuminen = vahvistus.päivä
-        val valmistumisvuosiStr = parseYear(valmistuminen)
-        val currentYear = new DateTime().year().get()
-        // ei tämän vuoden suorituksia
-        val oid = matchOpetusOid(suoritus.koulutusmoduuli.tunniste.koodiarvo);
-        val arvosanat: Seq[Arvosana] = osasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset.getOrElse(Seq()))
+  def lukioOsasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
+    var res = for (
+      suoritus <- osasuoritukset;
+      arviointi <- suoritus.arviointi
+    ) yield {
+      val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
+      // TODO
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), Some(0))
+    }
+    res
+  }
 
-        if ((arvosanat.nonEmpty || currentYear != valmistumisvuosiStr.toInt) && oid != "999999") {
-          val suor = VirallinenSuoritus(
-              oid,
-              vahvistus.myöntäjäOrganisaatio.oid,
-              "VALMIS",
-              parseLocalDate(valmistuminen),
-              personOid,
-              suoritus.yksilöllistettyOppimäärä match {
-                case Some(true) => yksilollistaminen.Alueittain
-                case _ => yksilollistaminen.Ei
-              },
-              "", //suorituskieli.koodiarvo,
-              None,
-              true,
-              "Koski");
-          LogMessage(suor.toString(), Logging.ErrorLevel)
-          result ++ Seq(suor, arvosanat)
+  def lisapisteOsasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
+    var res = for (
+      suoritus <- osasuoritukset;
+      arviointi <- suoritus.arviointi
+    ) yield {
+      val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
+      // TODO
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), Some(0))
+    }
+    res
+  }
+
+
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[(Suoritus, Seq[Arvosana])] = {
+    var result = Seq[(Suoritus, Seq[Arvosana])]()
+    for ( suoritus <- suoritukset ) {
+        var vahvistus = suoritus.vahvistus.getOrElse(KoskiVahvistus("1970-01-01", KoskiOrganisaatio("")))
+        var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
+        var valmistuminen = vahvistus.päivä
+        var valmistumisvuosiStr = parseYear(valmistuminen)
+        var currentYear = new DateTime().year().get()
+        // ei tämän vuoden suorituksia
+        var oid = suoritus.tyyppi match {
+          case Some(k) =>
+            matchOpetusOid(k.koodiarvo)
+          case _ => "999999"
+        }
+
+        var arvosanat: Seq[Arvosana] = oid match {
+          case Oids.perusopetusKomoOid => pkOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
+          case Oids.lukioKomoOid => lukioOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
+          case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.lisaopetusKomoOid => lisapisteOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
+          case _ => Seq()
+        }
+        if ((currentYear != valmistumisvuosiStr.toInt) && oid != "999999" && arvosanat.nonEmpty) {
+          result = result :+ (VirallinenSuoritus(
+            oid,
+            vahvistus.myöntäjäOrganisaatio.oid,
+            "VALMIS",
+            parseLocalDate(valmistuminen),
+            personOid,
+            suoritus.yksilöllistettyOppimäärä match {
+              case Some(true) => yksilollistaminen.Alueittain
+              case _ => yksilollistaminen.Ei
+            },
+            suorituskieli.koodiarvo,
+            None,
+            true,
+            "Koski"), arvosanat)
         }
       }
       result
