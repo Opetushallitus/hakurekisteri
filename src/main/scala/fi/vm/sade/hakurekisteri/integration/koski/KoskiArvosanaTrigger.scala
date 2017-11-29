@@ -23,6 +23,14 @@ object KoskiArvosanaTrigger {
   import scala.language.implicitConversions
   implicit val formats = DefaultFormats
 
+  val root_org_id = "1.2.246.562.10.00000000001"
+  val kielet = Seq("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
+  val oppiaineet = Seq("HI", "MU", "BI", "PS", "KT", "KO", "FI", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
+  val eivalinnaiset = kielet ++ oppiaineet ++ Seq("AI")
+
+  // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
+  val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
+
   def muodostaKoskiSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
                                      personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
                                     (implicit ec: ExecutionContext): Unit = {
@@ -123,7 +131,16 @@ object KoskiArvosanaTrigger {
       arviointi <- suoritus.arviointi
     ) yield {
       val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), Some(0))
+      val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
+        case (a:String, b:Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
+        case (a:String, b:Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
+        case _ => None
+      }
+      val valinnainen = (tunniste.koodiarvo) match {
+        case (a) if eivalinnaiset.contains(a) => false
+        case _ => true
+      }
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen, Some(0))
     }
     res
   }
@@ -174,6 +191,7 @@ object KoskiArvosanaTrigger {
           case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.lisaopetusKomoOid => lisapisteOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
           case _ => Seq()
         }
+
         if ((currentYear != valmistumisvuosiStr.toInt) && oid != "999999" && arvosanat.nonEmpty) {
           result = result :+ (VirallinenSuoritus(
             oid,
@@ -188,7 +206,7 @@ object KoskiArvosanaTrigger {
             suorituskieli.koodiarvo,
             None,
             true,
-            "Koski"), arvosanat)
+            root_org_id), arvosanat)
         }
       }
       result
