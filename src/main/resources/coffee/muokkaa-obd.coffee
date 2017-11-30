@@ -126,12 +126,30 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
     showCurrentRows = (henkiloMap) ->
-      $http.post(window.url("oppijanumerorekisteri-service.henkilotByHenkiloOidList"), Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
-      ).success((henkiloList, status) ->
-        if status != 200 || typeof henkiloList == "string"
-          $scope.loading = false
-          $log.error('error resolving henkilotByHenkiloOidList')
-          return
+      henkiloOids = Object.keys(henkiloMap)
+      chunkSize = 1000
+      chunks = []
+
+      while henkiloOids.length > 0
+        chunks.push(henkiloOids.splice(0, chunkSize))
+
+      promises = chunks.map((oids) ->
+        $http.post(window.url("oppijanumerorekisteri-service.henkilotByHenkiloOidList"),
+          oids,
+          { headers: { 'External-Permission-Service': 'SURE' } }
+          ).then ((response) ->
+          henkiloList = response.data
+          if response.status != 200 || typeof henkiloList == "string"
+            $scope.loading = false
+            validationError = 'error resolving henkilotByHenkiloOidList'
+            $log.error(validationError)
+            return Promise.reject(validationError)
+          else
+            return henkiloList
+        ))
+
+      $q.all(promises).then ((henkiloLists) ->
+        henkiloList = henkiloLists.reduce(((a, b) -> a.concat(b)), [])
         unsorted = []
         for henkiloTieto in henkiloList
           henkilo = henkiloMap[henkiloTieto.oidHenkilo]
@@ -147,10 +165,11 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         $scope.allRowsFiltered = $scope.allRows
         if(allRows.length > 0)
           $scope.valitseHenkilo(allRows[0].henkiloOid)
-      ).error(->
+        return
+      ), ->
         $scope.loading = false
         $log.error('error resolving henkilotByHenkiloOidList')
-      )
+        return
       return
 
     vuodet = () ->
