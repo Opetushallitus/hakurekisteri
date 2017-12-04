@@ -97,7 +97,7 @@ object KoskiArvosanaTrigger {
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
-      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset)
+      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset, opiskeluoikeus.tila.opiskeluoikeusjaksot)
     }).flatten
   }
 
@@ -111,13 +111,13 @@ object KoskiArvosanaTrigger {
   def matchOpetusOid(koulutusmoduuliTunnisteKoodiarvo: String): String = {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
-      case "valma" => Oids.valmaKomoOid
+      case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
       case "luva" => Oids.lukioonvalmistavaKomoOid
-      case "020075" => Oids.lisaopetusKomoOid
-      case "ylioppilastutkinto" => Oids.yotutkintoKomoOid
-      case "ammatillinentutkinto" => Oids.ammatillinenKomoOid
-      case _ => "999999"
+      case "perusopetuksenlisaopetus" => Oids.lisaopetusKomoOid
+//      case "ylioppilastutkinto" => Oids.yotutkintoKomoOid
+//      case "ammatillinentutkinto" => Oids.ammatillinenKomoOid
+      case _ => koulutusmoduuliTunnisteKoodiarvo
     }
   }
 
@@ -125,7 +125,7 @@ object KoskiArvosanaTrigger {
     arvosana.copy(suoritus = s.id)
   }
 
-  def pkOsasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
+  def pkOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
     var res = for (
       suoritus <- osasuoritukset;
       arviointi <- suoritus.arviointi
@@ -145,40 +145,47 @@ object KoskiArvosanaTrigger {
     res
   }
 
-  def lukioOsasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
+  // TODO
+  def lisapisteOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
     var res = for (
       suoritus <- osasuoritukset;
       arviointi <- suoritus.arviointi
     ) yield {
       val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
-      // TODO
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), Some(0))
+      val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
+        case (a:String, b:Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
+        case (a:String, b:Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
+        case _ => None
+      }
+      val valinnainen = (tunniste.koodiarvo) match {
+        case (a) if eivalinnaiset.contains(a) => false
+        case _ => true
+      }
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen, Some(0))
     }
     res
   }
 
-  def lisapisteOsasuoritusToArvosana(personOid: String, suoritusAika: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
-    var res = for (
-      suoritus <- osasuoritukset;
-      arviointi <- suoritus.arviointi
-    ) yield {
-      val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
-      // TODO
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, None, !suoritus.pakollinen.getOrElse(false), Some(0))
+  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, toimipiste: Option[KoskiOrganisaatio]): (Int, LocalDate, String) = {
+    vahvistus match {
+      case Some(k: KoskiVahvistus) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid)
+      case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), toimipiste.getOrElse(KoskiOrganisaatio(root_org_id)).oid)
     }
-    res
   }
 
-
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus]): Seq[(Suoritus, Seq[Arvosana])] = {
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila]): Seq[(Suoritus, Seq[Arvosana])] = {
     var result = Seq[(Suoritus, Seq[Arvosana])]()
     for ( suoritus <- suoritukset ) {
-        var vahvistus = suoritus.vahvistus.getOrElse(KoskiVahvistus("1970-01-01", KoskiOrganisaatio("")))
+        val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, suoritus.toimipiste)
+
         var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
-        var valmistuminen = vahvistus.päivä
-        var valmistumisvuosiStr = parseYear(valmistuminen)
-        var currentYear = new DateTime().year().get()
-        // ei tämän vuoden suorituksia
+
+        var lastTila = tilat.last.tila.koodiarvo match {
+          case "valmistunut" => "VALMIS"
+          case "eronnut" | "erotettu" | "katsotaaneronneeksi" | "mitatoity" | "peruutettu" => "KESKEYTYNYT"
+          case "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
+        }
+
         var oid = suoritus.tyyppi match {
           case Some(k) =>
             matchOpetusOid(k.koodiarvo)
@@ -186,18 +193,18 @@ object KoskiArvosanaTrigger {
         }
 
         var arvosanat: Seq[Arvosana] = oid match {
-          case Oids.perusopetusKomoOid => pkOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
-          case Oids.lukioKomoOid => lukioOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
-          case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.lisaopetusKomoOid => lisapisteOsasuoritusToArvosana(personOid, valmistuminen, oid, suoritus.osasuoritukset)
+          case Oids.perusopetusKomoOid => pkOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.valmaKomoOid => pkOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.telmaKomoOid => Seq()
+          case Oids.lisaopetusKomoOid => lisapisteOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
           case _ => Seq()
         }
-
-        if ((currentYear != valmistumisvuosiStr.toInt) && oid != "999999" && arvosanat.nonEmpty) {
+        if (oid != "999999" && vuosi > 1970) {
           result = result :+ (VirallinenSuoritus(
             oid,
-            vahvistus.myöntäjäOrganisaatio.oid,
-            "VALMIS",
-            parseLocalDate(valmistuminen),
+            organisaatioOid,
+            lastTila,
+            valmistumisPaiva,
             personOid,
             suoritus.yksilöllistettyOppimäärä match {
               case Some(true) => yksilollistaminen.Alueittain

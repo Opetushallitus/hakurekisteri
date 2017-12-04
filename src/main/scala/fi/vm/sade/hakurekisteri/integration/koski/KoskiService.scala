@@ -97,7 +97,9 @@ case class KoskiOpiskeluoikeus(
                  tila: KoskiOpiskeluoikeusjakso,
                  suoritukset: Seq[KoskiSuoritus])
 
-case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[Tila])
+case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
+
+case class KoskiTila(alku: String, tila:KoskiKoodi)
 
 // toimipiste, myöntäjäOrganisaatio, oppilaitos
 case class KoskiOrganisaatio(oid: String)
