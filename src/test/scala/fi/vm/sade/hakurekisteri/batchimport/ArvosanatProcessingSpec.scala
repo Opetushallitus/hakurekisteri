@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FailingResourceActor, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.{Config, MockConfig, Oids}
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig, Oids}
 import fi.vm.sade.utils.tcp.ChooseFreePort
 import generators.DataGen
 import org.joda.time.LocalDate
@@ -532,7 +532,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpOrganisaatioActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))),
-      new MockConfig
+      new MockConfig, MockCacheFactory.get
     )))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =

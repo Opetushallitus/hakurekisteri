@@ -77,7 +77,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   }
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val parameterActor = system.actorOf(Props(new MockParameterActor()))
+  val parameterActor = system.actorOf(Props(new MockParameterActor()(system)))
   val orgsActor = system.actorOf(Props(new MockOrganisaatioActor(new MockConfig())))
 
   object TestSchema extends SchemaDefinition {

@@ -77,6 +77,9 @@ ldap.search.base.people=ou=People,dc=opintopolku,dc=fi
 ldap.url=ldap://${host.ldap}
 ldap.url.with.base=ldap\://${host.ldap}/dc\=opintopolku,dc\=fi
 log4j.properties.file=${user.home.conf}/log4j.properties
+suoritusrekisteri.cache.redis.enabled={{redis_suoritusrekisteri_enabled}}
+suoritusrekisteri.cache.redis.host={{redis_suoritusrekisteri_host}}
+suoritusrekisteri.cache.redis.port={{redis_suoritusrekisteri_port}}
 suoritusrekisteri.cache.hours.ensikertalainen=6
 suoritusrekisteri.cache.hours.koodisto=12
 suoritusrekisteri.cache.hours.organisaatio=12

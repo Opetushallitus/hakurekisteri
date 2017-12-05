@@ -4,8 +4,11 @@ import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.MockCacheFactory
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import fi.vm.sade.scalaproperties.OphProperties
 import org.joda.time.DateTime
 import org.mockito.Mockito._
 import org.scalatest.Matchers
@@ -34,7 +37,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         waitFuture((parameterActor ? KierrosRequest("1.2.246.562.29.32820950486")).mapTo[HakuParams])(h => {
           h.end should be (new DateTime("2014-12-31T14:07:23.213+02:00"))
@@ -50,7 +54,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         waitFuture((parameterActor ? KierrosRequest("1.2.246.562.29.32820950486")).mapTo[HakuParams])(h => {
           h.end should be (new DateTime("2014-12-31T14:07:23.213+02:00"))
@@ -74,7 +79,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         expectFailure[NoParamFoundException](parameterActor ? KierrosRequest("1.2.246.562.29.43114244536"))
 
@@ -88,7 +94,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         expectFailure[NoParamFoundException](parameterActor ? KierrosRequest("1.2.246.562.29.foobar"))
 
@@ -102,7 +109,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         waitFuture((parameterActor ? IsSendingEnabled("perustiedot")).mapTo[Boolean])(b => {
           b should be (true)
@@ -118,7 +126,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         waitFuture((parameterActor ? IsRestrictionActive("opoUpdateGraduation")).mapTo[Boolean])(b => {
           b should be (true)
@@ -134,7 +143,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         waitFuture((parameterActor ? IsRestrictionActive("inactiveRestriction")).mapTo[Boolean])(b => {
           b should be (false)
@@ -151,7 +161,8 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(
+          new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
 
         waitFuture((parameterActor ? IsSendingEnabled("perustiedot")).mapTo[Boolean])(b => {
           b should be (true)

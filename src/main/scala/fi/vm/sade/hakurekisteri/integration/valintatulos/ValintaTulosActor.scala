@@ -5,10 +5,11 @@ import java.util.concurrent.ExecutionException
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
-import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -21,6 +22,7 @@ case class ValintaTulosQuery(hakuOid: String,
 
 class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
+                        cacheFactory: CacheFactory,
                         refetchTime: Option[Long] = None,
                         cacheTime: Option[Long] = None,
                         retryTime: Option[Long] = None,
@@ -30,7 +32,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
   private val refetch: FiniteDuration = refetchTime.map(_.milliseconds).getOrElse((config.integrations.valintatulosCacheHours / 2).hours)
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
-  private val cache: FutureCache[String, SijoitteluTulos] = new FutureCache[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis))
+  private val cache = cacheFactory.getInstance[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis), getClass, "sijoittelu-tulos")
   private var calling: Boolean = false
   private var initialLoadingDone = initOnStartup
   private val startTimeMillis: Long = System.currentTimeMillis()
@@ -48,7 +50,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case BatchUpdateValintatulos(haut) =>
-      haut.foreach(haku => if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
+      val hautCachessa = haut.filter(h => cache.contains(h.haku))
+      log.info(s"Skipping ${hautCachessa.size} hakus (${hautCachessa.map(_.haku).mkString(", ")}) from initial loading.")
+      haut.diff(hautCachessa).foreach(haku => if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
       self ! UpdateNext
 
     case UpdateValintatulos(haku) =>
@@ -143,16 +147,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       }.
       map(valintaTulokset2SijoitteluTulos)
 
-    def valintaTulokset2SijoitteluTulos(tulokset: ValintaTulos*): SijoitteluTulos = new SijoitteluTulos {
-      val hakemukset = tulokset.groupBy(t => t.hakemusOid).mapValues(_.head)
-
-      private def hakukohde(hakemusOid: String, hakukohdeOid: String): Option[ValintaTulosHakutoive] = hakemukset.get(hakemusOid).flatMap(_.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid))
-
-      override def pisteet(hakemusOid: String, hakukohdeOid: String): Option[BigDecimal] = hakukohde(hakemusOid, hakukohdeOid).flatMap(_.pisteet)
-      override def valintatila(hakemusOid: String, hakukohdeOid: String): Option[Valintatila] = hakukohde(hakemusOid, hakukohdeOid).map(_.valintatila)
-      override def vastaanottotila(hakemusOid: String, hakukohdeOid: String): Option[Vastaanottotila] = hakukohde(hakemusOid, hakukohdeOid).map(_.vastaanottotila)
-      override def ilmoittautumistila(hakemusOid: String, hakukohdeOid: String): Option[Ilmoittautumistila] = hakukohde(hakemusOid, hakukohdeOid).map(_.ilmoittautumistila.ilmoittautumistila)
-    }
+    def valintaTulokset2SijoitteluTulos(tulokset: ValintaTulos*): SijoitteluTulos = ValintaTulosToSijoitteluTulos(tulokset.groupBy(t => t.hakemusOid).mapValues(_.head).map(identity))
 
     hakemusOid match {
       case Some(oid) =>

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.MockConfig
+import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
@@ -32,6 +32,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   implicit val system = ActorSystem("failing-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
+  val cacheFactory = MockCacheFactory.get
 
   implicit var database: Database = _
 
@@ -71,7 +72,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val parameterActor = system.actorOf(Props(new HttpParameterActor(client)))
-  val orgsActor = system.actorOf(Props(new HttpOrganisaatioActor(client, new MockConfig)))
+  val orgsActor = system.actorOf(Props(new HttpOrganisaatioActor(client, new MockConfig, cacheFactory)))
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)

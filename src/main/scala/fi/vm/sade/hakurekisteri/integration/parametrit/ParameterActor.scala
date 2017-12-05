@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.parametrit
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.joda.time.DateTime
 
 import scala.compat.Platform
@@ -19,7 +20,7 @@ object ParameterActor {
 
 abstract class ParameterActor extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-  private val tiedonsiirtoSendingPeriodCache = new FutureCache[String, Boolean](2.minute.toMillis)
+  private val tiedonsiirtoSendingPeriodCache = new InMemoryFutureCache[String, Boolean](2.minute.toMillis)
   protected val HTTP_OK = 200
 
   object ProcessNext
@@ -62,8 +63,8 @@ abstract class ParameterActor extends Actor with ActorLogging {
   protected def isRestrictionActive(restriction: String): Future[Boolean]
 }
 
-class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActor {
-  private val allResponseCache = new FutureCache[String, Map[String, KierrosParams]](1.minute.toMillis)
+class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActor() {
+  private val allResponseCache = new InMemoryFutureCache[String, Map[String, KierrosParams]](1.minute.toMillis)
   private val all = "ALL"
 
   private def getAll: Future[Map[String, KierrosParams]] = {
@@ -108,7 +109,8 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
   }
 }
 
-class MockParameterActor(active: Boolean = false) extends ParameterActor {
+class MockParameterActor(active: Boolean = false)(implicit val system:ActorSystem) extends ParameterActor {
+
   override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 
   override protected def isEnabledFromRest(key: String) = Future { true }

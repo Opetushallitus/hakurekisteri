@@ -1,16 +1,28 @@
-package fi.vm.sade.hakurekisteri.integration
+package fi.vm.sade.hakurekisteri.integration.cache
 
 import scala.compat.Platform
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.Future
 import scala.language.higherKinds
+
+trait MonadCache[F[_], K, T] {
+
+  def +(key: K, f: F[T])
+
+  def -(key: K)
+
+  def contains(key: K): Boolean
+
+  def get(key: K): F[T]
+
+  protected def k(key: K, prefix:String) = s"${prefix}:${key}"
+}
+
+class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InMemoryMonadCache[Future, K, T](exp)
 
 case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, accessed: Long = Platform.currentTime, f: F[T])
 
-class FutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T](exp)
-
-
-class MonadCache[F[_], K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) {
+class InMemoryMonadCache[F[_], K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[F, K, T] {
 
   private var cache: Map[K, Cacheable[F, T]] = Map()
 
@@ -37,5 +49,4 @@ class MonadCache[F[_], K, T](val expirationDurationMillis: Long = 60.minutes.toM
   def size: Int = cache.size
 
   def getCache: Map[K, Cacheable[F, T]] = cache
-
 }

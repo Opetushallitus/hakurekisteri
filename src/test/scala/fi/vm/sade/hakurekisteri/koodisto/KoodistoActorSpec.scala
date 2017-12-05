@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.koodisto
 
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
-import fi.vm.sade.hakurekisteri.MockConfig
+import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, Koodisto, KoodistoActor}
 import org.junit.runner.RunWith
@@ -27,11 +27,12 @@ class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar
   private val maxRetries = 1
 
   implicit val system: ActorSystem = ActorSystem()
+  val cacheFactory = MockCacheFactory.get
 
   val mockRestClient = mock[VirkailijaRestClient]
   val mockKoodi = Koodi(koodiArvo, koodiUri, Koodisto(koodisto), null)
   val mockRinnasteinen = Koodi(rinnasteinenArvo, rinnasteinenUri, Koodisto(rinnasteinenKoodisto), null)
-  val koodistoActor = TestActorRef(new KoodistoActor(mockRestClient, new MockConfig())).underlyingActor
+  val koodistoActor = TestActorRef(new KoodistoActor(mockRestClient, new MockConfig(), cacheFactory)).underlyingActor
 
   when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", koodisto, koodiArvo)(responseCode, maxRetries)).thenReturn(
     Future.successful(Seq(mockKoodi))

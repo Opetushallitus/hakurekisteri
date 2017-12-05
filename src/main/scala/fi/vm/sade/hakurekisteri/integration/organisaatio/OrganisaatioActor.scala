@@ -7,7 +7,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
-import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
@@ -20,6 +21,7 @@ object RefreshOrganisaatioCache
 
 class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
                             config: Config,
+                            cacheFactory: CacheFactory,
                             initDuringStartup: Boolean = true,
                             ttl: Option[FiniteDuration] = None) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.system.dispatcher
@@ -31,13 +33,14 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
-  private val cache: FutureCache[String, Organisaatio] = new FutureCache[String, Organisaatio](timeToLive.toMillis)
-  private val childOidCache: FutureCache[String, ChildOids] = new FutureCache[String, ChildOids](timeToLive.toMillis)
+  private val cache = cacheFactory.getInstance[String, Organisaatio](timeToLive.toMillis, getClass, "organisaatio")
+  private val childOidCache = cacheFactory.getInstance[String, ChildOids](timeToLive.toMillis, getClass, "child-oids")
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
-      cache + (org.oid, Future.successful(org))
+      if(!cache.contains(org.oid))
+        cache + (org.oid, Future.successful(org))
 
       if (org.oppilaitosKoodi.isDefined)
         oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
@@ -106,7 +109,6 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     val all = organisaatioClient.readObject[OrganisaatioResponse]("organisaatio-service.hierarkia.hae")(200).recoverWith {
       case t: Throwable => Future.failed(OrganisaatioFetchFailedException(t))
     }
-
     all.map(r => CacheOrganisaatiot(r.organisaatiot)).pipeTo(self)(actor)
   }
 
@@ -129,7 +131,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
     case CacheOrganisaatiot(o) =>
       saveOrganisaatiot(o)
-      log.info(s"${o.size} saved to cache: ${cache.size}, oppilaitoskoodiIndex: ${oppilaitoskoodiIndex.size}")
+      log.info(s"${o.size} saved to cache, oppilaitoskoodiIndex: ${oppilaitoskoodiIndex.size}")
       if (sender() != ActorRef.noSender)
         sender ! true
 

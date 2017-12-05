@@ -2,27 +2,40 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{ MockCacheFactory, MockConfig}
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.mockito.Mockito._
+import fi.vm.sade.scalaproperties.OphProperties
+import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito
+import org.mockito.Mockito._
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, BeforeAndAfterEach, Ignore}
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import redis.embedded.RedisServer
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Try
 
-class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties {
+class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties with BeforeAndAfterAll {
+
+  val rPort:Int = PortChecker.findFreeLocalPort
+  val redisServer:RedisServer = new RedisServer(rPort)
 
   implicit val timeout: Timeout = 60.seconds
   val vtsConfig = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")
   val config = new MockConfig
-  val cacheFactory = MockCacheFactory.get
+  def cacheFactory(implicit system:ActorSystem) = CacheFactory.apply(new OphProperties()
+    .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
+    .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
+    .addDefault("suoritusrekisteri.cache.redis.port", s"${rPort}")
+  )(system)
 
   def createEndPoint = {
     val e = mock[Endpoint]
@@ -32,6 +45,10 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
     when(e.request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251/hakemus/1.2.246.562.11.00000000576"))).thenReturn((200, List(), ValintaTulosResults.hakemus))
 
     e
+  }
+
+  override def beforeAll() = {
+    redisServer.start
   }
 
   test("ValintaTulosActor should fire only one request to the backend even when asked multiple times") {
@@ -54,6 +71,10 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
         })
 
+        val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
+          classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286251"), 10.seconds)
+        cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
       }
     )
@@ -72,11 +93,11 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           cacheTime = Some(2000)
         )))
 
-        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
+        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286252")
 
         Thread.sleep(1500)
 
-        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
+        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286252"))
       }
     )
   }
@@ -94,20 +115,24 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           cacheTime = Some(1000)
         )))
 
-        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
+        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286253")
 
         Thread.sleep(550)
 
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
+        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
+        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
+        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
+        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
 
-        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
+        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286253", None)).mapTo[SijoitteluTulos])(t => {
           t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
         })
 
-        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
+        val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
+          classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286253"), 10.seconds)
+        cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
       }
     )
   }
@@ -155,13 +180,67 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
       }
     )
   }
-}
 
-object ValintaTulosResults {
-  def haku(implicit ec: ExecutionContext) =  {
-    Await.result(Future { Thread.sleep(20) }, Duration(1, TimeUnit.SECONDS))
-    scala.io.Source.fromURL(getClass.getResource("/mock-data/valintatulos/valintatulos-haku.json")).mkString
+  test("ValintaTulosActor should skip initial loading if data is already in redis") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
+          config = config,
+          cacheFactory = cacheFactory,
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          refetchTime = Some(500),
+          cacheTime = Some(1000),
+          retryTime = Some(100)
+        )))
+
+        valintaTulosActor ! BatchUpdateValintatulos((11 to 12).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+
+        Thread.sleep(300)
+
+        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
+        cache.contains("1.2.246.562.29.11") should be(true)
+        cache.contains("1.2.246.562.29.12") should be(true)
+        cache.contains("1.2.246.562.29.13") should be(false)
+        cache.contains("1.2.246.562.29.14") should be(false)
+
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+      }
+    )
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
+          config = config,
+          cacheFactory = cacheFactory,
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          refetchTime = Some(500),
+          cacheTime = Some(1000),
+          retryTime = Some(100)
+        )))
+
+        valintaTulosActor ! BatchUpdateValintatulos((11 to 14).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+
+        Thread.sleep(300)
+
+        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
+        cache.contains("1.2.246.562.29.11") should be(true)
+        cache.contains("1.2.246.562.29.12") should be(true)
+        cache.contains("1.2.246.562.29.13") should be(true)
+        cache.contains("1.2.246.562.29.14") should be(true)
+
+        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
+        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.13"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.14"))
+      }
+    )
   }
-  val hakemus = scala.io.Source.fromURL(getClass.getResource("/mock-data/valintatulos/valintatulos-hakemus.json")).mkString
-}
 
+  override def afterAll() = {
+    redisServer.stop
+  }
+}
