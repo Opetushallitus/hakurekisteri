@@ -1,31 +1,24 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.io.{InputStreamReader, BufferedReader, InputStream}
-import java.text.SimpleDateFormat
-import java.util.zip.{ZipInputStream}
 import java.io
+import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.zip.ZipInputStream
+
 import com.google.common.io.ByteStreams
 import fi.vm.sade.hakurekisteri.integration.ytl.Student.StudentAsyncParser
 import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.javautils.httpclient._
+import fi.vm.sade.javautils.httpclient.apache.{ApacheHttpClientBuilder, ApacheOphHttpClient}
 import fi.vm.sade.properties.OphProperties
-import jawn.{ast, Parser, AsyncParser}
-import jawn.ast.JParser
-import org.apache.commons.io.IOUtils
-import org.apache.http.client.CredentialsProvider
-import org.apache.http.client.protocol.ClientContext
-import org.apache.http.protocol.{BasicHttpContext, ExecutionContext, HttpContext}
-import org.apache.http.{HttpHost, HttpRequest, HttpRequestInterceptor, HttpHeaders}
-import org.apache.http.auth.{AuthScheme, AuthState, UsernamePasswordCredentials, AuthScope}
-import org.apache.http.client.methods.HttpPost
+import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.BasicCredentialsProvider
-import org.json4s.NoTypeHints
-import org.json4s.jackson.Serialization.{write}
-
+import org.apache.http.protocol.HttpContext
+import org.apache.http.{HttpRequest, HttpRequestInterceptor}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization
+import org.json4s.jackson.Serialization.write
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
@@ -35,7 +28,7 @@ class PreemptiveAuthInterceptor(creds: UsernamePasswordCredentials) extends Http
   override def process(request: HttpRequest, context: HttpContext): Unit = request.addHeader(new BasicScheme().authenticate(creds, request, context))
 }
 
-class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: ApacheOphHttpClient.ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()) {
+class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()) {
   val log = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
   implicit val formats = Student.formatsStudent
@@ -45,13 +38,13 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   val bufferSize = config.getOrElse("ytl.http.buffersize", "4096").toInt // 4K
   val credentials = new UsernamePasswordCredentials(username, password)
 
-  private def buildClient(a: ApacheOphHttpClient.ApacheHttpClientBuilder) = {
+  private def buildClient(a: ApacheHttpClientBuilder) = {
     val provider = new BasicCredentialsProvider()
     val scope = new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM)
     provider.setCredentials(scope, credentials)
-    a.httpBuilder.setDefaultCredentialsProvider(provider)
-    a.httpBuilder.disableAutomaticRetries()
-    a.httpBuilder.addInterceptorFirst(new PreemptiveAuthInterceptor(credentials))
+    a.getHttpBuilder.setDefaultCredentialsProvider(provider)
+    a.getHttpBuilder.disableAutomaticRetries()
+    a.getHttpBuilder.addInterceptorFirst(new PreemptiveAuthInterceptor(credentials))
     val client = a.buildOphClient("ytlHttpClient", config)
     client
   }
@@ -138,7 +131,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   }
 
   def downloadZip(groupUuid: String)(uuid: String): Either[Throwable, InputStream] = {
-    Try(client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
+    Try[List[InputStream]](client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
       fileSystem.write(groupUuid, uuid)(r.asInputStream())
       fileSystem.read(uuid).toList
     })) match {
@@ -149,7 +142,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   }
 
   def fetchOperation(hetus: Seq[String]): Either[Throwable, Operation] = {
-    Try(client.post("ytl.http.host.bulk")
+    Try[Operation](client.post("ytl.http.host.bulk")
       .dataWriter("application/json", "UTF-8", new OphRequestPostWriter() {
         override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
       })
