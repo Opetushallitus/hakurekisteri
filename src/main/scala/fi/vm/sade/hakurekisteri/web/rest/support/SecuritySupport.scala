@@ -14,9 +14,10 @@ trait SecuritySupport {
 }
 
 object Security {
-  def apply(config: Config): Security = config.mockMode match {
-    case true => new TestSecurity
-    case false => new SpringSecurity
+  def apply(config: Config): Security = if (config.mockMode) {
+    new TestSecurity
+  } else {
+    new SpringSecurity
   }
 }
 
