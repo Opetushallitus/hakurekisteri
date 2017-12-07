@@ -14,7 +14,7 @@ trait SecuritySupport {
 }
 
 object Security {
-  def apply(config: Config) = config.mockMode match {
+  def apply(config: Config): Security = config.mockMode match {
     case true => new TestSecurity
     case false => new SpringSecurity
   }
@@ -22,14 +22,14 @@ object Security {
 
 trait Security {
   def currentUser(implicit request: HttpServletRequest): Option[User]
-  def security = this
+  def security: Security = this
 }
 
 class SpringSecurity extends Security {
   import scala.collection.JavaConverters._
 
-  private def userAgent(r: HttpServletRequest) = Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
-  private def inetAddress(r: HttpServletRequest) = Option(r.getHeader("X-Forwarded-For")).getOrElse(r.getRemoteAddr)
+  private def userAgent(r: HttpServletRequest): String = Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
+  private def inetAddress(r: HttpServletRequest): String = Option(r.getHeader("X-Forwarded-For")).getOrElse(r.getRemoteAddr)
 
   override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
     case a: Authentication => OPHUser(username(a), authorities(a).toSet,userAgent(request),inetAddress(request))
@@ -40,7 +40,7 @@ class SpringSecurity extends Security {
     Option(u.getName).getOrElse("anonymous")
   }
 
-  def authorities(auth: Authentication) = for (
+  def authorities(auth: Authentication): Iterable[String] = for (
     authority <- granted(auth)
     if Option(authority.getAuthority).isDefined
   ) yield authority.getAuthority
@@ -51,7 +51,7 @@ class SpringSecurity extends Security {
   ) yield authority
 
 
-  def userPrincipal(implicit request: HttpServletRequest) = Option(request.getUserPrincipal)
+  def userPrincipal(implicit request: HttpServletRequest): Option[Principal] = Option(request.getUserPrincipal)
 }
 
 class TestSecurity extends Security {
