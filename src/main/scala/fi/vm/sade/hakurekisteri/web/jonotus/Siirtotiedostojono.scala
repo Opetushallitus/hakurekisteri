@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.web.jonotus
 
 import java.io.ByteArrayOutputStream
+import java.nio.charset.Charset
 import java.util.UUID
 import java.util.concurrent._
 
@@ -76,6 +77,8 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         }
       })
 
+  private val charset: Charset = Charset.forName("UTF-8")
+
   def queryToAsiakirja(format: ApiFormat, query: HakijaQuery): Array[Byte] = {
     Await.result(hakijaActor ? query, defaultTimeout.duration) match {
       case hakijat: XMLHakijat =>
@@ -92,7 +95,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
               val printer = new scala.xml.PrettyPrinter(120, 2)
               val formattedXml = printer.format(hakijat.toXml)
               val bytes = new ByteArrayOutputStream()
-              IOUtils.write(formattedXml, bytes)
+              IOUtils.write(formattedXml, bytes, charset)
               bytes.toByteArray
           }
 
@@ -104,7 +107,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           val bytes = new ByteArrayOutputStream()
           format match {
             case ApiFormat.Json =>
-              IOUtils.write(write(hakijat), bytes)
+              IOUtils.write(write(hakijat), bytes, charset)
               bytes.toByteArray
             case ApiFormat.Excel =>
               if(query.version == 2) {
@@ -130,7 +133,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
       val bytes = new ByteArrayOutputStream()
       format match {
         case ApiFormat.Json =>
-          IOUtils.write(write(hakijat), bytes)
+          IOUtils.write(write(hakijat), bytes, charset)
           bytes.toByteArray
         case ApiFormat.Excel =>
           if(query.version == 1) {

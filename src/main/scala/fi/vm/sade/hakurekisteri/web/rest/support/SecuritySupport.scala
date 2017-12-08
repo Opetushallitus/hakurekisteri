@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest
 
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, User}
+import fi.vm.sade.javautils.http.HttpServletRequestUtils
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.springframework.security.core.{Authentication, GrantedAuthority}
 
@@ -30,7 +31,7 @@ class SpringSecurity extends Security {
   import scala.collection.JavaConverters._
 
   private def userAgent(r: HttpServletRequest): String = Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
-  private def inetAddress(r: HttpServletRequest): String = Option(r.getHeader("X-Forwarded-For")).getOrElse(r.getRemoteAddr)
+  private def inetAddress(r: HttpServletRequest): String = HttpServletRequestUtils.getRemoteAddress(r)
 
   override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
     case a: Authentication => OPHUser(username(a), authorities(a).toSet,userAgent(request),inetAddress(request))

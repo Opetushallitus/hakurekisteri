@@ -40,7 +40,7 @@ object ItPostgres extends Logging {
     if (!pidFile.canRead) {
       None
     } else {
-      Some(FileUtils.readFileToString(pidFile).split("\n")(0).toInt)
+      Some(FileUtils.readFileToString(pidFile, "UTF-8").split("\n")(0).toInt)
     }
   }
 
