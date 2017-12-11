@@ -61,7 +61,7 @@ object CacheFactory {
       def +(key: K, f: Future[T]): Unit = f onSuccess {
         case t => {
           val prefixKey = k(key)
-          logger.info(s"Adding value with key ${prefixKey} to Redis cache")
+          logger.debug(s"Adding value with key ${prefixKey} to Redis cache")
           r.set[T](prefixKey, t, pxMilliseconds = Some(expirationDurationMillis))
         }
       }
@@ -72,7 +72,7 @@ object CacheFactory {
 
       def get(key: K): Future[T] = {
         val prefixKey = k(key)
-        logger.info(s"Getting value with key ${prefixKey} from Redis cache")
+        logger.debug(s"Getting value with key ${prefixKey} from Redis cache")
         r.get[T](prefixKey).collect { case Some(x) => x }
       }
 
