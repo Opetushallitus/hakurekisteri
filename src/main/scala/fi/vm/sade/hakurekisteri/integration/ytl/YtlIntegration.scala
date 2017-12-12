@@ -1,22 +1,17 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.io.{File, FileOutputStream}
-import java.text.SimpleDateFormat
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import java.util.function.UnaryOperator
 import java.util.zip.ZipInputStream
 import java.util.{Date, UUID}
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import akka.actor.ActorRef
-import fi.vm.sade.auditlog.hakurekisteri.HakuRekisteriOperation.RESOURCE_UPDATE
-import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
+import fi.vm.sade.auditlog.hakurekisteri.LogMessage
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.web.AuditLogger
 import fi.vm.sade.hakurekisteri.web.AuditLogger.audit
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
-import org.apache.commons.lang.time.DateUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.Set
@@ -39,7 +34,7 @@ class YtlIntegration(config: OphProperties,
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
 
-  def sync(hakemus: FullHakemus): Either[Throwable, Kokelas] = {
+  def sync(hakemus: HakijaHakemus): Either[Throwable, Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       if(hakemus.stateValid) {
         hakemus.personOid match {

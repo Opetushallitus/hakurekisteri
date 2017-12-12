@@ -31,16 +31,15 @@ object HakemusQuery {
   def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 
-case class Trigger(f: (FullHakemus, PersonOidsWithAliases) => Unit)
+case class Trigger(f: (HakijaHakemus, PersonOidsWithAliases) => Unit)
 
 object Trigger {
   def apply(f: (String, String, String, PersonOidsWithAliases) => Unit): Trigger = {
-    def processHakemusWithPersonOid(fullHakemus: FullHakemus, personOidsWithAliases: PersonOidsWithAliases): Unit = (fullHakemus, personOidsWithAliases) match {
-      case (FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _, _), personOidsWithAliases) =>
-        for (
-          henkilo <- answers.henkilotiedot;
-          hetu <- henkilo.Henkilotunnus)
-          f(personOid, hetu, hakuOid, personOidsWithAliases)
+    def processHakemusWithPersonOid(hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases): Unit = hakemus match {
+      case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _) if hakemus.hetu.isDefined =>
+        f(personOid, hakemus.hetu.get, applicationSystemId, personOidsWithAliases)
+      case AtaruHakemus(_, Some(personOid), Some(hetu), applicationSystemId, _, _, _, _, _, _, _, _, _) =>
+        f(personOid, hetu, applicationSystemId, personOidsWithAliases)
       case _ =>
     }
 
@@ -98,13 +97,14 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   case class AtaruSearchParams(hakijaOids: Option[List[String]],
                                hakukohdeOids: Option[List[String]],
                                hakuOid: Option[String],
-                               organizationOid: Option[String])
+                               organizationOid: Option[String],
+                               modifiedAfter: Option[String])
 
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
 
-  def enrichAtaruHakemukset(hakemukset: List[AtaruHakemusDto], henkilot: Seq[Henkilo]): Future[List[AtaruHakemus]] = {
+  def enrichAtaruHakemukset(ataruHakemusDtos: List[AtaruHakemusDto], henkilot: Seq[Henkilo]): Future[List[AtaruHakemus]] = {
     val henkilotByOid = henkilot.map(h => h.oidHenkilo -> h).toMap
 
     def getHakukohdeTarjoajaOid(hakukohdeOid: String): Future[Option[String]] = {
@@ -117,7 +117,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       case _ => "NOT_CHECKED"
     }
 
-    Future.sequence(hakemukset.map(hakemus => {
+    Future.sequence(ataruHakemusDtos.map(hakemus => {
       val hakutoiveet = Future.sequence(hakemus.hakukohteet.zipWithIndex.map {
         case (hakukohdeOid: String, index: Int) =>
           for {
@@ -131,6 +131,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         AtaruHakemus(
           hakemus.oid,
           Some(hakemus.personOid),
+          hakemus.hetu,
           hakemus.applicationSystemId,
           Some(toiveet),
           henkilotByOid(hakemus.personOid),
@@ -150,7 +151,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   private def ataruhakemukset(params: AtaruSearchParams): Future[List[HakijaHakemus]] = {
     val p = params.hakuOid.fold[Map[String, String]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
       params.hakukohdeOids.fold[Map[String, String]](Map.empty)(oids => Map("hakukohdeOids" -> oids.mkString(","))) ++
-      params.hakijaOids.fold[Map[String, String]](Map.empty)(oids => Map("hakijaOids" -> oids.mkString(",")))
+      params.hakijaOids.fold[Map[String, String]](Map.empty)(oids => Map("hakijaOids" -> oids.mkString(","))) ++
+      params.modifiedAfter.fold[Map[String, String]](Map.empty)(date => Map("modifiedAfter" -> date))
     for {
       ataruHakemusDtos <- ataruHakemusClient
         .readObject[List[AtaruHakemusDto]]("ataru.applications", p)(acceptedResponseCode = 200, maxRetries = 2)
@@ -171,7 +173,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = Some(List(personOid)),
         hakukohdeOids = None,
         hakuOid = None,
-        organizationOid = None
+        organizationOid = None,
+        modifiedAfter = None
       ))
     } yield hakuappHakemukset.getOrElse(personOid, Seq[FullHakemus]()) ++ ataruHakemukset
   }
@@ -184,7 +187,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = Some(personOids.toList),
         hakukohdeOids = None,
         hakuOid = Some(hakuOid),
-        organizationOid = None
+        organizationOid = None,
+        modifiedAfter = None
       ))
     } yield hakuappHakemukset ++ ataruHakemukset
   }
@@ -196,7 +200,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = None,
         hakukohdeOids = Some(List(hakukohdeOid)),
         hakuOid = None,
-        organizationOid = organisaatio
+        organizationOid = organisaatio,
+        modifiedAfter = None
       ))
     } yield hakuappHakemukset ++ ataruHakemukset
   }
@@ -211,7 +216,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           hakijaOids = None,
           hakukohdeOids = Some(hakukohdeOids.toList),
           hakuOid = None,
-          organizationOid = organisaatio
+          organizationOid = organisaatio,
+          modifiedAfter = None
         ))
       } yield hakuappHakemukset ++ ataruHakemukset
     }
@@ -223,7 +229,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = None,
         hakukohdeOids = None,
         hakuOid = Some(hakuOid),
-        organizationOid = organisaatio
+        organizationOid = organisaatio,
+        modifiedAfter = None
       ))
     } yield hakuappHakemukset ++ ataruHakemukset
   }
@@ -236,7 +243,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = None,
         hakukohdeOids = hakukohdeOid.map(List(_)),
         hakuOid = Some(hakuOid),
-        organizationOid = None
+        organizationOid = None,
+        modifiedAfter = None
       ))
     } yield hakuappHakemukset ++ ataruHakemukset
   }
@@ -248,7 +256,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = None,
         hakukohdeOids = None,
         hakuOid = Some(hakuOid),
-        organizationOid = organisaatio
+        organizationOid = organisaatio,
+        modifiedAfter = None
       ))
     } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
   }
@@ -260,7 +269,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = None,
         hakukohdeOids = Some(List(hakukohdeOid)),
         hakuOid = None,
-        organizationOid = organisaatio
+        organizationOid = organisaatio,
+        modifiedAfter = None
       ))
     } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
   }
@@ -273,7 +283,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakijaOids = None,
         hakukohdeOids = None,
         hakuOid = Some(hakuOid),
-        organizationOid = None
+        organizationOid = None,
+        modifiedAfter = None
       ))
     } yield (hakuappHakemukset ++ ataruHakemukset).collect({
       case h: FullHakemus if h.hetu.isDefined && h.personOid.isDefined =>
@@ -300,9 +311,16 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
-      fetchHakemukset(
-        params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))
-      ).flatMap(fetchPersonAliases).onComplete {
+      val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
+      val allApplications = for {
+        hakuappApplications: Seq[FullHakemus] <- fetchHakemukset(
+          params = SearchParams(updatedAfter = formattedDate)
+        )
+        ataruApplications: List[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(None, None, None, None, Some(formattedDate)))
+        _ = System.out.println(ataruApplications.map(_.oid))
+      } yield hakuappApplications.toList ::: ataruApplications
+
+      allApplications.flatMap(fetchPersonAliases).onComplete {
         case Success((hakemukset, personOidsWithAliases)) =>
           Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
             case Failure(e) => logger.error(e, "Exception in trigger!")
@@ -321,7 +339,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   }
 
   private def triggerHakemukset(hakemukset: Seq[HakijaHakemus], personOidsWithAliases: PersonOidsWithAliases): Unit =
-    hakemukset.collect({ case h: FullHakemus => h }).foreach(hakemus =>
+    hakemukset.collect({ case h: HakijaHakemus => h }).foreach(hakemus =>
       triggers.foreach(trigger => trigger.f(hakemus, personOidsWithAliases))
     )
 

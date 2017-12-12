@@ -27,7 +27,7 @@ object IlmoitetutArvosanatTrigger {
     arvosana.copy(suoritus = s.id)
   }
 
-  def muodostaSuorituksetJaArvosanat(hakemus: FullHakemus, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
+  def muodostaSuorituksetJaArvosanat(hakemus: HakijaHakemus, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
                                      personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
                                     (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
@@ -86,12 +86,13 @@ object IlmoitetutArvosanatTrigger {
     ).flatten
   }
 
-  def createSuorituksetJaArvosanatFromHakemus(hakemus: FullHakemus): Seq[(Suoritus, Seq[Arvosana])] = {
-    (for (
-      personOid <- hakemus.personOid;
-      answers <- hakemus.answers;
-      koulutustausta <- answers.koulutustausta
-    ) yield {
+  def createSuorituksetJaArvosanatFromHakemus(hakemus: HakijaHakemus): Seq[(Suoritus, Seq[Arvosana])] = hakemus match {
+    case hakemus: FullHakemus =>
+      (for (
+        personOid <- hakemus.personOid;
+        answers <- hakemus.answers;
+        koulutustausta <- answers.koulutustausta
+      ) yield {
         try {
           val peruskoulu = createPkSuoritusArvosanat(hakemus, personOid, answers, koulutustausta)
           val pkLisapiste = createPkLisapisteSuoritukset(hakemus, personOid, answers, koulutustausta)
@@ -104,6 +105,7 @@ object IlmoitetutArvosanatTrigger {
           }
         }
       }).getOrElse(Seq.empty)
+    case _ => Seq.empty
   }
 
   import fi.vm.sade.hakurekisteri.tools.RicherString._

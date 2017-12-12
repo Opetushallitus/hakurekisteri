@@ -415,12 +415,12 @@ object AkkaHakupalvelu {
         Henkilo(
           lahiosoite = hakemus.lahiosoite,
           postinumero = hakemus.postinumero,
-          postitoimipaikka = hakemus.postitoimipaikka,
           maa = maakoodit.getOrElse(hakemus.asuinmaa, "FIN"),
+          postitoimipaikka = hakemus.postitoimipaikka.getOrElse(""),
           matkapuhelin = "",
           puhelin = "",
           sahkoposti = hakemus.email,
-          kotikunta = hakemus.kotikunta,
+          kotikunta = hakemus.kotikunta.getOrElse(""),
           sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
           etunimet = hakemus.henkilo.etunimet.getOrElse(""),
           kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
@@ -614,6 +614,7 @@ case class PreferenceEligibility(aoId: String, status: String, source: Option[St
 
 sealed trait HakijaHakemus {
   def personOid: Option[String]
+  def hetu: Option[String]
   def oid: String
   def applicationSystemId: String
   def stateValid: Boolean
@@ -693,6 +694,7 @@ case class FullHakemus(oid: String,
 
 case class AtaruHakemusDto(oid: String,
                            personOid: String,
+                           hetu: Option[String],
                            applicationSystemId: String,
                            kieli: String,
                            hakukohteet: Set[String],
@@ -700,14 +702,15 @@ case class AtaruHakemusDto(oid: String,
                            matkapuhelin: String,
                            lahiosoite: String,
                            postinumero: String,
-                           postitoimipaikka:String,
-                           kotikunta: String,
+                           postitoimipaikka: Option[String],
+                           kotikunta: Option[String],
                            asuinmaa: String,
                            paymentObligations: Map[String, String],
                            kkPohjakoulutus: List[String])
 
 case class AtaruHakemus(oid: String,
                         personOid: Option[String],
+                        hetu: Option[String],
                         applicationSystemId: String,
                         hakutoiveet: Option[List[HakutoiveDTO]],
                         henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,
@@ -715,10 +718,11 @@ case class AtaruHakemus(oid: String,
                         matkapuhelin: String,
                         lahiosoite: String,
                         postinumero: String,
-                        postitoimipaikka:String,
-                        kotikunta: String,
+                        postitoimipaikka: Option[String],
+                        kotikunta: Option[String],
                         asuinmaa: String,
                         paymentObligations: Map[String, String],
                         kkPohjakoulutus: List[String]) extends HakijaHakemus {
+
   val stateValid: Boolean = true
 }

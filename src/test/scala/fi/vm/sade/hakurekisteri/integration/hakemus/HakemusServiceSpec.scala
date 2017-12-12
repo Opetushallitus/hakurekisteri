@@ -82,22 +82,22 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*listfull.*start=2.*")))
       .thenReturn((200, List(), "[]"))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
-      .thenReturn((200, List(), "[]"))
+      .thenReturn((200, List(), getJson("ataruApplications")))
 
 
     var triggerCounter = 0
-    val trigger = Trigger(f = (hakemus: FullHakemus, personOidsWithAliases: PersonOidsWithAliases) => {
+    val trigger = Trigger(f = (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) => {
       triggerCounter += 1
     })
 
     hakemusService.addTrigger(trigger)
     hakemusService.addTrigger(trigger)
 
-    hakemusService.processModifiedHakemukset(refreshFrequency = 1.millisecond)
+    hakemusService.processModifiedHakemukset(refreshFrequency = 1.second)
 
-    Thread.sleep(1000)
+    Thread.sleep(2000)
 
-    triggerCounter should be (40)
+    triggerCounter should be (44)
   }
 
   it should "be able to skip application without person oid" in {
@@ -106,11 +106,14 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       triggerCounter += 1
     })
     val answers = Some(HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("123456-7890")))))
+    val ataruHenkilo = henkilo.Henkilo( "ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, None, turvakielto = false)
 
     trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    triggerCounter should equal(1)
+    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "lahiosoite", "postinumero", Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+    triggerCounter should equal(2)
     trigger.f(FullHakemus("oid", None, "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    triggerCounter should equal(1)
+    trigger.f(AtaruHakemus("ataruOid", None, Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "lahiosoite", "postinumero", Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+    triggerCounter should equal(2)
   }
 
   it should "return hetus and personOids" in {
