@@ -72,7 +72,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       throw new UnsupportedOperationException("Not implemented")
     }
 
-    override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = ???
+    override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future.successful(Seq.empty)
   }
 
   val linkedPersonsSuoritus = VirallinenSuoritus(
