@@ -38,7 +38,7 @@ object Trigger {
     def processHakemusWithPersonOid(hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases): Unit = hakemus match {
       case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _) if hakemus.hetu.isDefined =>
         f(personOid, hakemus.hetu.get, applicationSystemId, personOidsWithAliases)
-      case AtaruHakemus(_, Some(personOid), Some(hetu), applicationSystemId, _, _, _, _, _, _, _, _, _) =>
+      case AtaruHakemus(_, Some(personOid), Some(hetu), applicationSystemId, _, _, _, _, _, _, _, _, _, _, _) =>
         f(personOid, hetu, applicationSystemId, personOidsWithAliases)
       case _ =>
     }

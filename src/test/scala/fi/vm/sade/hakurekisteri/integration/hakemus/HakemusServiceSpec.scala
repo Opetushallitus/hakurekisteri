@@ -109,10 +109,12 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     val ataruHenkilo = henkilo.Henkilo( "ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, None, turvakielto = Some(false))
 
     trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "lahiosoite", "postinumero", Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
+      Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty, List.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
     trigger.f(FullHakemus("oid", None, "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    trigger.f(AtaruHakemus("ataruOid", None, Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "lahiosoite", "postinumero", Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+    trigger.f(AtaruHakemus("ataruOid", None, Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
+      Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty, List.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
   }
 
