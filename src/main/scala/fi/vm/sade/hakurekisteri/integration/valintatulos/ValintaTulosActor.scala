@@ -102,9 +102,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   }
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-//    if (!initialLoadingDone) {
-//      Future.failed(InitialLoadingNotDone())
-//    } else {
+    if (!initialLoadingDone) {
+      Future.failed(InitialLoadingNotDone())
+    } else {
       if (q.cachedOk && cache.contains(q.hakuOid))
         cache.get(q.hakuOid)
       else {
@@ -113,7 +113,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
         } else {
           callBackend(q.hakuOid, q.hakemusOid)
         }
-//      }
+      }
     }
   }
 

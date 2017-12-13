@@ -312,12 +312,11 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
-      val allApplications = for {
+      val allApplications: Future[List[HakijaHakemus]] = for {
         hakuappApplications: Seq[FullHakemus] <- fetchHakemukset(
           params = SearchParams(updatedAfter = formattedDate)
         )
         ataruApplications: List[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(None, None, None, None, Some(formattedDate)))
-        _ = System.out.println(ataruApplications.map(_.oid))
       } yield hakuappApplications.toList ::: ataruApplications
 
       allApplications.flatMap(fetchPersonAliases).onComplete {
