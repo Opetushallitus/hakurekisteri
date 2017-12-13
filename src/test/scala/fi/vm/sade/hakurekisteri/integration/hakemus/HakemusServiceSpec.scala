@@ -106,7 +106,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       triggerCounter += 1
     })
     val answers = Some(HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("123456-7890")))))
-    val ataruHenkilo = henkilo.Henkilo( "ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, None, turvakielto = false)
+    val ataruHenkilo = henkilo.Henkilo( "ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, None, turvakielto = Some(false))
 
     trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), Some("ataruHetu"), "hakuOid", None, ataruHenkilo, "email", "lahiosoite", "postinumero", Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))

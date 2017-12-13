@@ -510,7 +510,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           koulutusmarkkinointilupa = None,
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = None,
-          turvakielto = hakemus.henkilo.turvakielto,
+          turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
           hakemukset = hakemukset
         )
       })
@@ -593,7 +593,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           koulutusmarkkinointilupa = None,
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
-          turvakielto = hakemus.henkilo.turvakielto,
+          turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
           hakemukset = hakemukset
         )
       })

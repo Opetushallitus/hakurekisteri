@@ -60,7 +60,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
         syntymaaika = None,
         sukupuoli = None,
         asiointiKieli = None,
-        turvakielto = false
+        turvakielto = Some(false)
       ))
     }
 

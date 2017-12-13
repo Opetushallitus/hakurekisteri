@@ -118,7 +118,7 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
       syntymaaika = Some("1989-09-24"),
       sukupuoli = Some("1"),
       asiointiKieli = Some(Kieli("fi")),
-      turvakielto = false
+      turvakielto = Some(false)
     )
   }.toSeq)
 }

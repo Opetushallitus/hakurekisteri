@@ -120,7 +120,7 @@ case class Henkilo(oidHenkilo: String,
                    syntymaaika: Option[String],
                    sukupuoli: Option[String],
                    asiointiKieli: Option[Kieli],
-                   turvakielto: Boolean)
+                   turvakielto: Option[Boolean])
 
 case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 
