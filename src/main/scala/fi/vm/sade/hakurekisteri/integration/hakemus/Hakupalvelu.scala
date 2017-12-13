@@ -694,7 +694,6 @@ case class FullHakemus(oid: String,
 
 case class AtaruHakemusDto(oid: String,
                            personOid: String,
-                           hetu: Option[String],
                            applicationSystemId: String,
                            kieli: String,
                            hakukohteet: Set[String],
@@ -710,7 +709,6 @@ case class AtaruHakemusDto(oid: String,
 
 case class AtaruHakemus(oid: String,
                         personOid: Option[String],
-                        hetu: Option[String],
                         applicationSystemId: String,
                         hakutoiveet: Option[List[HakutoiveDTO]],
                         henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,
@@ -724,5 +722,6 @@ case class AtaruHakemus(oid: String,
                         paymentObligations: Map[String, String],
                         kkPohjakoulutus: List[String]) extends HakijaHakemus {
 
+  val hetu: Option[String] = henkilo.hetu
   val stateValid: Boolean = true
 }
