@@ -190,6 +190,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val casUrlQa = s"https://$hostQa/cas"
   val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
+  val ataruUrlQa = s"https://$hostQa/lomake-editori"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
   val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
@@ -209,6 +210,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val koosteServiceUrl = properties("cas.service.valintalaskentakoostepalvelu")
   val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
+  val ataruUrl = properties.getOrElse("cas.service.ataru", ataruUrlQa)
   val koodistoServiceUrl = properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
   val parameterServiceUrl = properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
@@ -227,6 +229,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword, properties)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
   val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
+  val ataruConfig = ServiceConfig(casUrl, ataruUrl, serviceUser, servicePassword, properties)
   val koosteConfig = ServiceConfig(casUrl, koosteServiceUrl, serviceUser, servicePassword, properties)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)

@@ -88,6 +88,8 @@ object HetuUtil {
 
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
+case class Kansalaisuus(kansalaisuusKoodi: String)
+
 case class OrganisaatioHenkilo(organisaatioOid: String,
                                organisaatioHenkiloTyyppi: Option[String] = None,
                                voimassaAlkuPvm: Option[String] = None,
@@ -113,8 +115,12 @@ case class Henkilo(oidHenkilo: String,
                    etunimet: Option[String],
                    kutsumanimi: Option[String],
                    sukunimi: Option[String],
-                   kotikunta: Option[String],
-                   aidinkieli: Option[Kieli])
+                   aidinkieli: Option[Kieli],
+                   kansalaisuus: List[Kansalaisuus],
+                   syntymaaika: Option[String],
+                   sukupuoli: Option[String],
+                   asiointiKieli: Option[Kieli],
+                   turvakielto: Option[Boolean])
 
 case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 

@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import org.apache.commons.httpclient.HttpStatus
 import org.json4s.jackson.JsonMethods._
@@ -30,6 +31,8 @@ trait IOppijaNumeroRekisteri {
   }
 
   def getByHetu(hetu: String): Future[Henkilo]
+
+  def getByOids(oids: Set[String]): Future[Seq[Henkilo]]
 }
 
 object IOppijaNumeroRekisteri {
@@ -73,6 +76,14 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     logger.debug(s"Querying with hetu ${hetu.substring(0, 6)}XXXX")
     client.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(acceptedResponseCode = HttpStatus.SC_OK)
   }
+
+  override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = {
+    if (oids.nonEmpty) {
+      client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oids, acceptedResponseCode = HttpStatus.SC_OK)
+    } else {
+      Future.successful(Seq.empty)
+    }
+  }
 }
 
 object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
@@ -93,6 +104,23 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
     val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
     Future.successful(json.extract[Henkilo])
   }
+
+  def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future.successful(oids.zipWithIndex.map {
+    case (oid:String, i:Int) => Henkilo(
+      oidHenkilo = oid,
+      hetu = Some(s"Hetu$i"),
+      henkiloTyyppi = "OPPIJA",
+      etunimet = Some(s"Etunimi$i"),
+      kutsumanimi = Some(s"Kutsumanimi$i"),
+      sukunimi = Some(s"Sukunimi$i"),
+      aidinkieli = Some(Kieli("fi")),
+      kansalaisuus = List(Kansalaisuus("246")),
+      syntymaaika = Some("1989-09-24"),
+      sukupuoli = Some("1"),
+      asiointiKieli = Some(Kieli("fi")),
+      turvakielto = Some(false)
+    )
+  }.toSeq)
 }
 
 object MockPersonAliasesProvider extends PersonAliasesProvider {

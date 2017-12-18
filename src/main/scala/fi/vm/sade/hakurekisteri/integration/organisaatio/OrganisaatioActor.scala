@@ -71,8 +71,6 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case _ => false
   }
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
-
-
     val tulos = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
       case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
         log.warning(s"organisaatio not found with tunniste $tunniste")
@@ -92,6 +90,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     else
       findAndCache(oid)
   }
+
   private def findChildOids(parentOid: String): Future[Option[ChildOids]] = {
     if (childOidCache.contains(parentOid))
       childOidCache.get(parentOid).map(Some(_))

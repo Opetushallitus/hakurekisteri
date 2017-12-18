@@ -1,27 +1,22 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.io.{FileOutputStream, File}
-import java.text.SimpleDateFormat
-import java.util.function.UnaryOperator
-import java.util.zip.ZipInputStream
-import java.util.{UUID, Date}
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.function.UnaryOperator
+import java.util.zip.ZipInputStream
+import java.util.{Date, UUID}
 
 import akka.actor.ActorRef
-import fi.vm.sade.auditlog.hakurekisteri.HakuRekisteriOperation.RESOURCE_UPDATE
-import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{IHakemusService, FullHakemus, HakemusService, HetuPersonOid}
-import fi.vm.sade.hakurekisteri.web.AuditLogger
+import fi.vm.sade.auditlog.hakurekisteri.LogMessage
+import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.web.AuditLogger.audit
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
-import org.apache.commons.lang.time.DateUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.Set
 import scala.concurrent._
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeeded: Option[Boolean]) {
   def inProgress = end.isEmpty
@@ -39,7 +34,7 @@ class YtlIntegration(config: OphProperties,
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
 
-  def sync(hakemus: FullHakemus): Either[Throwable, Kokelas] = {
+  def sync(hakemus: HakijaHakemus): Either[Throwable, Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       if(hakemus.stateValid) {
         hakemus.personOid match {
@@ -80,25 +75,16 @@ class YtlIntegration(config: OphProperties,
   }
 
   def sync(personOid: String): Future[Seq[Either[Throwable, Kokelas]]] = {
-    val hakemusForPerson: Future[Seq[FullHakemus]] = hakemusService.hakemuksetForPerson(personOid)
-    hakemusForPerson.flatMap {
+    hakemusService.hakemuksetForPerson(personOid)
+      .map(_.collect {
+        case h: FullHakemus if h.stateValid && h.personOid.isDefined => h
+      }).flatMap {
       hakemukset =>
         if(hakemukset.isEmpty) {
           logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
-          throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
-        }
-        val hakemuksetInCorrectStateAndWithPersonOid = hakemukset.filter {
-          _.state match {
-          case Some("ACTIVE") => true
-          case Some("INCOMPLETE") => true
-          case _ => false
-          }
-        }.filter(_.personOid.isDefined)
-        if(hakemuksetInCorrectStateAndWithPersonOid.isEmpty) {
-          logger.error(s"Hakemukset with person OID $personOid in wrong state!")
-          Future.failed(new RuntimeException(s"Hakemukset with person OID $personOid in wrong state!"))
+          Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
         } else {
-          Future.successful(hakemuksetInCorrectStateAndWithPersonOid.map(sync))
+          Future.successful(hakemukset.map(sync))
         }
     }
   }

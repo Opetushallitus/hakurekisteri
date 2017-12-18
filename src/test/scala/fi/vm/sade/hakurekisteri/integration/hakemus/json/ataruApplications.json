@@ -1,0 +1,42 @@
+[
+  {
+    "oid": "1.2.246.562.11.00000000000000005261",
+    "personOid": "1.2.246.562.24.91842462815",
+    "applicationSystemId": "1.2.246.562.29.31587915971",
+    "kieli": "fi",
+    "hakukohteet": [
+      "1.2.246.562.20.14800254899"
+    ],
+    "paymentObligations": {
+      "1.2.246.562.20.14800254899": "obligated"
+    },
+    "asuinmaa": "Suomi",
+    "email": "lslsl@ldldl.com",
+    "matkapuhelin": "0123123",
+    "postitoimipaikka": "HELSINKI",
+    "postinumero": "00100",
+    "kotikunta": "lsldf",
+    "lahiosoite": "lslsl",
+    "kkPohjakoulutus": ["kk"]
+  },
+  {
+    "oid": "1.2.246.562.11.00000000000000005224",
+    "personOid": "1.2.246.562.24.91842462815",
+    "applicationSystemId": "1.2.246.562.29.64944541586",
+    "kieli": "en",
+    "hakukohteet": [
+      "1.2.246.562.20.44085996724"
+    ],
+    "paymentObligations": {
+      "1.2.246.562.20.14800254899": "not-checked"
+    },
+    "asuinmaa": "Suomi",
+    "email": "lslsl@ldldl.com",
+    "matkapuhelin": "0123123",
+    "postitoimipaikka": "HELSINKI",
+    "postinumero": "00100",
+    "kotikunta": "lsldf",
+    "lahiosoite": "lslsl",
+    "kkPohjakoulutus": []
+  }
+]

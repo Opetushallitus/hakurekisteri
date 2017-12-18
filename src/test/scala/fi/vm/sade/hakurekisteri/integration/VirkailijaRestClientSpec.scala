@@ -53,7 +53,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
   }
 
   it should "send JSESSIONID cookie in requests" in {
-    when(endPoint.request(forUrl("http://localhost/blast/j_spring_cas_security_check?ticket=ST-124"))).thenReturn((200, List("Set-Cookie" -> s"${JSessionIdCookieParser.name}=abcd"), ""))
+    when(endPoint.request(forUrl("http://localhost/blast/j_spring_cas_security_check?ticket=ST-124"))).thenReturn((200, List("Set-Cookie" -> s"JSESSIONID=abcd"), ""))
     when(endPoint.request(forUrl("http://localhost/cas2/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas2/v1/tickets/TGT-124"), ""))
     when(endPoint.request(forUrl("http://localhost/cas2/v1/tickets/TGT-124"))).thenReturn((200,List(), "ST-124"))
     when(endPoint.request(forUrl("http://localhost/test/rest").withHeader("Cookie" -> "JSESSIONID=abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
