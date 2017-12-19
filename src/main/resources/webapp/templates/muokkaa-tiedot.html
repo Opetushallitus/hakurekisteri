@@ -35,6 +35,19 @@
 <form ng-submit="saveTiedot()">
     <div class="row">
         <div class="col-sm-12">
+            <section ng-if="!henkilo.virtatiedot" class="panel panel-default">
+                <header class="panel-heading">
+                    <h2 oph-msg="suoritusrekisteri.muokkaa.virtatiedot" class="panel-title">Tiedot Virta-järjestelmästä</h2>
+                </header>
+                <div class="panel-body">
+                <aside>
+                    <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="!henkilo.hetu || henkilo.virtatiedot">
+                        <span oph-msg="suoritusrekisteri.muokkaa.naytavirtatiedot">Näytä tiedot Virta-järjestelmästä</span>
+                        <span class="glyphicon glyphicon-list"></span>
+                    </button>
+                </aside>
+                </div>
+            </section>
             <section ng-if="henkilo.virtatiedot" class="panel panel-default">
                 <header class="panel-heading">
                     <h2 oph-msg="suoritusrekisteri.muokkaa.virtatiedot" class="panel-title">Tiedot Virta-järjestelmästä</h2>
@@ -108,6 +121,12 @@
                             </tbody>
                         </table>
                     </div>
+                    <aside>
+                        <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="!henkilo.hetu">
+                            <span oph-msg="suoritusrekisteri.muokkaa.virtatiedotuudelleen">Hae tiedot Virta-järjestelmästä uudelleen</span>
+                            <span class="glyphicon glyphicon-list"></span>
+                        </button>
+                    </aside>
                 </div>
             </section>
             <section ng-if="henkilo.opiskeluoikeudet && henkilo.opiskeluoikeudet.length > 0" class="panel panel-default">
@@ -144,12 +163,6 @@
                             </div>
                         </li>
                     </ul>
-                    <aside>
-                        <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="!henkilo.hetu || henkilo.virtatiedot">
-                            <span oph-msg="suoritusrekisteri.muokkaa.naytavirtatiedot">Näytä tiedot Virta-järjestelmästä</span>
-                            <span class="glyphicon glyphicon-list"></span>
-                        </button>
-                    </aside>
                 </div>
             </section>
             <section class="panel panel-default">
