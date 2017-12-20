@@ -27,6 +27,7 @@ object KoskiArvosanaTrigger {
   val kielet = Seq("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
   val oppiaineet = Seq("HI", "MU", "BI", "PS", "KT", "KO", "FI", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
   val eivalinnaiset = kielet ++ oppiaineet ++ Seq("AI")
+  val peruskoulunaineet = kielet ++ oppiaineet ++ Seq("AI")
 
   // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
@@ -115,8 +116,6 @@ object KoskiArvosanaTrigger {
       case "telma" => Oids.telmaKomoOid
       case "luva" => Oids.lukioonvalmistavaKomoOid
       case "perusopetuksenlisaopetus" => Oids.lisaopetusKomoOid
-//      case "ylioppilastutkinto" => Oids.yotutkintoKomoOid
-//      case "ammatillinentutkinto" => Oids.ammatillinenKomoOid
       case _ => koulutusmoduuliTunnisteKoodiarvo
     }
   }
@@ -125,11 +124,16 @@ object KoskiArvosanaTrigger {
     arvosana.copy(suoritus = s.id)
   }
 
+  def isPK(osasuoritus: KoskiOsasuoritus): Boolean = {
+    peruskoulunaineet.contains(osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo)
+  }
+
   def pkOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
-    var res = for (
+    var res = for {
       suoritus <- osasuoritukset;
       arviointi <- suoritus.arviointi
-    ) yield {
+      if isPK(suoritus)
+    } yield {
       val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
       val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
         case (a:String, b:Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
@@ -140,12 +144,11 @@ object KoskiArvosanaTrigger {
         case (a) if eivalinnaiset.contains(a) => false
         case _ => true
       }
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen, Some(0))
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen)
     }
     res
   }
 
-  // TODO
   def lisapisteOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
     var res = for (
       suoritus <- osasuoritukset;
@@ -161,7 +164,7 @@ object KoskiArvosanaTrigger {
         case (a) if eivalinnaiset.contains(a) => false
         case _ => true
       }
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen, Some(0))
+      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen)
     }
     res
   }
@@ -184,6 +187,7 @@ object KoskiArvosanaTrigger {
           case "valmistunut" => "VALMIS"
           case "eronnut" | "erotettu" | "katsotaaneronneeksi" | "mitatoity" | "peruutettu" => "KESKEYTYNYT"
           case "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
+          case _ => "KESKEN"
         }
 
         var oid = suoritus.tyyppi match {
@@ -194,7 +198,7 @@ object KoskiArvosanaTrigger {
 
         var arvosanat: Seq[Arvosana] = oid match {
           case Oids.perusopetusKomoOid => pkOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
-          case Oids.valmaKomoOid => pkOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.valmaKomoOid => Seq()
           case Oids.telmaKomoOid => Seq()
           case Oids.lisaopetusKomoOid => lisapisteOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
           case _ => Seq()
