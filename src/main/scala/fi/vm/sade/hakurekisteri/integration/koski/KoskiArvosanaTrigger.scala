@@ -29,6 +29,7 @@ object KoskiArvosanaTrigger {
   val eivalinnaiset = kielet ++ oppiaineet ++ Seq("AI")
   val peruskoulunaineet = kielet ++ oppiaineet ++ Seq("AI")
 
+  val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
   // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
@@ -127,12 +128,15 @@ object KoskiArvosanaTrigger {
   def isPK(osasuoritus: KoskiOsasuoritus): Boolean = {
     peruskoulunaineet.contains(osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo)
   }
+  def isPKValue(arvosana: String): Boolean = {
+    peruskoulunArvosanat.contains(arvosana)
+  }
 
   def pkOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
     var res = for {
       suoritus <- osasuoritukset;
       arviointi <- suoritus.arviointi
-      if isPK(suoritus)
+      if isPK(suoritus) && isPKValue(arviointi.arvosana.koodiarvo)
     } yield {
       val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
       val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
