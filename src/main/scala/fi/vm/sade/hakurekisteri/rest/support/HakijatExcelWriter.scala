@@ -2,15 +2,18 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import java.io.OutputStream
 
-import org.apache.poi.hssf.{usermodel => hssf}
-
-
+import org.apache.poi.hssf.usermodel.HSSFWorkbook
+import org.apache.poi.ss.usermodel.CellType.BLANK
+import org.apache.poi.ss.usermodel.CellType.BOOLEAN
+import org.apache.poi.ss.usermodel.CellType.ERROR
+import org.apache.poi.ss.usermodel.CellType.FORMULA
+import org.apache.poi.ss.usermodel.CellType.NUMERIC
+import org.apache.poi.ss.usermodel.CellType.STRING
 import org.apache.poi.ss.{usermodel => poi}
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
 import scala.language.implicitConversions
-import scala.util.matching.Regex
 
 case class Cell(index: Int, value: String)
 case class Row(index: Int, cells: Set[Cell])
@@ -31,14 +34,14 @@ class Workbook(val sheets: Seq[Sheet]) {
   }
 
   def toExcel: poi.Workbook = {
-    val workbook = new hssf.HSSFWorkbook()
+    val workbook = new HSSFWorkbook()
 
     for (sheet <- sheets) {
       val eSheet = workbook.createSheet(sheet.name)
       for(row <- sheet.rows) {
         val eRow = eSheet.createRow(row.index)
         for (cell <- row.cells) {
-          eRow.createCell(cell.index, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING).setCellValue(cell.value)
+          eRow.createCell(cell.index, STRING).setCellValue(cell.value)
         }
       }
     }
@@ -50,17 +53,17 @@ object Workbook {
 
   def apply(original: poi.Workbook): Workbook = {
 
-    implicit def cellToString(cell: poi.Cell): String = cell.getCellType match {
-      case poi.Cell.CELL_TYPE_STRING =>
+    implicit def cellToString(cell: poi.Cell): String = cell.getCellTypeEnum match {
+      case STRING =>
         cell.getStringCellValue
-      case poi.Cell.CELL_TYPE_BLANK => ""
-      case poi.Cell.CELL_TYPE_BOOLEAN => cell.getBooleanCellValue.toString
-      case poi.Cell.CELL_TYPE_ERROR => throw new Exception("error in excel")
-      case poi.Cell.CELL_TYPE_FORMULA => throw new Exception("Formulas not supported")
-      case poi.Cell.CELL_TYPE_NUMERIC if poi.DateUtil.isCellDateFormatted(cell) =>
+      case BLANK => ""
+      case BOOLEAN => cell.getBooleanCellValue.toString
+      case ERROR => throw new Exception("error in excel")
+      case FORMULA => throw new Exception("Formulas not supported")
+      case NUMERIC if poi.DateUtil.isCellDateFormatted(cell) =>
         val d = new LocalDate(cell.getDateCellValue)
         DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).print(d)
-      case poi.Cell.CELL_TYPE_NUMERIC =>
+      case NUMERIC =>
         val df = new poi.DataFormatter()
         df.createFormat(cell).format(cell.getNumericCellValue)
       case cellType => throw new Exception(s"unknown cell type $cellType")
