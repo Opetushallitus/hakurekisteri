@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import java.io.OutputStream
 
+import fi.vm.sade.javautils.poi.OphCellStyles.OphHssfCellStyles
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.ss.usermodel.CellType.BLANK
 import org.apache.poi.ss.usermodel.CellType.BOOLEAN
@@ -35,13 +36,16 @@ class Workbook(val sheets: Seq[Sheet]) {
 
   def toExcel: poi.Workbook = {
     val workbook = new HSSFWorkbook()
+    val ophHssfCellStyles = new OphHssfCellStyles(workbook)
 
     for (sheet <- sheets) {
       val eSheet = workbook.createSheet(sheet.name)
       for(row <- sheet.rows) {
         val eRow = eSheet.createRow(row.index)
         for (cell <- row.cells) {
-          eRow.createCell(cell.index, STRING).setCellValue(cell.value)
+          val eCell = eRow.createCell(cell.index, STRING)
+          eCell.setCellValue(cell.value)
+          ophHssfCellStyles.apply(eCell)
         }
       }
     }
