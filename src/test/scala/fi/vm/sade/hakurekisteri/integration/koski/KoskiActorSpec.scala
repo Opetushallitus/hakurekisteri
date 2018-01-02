@@ -98,6 +98,34 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     )))
   }
 
+  it should "list should return suoritus kymppiluokka" in {
+    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+      HenkiloContainer()
+        .setSuorituksetForKymppi(List(("KT", "10"), ("KE", "8")))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .build
+    ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.lisaopetusKomoOid,
+      "orgId",
+      "VALMIS",
+      parseLocalDate("2016-02-02"),
+      "henkilo_oid",
+      yksilollistaminen.Ei,
+      "FI",
+      None,
+      true,
+      OrganisaatioOids.oph,
+      Map.empty), Seq(
+        Arvosana(suoritus = null, arvio = Arvio410("10"), "KT", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
+        Arvosana(suoritus = null, arvio = Arvio410("8"), "KE", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
+    )))
+  }
+
+  /*
+ "KO", "FI", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP"
+
+*/
+
+
   object HenkiloContainer {
     def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, "", None, "", "", ""), Seq(), "")
   }

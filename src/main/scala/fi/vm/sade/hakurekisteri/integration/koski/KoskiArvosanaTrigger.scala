@@ -132,32 +132,12 @@ object KoskiArvosanaTrigger {
     peruskoulunArvosanat.contains(arvosana)
   }
 
-  def pkOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
+  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
     var res = for {
       suoritus <- osasuoritukset;
       arviointi <- suoritus.arviointi
       if isPK(suoritus) && isPKValue(arviointi.arvosana.koodiarvo)
     } yield {
-      val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
-      val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
-        case (a:String, b:Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
-        case (a:String, b:Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
-        case _ => None
-      }
-      val valinnainen = (tunniste.koodiarvo) match {
-        case (a) if eivalinnaiset.contains(a) => false
-        case _ => true
-      }
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen)
-    }
-    res
-  }
-
-  def lisapisteOsasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): Seq[Arvosana] = {
-    var res = for (
-      suoritus <- osasuoritukset;
-      arviointi <- suoritus.arviointi
-    ) yield {
       val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
       val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
         case (a:String, b:Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
@@ -201,10 +181,11 @@ object KoskiArvosanaTrigger {
         }
 
         var arvosanat: Seq[Arvosana] = oid match {
-          case Oids.perusopetusKomoOid => pkOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
           case Oids.valmaKomoOid => Seq()
           case Oids.telmaKomoOid => Seq()
-          case Oids.lisaopetusKomoOid => lisapisteOsasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
           case _ => Seq()
         }
         if (oid != "999999" && vuosi > 1970) {
