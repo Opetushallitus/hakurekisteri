@@ -5,9 +5,13 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import java.util.function.UnaryOperator
 import java.util.zip.ZipInputStream
 import java.util.{Date, UUID}
+import javax.mail.Message.RecipientType
+import javax.mail.Session
+import javax.mail.internet.{InternetAddress, MimeMessage}
 
 import akka.actor.ActorRef
 import fi.vm.sade.auditlog.hakurekisteri.LogMessage
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.web.AuditLogger.audit
 import fi.vm.sade.properties.OphProperties
@@ -22,19 +26,20 @@ case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeed
   def inProgress = end.isEmpty
 }
 
-class YtlIntegration(config: OphProperties,
+class YtlIntegration(properties: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      hakemusService: IHakemusService,
-                     ytlActor: ActorRef) {
+                     ytlActor: ActorRef,
+                     config: Config) {
   private val logger = LoggerFactory.getLogger(getClass)
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
-  private val lastFetchStatus = new AtomicReference[LastFetchStatus]();
+  private val lastFetchStatus = new AtomicReference[LastFetchStatus]()
   private def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
-  def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
+  def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
 
-  def sync(hakemus: HakijaHakemus): Either[Throwable, Kokelas] = {
+  def sync(hakemus: HakijaHakemus): Try[Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       if(hakemus.stateValid) {
         hakemus.personOid match {
@@ -46,35 +51,35 @@ class YtlIntegration(config: OphProperties,
                   case None =>
                     val noData = s"No YTL data for hakemus ${hakemus.oid}"
                     logger.debug(noData)
-                    Left(new RuntimeException(noData))
+                    Failure(new RuntimeException(noData))
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
                     persistKokelas(kokelas)
-                    Right(kokelas)
+                    Success(kokelas)
                 }
               case None =>
                 val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
                 logger.debug(noHetu)
-                Left(new RuntimeException(noHetu))
+                Failure(new RuntimeException(noHetu))
             }
           case None =>
             val noOid = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!"
             logger.error(noOid)
-            Left(new RuntimeException(noOid))
+            Failure(new RuntimeException(noOid))
         }
       } else {
         val invalidState = s"Skipping YTL update as hakemus (${hakemus.oid}) is not in valid state!"
         logger.debug(invalidState)
-        Left(new RuntimeException(invalidState))
+        Failure(new RuntimeException(invalidState))
       }
     } else {
       val notActiveHaku =s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!"
       logger.debug(notActiveHaku)
-      Left(new RuntimeException(notActiveHaku))
+      Failure(new RuntimeException(notActiveHaku))
     }
   }
 
-  def sync(personOid: String): Future[Seq[Either[Throwable, Kokelas]]] = {
+  def sync(personOid: String): Future[Seq[Try[Kokelas]]] = {
     hakemusService.hakemuksetForPerson(personOid)
       .map(_.collect {
         case h: FullHakemus if h.stateValid && h.personOid.isDefined => h
@@ -99,14 +104,14 @@ class YtlIntegration(config: OphProperties,
 
   def getLastFetchStatus: Option[LastFetchStatus] = Option(lastFetchStatus.get())
 
-  def syncAll() = {
+  /**
+    * Begins async synchronization. Throws an exception if an error occurs during it.
+    */
+  def syncAll(): Unit = {
     val fetchStatus = newFetchStatus
     val currentStatus = atomicUpdateFetchStatus(currentStatus => {
       Option(currentStatus) match {
-        case Some(status) => status.inProgress match {
-          case true => currentStatus
-          case false => fetchStatus
-        }
+        case Some(status) if status.inProgress => currentStatus
         case _ => fetchStatus
       }
     })
@@ -132,13 +137,12 @@ class YtlIntegration(config: OphProperties,
 
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+          sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           audit.log(message(s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}"))
           atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
           throw e
       }
     }
-
-
   }
 
   private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
@@ -158,7 +162,7 @@ class YtlIntegration(config: OphProperties,
           students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
             case Some(personOid) =>
               Try(StudentToKokelas.convert(personOid, student)) match {
-                case Success(student) => Some(student)
+                case Success(candidate) => Some(candidate)
                 case Failure(exception) =>
                   logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
                   None
@@ -177,8 +181,12 @@ class YtlIntegration(config: OphProperties,
     } finally {
       zipInputStream.foreach(IOUtils.closeQuietly)
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
+
       val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
-      audit.log(message(s"Ytl sync ended ${msg}!"))
+      if(!allSucceeded.get()) {
+        sendFailureEmail(msg)
+      }
+      audit.log(message(s"Ytl sync ended $msg!"))
       atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
     }
   }
@@ -188,4 +196,29 @@ class YtlIntegration(config: OphProperties,
   }
   private def message(msg:String) = LogMessage.builder().message(msg).add("operaatio","YTL_SYNC").build()
 
+  private def sendFailureEmail(txt: String): Unit = {
+    val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisterki.ytl.error.report.recipients","")
+      .split(",").map(address => {
+      new InternetAddress(address)
+    })
+
+    val session = Session.getInstance(config.email.getAsJavaProperties())
+    var msg = new MimeMessage(session)
+    msg.setText(txt)
+    msg.setSubject("YTL sync all failed")
+    msg.setRecipients(RecipientType.TO, recipients)
+    msg.setFrom(new InternetAddress(config.email.smtpSender))
+    var tr = session.getTransport("smtp")
+    try {
+      tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
+      msg.saveChanges()
+      tr.sendMessage(msg, msg.getAllRecipients)
+    } catch {
+      case e: Throwable =>
+        logger.error("Could not send email", e)
+    } finally {
+      tr.close()
+    }
+  }
 }
+

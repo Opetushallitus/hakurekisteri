@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
+import java.util.Properties
 
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
@@ -120,7 +121,6 @@ class MockDevConfig extends Config {
 class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
 
 abstract class Config {
-
   def mockMode: Boolean
 
   val databaseUrl: String
@@ -156,6 +156,7 @@ abstract class Config {
   }
 
   val integrations = new IntegrationConfig(hostQa, properties)
+  val email: EmailConfig = new EmailConfig(properties)
 
   OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
 
@@ -259,4 +260,25 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     poll <- properties.get("suoritusrekisteri.ytl.poll").flatMap(_.blankOption);
     localStore <- properties.get("suoritusrekisteri.ytl.localstore").flatMap(_.blankOption)
   ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(";").map(LocalTime.parse), localStore)
+}
+
+class EmailConfig(properties: Map[String, String]) {
+  val smtpHost: String = properties.getOrElse("smtp.host","")
+  val smtpPort: String = properties.getOrElse("smtp.port","25")
+  val smtpUseTls: String = properties.getOrElse("smtp.use_tls","false")
+  val smtpAuthenticate: String = properties.getOrElse("smtp.authenticate","false")
+  val smtpUsername: String = properties.getOrElse("smtp.username","")
+  val smtpPassword: String = properties.getOrElse("smtp.password","")
+  val smtpSender: String = properties.getOrElse("smtp.sender","noreply@opintopolku.fi")
+
+  def getAsJavaProperties(): Properties = {
+    var props = new Properties()
+    props.setProperty("mail.smtp.user", smtpUsername)
+    props.setProperty("mail.smtp.host", smtpHost)
+    props.setProperty("mail.smtp.port", smtpPort)
+    props.setProperty("mail.smtp.auth", smtpAuthenticate)
+    props.setProperty("mail.smtp.starttls.enable", smtpUseTls)
+    props.setProperty("mail.smtp.submitter", smtpSender)
+    props
+  }
 }
