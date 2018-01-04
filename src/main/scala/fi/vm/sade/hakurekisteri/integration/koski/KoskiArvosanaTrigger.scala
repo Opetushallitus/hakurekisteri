@@ -3,13 +3,14 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import java.util.UUID
 
 import akka.actor.ActorRef
+import akka.actor.Status.{Failure, Success}
 import akka.event.Logging
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, DeleteResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, LocalDate}
@@ -47,10 +48,35 @@ object KoskiArvosanaTrigger {
         case t: AskTimeoutException => fetchExistingSuoritukset(henkiloOid)
       }
     }
+
+    def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]]
+
+    def updateArvosana(arvosana: Arvosana with Identified[UUID], arv: Arvosana): Future[Arvosana with Identified[UUID]] =
+      (suoritusRekisteri ? arvosana.copy(arvio = arv.arvio)).mapTo[Arvosana with Identified[UUID]]
+
+    def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] =
+      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).
+      mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
+      flatMap(suoritukset => suoritukset.headOption match {
+        case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
+        case Some(_) if suoritukset.length > 1 => Future.failed(new MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
+      })
+
+    def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
+      (suoritusRekisteri ? ArvosanaQuery(s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
+      //.map(a => Future.successful(a))
+    }
+
+    def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
+      arvosanat.filter(a => a.aine == aine).head
+    }
+
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
       case s: VirallinenSuoritus => s.core == suor.core
       case _ => false
     }
+
     henkilo.henkilö.oid.foreach(henkiloOid => {
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromKoski(henkilo).foreach {
@@ -62,6 +88,22 @@ object KoskiArvosanaTrigger {
                 arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
               )
             } else if (logBypassed) {
+              /*
+              TODO
+               */
+/*
+              fetchSuoritus(henkiloOid, suor.myontaja, suor.komo).map(ss => {
+                fetchArvosanat(ss).map(aa => {
+                  println(aa)
+                  arvosanat.foreach(a => {
+                      println(a)
+                      var updateableArvosana = fetchArvosana(aa, a.aine)
+                      updateArvosana(updateableArvosana, a)
+                    }
+                  )
+                })
+              })
+          */
               suoritusRekisteri ! LogMessage(s"suoritus already exists: $suor", Logging.DebugLevel)
             }
           case (_, _) =>
