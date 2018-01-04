@@ -198,19 +198,19 @@ class YtlIntegration(properties: OphProperties,
   private def message(msg:String) = LogMessage.builder().message(msg).add("operaatio","YTL_SYNC").build()
 
   private def sendFailureEmail(txt: String): Unit = {
-    val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisterki.ytl.error.report.recipients","")
-      .split(",").map(address => {
-      new InternetAddress(address)
-    })
 
     val session = Session.getInstance(config.email.getAsJavaProperties())
     var msg = new MimeMessage(session)
     msg.setText(txt)
     msg.setSubject("YTL sync all failed")
-    msg.setRecipients(RecipientType.TO, recipients)
     msg.setFrom(new InternetAddress(config.email.smtpSender))
     var tr = session.getTransport("smtp")
     try {
+      val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisteri.ytl.error.report.recipients","")
+        .split(",").map(address => {
+        new InternetAddress(address)
+      })
+      msg.setRecipients(RecipientType.TO, recipients)
       tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
       msg.saveChanges()
       tr.sendMessage(msg, msg.getAllRecipients)
