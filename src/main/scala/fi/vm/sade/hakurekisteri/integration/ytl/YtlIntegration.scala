@@ -118,7 +118,6 @@ class YtlIntegration(properties: OphProperties,
     val isAlreadyRunningAtomic = currentStatus != fetchStatus
     if(isAlreadyRunningAtomic) {
       val message = s"syncAll is already running! $currentStatus"
-      sendFailureEmail(message)
       logger.error(message)
       throw new RuntimeException(message)
     } else {
