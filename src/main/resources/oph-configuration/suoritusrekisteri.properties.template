@@ -121,4 +121,4 @@ smtp.password={{ryhmasahkoposti_smtp_password}}
 smtp.sender={{ryhmasahkoposti_smtp_sender}}
 
 # YTL sync error message recipients
-suoritusrekisterki.ytl.error.report.recipients={{suoritusrekisterki_ytl_error_report_recipients}}
+suoritusrekisteri.ytl.error.report.recipients={{suoritusrekisteri_ytl_error_report_recipients}}
