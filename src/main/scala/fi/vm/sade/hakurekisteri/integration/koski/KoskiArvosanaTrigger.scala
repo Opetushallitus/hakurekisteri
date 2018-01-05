@@ -10,7 +10,8 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, DeleteResource, LogMessage}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, LocalDate}
@@ -22,6 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object KoskiArvosanaTrigger {
 
   import scala.language.implicitConversions
+
   implicit val formats = DefaultFormats
 
   val root_org_id = "1.2.246.562.10.00000000001"
@@ -35,13 +37,15 @@ object KoskiArvosanaTrigger {
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
   def muodostaKoskiSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
-                                     personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
-                                    (implicit ec: ExecutionContext): Unit = {
+                                          personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
+                                         (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
+
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] =
       (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor, personOidsWithAliases)).mapTo[Suoritus with Identified[UUID]].recoverWith {
         case t: AskTimeoutException => saveSuoritus(suor)
       }
+
     def fetchExistingSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
       val q = SuoritusQuery(henkilo = Some(henkiloOid))
       (suoritusRekisteri ? SuoritusQueryWithPersonAliases(q, personOidsWithAliases)).mapTo[Seq[Suoritus]].recoverWith {
@@ -56,8 +60,7 @@ object KoskiArvosanaTrigger {
       (suoritusRekisteri ? arvosana.copy(arvio = arv.arvio)).mapTo[Arvosana with Identified[UUID]]
 
     def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] =
-      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).
-      mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
+      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
       flatMap(suoritukset => suoritukset.headOption match {
         case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
         case Some(_) if suoritukset.length > 1 => Future.failed(new MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
@@ -72,6 +75,44 @@ object KoskiArvosanaTrigger {
       arvosanat.filter(a => a.aine == aine).head
     }
 
+    def maxDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s1 else s2
+    def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
+
+    def createOpiskelija(henkiloOid: String, henkilo: KoskiHenkilo, suoritukset: Seq[VirallinenSuoritus]): Opiskelija = {
+      var (luokkataso, oppilaitosOid) = detectOppilaitos(suoritukset)
+      var alku = suoritukset.map(_.valmistuminen).reduceLeft(minDate).toDateTimeAtStartOfDay
+      var loppu = suoritukset.map(_.valmistuminen).reduceLeft(maxDate).toDateTimeAtStartOfDay
+
+      Opiskelija(
+        oppilaitosOid = oppilaitosOid,
+        luokkataso = luokkataso,
+        luokka = "9C",
+        henkiloOid = henkiloOid,
+        alkuPaiva = alku,
+        loppuPaiva = Some(loppu),
+        source = "koski"
+      )
+    }
+
+    def saveOpiskelija(henkiloOid: String, saveOpiskelija: Opiskelija) = {
+      suoritusRekisteri ? saveOpiskelija
+    }
+
+    //noinspection ScalaStyle
+    def detectOppilaitos(suoritukset: Seq[VirallinenSuoritus]): (String, String) = {
+      if (suoritukset.exists(_.komo == Oids.lukioKomoOid)) ("L", suoritukset.filter(_.komo == Oids.lukioKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.lukioonvalmistavaKomoOid)) ("ML", suoritukset.filter(_.komo == Oids.lukioonvalmistavaKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.ammatillinenKomoOid)) ("AK", suoritukset.filter(_.komo == Oids.ammatillinenKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.ammatilliseenvalmistavaKomoOid)) ("M", suoritukset.filter(_.komo == Oids.ammatilliseenvalmistavaKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.ammattistarttiKomoOid)) ("A", suoritukset.filter(_.komo == Oids.ammattistarttiKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.valmentavaKomoOid)) ("V", suoritukset.filter(_.komo == Oids.valmentavaKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.valmaKomoOid)) ("VALMA", suoritukset.filter(_.komo == Oids.valmaKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.telmaKomoOid)) ("TELMA", suoritukset.filter(_.komo == Oids.telmaKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.lisaopetusKomoOid)) ("10", suoritukset.filter(_.komo == Oids.lisaopetusKomoOid).head.myontaja)
+      if (suoritukset.exists(_.komo == Oids.perusopetusKomoOid)) ("9", suoritukset.filter(_.komo == Oids.perusopetusKomoOid).head.myontaja)
+      ("", "")
+    }
+
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
       case s: VirallinenSuoritus => s.core == suor.core
       case _ => false
@@ -80,7 +121,7 @@ object KoskiArvosanaTrigger {
     henkilo.henkilö.oid.foreach(henkiloOid => {
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromKoski(henkilo).foreach {
-          case (suor: VirallinenSuoritus, arvosanat:Seq[Arvosana]) =>
+          case (suor: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String) =>
             if (!suoritusExists(suor, suoritukset)) {
               for (
                 suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suor)
@@ -91,7 +132,7 @@ object KoskiArvosanaTrigger {
               /*
               TODO
                */
-/*
+              /*
               fetchSuoritus(henkiloOid, suor.myontaja, suor.komo).map(ss => {
                 fetchArvosanat(ss).map(aa => {
                   println(aa)
@@ -106,7 +147,7 @@ object KoskiArvosanaTrigger {
           */
               suoritusRekisteri ! LogMessage(s"suoritus already exists: $suor", Logging.DebugLevel)
             }
-          case (_, _) =>
+          case (_, _, _) =>
           // VapaamuotoinenSuoritus will not be saved
         }
       })
@@ -125,11 +166,12 @@ object KoskiArvosanaTrigger {
     Arvosana(suoritus = null, arvio = arvo, aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
   }
 
-  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus, Seq[Arvosana])] = {
+  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus, Seq[Arvosana], String)] = {
     getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
 
   import fi.vm.sade.hakurekisteri.tools.RicherString._
+
   def parseLocalDate(s: String): LocalDate =
     if (s.length() > 10) {
       DateTimeFormat.forPattern("yyyy-MM-ddZ").parseLocalDate(s)
@@ -137,7 +179,7 @@ object KoskiArvosanaTrigger {
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
 
-  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[(Suoritus, Seq[Arvosana])] = {
+  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[(Suoritus, Seq[Arvosana], String)] = {
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
@@ -155,6 +197,7 @@ object KoskiArvosanaTrigger {
   def matchOpetusOid(koulutusmoduuliTunnisteKoodiarvo: String): String = {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
+      case "perusopetuksenvuosiluokka" => Oids.perusopetusKomoOid
       case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
       case "luva" => Oids.lukioonvalmistavaKomoOid
@@ -170,6 +213,7 @@ object KoskiArvosanaTrigger {
   def isPK(osasuoritus: KoskiOsasuoritus): Boolean = {
     peruskoulunaineet.contains(osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo)
   }
+
   def isPKValue(arvosana: String): Boolean = {
     peruskoulunArvosanat.contains(arvosana)
   }
@@ -181,9 +225,9 @@ object KoskiArvosanaTrigger {
       if isPK(suoritus) && isPKValue(arviointi.arvosana.koodiarvo)
     } yield {
       val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
-      val lisatieto:Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
-        case (a:String, b:Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
-        case (a:String, b:Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
+      val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
+        case (a: String, b: Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
+        case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
         case _ => None
       }
       val valinnainen = (tunniste.koodiarvo) match {
@@ -202,17 +246,21 @@ object KoskiArvosanaTrigger {
     }
   }
 
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila]): Seq[(Suoritus, Seq[Arvosana])] = {
-    var result = Seq[(Suoritus, Seq[Arvosana])]()
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila]): Seq[(Suoritus, Seq[Arvosana], String)] = {
+    var result = Seq[(Suoritus, Seq[Arvosana], String)]()
     for ( suoritus <- suoritukset ) {
         val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, suoritus.toimipiste)
 
         var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
-        var lastTila = tilat.last.tila.koodiarvo match {
-          case "valmistunut" => "VALMIS"
-          case "eronnut" | "erotettu" | "katsotaaneronneeksi" | "mitatoity" | "peruutettu" => "KESKEYTYNYT"
-          case "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
+        var lastTila = tilat match {
+          case t if(t.exists(_.tila.koodiarvo == "valmistunut")) => "VALMIS"
+          case t if(t.exists(_.tila.koodiarvo == "eronnut")) => "KESKEYTYNYT"
+          case t if(t.exists(_.tila.koodiarvo == "erotettu")) => "KESKEYTYNYT"
+          case t if(t.exists(_.tila.koodiarvo == "katsotaaneronneeksi")) => "KESKEYTYNYT"
+          case t if(t.exists(_.tila.koodiarvo == "mitatoity")) => "KESKEYTYNYT"
+          case t if(t.exists(_.tila.koodiarvo == "peruutettu")) => "KESKEYTYNYT"
+          // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
           case _ => "KESKEN"
         }
 
@@ -244,9 +292,14 @@ object KoskiArvosanaTrigger {
             suorituskieli.koodiarvo,
             None,
             true,
-            root_org_id), arvosanat)
+            root_org_id), arvosanat, suoritus.luokka.getOrElse(""))
         }
       }
       result
   }
 }
+
+case class MultipleSuoritusException(henkiloOid: String,
+                                     myontaja: String,
+                                     komo: String)
+  extends Exception(s"Multiple suoritus found for henkilo $henkiloOid by myontaja $myontaja with komo $komo.")

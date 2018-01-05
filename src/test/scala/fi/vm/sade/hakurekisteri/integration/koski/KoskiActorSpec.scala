@@ -181,6 +181,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
     def getPeruskouluSuoritus(osasuoritus: Seq[KoskiOsasuoritus]): KoskiSuoritus = {
       KoskiSuoritus(
+        luokka = Some(""),
         koulutusmoduuli = dummyKoulutusmoduuli,
         tyyppi = Some (KoskiKoodi (Oids.perusopetusKomoOid, "") ),
         kieli = None,
@@ -190,12 +191,14 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         suorituskieli = None, // default FI tai sitten Muuta
         arviointi = None,
         yksilöllistettyOppimäärä = None,
-        osasuoritukset = osasuoritus
+        osasuoritukset = osasuoritus,
+        ryhmä = None
       )
     }
 
     def getKymppiSuoritus(osasuoritus: Seq[KoskiOsasuoritus]): KoskiSuoritus = {
       KoskiSuoritus(
+        luokka = Some(""),
         koulutusmoduuli = dummyKoulutusmoduuli,
         tyyppi = Some (KoskiKoodi (Oids.lisaopetusKomoOid, "") ),
         kieli = None,
@@ -205,7 +208,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         suorituskieli = None, // default FI tai sitten Muuta
         arviointi = None,
         yksilöllistettyOppimäärä = None,
-        osasuoritukset = osasuoritus
+        osasuoritukset = osasuoritus,
+        ryhmä = None
       )
     }
 

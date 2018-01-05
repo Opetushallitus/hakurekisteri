@@ -105,6 +105,7 @@ case class KoskiTila(alku: String, tila:KoskiKoodi)
 case class KoskiOrganisaatio(oid: String)
 
 case class KoskiSuoritus(
+                  luokka: Option[String],
                   koulutusmoduuli: KoskiKoulutusmoduuli,
                   tyyppi: Option[KoskiKoodi],
                   kieli: Option[KoskiKieli],
@@ -114,7 +115,8 @@ case class KoskiSuoritus(
                   suorituskieli: Option[KoskiKieli],
                   arviointi: Option[Seq[KoskiArviointi]],
                   yksilöllistettyOppimäärä: Option[Boolean],
-                  osasuoritukset: Seq[KoskiOsasuoritus])
+                  osasuoritukset: Seq[KoskiOsasuoritus],
+                  ryhmä: Option[String])
 
 case class KoskiOsasuoritus(
                  koulutusmoduuli: KoskiKoulutusmoduuli,
