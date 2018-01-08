@@ -37,7 +37,8 @@ object KoskiArvosanaTrigger {
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
   def muodostaKoskiSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
-                                          personOidsWithAliases: PersonOidsWithAliases, logBypassed: Boolean = false)
+                                          opiskelijaRekisteri: ActorRef, personOidsWithAliases: PersonOidsWithAliases,
+                                          logBypassed: Boolean = false)
                                          (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
 
@@ -78,39 +79,45 @@ object KoskiArvosanaTrigger {
     def maxDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s1 else s2
     def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
 
-    def createOpiskelija(henkiloOid: String, henkilo: KoskiHenkilo, suoritukset: Seq[VirallinenSuoritus]): Opiskelija = {
-      var (luokkataso, oppilaitosOid) = detectOppilaitos(suoritukset)
-      var alku = suoritukset.map(_.valmistuminen).reduceLeft(minDate).toDateTimeAtStartOfDay
-      var loppu = suoritukset.map(_.valmistuminen).reduceLeft(maxDate).toDateTimeAtStartOfDay
+    def createOpiskelija(henkiloOid: String, suoritukset: Seq[SuoritusLuokka]): Opiskelija = {
+      var (luokkataso, oppilaitosOid, luokka) = detectOppilaitos(suoritukset)
+      var alku = suoritukset.map(_.suoritus.valmistuminen).reduceLeft(minDate).toDateTimeAtStartOfDay
+      var loppu = suoritukset.map(_.suoritus.valmistuminen).reduceLeft(maxDate).toDateTimeAtStartOfDay
 
-      Opiskelija(
+      var op = Opiskelija(
         oppilaitosOid = oppilaitosOid,
         luokkataso = luokkataso,
-        luokka = "9C",
+        luokka = luokka,
         henkiloOid = henkiloOid,
         alkuPaiva = alku,
         loppuPaiva = Some(loppu),
         source = "koski"
       )
+      op
     }
 
-    def saveOpiskelija(henkiloOid: String, saveOpiskelija: Opiskelija) = {
-      suoritusRekisteri ? saveOpiskelija
+    def saveOpiskelija(henkiloOid: String, suoritukset: Seq[SuoritusLuokka]) = {
+      opiskelijaRekisteri ! createOpiskelija(henkiloOid, suoritukset)
+    }
+
+    def getOppilaitosAndLuokka(luokkataso: String, suoritusLuokka: Seq[SuoritusLuokka], oid: String): (String, String, String) = {
+      var sluokka = suoritusLuokka.filter(_.suoritus.komo == oid).head
+      (luokkataso, sluokka.suoritus.myontaja, sluokka.luokka)
     }
 
     //noinspection ScalaStyle
-    def detectOppilaitos(suoritukset: Seq[VirallinenSuoritus]): (String, String) = {
-      if (suoritukset.exists(_.komo == Oids.lukioKomoOid)) ("L", suoritukset.filter(_.komo == Oids.lukioKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.lukioonvalmistavaKomoOid)) ("ML", suoritukset.filter(_.komo == Oids.lukioonvalmistavaKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.ammatillinenKomoOid)) ("AK", suoritukset.filter(_.komo == Oids.ammatillinenKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.ammatilliseenvalmistavaKomoOid)) ("M", suoritukset.filter(_.komo == Oids.ammatilliseenvalmistavaKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.ammattistarttiKomoOid)) ("A", suoritukset.filter(_.komo == Oids.ammattistarttiKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.valmentavaKomoOid)) ("V", suoritukset.filter(_.komo == Oids.valmentavaKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.valmaKomoOid)) ("VALMA", suoritukset.filter(_.komo == Oids.valmaKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.telmaKomoOid)) ("TELMA", suoritukset.filter(_.komo == Oids.telmaKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.lisaopetusKomoOid)) ("10", suoritukset.filter(_.komo == Oids.lisaopetusKomoOid).head.myontaja)
-      if (suoritukset.exists(_.komo == Oids.perusopetusKomoOid)) ("9", suoritukset.filter(_.komo == Oids.perusopetusKomoOid).head.myontaja)
-      ("", "")
+    def detectOppilaitos(suoritukset: Seq[SuoritusLuokka]): (String, String, String) = suoritukset match {
+      case s if (s.exists(_.suoritus.komo == Oids.lukioKomoOid)) => getOppilaitosAndLuokka("L", s, Oids.lukioKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.lukioonvalmistavaKomoOid)) => getOppilaitosAndLuokka("ML", s, Oids.lukioonvalmistavaKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.ammatillinenKomoOid)) => getOppilaitosAndLuokka("AK", s, Oids.ammatillinenKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.ammatilliseenvalmistavaKomoOid)) => getOppilaitosAndLuokka("M", s, Oids.ammatilliseenvalmistavaKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.ammattistarttiKomoOid)) => getOppilaitosAndLuokka("A", s, Oids.ammattistarttiKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.valmentavaKomoOid)) => getOppilaitosAndLuokka("V", s, Oids.valmentavaKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.valmaKomoOid)) => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.telmaKomoOid)) => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.lisaopetusKomoOid)) => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid)
+      case s if (s.exists(_.suoritus.komo == Oids.perusopetusKomoOid)) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid)
+      case _ => ("", "", "")
     }
 
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
@@ -119,9 +126,11 @@ object KoskiArvosanaTrigger {
     }
 
     henkilo.henkilö.oid.foreach(henkiloOid => {
+      var vahvistetut = Seq[SuoritusLuokka]()
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromKoski(henkilo).foreach {
           case (suor: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String) =>
+            vahvistetut = vahvistetut :+ SuoritusLuokka(suor, luokka)
             if (!suoritusExists(suor, suoritukset)) {
               for (
                 suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suor)
@@ -150,14 +159,17 @@ object KoskiArvosanaTrigger {
           case (_, _, _) =>
           // VapaamuotoinenSuoritus will not be saved
         }
+        if (vahvistetut.nonEmpty) {
+          saveOpiskelija(henkiloOid, vahvistetut)
+        }
       })
     })
   }
 
-  def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
+  def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
     KoskiTrigger {
       (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases) => {
-        muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
+        muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, opiskelijaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
       }
     }
   }
@@ -298,6 +310,8 @@ object KoskiArvosanaTrigger {
       result
   }
 }
+
+case class SuoritusLuokka(suoritus: VirallinenSuoritus, luokka: String)
 
 case class MultipleSuoritusException(henkiloOid: String,
                                      myontaja: String,

@@ -187,7 +187,7 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
-  val koskiArvosanaTrigger: KoskiTrigger = KoskiArvosanaTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
+  val koskiArvosanaTrigger: KoskiTrigger = KoskiArvosanaTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
   val ytlTrigger: Trigger = Trigger { (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) => Try(ytlIntegration.sync(hakemus)) match {
       case Failure(e) =>
         logger.error(s"YTL sync failed for hakemus with OID ${hakemus.oid}", e)
