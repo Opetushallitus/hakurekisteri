@@ -55,7 +55,9 @@ object KoskiArvosanaTrigger {
     }
 
     def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
-    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]]
+    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
+      case t: AskTimeoutException => updateSuoritus(suoritus, suor)
+    }
 
     def updateArvosana(arvosana: Arvosana with Identified[UUID], arv: Arvosana): Future[Arvosana with Identified[UUID]] =
       (suoritusRekisteri ? arvosana.copy(arvio = arv.arvio)).mapTo[Arvosana with Identified[UUID]]
@@ -68,8 +70,7 @@ object KoskiArvosanaTrigger {
       })
 
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
-      (suoritusRekisteri ? ArvosanaQuery(s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
-      //.map(a => Future.successful(a))
+      (suoritusRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
     }
 
     def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
@@ -129,6 +130,8 @@ object KoskiArvosanaTrigger {
       case _ => false
     }
 
+    def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
+
     henkilo.henkilö.oid.foreach(henkiloOid => {
       var vahvistetut = Seq[SuoritusLuokka]()
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
@@ -142,23 +145,14 @@ object KoskiArvosanaTrigger {
                 arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
               )
             } else if (suor.komo != "luokka") {
-              /*
-              TODO
-               */
-              /*
-              fetchSuoritus(henkiloOid, suor.myontaja, suor.komo).map(ss => {
-                fetchArvosanat(ss).map(aa => {
-                  println(aa)
-                  arvosanat.foreach(a => {
-                      println(a)
-                      var updateableArvosana = fetchArvosana(aa, a.aine)
-                      updateArvosana(updateableArvosana, a)
-                    }
-                  )
+              for(
+                suoritus: VirallinenSuoritus with Identified[UUID] <- fetchSuoritus(henkiloOid, suor.myontaja, suor.komo)
+              ){
+                var ss = updateSuoritus(suoritus, suor)
+                arvosanat.foreach(a => {
+                  (arvosanaRekisteri ? toArvosana(a)(suoritus.id)("koski"))
                 })
-              })
-          */
-              suoritusRekisteri ! LogMessage(s"suoritus already exists: $suor", Logging.DebugLevel)
+              }
             }
           case (_, _, _, _) =>
           // VapaamuotoinenSuoritus will not be saved
