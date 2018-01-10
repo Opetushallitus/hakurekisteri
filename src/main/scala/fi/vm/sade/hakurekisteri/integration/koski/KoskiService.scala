@@ -40,9 +40,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
-      .flatMap(henkilot =>
-          Future.successful(henkilot)
-        )
   }
 
   def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
@@ -101,7 +98,6 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 
 case class KoskiTila(alku: String, tila:KoskiKoodi)
 
-// toimipiste, myöntäjäOrganisaatio, oppilaitos
 case class KoskiOrganisaatio(oid: String)
 
 case class KoskiSuoritus(
@@ -130,7 +126,6 @@ case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean])
 
 case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi], kieli: Option[KoskiKieli], koulutustyyppi: Option[KoskiKoodi])
 
-// koulutustyyppi, tyyppi, arvosana
 case class KoskiKoodi(koodiarvo: String, koodistoUri: String)
 
 case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganisaatio)

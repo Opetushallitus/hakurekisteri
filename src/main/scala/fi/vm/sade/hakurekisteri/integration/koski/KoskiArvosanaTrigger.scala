@@ -3,8 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import java.util.UUID
 
 import akka.actor.ActorRef
-import akka.actor.Status.{Failure, Success}
-import akka.event.Logging
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
@@ -14,8 +12,9 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{LocalDate}
 import org.json4s.DefaultFormats
+import scala.math.Ordering.Implicits._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,8 +35,11 @@ object KoskiArvosanaTrigger {
   // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
-  def muodostaKoskiSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
-                                          opiskelijaRekisteri: ActorRef, personOidsWithAliases: PersonOidsWithAliases,
+  def muodostaKoskiSuorituksetJaArvosanat(henkilo: KoskiHenkiloContainer,
+                                          suoritusRekisteri: ActorRef,
+                                          arvosanaRekisteri: ActorRef,
+                                          opiskelijaRekisteri: ActorRef,
+                                          personOidsWithAliases: PersonOidsWithAliases,
                                           logBypassed: Boolean = false)
                                          (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
@@ -133,10 +135,10 @@ object KoskiArvosanaTrigger {
 
   def createOpiskelija(henkiloOid: String, suoritukset: Seq[SuoritusLuokka]): Opiskelija = {
     var (luokkataso, oppilaitosOid, luokka) = detectOppilaitos(suoritukset)
-    var alku = suoritukset.map(_.lasnaDate).reduceLeft(minDate).toDateTimeAtStartOfDay
-    var loppu = suoritukset.map(_.suoritus.valmistuminen).reduceLeft(maxDate).toDateTimeAtStartOfDay
+    val alku = suoritukset.map(_.lasnaDate).reduceLeft(minDate).toDateTimeAtStartOfDay
+    val loppu = suoritukset.map(_.suoritus.valmistuminen).reduceLeft(maxDate).toDateTimeAtStartOfDay
 
-    var op = Opiskelija(
+    Opiskelija(
       oppilaitosOid = oppilaitosOid,
       luokkataso = luokkataso,
       luokka = luokka,
@@ -145,11 +147,10 @@ object KoskiArvosanaTrigger {
       loppuPaiva = Some(loppu),
       source = "koski"
     )
-    op
   }
 
   def getOppilaitosAndLuokka(luokkataso: String, suoritusLuokka: Seq[SuoritusLuokka], oid: String): (String, String, String) = {
-    var sluokka = suoritusLuokka.filter(_.suoritus.komo == oid).head
+    val sluokka = suoritusLuokka.find(_.suoritus.komo == oid).get
     oid match {
       // hae luokka 9C tai vast
       case Oids.perusopetusKomoOid => (luokkataso, sluokka.suoritus.myontaja, suoritusLuokka.filter(_.luokka.startsWith("9")).head.luokka)
@@ -272,9 +273,9 @@ object KoskiArvosanaTrigger {
           case _ => "KESKEN"
         }
 
-        var lasnaDate = tilat.filter(_.tila.koodiarvo == "lasna").headOption.getOrElse(None) match {
-          case kt:KoskiTila => parseLocalDate(kt.alku)
-          case _ => valmistumisPaiva
+        val lasnaDate = tilat.filter(_.tila.koodiarvo == "lasna").headOption match {
+          case Some(kt) => parseLocalDate(kt.alku)
+          case None => valmistumisPaiva
         }
 
         var oid = suoritus.tyyppi match {
