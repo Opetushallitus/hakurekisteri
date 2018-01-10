@@ -71,17 +71,22 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case _ => false
   }
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
-    val tulos = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
-      case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
-        log.warning(s"organisaatio not found with tunniste $tunniste")
-        Future.successful(None)
-    }
+    if (tunniste.isEmpty) {
+      Future.failed(new Exception(s"findAndCache error: string tunniste must not be empty"))
+    } else {
 
-    tulos.onSuccess {
-      case Some(o) => self ! CacheOrganisaatiot(Seq(o))
-    }
+      val tulos: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
+        case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
+          log.warning(s"organisaatio not found with tunniste $tunniste")
+          Future.successful(None)
+      }
 
-    tulos
+      tulos.onSuccess {
+        case Some(o) => self ! CacheOrganisaatiot(Seq(o))
+      }
+
+      tulos
+    }
   }
 
   private def findByOid(oid: String): Future[Option[Organisaatio]] = {
