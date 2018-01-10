@@ -6,10 +6,11 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.parseLocalDate
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.{Oids, OrganisaatioOids, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.json4s._
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
@@ -49,8 +50,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       None,
       true,
       OrganisaatioOids.oph,
-      Map.empty), Seq(Arvosana( suoritus = null, arvio = Arvio410("9"), "A1", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    )))
+      Map.empty), Seq(Arvosana( suoritus = null, arvio = Arvio410("9"), "A1", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())), "", parseLocalDate("2016-02-02")
+    ))
   }
 
 
@@ -59,6 +60,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("HI", "9"), ("MU", "8")))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setLuokka("9E")
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
@@ -73,7 +75,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    )))
+    ), "", parseLocalDate("2016-02-02")),
+      (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(), "9E", parseLocalDate("2016-02-02")))
   }
 
   it should "list should return peruskoulutus skip bad" in {
@@ -95,7 +98,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("5"), "PS", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    )))
+    ), "", parseLocalDate("2016-02-02")))
   }
 
   it should "list should return suoritus kymppiluokka" in {
@@ -117,14 +120,38 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("10"), "KT", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "KE", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    )))
+    ), "", parseLocalDate("2016-02-02")))
   }
 
-  /*
- "KO", "FI", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP"
 
-*/
+  it should "detectOppilaitos should return luokka for peruskoulu" in {
+    KoskiArvosanaTrigger.detectOppilaitos(Seq(
+      SuoritusLuokka(
+        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
+      SuoritusLuokka(
+        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-01"))
+    )) should equal ("9", "orgId", "9F")
+  }
 
+  it should "detectOppilaitos should return empty luokka for peruskoulun lisäopetus" in {
+    KoskiArvosanaTrigger.detectOppilaitos(Seq(
+      SuoritusLuokka(
+        VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
+      SuoritusLuokka(
+        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-01"))
+    )) should equal ("10", "orgId", "")
+  }
+
+  it should "createOpiskelija should create opiskelija" in {
+    KoskiArvosanaTrigger.createOpiskelija("henkilo_oid", Seq(
+      SuoritusLuokka(
+        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2016-01-01")),
+      SuoritusLuokka(
+        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2015-01-01"))
+    )) should equal (
+      Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2015-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+    )
+  }
 
   object HenkiloContainer {
     def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, "", None, "", "", ""), Seq(), "")
@@ -173,6 +200,24 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         tunniste = Some(KoskiKoodi(aine, "uri")),
         kieli = None,
         koulutustyyppi = None)
+    }
+
+    def setLuokka(luokka: String): HenkiloContainerBuilder = {
+      var uudetSuoritukset = suoritukset :+ KoskiSuoritus(
+        luokka = Some(luokka),
+        koulutusmoduuli = dummyKoulutusmoduuli,
+        tyyppi = Some (KoskiKoodi ("luokka", "") ),
+        kieli = None,
+        pakollinen = None,
+        toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
+        vahvistus = Some (KoskiVahvistus (päivä = "2016-02-02", myöntäjäOrganisaatio = organisaatio) ),
+        suorituskieli = None, // default FI tai sitten Muuta
+        arviointi = None,
+        yksilöllistettyOppimäärä = None,
+        osasuoritukset = Seq(getOsasuoritus("MA", "9")),
+        ryhmä = None
+      )
+      this.copy(suoritukset = uudetSuoritukset)
     }
 
     def getArvosana(arvosana: String): KoskiArviointi = {
