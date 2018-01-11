@@ -248,6 +248,22 @@ object KoskiArvosanaTrigger {
     res
   }
 
+  def opintopisteidenMaaraFromOsasuoritus(osasuoritukset: Seq[KoskiOsasuoritus]): BigDecimal = {
+    var opintopisteet = BigDecimal(0)
+    osasuoritukset.foreach{suoritus => {
+        suoritus.koulutusmoduuli.laajuus match {
+          case Some(kvj) => {
+            if(kvj.yksikkö.koodiarvo == "2"){ // opintopisteet
+              opintopisteet = opintopisteet + kvj.arvo.getOrElse(BigDecimal(0))
+            }
+          }
+          case None =>
+        }
+      }
+    }
+    opintopisteet
+  }
+
   def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, toimipiste: Option[KoskiOrganisaatio]): (Int, LocalDate, String) = {
     vahvistus match {
       case Some(k: KoskiVahvistus) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid)
@@ -293,6 +309,11 @@ object KoskiArvosanaTrigger {
           case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
           case _ => Seq()
         }
+
+        if(oid == Oids.valmaKomoOid && lastTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30){
+          lastTila = "KESKEN"
+        }
+
         if (oid != "999999" && vuosi > 1970) {
           result = result :+ (VirallinenSuoritus(
             oid,

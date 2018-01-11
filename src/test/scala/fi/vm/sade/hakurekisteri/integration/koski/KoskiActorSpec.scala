@@ -165,7 +165,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     var dummyKoulutusmoduuli = KoskiKoulutusmoduuli(
       tunniste = None,
       kieli = None,
-      koulutustyyppi = None)
+      koulutustyyppi = None,
+      laajuus = None)
 
     var organisaatio = KoskiOrganisaatio("orgId")
 
@@ -175,7 +176,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     var suomenkieliKoulutusmoduuli = KoskiKoulutusmoduuli(
       tunniste = Some(KoskiKoodi("A1", "uri")),
       kieli = Some(KoskiKieli("FI", "")),
-      koulutustyyppi = None)
+      koulutustyyppi = None,
+      laajuus = None)
 
     var kieliOsasuoritus = KoskiOsasuoritus(
       koulutusmoduuli = suomenkieliKoulutusmoduuli,
@@ -199,7 +201,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       KoskiKoulutusmoduuli(
         tunniste = Some(KoskiKoodi(aine, "uri")),
         kieli = None,
-        koulutustyyppi = None)
+        koulutustyyppi = None,
+        laajuus = None)
     }
 
     def setLuokka(luokka: String): HenkiloContainerBuilder = {
