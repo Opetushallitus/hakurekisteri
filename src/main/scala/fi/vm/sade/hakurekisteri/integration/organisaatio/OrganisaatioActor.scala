@@ -72,7 +72,9 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
     if (tunniste.isEmpty) {
-      Future.failed(new Exception(s"findAndCache error: string tunniste must not be empty"))
+      val errorMessage = "findAndCache error: string tunniste must not be empty"
+      log.error(errorMessage)
+      Future.failed(new IllegalArgumentException(errorMessage))
     } else {
 
       val tulos: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
