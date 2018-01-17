@@ -16,7 +16,7 @@ case class HasPermission(user: User, hetu: String)
 case class PermissionRequest(personOidsForSamePerson: Seq[String], organisationOids: Seq[String], loggedInUserRoles: Seq[String])
 case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
-class HakuAppPermissionCheckerActor(client: VirkailijaRestClient, organisaatioActor: ActorRef) extends Actor {
+class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient, organisaatioActor: ActorRef) extends Actor {
   private val acceptedResponseCode: Int = 200
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 30.seconds
@@ -32,7 +32,7 @@ class HakuAppPermissionCheckerActor(client: VirkailijaRestClient, organisaatioAc
       ) yield (organisaatioActor ? organisaatioOid).mapTo[Option[Organisaatio]].map(_.map(getOrganisationPath))).map(_.flatten.flatten)
 
       allOrgs.flatMap(orgs => {
-        client.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
+        hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
           acceptedResponseCode,
           PermissionRequest(
             personOidsForSamePerson = Seq(forPerson),
