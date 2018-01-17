@@ -76,7 +76,9 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
     ), "", parseLocalDate("2016-02-02")),
-      (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(), "9E", parseLocalDate("2016-02-02")))
+      (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(
+        Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
+      ), "9E", parseLocalDate("2016-02-02")))
   }
 
   it should "list should return peruskoulutus skip bad" in {
@@ -139,7 +141,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
       SuoritusLuokka(
         VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-01"))
-    )) should equal ("10", "orgId", "")
+    )) should equal ("10", "orgId", "10")
   }
 
   it should "createOpiskelija should create opiskelija" in {
