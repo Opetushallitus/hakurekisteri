@@ -16,30 +16,52 @@ case class HasPermission(user: User, hetu: String)
 case class PermissionRequest(personOidsForSamePerson: Seq[String], organisationOids: Seq[String], loggedInUserRoles: Seq[String])
 case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
-class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient, organisaatioActor: ActorRef) extends Actor {
+class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
+                                         ataruClient: VirkailijaRestClient,
+                                         organisaatioActor: ActorRef) extends Actor {
   private val acceptedResponseCode: Int = 200
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 30.seconds
 
-  def getOrganisationPath(organisaatio: Organisaatio): Seq[String] = {
-    organisaatio.children.flatMap(getOrganisationPath) :+ organisaatio.oid
+  private def getOrganisationPath(organisaatio: Organisaatio): Set[String] = {
+    def go(organisations: List[Organisaatio], oids: Set[String]): Set[String] = organisations match {
+      case Nil => oids
+      case org :: rest => go(rest ++ org.children, oids + org.oid)
+    }
+    go(List(organisaatio), Set())
+  }
+
+  private def checkHakuApp(forPerson: String, orgs: Set[String]): Future[Boolean] = {
+    hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
+      acceptedResponseCode,
+      PermissionRequest(
+        personOidsForSamePerson = Seq(forPerson),
+        organisationOids = orgs.toSeq,
+        loggedInUserRoles = Seq()
+      )
+    ).map(_.accessAllowed.getOrElse(false))
+  }
+
+  private def checkAtaru(forPerson: String, orgs: Set[String]): Future[Boolean] = {
+    ataruClient.postObject[PermissionRequest, PermissionResponse]("ataru.permissioncheck")(
+      acceptedResponseCode,
+      PermissionRequest(
+        personOidsForSamePerson = Seq(forPerson),
+        organisationOids = orgs.toSeq,
+        loggedInUserRoles = Seq()
+      )
+    ).map(_.accessAllowed.getOrElse(false))
   }
 
   override def receive: Receive = {
     case HasPermission(user, forPerson) =>
-      val allOrgs: Future[Set[String]] = Future.sequence(for (
-        organisaatioOid: String <- user.orgsFor("READ", "Virta")
-      ) yield (organisaatioActor ? organisaatioOid).mapTo[Option[Organisaatio]].map(_.map(getOrganisationPath))).map(_.flatten.flatten)
-
-      allOrgs.flatMap(orgs => {
-        hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
-          acceptedResponseCode,
-          PermissionRequest(
-            personOidsForSamePerson = Seq(forPerson),
-            organisationOids = orgs.toSeq,
-            loggedInUserRoles = Seq()
-          )
-        ).map(_.accessAllowed.getOrElse(false))
-      }) pipeTo sender
+      Future.sequence(user.orgsFor("READ", "Virta").map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
+        .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
+        .flatMap(orgs => {
+          checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
+            case (false, false) => false
+            case _ => true
+          }
+        }) pipeTo sender
   }
 }

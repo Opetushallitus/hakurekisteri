@@ -137,6 +137,8 @@ class BaseIntegrations(rekisterit: Registers,
   private val hakuAppPermissionCheckerClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf.copy(
     casUrl = None, user = None, password = None
   ), None)(restEc, system)
+  private val ataruPermissionCheckerClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas")(restEc, system)
 
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(BackoffSupervisor.props(
     Backoff.onStop(
@@ -199,6 +201,6 @@ class BaseIntegrations(rekisterit: Registers,
   val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
-  override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
+  override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot)))
 
 }
