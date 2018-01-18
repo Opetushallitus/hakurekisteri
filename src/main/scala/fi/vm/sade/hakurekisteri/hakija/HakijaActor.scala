@@ -204,7 +204,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def getOrg(oid: String): Future[Option[Organisaatio]] = {
-    Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
+      (organisaatioActor ? oid).mapTo[Option[Organisaatio]]
+        .recover { case t =>
+          log.error(t, s"Fetching organisaatio for oid $oid failed")
+          None
+        }
   }
 
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
