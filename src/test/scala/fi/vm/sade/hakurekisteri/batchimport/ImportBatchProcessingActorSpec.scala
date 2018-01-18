@@ -102,11 +102,11 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     }
 
     if (fail) {
-      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((500, List(), "error"))
+      when(result.request(forUrl("http://localhost/oppijanumerorekisteri-service/s2s/findOrCreateHenkiloPerustieto"))).thenReturn((500, List(), "error"))
       when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((500, List(), "error"))
       when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((500, List(), "error"))
     } else {
-      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
+      when(result.request(forUrl("http://localhost/oppijanumerorekisteri-service/s2s/findOrCreateHenkiloPerustieto"))).thenReturn((200, List(), "1.2.246.562.24.123"))
       when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
       when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
     }
@@ -125,8 +125,8 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     val importBatchOrgActor = system.actorOf(Props(new ImportBatchOrgActor(null)))
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchHandler, query = { (q) => Seq(batch) })))
-    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(httpProvider)))
-    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, config)))
+    val onrClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(new AsyncHttpClient(httpProvider)))
+    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(onrClient, config)))
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = suoritusHandler, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(httpProvider)))

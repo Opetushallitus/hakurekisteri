@@ -537,7 +537,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpHenkiloActor(
-      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))),
+      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(new AsyncHttpClient(asyncProvider))),
       new MockConfig
     )))
 
@@ -923,7 +923,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
     private def createEndpoint = {
       val result = mock[Endpoint]
-      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot")))
+      when(result.request(forUrl("http://localhost/oppijanumerorekisteri-service/s2s/findOrCreateHenkiloPerustieto")))
         .thenReturn((200, List(), "1.2.246.562.24.123"))
       when(result.request(
         forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true")

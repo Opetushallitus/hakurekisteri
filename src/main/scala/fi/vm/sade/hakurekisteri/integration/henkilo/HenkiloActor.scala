@@ -19,7 +19,7 @@ abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
 }
 
 class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) extends HenkiloActor(config) {
-  private val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
+  private val maxRetries = config.integrations.oppijaNumeroRekisteriConfig.httpClientMaxRetries
   private var savingHenkilo = false
   private var lastUnhandledSaveNext = 0L
   private val saveQueue: mutable.Map[SaveHenkilo, ActorRef] = new mutable.LinkedHashMap[SaveHenkilo, ActorRef]()
@@ -38,7 +38,7 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       saveQueue.remove(save)
       Future {
         Thread.sleep(100)
-      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String]("authentication-service.s2s.tiedonsiirrot")(200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
+      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String]("oppijanumerorekisteri-service.s2s.tiedonsiirrot")(200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(save.tunniste, t))
       }).pipeTo(self)(actor)
 
@@ -101,13 +101,11 @@ case class CreateHenkilo(etunimet: String,
                          sukunimi: String,
                          hetu: Option[String] = None,
                          oidHenkilo: Option[String] = None,
-                         externalId: Option[String] = None,
+                         externalIds: Option[Seq[String]] = None,
                          syntymaaika: Option[String] = None,
                          sukupuoli: Option[String] = None,
                          aidinkieli: Option[Kieli] = None,
-                         henkiloTyyppi: String,
-                         kasittelijaOid: String,
-                         organisaatioHenkilo: Seq[OrganisaatioHenkilo] = Seq())
+                         henkiloTyyppi: String)
 
 case class Henkilo(oidHenkilo: String,
                    hetu: Option[String],
