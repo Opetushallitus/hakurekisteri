@@ -414,24 +414,16 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
       sukunimi = sukunimi,
       hetu = extractHetu,
       oidHenkilo = extractOppijanumero,
-      externalId = extractHenkilontunniste(vuosi),
+      externalIds = extractHenkilontunniste(vuosi),
       syntymaaika = syntymaaika,
       sukupuoli = sukupuoli,
       aidinkieli = Some(Kieli(aidinkieli.toLowerCase)),
-      henkiloTyyppi = "OPPIJA",
-      kasittelijaOid = lahde,
-      organisaatioHenkilo = Seq(OrganisaatioHenkilo(
-        organisaatioOid = resolveOid(lahtokoulu),
-        organisaatioHenkiloTyyppi = Some("OPISKELIJA"),
-        voimassaAlkuPvm = Some(opiskelijaAlkuPaiva.toString("yyyy-MM-dd")),
-        voimassaLoppuPvm = Some(opiskelijaLoppuPaiva.toString("yyyy-MM-dd")),
-        tehtavanimike = Some(luokka)
-      ))
+      henkiloTyyppi = "OPPIJA"
     )
   }
 
-  private def extractHenkilontunniste(vuosi: Int): Option[String] = tunniste match {
-    case ImportHenkilonTunniste(t, sa, _) => Some(s"${koulut}_${vuosi}_${t}_$sa")
+  private def extractHenkilontunniste(vuosi: Int): Option[Seq[String]] = tunniste match {
+    case ImportHenkilonTunniste(t, sa, _) => Some(Seq(s"${koulut}_${vuosi}_${t}_$sa"))
     case _ => None
   }
 

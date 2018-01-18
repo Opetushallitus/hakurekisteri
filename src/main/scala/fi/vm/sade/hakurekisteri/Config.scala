@@ -197,7 +197,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
-  val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
   val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
 
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
@@ -208,7 +207,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
   val koosteServiceUrl = properties("cas.service.valintalaskentakoostepalvelu")
-  val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
   val ataruUrl = properties.getOrElse("cas.service.ataru", ataruUrlQa)
   val koodistoServiceUrl = properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
@@ -226,7 +224,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val servicePassword = properties.get("suoritusrekisteri.app.password")
 
   val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties)
-  val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword, properties)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
   val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
   val ataruConfig = ServiceConfig(casUrl, ataruUrl, serviceUser, servicePassword, properties)
