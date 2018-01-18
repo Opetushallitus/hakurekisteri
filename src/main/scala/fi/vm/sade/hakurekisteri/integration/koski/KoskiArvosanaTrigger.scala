@@ -243,24 +243,28 @@ object KoskiArvosanaTrigger {
 
   def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): (Seq[Arvosana], Yksilollistetty) = {
     var yksilöllistetyt = ListBuffer[Boolean]()
-    var res = for {
+    var res:Seq[Arvosana] = Seq()
+    for {
       suoritus <- osasuoritukset;
       arviointi <- suoritus.arviointi
-      if isPK(suoritus) && isPKValue(arviointi.arvosana.koodiarvo)
+      if isPK(suoritus)
     } yield {
-      val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
-      val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
-        case (a: String, b: Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
-        case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
-        case _ => None
-      }
-      val valinnainen = (tunniste.koodiarvo) match {
-        case (a) if eivalinnaiset.contains(a) => false
-        case _ => true
-      }
       yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
-      createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen)
+      if(isPKValue(arviointi.arvosana.koodiarvo)){
+        val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
+        val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
+          case (a: String, b: Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
+          case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
+          case _ => None
+        }
+        val valinnainen = (tunniste.koodiarvo) match {
+          case (a) if eivalinnaiset.contains(a) => false
+          case _ => true
+        }
+        res = res :+ createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen)
+      }
     }
+
     var yksilöllistetty = yksilollistaminen.Ei
     if (yksilöllistetyt.contains(true) && yksilöllistetyt.contains(false)) {
       yksilöllistetty = yksilollistaminen.Osittain
