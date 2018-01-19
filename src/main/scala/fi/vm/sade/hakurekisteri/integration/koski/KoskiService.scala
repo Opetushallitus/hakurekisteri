@@ -112,7 +112,8 @@ case class KoskiSuoritus(
                   arviointi: Option[Seq[KoskiArviointi]],
                   yksilöllistettyOppimäärä: Option[Boolean],
                   osasuoritukset: Seq[KoskiOsasuoritus],
-                  ryhmä: Option[String])
+                  ryhmä: Option[String],
+                  alkamispäivä: Option[String])
 
 case class KoskiOsasuoritus(
                  koulutusmoduuli: KoskiKoulutusmoduuli,

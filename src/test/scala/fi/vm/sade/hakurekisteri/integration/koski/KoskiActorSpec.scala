@@ -131,8 +131,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       SuoritusLuokka(
         VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
       SuoritusLuokka(
-        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-01"))
-    )) should equal ("9", "orgId", "9F")
+        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-31"))
+    ), DateTime.parse("2017-01-01")) should equal ("9", "orgId", "9F", DateTime.parse("2017-01-31"))
   }
 
   it should "detectOppilaitos should return empty luokka for peruskoulun lisäopetus" in {
@@ -140,8 +140,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       SuoritusLuokka(
         VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
       SuoritusLuokka(
-        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-01"))
-    )) should equal ("10", "orgId", "10")
+        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-02-02"))
+    ), DateTime.parse("2017-02-02")) should equal ("10", "orgId", "10", DateTime.parse("2017-02-02"))
   }
 
   it should "createOpiskelija should create opiskelija" in {
@@ -220,7 +220,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         arviointi = None,
         yksilöllistettyOppimäärä = None,
         osasuoritukset = Seq(getOsasuoritus("MA", "9")),
-        ryhmä = None
+        ryhmä = None,
+        alkamispäivä = None
       )
       this.copy(suoritukset = uudetSuoritukset)
     }
@@ -242,7 +243,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         arviointi = None,
         yksilöllistettyOppimäärä = None,
         osasuoritukset = osasuoritus,
-        ryhmä = None
+        ryhmä = None,
+        alkamispäivä = None
       )
     }
 
@@ -259,7 +261,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         arviointi = None,
         yksilöllistettyOppimäärä = None,
         osasuoritukset = osasuoritus,
-        ryhmä = None
+        ryhmä = None,
+        alkamispäivä = None
       )
     }
 
