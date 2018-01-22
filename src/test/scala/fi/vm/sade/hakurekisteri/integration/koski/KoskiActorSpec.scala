@@ -58,7 +58,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   it should "list should return peruskoulutus with arvosanat" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("HI", "9"), ("MU", "8")))
+        .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
         .setLuokka("9E")
         .build
@@ -84,7 +84,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   it should "list should return peruskoulutus skip bad" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("BI", "4"), ("PS", "5"), ("IHME JA KUMMA", "10"), ("TE", "11")))
+        .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", Some("5"), false), ("IHME JA KUMMA", Some("10"), false), ("TE", Some("11"), false)))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
@@ -103,10 +103,52 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     ), "", parseLocalDate("2016-02-02")))
   }
 
+  it should "Suoritus should be osittain yksilöllistetty" in {
+    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+      HenkiloContainer()
+        .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .build
+    ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
+      "orgId",
+      "VALMIS",
+      parseLocalDate("2016-02-02"),
+      "henkilo_oid",
+      yksilollistaminen.Osittain,
+      "FI",
+      None,
+      true,
+      OrganisaatioOids.oph,
+      Map.empty), Seq(
+        Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
+    ), "", parseLocalDate("2016-02-02")))
+  }
+
+  it should "Suoritus should be kokonaan yksilöllistetty" in {
+    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+      HenkiloContainer()
+        .setSuorituksetForPeruskoulu(List(("YL", Some("4"), true), ("OP", None, true), ("DDR", None, false)))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .build
+    ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
+      "orgId",
+      "VALMIS",
+      parseLocalDate("2016-02-02"),
+      "henkilo_oid",
+      yksilollistaminen.Kokonaan,
+      "FI",
+      None,
+      true,
+      OrganisaatioOids.oph,
+      Map.empty), Seq(
+        Arvosana(suoritus = null, arvio = Arvio410("4"), "YL", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
+    ), "", parseLocalDate("2016-02-02")))
+  }
+
   it should "list should return suoritus kymppiluokka" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
-        .setSuorituksetForKymppi(List(("KT", "10"), ("KE", "8")))
+        .setSuorituksetForKymppi(List(("KT", Some("10")), ("KE", Some("8"))))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.lisaopetusKomoOid,
@@ -155,6 +197,11 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     )
   }
 
+
+
+
+
+
   object HenkiloContainer {
     def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, "", None, "", "", ""), Seq(), "")
   }
@@ -189,13 +236,17 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       yksilöllistettyOppimäärä = Some(false)
     )
 
-    def getOsasuoritus(aine: String, arvosana: String): KoskiOsasuoritus = {
+    def getOsasuoritus(aine: String, arvosana: Option[String], yksilollistetty: Boolean = false): KoskiOsasuoritus = {
+      val arv = arvosana match {
+        case Some(s) => Seq(getArvosana(s))
+        case None => Seq()
+      }
       KoskiOsasuoritus(
         koulutusmoduuli = getKoulutusModuuli(aine),
         tyyppi = KoskiKoodi("", ""),
-        arviointi = Seq(getArvosana(arvosana)),
+        arviointi = arv,
         pakollinen = Some(true),
-        yksilöllistettyOppimäärä = Some(false)
+        yksilöllistettyOppimäärä = Some(yksilollistetty)
       )
     }
 
@@ -219,7 +270,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         suorituskieli = None, // default FI tai sitten Muuta
         arviointi = None,
         yksilöllistettyOppimäärä = None,
-        osasuoritukset = Seq(getOsasuoritus("MA", "9")),
+        osasuoritukset = Seq(getOsasuoritus("MA", Some("9"))),
         ryhmä = None,
         alkamispäivä = None
       )
@@ -270,12 +321,12 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       this.copy(koskiHenkilo = henkilo)
 
 
-    def setSuorituksetForPeruskoulu(osasuoritukset: List[(String, String)]): HenkiloContainerBuilder = {
-      var osasuor = osasuoritukset.map(a => getOsasuoritus(a._1,a._2))
+    def setSuorituksetForPeruskoulu(osasuoritukset: List[(String, Option[String], Boolean)]): HenkiloContainerBuilder = {
+      var osasuor = osasuoritukset.map(a => getOsasuoritus(a._1,a._2,a._3))
       this.copy(suoritukset = Seq(getPeruskouluSuoritus(osasuor)))
     }
 
-    def setSuorituksetForKymppi(osasuoritukset: List[(String, String)]): HenkiloContainerBuilder = {
+    def setSuorituksetForKymppi(osasuoritukset: List[(String, Option[String])]): HenkiloContainerBuilder = {
       var osasuor = osasuoritukset.map(a => getOsasuoritus(a._1,a._2))
       this.copy(suoritukset = Seq(getKymppiSuoritus(osasuor)))
     }
