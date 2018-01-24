@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.UUID
+import java.util.{Calendar, UUID}
 
 import akka.actor.ActorRef
 import akka.pattern.{AskTimeoutException, ask}
@@ -301,11 +301,21 @@ object KoskiArvosanaTrigger {
     }
   }
 
+  def parseNextFourthOfJune(): LocalDate = {
+    var cal = java.util.Calendar.getInstance()
+    cal.set(cal.get(Calendar.YEAR), 5, 4)
+    var now = LocalDate.now()
+    var fourthOfJune = LocalDate.fromCalendarFields(cal)
+    if(now.isAfter(fourthOfJune)){
+      fourthOfJune.plusYears(1)
+    }
+    fourthOfJune
+  }
+
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila]): Seq[(Suoritus, Seq[Arvosana], String, LocalDate)] = {
     var result = Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]()
     for ( suoritus <- suoritukset ) {
         val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, suoritus.toimipiste)
-
         var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
         var lastTila = tilat match {
@@ -320,7 +330,7 @@ object KoskiArvosanaTrigger {
         }
 
         val lasnaDate = (suoritus.alkamispäivä, tilat.filter(_.tila.koodiarvo == "lasna").headOption, lastTila) match {
-          case (Some(a), _, "VALMIS") => parseLocalDate(a)
+          case (Some(a), _, _) => parseLocalDate(a)
           case (None, Some(kt), _) => parseLocalDate(kt.alku)
           case (_,_,_) => valmistumisPaiva
         }
@@ -351,12 +361,19 @@ object KoskiArvosanaTrigger {
           case _ => suoritus.luokka.getOrElse("")
         }
 
+
+        val useValmistumisPaiva = (oid, luokka.startsWith("9"), lastTila) match {
+          case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+          case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
+          case (_,_,_) => valmistumisPaiva
+        }
+
         if (oid != "999999" && vuosi > 1970) {
           result = result :+ (VirallinenSuoritus(
             oid,
             organisaatioOid,
             lastTila,
-            valmistumisPaiva,
+            useValmistumisPaiva,
             personOid,
             yksilöllistaminen,
             suorituskieli.koodiarvo,

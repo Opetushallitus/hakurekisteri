@@ -81,6 +81,33 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       ), "9E", parseLocalDate("2016-02-02")))
   }
 
+  it should "alkamispaiva should be from alkamispaiva" in {
+    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+      HenkiloContainer()
+        .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setLuokka("9A", Some("2017-03-03"))
+        .build
+    ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
+      "orgId",
+      "VALMIS",
+      parseLocalDate("2016-02-02"),
+      "henkilo_oid",
+      yksilollistaminen.Ei,
+      "FI",
+      None,
+      true,
+      OrganisaatioOids.oph,
+      Map.empty), Seq(
+      Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
+      Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
+    ), "", parseLocalDate("2016-02-02")),
+      (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(
+        Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
+      ), "9A", parseLocalDate("2017-03-03")))
+  }
+
+
   it should "list should return peruskoulutus skip bad" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
@@ -113,6 +140,30 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
+      "henkilo_oid",
+      yksilollistaminen.Osittain,
+      "FI",
+      None,
+      true,
+      OrganisaatioOids.oph,
+      Map.empty), Seq(
+        Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
+    ), "", parseLocalDate("2016-02-02")))
+  }
+
+  it should "Kesken should set enddate as next fourth of june" in {
+
+    val nextFourthOfJune = KoskiArvosanaTrigger.parseNextFourthOfJune()
+
+    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+      HenkiloContainer()
+        .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setOpiskeluOikeusJakso(Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "kesken", koodistoUri = "uri"))))
+    ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
+      "orgId",
+      "KESKEN",
+      nextFourthOfJune,
       "henkilo_oid",
       yksilollistaminen.Osittain,
       "FI",
@@ -221,6 +272,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
     var arvosana9 = KoskiArviointi(arvosana = KoskiKoodi(koodiarvo = "9", koodistoUri = ""), hyväksytty = Some(true))
 
+    var opiskeluOikeusJakso = KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot = Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "valmistunut", koodistoUri = "uri"))))
+
     // suomen kielinen kielisuoritus
     var suomenkieliKoulutusmoduuli = KoskiKoulutusmoduuli(
       tunniste = Some(KoskiKoodi("A1", "uri")),
@@ -235,6 +288,15 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       pakollinen = Some(true),
       yksilöllistettyOppimäärä = Some(false)
     )
+
+    def setOpiskeluOikeusJakso(tilat: Seq[KoskiTila]) = {
+      opiskeluOikeusJakso = opiskeluOikeusJakso.copy(opiskeluoikeusjaksot = tilat)
+      this.build
+    }
+
+    def getOpiskeluOikeusJakso: KoskiOpiskeluoikeusjakso = {
+      opiskeluOikeusJakso
+    }
 
     def getOsasuoritus(aine: String, arvosana: Option[String], yksilollistetty: Boolean = false): KoskiOsasuoritus = {
       val arv = arvosana match {
@@ -258,7 +320,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         laajuus = None)
     }
 
-    def setLuokka(luokka: String): HenkiloContainerBuilder = {
+    def setLuokka(luokka: String, alkamisPaiva: Option[String] = None): HenkiloContainerBuilder = {
       var uudetSuoritukset = suoritukset :+ KoskiSuoritus(
         luokka = Some(luokka),
         koulutusmoduuli = dummyKoulutusmoduuli,
@@ -272,7 +334,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         yksilöllistettyOppimäärä = None,
         osasuoritukset = Seq(getOsasuoritus("MA", Some("9"))),
         ryhmä = None,
-        alkamispäivä = None
+        alkamispäivä = alkamisPaiva
       )
       this.copy(suoritukset = uudetSuoritukset)
     }
@@ -340,9 +402,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         Seq(KoskiOpiskeluoikeus(
           oid = "",
           oppilaitos = KoskiOrganisaatio(orgId),
-          tila = KoskiOpiskeluoikeusjakso(
-                  opiskeluoikeusjaksot = Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "valmistunut", koodistoUri = "uri")))
-          ),
+          tila = this.getOpiskeluOikeusJakso,
           suoritukset = suoritukset
         ))
       )
