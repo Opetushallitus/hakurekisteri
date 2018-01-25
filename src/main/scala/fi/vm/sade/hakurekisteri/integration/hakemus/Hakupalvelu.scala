@@ -57,11 +57,11 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
-  private def getLisakysymyksetForHaku(hakuOid: String, isErkkaHaku: Boolean): Future[Map[String, ThemeQuestion]] = {
+  private def getLisakysymyksetForHaku(hakuOid: String, kohdejoukkoUri: Option[String]): Future[Map[String, ThemeQuestion]] = {
     val alwaysIncludeHardcodedLisakysymysFeatureFlag = false
 
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(kysymykset =>
-      if (alwaysIncludeHardcodedLisakysymysFeatureFlag || isErkkaHaku) {
+      if (alwaysIncludeHardcodedLisakysymysFeatureFlag || AkkaHakupalvelu.isErkkaHaku(kohdejoukkoUri)) {
         kysymykset ++ AkkaHakupalvelu.hardCodedLisakysymys
       } else {
         kysymykset
@@ -100,8 +100,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
       val hakuF = (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
       for {
         haku <- hakuF
-        isErkkaHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_20"))
-        lisakysymykset <-  getLisakysymyksetForHaku(hakuOid, isErkkaHaku)
+        lisakysymykset <-  getLisakysymyksetForHaku(hakuOid, haku.kohdejoukkoUri)
       } yield (haku, lisakysymykset)
     }
 
@@ -224,7 +223,7 @@ object AkkaHakupalvelu {
     Liite(prefAoId, prefAoGroupId, har.receptionStatus, har.processingStatus, name, har.applicationAttachment.address.recipient)
   }
 
-  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
+  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], kohdejoukkoUri: Option[String]): Seq[Lisakysymys] = {
 
     case class CompositeId(questionId: String, answerId: Option[String])
 
@@ -301,10 +300,15 @@ object AkkaHakupalvelu {
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
     val flatAnswers = answers.hakutoiveet.getOrElse(Map()) ++ answers.osaaminen.getOrElse(Map()) ++ answers.lisatiedot.getOrElse(Map())
 
-    val missingQuestionAnswers: Map[String, String] = hardCodedLisakysymys.filterNot(q => {
-      val id = q._1
-      flatAnswers.contains(id)
-    }).map(q => (q._1, ""))
+    val missingQuestionAnswers: Map[String, String] =
+      if (isErkkaHaku(kohdejoukkoUri)) {
+        hardCodedLisakysymys.filterNot(q => {
+          val id = q._1
+          flatAnswers.contains(id)
+        }).map(q => (q._1, ""))
+      } else {
+      Map.empty
+    }
 
     /*
     The missing question answers are added here forcefully since the excel sheets and what not need to have them in all cases
@@ -318,6 +322,11 @@ object AkkaHakupalvelu {
 
     finalanswers
   }
+
+  private def isErkkaHaku(kohdejoukkoUri: Option[String]): Boolean = {
+    kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_20"))
+  }
+
 
   def getHakija(h: HakijaHakemus,
                 haku: Haku,
@@ -393,7 +402,7 @@ object AkkaHakupalvelu {
           huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
           huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
           huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-          lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
+          lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid, haku.kohdejoukkoUri),
           liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
           muukoulutus = hakemus.koulutustausta.flatMap(_.muukoulutus)
 
