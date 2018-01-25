@@ -228,13 +228,22 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     ), DateTime.parse("2017-01-01")) should equal ("9", "orgId", "9F", DateTime.parse("2017-01-31"))
   }
 
-  it should "detectOppilaitos should return empty luokka for peruskoulun lisäopetus" in {
+  it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
     KoskiArvosanaTrigger.detectOppilaitos(Seq(
       SuoritusLuokka(
         VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
       SuoritusLuokka(
         VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-02-02"))
     ), DateTime.parse("2017-02-02")) should equal ("10", "orgId", "10", DateTime.parse("2017-02-02"))
+  }
+
+  it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
+    KoskiArvosanaTrigger.detectOppilaitos(Seq(
+      SuoritusLuokka(
+        VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "10C", parseLocalDate("2017-01-01")),
+      SuoritusLuokka(
+        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-02-02"))
+    ), DateTime.parse("2017-02-02")) should equal ("10", "orgId", "10C", DateTime.parse("2017-02-02"))
   }
 
   it should "createOpiskelija should create opiskelija" in {

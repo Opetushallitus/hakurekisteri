@@ -169,8 +169,20 @@ object KoskiArvosanaTrigger {
     val sluokka = suoritusLuokka.find(_.suoritus.komo == oid).get
     oid match {
       // hae luokka 9C tai vast
-      case Oids.perusopetusKomoOid if suoritusLuokka.filter(_.luokka.startsWith("9")).nonEmpty => (luokkataso, sluokka.suoritus.myontaja, suoritusLuokka.filter(_.luokka.startsWith("9")).head.luokka, suoritusLuokka.filter(_.luokka.startsWith("9")).head.lasnaDate.toDateTimeAtStartOfDay)
-      case Oids.lisaopetusKomoOid => (luokkataso, sluokka.suoritus.myontaja, "10", alku)
+      case Oids.perusopetusKomoOid if suoritusLuokka.filter(_.luokka.startsWith("9")).nonEmpty => {
+        var luokka = sluokka.suoritus.myontaja, suoritusLuokka.filter(_.luokka.startsWith("9")).head.luokka
+        if(luokka.isEmpty()){
+          luokka = "9"
+        }
+        (luokkataso, luokka, suoritusLuokka.filter(_.luokka.startsWith("9")).head.lasnaDate.toDateTimeAtStartOfDay)
+      }
+      case Oids.lisaopetusKomoOid => {
+        var luokka = suoritusLuokka.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka
+        if(suoritusLuokka.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka.isEmpty()){
+          luokka = "10"
+        }
+        (luokkataso, sluokka.suoritus.myontaja, luokka, alku)
+      }
       case _ => (luokkataso, sluokka.suoritus.myontaja, sluokka.luokka, alku)
     }
   }
@@ -223,6 +235,7 @@ object KoskiArvosanaTrigger {
   def matchOpetusOid(koulutusmoduuliTunnisteKoodiarvo: String): String = {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
+      case "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
       case "perusopetuksenvuosiluokka" => "luokka"
       case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
@@ -364,6 +377,7 @@ object KoskiArvosanaTrigger {
 
         val useValmistumisPaiva = (oid, luokka.startsWith("9"), lastTila) match {
           case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+          case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
           case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
           case (_,_,_) => valmistumisPaiva
         }
