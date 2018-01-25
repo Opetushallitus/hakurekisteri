@@ -616,10 +616,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
     val koosteData: Option[Map[String,String]] = None
 
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
-      case Some(org) => {
+      case Some(org) =>
         Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {kohde.tarjoaja == org}))))
-      }
-      case _ => Future(hakijat)
+      case _ =>
+        Future(hakijat)
     }
 
     val haku = Haku(
@@ -629,12 +629,16 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       "kausi_s#1",
       2014,
       Some("kausi_k#1"),
-      Some(2015), kkHaku = false, None, None)
+      Some(2015),
+      kkHaku =  false,
+      None,
+      None
+    )
 
     private val kansalaisuuskoodit = Map("246" -> "FIN")
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty, koosteData, kansalaisuuskoodit))
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, Map.empty, Option.empty, koosteData, kansalaisuuskoodit))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
@@ -651,19 +655,11 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       case "1.25.3" => Future(Some(SynteettinenHakemus))
       case "1.25.5" => Future(Some(FullHakemus5))
       case "1.25.10" => Future(Some(VanhentuneenHaunHakemus))
-      case default => Future(None)
-    }
-
-    def is(token:Any): Unit = token match {
-      case notEmpty => has(FullHakemus1, FullHakemus2)
+      case _ => Future(None)
     }
 
     def has(hakemukset: FullHakemus*): Unit = {
       tehdytHakemukset = hakemukset
-    }
-
-    def withLisakysymykset (lisakysymykset: Map[String, ThemeQuestion]): Unit = {
-      this.lisakysymykset = lisakysymykset
     }
 
     override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq("1.2.246.562.20.14800254899", "1.2.246.562.20.44085996724"))
@@ -679,7 +675,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       case OpetuspisteY.oid => Future.successful(Some(OpetuspisteY)) pipeTo sender
       case AtaruOpetuspiste1.oid => Future.successful(Some(AtaruOpetuspiste1)) pipeTo sender
       case AtaruOpetuspiste2.oid => Future.successful(Some(AtaruOpetuspiste2)) pipeTo sender
-      case default => Future.successful(None) pipeTo sender
+      case _ => Future.successful(None) pipeTo sender
     }
   }
 
@@ -714,7 +710,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
 
-  val valintatulokset = Future.successful(
+  val valintatulokset: Future[Seq[ValintaTulos]] = Future.successful(
     Seq(
       ValintaTulos(
         FullHakemus1.oid,
@@ -774,7 +770,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
     )
   )
 
-  val sijoitteluClient = mock[VirkailijaRestClient]
+  val sijoitteluClient: VirkailijaRestClient = mock[VirkailijaRestClient]
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.1")(200) returns valintatulokset
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.2")(200) returns valintatulokset
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.3")(200) returns valintatulokset
@@ -788,7 +784,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
     val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
 
-    def get(q: HakijaQuery) = {
+    def get(q: HakijaQuery): Future[Any] = {
       hakijaActor ? q
     }
   }
