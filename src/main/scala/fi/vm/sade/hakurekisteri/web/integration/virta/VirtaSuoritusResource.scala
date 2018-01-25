@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.matching.Regex
 
-class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: ActorRef, oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
+class VirtaSuoritusResource(virtaActor: ActorRef, hakemusBasedPermissionChecker: ActorRef, oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with VirtaSuoritusSwaggerApi with JacksonJsonSupport
     with SecuritySupport with FutureSupport {
@@ -33,7 +33,7 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: Acto
     if (user.isAdmin) {
       Future.successful(true)
     } else {
-      (hakuAppPermissionChecker ? HasPermission(user, personOid)).mapTo[Boolean]
+      (hakemusBasedPermissionChecker ? HasPermission(user, personOid)).mapTo[Boolean]
     }
 
   before() {

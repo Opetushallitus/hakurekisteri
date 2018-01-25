@@ -31,7 +31,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Try}
 
 trait Integrations {
-  val hakuAppPermissionChecker: ActorRef
+  val hakemusBasedPermissionChecker: ActorRef
   val virta: ActorRef
   val virtaResource: ActorRef
   val henkilo: ActorRef
@@ -92,7 +92,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
-  override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new Actor {
+  override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new Actor {
     override def receive: Receive = {
       case a: HasPermission => sender ! true
     }
@@ -137,6 +137,8 @@ class BaseIntegrations(rekisterit: Registers,
   private val hakuAppPermissionCheckerClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf.copy(
     casUrl = None, user = None, password = None
   ), None)(restEc, system)
+  private val ataruPermissionCheckerClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas")(restEc, system)
 
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(BackoffSupervisor.props(
     Backoff.onStop(
@@ -199,6 +201,6 @@ class BaseIntegrations(rekisterit: Registers,
   val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
-  override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
+  override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot)))
 
 }
