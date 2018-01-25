@@ -58,14 +58,8 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
   private def getLisakysymyksetForHaku(hakuOid: String, kohdejoukkoUri: Option[String]): Future[Map[String, ThemeQuestion]] = {
-    val alwaysIncludeHardcodedLisakysymysFeatureFlag = false
-
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(kysymykset =>
-      if (alwaysIncludeHardcodedLisakysymysFeatureFlag || AkkaHakupalvelu.isErkkaHaku(kohdejoukkoUri)) {
-        kysymykset ++ AkkaHakupalvelu.hardCodedLisakysymys
-      } else {
-        kysymykset
-      }
+        kysymykset ++ AkkaHakupalvelu.hardcodedLisakysymykset(kohdejoukkoUri)
     )
   }
 
@@ -144,30 +138,12 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
 object AkkaHakupalvelu {
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
-  val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
+  def hardcodedLisakysymykset(kohdejoukkoUri: Option[String]): Map[String, ThemeQuestion] = {
+    val isErkkaHaku = kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_20"))
+    hardcodedLisakysymyksetForAll ++ (if (isErkkaHaku) hardcodedLisakysymyksetForErkkaHaku else Map.empty)
+  }
 
-    "hojks" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
-        "suunnitelma)?",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "koulutuskokeilu" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Oletko ollut koulutuskokeilussa?",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "miksi_ammatilliseen" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Miksi haet erityisoppilaitokseen?",
-      applicationOptionOids = Nil,
-      options = None),
-
+  val hardcodedLisakysymyksetForAll: Map[String, ThemeQuestion] = Map(
     "TYOKOKEMUSKUUKAUDET" -> ThemeQuestion(
       isHaunLisakysymys = true,
       `type` = "ThemeTextQuestion",
@@ -188,6 +164,30 @@ object AkkaHakupalvelu {
       messageText = "Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä.",
       applicationOptionOids = Nil,
       options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
+  )
+
+  val hardcodedLisakysymyksetForErkkaHaku: Map[String, ThemeQuestion] = Map(
+    "hojks" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
+        "suunnitelma)?",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "koulutuskokeilu" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Oletko ollut koulutuskokeilussa?",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "miksi_ammatilliseen" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Miksi haet erityisoppilaitokseen?",
+      applicationOptionOids = Nil,
+      options = None)
   )
 
 
@@ -250,7 +250,7 @@ object AkkaHakupalvelu {
     def extractLisakysymysFromAnswer(avain: String, arvo: String): Lisakysymys = {
       val compositeIds = extractCompositeIds(avain)
       val kysymysId = compositeIds.questionId
-      val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, hardCodedLisakysymys(kysymysId))
+      val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, (hardcodedLisakysymykset(kohdejoukkoUri))(kysymysId))
       Lisakysymys(
         kysymysid = kysymysId,
         hakukohdeOids = kysymys.applicationOptionOids,
@@ -301,14 +301,10 @@ object AkkaHakupalvelu {
     val flatAnswers = answers.hakutoiveet.getOrElse(Map()) ++ answers.osaaminen.getOrElse(Map()) ++ answers.lisatiedot.getOrElse(Map())
 
     val missingQuestionAnswers: Map[String, String] =
-      if (isErkkaHaku(kohdejoukkoUri)) {
-        hardCodedLisakysymys.filterNot(q => {
+      hardcodedLisakysymykset(kohdejoukkoUri).filterNot(q => {
           val id = q._1
           flatAnswers.contains(id)
         }).map(q => (q._1, ""))
-      } else {
-      Map.empty
-    }
 
     /*
     The missing question answers are added here forcefully since the excel sheets and what not need to have them in all cases
@@ -321,10 +317,6 @@ object AkkaHakupalvelu {
       .toSeq
 
     finalanswers
-  }
-
-  private def isErkkaHaku(kohdejoukkoUri: Option[String]): Boolean = {
-    kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_20"))
   }
 
 
