@@ -92,7 +92,6 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
     scenario("Vain tietyn hakukohteen tiedot") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
       Hakupalvelu has(FullHakemus1, FullHakemus2, FullHakemus4)
-      Hakupalvelu withLisakysymykset lisakysymysMap
 
       When("rajaan muodostusta valitsemalla haun X, opetuspisteeseen X ja Koulutuskoodin X")
       val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(Some("1.1"), Some(OpetuspisteX.oid), Some("000"), Hakuehto.Kaikki, None, 2)),
@@ -143,56 +142,6 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       })
     }
   }
-
-  def lisakysymysMap: Map[String, ThemeQuestion] = Map(
-    "lisakysymys1" -> ThemeQuestion(
-      `type`="ThemeRadioButtonQuestion",
-      messageText = "Radiobutton kysymys",
-      applicationOptionOids = Seq(),
-      options = Some(Map(
-        "option_0" -> "Kyllä1",
-        "option_1" -> "Ei1"
-      ))),
-
-    "lisakysymys2" -> ThemeQuestion(
-      `type`="ThemeCheckBoxQuestion",
-      messageText = "Checkbox kysymys",
-      applicationOptionOids = Seq(),
-      options = Some(Map(
-        "option_0" -> "Kyllä2",
-        "option_1" -> "Ei2"
-      ))),
-
-    "lisakysymys3" -> ThemeQuestion(
-      `type`="ThemeTextQuestion",
-      messageText = "Tekstikysymys",
-      applicationOptionOids = Seq(),
-      options = None),
-
-    "hojks" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
-        "suunnitelma)?",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "koulutuskokeilu" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Oletko ollut koulutuskokeilussa?",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "miksi_ammatilliseen" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Miksi haet erityisoppilaitokseen?",
-      applicationOptionOids = Nil,
-      options = None)
-  )
-
-
 
   override def stop(): Unit = {
     import scala.concurrent.duration._
