@@ -172,7 +172,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   it should "have v2 fields" in {
     val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, None, Map("246" -> "FIN"))
     hakija.henkilo.huoltajannimi should be("nimi")
-    hakija.henkilo.lisakysymykset.length should be(3)
+    hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardcodedLisakysymyksetForAll.size)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
   }
 
@@ -180,7 +180,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     val erkkaHaku = haku.copy(kohdejoukkoUri = Some("haunkohdejoukko_20#1"))
     val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, erkkaHaku, themeQuestions, Option.empty, None, Map("246" -> "FIN"))
     hakija.henkilo.huoltajannimi should be("nimi")
-    hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardCodedLisakysymys.size)
+    hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardcodedLisakysymyksetForAll.size + AkkaHakupalvelu.hardcodedLisakysymyksetForErkkaHaku.size)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
   }
 
