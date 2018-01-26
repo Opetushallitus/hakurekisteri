@@ -126,7 +126,11 @@ class HakijaSpec extends FlatSpec with Matchers {
     "kausi_s#1",
     2014,
     Some("kausi_k#1"),
-    Some(2015), false, None, None)
+    Some(2015),
+    false,
+    None,
+    None
+  )
 
   val tq1 = ThemeQuestion(`type` = "ThemeRadioButtonQuestion", messageText = "Millä kielellä haluat saada valintakokeen?", options = Some(Map(
     "option_0" -> "Suomi",
@@ -168,9 +172,18 @@ class HakijaSpec extends FlatSpec with Matchers {
   it should "have v2 fields" in {
     val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty, None, Map("246" -> "FIN"))
     hakija.henkilo.huoltajannimi should be("nimi")
-    hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardCodedLisakysymys.size)
+    hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardcodedLisakysymyksetForAll.size)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
   }
+
+  it should "have v2 fields with lisäkysymykset if erkkahaku" in {
+    val erkkaHaku = haku.copy(kohdejoukkoUri = Some("haunkohdejoukko_20#1"))
+    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, erkkaHaku, themeQuestions, Option.empty, None, Map("246" -> "FIN"))
+    hakija.henkilo.huoltajannimi should be("nimi")
+    hakija.henkilo.lisakysymykset.length should be(3 + AkkaHakupalvelu.hardcodedLisakysymyksetForAll.size + AkkaHakupalvelu.hardcodedLisakysymyksetForErkkaHaku.size)
+    hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
+  }
+
 
 
   behavior of "KoosteData"

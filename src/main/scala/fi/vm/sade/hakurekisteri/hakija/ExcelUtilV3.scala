@@ -16,7 +16,8 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
     "Todistusvuosi", "Minkä muun koulutuksen/opintoja olet suorittanut?", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", "HakukohdeOid",
     "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
-    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
+    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto",
+    "Koulutuksen kieli"
   )
 
   private def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String): Seq[lisakysymysHeader] = {
@@ -43,7 +44,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
       .flatMap(ht => getLisakysymysIdsAndQuestionsInOrder(hakijat, ht.hakukohdeOid)).distinct.sortBy(_.header)
 
     val rows: Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
-      val mainAnswers = Seq(
+      val mainAnswers: Seq[String] = Seq(
         h.hetu,
         h.oppijanumero,
         h.sukunimi,
@@ -118,7 +119,9 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
             }
           }
           case _ => ""
-        })
+        },
+        ht.koulutuksenKieli.getOrElse("")
+      )
 
       def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
         val answers: Seq[Seq[String]] = for {
