@@ -11,6 +11,7 @@ import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
+import scala.util.parsing.json.JSON
 
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
@@ -26,6 +27,15 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
 
   private object SaveNext
 
+  def parseOid(h: String): String = {
+    val j = JSON.parseFull(h).get.asInstanceOf[Map[String, String]]
+    val oid = j.get("oidHenkilo") match {
+      case Some(s) => s
+      case None => ""
+    }
+    oid
+  }
+
   override def receive: Receive = {
     case s: SaveHenkilo =>
       saveQueue.put(s, sender())
@@ -38,7 +48,7 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       saveQueue.remove(save)
       Future {
         Thread.sleep(100)
-      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String]("oppijanumerorekisteri-service.s2s.tiedonsiirrot")(200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
+      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String]("oppijanumerorekisteri-service.s2s.tiedonsiirrot")(200, save.henkilo).map(saved => SavedHenkilo(parseOid(saved), save.tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(save.tunniste, t))
       }).pipeTo(self)(actor)
 
