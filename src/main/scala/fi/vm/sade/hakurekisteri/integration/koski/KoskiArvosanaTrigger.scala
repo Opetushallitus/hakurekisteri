@@ -165,20 +165,20 @@ object KoskiArvosanaTrigger {
     )
   }
 
-  def getOppilaitosAndLuokka(luokkataso: String, suoritusLuokka: Seq[SuoritusLuokka], oid: String, alku: DateTime): (String, String, String, DateTime) = {
-    val sluokka = suoritusLuokka.find(_.suoritus.komo == oid).get
+  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritukset: Seq[SuoritusLuokka], oid: String, alku: DateTime): (String, String, String, DateTime) = {
+    val sluokka = luokkaSuoritukset.find(_.suoritus.komo == oid).get
     oid match {
       // hae luokka 9C tai vast
-      case Oids.perusopetusKomoOid if suoritusLuokka.filter(_.luokka.startsWith("9")).nonEmpty => {
-        var luokka = sluokka.suoritus.myontaja, suoritusLuokka.filter(_.luokka.startsWith("9")).head.luokka
+      case Oids.perusopetusKomoOid if luokkaSuoritukset.exists(_.luokka.startsWith("9")) => {
+        var luokka = luokkaSuoritukset.filter(_.luokka.startsWith("9")).head.luokka
         if(luokka.isEmpty()){
           luokka = "9"
         }
-        (luokkataso, luokka, suoritusLuokka.filter(_.luokka.startsWith("9")).head.lasnaDate.toDateTimeAtStartOfDay)
+        (luokkataso, sluokka.suoritus.myontaja, luokka, luokkaSuoritukset.filter(_.luokka.startsWith("9")).head.lasnaDate.toDateTimeAtStartOfDay)
       }
       case Oids.lisaopetusKomoOid => {
-        var luokka = suoritusLuokka.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka
-        if(suoritusLuokka.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka.isEmpty()){
+        var luokka = luokkaSuoritukset.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka
+        if(luokkaSuoritukset.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka.isEmpty()){
           luokka = "10"
         }
         (luokkataso, sluokka.suoritus.myontaja, luokka, alku)
@@ -348,43 +348,43 @@ object KoskiArvosanaTrigger {
           case (_,_,_) => valmistumisPaiva
         }
 
-        var oid = suoritus.tyyppi match {
+        var komoOid = suoritus.tyyppi match {
           case Some(k) =>
             matchOpetusOid(k.koodiarvo)
           case _ => "999999"
         }
 
-        var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = oid match {
-          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
-          case "luokka" => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+        var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
+          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
+          case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
           case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
           case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
-          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
-          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, oid, suoritus.osasuoritukset)
+          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
+          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
           case _ => (Seq(), yksilollistaminen.Ei)
         }
 
-        if(oid == Oids.valmaKomoOid && lastTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30){
+        if(komoOid == Oids.valmaKomoOid && lastTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30){
           lastTila = "KESKEN"
         }
 
-        var luokka = oid match {
+        var luokka = komoOid match {
           case Oids.valmaKomoOid => suoritus.ryhmä.getOrElse("")
           case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("")
           case _ => suoritus.luokka.getOrElse("")
         }
 
 
-        val useValmistumisPaiva = (oid, luokka.startsWith("9"), lastTila) match {
+        val useValmistumisPaiva = (komoOid, luokka.startsWith("9"), lastTila) match {
           case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
           case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
           case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
           case (_,_,_) => valmistumisPaiva
         }
 
-        if (oid != "999999" && vuosi > 1970) {
+        if (komoOid != "999999" && vuosi > 1970) {
           result = result :+ (VirallinenSuoritus(
-            oid,
+            komoOid,
             organisaatioOid,
             lastTila,
             useValmistumisPaiva,
