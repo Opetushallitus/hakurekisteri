@@ -1,7 +1,8 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.testkit.{TestProbe, TestActorRef}
+import akka.testkit.{TestActorRef, TestProbe}
+import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, ExecutorUtil}
@@ -27,7 +28,8 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   val hakemusService = stub[IHakemusService]
   val fileSystem = YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, new TestProbe(system).ref)
+  val config: Config = new MockConfig
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, new TestProbe(system).ref, config)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 

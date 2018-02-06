@@ -110,3 +110,15 @@ ytl.http.syncAllCronJob=0 0/5 01-02 * * ?
 ytl.s3.enabled={{suoritusrekisteri_ytl_s3_enabled}}
 ytl.s3.region={{suoritusrekisteri_ytl_s3_region}}
 ytl.s3.bucket.name={{suoritusrekisteri_ytl_s3_bucket_name}}
+
+# Email settings
+smtp.host={{ryhmasahkoposti_smtp_host}}
+smtp.port={{ryhmasahkoposti_smtp_port}}
+smtp.use_tls={{ryhmasahkoposti_smtp_use_tls}}
+smtp.authenticate={{ryhmasahkoposti_smtp_authenticate}}
+smtp.username={{ryhmasahkoposti_smtp_username}}
+smtp.password={{ryhmasahkoposti_smtp_password}}
+smtp.sender={{ryhmasahkoposti_smtp_sender}}
+
+# YTL sync error message recipients
+suoritusrekisteri.ytl.error.report.recipients={{suoritusrekisteri_ytl_error_report_recipients}}
