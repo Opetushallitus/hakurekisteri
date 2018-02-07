@@ -306,6 +306,8 @@ private object Koe {
   ), "optional-subject" -> Map("A" -> "60",
     "O" -> "60",
     "Z" -> "60",
+    "I" -> "60",
+    "W" -> "60",
     /* END OF 60 */
     "L7" -> "61",
     "VA" -> "61",
@@ -332,6 +334,7 @@ private object Koe {
     "CA" -> "62",
     "BB" -> "62",
     "A5" -> "62",
+    "O5" -> "62",
     "BA" -> "62",
     "CB" -> "62",
     /* END OF 71 */
