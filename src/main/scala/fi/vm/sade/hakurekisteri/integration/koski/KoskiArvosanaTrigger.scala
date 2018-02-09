@@ -236,7 +236,7 @@ object KoskiArvosanaTrigger {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
       case "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
-      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => "999999" //Ei merkitä perusopetuksen esiopetuksia sureen
+      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => "999999" //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
       case "perusopetuksenvuosiluokka" => "luokka"
       case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
