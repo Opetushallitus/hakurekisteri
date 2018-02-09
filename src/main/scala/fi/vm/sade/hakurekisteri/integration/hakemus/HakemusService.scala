@@ -317,7 +317,6 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         )
         ataruApplications: List[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(None, None, None, None, Some(formattedDate)))
       } yield hakuappApplications.toList ::: ataruApplications
-
       allApplications.flatMap(fetchPersonAliases).onComplete {
         case Success((hakemukset, personOidsWithAliases)) =>
           Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
