@@ -26,6 +26,7 @@ object KoskiArvosanaTrigger {
 
   implicit val formats = DefaultFormats
 
+  val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
   val root_org_id = "1.2.246.562.10.00000000001"
   val kielet = Seq("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
   val oppiaineet = Seq("HI", "MU", "BI", "PS", "KT", "KO", "FI", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
@@ -236,7 +237,7 @@ object KoskiArvosanaTrigger {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
       case "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
-      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => "999999" //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
+      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => DUMMYOID //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
       case "perusopetuksenvuosiluokka" => "luokka"
       case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
@@ -352,7 +353,7 @@ object KoskiArvosanaTrigger {
         var komoOid = suoritus.tyyppi match {
           case Some(k) =>
             matchOpetusOid(k.koodiarvo)
-          case _ => "999999"
+          case _ => DUMMYOID
         }
 
         var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
@@ -384,7 +385,7 @@ object KoskiArvosanaTrigger {
           case (_,_,_) => valmistumisPaiva
         }
 
-        if (komoOid != "999999" && vuosi > 1970) {
+        if (komoOid != DUMMYOID && vuosi > 1970) {
           result = result :+ (VirallinenSuoritus(
             komoOid,
             organisaatioOid,
