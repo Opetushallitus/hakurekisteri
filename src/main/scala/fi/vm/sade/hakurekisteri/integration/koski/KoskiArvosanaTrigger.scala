@@ -236,6 +236,7 @@ object KoskiArvosanaTrigger {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
       case "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
+      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => "999999" //Ei merkitä perusopetuksen esiopetuksia sureen
       case "perusopetuksenvuosiluokka" => "luokka"
       case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
@@ -369,15 +370,16 @@ object KoskiArvosanaTrigger {
         }
 
         var luokka = komoOid match {
-          case Oids.valmaKomoOid => suoritus.ryhmä.getOrElse("")
-          case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("")
+          case Oids.valmaKomoOid => suoritus.ryhmä.getOrElse("VALMA")
+          case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("TELMA")
           case _ => suoritus.luokka.getOrElse("")
         }
-
 
         val useValmistumisPaiva = (komoOid, luokka.startsWith("9"), lastTila) match {
           case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
           case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+          case (Oids.valmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+          case (Oids.telmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
           case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
           case (_,_,_) => valmistumisPaiva
         }
