@@ -10,15 +10,12 @@ import fi.vm.sade.hakurekisteri.storage.repository.Repository
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import slick.dbio.Effect.Write
 import slick.jdbc.meta.MTable
-import slick.profile.FixedSqlAction
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import slick.dbio
-import slick.driver.JdbcActionComponent
-import slick.driver.JdbcTypesComponent._
 import scala.util.{Failure, Success, Try}
 import akka.pattern.{ask, pipe}
 
