@@ -5,9 +5,9 @@ import java.util.UUID
 
 import com.github.nscala_time.time.Imports._
 import slick.ast.{FieldSymbol, Node}
-import slick.driver.{JdbcStatementBuilderComponent, PostgresDriver}
+import slick.jdbc.{JdbcStatementBuilderComponent, PostgresProfile}
 
-object HakurekisteriDriver extends PostgresDriver {
+object HakurekisteriDriver extends PostgresProfile {
 
   override val columnTypes = new super.JdbcTypes {
     override val uuidJdbcType = new UUIDJdbcType {
