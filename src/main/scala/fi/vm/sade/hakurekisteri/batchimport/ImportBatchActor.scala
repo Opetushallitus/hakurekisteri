@@ -15,8 +15,6 @@ import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Delta, Insert, Upda
 import scala.concurrent.{Await, ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import slick.dbio.Effect.{All, Read}
-import slick.lifted
-import slick.profile.FixedSqlStreamingAction
 
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}

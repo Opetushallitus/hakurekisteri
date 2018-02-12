@@ -877,7 +877,7 @@
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick_2.11</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -896,7 +896,7 @@
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick-hikaricp_2.11</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -911,7 +911,7 @@
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick-testkit_2.11</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -930,7 +930,7 @@
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick-codegen_2.11</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
