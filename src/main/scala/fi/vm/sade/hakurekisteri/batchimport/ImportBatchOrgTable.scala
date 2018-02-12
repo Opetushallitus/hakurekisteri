@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchOrgTable.ImportBatchOrgsRow
 import slick.ast.{FieldSymbol, Node}
-import slick.driver.{JdbcStatementBuilderComponent, PostgresDriver}
+import slick.driver.PostgresDriver
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 
 import scala.compat.Platform
