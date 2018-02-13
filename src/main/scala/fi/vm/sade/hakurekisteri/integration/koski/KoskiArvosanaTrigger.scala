@@ -375,6 +375,9 @@ object KoskiArvosanaTrigger {
           case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("TELMA")
           case _ => suoritus.luokka.getOrElse("")
         }
+        if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
+          luokka = "9"
+        }
 
         val useValmistumisPaiva = (komoOid, luokka.startsWith("9"), lastTila) match {
           case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
