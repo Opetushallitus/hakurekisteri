@@ -139,11 +139,13 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def readObject[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
-    readObject[A](uriKey, Seq(acceptedResponseCode), maxRetries, args)
+    logger.info(s"Read query, uri: $uriKey acceptedresponseCode: $acceptedResponseCode args: $args")
+    readObjectWithCodes[A](uriKey, Seq(acceptedResponseCode), maxRetries, args)
   }
 
-  def readObject[A <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, args: AnyRef*): Future[A] = {
+  def readObjectWithCodes[A <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, args: AnyRef*): Future[A] = {
     val url1: String = OphUrlProperties.url(uriKey, args:_*)
+    logger.info(s"Read query, final url $url1 acceptedresponseCodes: $acceptedResponseCodes")
     readObjectFromUrl(url1, acceptedResponseCodes, maxRetries)
   }
 
@@ -155,11 +157,14 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
-    postObject[A,B](uriKey, Seq(acceptedResponseCode), resource, args)
+    logger.info(s"Post query, uri: $uriKey acceptedresponseCode: $acceptedResponseCode args: $args")
+    postObjectWithCodes[A,B](uriKey, Seq(acceptedResponseCode), resource, args)
   }
 
-  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], resource: A, args: AnyRef*): Future[B] = {
+  def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], resource: A, args: AnyRef*): Future[B] = {
     val url = OphUrlProperties.url(uriKey, args:_*)
+    logger.info(s"Post query, final url $url acceptedresponseCodes: $acceptedResponseCodes")
+
     val result = Client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource))
     logLongQuery(result, url)
     result
