@@ -140,7 +140,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def readObject[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
     logger.info(s"Read query, uri: $uriKey acceptedresponseCode: $acceptedResponseCode args: $args")
-    readObjectWithCodes[A](uriKey, Seq(acceptedResponseCode), maxRetries, args)
+    readObjectWithCodes[A](uriKey, Seq(acceptedResponseCode), maxRetries, args:_*)
   }
 
   def readObjectWithCodes[A <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, args: AnyRef*): Future[A] = {
@@ -158,7 +158,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
     logger.info(s"Post query, uri: $uriKey acceptedresponseCode: $acceptedResponseCode args: $args")
-    postObjectWithCodes[A,B](uriKey, Seq(acceptedResponseCode), resource, args)
+    postObjectWithCodes[A,B](uriKey, Seq(acceptedResponseCode), resource, args:_*)
   }
 
   def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], resource: A, args: AnyRef*): Future[B] = {
