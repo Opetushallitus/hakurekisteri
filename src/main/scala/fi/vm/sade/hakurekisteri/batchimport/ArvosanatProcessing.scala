@@ -194,13 +194,11 @@ class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: Acto
           case ImportOppijanumero(oid) => Some(oid)
           case _ => None
         },
-        externalId = henkilo.tunniste match {
-          case ImportHenkilonTunniste(t, sa, _) => Some(s"${henkilo.todistukset.map(_.myontaja).toSet.toList.sorted.mkString(",")}_${vuosi}_${t}_$sa")
+        externalIds = henkilo.tunniste match {
+          case ImportHenkilonTunniste(t, sa, _) => Some(Seq(s"${henkilo.todistukset.map(_.myontaja).toSet.toList.sorted.mkString(",")}_${vuosi}_${t}_$sa"))
           case _ => None
         },
-        henkiloTyyppi = "OPPIJA",
-        kasittelijaOid = lahde,
-        organisaatioHenkilo = Seq() // TODO liitetäänkö organisaatioihin todistusten myöntäjien perusteella?
+        henkiloTyyppi = "OPPIJA"
       ),
       tunniste
     )

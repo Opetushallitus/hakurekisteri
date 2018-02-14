@@ -126,7 +126,6 @@ class BaseIntegrations(rekisterit: Registers,
   private val tarjontaClient = new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(restEc, system)
   private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(restEc, system)
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
-  private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(restEc, system)
   val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
   val ataruHakemusClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
     serviceUrlSuffix = "/auth/cas")(restEc, system)
@@ -139,6 +138,7 @@ class BaseIntegrations(rekisterit: Registers,
   ), None)(restEc, system)
   private val ataruPermissionCheckerClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
     serviceUrlSuffix = "/auth/cas")(restEc, system)
+  private val onrClient = new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system)
 
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(BackoffSupervisor.props(
     Backoff.onStop(
@@ -152,8 +152,8 @@ class BaseIntegrations(rekisterit: Registers,
   val cacheFactory = CacheFactory.apply(OphUrlProperties)(system)
   val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config, cacheFactory)), "tarjonta")
   val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)), "organisaatio")
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
-  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system), system)
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo")
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system)
   val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")

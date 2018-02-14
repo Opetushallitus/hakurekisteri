@@ -185,7 +185,7 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
 
           }
           val asyncProvider =  new DelayingProvider(endPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
-          val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))(system.dispatcher, system)
+          val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(new AsyncHttpClient(asyncProvider)))(system.dispatcher, system)
 
 
           henkiloActorHolder = Some(system.actorOf(Props(new HttpHenkiloActor(client, Config.mockConfig))))
