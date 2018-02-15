@@ -39,13 +39,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   }
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    val o = virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
-    o.onComplete {
-      case Success(h) =>
-        logger.info(s"success fetching, raw data: "+h.toString())
-        return Future(h)
-    }
-
+    virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
   def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
@@ -99,7 +93,7 @@ case class KoskiOpiskeluoikeus(
                  oid: String,
                  oppilaitos: KoskiOrganisaatio,
                  tila: KoskiOpiskeluoikeusjakso,
-                 lisatiedot: Option[KoskiLisatiedot],
+                 lisätiedot: Option[KoskiLisatiedot],
                  suoritukset: Seq[KoskiSuoritus])
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
@@ -143,7 +137,7 @@ case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganis
 
 case class KoskiKieli(koodiarvo: String, koodistoUri: String)
 
-case class KoskiLisatiedot(erityisenTuenPaatos: Option[KoskiErityisenTuenPaatos])
+case class KoskiLisatiedot(erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 

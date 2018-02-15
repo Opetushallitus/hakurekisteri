@@ -293,7 +293,7 @@ object KoskiArvosanaTrigger {
     if (yksilöllistetty == yksilollistaminen.Ei) {
       for {
         lisatieto <- lisatiedot
-        tuenPaatos <- lisatieto.erityisenTuenPaatos
+        tuenPaatos <- lisatieto.erityisenTuenPäätös
       } yield {
         if (tuenPaatos.opiskeleeToimintaAlueittain.getOrElse(false)) {
           yksilöllistetty = yksilollistaminen.Alueittain
@@ -367,12 +367,12 @@ object KoskiArvosanaTrigger {
         }
 
         var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
-          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
-          case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
+          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+          case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
           case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
           case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
-          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
-          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
+          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
           case _ => (Seq(), yksilollistaminen.Ei)
         }
 
