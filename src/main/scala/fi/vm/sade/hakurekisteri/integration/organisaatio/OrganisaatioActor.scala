@@ -1,19 +1,23 @@
 package fi.vm.sade.hakurekisteri.integration.organisaatio
 
+import java.util
 import java.util.concurrent.ExecutionException
 
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
+import scala.collection.JavaConverters._
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Try}
 
 
 object RefreshOrganisaatioCache
@@ -132,6 +136,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
   case class CacheChildOids(parentOid: String, childOids: ChildOids)
 
+  private val koodiQueriesQueue: TrieMap[String, java.util.List[ActorRef]] = TrieMap()
+
   override def receive: Receive = {
     case RefreshOrganisaatioCache => fetchAll(sender())
 
@@ -161,12 +167,33 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
       findChildOids(parentOid) pipeTo sender
 
     case Oppilaitos(koodi) =>
-      findByOppilaitoskoodi(koodi).flatMap {
-        case Some(oppilaitos) => Future.successful(OppilaitosResponse(koodi, oppilaitos))
-        case None => Future.failed(OppilaitosNotFoundException(koodi))
-      } pipeTo sender
+      if (koodiQueriesQueue.keySet.contains(koodi)) {
+        koodiQueriesQueue(koodi).add(sender())
+      } else {
+        val refs = new util.ArrayList[ActorRef]()
+        refs.add(sender())
+        koodiQueriesQueue.put(koodi, refs)
+        findByOppilaitoskoodi(koodi).onComplete { response =>
+          self ! HandleKoodiResponse(koodi, response)
+        }
+      }
+
+    case HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]]) =>
+      response match {
+        case Success(Some(oppilaitos)) =>
+          koodiQueriesQueue(koodi).asScala.foreach(_ ! OppilaitosResponse(koodi, oppilaitos))
+          koodiQueriesQueue.remove(koodi)
+        case Success(None) =>
+          koodiQueriesQueue(koodi).asScala.foreach(_ ! OppilaitosNotFoundException(koodi))
+          koodiQueriesQueue.remove(koodi)
+        case failure@scala.util.Failure(_) =>
+          koodiQueriesQueue(koodi).asScala.foreach(_ ! failure)
+          koodiQueriesQueue.remove(koodi)
+      }
   }
 }
+
+case class HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]])
 
 class MockOrganisaatioActor(config: Config) extends Actor {
   implicit val formats = DefaultFormats
