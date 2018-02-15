@@ -1,16 +1,15 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
-import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{QueryLogging, ApiFormat}
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat._
-import org.scalatra.{AsyncResult, ApiFormats, ScalatraServlet, ScalatraBase}
+import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, QueryLogging}
+import org.scalatra.{ApiFormats, AsyncResult}
 
 import scala.compat.Platform
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, _}
 import scala.util.Try
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaValintarekisteriStack =>
