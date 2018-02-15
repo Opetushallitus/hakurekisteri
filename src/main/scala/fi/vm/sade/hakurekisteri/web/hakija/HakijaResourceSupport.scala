@@ -39,6 +39,7 @@ trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaV
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
       val is = process
+      process.onFailure { case e: Throwable => logger.error(e, "Exception thrown from async processing") }
     }
   }
 }
