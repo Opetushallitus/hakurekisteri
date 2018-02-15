@@ -222,7 +222,7 @@ object KoskiArvosanaTrigger {
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
-      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset, opiskeluoikeus.tila.opiskeluoikeusjaksot)
+      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset, opiskeluoikeus.tila.opiskeluoikeusjaksot, opiskeluoikeus)
     }).flatten
   }
 
@@ -259,7 +259,7 @@ object KoskiArvosanaTrigger {
     peruskoulunArvosanat.contains(arvosana)
   }
 
-  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus]): (Seq[Arvosana], Yksilollistetty) = {
+  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot]): (Seq[Arvosana], Yksilollistetty) = {
     var yksilöllistetyt = ListBuffer[Boolean]()
     var res:Seq[Arvosana] = Seq()
     for {
@@ -289,6 +289,16 @@ object KoskiArvosanaTrigger {
       yksilöllistetty = yksilollistaminen.Osittain
     } else if (yksilöllistetyt.contains(true)) {
       yksilöllistetty = yksilollistaminen.Kokonaan
+    }
+    if (yksilöllistetty == yksilollistaminen.Ei) {
+      for {
+        lisatieto <- lisatiedot
+        tuenPaatos <- lisatieto.erityisenTuenPaatos
+      } yield {
+        if (tuenPaatos.opiskeleeToimintaAlueittain.getOrElse(false)) {
+          yksilöllistetty = yksilollistaminen.Alueittain
+        }
+      }
     }
     (res, yksilöllistetty)
   }
@@ -327,7 +337,7 @@ object KoskiArvosanaTrigger {
     fourthOfJune
   }
 
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila]): Seq[(Suoritus, Seq[Arvosana], String, LocalDate)] = {
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[(Suoritus, Seq[Arvosana], String, LocalDate)] = {
     var result = Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]()
     for ( suoritus <- suoritukset ) {
         val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, suoritus.toimipiste)
@@ -357,12 +367,12 @@ object KoskiArvosanaTrigger {
         }
 
         var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
-          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
-          case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
+          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
+          case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
           case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
           case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
-          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
-          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset)
+          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
+          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisatiedot)
           case _ => (Seq(), yksilollistaminen.Ei)
         }
 

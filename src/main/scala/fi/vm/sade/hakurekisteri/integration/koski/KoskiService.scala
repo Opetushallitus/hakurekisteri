@@ -92,6 +92,7 @@ case class KoskiOpiskeluoikeus(
                  oid: String,
                  oppilaitos: KoskiOrganisaatio,
                  tila: KoskiOpiskeluoikeusjakso,
+                 lisatiedot: Option[KoskiLisatiedot],
                  suoritukset: Seq[KoskiSuoritus])
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
@@ -134,6 +135,10 @@ case class KoskiKoodi(koodiarvo: String, koodistoUri: String)
 case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganisaatio)
 
 case class KoskiKieli(koodiarvo: String, koodistoUri: String)
+
+case class KoskiLisatiedot(erityisenTuenPaatos: Option[KoskiErityisenTuenPaatos])
+
+case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 
 
 
