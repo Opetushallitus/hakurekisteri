@@ -5,12 +5,12 @@ import java.io._
 import akka.actor.ActorSystem
 import akka.util.ByteString
 import fi.vm.sade.properties.OphProperties
+import fi.vm.sade.utils.Timer
 import org.apache.commons.io.IOUtils
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
-
 import scala.concurrent.duration._
 
 trait CacheFactory {
@@ -68,12 +68,24 @@ object CacheFactory {
 
       def -(key: K): Unit = r.del(k(key))
 
-      def contains(key: K): Boolean = Await.result(r.exists(k(key)), 60.seconds)
+      def contains(key: K): Boolean = {
+        Timer.timed(s"Checking contains $cacheKeyPrefix:$key from Redis", 100) {
+          Await.result(r.exists(k(key)), 60.seconds)
+        }
+      }
 
       def get(key: K): Future[T] = {
         val prefixKey = k(key)
+        val startTime = System.currentTimeMillis
         logger.debug(s"Getting value with key ${prefixKey} from Redis cache")
-        r.get[T](prefixKey).collect { case Some(x) => x }
+        r.get[T](prefixKey).collect {
+          case Some(x) =>
+            val duration = System.currentTimeMillis - startTime
+            if (duration > 100) {
+              logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")
+            }
+            x
+        }
       }
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
