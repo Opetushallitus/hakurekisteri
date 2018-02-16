@@ -32,14 +32,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[KoskiTrigger] = Seq()
 
-  var baseFetchDone = false
-
-  var ysiluokkalaisesdone = false
-  var kymppidone = false
-  var valmadone = false
-  var telmadone = false
-  var aikuisperusdone = false
-
   case class SearchParams(muuttunutJälkeen: String = null)
 
   def fetchChanged(): Future[Seq[KoskiHenkiloContainer]] = {
@@ -56,97 +48,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     virkailijaRestClient.readObjectWithBasicAuthAndHardcodedUrl[List[KoskiHenkiloContainer]](hardconfig)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
+  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(3)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
-    if(!baseFetchDone) {
-      scheduler.scheduleOnce(refreshFrequency)({
-        logger.info(s"Koski base fetch not done!")
-        val params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter))
-        var lastChecked = new Date(0)
-        if (!ysiluokkalaisesdone) {
-          logger.info(s"Ysiluokkalaises not done!")
-          fetchHardCoded("koski.oppija.ysiluokkas", params)
-            .flatMap(fetchPersonAliases).onComplete {
-            case Success((henkilot, personOidsWithAliases)) =>
-              logger.info(s"YSILUOKAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
-              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-                case Failure(e) => logger.error(e, "Exception in trigger!")
-                case _ =>
-                  ysiluokkalaisesdone = true
-              }
-              processModifiedKoski(lastChecked, refreshFrequency)
-            case Failure(t) =>
-              logger.error(t, "Fetching modified henkilot (ysi) failed, retrying")
-              processModifiedKoski(modifiedAfter, refreshFrequency)
-          }
-        } else if (!kymppidone) {
-          logger.info(s"Kymppiluokkalaises not done!")
-          fetchHardCoded("koski.oppija.kymppiluokkas", params)
-            .flatMap(fetchPersonAliases).onComplete {
-            case Success((henkilot, personOidsWithAliases)) =>
-              logger.info(s"KYMPPILUOKAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
-              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-                case Failure(e) => logger.error(e, "Exception in trigger!")
-                case _ =>
-                  kymppidone = true
-              }
-              processModifiedKoski(lastChecked, refreshFrequency)
-            case Failure(t) =>
-              logger.error(t, "Fetching modified henkilot failed (kymppi), retrying")
-              processModifiedKoski(modifiedAfter, refreshFrequency)
-          }
-        } else if (!valmadone) {
-          logger.info(s"Valma not done!")
-          fetchHardCoded("koski.oppija.valmas", params)
-            .flatMap(fetchPersonAliases).onComplete {
-            case Success((henkilot, personOidsWithAliases)) =>
-              logger.info(s"VALMAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
-              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-                case Failure(e) => logger.error(e, "Exception in trigger!")
-                case _ =>
-                  valmadone = true
-              }
-              processModifiedKoski(lastChecked, refreshFrequency)
-            case Failure(t) =>
-              logger.error(t, "Fetching modified henkilot failed (valma), retrying")
-              processModifiedKoski(modifiedAfter, refreshFrequency)
-          }
-        } else if (!telmadone) {
-          logger.info(s"Telma not done!")
-          fetchHardCoded("koski.oppija.telmas", params)
-            .flatMap(fetchPersonAliases).onComplete {
-            case Success((henkilot, personOidsWithAliases)) =>
-              logger.info(s"TELMAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
-              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-                case Failure(e) => logger.error(e, "Exception in trigger!")
-                case _ =>
-                  telmadone = true
-              }
-              processModifiedKoski(lastChecked, refreshFrequency)
-            case Failure(t) =>
-              logger.error(t, "Fetching modified henkilot failed (telma), retrying")
-              processModifiedKoski(modifiedAfter, refreshFrequency)
-          }
-        } else if (!aikuisperusdone) {
-          logger.info(s"Aikuisperusopetukses not done!")
-          fetchHardCoded("koski.oppija.aikuistenperusopetukses", params)
-            .flatMap(fetchPersonAliases).onComplete {
-            case Success((henkilot, personOidsWithAliases)) =>
-              logger.info(s"AIKUISTENPERUSOPETUKSES haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
-              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-                case Failure(e) => logger.error(e, "Exception in trigger!")
-                case _ =>
-                  aikuisperusdone = true
-                  baseFetchDone = true
-              }
-              processModifiedKoski(lastChecked, refreshFrequency)
-            case Failure(t) =>
-              logger.error(t, "Fetching modified henkilot failed (aikuistenperusopetukses), retrying")
-              processModifiedKoski(modifiedAfter, refreshFrequency)
-          }
-        }
-      })
-    } else {
       scheduler.scheduleOnce(refreshFrequency)({
         val lastChecked = new Date()
         fetchChanged(
@@ -164,7 +67,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
             processModifiedKoski(modifiedAfter, refreshFrequency)
         }
       })
-    }
+
   }
 
   private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases) =
