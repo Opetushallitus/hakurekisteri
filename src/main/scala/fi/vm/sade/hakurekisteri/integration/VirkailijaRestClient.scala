@@ -155,8 +155,17 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def readObjectWithBasicAuth[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
     val url1: String = OphUrlProperties.url(uriKey, args:_*)
+    logger.info(s"doing fetch from url: " + url1)
     readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
   }
+
+  def readObjectWithBasicAuthAndHardcodedUrl[A <: AnyRef: Manifest](url: String)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
+    //val url1: String = OphUrlProperties.url(uriKey, args:_*)
+    val url1 = OphUrlProperties.url(url)
+    logger.info(s"doing fetch from url: " + url1)
+    readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
+  }
+
 
   def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCodes: Seq[Int], maxRetries: Int = 0, basicAuth: Boolean = false): Future[A] = {
     val retryCount = new AtomicInteger(1)
