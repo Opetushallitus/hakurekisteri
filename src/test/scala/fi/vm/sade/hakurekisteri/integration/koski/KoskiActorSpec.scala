@@ -38,7 +38,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setPeruskouluKieli()
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
@@ -59,7 +59,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .setLuokka("9E")
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
@@ -85,7 +85,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .setLuokka("9A", Some("2017-03-03"))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
@@ -112,7 +112,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", Some("5"), false), ("IHME JA KUMMA", Some("10"), false), ("TE", Some("11"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
@@ -134,7 +134,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
@@ -158,7 +158,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .setOpiskeluOikeusJakso(Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "kesken", koodistoUri = "uri"))))
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
@@ -179,7 +179,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForPeruskoulu(List(("YL", Some("4"), true), ("OP", None, true), ("DDR", None, false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
@@ -200,7 +200,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
         .setSuorituksetForKymppi(List(("KT", Some("10")), ("KE", Some("8"))))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = "010101-0101", syntymäaika = None, etunimet = "Test", kutsumanimi = "Test", sukunimi = "Tester"))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
     ) should contain theSameElementsAs Seq((VirallinenSuoritus(Oids.lisaopetusKomoOid,
       "orgId",
@@ -263,7 +263,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
 
   object HenkiloContainer {
-    def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, "", None, "", "", ""), Seq(), "")
+    def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, Some(""), None, Some(""), Some(""), Some("")), Seq(), "")
   }
 
   case class HenkiloContainerBuilder(

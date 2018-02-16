@@ -187,11 +187,11 @@ case class KoskiHenkiloContainer(
 
 case class KoskiHenkilo(
                          oid: Option[String],
-                         hetu: String,
+                         hetu: Option[String],
                          syntymäaika: Option[String],
-                         etunimet: String,
-                         kutsumanimi: String,
-                         sukunimi: String) {
+                         etunimet: Option[String],
+                         kutsumanimi: Option[String],
+                         sukunimi: Option[String]) {
 }
 case class KoskiOpiskeluoikeus(
                  oid: String,
