@@ -1,5 +1,6 @@
 package support
 
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
@@ -201,7 +202,7 @@ class BaseIntegrations(rekisterit: Registers,
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
-  koskiService.processModifiedKoski()
+  koskiService.processModifiedKoski(new Date(0))
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()

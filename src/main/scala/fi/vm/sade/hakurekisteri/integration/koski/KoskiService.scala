@@ -39,7 +39,10 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   }
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
+    logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet jälkeen: " + params.muuttunutJälkeen.toString)
+    val f = virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
+    logger.info(s"Tiedot haettu. Muuttuneet jälkeen: " + params.muuttunutJälkeen.toString)
+    f
   }
 
   def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
@@ -50,7 +53,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
         params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter))
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
-          logger.info(s"muuttuneet henkilöt: " + henkilot.toString())
+          logger.info(s"muuttuneita henkilöitä: " + henkilot.size + " kpl")
           Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
             case Failure(e) => logger.error(e, "Exception in trigger!")
             case _ =>
