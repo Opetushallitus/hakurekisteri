@@ -151,12 +151,12 @@ object AkkaHakupalvelu {
       applicationOptionOids = Nil,
       options = None),
 
-    "lupaSahkoisesti" -> ThemeQuestion(
+/*    "lupaSahkoisesti" -> ThemeQuestion(
       isHaunLisakysymys = true,
       `type` = "ThemeRadioButtonQuestion",
       messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
       applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),*/
 
     "lupaSms" -> ThemeQuestion(
       isHaunLisakysymys = true,
