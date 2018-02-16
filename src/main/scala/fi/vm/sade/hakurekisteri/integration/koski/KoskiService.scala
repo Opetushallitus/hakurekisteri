@@ -72,12 +72,76 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
               Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
                 case Failure(e) => logger.error(e, "Exception in trigger!")
                 case _ =>
-                  baseFetchDone = true
                   ysiluokkalaisesdone = true
               }
               processModifiedKoski(lastChecked, refreshFrequency)
             case Failure(t) =>
-              logger.error(t, "Fetching modified henkilot failed, retrying")
+              logger.error(t, "Fetching modified henkilot (ysi) failed, retrying")
+              processModifiedKoski(modifiedAfter, refreshFrequency)
+          }
+        } else if (!kymppidone) {
+          logger.info(s"Kymppiluokkalaises not done!")
+          fetchHardCoded("koski.oppija.kymppiluokkas", params)
+            .flatMap(fetchPersonAliases).onComplete {
+            case Success((henkilot, personOidsWithAliases)) =>
+              logger.info(s"KYMPPILUOKAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
+              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+                case Failure(e) => logger.error(e, "Exception in trigger!")
+                case _ =>
+                  kymppidone = true
+              }
+              processModifiedKoski(lastChecked, refreshFrequency)
+            case Failure(t) =>
+              logger.error(t, "Fetching modified henkilot failed (kymppi), retrying")
+              processModifiedKoski(modifiedAfter, refreshFrequency)
+          }
+        } else if (!valmadone) {
+          logger.info(s"Valma not done!")
+          fetchHardCoded("koski.oppija.valmas", params)
+            .flatMap(fetchPersonAliases).onComplete {
+            case Success((henkilot, personOidsWithAliases)) =>
+              logger.info(s"VALMAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
+              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+                case Failure(e) => logger.error(e, "Exception in trigger!")
+                case _ =>
+                  valmadone = true
+              }
+              processModifiedKoski(lastChecked, refreshFrequency)
+            case Failure(t) =>
+              logger.error(t, "Fetching modified henkilot failed (valma), retrying")
+              processModifiedKoski(modifiedAfter, refreshFrequency)
+          }
+        } else if (!telmadone) {
+          logger.info(s"Telma not done!")
+          fetchHardCoded("koski.oppija.telmas", params)
+            .flatMap(fetchPersonAliases).onComplete {
+            case Success((henkilot, personOidsWithAliases)) =>
+              logger.info(s"TELMAT haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
+              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+                case Failure(e) => logger.error(e, "Exception in trigger!")
+                case _ =>
+                  telmadone = true
+              }
+              processModifiedKoski(lastChecked, refreshFrequency)
+            case Failure(t) =>
+              logger.error(t, "Fetching modified henkilot failed (telma), retrying")
+              processModifiedKoski(modifiedAfter, refreshFrequency)
+          }
+        } else if (!aikuisperusdone) {
+          logger.info(s"Aikuisperusopetukses not done!")
+          fetchHardCoded("koski.oppija.aikuistenperusopetukses", params)
+            .flatMap(fetchPersonAliases).onComplete {
+            case Success((henkilot, personOidsWithAliases)) =>
+              logger.info(s"AIKUISTENPERUSOPETUKSES haettu. muuttuneita henkilöitä: " + henkilot.size + " kpl")
+              Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+                case Failure(e) => logger.error(e, "Exception in trigger!")
+                case _ =>
+                  aikuisperusdone = true
+                  baseFetchDone = true
+              }
+              processModifiedKoski(lastChecked, refreshFrequency)
+            case Failure(t) =>
+              logger.error(t, "Fetching modified henkilot failed (aikuistenperusopetukses), retrying")
               processModifiedKoski(modifiedAfter, refreshFrequency)
           }
         }
