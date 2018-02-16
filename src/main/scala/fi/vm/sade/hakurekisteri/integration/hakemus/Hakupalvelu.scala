@@ -167,6 +167,13 @@ object AkkaHakupalvelu {
   )
 
   val hardcodedLisakysymyksetForErkkaHaku: Map[String, ThemeQuestion] = Map(
+    "muutsuoritukset" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Minkä muun koulutuksen/opintoja olet suorittanut?",
+      applicationOptionOids = Nil,
+      options = None),
+
     "hojks" -> ThemeQuestion(
       isHaunLisakysymys = true,
       `type` = "ThemeRadioButtonQuestion",

@@ -16,7 +16,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
     "Todistusvuosi", /*"Minkä muun koulutuksen/opintoja olet suorittanut?",*/ "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", "HakukohdeOid",
     "Harkinnanvaraisuuden peruste", /*"Urheilijan ammatillinen koulutus",*/ "Yhteispisteet", "Valinta", "Vastaanotto",
-    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto",
+    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", /*"Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto",*/
     "Koulutuksen kieli"
   )
 
@@ -97,7 +97,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         toBooleanX(ht.terveys),
         toBooleanX(ht.aiempiperuminen),
         toBooleanX(ht.kaksoistutkinto),
-        h.hakemus.osaaminen match {
+        /* h.hakemus.osaaminen match {
           case Some(os) => {
             (ht.koulutuksenKieli) match {
               case Some("FI") => kieleistys(os.yleinen_kielitutkinto_fi)
@@ -119,7 +119,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
             }
           }
           case _ => ""
-        },
+        },*/
         ht.koulutuksenKieli.getOrElse("")
       )
 
