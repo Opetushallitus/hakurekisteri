@@ -43,11 +43,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  def fetchHardCoded(hardconfig: String, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, kovakoodattu: " + hardconfig)
-    virkailijaRestClient.readObjectWithBasicAuthAndHardcodedUrl[List[KoskiHenkiloContainer]](hardconfig)(acceptedResponseCode = 200, maxRetries = 2)
-  }
-
   def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(3)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
@@ -56,7 +51,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
           params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter))
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
-            logger.info(s"muuttuneita henkilöitä: " + henkilot.size + " kpl")
+            logger.info(s"muuttuneita henkilöitä (opiskeluoikeuksia): " + henkilot.size + " kpl")
             Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
               case Failure(e) => logger.error(e, "Exception in trigger!")
               case _ =>
@@ -67,7 +62,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
             processModifiedKoski(modifiedAfter, refreshFrequency)
         }
       })
-
   }
 
   private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases) =
