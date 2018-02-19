@@ -37,7 +37,6 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
           }
         })
 
-    // when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/99999"))).thenReturn((200, List(), OrganisaatioResults.ysiysiysiysiysi))
     when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), OrganisaatioResults.pikkola))
     when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305"))).thenReturn((200, List(), OrganisaatioResults.pikkola))
 
