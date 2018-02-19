@@ -90,6 +90,9 @@ object CacheFactory {
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
+      override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = ???
+
+      override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
