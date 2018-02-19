@@ -24,6 +24,7 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 
   implicit val timeout: Timeout = 60.seconds
   private var delayMillisForOrganization99999 = 0
+  private var delayMillisForOrganization8888 = 0
   val organisaatioConfig = ServiceConfig(serviceUrl = "http://localhost/organisaatio-service")
 
   def createEndPoint(implicit ec: ExecutionContext) = {
@@ -39,6 +40,13 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 
     when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), OrganisaatioResults.pikkola))
     when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305"))).thenReturn((200, List(), OrganisaatioResults.pikkola))
+
+    when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.165466228888"))).thenAnswer(new Answer[(Int, List[Nothing], String)]() {
+          override def answer(invocation: InvocationOnMock): (Int, List[Nothing], String) = {
+            Thread.sleep(delayMillisForOrganization8888)
+            (200, List(), OrganisaatioResults.kasikasikasikasi)
+          }
+        })
 
     e
   }
@@ -109,7 +117,7 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
     )
   }
 
-  test("OrganisaatioActor should cache a single result") {
+  test("OrganisaatioActor should cache a single koodi based result") {
     withSystem(
       implicit system => {
         implicit val ec = system.dispatcher
@@ -131,6 +139,33 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
         verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/99999"))
+      }
+    )
+  }
+
+  test("OrganisaatioActor should cache a single oid based result") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val (endPoint, organisaatioActor) = initOrganisaatioActor()
+
+        delayMillisForOrganization8888 = 150
+
+        organisaatioActor ! "1.2.246.562.10.165466228888"
+
+        Thread.sleep(delayMillisForOrganization8888 - 50)
+
+        1.to(10).foreach { _ => organisaatioActor ! "1.2.246.562.10.165466228888" }
+
+        delayMillisForOrganization99999 = 0
+
+        waitFuture((organisaatioActor ? "1.2.246.562.10.165466228888").mapTo[Option[Organisaatio]])(o => {
+          o.isDefined should be(true)
+          o.get.oppilaitosKoodi.get should be ("88888")
+        })
+
+        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.165466228888"))
       }
     )
   }
@@ -181,5 +216,8 @@ object OrganisaatioResults {
   def ysiysiysiysiysi(implicit ec: ExecutionContext) = {
     Await.result(Future { Thread.sleep(10) }, Duration(1, TimeUnit.SECONDS))
     scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-99999.json")).mkString
+  }
+  def kasikasikasikasi(implicit ec: ExecutionContext) = {
+    scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-1.2.246.562.10.165466228888.json")).mkString
   }
 }
