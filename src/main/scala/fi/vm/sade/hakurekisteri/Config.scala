@@ -195,6 +195,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
   val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
+  val koskiServiceUrlQa = s"https://$hostQa/koski"
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
@@ -215,6 +216,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val valintaTulosServiceUrl = properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
   val oppijaNumeroRekisteriUrl = properties.getOrElse("cas.service.oppijanumerorekisteri-service", oppijaNumeroRekisteriServiceUrlQa)
+  val koskiServiceUrl = properties.getOrElse("cas.service.koski-service", koskiServiceUrlQa)
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl = properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
@@ -232,6 +234,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl, properties = properties)
+  val koskiConfig = ServiceConfig(serviceUrl = koskiServiceUrl, user = serviceUser, password = servicePassword, properties = properties)
   val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
   }

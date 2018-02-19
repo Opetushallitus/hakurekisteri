@@ -1,5 +1,6 @@
 package support
 
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
@@ -10,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
+import fi.vm.sade.hakurekisteri.integration.koski.{KoskiArvosanaTrigger, KoskiService, KoskiTrigger}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
@@ -110,6 +112,7 @@ class BaseIntegrations(rekisterit: Registers,
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
   val virtaEc = ExecutorUtil.createExecutor(1, "virta-client-pool")
   val virtaResourceEc = ExecutorUtil.createExecutor(5, "virta-resource-client-pool")
+  val koskiResourceEc = ExecutorUtil.createExecutor(5, "koski-resource-client-pool")
 
   system.registerOnTermination(() => {
     restEc.shutdown()
@@ -121,6 +124,7 @@ class BaseIntegrations(rekisterit: Registers,
     vrEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaResourceEc.awaitTermination(3, TimeUnit.SECONDS)
+    koskiResourceEc.awaitTermination(3, TimeUnit.SECONDS)
   })
 
   private val tarjontaClient = new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(restEc, system)
@@ -133,6 +137,7 @@ class BaseIntegrations(rekisterit: Registers,
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
   private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
+  private val koskiClient = new VirkailijaRestClient(config.integrations.koskiConfig, None)(koskiResourceEc, system)
   private val hakuAppPermissionCheckerClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf.copy(
     casUrl = None, user = None, password = None
   ), None)(restEc, system)
@@ -155,6 +160,7 @@ class BaseIntegrations(rekisterit: Registers,
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo")
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system)
   val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
+  val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
@@ -182,17 +188,21 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
+  val koskiArvosanaTrigger: KoskiTrigger = KoskiArvosanaTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
   val ytlTrigger: Trigger = Trigger { (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) => Try(ytlIntegration.sync(hakemus)) match {
       case Failure(e) =>
         logger.error(s"YTL sync failed for hakemus with OID ${hakemus.oid}", e)
       case _ => // pass
     }
   }
+
   hakemusService.addTrigger(arvosanaTrigger)
   hakemusService.addTrigger(ytlTrigger)
+  koskiService.addTrigger(koskiArvosanaTrigger)
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
+  koskiService.processModifiedKoski()
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()

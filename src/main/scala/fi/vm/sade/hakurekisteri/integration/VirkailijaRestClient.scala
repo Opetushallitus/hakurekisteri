@@ -28,7 +28,7 @@ case class PreconditionFailedException(message: String, responseCode: Int) exten
 
 class HttpConfig(properties: Map[String, String] = Map.empty) {
   val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
-  val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "600000").toInt
+  val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "6000000").toInt
   val httpClientMaxRetries = properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
   val httpClientSlowRequest = properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
 }
@@ -76,7 +76,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       }
     }
 
-    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
+    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend", "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend")
       val cookies = new scala.collection.mutable.ListBuffer[String]()
 
@@ -87,13 +87,19 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case None => request
       }
 
-      (user, password) match{
-        case (Some(un), Some(pw)) =>
+      (user, password, basicAuth) match{
+        case (Some(un), Some(pw), false) =>
           for (
             jsession <- jSessionId;
             result <- {
               cookies += s"${jSessionName}=${jsession.sessionId}"
               internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
+            }
+          ) yield result
+        case (Some(un), Some(pw), true) =>
+          for (
+            result <- {
+              internalClient(addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest, handler)
             }
           ) yield result
         case _ =>
@@ -111,12 +117,12 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case _ => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](url: String)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger): Future[A] =
-    Client.request[A, A](url)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
+  private def tryClient[A <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger): Future[A] =
+    Client.request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url)(acceptedResponseCodes, maxRetries, retryCount))
+          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
         } else Future.failed(t)
     }
 
@@ -147,9 +153,14 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     readObjectFromUrl(url1, acceptedResponseCodes, maxRetries)
   }
 
-  def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCodes: Seq[Int], maxRetries: Int = 0): Future[A] = {
+  def readObjectWithBasicAuth[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
+    val url1: String = OphUrlProperties.url(uriKey, args:_*)
+    readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
+  }
+
+  def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCodes: Seq[Int], maxRetries: Int = 0, basicAuth: Boolean = false): Future[A] = {
     val retryCount = new AtomicInteger(1)
-    val result = tryClient[A](url)(acceptedResponseCodes, maxRetries, retryCount)
+    val result = tryClient[A](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount)
     logLongQuery(result, url)
     result
   }
