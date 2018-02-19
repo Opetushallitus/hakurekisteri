@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.organisaatio
 
-import java.util
 import java.util.concurrent.ExecutionException
 
 import akka.actor.Status.Failure
@@ -13,8 +12,8 @@ import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, Virkai
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import scala.collection.JavaConverters._
 import scala.collection.concurrent.TrieMap
+import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
@@ -136,7 +135,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
   case class CacheChildOids(parentOid: String, childOids: ChildOids)
 
-  private val koodiQueriesQueue: TrieMap[String, java.util.List[ActorRef]] = TrieMap()
+  private val koodiQueriesQueue: TrieMap[String, mutable.MutableList[ActorRef]] = TrieMap()
 
   override def receive: Receive = {
     case RefreshOrganisaatioCache => fetchAll(sender())
@@ -168,10 +167,10 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
     case Oppilaitos(koodi) =>
       if (koodiQueriesQueue.keySet.contains(koodi)) {
-        koodiQueriesQueue(koodi).add(sender())
+        koodiQueriesQueue(koodi).+=(sender())
       } else {
-        val refs = new util.ArrayList[ActorRef]()
-        refs.add(sender())
+        val refs = new mutable.MutableList[ActorRef]()
+        refs.+=(sender())
         koodiQueriesQueue.put(koodi, refs)
         findByOppilaitoskoodi(koodi).onComplete { response =>
           self ! HandleKoodiResponse(koodi, response)
@@ -181,13 +180,13 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]]) =>
       response match {
         case Success(Some(oppilaitos)) =>
-          koodiQueriesQueue(koodi).asScala.foreach(_ ! OppilaitosResponse(koodi, oppilaitos))
+          koodiQueriesQueue(koodi).foreach(_ ! OppilaitosResponse(koodi, oppilaitos))
           koodiQueriesQueue.remove(koodi)
         case Success(None) =>
-          koodiQueriesQueue(koodi).asScala.foreach(_ ! OppilaitosNotFoundException(koodi))
+          koodiQueriesQueue(koodi).foreach(_ ! OppilaitosNotFoundException(koodi))
           koodiQueriesQueue.remove(koodi)
         case failure@scala.util.Failure(_) =>
-          koodiQueriesQueue(koodi).asScala.foreach(_ ! failure)
+          koodiQueriesQueue(koodi).foreach(_ ! failure)
           koodiQueriesQueue.remove(koodi)
       }
   }
