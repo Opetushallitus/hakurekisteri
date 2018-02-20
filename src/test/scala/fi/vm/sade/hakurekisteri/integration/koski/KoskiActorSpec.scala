@@ -218,7 +218,6 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     ), "", parseLocalDate("2016-02-02")))
   }
 
-
   it should "detectOppilaitos should return luokka for peruskoulu" in {
     KoskiArvosanaTrigger.detectOppilaitos(Seq(
       SuoritusLuokka(

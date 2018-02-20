@@ -155,6 +155,10 @@ object KoskiArvosanaTrigger {
 
     var (luokkataso, oppilaitosOid, luokka, alku) = detectOppilaitos(suoritukset, def_alku)
 
+    if (!loppu.isAfter(alku) && loppu.isAfter(def_alku)) {
+      alku = def_alku
+    }
+
     Opiskelija(
       oppilaitosOid = oppilaitosOid,
       luokkataso = luokkataso,
@@ -166,9 +170,9 @@ object KoskiArvosanaTrigger {
     )
   }
 
-  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritukset: Seq[SuoritusLuokka], oid: String, alku: DateTime): (String, String, String, DateTime) = {
-    val sluokka = luokkaSuoritukset.find(_.suoritus.komo == oid).get
-    oid match {
+  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritukset: Seq[SuoritusLuokka], komoOid: String, alku: DateTime): (String, String, String, DateTime) = {
+    val sluokka = luokkaSuoritukset.filter(_.suoritus.komo == komoOid).maxBy(_.luokka)
+    komoOid match {
       // hae luokka 9C tai vast
       case Oids.perusopetusKomoOid if luokkaSuoritukset.exists(_.luokka.startsWith("9")) => {
         var luokka = luokkaSuoritukset.filter(_.luokka.startsWith("9")).head.luokka
@@ -199,7 +203,8 @@ object KoskiArvosanaTrigger {
     case s if (s.exists(_.suoritus.komo == Oids.valmaKomoOid)) => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid, alku)
     case s if (s.exists(_.suoritus.komo == Oids.telmaKomoOid)) => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid, alku)
     case s if (s.exists(_.suoritus.komo == Oids.lisaopetusKomoOid)) => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.perusopetusKomoOid)) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid, alku)
+    case s if (s.exists(_.suoritus.komo == Oids.perusopetusKomoOid) && s.exists(_.luokka.startsWith("9"))) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid, alku)
+    case s if (s.exists(_.suoritus.komo == Oids.perusopetusKomoOid) && !s.exists(_.luokka.startsWith("9"))) => getOppilaitosAndLuokka("", s, Oids.perusopetusKomoOid, alku)
     case _ => ("", "", "", alku)
   }
 
