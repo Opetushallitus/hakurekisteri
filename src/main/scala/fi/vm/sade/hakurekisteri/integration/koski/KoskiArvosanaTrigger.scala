@@ -319,10 +319,10 @@ object KoskiArvosanaTrigger {
     opintopisteet
   }
 
-  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, toimipiste: Option[KoskiOrganisaatio]): (Int, LocalDate, String) = {
+  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, oppilaitos: KoskiOrganisaatio): (Int, LocalDate, String) = {
     vahvistus match {
       case Some(k: KoskiVahvistus) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid)
-      case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), toimipiste.getOrElse(KoskiOrganisaatio(root_org_id)).oid)
+      case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid)
     }
   }
 
@@ -340,7 +340,8 @@ object KoskiArvosanaTrigger {
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[(Suoritus, Seq[Arvosana], String, LocalDate)] = {
     var result = Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]()
     for ( suoritus <- suoritukset ) {
-        val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, suoritus.toimipiste)
+        val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus.oppilaitos)
+
         var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
         var lastTila = tilat match {
