@@ -12,9 +12,8 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, Per
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Success, Try}
-import scala.concurrent.duration._
 
 trait IKoskiService {
   def fetchChanged(personOid: String): Future[Seq[KoskiHenkilo]]
@@ -32,11 +31,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[KoskiTrigger] = Seq()
 
-  case class SearchParams(muuttunutJälkeen: String = null)
-
-  def fetchChanged(): Future[Seq[KoskiHenkiloContainer]] = {
-    fetchChanged(0, params = SearchParams())
-  }
+  case class SearchParams(muuttunutJälkeen: String)
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
     logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet jälkeen: " + params.muuttunutJälkeen.toString)
