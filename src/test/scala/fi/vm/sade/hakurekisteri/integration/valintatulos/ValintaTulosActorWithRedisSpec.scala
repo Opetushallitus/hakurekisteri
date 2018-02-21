@@ -34,6 +34,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
   def cacheFactory(implicit system:ActorSystem) = CacheFactory.apply(new OphProperties()
     .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
     .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
+    .addDefault("suoritusrekisteri.cache.redis.numberOfWaitersToLog", "5")
     .addDefault("suoritusrekisteri.cache.redis.port", s"${rPort}")
   )(system)
 
