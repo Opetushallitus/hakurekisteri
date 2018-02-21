@@ -1,8 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.cache
 
 import java.io._
-import java.util.Collections
-import java.util.concurrent.locks.ReentrantLock
 
 import akka.actor.ActorSystem
 import akka.util.ByteString
@@ -11,11 +9,8 @@ import fi.vm.sade.utils.Timer
 import org.apache.commons.io.IOUtils
 import redis.{ByteStringFormatter, RedisClient}
 
-import scala.collection.JavaConverters._
-import scala.collection.concurrent.TrieMap
-import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future, Promise}
+import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
 
 trait CacheFactory {
@@ -65,12 +60,12 @@ object CacheFactory {
                            cacheItemLockMaxDurationSeconds: Int) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
-      private val waitingPromisesHandlingLock = new ReentrantLock(true)
-      private val waitingPromises: mutable.Map[K, java.util.List[Promise[Option[T]]]] = TrieMap[K, java.util.List[Promise[Option[T]]]]()
 
       import scala.concurrent.ExecutionContext.Implicits.global
 
       implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
+
+      private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog, cacheItemLockMaxDurationSeconds)
 
       def +(key: K, f: Future[T]): Future[_] = f flatMap {
         case t =>
@@ -104,127 +99,16 @@ object CacheFactory {
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
       override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        r.exists(k(key)).flatMap(keyIsIncache =>
+        r.exists(k(key)).flatMap { keyIsIncache =>
           if (keyIsIncache) {
             toOption(get(key))
           } else {
-            lockWaiterBookkeeping()
-            try {
-              initiateLoadingIfNotYetRunning(key, loader)
-            } finally {
-              releaseWaitingBookkeeping()
-            }
-          })
-      }
-
-      private def lockWaiterBookkeeping(): Unit = {
-        waitingPromisesHandlingLock.lock()
-        if (waitingPromisesHandlingLock.getHoldCount != 1) {
-          throw new IllegalStateException(s"After locking, waitingPromisesHandlingLock.getHoldCount == " +
-            s"${waitingPromisesHandlingLock.getHoldCount} – this should never happen.")
-        }
-      }
-
-      private def releaseWaitingBookkeeping(): Unit = {
-        if (waitingPromisesHandlingLock.getHoldCount != 1) {
-          throw new IllegalStateException(s"Before unlocking, waitingPromisesHandlingLock.getHoldCount == " +
-            s"${waitingPromisesHandlingLock.getHoldCount} – this should never happen.")
-        }
-        waitingPromisesHandlingLock.unlock()
-      }
-
-      private def initiateLoadingIfNotYetRunning(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        val promisesOfThisKey = waitingPromises.getOrElseUpdate(key, { createSynchonizedList })
-        val newClientPromise: Promise[Option[T]] = Promise[Option[T]]
-        logger.debug("Adding new client promise:")
-        promisesOfThisKey.add(newClientPromise)
-        val numberWaiting = promisesOfThisKey.size
-        logger.debug(s"Waiting after adding: $numberWaiting")
-        if (numberWaiting > limitOfWaitingClientsToLog) {
-          logger.warn(s"Already $numberWaiting clients waiting for value of $key")
-        }
-
-        val prefixKey = k(key)
-        val lockKey = prefixKey + "-lock"
-        r.set(lockKey, "LOCKED", exSeconds = Some(cacheItemLockMaxDurationSeconds), NX = true).flatMap { lockObtained =>
-          if (lockObtained) {
-            logger.debug(s"Successfully acquired update lock of $lockKey")
-            r.get(prefixKey).onComplete {
-              case Success(found@Some(_)) =>
-                logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
-                resolvePromisesWaitingForValueFromCache(key, Success(found))
-                removeCacheUpdateLock(lockKey)
-              case Success(None) =>
-                logger.debug(s"Starting retrieval of $prefixKey with loader function.")
-                retrieveNewvalueWithLoader(key, loader, lockKey)
-              case Failure(e) => newClientPromise.failure(e)
-            }
-          } else {
-            logger.debug(s"Could not acquire $lockKey, waiting patiently for my promise to be resolved. We're ${promisesOfThisKey.size} in total waiting")
+            updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
           }
-          newClientPromise.future
-        }.recoverWith { case e =>
-            logger.error(s"Error when obtaining lock $lockKey", e)
-            Future.failed(e)
-        }
-      }
-
-      private def retrieveNewvalueWithLoader(key: K, loader: K => Future[Option[T]], lockKey: String): Unit = {
-        val loadingFuture = loader(key)
-        loadingFuture.onComplete { result =>
-          if (result.isSuccess) {
-            result.get match {
-              case Some(foundItem) =>
-                this.+(key, Future.successful(foundItem)).onComplete { _ =>
-                  resolvePromisesWaitingForValueFromCache(key, result, failIfNobodyWaiting = false)
-                  removeCacheUpdateLock(lockKey)
-                }
-              case None =>
-                removeCacheUpdateLock(lockKey)
-            }
-          } else {
-            removeCacheUpdateLock(lockKey)
-          }
-          resolvePromisesWaitingForValueFromCache(key, result)
-        }
-      }
-
-      private def resolvePromisesWaitingForValueFromCache(key: K, result: Try[Option[T]], failIfNobodyWaiting: Boolean = true): Unit = {
-        lockWaiterBookkeeping()
-        try {
-          waitingPromises.remove(key) match {
-            case Some(promisesWaitingForResult) =>
-              logger.debug(s"Resolving promises for key $key: ${promisesWaitingForResult.size()}")
-              promisesWaitingForResult.asScala.foreach {
-                _.complete(result)
-              }
-            case None =>
-              if (failIfNobodyWaiting) {
-                throw new IllegalStateException(s"Nobody waiting for results of $key , got result $result")
-              } else {
-                logger.debug(s"Nobody waiting for results of $key, got result $result")
-              }
-          }
-        } finally {
-          releaseWaitingBookkeeping()
-        }
-      }
-
-      private def removeCacheUpdateLock(lockKey: String): Unit = {
-        val removalOfLock = r.del(lockKey)
-        removalOfLock.onSuccess { case _ =>
-          logger.debug(s"Successfully removed update lock $lockKey")
-        }
-        removalOfLock.onFailure { case e: Throwable =>
-          logger.error(s"Could not remove update lock $lockKey", e)
         }
       }
 
       override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
-
-      private def createSynchonizedList: java.util.List[Promise[Option[T]]] = {
-        Collections.synchronizedList(new java.util.ArrayList[Promise[Option[T]]]())
-      }
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
