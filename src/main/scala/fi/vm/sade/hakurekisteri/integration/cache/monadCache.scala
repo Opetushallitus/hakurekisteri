@@ -3,17 +3,17 @@ package fi.vm.sade.hakurekisteri.integration.cache
 import java.util.Collections
 import java.util.concurrent.Semaphore
 
+import scala.collection.JavaConverters._
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.language.higherKinds
-import scala.collection.JavaConverters._
 
 trait MonadCache[F[_], K, T] {
 
-  def +(key: K, f: F[T])
+  def +(key: K, f: F[T]): F[_]
 
   def -(key: K)
 
@@ -98,7 +98,11 @@ abstract class InMemoryMonadCache[F[_], K, T](val expirationDurationMillis: Long
 
   private var cache: Map[K, Cacheable[F, T]] = Map()
 
-  def +(key: K, f: F[T]) = cache = cache + (key -> cacheable(key, f))
+  def +(key: K, f: F[T]): F[_] = {
+    val value = cacheable(key, f)
+    cache = cache + (key -> value)
+    value.f
+  }
 
   def cacheable(key: K, f: F[T]): Cacheable[F, T] = {
     Cacheable[F, T](f = f, accessed = getAccessed(key))
