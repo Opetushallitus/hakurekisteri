@@ -63,7 +63,6 @@ object CacheFactory {
                            limitOfWaitingClientsToLog: Int) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
-      //private val waitingPromisesHandlingSemaphore = new Semaphore(1)
       private val waitingPromisesHandlingLock = new ReentrantLock(true)
       private val waitingPromises: mutable.Map[K, java.util.List[Promise[Option[T]]]] = TrieMap[K, java.util.List[Promise[Option[T]]]]()
 
