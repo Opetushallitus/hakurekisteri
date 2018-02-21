@@ -55,12 +55,14 @@ object CacheFactory {
       r,
       expirationDurationMillis,
       cacheKeyPrefix,
-      config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt)
+      config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
+      config.getProperty("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds").toInt)
 
     class RedisCache[K, T](val r: RedisClient,
                            val expirationDurationMillis: Long,
                            val cacheKeyPrefix: String,
-                           limitOfWaitingClientsToLog: Int) extends MonadCache[Future, K, T] {
+                           limitOfWaitingClientsToLog: Int,
+                           cacheItemLockMaxDurationSeconds: Int) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
       private val waitingPromisesHandlingLock = new ReentrantLock(true)
@@ -144,7 +146,7 @@ object CacheFactory {
 
         val prefixKey = k(key)
         val lockKey = prefixKey + "-lock"
-        r.set(lockKey, "LOCKED", exSeconds = Some(60), NX = true).flatMap { lockObtained =>
+        r.set(lockKey, "LOCKED", exSeconds = Some(cacheItemLockMaxDurationSeconds), NX = true).flatMap { lockObtained =>
           if (lockObtained) {
             logger.debug(s"Successfully acquired update lock of $lockKey")
             r.get(prefixKey).onComplete {
