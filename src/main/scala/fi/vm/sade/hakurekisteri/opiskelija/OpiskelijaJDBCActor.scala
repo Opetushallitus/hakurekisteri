@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumn, startOfYear, yearOf}
@@ -32,6 +33,8 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
         matchPaiva(paiva)(t) &&
         matchVuosiAndKausi(vuosi, kausi)(t) &&
         matchLuokka(luokka)(t)).result)
+    case OpiskelijaHenkilotQuery(henkilot: PersonOidsWithAliases) =>
+      Right(findWithHenkilot(henkilot, "henkilo_oid", all))
   }
 
   private def matchHenkilo(henkilo: Option[String])(t: OpiskelijaTable): Rep[Boolean] = henkilo match {

@@ -27,7 +27,7 @@ import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity, TestUser}
 import fi.vm.sade.hakurekisteri.{Config, MockConfig}
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.read
@@ -130,9 +130,12 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     ItPostgres.reset()
     val rekisterit = new Registers {
       insertAFewRandomishSuoritukset(suoritusJournal)
+      private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+      opiskelijaJournal.addModification(Updated(Opiskelija("1.2.246.562.10.00000000001", "9",
+        "9A", "1.2.246.562.24.61781310000", DateTime.now.minusYears(2), Some(DateTime.now.minusWeeks(1)), "source").identify))
+
       private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
       private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
-      private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
       private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
       private val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null)))
       private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
@@ -231,6 +234,17 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
     })
+  }
+
+  test("OppijaResource should return opiskelu") {
+    get("/1.2.246.562.24.61781310000?haku=1.2.3.4") {
+      response.status should be(OK)
+
+      val oppija = read[Oppija](response.body)
+      oppija.opiskelu.size should be(1)
+      oppija.opiskelu.head.oppilaitosOid should be("1.2.246.562.10.00000000001")
+      oppija.opiskelu.head.luokka should be("9A")
+    }
   }
 
   test("OppijaResource should return oppija with ensikertalainen true") {
