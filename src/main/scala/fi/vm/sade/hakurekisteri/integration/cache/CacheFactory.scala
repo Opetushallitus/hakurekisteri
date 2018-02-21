@@ -192,7 +192,7 @@ object CacheFactory {
               if (failIfNobodyWaiting) {
                 throw new IllegalStateException(s"Nobody waiting for results of $key , got result $result")
               } else {
-                logger.warn(s"Nobody waiting for results of $key, got result $result")
+                logger.debug(s"Nobody waiting for results of $key, got result $result")
               }
           }
         } finally {
