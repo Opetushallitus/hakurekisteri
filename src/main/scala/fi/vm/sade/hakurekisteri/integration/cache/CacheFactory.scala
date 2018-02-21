@@ -51,11 +51,16 @@ object CacheFactory {
       RedisClient(host = host, port = port)
     }
 
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new RedisCache[K, T](r, expirationDurationMillis, cacheKeyPrefix)
+    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new RedisCache[K, T](
+      r,
+      expirationDurationMillis,
+      cacheKeyPrefix,
+      config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt)
 
     class RedisCache[K, T](val r: RedisClient,
                            val expirationDurationMillis: Long,
-                           val cacheKeyPrefix: String) extends MonadCache[Future, K, T] {
+                           val cacheKeyPrefix: String,
+                           limitOfWaitingClientsToLog: Int) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
       //private val waitingPromisesHandlingSemaphore = new Semaphore(1)
@@ -132,7 +137,11 @@ object CacheFactory {
         val newClientPromise: Promise[Option[T]] = Promise[Option[T]]
         logger.debug("Adding new client promise:")
         promisesOfThisKey.add(newClientPromise)
-        logger.debug(s"Waiting after adding: ${promisesOfThisKey.size()}")
+        val numberWaiting = promisesOfThisKey.size
+        logger.debug(s"Waiting after adding: $numberWaiting")
+        if (numberWaiting > limitOfWaitingClientsToLog) {
+          logger.warn(s"Already $numberWaiting clients waiting for value of $key")
+        }
 
         val prefixKey = k(key)
         val lockKey = prefixKey + "-lock"
