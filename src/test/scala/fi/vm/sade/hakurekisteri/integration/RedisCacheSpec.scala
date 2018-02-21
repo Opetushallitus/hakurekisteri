@@ -23,6 +23,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
     .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
     .addDefault("suoritusrekisteri.cache.redis.numberOfWaitersToLog", "5")
+    .addDefault("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds", "6")
     .addDefault("suoritusrekisteri.cache.redis.port", s"${port}"))(system)
 
   override def beforeAll() = {
