@@ -429,6 +429,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           kansalaisuus = kansalaisuus,
           kaksoiskansalaisuus = h.kaksoiskansalaisuus,
           asiointiKieli = h.asiointiKieli,
+          opetuskieli = h.opetuskieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
           markkinointilupa = h.markkinointilupa,
           kiinnostunutoppisopimuksesta = h.kiinnostunutoppisopimuksesta,
