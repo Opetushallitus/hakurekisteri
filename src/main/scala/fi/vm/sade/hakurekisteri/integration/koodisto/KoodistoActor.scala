@@ -48,10 +48,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
         .map(koodit => KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo)))
         .map(Some(_))
     }
-    koodiArvotCache.get(koodistoUri, loader).flatMap {
-      case Some(koodistoArvot) => Future.successful(koodistoArvot)
-      case None => Future.failed(new IllegalArgumentException(s"Could not find koodistoarvot for koodistoUri '$koodistoUri'"))
-    }
+    koodiArvotCache.get(koodistoUri, loader).map(_.get)
   }
 
   def notFound(t: Throwable): Boolean = t match {
@@ -68,10 +65,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
       }
       koodi.map(Option(_))
     }
-    koodiCache.get(koodiUri, loader).flatMap {
-      case Some(found) => Future.successful(found)
-      case None => Future.failed(new RuntimeException(s"Something went wrong when retrieving koodi $koodiUri from $koodistoUri"))
-    }
+    koodiCache.get(koodiUri, loader).map(_.get)
   }
 
   def getRinnasteinenKoodiArvo(q: GetRinnasteinenKoodiArvoQuery): Future[String] = {
