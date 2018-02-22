@@ -4,13 +4,14 @@ import java.io._
 
 import akka.actor.ActorSystem
 import akka.util.ByteString
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.Timer
 import org.apache.commons.io.IOUtils
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait CacheFactory {
@@ -51,17 +52,19 @@ object CacheFactory {
       expirationDurationMillis,
       cacheKeyPrefix,
       config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
-      config.getProperty("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds").toInt)
+      config.getProperty("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds").toInt,
+      config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt)
 
     class RedisCache[K, T](val r: RedisClient,
                            val expirationDurationMillis: Long,
                            val cacheKeyPrefix: String,
                            limitOfWaitingClientsToLog: Int,
-                           cacheItemLockMaxDurationSeconds: Int) extends MonadCache[Future, K, T] {
+                           cacheItemLockMaxDurationSeconds: Int,
+                           cacheHandlingThreadPoolSize: Int) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
-      import scala.concurrent.ExecutionContext.Implicits.global
+      implicit val executor: ExecutionContext = ExecutorUtil.createExecutor(cacheHandlingThreadPoolSize, s"cache-access-$cacheKeyPrefix")
 
       implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
 
