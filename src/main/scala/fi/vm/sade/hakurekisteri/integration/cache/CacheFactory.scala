@@ -85,7 +85,7 @@ object CacheFactory {
       def get(key: K): Future[T] = {
         val prefixKey = k(key)
         val startTime = System.currentTimeMillis
-        logger.debug(s"Getting value with key ${prefixKey} from Redis cache")
+        logger.trace(s"Getting value with key ${prefixKey} from Redis cache")
         r.get[T](prefixKey).collect {
           case Some(x) =>
             val duration = System.currentTimeMillis - startTime
