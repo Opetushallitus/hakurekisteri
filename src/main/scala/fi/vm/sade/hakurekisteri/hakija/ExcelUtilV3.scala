@@ -10,7 +10,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
 
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
-    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Huoltajan nimi",
+    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Opetuskieli", "Huoltajan nimi",
     "Huoltajan puhelinnumero", "Huoltajan sähköposti", "Koulutusmarkkinointilupa", "Kiinnostunut oppisopimuskoulutuksesta",
     "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus",
     "Todistusvuosi", /*"Minkä muun koulutuksen/opintoja olet suorittanut?",*/ "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
@@ -60,6 +60,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         h.kotikunta.getOrElse(""),
         h.sukupuoli,
         h.aidinkieli,
+        h.opetuskieli,
         h.huoltajannimi.getOrElse(""),
         h.huoltajanpuhelinnumero.getOrElse(""),
         h.huoltajansahkoposti.getOrElse(""),
