@@ -28,6 +28,7 @@ object JSONHakija {
       kotikunta = hakija.henkilo.kotikunta.blankOption,
       sukupuoli = Hakija.resolveSukupuoli(hakija),
       aidinkieli = hakija.henkilo.asiointiKieli,
+      opetuskieli = hakija.henkilo.opetuskieli,
       koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
       kiinnostunutoppisopimuksesta = hakija.henkilo.kiinnostunutoppisopimuksesta.getOrElse(false),
       huoltajannimi = hakija.henkilo.huoltajannimi.blankOption,
@@ -44,10 +45,30 @@ object JSONHakija {
 
 }
 
-case class JSONHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                      postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
-                      muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
-                      aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
-                      huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus, lisakysymykset: Seq[Lisakysymys])
+case class JSONHakija(hetu: String,
+                      oppijanumero: String,
+                      sukunimi: String,
+                      etunimet: String,
+                      kutsumanimi: Option[String],
+                      lahiosoite: String,
+                      postinumero: String,
+                      postitoimipaikka: String,
+                      maa: String,
+                      kansalaisuus: String,
+                      matkapuhelin: Option[String],
+                      muupuhelin: Option[String],
+                      sahkoposti: Option[String],
+                      kotikunta: Option[String],
+                      sukupuoli: String,
+                      aidinkieli: String,
+                      opetuskieli: String,
+                      koulutusmarkkinointilupa: Boolean,
+                      kiinnostunutoppisopimuksesta: Boolean,
+                      huoltajannimi: Option[String],
+                      huoltajanpuhelinnumero: Option[String],
+                      huoltajansahkoposti: Option[String],
+                      hakemus: XMLHakemus,
+                      lisakysymykset: Seq[Lisakysymys]
+                     )
 
 case class JSONHakijat(hakijat: Seq[JSONHakija])

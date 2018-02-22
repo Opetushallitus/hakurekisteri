@@ -345,7 +345,8 @@ object AkkaHakupalvelu {
       val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
       val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
       val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
-      val kieli: String = hakemus.kieli
+      val kieli: String = hakemus.aidinkieli
+      val opetuskieli: Option[String] = koulutustausta.flatMap(_.perusopetuksen_kieli)
       val suorittaja: String = hakemus.personOid.getOrElse("")
       val julkaisulupa: Boolean = hakemus.julkaisulupa
 
@@ -392,6 +393,7 @@ object AkkaHakupalvelu {
           kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
           kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
           asiointiKieli = kieli,
+          opetuskieli = opetuskieli.getOrElse(""),
           eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
           sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
           hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
@@ -449,6 +451,7 @@ object AkkaHakupalvelu {
             .getOrElse("FIN"),
           kaksoiskansalaisuus = "",
           asiointiKieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi.toUpperCase).getOrElse("FI"),
+          opetuskieli = "",
           eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
           hetu = hakemus.henkilo.hetu.getOrElse(""),
@@ -706,7 +709,7 @@ case class FullHakemus(oid: String,
 
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = koulutustausta.flatMap(_.lahtokoulu)
-  val kieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
+  val aidinkieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
   val julkaisulupa: Boolean = answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu))).getOrElse("false").toBoolean
 }
 

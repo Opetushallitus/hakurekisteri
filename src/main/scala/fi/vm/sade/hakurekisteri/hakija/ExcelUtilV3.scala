@@ -10,14 +10,13 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
 
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
-    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Huoltajan nimi",
+    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Opetuskieli", "Huoltajan nimi",
     "Huoltajan puhelinnumero", "Huoltajan sähköposti", "Koulutusmarkkinointilupa", "Kiinnostunut oppisopimuskoulutuksesta",
     "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus",
     "Todistusvuosi", /*"Minkä muun koulutuksen/opintoja olet suorittanut?",*/ "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", "HakukohdeOid",
     "Harkinnanvaraisuuden peruste", /*"Urheilijan ammatillinen koulutus",*/ "Yhteispisteet", "Valinta", "Vastaanotto",
-    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", /*"Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto",*/
-    "Koulutuksen kieli"
+    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"/*, "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"*/
   )
 
   private def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String): Seq[lisakysymysHeader] = {
@@ -61,6 +60,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         h.kotikunta.getOrElse(""),
         h.sukupuoli,
         h.aidinkieli,
+        h.opetuskieli,
         h.huoltajannimi.getOrElse(""),
         h.huoltajanpuhelinnumero.getOrElse(""),
         h.huoltajansahkoposti.getOrElse(""),
@@ -96,7 +96,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         ht.lasnaolo.getOrElse(""),
         toBooleanX(ht.terveys),
         toBooleanX(ht.aiempiperuminen),
-        toBooleanX(ht.kaksoistutkinto),
+        toBooleanX(ht.kaksoistutkinto)
         /* h.hakemus.osaaminen match {
           case Some(os) => {
             (ht.koulutuksenKieli) match {
@@ -119,8 +119,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
             }
           }
           case _ => ""
-        },*/
-        ht.koulutuksenKieli.getOrElse("")
+        }*/
       )
 
       def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
