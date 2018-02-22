@@ -95,17 +95,11 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
 
   private def findByOid(oid: String): Future[Option[Organisaatio]] = {
-    if (cache.contains(oid))
-      cache.get(oid).map(Some(_))
-    else
-      cache.get(oid, findAndCache)
+    cache.get(oid, findAndCache)
   }
 
   private def findChildOids(parentOid: String): Future[Option[ChildOids]] = {
-    if (childOidCache.contains(parentOid))
-      childOidCache.get(parentOid).map(Some(_))
-    else
-      findAndCacheChildOids(parentOid)
+    childOidCache.get(parentOid, _ => findAndCacheChildOids(parentOid))
   }
   private def findByOppilaitoskoodi(koodi: String): Future[Option[Organisaatio]] = {
     oppilaitoskoodiIndex.get(koodi) match {
