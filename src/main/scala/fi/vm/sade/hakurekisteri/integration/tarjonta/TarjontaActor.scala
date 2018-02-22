@@ -98,8 +98,10 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getKomo(oid: String): Future[KomoResponse] = {
-    val f = restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries).map(res => KomoResponse(oid, res.result))
-    komoCache.get(oid, o => f.map(Option(_))).flatMap {
+    val loader = restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries)
+      .map(res => KomoResponse(oid, res.result))
+      .map(Option(_))
+    komoCache.get(oid, o => loader).flatMap {
       case Some(foundKomo) => Future.successful(foundKomo)
       case None => Future.failed(new RuntimeException(s"Could not retrieve komo $oid"))
     }
@@ -143,14 +145,15 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
 
   def getHakukohteenKoulutuksetViaCache(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
     val loader: String => Future[Option[HakukohteenKoulutukset]] = hakukohdeOid => {
-          val fh: Future[Option[Hakukohde]] = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hk.oid)(200, maxRetries).map(r => r.result)
-          fh.flatMap {
-            case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
-            case Some(h) => for (
-              hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- getHakukohteenkoulutukset(h.hakukohdeKoulutusOids)
-            ) yield Some(HakukohteenKoulutukset(h.oid, h.ulkoinenTunniste, hakukohteenkoulutukset))
-          }
+      restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hk.oid)(200, maxRetries)
+        .map(r => r.result)
+        .flatMap {
+          case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
+          case Some(h) => for (
+            hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- getHakukohteenkoulutukset(h.hakukohdeKoulutusOids)
+          ) yield Some(HakukohteenKoulutukset(h.oid, h.ulkoinenTunniste, hakukohteenkoulutukset))
         }
+    }
 
     koulutusCache.get(hk.oid, loader).flatMap {
       case Some(foundHakukohteenKoulutukset) => Future.successful(foundHakukohteenKoulutukset)
