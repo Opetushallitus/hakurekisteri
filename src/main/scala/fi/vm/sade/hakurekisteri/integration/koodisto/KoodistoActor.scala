@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.koodisto
 
-import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
 import akka.actor.{Actor, ActorLogging}
@@ -9,8 +8,8 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, PreconditionFailedException, VirkailijaRestClient}
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 case class GetRinnasteinenKoodiArvoQuery(koodisto: String, arvo: String, rinnasteinenKoodistoUri: String)
 case class Koodisto(koodistoUri: String)
@@ -44,12 +43,14 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getKoodistoKoodiArvot(koodistoUri: String): Future[KoodistoKoodiArvot] = {
-    if (koodiArvotCache.contains(koodistoUri)) koodiArvotCache.get(koodistoUri)
-    else {
-      val f = restClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
+    val loader: String => Future[Option[KoodistoKoodiArvot]] = { uri =>
+      restClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
         .map(koodit => KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo)))
-      koodiArvotCache + (koodistoUri, f)
-      f
+        .map(Some(_))
+    }
+    koodiArvotCache.get(koodistoUri, loader).flatMap {
+      case Some(koodistoArvot) => Future.successful(koodistoArvot)
+      case None => Future.failed(new IllegalArgumentException(s"Could not find koodistoarvot for koodistoUri '$koodistoUri'"))
     }
   }
 
@@ -59,37 +60,40 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
-    if (koodiCache.contains(koodiUri)) koodiCache.get(koodiUri)
-    else {
-      val koodi = restClient.readObject[Koodi]("koodisto-service.koodiByUri", koodistoUri, koodiUri)(200, maxRetries).map(Some(_)).recoverWith {
+    val loader: String => Future[Option[Option[Koodi]]] = { uri =>
+      val koodi: Future[Option[Koodi]] = restClient.readObject[Koodi]("koodisto-service.koodiByUri", koodistoUri, uri)(200, maxRetries).map(Some(_)).recoverWith {
         case t: ExecutionException if t.getCause != null && notFound(t.getCause) =>
-          log.warning(s"koodi not found with koodiUri $koodiUri: $t")
+          log.warning(s"koodi not found from koodisto $koodistoUri with koodiUri $koodiUri: $t")
           Future.successful(None)
       }
-      koodiCache + (koodiUri, koodi)
-      koodi
+      koodi.map(Option(_))
+    }
+    koodiCache.get(koodiUri, loader).flatMap {
+      case Some(found) => Future.successful(found)
+      case None => Future.failed(new RuntimeException(s"Something went wrong when retrieving koodi $koodiUri from $koodistoUri"))
     }
   }
 
   def getRinnasteinenKoodiArvo(q: GetRinnasteinenKoodiArvoQuery): Future[String] = {
-    if (relaatioCache.contains(q)) relaatioCache.get(q)
-    else {
+    val loader: GetRinnasteinenKoodiArvoQuery => Future[Option[String]] = { query =>
       lazy val url = OphUrlProperties.url("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)
       restClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)(200, maxRetries)
-          .map(_.headOption.map(_.koodiUri)).flatMap(uriOpt => {
-            uriOpt match {
-              case Some(uri) =>
-                val fs = restClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", uri)(200, maxRetries)
-                  .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
-                    case None => throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodiurilla $uri")
-                    case Some(k) => k.koodiArvo
-                  })
-                relaatioCache + (q, fs)
-                fs
-              case _ =>
-                throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodistosta: $url")
-            }
-        })
+        .map(_.headOption.map(_.koodiUri)).flatMap {
+        case Some(uri) =>
+          val fs = restClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", uri)(200, maxRetries)
+            .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
+              case None => throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodiurilla $uri")
+              case Some(k) => k.koodiArvo
+            })
+          fs.map(Option(_))
+        case None =>
+          throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodistosta: $url")
+      }
+    }
+
+    relaatioCache.get(q, loader).flatMap {
+      case Some(found) => Future.successful(found)
+      case None => Future.failed(new RuntimeException(s"Something went wrong when retrieving rinnasteinen koodiarvo with $q"))
     }
   }
 }
