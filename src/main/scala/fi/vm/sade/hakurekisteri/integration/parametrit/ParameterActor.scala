@@ -38,12 +38,10 @@ abstract class ParameterActor extends Actor with ActorLogging {
   }
 
   private def isSendingEnabled(key: String): Future[Boolean] = {
-    if (tiedonsiirtoSendingPeriodCache.contains(key))
-      tiedonsiirtoSendingPeriodCache.get(key)
-    else {
-      val future = isEnabledFromRest(key)
-      tiedonsiirtoSendingPeriodCache + (key, future)
-      future
+    val loader: String => Future[Option[Boolean]] = _ => isEnabledFromRest(key).map(Option(_))
+    tiedonsiirtoSendingPeriodCache.get(key, loader).flatMap {
+      case Some(found) => Future.successful(found)
+      case None => Future.failed(new IllegalArgumentException(s"Could not find key $key"))
     }
   }
 
@@ -68,12 +66,10 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
   private val all = "ALL"
 
   private def getAll: Future[Map[String, KierrosParams]] = {
-    if (allResponseCache.contains(all))
-      allResponseCache.get(all)
-    else {
-      val allFuture = restClient.readObject[Map[String, KierrosParams]]("ohjausparametrit-service.all")(200, 2)
-      allResponseCache + (all, allFuture)
-      allFuture
+    val loader: String => Future[Option[Map[String, KierrosParams]]] = _ => restClient.readObject[Map[String, KierrosParams]]("ohjausparametrit-service.all")(200, 2).map(Option(_))
+    allResponseCache.get(all, loader).flatMap {
+      case Some(found) => Future.successful(found)
+      case None => Future.failed(new RuntimeException("Could not retrieve all paraleters"))
     }
   }
 
