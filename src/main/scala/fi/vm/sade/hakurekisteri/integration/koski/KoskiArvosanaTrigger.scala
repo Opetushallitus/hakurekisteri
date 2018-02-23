@@ -81,14 +81,9 @@ object KoskiArvosanaTrigger {
       arvosanat.filter(a => a.aine == aine).head
     }
 
-    /*def saveOpiskelija(henkiloOid: String, suoritukset: Seq[SuoritusLuokka]) = {
-      opiskelijaRekisteri ! createOpiskelija(henkiloOid, suoritukset)
-    }*/
-
     def saveOpiskelija(opiskelija: Opiskelija) = {
       opiskelijaRekisteri ! opiskelija
     }
-
 
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
       case s: VirallinenSuoritus => s.core == suor.core
@@ -104,10 +99,10 @@ object KoskiArvosanaTrigger {
         henkilonSuoritukset.foreach {
           case (suor: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate) =>
 
-            val useArvosanat = arvosanat
+            var useArvosanat = arvosanat
             val useSuoritus = suor
             if(suor.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty){
-              var useArvosanat = henkilonSuoritukset
+              useArvosanat = henkilonSuoritukset
                 .filter(_._1.asInstanceOf[VirallinenSuoritus].henkilo.equals(suor.henkilo))
                 .filter(_._1.asInstanceOf[VirallinenSuoritus].myontaja.equals(suor.myontaja))
                 .filter(_._1.asInstanceOf[VirallinenSuoritus].komo.equals("luokka"))
@@ -121,16 +116,17 @@ object KoskiArvosanaTrigger {
               useLuokka = luokka
             }
             val peruskoulututkintoJaYsisuoritus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && henkilonSuoritukset.exists(_._3.startsWith("9"))
-            if (peruskoulututkintoJaYsisuoritus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid)) {
+
+            if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
               val opiskelija = createOpiskelija(henkiloOid, Seq(SuoritusLuokka(useSuoritus, useLuokka, lasnaDate))) //LUOKKATIETO
-              if (!suoritusExists(useSuoritus, suoritukset) && useSuoritus.komo != "luokka") {
+              if (!suoritusExists(useSuoritus, suoritukset)) {
                 for (
                   suoritus: Suoritus with Identified[UUID] <- saveSuoritus(useSuoritus)
                 ) useArvosanat.foreach(arvosana =>
                   arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
                 )
                 saveOpiskelija(opiskelija)
-              } else if (useSuoritus.komo != "luokka") {
+              } else {
                 for (
                   suoritus: VirallinenSuoritus with Identified[UUID] <- fetchSuoritus(henkiloOid, useSuoritus.myontaja, useSuoritus.komo)
                 ) {
@@ -145,10 +141,6 @@ object KoskiArvosanaTrigger {
           case (_, _, _, _) =>
           // VapaamuotoinenSuoritus will not be saved
         }
-        /*if (vahvistetut.nonEmpty) {
-          var opiskelija = createOpiskelija(henkiloOid, vahvistetut)
-          saveOpiskelija(opiskelija)
-        }*/
       })
     })
   }
@@ -254,7 +246,7 @@ object KoskiArvosanaTrigger {
       case "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
       case "aikuistenperusopetuksenoppimaaranalkuvaihe" => DUMMYOID //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
       case "perusopetuksenvuosiluokka" => "luokka"
-      case "perusopetukseenvalmistavaopetus" => Oids.valmaKomoOid
+      case "valma" => Oids.valmaKomoOid
       case "telma" => Oids.telmaKomoOid
       case "luva" => Oids.lukioonvalmistavaKomoOid
       case "perusopetuksenlisaopetus" => Oids.lisaopetusKomoOid
@@ -372,7 +364,7 @@ object KoskiArvosanaTrigger {
           case _ => "KESKEN"
         }
 
-        val lasnaDate = (suoritus.alkamispäivä, tilat.filter(_.tila.koodiarvo == "lasna").headOption, lastTila) match {
+        val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna"), lastTila) match {
           case (Some(a), _, _) => parseLocalDate(a)
           case (None, Some(kt), _) => parseLocalDate(kt.alku)
           case (_,_,_) => valmistumisPaiva
@@ -415,8 +407,6 @@ object KoskiArvosanaTrigger {
           case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
           case (_,_,_) => valmistumisPaiva
         }
-
-        val nonPeruskouluOrPeruskouluClass9 = (!suoritus.koulutusmoduuli.koulutustyyppi.equals(Oids.perusopetusKomoOid) || (komoOid.equals(Oids.perusopetusKomoOid) && luokka.startsWith("9")))
 
         if (komoOid != DUMMYOID && vuosi > 1970) {
           result = result :+ (VirallinenSuoritus(
