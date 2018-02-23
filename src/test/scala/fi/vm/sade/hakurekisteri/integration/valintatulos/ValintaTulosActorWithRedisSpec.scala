@@ -200,10 +200,10 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         Thread.sleep(300)
 
         val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
-        cache.contains("1.2.246.562.29.11") should be(true)
-        cache.contains("1.2.246.562.29.12") should be(true)
-        cache.contains("1.2.246.562.29.13") should be(false)
-        cache.contains("1.2.246.562.29.14") should be(false)
+        Await.result(cache.contains("1.2.246.562.29.11"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.12"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(false)
+        Await.result(cache.contains("1.2.246.562.29.14"), 1.second) should be(false)
 
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
@@ -227,10 +227,10 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         Thread.sleep(300)
 
         val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
-        cache.contains("1.2.246.562.29.11") should be(true)
-        cache.contains("1.2.246.562.29.12") should be(true)
-        cache.contains("1.2.246.562.29.13") should be(true)
-        cache.contains("1.2.246.562.29.14") should be(true)
+        Await.result(cache.contains("1.2.246.562.29.11"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.12"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.14"), 1.second) should be(true)
 
         verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
         verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
