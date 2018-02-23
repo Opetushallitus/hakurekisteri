@@ -60,9 +60,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   }
 
   private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases) =
-    henkilot.foreach(henkilo =>
+    henkilot.foreach(henkilo => {
       triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases))
-    )
+    })
 
   def addTrigger(trigger: KoskiTrigger) = triggers = triggers :+ trigger
 }
