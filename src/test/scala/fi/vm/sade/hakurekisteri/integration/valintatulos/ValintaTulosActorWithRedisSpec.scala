@@ -34,6 +34,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
     .addDefault("suoritusrekisteri.cache.redis.numberOfWaitersToLog", "5")
     .addDefault("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds", "6")
     .addDefault("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize", "3")
+    .addDefault("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis", "0")
     .addDefault("suoritusrekisteri.cache.redis.port", s"${rPort}")
   )(system)
 
