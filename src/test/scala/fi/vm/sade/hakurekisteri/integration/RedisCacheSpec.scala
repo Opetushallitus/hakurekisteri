@@ -48,7 +48,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        cache contains(cacheKey) should be(true)
+        Await.result(cache.contains(cacheKey), 1.second) should be(true)
 
         Await.result(cache get cacheKey, 10.seconds) should be (cacheEntry)
       }
@@ -64,13 +64,13 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        cache contains(cacheKey) should be(true)
+        Await.result(cache.contains(cacheKey), 1.second) should be(true)
 
         cache - cacheKey
 
         Thread.sleep(500)
 
-        cache contains(cacheKey) should be(false)
+        Await.result(cache.contains(cacheKey), 1.second) should be(false)
       }
     )
   }
@@ -89,7 +89,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
 
-        cache contains(cacheKey) should be(true)
+        Await.result(cache.contains(cacheKey), 1.second) should be(true)
       }
     )
   }
@@ -109,8 +109,8 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
         val cache4 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
         val cache5 =  redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix5")
 
-        cache5 contains(cacheKey) should be(false)
-        cache4 contains(cacheKey) should be(true)
+        Await.result(cache5.contains(cacheKey), 1.second) should be(false)
+        Await.result(cache4.contains(cacheKey), 1.second) should be(true)
       }
     )
   }
@@ -134,7 +134,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
            results.foreach(_ should be(Some(cacheEntry)))
 
            Await.result(cache.get(cacheKey), 1.second) should be (cacheEntry)
-           cache.contains(cacheKey) should be(true)
+           Await.result(cache.contains(cacheKey), 1.second) should be(true)
 
            verify(mockLoader, times(1)).apply(cacheKey)
          }
