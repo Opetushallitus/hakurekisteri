@@ -52,14 +52,17 @@ object CacheFactory {
       cacheKeyPrefix,
       config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
       config.getProperty("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds").toInt,
-      config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt)
+      config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt,
+      config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt)
 
     class RedisCache[K, T](val r: RedisClient,
                            val expirationDurationMillis: Long,
                            val cacheKeyPrefix: String,
                            limitOfWaitingClientsToLog: Int,
                            cacheItemLockMaxDurationSeconds: Int,
-                           cacheHandlingThreadPoolSize: Int) extends MonadCache[Future, K, T] {
+                           cacheHandlingThreadPoolSize: Int,
+                           slowRedisRequestThresholdMillis: Int
+                          ) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
@@ -84,7 +87,7 @@ object CacheFactory {
         r.exists(prefixKey).collect {
           case result =>
             val duration = System.currentTimeMillis - startTime
-            if (duration > 100) {
+            if (duration > slowRedisRequestThresholdMillis) {
               logger.info(s"Checking contains $prefixKey from Redis took $duration ms")
             }
             result
@@ -98,7 +101,7 @@ object CacheFactory {
         r.get[T](prefixKey).collect {
           case Some(x) =>
             val duration = System.currentTimeMillis - startTime
-            if (duration > 100) {
+            if (duration > slowRedisRequestThresholdMillis) {
               logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")
             }
             x

@@ -83,6 +83,7 @@ suoritusrekisteri.cache.redis.port={{redis_suoritusrekisteri_port}}
 suoritusrekisteri.cache.redis.numberOfWaitersToLog={{redis_suoritusrekisteri_number_of_waiters_to_log | default('99')}}
 suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds={{redis_suoritusrekisteri_cache_item_lock_max_duraction_seconds | default('60')}}
 suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize={{redis_suoritusrekisteri_single_cache_threadpool_size | default('3')}}
+suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis={{redis_suoritusrekisteri_slow_request_threshold_millis | default('100')}}
 suoritusrekisteri.cache.hours.ensikertalainen=6
 suoritusrekisteri.cache.hours.koodisto=12
 suoritusrekisteri.cache.hours.organisaatio=12
