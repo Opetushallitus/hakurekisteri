@@ -5,8 +5,8 @@ import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.compat.Platform
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class FutureCacheSpec extends FlatSpec with Matchers {
 
@@ -110,7 +110,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
     cache + (cacheKey, cacheEntry)
 
-    cache.contains(cacheKey) should be (true)
+    Await.result(cache.contains(cacheKey), 1.second) should be(true)
   }
 
   it should "tell if an entry is no longer live" in {
@@ -118,7 +118,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
     cache + (cacheKey, cacheEntry)
 
-    cache.contains(cacheKey) should be (false)
+    Await.result(cache.contains(cacheKey), 1.second) should be(false)
   }
 
 }

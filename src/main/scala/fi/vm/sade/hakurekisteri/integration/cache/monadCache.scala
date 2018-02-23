@@ -8,7 +8,7 @@ import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{Await, Future, Promise}
 import scala.language.higherKinds
 
 trait MonadCache[F[_], K, T] {
@@ -17,7 +17,7 @@ trait MonadCache[F[_], K, T] {
 
   def -(key: K)
 
-  def contains(key: K): Boolean
+  def contains(key: K): F[Boolean]
 
   def get(key: K): F[T]
 
@@ -28,7 +28,7 @@ trait MonadCache[F[_], K, T] {
   protected def k(key: K, prefix:String) = s"${prefix}:${key}"
 }
 
-class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InMemoryMonadCache[Future, K, T](exp) {
+class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T] {
   private val commonLockHandlingSemaphore = new Semaphore(1)
   private val loadingLocks: mutable.Map[K, Semaphore] = TrieMap[K, Semaphore]()
   private val waitingPromises: mutable.Map[K, java.util.List[Promise[Option[T]]]] = TrieMap[K, java.util.List[Promise[Option[T]]]]()
@@ -36,8 +36,36 @@ class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InM
   import scala.concurrent.ExecutionContext.Implicits.global
   override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
 
+  private var cache: Map[K, Cacheable[Future, T]] = Map()
+
+  def +(key: K, f: Future[T]): Future[_] = {
+    val value = cacheable(key, f)
+    cache = cache + (key -> value)
+    value.f
+  }
+
+  private def cacheable(key: K, f: Future[T]): Cacheable[Future, T] = {
+    Cacheable[Future, T](f = f, accessed = getAccessed(key))
+  }
+
+  def -(key: K): Unit = if (cache.contains(key)) cache = cache - key
+
+  def contains(key: K): Future[Boolean] = Future.successful(cache.contains(key) && (cache(key).inserted + expirationDurationMillis) > Platform.currentTime)
+
+  def get(key: K): Future[T] = {
+    val cached = cache(key)
+    cache = cache + (key -> Cacheable[Future, T](inserted = cached.inserted, f = cached.f))
+    cached.f
+  }
+
+  private def getAccessed(key: K): Long = cache.get(key).map(_.accessed).getOrElse(Platform.currentTime)
+
+  def size: Int = cache.size
+
+  def getCache: Map[K, Cacheable[Future, T]] = cache
+
   override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-    if (contains(key)) {
+    if (Await.result(contains(key), 1.second)) {
       toOption(get(key))
     } else {
       commonLockHandlingSemaphore.acquire()
@@ -56,7 +84,7 @@ class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InM
     promisesOfThisKey.add(newClientPromise)
     if (loadingLockOfKey.availablePermits() > 0) {
       loadingLockOfKey.acquire()
-      if (contains(key)) {
+      if (Await.result(contains(key), 1.second)) {
         loadingLockOfKey.release()
         toOption(get(key))
       } else {
@@ -93,44 +121,3 @@ class InMemoryFutureCache[K, T](val exp: Long = 60.minutes.toMillis) extends InM
 }
 
 case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, accessed: Long = Platform.currentTime, f: F[T])
-
-abstract class InMemoryMonadCache[F[_], K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[F, K, T] {
-
-  private var cache: Map[K, Cacheable[F, T]] = Map()
-
-  def +(key: K, f: F[T]): F[_] = {
-    val value = cacheable(key, f)
-    cache = cache + (key -> value)
-    value.f
-  }
-
-  def cacheable(key: K, f: F[T]): Cacheable[F, T] = {
-    Cacheable[F, T](f = f, accessed = getAccessed(key))
-  }
-
-  def -(key: K) = if (cache.contains(key)) cache = cache - key
-
-  def contains(key: K): Boolean = cache.contains(key) && (cache(key).inserted + expirationDurationMillis) > Platform.currentTime
-
-  def get(key: K): F[T] = {
-    val cached = cache(key)
-    cache = cache + (key -> Cacheable[F, T](inserted = cached.inserted, f = cached.f))
-    cached.f
-  }
-
-  def get(key: K, loader: K => F[Option[T]]): F[Option[T]] = {
-    if (cache.contains(key)) {
-      toOption(get(key))
-    } else {
-        loader(key)
-    }
-  }
-
-  def inUse(key: K): Boolean = cache.contains(key) && (cache(key).accessed + expirationDurationMillis) > Platform.currentTime
-
-  private def getAccessed(key: K): Long = cache.get(key).map(_.accessed).getOrElse(Platform.currentTime)
-
-  def size: Int = cache.size
-
-  def getCache: Map[K, Cacheable[F, T]] = cache
-}
