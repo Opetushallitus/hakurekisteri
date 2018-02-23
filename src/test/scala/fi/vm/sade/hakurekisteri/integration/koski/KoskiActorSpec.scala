@@ -218,15 +218,6 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     ), "", parseLocalDate("2016-02-02")))
   }
 
-  it should "detectOppilaitos should return luokka for peruskoulu" in {
-    KoskiArvosanaTrigger.detectOppilaitos(Seq(
-      SuoritusLuokka(
-        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01")),
-      SuoritusLuokka(
-        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2017-01-31"))
-    ), DateTime.parse("2017-01-01")) should equal ("9", "orgId", "9F", DateTime.parse("2017-01-31"))
-  }
-
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
     KoskiArvosanaTrigger.detectOppilaitos(Seq(
       SuoritusLuokka(
@@ -248,18 +239,11 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   it should "createOpiskelija should create opiskelija" in {
     KoskiArvosanaTrigger.createOpiskelija("henkilo_oid", Seq(
       SuoritusLuokka(
-        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2016-01-01")),
-      SuoritusLuokka(
-        VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2015-01-01"))
-    )) should equal (
-      Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2015-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2016-01-01"))
+      )) should equal (
+      Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
     )
   }
-
-
-
-
-
 
   object HenkiloContainer {
     def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, Some(""), None, Some(""), Some(""), Some("")), Seq(), "")
@@ -332,7 +316,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       var uudetSuoritukset = suoritukset :+ KoskiSuoritus(
         luokka = Some(luokka),
         koulutusmoduuli = dummyKoulutusmoduuli,
-        tyyppi = Some (KoskiKoodi ("luokka", "") ),
+        tyyppi = Some (KoskiKoodi ("perusopetuksenvuosiluokka", "") ),
         kieli = None,
         pakollinen = None,
         toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
@@ -355,7 +339,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       KoskiSuoritus(
         luokka = Some(""),
         koulutusmoduuli = dummyKoulutusmoduuli,
-        tyyppi = Some (KoskiKoodi (Oids.perusopetusKomoOid, "") ),
+        tyyppi = Some (KoskiKoodi ("perusopetuksenoppimaara", "") ),
         kieli = None,
         pakollinen = None,
         toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
@@ -373,7 +357,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       KoskiSuoritus(
         luokka = Some(""),
         koulutusmoduuli = dummyKoulutusmoduuli,
-        tyyppi = Some (KoskiKoodi (Oids.lisaopetusKomoOid, "") ),
+        tyyppi = Some (KoskiKoodi ("perusopetuksenlisaopetus", "") ),
         kieli = None,
         pakollinen = None,
         toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
