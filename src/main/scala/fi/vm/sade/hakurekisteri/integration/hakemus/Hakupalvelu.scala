@@ -48,7 +48,6 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
                       hakuActor: ActorRef,
                       koodisto: ActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
-  val Pattern = "preference(\\d+).*".r
 
   private implicit val defaultTimeout: Timeout = 120.seconds
   private val acceptedResponseCode: Int = 200
@@ -58,8 +57,10 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
-  private def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] = {
-    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ AkkaHakupalvelu.hardCodedLisakysymys)
+  private def getLisakysymyksetForHaku(hakuOid: String, kohdejoukkoUri: Option[String]): Future[Map[String, ThemeQuestion]] = {
+    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(kysymykset =>
+        kysymykset ++ AkkaHakupalvelu.hardcodedLisakysymykset(kohdejoukkoUri)
+    )
   }
 
   override def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]] = {
@@ -91,8 +92,10 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     def hakuAndLisakysymykset(hakuOid: String): Future[(Haku, Map[String, ThemeQuestion])] = {
       val hakuF = (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
-      val lisakysymyksetF = getLisakysymyksetForHaku(hakuOid)
-      for (haku <- hakuF; lisakysymykset <- lisakysymyksetF) yield (haku, lisakysymykset)
+      for {
+        haku <- hakuF
+        lisakysymykset <-  getLisakysymyksetForHaku(hakuOid, haku.kohdejoukkoUri)
+      } yield (haku, lisakysymykset)
     }
 
     q match {
@@ -135,7 +138,41 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
 object AkkaHakupalvelu {
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
-  val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
+  def hardcodedLisakysymykset(kohdejoukkoUri: Option[String]): Map[String, ThemeQuestion] = {
+    val isErkkaHaku = kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_20"))
+    hardcodedLisakysymyksetForAll ++ (if (isErkkaHaku) hardcodedLisakysymyksetForErkkaHaku else Map.empty)
+  }
+
+  val hardcodedLisakysymyksetForAll: Map[String, ThemeQuestion] = Map(
+    "TYOKOKEMUSKUUKAUDET" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Työkokemus kuukausina",
+      applicationOptionOids = Nil,
+      options = None),
+
+/*    "lupaSahkoisesti" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),*/
+
+    "lupaSms" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä.",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
+  )
+
+  val hardcodedLisakysymyksetForErkkaHaku: Map[String, ThemeQuestion] = Map(
+    "muutsuoritukset" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Minkä muun koulutuksen/opintoja olet suorittanut?",
+      applicationOptionOids = Nil,
+      options = None),
 
     "hojks" -> ThemeQuestion(
       isHaunLisakysymys = true,
@@ -157,28 +194,7 @@ object AkkaHakupalvelu {
       `type` = "ThemeTextQuestion",
       messageText = "Miksi haet erityisoppilaitokseen?",
       applicationOptionOids = Nil,
-      options = None),
-
-    "TYOKOKEMUSKUUKAUDET" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeTextQuestion",
-      messageText = "Työkokemus kuukausina",
-      applicationOptionOids = Nil,
-      options = None),
-
-    "lupaSahkoisesti" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-    "lupaSms" -> ThemeQuestion(
-      isHaunLisakysymys = true,
-      `type` = "ThemeRadioButtonQuestion",
-      messageText = "Minulle saa lähettää tietoa opiskelijavalinnan etenemisestä ja tuloksista myös tekstiviestillä.",
-      applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
+      options = None)
   )
 
 
@@ -214,7 +230,7 @@ object AkkaHakupalvelu {
     Liite(prefAoId, prefAoGroupId, har.receptionStatus, har.processingStatus, name, har.applicationAttachment.address.recipient)
   }
 
-  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
+  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String], kohdejoukkoUri: Option[String]): Seq[Lisakysymys] = {
 
     case class CompositeId(questionId: String, answerId: Option[String])
 
@@ -241,7 +257,7 @@ object AkkaHakupalvelu {
     def extractLisakysymysFromAnswer(avain: String, arvo: String): Lisakysymys = {
       val compositeIds = extractCompositeIds(avain)
       val kysymysId = compositeIds.questionId
-      val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, hardCodedLisakysymys(kysymysId))
+      val kysymys: ThemeQuestion = lisakysymykset.getOrElse(kysymysId, (hardcodedLisakysymykset(kohdejoukkoUri))(kysymysId))
       Lisakysymys(
         kysymysid = kysymysId,
         hakukohdeOids = kysymys.applicationOptionOids,
@@ -291,16 +307,17 @@ object AkkaHakupalvelu {
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
     val flatAnswers = answers.hakutoiveet.getOrElse(Map()) ++ answers.osaaminen.getOrElse(Map()) ++ answers.lisatiedot.getOrElse(Map())
 
-    val missingQuestionAnswers = hardCodedLisakysymys.filterNot(q => {
-      val id = q._1
-      flatAnswers.contains(id)
-    }).map(q => (q._1, ""))
+    val missingQuestionAnswers: Map[String, String] =
+      hardcodedLisakysymykset(kohdejoukkoUri).filterNot(q => {
+          val id = q._1
+          flatAnswers.contains(id)
+        }).map(q => (q._1, ""))
 
     /*
     The missing question answers are added here forcefully since the excel sheets and what not need to have them in all cases
      */
-    val filteredAnswers = flatAnswers.filterKeys(thatAreLisakysymysInHakukohde) ++ missingQuestionAnswers
-    val finalanswers = filteredAnswers
+    val filteredAnswers: Map[String, String] = flatAnswers.filterKeys(thatAreLisakysymysInHakukohde) ++ missingQuestionAnswers
+    val finalanswers: Seq[Lisakysymys] = filteredAnswers
       .map { case (avain, arvo) => extractLisakysymysFromAnswer(avain, arvo) }
       .groupBy(_.kysymysid)
       .map { case (questionId, answerList) => mergeAnswers(questionId, answerList)}
@@ -308,6 +325,7 @@ object AkkaHakupalvelu {
 
     finalanswers
   }
+
 
   def getHakija(h: HakijaHakemus,
                 haku: Haku,
@@ -327,7 +345,8 @@ object AkkaHakupalvelu {
       val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
       val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
       val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
-      val kieli: String = hakemus.kieli
+      val kieli: String = hakemus.aidinkieli
+      val opetuskieli: Option[String] = koulutustausta.flatMap(_.perusopetuksen_kieli)
       val suorittaja: String = hakemus.personOid.getOrElse("")
       val julkaisulupa: Boolean = hakemus.julkaisulupa
 
@@ -374,6 +393,7 @@ object AkkaHakupalvelu {
           kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
           kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
           asiointiKieli = kieli,
+          opetuskieli = opetuskieli.getOrElse(""),
           eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
           sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
           hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
@@ -383,7 +403,7 @@ object AkkaHakupalvelu {
           huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
           huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
           huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-          lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid),
+          lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid, haku.kohdejoukkoUri),
           liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
           muukoulutus = hakemus.koulutustausta.flatMap(_.muukoulutus)
 
@@ -431,6 +451,7 @@ object AkkaHakupalvelu {
             .getOrElse("FIN"),
           kaksoiskansalaisuus = "",
           asiointiKieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi.toUpperCase).getOrElse("FI"),
+          opetuskieli = "",
           eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
           hetu = hakemus.henkilo.hetu.getOrElse(""),
@@ -688,7 +709,7 @@ case class FullHakemus(oid: String,
 
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = koulutustausta.flatMap(_.lahtokoulu)
-  val kieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
+  val aidinkieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
   val julkaisulupa: Boolean = answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu))).getOrElse("false").toBoolean
 }
 

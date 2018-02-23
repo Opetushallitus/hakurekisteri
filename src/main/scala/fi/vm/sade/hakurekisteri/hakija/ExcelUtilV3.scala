@@ -10,13 +10,13 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
 
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
-    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Huoltajan nimi",
+    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Opetuskieli", "Huoltajan nimi",
     "Huoltajan puhelinnumero", "Huoltajan sähköposti", "Koulutusmarkkinointilupa", "Kiinnostunut oppisopimuskoulutuksesta",
     "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus",
-    "Todistusvuosi", "Minkä muun koulutuksen/opintoja olet suorittanut?", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
+    "Todistusvuosi", /*"Minkä muun koulutuksen/opintoja olet suorittanut?",*/ "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", "HakukohdeOid",
-    "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
-    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto", "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"
+    "Harkinnanvaraisuuden peruste", /*"Urheilijan ammatillinen koulutus",*/ "Yhteispisteet", "Valinta", "Vastaanotto",
+    "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"/*, "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"*/
   )
 
   private def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat, hakukohdeOid: String): Seq[lisakysymysHeader] = {
@@ -60,6 +60,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         h.kotikunta.getOrElse(""),
         h.sukupuoli,
         h.aidinkieli,
+        h.opetuskieli,
         h.huoltajannimi.getOrElse(""),
         h.huoltajanpuhelinnumero.getOrElse(""),
         h.huoltajansahkoposti.getOrElse(""),
@@ -74,7 +75,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         h.hakemus.luokkataso.getOrElse(""),
         h.hakemus.pohjakoulutus,
         h.hakemus.todistusvuosi.getOrElse(""),
-        h.hakemus.muukoulutus.getOrElse(""),
+        //h.hakemus.muukoulutus.getOrElse(""),
         toBooleanX(h.hakemus.julkaisulupa),
         h.hakemus.yhteisetaineet.getOrElse(zero).toString(),
         h.hakemus.lukiontasapisteet.getOrElse(zero).toString(),
@@ -88,15 +89,15 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         ht.koulutus,
         ht.hakukohdeOid,
         ht.harkinnanvaraisuusperuste.getOrElse(""),
-        ht.urheilijanammatillinenkoulutus.getOrElse(false).toString,
+        //ht.urheilijanammatillinenkoulutus.getOrElse(false).toString,
         ht.yhteispisteet.getOrElse(zero).toString(),
         ht.valinta.getOrElse(""),
         ht.vastaanotto.getOrElse(""),
         ht.lasnaolo.getOrElse(""),
         toBooleanX(ht.terveys),
         toBooleanX(ht.aiempiperuminen),
-        toBooleanX(ht.kaksoistutkinto),
-        h.hakemus.osaaminen match {
+        toBooleanX(ht.kaksoistutkinto)
+        /* h.hakemus.osaaminen match {
           case Some(os) => {
             (ht.koulutuksenKieli) match {
               case Some("FI") => kieleistys(os.yleinen_kielitutkinto_fi)
@@ -118,7 +119,8 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
             }
           }
           case _ => ""
-        })
+        }*/
+      )
 
       def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
         val answers: Seq[Seq[String]] = for {
