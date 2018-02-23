@@ -42,9 +42,11 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
-      if(!cache.contains(org.oid))
-        cache + (org.oid, Future.successful(org))
-
+      cache.contains(org.oid).onComplete {
+        case Success(false) => cache + (org.oid, Future.successful(org))
+        case Success(true) =>
+        case scala.util.Failure(t) => log.error(t, s"Exception when checking contains for ${org.oid}")
+      }
       if (org.oppilaitosKoodi.isDefined)
         oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
 

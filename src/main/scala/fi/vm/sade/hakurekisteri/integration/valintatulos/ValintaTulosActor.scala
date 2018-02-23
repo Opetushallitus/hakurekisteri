@@ -6,13 +6,11 @@ import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.{Failure, Success}
 
 case class InitialLoadingNotDone() extends Exception("Initial loading not yet done")
 
@@ -50,10 +48,21 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case BatchUpdateValintatulos(haut) =>
-      val hautCachessa = haut.filter(h => cache.contains(h.haku))
-      log.info(s"Skipping ${hautCachessa.size} hakus (${hautCachessa.map(_.haku).mkString(", ")}) from initial loading.")
-      haut.diff(hautCachessa).foreach(haku => if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
-      self ! UpdateNext
+      Future.sequence(haut.map(h => Future.successful(h).zip(cache.contains(h.haku)))).map { updatesWithContainsFlags: Set[(UpdateValintatulos, Boolean)] =>
+        updatesWithContainsFlags.groupBy(_._2).mapValues(_.map(_._1))
+      }.onComplete { result =>
+        result match {
+          case Success(updatesByContains) =>
+            val hautCachessa = updatesByContains.get(true)
+            log.info(s"Skipping ${hautCachessa.map(_.size).getOrElse(0)} hakus (${hautCachessa.map(_.map(_.haku)).mkString(", ")}) from initial loading.")
+            val hautEiCachessa = updatesByContains.get(false)
+            hautEiCachessa.foreach(_.foreach(haku =>
+              if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq())))
+          case Failure(e) =>
+            log.error(e, s"Problem when checking contains from cache. Cannot process ${BatchUpdateValintatulos.getClass.getSimpleName} with ${haut.size} haut.")
+        }
+        self ! UpdateNext
+      }
 
     case UpdateValintatulos(haku) =>
       if (!updateRequestQueue.contains(haku)) {
@@ -105,15 +114,25 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     if (!initialLoadingDone) {
       Future.failed(InitialLoadingNotDone())
     } else {
-      if (q.cachedOk && cache.contains(q.hakuOid))
-        cache.get(q.hakuOid)
-      else {
-        if (q.hakemusOid.isEmpty) {
-          queueForResult(q.hakuOid)
-        } else {
-          callBackend(q.hakuOid, q.hakemusOid)
-        }
+      if (q.cachedOk) {
+        cache.contains(q.hakuOid).flatMap(hakuIsInCache => {
+          if (hakuIsInCache) {
+            cache.get(q.hakuOid)
+          } else {
+            initiateBackendFetch(q)
+          }
+        })
+      } else {
+        initiateBackendFetch(q)
       }
+    }
+  }
+
+  private def initiateBackendFetch(q: ValintaTulosQuery) = {
+    if (q.hakemusOid.isEmpty) {
+      queueForResult(q.hakuOid)
+    } else {
+      callBackend(q.hakuOid, q.hakemusOid)
     }
   }
 
