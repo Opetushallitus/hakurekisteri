@@ -54,7 +54,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
 
   private def storePromiseForThisRequest(key: K): (Promise[Option[T]], Boolean) = {
     logger.debug("Adding new client promise:")
-    val updateFunction: BiFunction[_ >: K, _ >: List[Promise[Option[T]]], _ <: List[Promise[Option[T]]]] = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
+    val updateFunction = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
       override def apply(key: K, promises: List[Promise[Option[T]]]): List[Promise[Option[T]]] = {
         val myPromise = Promise[Option[T]]
         if (promises == null) {
@@ -98,7 +98,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
   }
 
   private def resolvePromisesWaitingForValueFromCache(key: K, result: Try[Option[T]], failIfNobodyWaiting: Boolean = true): Unit = {
-    val updateFunction: BiFunction[_ >: K, _ >: List[Promise[Option[T]]], _ <: List[Promise[Option[T]]]] = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
+    val updateFunction = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
       override def apply(key: K, promisesWaitingForResult: List[Promise[Option[T]]]): List[Promise[Option[T]]] = {
         if (promisesWaitingForResult != null) {
           logger.debug(s"Resolving promises for key $key: ${promisesWaitingForResult.size}")
