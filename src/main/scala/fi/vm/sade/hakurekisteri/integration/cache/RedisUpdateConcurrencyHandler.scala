@@ -1,13 +1,11 @@
 package fi.vm.sade.hakurekisteri.integration.cache
 
-import java.util.Collections
-import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.ConcurrentHashMap
+import java.util.function.BiFunction
 
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.collection.JavaConverters._
-import scala.collection.concurrent.TrieMap
-import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -18,73 +16,58 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
                                            implicit val executionContext: ExecutionContext) {
 
   private val logger = org.slf4j.LoggerFactory.getLogger(getClass)
-  private val waitingPromisesHandlingLock = new ReentrantLock(true)
-  private val waitingPromises: mutable.Map[K, java.util.List[Promise[Option[T]]]] = TrieMap[K, java.util.List[Promise[Option[T]]]]()
+  private val waitingPromises: ConcurrentHashMap[K, List[Promise[Option[T]]]] = new ConcurrentHashMap[K, List[Promise[Option[T]]]]()
 
   def initiateLoadingIfNotYetRunning(key: K,
                                      loader: K => Future[Option[T]],
                                      loadedValueStorer: (K, Future[T]) => Future[_],
                                      keyPrefixer: K => String): Future[Option[T]] = {
-    lockWaiterBookkeeping()
-    try {
-      val newClientPromise = storePromiseForThisRequest(key)
-      val prefixKey = keyPrefixer(key)
-      val lockKey = prefixKey + "-lock"
-      r.set(lockKey, "LOCKED", exSeconds = Some(cacheItemLockMaxDurationSeconds), NX = true).flatMap { lockObtained =>
-        if (lockObtained) {
-          logger.debug(s"Successfully acquired update lock of $lockKey")
-          r.get(prefixKey).onComplete {
-            case Success(found@Some(_)) =>
-              logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
-              resolvePromisesWaitingForValueFromCache(key, Success(found))
-              removeCacheUpdateLock(lockKey)
-            case Success(None) =>
-              logger.debug(s"Starting retrieval of $prefixKey with loader function.")
-              retrieveNewvalueWithLoader(key, loader, loadedValueStorer, lockKey)
-            case Failure(e) => newClientPromise.failure(e)
-          }
-        } else {
-          logger.debug(s"Could not acquire $lockKey, waiting patiently for my promise to be resolved. We're ${waitingPromises.get(key).map(_.size).getOrElse(0)} in total waiting")
+    val newClientPromise = storePromiseForThisRequest(key)
+    val prefixKey = keyPrefixer(key)
+    val lockKey = prefixKey + "-lock"
+    r.set(lockKey, "LOCKED", exSeconds = Some(cacheItemLockMaxDurationSeconds), NX = true).flatMap { lockObtained =>
+      if (lockObtained) {
+        logger.debug(s"Successfully acquired update lock of $lockKey")
+        r.get(prefixKey).onComplete {
+          case Success(found@Some(_)) =>
+            logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
+            resolvePromisesWaitingForValueFromCache(key, Success(found))
+            removeCacheUpdateLock(lockKey)
+          case Success(None) =>
+            logger.debug(s"Starting retrieval of $prefixKey with loader function.")
+            retrieveNewvalueWithLoader(key, loader, loadedValueStorer, lockKey)
+          case Failure(e) => newClientPromise.failure(e)
         }
-        newClientPromise.future
-      }.recoverWith { case e =>
-        logger.error(s"Error when obtaining lock $lockKey", e)
-        Future.failed(e)
+      } else {
+        logger.debug(s"Could not acquire $lockKey, waiting patiently for my promise to be resolved. We're ${waitingPromises.asScala.get(key).map(_.size).getOrElse(0)} in total waiting")
       }
-    } finally {
-      releaseWaitingBookkeeping()
+      newClientPromise.future
+    }.recoverWith { case e =>
+      logger.error(s"Error when obtaining lock $lockKey", e)
+      Future.failed(e)
     }
   }
 
   private def storePromiseForThisRequest(key: K): Promise[Option[T]] = {
-    val promisesOfThisKey = waitingPromises.getOrElseUpdate(key, {
-      createSynchonizedList
-    })
-    val newClientPromise: Promise[Option[T]] = Promise[Option[T]]
     logger.debug("Adding new client promise:")
-    promisesOfThisKey.add(newClientPromise)
-    val numberWaiting = promisesOfThisKey.size
+    val updateFunction: BiFunction[_ >: K, _ >: List[Promise[Option[T]]], _ <: List[Promise[Option[T]]]] = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
+      override def apply(key: K, promises: List[Promise[Option[T]]]): List[Promise[Option[T]]] = {
+        val myPromise = Promise[Option[T]]
+        if (promises == null) {
+          List(myPromise)
+        } else {
+          myPromise :: promises
+        }
+      }
+    }
+    val (newClientPromise :: otherPromises): Seq[Promise[Option[T]]] = waitingPromises.compute(key, updateFunction)
+
+    val numberWaiting = otherPromises.size + 1
     logger.debug(s"Waiting after adding: $numberWaiting")
     if (numberWaiting > limitOfWaitingClientsToLog) {
       logger.warn(s"Already $numberWaiting clients waiting for value of $key")
     }
     newClientPromise
-  }
-
-  private def lockWaiterBookkeeping(): Unit = {
-    waitingPromisesHandlingLock.lock()
-    if (waitingPromisesHandlingLock.getHoldCount != 1) {
-      throw new IllegalStateException(s"After locking, waitingPromisesHandlingLock.getHoldCount == " +
-        s"${waitingPromisesHandlingLock.getHoldCount} – this should never happen.")
-    }
-  }
-
-  private def releaseWaitingBookkeeping(): Unit = {
-    if (waitingPromisesHandlingLock.getHoldCount != 1) {
-      throw new IllegalStateException(s"Before unlocking, waitingPromisesHandlingLock.getHoldCount == " +
-        s"${waitingPromisesHandlingLock.getHoldCount} – this should never happen.")
-    }
-    waitingPromisesHandlingLock.unlock()
   }
 
   private def retrieveNewvalueWithLoader(key: K,
@@ -111,24 +94,23 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
   }
 
   private def resolvePromisesWaitingForValueFromCache(key: K, result: Try[Option[T]], failIfNobodyWaiting: Boolean = true): Unit = {
-    lockWaiterBookkeeping()
-    try {
-      waitingPromises.remove(key) match {
-        case Some(promisesWaitingForResult) =>
-          logger.debug(s"Resolving promises for key $key: ${promisesWaitingForResult.size()}")
-          promisesWaitingForResult.asScala.foreach {
-            _.complete(result)
-          }
-        case None =>
+    val updateFunction: BiFunction[_ >: K, _ >: List[Promise[Option[T]]], _ <: List[Promise[Option[T]]]] = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
+      override def apply(key: K, promisesWaitingForResult: List[Promise[Option[T]]]): List[Promise[Option[T]]] = {
+        if (promisesWaitingForResult != null) {
+          logger.debug(s"Resolving promises for key $key: ${promisesWaitingForResult.size}")
+          promisesWaitingForResult.foreach { _.complete(result) }
+        } else {
           if (failIfNobodyWaiting) {
             throw new IllegalStateException(s"Nobody waiting for results of $key , got result $result")
           } else {
             logger.debug(s"Nobody waiting for results of $key, got result $result")
           }
+        }
+        null
       }
-    } finally {
-      releaseWaitingBookkeeping()
     }
+
+    waitingPromises.compute(key, updateFunction)
   }
 
   private def removeCacheUpdateLock(lockKey: String): Unit = {
@@ -139,9 +121,5 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     removalOfLock.onFailure { case e: Throwable =>
       logger.error(s"Could not remove update lock $lockKey", e)
     }
-  }
-
-  private def createSynchonizedList: java.util.List[Promise[Option[T]]] = {
-    Collections.synchronizedList(new java.util.ArrayList[Promise[Option[T]]]())
   }
 }
