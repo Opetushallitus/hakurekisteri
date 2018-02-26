@@ -22,33 +22,37 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
                                      loader: K => Future[Option[T]],
                                      loadedValueStorer: (K, Future[T]) => Future[_],
                                      keyPrefixer: K => String): Future[Option[T]] = {
-    val newClientPromise = storePromiseForThisRequest(key)
-    val prefixKey = keyPrefixer(key)
-    val lockKey = prefixKey + "-lock"
-    r.set(lockKey, "LOCKED", exSeconds = Some(cacheItemLockMaxDurationSeconds), NX = true).flatMap { lockObtained =>
-      if (lockObtained) {
-        logger.debug(s"Successfully acquired update lock of $lockKey")
-        r.get(prefixKey).onComplete {
-          case Success(found@Some(_)) =>
-            logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
-            resolvePromisesWaitingForValueFromCache(key, Success(found))
-            removeCacheUpdateLock(lockKey)
-          case Success(None) =>
-            logger.debug(s"Starting retrieval of $prefixKey with loader function.")
-            retrieveNewvalueWithLoader(key, loader, loadedValueStorer, lockKey)
-          case Failure(e) => newClientPromise.failure(e)
-        }
-      } else {
-        logger.debug(s"Could not acquire $lockKey, waiting patiently for my promise to be resolved. We're ${waitingPromises.asScala.get(key).map(_.size).getOrElse(0)} in total waiting")
-      }
+    val (newClientPromise, loadIsInProgressAlready) = storePromiseForThisRequest(key)
+    if (loadIsInProgressAlready) {
       newClientPromise.future
-    }.recoverWith { case e =>
-      logger.error(s"Error when obtaining lock $lockKey", e)
-      Future.failed(e)
+    } else {
+      val prefixKey = keyPrefixer(key)
+      val lockKey = prefixKey + "-lock"
+      r.set(lockKey, "LOCKED", exSeconds = Some(cacheItemLockMaxDurationSeconds), NX = true).flatMap { lockObtained =>
+        if (lockObtained) {
+          logger.debug(s"Successfully acquired update lock of $lockKey")
+          r.get(prefixKey).onComplete {
+            case Success(found@Some(_)) =>
+              logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
+              resolvePromisesWaitingForValueFromCache(key, Success(found))
+              removeCacheUpdateLock(lockKey)
+            case Success(None) =>
+              logger.debug(s"Starting retrieval of $prefixKey with loader function.")
+              retrieveNewvalueWithLoader(key, loader, loadedValueStorer, lockKey)
+            case Failure(e) => newClientPromise.failure(e)
+          }
+        } else {
+          logger.debug(s"Could not acquire $lockKey, waiting patiently for my promise to be resolved. We're ${waitingPromises.asScala.get(key).map(_.size).getOrElse(0)} in total waiting")
+        }
+        newClientPromise.future
+      }.recoverWith { case e =>
+        logger.error(s"Error when obtaining lock $lockKey", e)
+        Future.failed(e)
+      }
     }
   }
 
-  private def storePromiseForThisRequest(key: K): Promise[Option[T]] = {
+  private def storePromiseForThisRequest(key: K): (Promise[Option[T]], Boolean) = {
     logger.debug("Adding new client promise:")
     val updateFunction: BiFunction[_ >: K, _ >: List[Promise[Option[T]]], _ <: List[Promise[Option[T]]]] = new BiFunction[K, List[Promise[Option[T]]], List[Promise[Option[T]]]] {
       override def apply(key: K, promises: List[Promise[Option[T]]]): List[Promise[Option[T]]] = {
@@ -67,7 +71,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     if (numberWaiting > limitOfWaitingClientsToLog) {
       logger.warn(s"Already $numberWaiting clients waiting for value of $key")
     }
-    newClientPromise
+    (newClientPromise, !otherPromises.isEmpty)
   }
 
   private def retrieveNewvalueWithLoader(key: K,
