@@ -51,7 +51,6 @@ object CacheFactory {
       expirationDurationMillis,
       cacheKeyPrefix,
       config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
-      config.getProperty("suoritusrekisteri.cache.redis.cacheItemLockMaxDurationSeconds").toInt,
       config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt,
       config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt)
 
@@ -59,7 +58,6 @@ object CacheFactory {
                            val expirationDurationMillis: Long,
                            val cacheKeyPrefix: String,
                            limitOfWaitingClientsToLog: Int,
-                           cacheItemLockMaxDurationSeconds: Int,
                            cacheHandlingThreadPoolSize: Int,
                            slowRedisRequestThresholdMillis: Int
                           ) extends MonadCache[Future, K, T] {
@@ -70,7 +68,7 @@ object CacheFactory {
 
       implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
 
-      private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog, cacheItemLockMaxDurationSeconds)
+      private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog)
 
       def +(key: K, f: Future[T]): Future[_] = f flatMap {
         case t =>
