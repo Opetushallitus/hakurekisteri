@@ -358,17 +358,17 @@ private object Koe {
     "N" -> "81"
   ))
 
-  private def convertToOldRole(id: String, newRole: String): String = {
-    val v: Map[String, String] = EXAM_ROLE_CONVERTER.getOrElse(newRole, throw new RuntimeException(s"Unrecognized examRole: ${newRole}"))
-    v.getOrElse(id, throw new RuntimeException(s"Unrecognized examRole and examId pair: ${newRole} => ${id}"))
+  private def convertToOldRole(id: String, newRole: String, henkiloOid: String): String = {
+    val v: Map[String, String] = EXAM_ROLE_CONVERTER.getOrElse(newRole, throw new RuntimeException(s"(Hakija: ${henkiloOid} ) Unrecognized examRole: ${newRole}"))
+    v.getOrElse(id, throw new RuntimeException(s"(Hakija: ${henkiloOid} ) Unrecognized examRole and examId pair: ${newRole} => ${id}"))
   }
 
-  def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int]): Map[String, String] = {
+  def lahdeArvot(koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], henkiloOid: String): Map[String, String] = {
     aineyhdistelmarooliLegacy match {
       case Some(oldRooli) =>
         Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> oldRooli.toString)
       case _ =>
-        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> convertToOldRole(koetunnus, aineyhdistelmarooli))
+        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> convertToOldRole(koetunnus, aineyhdistelmarooli, henkiloOid))
     }
   }
 }
@@ -382,7 +382,7 @@ case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, a
       isValinnainen: Boolean,
       Some(myonnetty),
       YoTutkinto.YTL,
-      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy))
+      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy, suoritus.henkiloOid))
   }
 }
 
@@ -396,7 +396,7 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
       isValinnainen: Boolean,
       Some(myonnetty),
       YoTutkinto.YTL,
-      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy))
+      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy, suoritus.henkiloOid))
   }
 }
 

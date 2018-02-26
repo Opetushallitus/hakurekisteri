@@ -131,8 +131,10 @@ class YtlIntegration(properties: OphProperties,
           case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
         }
       }
+      logger.info(s"Fetching in chunks, activeKKHakuOids: ${activeKKHakuOids.get()}")
       fetchInChunks(activeKKHakuOids.get()).onComplete {
         case Success(persons) =>
+          logger.info(s"(Group UUID: ${currentStatus.uuid} ) success fetching personOids, total found: ${persons.size}.")
           handleHakemukset(currentStatus.uuid, persons)
 
         case Failure(e: Throwable) =>
@@ -158,7 +160,7 @@ class YtlIntegration(properties: OphProperties,
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           zipInputStream = Some(zip)
-          logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count!")
+          logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count! total students received: ${students.size}")
           students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
             case Some(personOid) =>
               Try(StudentToKokelas.convert(personOid, student)) match {

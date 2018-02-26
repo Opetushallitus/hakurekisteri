@@ -55,9 +55,12 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
     case sq: Seq[_] =>
       storedHakus = sq.collect{ case h: Haku => h}
       val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
-      val ytlHakus: Set[String] = activeHakus.filter(_.kkHaku).map(_.oid).toSet
-      ytl ! HakuList(ytlHakus)
-      ytlIntegration.setAktiivisetKKHaut(ytlHakus)
+      val ytlHakus = activeHakus.filter(_.kkHaku)
+      val ytlHakuOidsWithNames = ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
+      val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
+      log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
+      ytl ! HakuList(ytlHakuOids)
+      ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
       if (starting) {
