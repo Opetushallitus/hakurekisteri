@@ -134,8 +134,9 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
            results should have size concurrencyTestParallelRequestCount
            results.foreach(_ should be(Some(cacheEntry)))
 
-           Await.result(cache.get(cacheKey), 1.second) should be (cacheEntry)
+           Thread.sleep(100)
            Await.result(cache.contains(cacheKey), 1.second) should be(true)
+           Await.result(cache.get(cacheKey), 1.second) should be (cacheEntry)
 
            verify(mockLoader, times(1)).apply(cacheKey)
          }
