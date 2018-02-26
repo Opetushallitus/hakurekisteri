@@ -25,7 +25,6 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     val prefixKey = keyPrefixer(key)
     if (loadIsInProgressAlready) {
       logger.debug(s"Load already in progress for key $prefixKey, waiting to be resolved.")
-      newClientPromise.future
     } else {
       r.get(prefixKey).onComplete {
         case Success(found@Some(_)) =>
@@ -37,8 +36,8 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
         case failure@Failure(e) =>
           resolvePromisesWaitingForValueFromCache(key, failure, removeWaiters = true)
       }
-      newClientPromise.future
     }
+    newClientPromise.future
   }
 
   private def storePromiseForThisRequest(key: K): (Promise[Option[T]], Boolean) = {
