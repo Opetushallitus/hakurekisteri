@@ -125,12 +125,15 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
            val mockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
            when(mockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
              override def answer(invocation: InvocationOnMock): Future[Option[String]] = {
-               Thread.sleep(10)
+               Thread.sleep(3)
                Future.successful(Some(cacheEntry))
              }
            })
 
-           val results = 1.to(concurrencyTestParallelRequestCount).par.map(_ => cache.get(cacheKey, mockLoader)).map(Await.result(_, concurrencyTestResultsWaitDuration))
+           val results = 1.to(concurrencyTestParallelRequestCount).par.map { _ =>
+             Thread.sleep(10)
+             cache.get(cacheKey, mockLoader)
+           }.map(Await.result(_, concurrencyTestResultsWaitDuration))
            results should have size concurrencyTestParallelRequestCount
            results.foreach(_ should be(Some(cacheEntry)))
 
