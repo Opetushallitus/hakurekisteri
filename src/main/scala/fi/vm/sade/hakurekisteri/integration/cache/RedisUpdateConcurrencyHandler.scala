@@ -71,7 +71,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     if (numberWaiting > limitOfWaitingClientsToLog) {
       logger.warn(s"Already $numberWaiting clients waiting for value of $key")
     }
-    (newClientPromise, !otherPromises.isEmpty)
+    (newClientPromise, otherPromises.nonEmpty)
   }
 
   private def retrieveNewvalueWithLoader(key: K,
