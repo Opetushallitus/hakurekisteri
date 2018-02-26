@@ -34,7 +34,8 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
         case Success(None) =>
           logger.debug(s"Starting retrieval of $prefixKey with loader function.")
           retrieveNewvalueWithLoader(key, loader, loadedValueStorer)
-        case Failure(e) => newClientPromise.failure(e)
+        case failure@Failure(e) =>
+          resolvePromisesWaitingForValueFromCache(key, failure, removeWaiters = true)
       }
       newClientPromise.future
     }
