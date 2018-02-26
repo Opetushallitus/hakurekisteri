@@ -9,8 +9,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
-                                          limitOfWaitingClientsToLog: Int,
-                                          cacheItemLockMaxDurationSeconds: Int)
+                                          limitOfWaitingClientsToLog: Int)
                                          (implicit val byteStringFormatter: ByteStringFormatter[T],
                                            implicit val executionContext: ExecutionContext) {
 
