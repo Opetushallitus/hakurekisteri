@@ -31,7 +31,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
           Future.successful(result)
         case None =>
           logger.debug(s"Starting retrieval of $prefixKey with loader function.")
-          retrieveNewvalueWithLoader(key, loader, loadedValueStorer)
+          retrieveNewValueWithLoader(key, loader, loadedValueStorer)
       }.onComplete(resolveWaiters(key, _, waitingPromises.remove(key)))
     }
     newClientPromise.future
@@ -59,7 +59,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     (newClientPromise, otherPromises.nonEmpty)
   }
 
-  private def retrieveNewvalueWithLoader(key: K,
+  private def retrieveNewValueWithLoader(key: K,
                                          loader: K => Future[Option[T]],
                                          loadedValueStorer: (K, Future[T]) => Future[_]): Future[Option[T]] = {
     val loadingFuture = loader(key)
