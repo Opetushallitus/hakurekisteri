@@ -98,10 +98,10 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getKomo(oid: String): Future[KomoResponse] = {
-    val loader = restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries)
+    val loader: String => Future[Option[KomoResponse]] = o => restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries)
       .map(res => KomoResponse(oid, res.result))
       .map(Option(_))
-    komoCache.get(oid, o => loader).flatMap {
+    komoCache.get(oid, loader).flatMap {
       case Some(foundKomo) => Future.successful(foundKomo)
       case None => Future.failed(new RuntimeException(s"Could not retrieve komo $oid"))
     }

@@ -97,7 +97,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
 
   private def findByOid(oid: String): Future[Option[Organisaatio]] = {
-    cache.get(oid, findAndCache)
+    cache.get(oid, o => findAndCache(o))
   }
 
   private def findChildOids(parentOid: String): Future[Option[ChildOids]] = {
