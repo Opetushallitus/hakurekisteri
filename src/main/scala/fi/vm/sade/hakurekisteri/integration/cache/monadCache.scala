@@ -13,7 +13,7 @@ import scala.language.higherKinds
 
 trait MonadCache[F[_], K, T] {
 
-  def +(key: K, f: F[T]): F[_]
+  def +(key: K, value: T): F[_]
 
   def -(key: K)
 
@@ -38,8 +38,8 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
 
   private var cache: Map[K, Cacheable[Future, T]] = Map()
 
-  def +(key: K, f: Future[T]): Future[_] = {
-    val value = cacheable(key, f)
+  def +(key: K, v: T): Future[_] = {
+    val value: Cacheable[Future, T] = cacheable(key, Future.successful(v))
     cache = cache + (key -> value)
     value.f
   }
@@ -93,7 +93,7 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
           commonLockHandlingSemaphore.acquire()
           try {
             if (result.isSuccess) {
-              result.get.foreach(foundItem => storeToCache(key, foundItem))
+              result.get.foreach(foundItem => this.+(key, foundItem))
             }
             waitingPromises.remove(key) match {
               case Some(promisesWaitingForResult) => promisesWaitingForResult.asScala.foreach(_.complete(result))
@@ -109,10 +109,6 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
     } else {
       newClientPromise.future
     }
-  }
-
-  private def storeToCache(key: K, found: T): Unit = {
-    this.+(key, Future.successful(found))
   }
 
   private def createSynchonizedList: java.util.List[Promise[Option[T]]] = {
