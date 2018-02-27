@@ -31,19 +31,22 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[KoskiTrigger] = Seq()
 
-  case class SearchParams(muuttunutJälkeen: String)
+  case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet jälkeen: " + params.muuttunutJälkeen.toString)
+    logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString)
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
   def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(3)),
-                                refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
+                           refreshFrequency: FiniteDuration = 1.minute,
+                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(10))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
-        val lastChecked = new Date()
+        //val timestampAtStart = new Date()
+        val modifiedBefore: Date = new Date(modifiedAfter.getTime + searchWindowSize)
         fetchChanged(
-          params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter))
+          params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter),
+                                muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedBefore))
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
             logger.info(s"muuttuneita henkilöitä (opiskeluoikeuksia): " + henkilot.size + " kpl")
@@ -51,7 +54,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
               case Failure(e) => logger.error(e, "Exception in trigger!")
               case _ =>
             }
-            processModifiedKoski(lastChecked, refreshFrequency)
+            processModifiedKoski(modifiedBefore, 10.seconds)
           case Failure(t) =>
             logger.error(t, "Fetching modified henkilot failed, retrying")
             processModifiedKoski(modifiedAfter, refreshFrequency)
@@ -136,6 +139,3 @@ case class KoskiKieli(koodiarvo: String, koodistoUri: String)
 case class KoskiLisatiedot(erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
-
-
-
