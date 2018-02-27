@@ -6,8 +6,11 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import org.joda.time.LocalDate
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,9 +41,43 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
+  var totalFalseDataFound: Long = 0
+  var processedHenkilos: Map[String, Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]] = Map[String, Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]]()
+
+  def seekOldAndFalseData(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(14)),
+                           refreshFrequency: FiniteDuration = 10.seconds,
+                           searchWindowSize: Long = TimeUnit.HOURS.toMillis(3))(implicit scheduler: Scheduler): Unit = {
+    if(modifiedAfter.getTime < Platform.currentTime ) {
+    scheduler.scheduleOnce(refreshFrequency)({
+      val modifiedBefore: Date = new Date(modifiedAfter.getTime + searchWindowSize)
+      fetchChanged(
+        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter),
+          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedBefore))
+      ).flatMap(fetchPersonAliases).onComplete {
+        case Success((henkilot, personOidsWithAliases)) =>
+          logger.info(s"--- Huonoa dataa löydetty " + henkilot.size + " kpl")
+          totalFalseDataFound += henkilot.size
+          /*Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+            case Failure(e) => logger.error(e, "Exception in trigger!")
+            case _ =>
+          }*/
+          henkilot.foreach(h => processedHenkilos.+(h.henkilö.oid.getOrElse("Henkilöllä ei oidia") -> KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(h)))
+          logger.info(s"--- Prosessointi valmis, size: " + processedHenkilos.size)
+          if(processedHenkilos.size < 10) {
+            logger.info("--- Processed henkilös map: " + processedHenkilos.toString())
+          }
+          seekOldAndFalseData(modifiedBefore, 10.seconds)
+        case Failure(t) =>
+          logger.error(t, "--- Seek old and false data failed, retrying")
+          seekOldAndFalseData(modifiedAfter, refreshFrequency)
+      }
+    })}
+  }
+
+
   def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(3)),
                            refreshFrequency: FiniteDuration = 1.minute,
-                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(10))(implicit scheduler: Scheduler): Unit = {
+                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(5))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
         //val timestampAtStart = new Date()
         val modifiedBefore: Date = new Date(modifiedAfter.getTime + searchWindowSize)
@@ -54,7 +91,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
               case Failure(e) => logger.error(e, "Exception in trigger!")
               case _ =>
             }
-            processModifiedKoski(modifiedBefore, 10.seconds)
+            processModifiedKoski(modifiedBefore, 5.minutes)
           case Failure(t) =>
             logger.error(t, "Fetching modified henkilot failed, retrying")
             processModifiedKoski(modifiedAfter, refreshFrequency)
