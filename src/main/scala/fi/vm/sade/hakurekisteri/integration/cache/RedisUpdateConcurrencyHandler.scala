@@ -25,19 +25,14 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     if (loadIsInProgressAlready) {
       logger.debug(s"Load already in progress for key $prefixKey, waiting to be resolved.")
     } else {
-      val resolveWaitingPromisesAndRemoveThemFromBookkeeping: Try[Option[T]] => Unit = { result =>
-        resolveWaiters(key, result, waitingPromises.remove(key))
-      }
-      r.get(prefixKey).onComplete {
-        case result@Success(Some(_)) =>
+      r.get(prefixKey).flatMap {
+        case result@Some(_) =>
           logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
-          resolveWaitingPromisesAndRemoveThemFromBookkeeping(result)
-        case Success(None) =>
+          Future.successful(result)
+        case None =>
           logger.debug(s"Starting retrieval of $prefixKey with loader function.")
-          retrieveNewvalueWithLoader(key, loader, loadedValueStorer, resolveWaitingPromisesAndRemoveThemFromBookkeeping)
-        case failure@Failure(e) =>
-          resolveWaitingPromisesAndRemoveThemFromBookkeeping(failure)
-      }
+          retrieveNewvalueWithLoader(key, loader, loadedValueStorer)
+      }.onComplete(resolveWaiters(key, _, waitingPromises.remove(key)))
     }
     newClientPromise.future
   }
@@ -66,23 +61,15 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
 
   private def retrieveNewvalueWithLoader(key: K,
                                          loader: K => Future[Option[T]],
-                                         loadedValueStorer: (K, Future[T]) => Future[_],
-                                         loadingResultHandler: Try[Option[T]] => Unit): Unit = {
+                                         loadedValueStorer: (K, Future[T]) => Future[_]): Future[Option[T]] = {
     val loadingFuture = loader(key)
     loadingFuture.onComplete { result =>
-      if (result.isSuccess) {
-        result.get match {
-          case Some(foundItem) =>
-            loadedValueStorer(key, Future.successful(foundItem)).onComplete { _ =>
-              loadingResultHandler(result)
-            }
-          case None =>
-            loadingResultHandler(result)
-        }
-      } else {
-        loadingResultHandler(result)
-      }
       resolveWaiters(key, result, waitingPromises.get(key))
+    }
+
+    loadingFuture.flatMap {
+      case result@Some(found) => loadedValueStorer(key, Future.successful(found)).map(_ => result)
+      case result => Future.successful(result)
     }
   }
 
