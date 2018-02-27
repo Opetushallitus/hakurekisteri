@@ -25,15 +25,18 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
     if (loadIsInProgressAlready) {
       logger.debug(s"Load already in progress for key $prefixKey, waiting to be resolved.")
     } else {
+      val resolveWaitingPromisesAndRemoveThemFromBookkeeping: Try[Option[T]] => Unit = { result =>
+        resolveWaiters(key, result, waitingPromises.remove(key))
+      }
       r.get(prefixKey).onComplete {
-        case Success(found@Some(_)) =>
+        case result@Success(Some(_)) =>
           logger.debug(s"Value with $prefixKey had appeared in cache, no need to retrieve it.")
-          resolvePromisesWaitingForValueFromCache(key, Success(found), removeWaiters = true)
+          resolveWaitingPromisesAndRemoveThemFromBookkeeping(result)
         case Success(None) =>
           logger.debug(s"Starting retrieval of $prefixKey with loader function.")
-          retrieveNewvalueWithLoader(key, loader, loadedValueStorer)
+          retrieveNewvalueWithLoader(key, loader, loadedValueStorer, resolveWaitingPromisesAndRemoveThemFromBookkeeping)
         case failure@Failure(e) =>
-          resolvePromisesWaitingForValueFromCache(key, failure, removeWaiters = true)
+          resolveWaitingPromisesAndRemoveThemFromBookkeeping(failure)
       }
     }
     newClientPromise.future
@@ -63,38 +66,32 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
 
   private def retrieveNewvalueWithLoader(key: K,
                                          loader: K => Future[Option[T]],
-                                         loadedValueStorer: (K, Future[T]) => Future[_]): Unit = {
+                                         loadedValueStorer: (K, Future[T]) => Future[_],
+                                         loadingResultHandler: Try[Option[T]] => Unit): Unit = {
     val loadingFuture = loader(key)
     loadingFuture.onComplete { result =>
       if (result.isSuccess) {
         result.get match {
           case Some(foundItem) =>
             loadedValueStorer(key, Future.successful(foundItem)).onComplete { _ =>
-              resolvePromisesWaitingForValueFromCache(key, result, removeWaiters = true)
+              loadingResultHandler(result)
             }
           case None =>
-            resolvePromisesWaitingForValueFromCache(key, result, removeWaiters = true)
+            loadingResultHandler(result)
         }
       } else {
-        resolvePromisesWaitingForValueFromCache(key, result, removeWaiters = true)
+        loadingResultHandler(result)
       }
-      resolvePromisesWaitingForValueFromCache(key, result, removeWaiters = false)
+      resolveWaiters(key, result, waitingPromises.get(key))
     }
   }
 
-  private def resolvePromisesWaitingForValueFromCache(key: K, result: Try[Option[T]], removeWaiters: Boolean): Unit = {
-    val resolveWaiters: List[Promise[Option[T]]] => Unit = { promisesWaitingForResult =>
-      if (promisesWaitingForResult != null) {
-        logger.debug(s"Resolving promises for key $key: ${promisesWaitingForResult.size}")
-        promisesWaitingForResult.foreach { _.tryComplete(result) }
-      } else {
-        logger.debug(s"Nobody waiting for results of $key, got result $result")
-      }
-    }
-    if (removeWaiters) {
-      resolveWaiters(waitingPromises.remove(key))
+  private def resolveWaiters(key: K, result: Try[Option[T]], promisesWaitingForResult: List[Promise[Option[T]]]): Unit = {
+    if (promisesWaitingForResult != null) {
+      logger.debug(s"Resolving promises for key $key: ${promisesWaitingForResult.size}")
+      promisesWaitingForResult.foreach { _.tryComplete(result) }
     } else {
-      resolveWaiters(waitingPromises.get(key))
+      logger.debug(s"Nobody waiting for results of $key, got result $result")
     }
   }
 }
