@@ -93,7 +93,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       } pipeTo self
 
     case CacheResponse(haku, tulos) =>
-      cache + (haku, Future.successful(tulos))
+      cache + (haku, tulos)
       calling = false
       self ! UpdateNext
 

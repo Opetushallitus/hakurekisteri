@@ -44,7 +44,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix1")
 
-        cache + (cacheKey, cacheEntryF)
+        cache + (cacheKey, cacheEntry)
 
         Thread.sleep(500)
 
@@ -60,7 +60,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String, String](3.minutes.toMillis, getClass, "prefix2")
 
-        cache + (cacheKey, cacheEntryF)
+        cache + (cacheKey, cacheEntry)
 
         Thread.sleep(500)
 
@@ -80,7 +80,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
 
-        cache + (cacheKey, cacheEntryF)
+        cache + (cacheKey, cacheEntry)
 
         Thread.sleep(500)
       }
@@ -99,7 +99,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
 
-        cache + (cacheKey, cacheEntryF)
+        cache + (cacheKey, cacheEntry)
 
         Thread.sleep(500)
       }

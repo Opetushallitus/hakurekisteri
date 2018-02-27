@@ -70,11 +70,10 @@ object CacheFactory {
 
       private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog)
 
-      def +(key: K, f: Future[T]): Future[_] = f flatMap {
-        case t =>
-          val prefixKey = k(key)
-          logger.debug(s"Adding value with key ${prefixKey} to Redis cache")
-          r.set[T](prefixKey, t, pxMilliseconds = Some(expirationDurationMillis))
+      def +(key: K, value: T): Future[_] =  {
+        val prefixKey = k(key)
+        logger.debug(s"Adding value with key $prefixKey to Redis cache")
+        r.set[T](prefixKey, value, pxMilliseconds = Some(expirationDurationMillis))
       }
 
       def -(key: K): Unit = r.del(k(key))

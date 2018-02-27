@@ -43,7 +43,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
       cache.contains(org.oid).onComplete {
-        case Success(false) => cache + (org.oid, Future.successful(org))
+        case Success(false) => cache + (org.oid, org)
         case Success(true) =>
         case scala.util.Failure(t) => log.error(t, s"Exception when checking contains for ${org.oid}")
       }
@@ -55,7 +55,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     })
   }
   private def saveChildOids(parentOid: String, childOids: ChildOids): Unit = {
-    childOidCache + (parentOid, Future.successful(childOids))
+    childOidCache + (parentOid, childOids)
   }
 
   private def findAndCacheChildOids(parentOid: String): Future[Option[ChildOids]] = {

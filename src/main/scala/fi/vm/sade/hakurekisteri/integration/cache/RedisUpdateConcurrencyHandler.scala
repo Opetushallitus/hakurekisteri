@@ -18,7 +18,7 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
 
   def initiateLoadingIfNotYetRunning(key: K,
                                      loader: K => Future[Option[T]],
-                                     loadedValueStorer: (K, Future[T]) => Future[_],
+                                     loadedValueStorer: (K, T) => Future[_],
                                      keyPrefixer: K => String): Future[Option[T]] = {
     val (newClientPromise, loadIsInProgressAlready) = storePromiseForThisRequest(key)
     val prefixKey = keyPrefixer(key)
@@ -61,14 +61,14 @@ class RedisUpdateConcurrencyHandler[K, T](val r: RedisClient,
 
   private def retrieveNewValueWithLoader(key: K,
                                          loader: K => Future[Option[T]],
-                                         loadedValueStorer: (K, Future[T]) => Future[_]): Future[Option[T]] = {
+                                         loadedValueStorer: (K, T) => Future[_]): Future[Option[T]] = {
     val loadingFuture = loader(key)
     loadingFuture.onComplete { result =>
       resolveWaiters(key, result, waitingPromises.get(key))
     }
 
     loadingFuture.flatMap {
-      case result@Some(found) => loadedValueStorer(key, Future.successful(found)).map(_ => result)
+      case result@Some(found) => loadedValueStorer(key, found).map(_ => result)
       case result => Future.successful(result)
     }
   }
