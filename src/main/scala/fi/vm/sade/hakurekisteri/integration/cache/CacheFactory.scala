@@ -109,7 +109,13 @@ object CacheFactory {
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
       override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
+        r.exists(k(key)).flatMap { keyIsIncache =>
+          if (keyIsIncache) {
+            toOption(get(key))
+          } else {
+            updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
+          }
+        }
       }
 
       override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
