@@ -203,7 +203,7 @@ class BaseIntegrations(rekisterit: Registers,
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
   koskiService.processModifiedKoski()
-  koskiService.seekOldAndFalseData()
+  koskiService.historyRepairCrawler()
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()
