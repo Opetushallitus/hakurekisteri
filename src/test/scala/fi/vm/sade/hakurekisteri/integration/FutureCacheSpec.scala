@@ -26,7 +26,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
     cache + (cacheKey, cacheEntryValue)
 
-    cache.getCache(cacheKey).f should be (cacheEntry)
+    Await.result(cache.getCache(cacheKey).f, 1.second) should be (cacheEntryValue)
   }
 
   it should "set inserted time for the cached entry" in {
