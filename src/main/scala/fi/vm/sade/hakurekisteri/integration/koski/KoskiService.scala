@@ -41,60 +41,54 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  var totalFalseDataFound: Long = 0
-  var processedHenkilos: Map[String, Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]] = Map[String, Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]]()
-
-  def seekOldAndFalseData(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(14)),
-                           refreshFrequency: FiniteDuration = 10.seconds,
-                           searchWindowSize: Long = TimeUnit.HOURS.toMillis(3))(implicit scheduler: Scheduler): Unit = {
-    if(modifiedAfter.getTime < Platform.currentTime ) {
-    scheduler.scheduleOnce(refreshFrequency)({
-      val modifiedBefore: Date = new Date(modifiedAfter.getTime + searchWindowSize)
+  //Käy läpi vanhaa dataa Koskesta ja päivittää sitä sureen. TODO: false ysit-korjaus
+  def historyRepairCrawler(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(2)),
+                           timeToWaitUntilNextBatch: FiniteDuration = 30.seconds,
+                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(3),
+                           repairTargetTime: Date = new Date(Platform.currentTime))(implicit scheduler: Scheduler): Unit = {
+    if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
+    scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
+      val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
       fetchChanged(
-        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter),
-          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedBefore))
+        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowStartTime),
+          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime))
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
-          logger.info(s"--- Huonoa dataa löydetty " + henkilot.size + " kpl")
-          totalFalseDataFound += henkilot.size
-          /*Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-            case Failure(e) => logger.error(e, "Exception in trigger!")
+          logger.info(s"HistoryCrawler - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + " : "  + henkilot.size + " kpl")
+          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+            case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
             case _ =>
-          }*/
-          henkilot.foreach(h => processedHenkilos.+(h.henkilö.oid.getOrElse("Henkilöllä ei oidia") -> KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(h)))
-          logger.info(s"--- Prosessointi valmis, size: " + processedHenkilos.size)
-          if(processedHenkilos.size < 10) {
-            logger.info("--- Processed henkilös map: " + processedHenkilos.toString())
           }
-          seekOldAndFalseData(modifiedBefore, 10.seconds)
+          historyRepairCrawler(searchWindowEndTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime)
         case Failure(t) =>
-          logger.error(t, "--- Seek old and false data failed, retrying")
-          seekOldAndFalseData(modifiedAfter, refreshFrequency)
+          logger.error(t, "HistoryCrawler - fetch data failed, retrying")
+          historyRepairCrawler(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime)
       }
-    })}
+    })} else {
+      logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
+    }
   }
 
-
-  def processModifiedKoski(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(3)),
+  //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
+  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)),
                            refreshFrequency: FiniteDuration = 1.minute,
-                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(5))(implicit scheduler: Scheduler): Unit = {
+                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
-        //val timestampAtStart = new Date()
-        val modifiedBefore: Date = new Date(modifiedAfter.getTime + searchWindowSize)
+        val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
         fetchChanged(
-          params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedAfter),
-                                muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(modifiedBefore))
+          params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowStartTime),
+                                muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime))
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
-            logger.info(s"muuttuneita henkilöitä (opiskeluoikeuksia): " + henkilot.size + " kpl")
+            logger.info(s"processModifiedKoski - muuttuneita henkilöitä (opiskeluoikeuksia): " + henkilot.size + " kpl")
             Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-              case Failure(e) => logger.error(e, "Exception in trigger!")
+              case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
               case _ =>
             }
-            processModifiedKoski(modifiedBefore, 5.minutes)
+            processModifiedKoski(searchWindowEndTime, refreshFrequency)
           case Failure(t) =>
-            logger.error(t, "Fetching modified henkilot failed, retrying")
-            processModifiedKoski(modifiedAfter, refreshFrequency)
+            logger.error(t, "processModifiedKoski - fetching modified henkilot failed, retrying")
+            processModifiedKoski(searchWindowStartTime, refreshFrequency)
         }
       })
   }
