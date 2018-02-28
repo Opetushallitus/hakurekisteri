@@ -291,12 +291,12 @@ object KoskiArvosanaTrigger {
         }
       })
     }
-
     var yksilöllistetty = yksilollistaminen.Ei
-    if (yksilöllistetyt.contains(true) && yksilöllistetyt.contains(false)) {
-      yksilöllistetty = yksilollistaminen.Osittain
-    } else if (yksilöllistetyt.contains(true)) {
+    //Yli puolet osasuorituksista yksilöllistettyjä -> kokonaan yksilöllistetty. Osittain yksilöllistetty, jos yli 1 mutta alle tai tasan puolet yksilöllistettyjä.
+    if (yksilöllistetyt.count(_.equals(true)) > yksilöllistetyt.count(_.equals(false))) {
       yksilöllistetty = yksilollistaminen.Kokonaan
+    } else if (yksilöllistetyt.count(_.equals(true)) > 0) {
+      yksilöllistetty = yksilollistaminen.Osittain
     }
     if (yksilöllistetty == yksilollistaminen.Ei) {
       for {
