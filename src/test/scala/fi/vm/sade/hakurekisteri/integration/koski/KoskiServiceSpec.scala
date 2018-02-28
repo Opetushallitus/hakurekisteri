@@ -23,7 +23,7 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
 
   it should "return suoritukset" in {
-    when(endPoint.request(forUrl("http://localhost/koski/api/oppija?muuttunutJ%C3%A4lkeen=2010-01-01")))
+    when(endPoint.request(forUrl("http://localhost/koski/api/oppija?muuttunutJ%C3%A4lkeen=2010-01-01&muuttunutEnnen=2100-01-01T12%3A00")))
       .thenReturn((200, List(), getJson("koski_1130")))
     Await.result(koskiService.fetchChanged(0, koskiService.SearchParams(muuttunutJälkeen = "2010-01-01")), 10.seconds).size should be (3)
   }
