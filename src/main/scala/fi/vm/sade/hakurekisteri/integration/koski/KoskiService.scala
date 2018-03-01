@@ -22,7 +22,7 @@ trait IKoskiService {
   def fetchChanged(personOid: String): Future[Seq[KoskiHenkilo]]
 }
 
-case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases) => Unit)
+case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)(implicit val system: ActorSystem)  {
 
@@ -37,14 +37,14 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString)
+    //logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString)
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
   //Käy läpi vanhaa dataa Koskesta ja päivittää sitä sureen. TODO: false ysit-korjaus
-  def historyRepairCrawler(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(2)),
-                           timeToWaitUntilNextBatch: FiniteDuration = 30.seconds,
-                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(3),
+  def historyRepairCrawler(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(15)),
+                           timeToWaitUntilNextBatch: FiniteDuration = 10.seconds,
+                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(60),
                            repairTargetTime: Date = new Date(Platform.currentTime))(implicit scheduler: Scheduler): Unit = {
     if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
     scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
@@ -55,7 +55,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
           logger.info(s"HistoryCrawler - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + " : "  + henkilot.size + " kpl")
-          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+          Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = true)) match {
             case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
             case _ =>
           }
@@ -69,18 +69,24 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     }
   }
 
+  var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(15)
   //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
   def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)),
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
-        val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
+        var catchup = false //Estetään prosessoijaa jättäytymästä vähitellen yhä enemmän jälkeen vaihtelevien käsittelyaikojen takia
+        var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
+        if (searchWindowStartTime.getTime < (Platform.currentTime-TimeUnit.MINUTES.toMillis(5))) {
+          searchWindowEndTime = new Date(searchWindowStartTime.getTime + searchWindowSize + maximumCatchup)
+          catchup = true
+        }
         fetchChanged(
           params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowStartTime),
                                 muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime))
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
-            logger.info(s"processModifiedKoski - muuttuneita henkilöitä (opiskeluoikeuksia): " + henkilot.size + " kpl")
+            logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
             Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
               case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
               case _ =>
@@ -93,12 +99,12 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
       })
   }
 
-  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases) =
+  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, removeFalseYsit: Boolean = false): Unit =
     henkilot.foreach(henkilo => {
-      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases))
+      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases, removeFalseYsit))
     })
 
-  def addTrigger(trigger: KoskiTrigger) = triggers = triggers :+ trigger
+  def addTrigger(trigger: KoskiTrigger): Unit = triggers = triggers :+ trigger
 }
 
 

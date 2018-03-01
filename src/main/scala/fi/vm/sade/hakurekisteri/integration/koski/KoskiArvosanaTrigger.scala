@@ -8,19 +8,22 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
+import fi.vm.sade.hakurekisteri.opiskelija.{IdentifiedOpiskelija, Opiskelija, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.DefaultFormats
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 object KoskiArvosanaTrigger {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   import scala.language.implicitConversions
 
@@ -42,7 +45,8 @@ object KoskiArvosanaTrigger {
                                           arvosanaRekisteri: ActorRef,
                                           opiskelijaRekisteri: ActorRef,
                                           personOidsWithAliases: PersonOidsWithAliases,
-                                          logBypassed: Boolean = false)
+                                          logBypassed: Boolean = false,
+                                          removeFalseYsit: Boolean = false)
                                          (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
 
@@ -55,6 +59,13 @@ object KoskiArvosanaTrigger {
       val q = SuoritusQuery(henkilo = Some(henkiloOid))
       (suoritusRekisteri ? SuoritusQueryWithPersonAliases(q, personOidsWithAliases)).mapTo[Seq[Suoritus]].recoverWith {
         case t: AskTimeoutException => fetchExistingSuoritukset(henkiloOid)
+      }
+    }
+
+    def fetchExistingLuokkatiedot(henkiloOid: String): Future[Seq[Opiskelija]] = {
+      val q = OpiskelijaQuery(henkilo = Some(henkiloOid))
+      (opiskelijaRekisteri ? q).mapTo[Seq[Opiskelija]].recoverWith {
+        case t: AskTimeoutException => fetchExistingLuokkatiedot(henkiloOid)
       }
     }
 
@@ -92,6 +103,53 @@ object KoskiArvosanaTrigger {
 
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
+    def findMatchingLuokkatietoAndSuoritus(sureSuoritukset: Seq[Suoritus], sureLuokkatiedot: Seq[Opiskelija]): (Option[Suoritus], Option[Opiskelija]) = {
+      logger.info(s"Etsitään suoritus-luokkatieto-pari")
+      val tieto = sureLuokkatiedot.find(lt => sureSuoritukset.exists(_.asInstanceOf[VirallinenSuoritus].myontaja.equals(lt.oppilaitosOid)))
+      //val suoritus
+      var suoritus = Option.empty[Suoritus]
+      if (tieto.isDefined) {
+        suoritus = sureSuoritukset.find(s => s.asInstanceOf[VirallinenSuoritus].myontaja.equals(tieto.get.oppilaitosOid))
+      } else {
+        suoritus = Option.empty
+      }
+      (suoritus, tieto)
+    }
+
+    //Teoria: Suorituksen voi poistaa, jos samalla oppilaitoksella löytyy suresta luokkatieto, jossa lähteenä koski ja luokka tyhjä.
+    //Ongelma: myös suoritusten oppilaitokset saattavat olla väärin
+    def detectAndFixFalseYsiness(suorituksetSuressa: Seq[Suoritus], koskiSuoritus: VirallinenSuoritus, kaikkiKoskiSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate)]): Unit = {
+      if (!kaikkiKoskiSuoritukset.exists(_._3.startsWith("9"))) {
+        logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" on peruskoulusuoritus, joka ei sisällä 9. luokan suoritusta. Päätellään tästä, että kyseessä on mahdollinen valeysi.")
+        fetchExistingLuokkatiedot(koskiSuoritus.henkilo).onComplete(luokkatiedot => {
+          logger.info(s"Detect valeysit : Luokkatieto: " + luokkatiedot)
+          logger.info(s"Detect valeysit : Suoritukset: " + suorituksetSuressa.toString())
+          if (suorituksetSuressa.exists(_.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid))) {
+            logger.info(s"Detect valeysit : Sureen on aiemmin tallennettu perusopetussuoritus! ")
+
+            val (poistettavaSuoritus, poistettavaLuokkatieto) = findMatchingLuokkatietoAndSuoritus(suorituksetSuressa, luokkatiedot.get)
+            if (poistettavaLuokkatieto.isDefined && poistettavaSuoritus.isDefined && poistettavaLuokkatieto.get.source.equals("koski") && !poistettavaLuokkatieto.get.luokka.startsWith("9")) {
+              logger.info(s"Detect valeysit : Tässä kohtaa poistettaisiin suoritusresurssi id:llä " +
+                poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id
+                + ", sisältö: " + poistettavaSuoritus.get.toString)
+              logger.info(s"Detect valeysit : Tässä kohtaa poistettaisiin luokkatietoresurssi id:llä " +
+                poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id
+                + ", sisältö: " + poistettavaLuokkatieto.get.toString)
+              logger.info(s"Vertailuluokkatietoid: " + poistettavaLuokkatieto.get.asInstanceOf[IdentifiedOpiskelija].id)
+              val deletedSuoritus = suoritusRekisteri ? DeleteResource(poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id, "koski-integraatio-fix")
+              val deletedLuokkatieto = opiskelijaRekisteri ? DeleteResource(poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id, "koski-integraatio-fix")
+              logger.info(s"Ollaan poistettu suoritus " + deletedSuoritus + " sekä luokkatieto " + deletedLuokkatieto)
+            } else {
+              logger.info(s"Ehdot täyttyivät muuten, mutta sureen tallennettua sopivaa suoritus-luokkatieto-paria ei löytynyt.")
+            }
+          }
+        })
+
+      } else {
+        //logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" kaikki kunnossa.")
+      }
+    }
+
     henkilo.henkilö.oid.foreach(henkiloOid => {
       val allSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate)] = createSuorituksetJaArvosanatFromKoski(henkilo)
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
@@ -99,6 +157,10 @@ object KoskiArvosanaTrigger {
         henkilonSuoritukset.foreach {
           case (suor: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate) =>
 
+            if(removeFalseYsit && suor.komo.equals(Oids.perusopetusKomoOid)) {
+              detectAndFixFalseYsiness(suoritukset, suor, henkilonSuoritukset)
+            }
+            logger.info(s"Falseysiness käsitelty")
             var useArvosanat = arvosanat
             val useSuoritus = suor
             if(suor.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty){
@@ -147,8 +209,9 @@ object KoskiArvosanaTrigger {
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
     KoskiTrigger {
-      (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases) => {
-        muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, opiskelijaRekisteri, personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
+      (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases, removeFalseYsit: Boolean) => {
+        muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, opiskelijaRekisteri,
+                                            personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet), removeFalseYsit = removeFalseYsit)
       }
     }
   }
