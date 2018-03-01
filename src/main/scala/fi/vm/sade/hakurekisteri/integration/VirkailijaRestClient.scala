@@ -155,7 +155,6 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def readObjectWithBasicAuth[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
     val url1: String = OphUrlProperties.url(uriKey, args:_*)
-    logger.info(s"Doing fetch from url:  " + url1)
     readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
   }
 
