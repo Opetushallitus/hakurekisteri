@@ -50,6 +50,7 @@ class YtlMockServlet extends HttpServlet {
   override protected def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
     val fetchBulk = "/api/oph-transfer/bulk"
     val uri = req.getRequestURI
+    consumeBodySoThatClientCanWriteEverythingItWants(req)
     uri match {
       case x if x == fetchBulk =>
         val uuid = UUID.randomUUID().toString
@@ -89,6 +90,10 @@ class YtlMockServlet extends HttpServlet {
         resp.sendError(500)
       }
     }
+  }
+
+  private def consumeBodySoThatClientCanWriteEverythingItWants(req: HttpServletRequest) = {
+    IOUtils.toString(req.getInputStream, "UTF-8")
   }
 }
 
