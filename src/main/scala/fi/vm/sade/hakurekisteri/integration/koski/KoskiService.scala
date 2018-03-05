@@ -45,7 +45,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   def historyRepairCrawler(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(15)),
                            timeToWaitUntilNextBatch: FiniteDuration = 10.seconds,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(60),
-                           repairTargetTime: Date = new Date(Platform.currentTime))(implicit scheduler: Scheduler): Unit = {
+                           repairTargetTime: Date = new Date(Platform.currentTime),
+                           handleFalseYsit: Boolean = false)(implicit scheduler: Scheduler): Unit = {
     if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
     scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
       val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
@@ -55,7 +56,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
           logger.info(s"HistoryCrawler - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + " : "  + henkilot.size + " kpl")
-          Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = true)) match {
+          Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = handleFalseYsit)) match {
             case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
             case _ =>
           }
@@ -69,9 +70,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     }
   }
 
-  var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(15)
+  var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
   //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
-  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)),
+  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(1)),
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
