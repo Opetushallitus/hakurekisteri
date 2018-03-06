@@ -50,7 +50,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       None,
       true,
       OrganisaatioOids.oph,
-      Map.empty), Seq(Arvosana( suoritus = null, arvio = Arvio410("9"), "A1", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())), "", parseLocalDate("2016-02-02")
+      Map.empty), Seq(Arvosana( suoritus = null, arvio = Arvio410("9"), "A1", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())), "", parseLocalDate("2016-02-02"), None
     ))
   }
 
@@ -75,10 +75,10 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")),
+    ), "", parseLocalDate("2016-02-02"), None),
       (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(
         Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
-      ), "9E", parseLocalDate("2016-02-02")))
+      ), "9E", parseLocalDate("2016-02-02"), None))
   }
 
   it should "alkamispaiva should be from alkamispaiva" in {
@@ -101,10 +101,10 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
       Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
       Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")),
+    ), "", parseLocalDate("2016-02-02"), None),
       (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(
         Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
-      ), "9A", parseLocalDate("2017-03-03")))
+      ), "9A", parseLocalDate("2017-03-03"), None))
   }
 
 
@@ -127,7 +127,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("5"), "PS", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")))
+    ), "", parseLocalDate("2016-02-02"), None))
   }
 
   it should "Suoritus should be osittain yksilöllistetty" in {
@@ -148,7 +148,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       OrganisaatioOids.oph,
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")))
+    ), "", parseLocalDate("2016-02-02"), None))
   }
 
   it should "Kesken should set enddate as next fourth of june" in {
@@ -172,7 +172,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       OrganisaatioOids.oph,
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")))
+    ), "", parseLocalDate("2016-02-02"), None))
   }
 
   it should "Suoritus should be kokonaan yksilöllistetty" in {
@@ -193,7 +193,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       OrganisaatioOids.oph,
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("4"), "YL", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")))
+    ), "", parseLocalDate("2016-02-02"), None))
   }
 
   it should "list should return suoritus kymppiluokka" in {
@@ -215,7 +215,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("10"), "KT", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "KE", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02")))
+    ), "", parseLocalDate("2016-02-02"), None))
   }
 
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
@@ -239,7 +239,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   it should "createOpiskelija should create opiskelija" in {
     KoskiArvosanaTrigger.createOpiskelija("henkilo_oid", Seq(
       SuoritusLuokka(
-        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2016-01-01"))
+        VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
       )) should equal (
       Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
     )
