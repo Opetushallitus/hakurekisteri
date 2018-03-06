@@ -35,13 +35,61 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   var triggers: Seq[KoskiTrigger] = Seq()
 
   case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
+  case class SearchParamsWithPagination (muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00", pageSize: Int, pageNumber: Int)
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
     //logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString)
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  //Käy läpi vanhaa dataa Koskesta ja päivittää sitä sureen. TODO: false ysit-korjaus
+  def fetchChangedWithPagination(page: Int = 0, params: SearchParamsWithPagination): Future[Seq[KoskiHenkiloContainer]] = {
+    logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString + ", sivu: " + params.pageNumber)
+    virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
+  }
+
+  //Käydään läpi data muuttunut data (abt.)kuukausittain, ja jaetaan jokainen kuukausi pienempiin rajapintakutsuihin sivuittain.
+  def traverseAllOfKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(95)),
+                                     timeToWaitUntilNextBatch: FiniteDuration = 1.minute,
+                                     searchWindowSize: Long = TimeUnit.DAYS.toMillis(30),
+                                     repairTargetTime: Date = new Date(Platform.currentTime),
+                                     pageNbr: Int = 0,
+                                     pageSizePerFetch: Int = 5000,
+                                     fixValeysit: Boolean = false)(implicit scheduler: Scheduler): Unit = {
+    if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
+      scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
+        var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
+        if (searchWindowEndTime.getTime > repairTargetTime.getTime) {
+          searchWindowEndTime = new Date(repairTargetTime.getTime)
+        }
+        fetchChangedWithPagination(
+          params = SearchParamsWithPagination(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowStartTime),
+                                              muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime),
+                                              pageSize = pageSizePerFetch,
+                                              pageNumber = pageNbr)
+        ).flatMap(fetchPersonAliases).onComplete {
+          case Success((henkilot, personOidsWithAliases)) =>
+            logger.info(s"HistoryCrawler - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + " : "  + henkilot.size + " kpl. Sivu: " + pageNbr)
+            Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = fixValeysit)) match {
+              case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
+              case _ =>
+            }
+            if(henkilot.isEmpty) {
+              logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
+              traverseAllOfKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
+            } else {
+              logger.info(s"HistoryCrawler - Haetaan saman aikaikkunan seuraava sivu!")
+              traverseAllOfKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch, fixValeysit) //Seuraava sivu samaa aikaikkunaa
+            }
+          case Failure(t) =>
+            logger.error(t, "HistoryCrawler - fetch data failed, retrying")
+            traverseAllOfKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Sama sivu samasta aikaikkunasta
+        }
+      })} else {
+      logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
+    }
+  }
+
+  //Käy läpi vanhaa dataa Koskesta ja päivittää sitä sureen.
   def historyRepairCrawler(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(15)),
                            timeToWaitUntilNextBatch: FiniteDuration = 10.seconds,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(60),
