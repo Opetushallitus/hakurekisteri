@@ -6,14 +6,17 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
+import scala.collection.concurrent.TrieMap
+import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Try}
 
 
 object RefreshOrganisaatioCache
@@ -39,9 +42,11 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
-      if(!cache.contains(org.oid))
-        cache + (org.oid, Future.successful(org))
-
+      cache.contains(org.oid).onComplete {
+        case Success(false) => cache + (org.oid, org)
+        case Success(true) =>
+        case scala.util.Failure(t) => log.error(t, s"Exception when checking contains for ${org.oid}")
+      }
       if (org.oppilaitosKoodi.isDefined)
         oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
 
@@ -50,7 +55,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     })
   }
   private def saveChildOids(parentOid: String, childOids: ChildOids): Unit = {
-    childOidCache + (parentOid, Future.successful(childOids))
+    childOidCache + (parentOid, childOids)
   }
 
   private def findAndCacheChildOids(parentOid: String): Future[Option[ChildOids]] = {
@@ -92,17 +97,11 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
 
   private def findByOid(oid: String): Future[Option[Organisaatio]] = {
-    if (cache.contains(oid))
-      cache.get(oid).map(Some(_))
-    else
-      findAndCache(oid)
+    cache.get(oid, o => findAndCache(o))
   }
 
   private def findChildOids(parentOid: String): Future[Option[ChildOids]] = {
-    if (childOidCache.contains(parentOid))
-      childOidCache.get(parentOid).map(Some(_))
-    else
-      findAndCacheChildOids(parentOid)
+    childOidCache.get(parentOid, _ => findAndCacheChildOids(parentOid))
   }
   private def findByOppilaitoskoodi(koodi: String): Future[Option[Organisaatio]] = {
     oppilaitoskoodiIndex.get(koodi) match {
@@ -131,6 +130,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
   case class CacheChildOids(parentOid: String, childOids: ChildOids)
+
+  private val koodiQueriesQueue: TrieMap[String, mutable.MutableList[ActorRef]] = TrieMap()
 
   override def receive: Receive = {
     case RefreshOrganisaatioCache => fetchAll(sender())
@@ -161,12 +162,33 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
       findChildOids(parentOid) pipeTo sender
 
     case Oppilaitos(koodi) =>
-      findByOppilaitoskoodi(koodi).flatMap {
-        case Some(oppilaitos) => Future.successful(OppilaitosResponse(koodi, oppilaitos))
-        case None => Future.failed(OppilaitosNotFoundException(koodi))
-      } pipeTo sender
+      if (koodiQueriesQueue.keySet.contains(koodi)) {
+        koodiQueriesQueue(koodi).+=(sender())
+      } else {
+        val refs = new mutable.MutableList[ActorRef]()
+        refs.+=(sender())
+        koodiQueriesQueue.put(koodi, refs)
+        findByOppilaitoskoodi(koodi).onComplete { response =>
+          self ! HandleKoodiResponse(koodi, response)
+        }
+      }
+
+    case HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]]) =>
+      response match {
+        case Success(Some(oppilaitos)) =>
+          koodiQueriesQueue(koodi).foreach(_ ! OppilaitosResponse(koodi, oppilaitos))
+          koodiQueriesQueue.remove(koodi)
+        case Success(None) =>
+          koodiQueriesQueue(koodi).foreach(_ ! OppilaitosNotFoundException(koodi))
+          koodiQueriesQueue.remove(koodi)
+        case failure@scala.util.Failure(_) =>
+          koodiQueriesQueue(koodi).foreach(_ ! failure)
+          koodiQueriesQueue.remove(koodi)
+      }
   }
 }
+
+case class HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]])
 
 class MockOrganisaatioActor(config: Config) extends Actor {
   implicit val formats = DefaultFormats

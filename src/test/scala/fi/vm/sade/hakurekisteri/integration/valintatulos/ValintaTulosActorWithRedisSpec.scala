@@ -1,12 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -14,14 +12,13 @@ import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, BeforeAndAfterEach, Ignore}
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import redis.embedded.RedisServer
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Try
 
 class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties with BeforeAndAfterAll {
 
@@ -34,6 +31,9 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
   def cacheFactory(implicit system:ActorSystem) = CacheFactory.apply(new OphProperties()
     .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
     .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
+    .addDefault("suoritusrekisteri.cache.redis.numberOfWaitersToLog", "5")
+    .addDefault("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize", "3")
+    .addDefault("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis", "0")
     .addDefault("suoritusrekisteri.cache.redis.port", s"${rPort}")
   )(system)
 
@@ -75,7 +75,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286251"), 10.seconds)
         cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
 
-        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
       }
     )
   }
@@ -132,7 +132,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286253"), 10.seconds)
         cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
 
-        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
       }
     )
   }
@@ -200,10 +200,10 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         Thread.sleep(300)
 
         val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
-        cache.contains("1.2.246.562.29.11") should be(true)
-        cache.contains("1.2.246.562.29.12") should be(true)
-        cache.contains("1.2.246.562.29.13") should be(false)
-        cache.contains("1.2.246.562.29.14") should be(false)
+        Await.result(cache.contains("1.2.246.562.29.11"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.12"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(false)
+        Await.result(cache.contains("1.2.246.562.29.14"), 1.second) should be(false)
 
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
@@ -227,10 +227,10 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         Thread.sleep(300)
 
         val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], "sijoittelu-tulos")
-        cache.contains("1.2.246.562.29.11") should be(true)
-        cache.contains("1.2.246.562.29.12") should be(true)
-        cache.contains("1.2.246.562.29.13") should be(true)
-        cache.contains("1.2.246.562.29.14") should be(true)
+        Await.result(cache.contains("1.2.246.562.29.11"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.12"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(true)
+        Await.result(cache.contains("1.2.246.562.29.14"), 1.second) should be(true)
 
         verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
         verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))

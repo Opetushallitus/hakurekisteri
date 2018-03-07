@@ -90,19 +90,20 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     case q: GetKomoQuery => getKomo(q.oid) pipeTo sender
     case q: HakukohdeQuery => getHakukohde(q.oid) pipeTo sender
     case GetHautQuery => getHaut pipeTo sender
-    case oid: HakukohdeOid => getHakukohteenKoulutukset(oid) pipeTo sender
+    case oid: HakukohdeOid => getHakukohteenKoulutuksetViaCache(oid) pipeTo sender
   }
-  
+
   def searchKomo(koulutus: String): Future[Seq[Komo]] = {
     restClient.readObject[TarjontaResultResponse[Seq[Komo]]]("tarjonta-service.komo.search", koulutus)(200, maxRetries).map(_.result)
   }
 
   def getKomo(oid: String): Future[KomoResponse] = {
-    if (komoCache.contains(oid)) komoCache.get(oid)
-    else {
-      val f = restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries).map(res => KomoResponse(oid, res.result))
-      komoCache + (oid, f)
-      f
+    val loader: String => Future[Option[KomoResponse]] = o => restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries)
+      .map(res => KomoResponse(oid, res.result))
+      .map(Option(_))
+    komoCache.get(oid, loader).flatMap {
+      case Some(foundKomo) => Future.successful(foundKomo)
+      case None => Future.failed(new RuntimeException(s"Could not retrieve komo $oid"))
     }
   }
 
@@ -133,29 +134,30 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getHakukohde(oid: String): Future[Option[Hakukohde]] = {
-    if (hakukohdeCache.contains(oid)) {
-      hakukohdeCache.get(oid)
-    } else {
-      val hakukohde = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", oid)(200, maxRetries).map(r => r.result)
-      hakukohdeCache + (oid, hakukohde)
-      hakukohde
+    val loader: String => Future[Option[Option[Hakukohde]]] = { hakukohdeOid =>
+      restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hakukohdeOid)(200, maxRetries).map(r => r.result).map(Option(_))
     }
+
+    hakukohdeCache.get(oid, loader).map(_.get)
   }
 
   def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus)).map(_.foldLeft(Seq[Hakukohteenkoulutus]())(_ ++ _))
 
-  def getHakukohteenKoulutukset(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
-    if (koulutusCache.contains(hk.oid)) koulutusCache.get(hk.oid)
-    else {
-      val fh: Future[Option[Hakukohde]] = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hk.oid)(200, maxRetries).map(r => r.result)
-      val hks: Future[HakukohteenKoulutukset] = fh.flatMap {
-        case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
-        case Some(h) => for (
-          hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- getHakukohteenkoulutukset(h.hakukohdeKoulutusOids)
-        ) yield HakukohteenKoulutukset(h.oid, h.ulkoinenTunniste, hakukohteenkoulutukset)
-      }
-      koulutusCache + (hk.oid, hks)
-      hks
+  def getHakukohteenKoulutuksetViaCache(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
+    val loader: String => Future[Option[HakukohteenKoulutukset]] = hakukohdeOid => {
+      restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hk.oid)(200, maxRetries)
+        .map(r => r.result)
+        .flatMap {
+          case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
+          case Some(h) => for (
+            hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- getHakukohteenkoulutukset(h.hakukohdeKoulutusOids)
+          ) yield Some(HakukohteenKoulutukset(h.oid, h.ulkoinenTunniste, hakukohteenkoulutukset))
+        }
+    }
+
+    koulutusCache.get(hk.oid, loader).flatMap {
+      case Some(foundHakukohteenKoulutukset) => Future.successful(foundHakukohteenKoulutukset)
+      case None => Future.failed(new RuntimeException(s"Could not retrieve koulutukset for Hakukohde ${hk.oid}"))
     }
   }
 }

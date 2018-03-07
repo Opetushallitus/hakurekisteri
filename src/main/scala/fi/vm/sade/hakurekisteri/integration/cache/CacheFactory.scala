@@ -4,14 +4,14 @@ import java.io._
 
 import akka.actor.ActorSystem
 import akka.util.ByteString
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import redis.{ByteStringFormatter, RedisClient}
 
-import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success, Try}
-
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 trait CacheFactory {
 
@@ -46,38 +46,80 @@ object CacheFactory {
       RedisClient(host = host, port = port)
     }
 
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new RedisCache[K, T](r, expirationDurationMillis, cacheKeyPrefix)
+    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new RedisCache[K, T](
+      r,
+      expirationDurationMillis,
+      cacheKeyPrefix,
+      config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
+      config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt,
+      config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt)
 
     class RedisCache[K, T](val r: RedisClient,
                            val expirationDurationMillis: Long,
-                           val cacheKeyPrefix: String) extends MonadCache[Future, K, T] {
+                           val cacheKeyPrefix: String,
+                           limitOfWaitingClientsToLog: Int,
+                           cacheHandlingThreadPoolSize: Int,
+                           slowRedisRequestThresholdMillis: Int
+                          ) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
-      import scala.concurrent.ExecutionContext.Implicits.global
+      implicit val executor: ExecutionContext = ExecutorUtil.createExecutor(cacheHandlingThreadPoolSize, s"cache-access-$cacheKeyPrefix")
 
       implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
 
-      def +(key: K, f: Future[T]): Unit = f onSuccess {
-        case t => {
-          val prefixKey = k(key)
-          logger.debug(s"Adding value with key ${prefixKey} to Redis cache")
-          r.set[T](prefixKey, t, pxMilliseconds = Some(expirationDurationMillis))
-        }
+      private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog)
+
+      def +(key: K, value: T): Future[_] =  {
+        val prefixKey = k(key)
+        logger.debug(s"Adding value with key $prefixKey to Redis cache")
+        r.set[T](prefixKey, value, pxMilliseconds = Some(expirationDurationMillis))
       }
 
       def -(key: K): Unit = r.del(k(key))
 
-      def contains(key: K): Boolean = Await.result(r.exists(k(key)), 60.seconds)
+      def contains(key: K): Future[Boolean] = {
+        val prefixKey = k(key)
+        val startTime = System.currentTimeMillis
+        r.exists(prefixKey).collect {
+          case result =>
+            val duration = System.currentTimeMillis - startTime
+            if (duration > slowRedisRequestThresholdMillis) {
+              logger.info(s"Checking contains $prefixKey from Redis took $duration ms")
+            }
+            result
+        }
+      }
 
       def get(key: K): Future[T] = {
         val prefixKey = k(key)
-        logger.debug(s"Getting value with key ${prefixKey} from Redis cache")
-        r.get[T](prefixKey).collect { case Some(x) => x }
+        val startTime = System.currentTimeMillis
+        logger.trace(s"Getting value with key ${prefixKey} from Redis cache")
+        r.get[T](prefixKey).flatMap {
+          case Some(x) =>
+            val duration = System.currentTimeMillis - startTime
+            if (duration > slowRedisRequestThresholdMillis) {
+              logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")
+            }
+            Future.successful(x)
+          case None =>
+            Future.failed(new NotFoundFromSuoritusrekisteriRedisException(prefixKey))
+        }
       }
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
+      override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
+        r.exists(k(key)).flatMap { keyIsIncache =>
+          if (keyIsIncache) {
+            toOption(get(key))
+          } else {
+            updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
+          }
+        }
+      }
+
+      override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
@@ -117,4 +159,7 @@ object CacheFactory {
     }
 
   }
+
+  class NotFoundFromSuoritusrekisteriRedisException(prefixKey: String)
+    extends RuntimeException(s"Could not find value with key $prefixKey from Redis cache")
 }

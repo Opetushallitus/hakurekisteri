@@ -5,8 +5,8 @@ import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.compat.Platform
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class FutureCacheSpec extends FlatSpec with Matchers {
 
@@ -18,20 +18,21 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   behavior of "FutureCache"
 
   val cacheKey = "foo"
-  val cacheEntry = Future.successful("bar")
+  private val cacheEntryValue = "bar"
+  val cacheEntry = Future.successful(cacheEntryValue)
 
   it should "add an entry to cache" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
-    cache.getCache(cacheKey).f should be (cacheEntry)
+    Await.result(cache.getCache(cacheKey).f, 1.second) should be (cacheEntryValue)
   }
 
   it should "set inserted time for the cached entry" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     cache.getCache(cacheKey).inserted should be <= Platform.currentTime
   }
@@ -39,7 +40,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "set accessed time for the cached entry during add" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     cache.getCache(cacheKey).accessed should be <= Platform.currentTime
   }
@@ -47,7 +48,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "update accessed time during get" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     val accessed = cache.getCache(cacheKey).accessed
 
@@ -61,13 +62,13 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "update inserted time for an existing entry during add" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     val inserted = cache.getCache(cacheKey).inserted
 
     Thread.sleep(100)
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     cache.getCache(cacheKey).inserted should be > inserted
   }
@@ -75,13 +76,13 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "retain accessed time for an existing entry during add" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     val accessed = cache.getCache(cacheKey).accessed
 
     Thread.sleep(100)
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     cache.getCache(cacheKey).accessed should be (accessed)
   }
@@ -89,7 +90,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "remove an entry from cache" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
     cache - cacheKey
 
@@ -99,8 +100,8 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "return the size of the cache" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
-    cache + ("foo2", Future.successful("bar2"))
+    cache + (cacheKey, cacheEntryValue)
+    cache + ("foo2", cacheEntryValue + "2")
 
     cache.size should be (2)
   }
@@ -108,17 +109,17 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "tell if cache contains a key" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
-    cache.contains(cacheKey) should be (true)
+    Await.result(cache.contains(cacheKey), 1.second) should be(true)
   }
 
   it should "tell if an entry is no longer live" in {
     val cache = newCache(0)
 
-    cache + (cacheKey, cacheEntry)
+    cache + (cacheKey, cacheEntryValue)
 
-    cache.contains(cacheKey) should be (false)
+    Await.result(cache.contains(cacheKey), 1.second) should be(false)
   }
 
 }
