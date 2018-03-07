@@ -95,13 +95,15 @@ object CacheFactory {
         val prefixKey = k(key)
         val startTime = System.currentTimeMillis
         logger.trace(s"Getting value with key ${prefixKey} from Redis cache")
-        r.get[T](prefixKey).collect {
+        r.get[T](prefixKey).flatMap {
           case Some(x) =>
             val duration = System.currentTimeMillis - startTime
             if (duration > slowRedisRequestThresholdMillis) {
               logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")
             }
-            x
+            Future.successful(x)
+          case None =>
+            Future.failed(new NotFoundFromSuoritusrekisteriRedisException(prefixKey))
         }
       }
 
@@ -157,4 +159,7 @@ object CacheFactory {
     }
 
   }
+
+  class NotFoundFromSuoritusrekisteriRedisException(prefixKey: String)
+    extends RuntimeException(s"Could not find value with key $prefixKey from Redis cache")
 }
