@@ -1083,21 +1083,6 @@
             <version>2.5</version>
         </dependency>
         <dependency>
-            <groupId>fr.janalyse</groupId>
-            <artifactId>janalyse-ssh_2.11</artifactId>
-            <version>0.9.14</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.typesafe.scala-logging</groupId>
-                    <artifactId>scala-logging-slf4j_2.11</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-reflect</artifactId>
             <version>2.11.7</version>
@@ -1635,12 +1620,6 @@
             <id>Sonatypesnapshots</id>
             <name>Sonatype snapshots</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <layout>default</layout>
-        </repository>
-        <repository>
-            <id>JAnalyseRepository</id>
-            <name>JAnalyse Repository</name>
-            <url>http://www.janalyse.fr/repository/</url>
             <layout>default</layout>
         </repository>
         <repository>
