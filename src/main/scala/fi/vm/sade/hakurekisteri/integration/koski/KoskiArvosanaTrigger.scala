@@ -165,16 +165,18 @@ object KoskiArvosanaTrigger {
                 .filter(_._5.getOrElse("").startsWith("9"))
                 .map(_._2).flatten
             }
-            var useLuokka = ""
+            var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
+            var useLuokkaAste = luokkaAste
             if (henkilonSuoritukset.exists(_._5.getOrElse("").startsWith("9")) && useSuoritus.komo.equals(Oids.perusopetusKomoOid)) {
               useLuokka = henkilonSuoritukset.filter(_._5.get.startsWith("9")).head._3
+              useLuokkaAste = Some("9")
             } else {
               useLuokka = luokka
             }
             val peruskoulututkintoJaYsisuoritus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && henkilonSuoritukset.exists(_._5.getOrElse("").startsWith("9"))
 
             if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-              val opiskelija = createOpiskelija(henkiloOid, Seq(SuoritusLuokka(useSuoritus, useLuokka, lasnaDate, luokkaAste))) //LUOKKATIETO
+              val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, lasnaDate, useLuokkaAste)) //LUOKKATIETO
               if (!suoritusExists(useSuoritus, suoritukset)) {
                 for (
                   suoritus: Suoritus with Identified[UUID] <- saveSuoritus(useSuoritus)
@@ -213,11 +215,11 @@ object KoskiArvosanaTrigger {
   def maxDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s1 else s2
   def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
 
-  def createOpiskelija(henkiloOid: String, suoritukset: Seq[SuoritusLuokka]): Opiskelija = {
-    var def_alku = suoritukset.map(_.lasnaDate).reduceLeft(minDate).toDateTimeAtStartOfDay
-    var loppu = suoritukset.map(_.suoritus.valmistuminen).reduceLeft(maxDate).toDateTimeAtStartOfDay
+  def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
+    var def_alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
+    var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
 
-    var (luokkataso, oppilaitosOid, luokka, alku) = detectOppilaitos(suoritukset, def_alku)
+    var (luokkataso, oppilaitosOid, luokka, alku) = detectOppilaitos(suoritusLuokka, def_alku)
 
     if (!loppu.isAfter(alku)) {
       loppu = parseNextFourthOfJune().toDateTimeAtStartOfDay
@@ -237,36 +239,35 @@ object KoskiArvosanaTrigger {
     )
   }
 
-  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritukset: Seq[SuoritusLuokka], komoOid: String, alku: DateTime): (String, String, String, DateTime) = {
-    val sluokka = luokkaSuoritukset.find(_.suoritus.komo == komoOid).get
+  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritus: SuoritusLuokka, komoOid: String, alku: DateTime): (String, String, String, DateTime) = {
     komoOid match {
       // hae luokka 9C tai vast
       case Oids.perusopetusKomoOid => {
-        (luokkataso, sluokka.suoritus.myontaja, sluokka.luokka, alku)
+        (luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka, alku)
       }
       case Oids.lisaopetusKomoOid => {
-        var luokka = luokkaSuoritukset.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka
-        if(luokkaSuoritukset.filter(_.suoritus.komo.equals(Oids.lisaopetusKomoOid)).head.luokka.isEmpty){
+        var luokka = luokkaSuoritus.luokka
+        if(luokkaSuoritus.luokka.isEmpty){
           luokka = "10"
         }
-        (luokkataso, sluokka.suoritus.myontaja, luokka, alku)
+        (luokkataso, luokkaSuoritus.suoritus.myontaja, luokka, alku)
       }
-      case _ => (luokkataso, sluokka.suoritus.myontaja, sluokka.luokka, alku)
+      case _ => (luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka, alku)
     }
   }
 
   //noinspection ScalaStyle
-  def detectOppilaitos(suoritukset: Seq[SuoritusLuokka], alku: DateTime): (String, String, String, DateTime) = suoritukset match {
-    case s if (s.exists(_.suoritus.komo == Oids.lukioKomoOid)) => getOppilaitosAndLuokka("L", s, Oids.lukioKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.lukioonvalmistavaKomoOid)) => getOppilaitosAndLuokka("ML", s, Oids.lukioonvalmistavaKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.ammatillinenKomoOid)) => getOppilaitosAndLuokka("AK", s, Oids.ammatillinenKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.ammatilliseenvalmistavaKomoOid)) => getOppilaitosAndLuokka("M", s, Oids.ammatilliseenvalmistavaKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.ammattistarttiKomoOid)) => getOppilaitosAndLuokka("A", s, Oids.ammattistarttiKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.valmentavaKomoOid)) => getOppilaitosAndLuokka("V", s, Oids.valmentavaKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.valmaKomoOid)) => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.telmaKomoOid)) => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.lisaopetusKomoOid)) => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid, alku)
-    case s if (s.exists(_.suoritus.komo == Oids.perusopetusKomoOid) && s.exists(_.luokkataso.getOrElse("").equals("9"))) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid, alku)
+  def detectOppilaitos(suoritus: SuoritusLuokka, alku: DateTime): (String, String, String, DateTime) = suoritus match {
+    case s if (s.suoritus.komo == Oids.lukioKomoOid) => getOppilaitosAndLuokka("L", s, Oids.lukioKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.lukioonvalmistavaKomoOid) => getOppilaitosAndLuokka("ML", s, Oids.lukioonvalmistavaKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.ammatillinenKomoOid) => getOppilaitosAndLuokka("AK", s, Oids.ammatillinenKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.ammatilliseenvalmistavaKomoOid) => getOppilaitosAndLuokka("M", s, Oids.ammatilliseenvalmistavaKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.ammattistarttiKomoOid) => getOppilaitosAndLuokka("A", s, Oids.ammattistarttiKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.valmentavaKomoOid) => getOppilaitosAndLuokka("V", s, Oids.valmentavaKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.valmaKomoOid) => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.telmaKomoOid) => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.lisaopetusKomoOid) => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid, alku)
+    case s if (s.suoritus.komo == Oids.perusopetusKomoOid && s.luokkataso.getOrElse("").equals("9")) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid, alku)
     case _ => ("", "", "", alku)
   }
 
@@ -459,6 +460,7 @@ object KoskiArvosanaTrigger {
           case Oids.valmaKomoOid => suoritus.ryhmä.getOrElse("VALMA")
           case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("TELMA")
           case Oids.lukioonvalmistavaKomoOid => suoritus.ryhmä.getOrElse("LUVA")
+          case Oids.ammatillinenKomoOid => suoritus.ryhmä.getOrElse("AMM")
           case _ => suoritus.luokka.getOrElse("")
         }
         if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {

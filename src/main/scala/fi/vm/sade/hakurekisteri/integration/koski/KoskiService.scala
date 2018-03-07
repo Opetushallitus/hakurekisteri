@@ -47,14 +47,14 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  //Käydään läpi data muuttunut data (abt.)kuukausittain, ja jaetaan jokainen kuukausi pienempiin rajapintakutsuihin sivuittain.
-  def traverseAllOfKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(95)),
-                                     timeToWaitUntilNextBatch: FiniteDuration = 1.minute,
-                                     searchWindowSize: Long = TimeUnit.DAYS.toMillis(30),
-                                     repairTargetTime: Date = new Date(Platform.currentTime),
-                                     pageNbr: Int = 0,
-                                     pageSizePerFetch: Int = 5000,
-                                     fixValeysit: Boolean = false)(implicit scheduler: Scheduler): Unit = {
+  //Käydään läpi Koskessa muuttuneet opiskeluoikeudet aikavälillä, ja jaetaan jokainen aikaviipale pienempiin rajapintakutsuihin sivuittain.
+  def traverseKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(95)),
+                                timeToWaitUntilNextBatch: FiniteDuration = 1.minute,
+                                searchWindowSize: Long = TimeUnit.DAYS.toMillis(30),
+                                repairTargetTime: Date = new Date(Platform.currentTime),
+                                pageNbr: Int = 0,
+                                pageSizePerFetch: Int = 2500,
+                                fixValeysit: Boolean = false)(implicit scheduler: Scheduler): Unit = {
     if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
         var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
@@ -75,14 +75,14 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
             }
             if(henkilot.isEmpty) {
               logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
-              traverseAllOfKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
+              traverseKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, 0, pageSizePerFetch, fixValeysit) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
             } else {
               logger.info(s"HistoryCrawler - Haetaan saman aikaikkunan seuraava sivu!")
-              traverseAllOfKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch, fixValeysit) //Seuraava sivu samaa aikaikkunaa
+              traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch, fixValeysit) //Seuraava sivu samaa aikaikkunaa
             }
           case Failure(t) =>
             logger.error(t, "HistoryCrawler - fetch data failed, retrying")
-            traverseAllOfKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Sama sivu samasta aikaikkunasta
+            traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Sama sivu samasta aikaikkunasta
         }
       })} else {
       logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
@@ -120,7 +120,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
 
   var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
   //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
-  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(1)),
+  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(10)),
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
