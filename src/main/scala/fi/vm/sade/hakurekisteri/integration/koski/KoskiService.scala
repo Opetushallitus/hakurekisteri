@@ -68,21 +68,21 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
                                               pageNumber = pageNbr)
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
-            logger.info(s"HistoryCrawler - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + " : "  + henkilot.size + " kpl. Sivu: " + pageNbr)
+            logger.info(s"HistoryCrawler - Aikaikkuna: " + searchWindowStartTime + " - " + searchWindowEndTime + ", Sivu: " + pageNbr +" , Henkilöitä: " + henkilot.size + " kpl.")
             Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = fixValeysit)) match {
               case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
               case _ =>
             }
             if(henkilot.isEmpty) {
               logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
-              traverseKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, 0, pageSizePerFetch, fixValeysit) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
+              traverseKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch = 5.seconds, searchWindowSize, repairTargetTime, pageNbr = 0, pageSizePerFetch, fixValeysit) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
             } else {
               logger.info(s"HistoryCrawler - Haetaan saman aikaikkunan seuraava sivu!")
-              traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch, fixValeysit) //Seuraava sivu samaa aikaikkunaa
+              traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch = 1.minute, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch, fixValeysit) //Seuraava sivu samaa aikaikkunaa
             }
           case Failure(t) =>
             logger.error(t, "HistoryCrawler - fetch data failed, retrying")
-            traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Sama sivu samasta aikaikkunasta
+            traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch = 1.minute, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Sama sivu samasta aikaikkunasta
         }
       })} else {
       logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
