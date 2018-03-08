@@ -89,35 +89,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     }
   }
 
-  //Käy läpi vanhaa dataa Koskesta ja päivittää sitä sureen.
-  def historyRepairCrawler(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(15)),
-                           timeToWaitUntilNextBatch: FiniteDuration = 10.seconds,
-                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(60),
-                           repairTargetTime: Date = new Date(Platform.currentTime),
-                           handleFalseYsit: Boolean = false)(implicit scheduler: Scheduler): Unit = {
-    if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
-    scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
-      val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
-      fetchChanged(
-        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowStartTime),
-          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime))
-      ).flatMap(fetchPersonAliases).onComplete {
-        case Success((henkilot, personOidsWithAliases)) =>
-          logger.info(s"HistoryCrawler - muuttuneita opiskeluoikeuksia aikavälillä " + searchWindowStartTime + " - " + searchWindowEndTime + " : "  + henkilot.size + " kpl")
-          Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = handleFalseYsit)) match {
-            case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
-            case _ =>
-          }
-          historyRepairCrawler(searchWindowEndTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime)
-        case Failure(t) =>
-          logger.error(t, "HistoryCrawler - fetch data failed, retrying")
-          historyRepairCrawler(searchWindowStartTime, timeToWaitUntilNextBatch, searchWindowSize, repairTargetTime)
-      }
-    })} else {
-      logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
-    }
-  }
-
   var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
   //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
   def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(10)),
