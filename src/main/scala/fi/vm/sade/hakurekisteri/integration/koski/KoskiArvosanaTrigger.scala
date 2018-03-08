@@ -120,10 +120,10 @@ object KoskiArvosanaTrigger {
     //Ongelma: myös suoritusten oppilaitokset saattavat olla väärin
     def detectAndFixFalseYsiness(suorituksetSuressa: Seq[Suoritus], koskiSuoritus: VirallinenSuoritus, kaikkiKoskiSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])]): Unit = {
       if (!kaikkiKoskiSuoritukset.exists(_._5.getOrElse("").startsWith("9"))) {
-        logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" on peruskoulusuoritus, joka ei sisällä 9. luokan suoritusta. Päätellään tästä, että kyseessä on mahdollinen valeysi.")
+        //logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" on peruskoulusuoritus, joka ei sisällä 9. luokan suoritusta. Päätellään tästä, että kyseessä on mahdollinen valeysi.")
         fetchExistingLuokkatiedot(koskiSuoritus.henkilo).onComplete(luokkatiedot => {
-          logger.info(s"Detect valeysit : Luokkatieto: " + luokkatiedot)
-          logger.info(s"Detect valeysit : Suoritukset: " + suorituksetSuressa.toString())
+          //logger.info(s"Detect valeysit : Luokkatieto: " + luokkatiedot)
+          //logger.info(s"Detect valeysit : Suoritukset: " + suorituksetSuressa.toString())
           if (suorituksetSuressa.exists(_.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid))) {
             //logger.info(s"Detect valeysit : Sureen on aiemmin tallennettu perusopetussuoritus! ")
             val (poistettavaSuoritus, poistettavaLuokkatieto) = findMatchingLuokkatietoAndSuoritus(suorituksetSuressa, luokkatiedot.get)
