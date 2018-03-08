@@ -150,7 +150,7 @@ object KoskiArvosanaTrigger {
         henkilonSuoritukset.foreach {
           case (suor: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaAste: Option[String]) =>
 
-            if(removeFalseYsit && suor.komo.equals(Oids.perusopetusKomoOid)) {
+            if(removeFalseYsit && suor.komo.equals(Oids.perusopetusKomoOid) && !luokkaAste.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE)) {
               detectAndFixFalseYsiness(suoritukset, suor, henkilonSuoritukset)
             }
             var useArvosanat = arvosanat
