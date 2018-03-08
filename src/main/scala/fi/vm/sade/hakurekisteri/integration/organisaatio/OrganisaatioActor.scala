@@ -15,7 +15,7 @@ import org.json4s.jackson.JsonMethods._
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
 
 
@@ -40,19 +40,26 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   private val childOidCache = cacheFactory.getInstance[String, ChildOids](timeToLive.toMillis, getClass, "child-oids")
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
 
-  private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
-    s.foreach(org => {
-      cache.contains(org.oid).onComplete {
-        case Success(false) => cache + (org.oid, org)
-        case Success(true) =>
-        case scala.util.Failure(t) => log.error(t, s"Exception when checking contains for ${org.oid}")
-      }
+  private def saveOrganisaatiot(s: Seq[Organisaatio]): Future[_] = {
+    s.foreach { org =>
       if (org.oppilaitosKoodi.isDefined)
         oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
-
-      if (org.children.nonEmpty)
-        saveOrganisaatiot(org.children)
-    })
+    }
+    val recursiveSaveFuture = Future.sequence(s.map { org: Organisaatio =>
+      cache.contains(org.oid).flatMap {
+        case false => (cache + (org.oid, org)).map(_ => org)
+        case true => Future.successful(org)
+      }
+    }).flatMap { orgs =>
+      Future.sequence(orgs.map { org =>
+        if (org.children.nonEmpty) {
+          saveOrganisaatiot(org.children)
+        } else {
+          Future.successful(org)
+        }
+      })
+    }
+    recursiveSaveFuture
   }
   private def saveChildOids(parentOid: String, childOids: ChildOids): Unit = {
     childOidCache + (parentOid, childOids)
@@ -137,10 +144,15 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case RefreshOrganisaatioCache => fetchAll(sender())
 
     case CacheOrganisaatiot(o) =>
-      saveOrganisaatiot(o)
-      log.info(s"${o.size} saved to cache, oppilaitoskoodiIndex: ${oppilaitoskoodiIndex.size}")
-      if (sender() != ActorRef.noSender)
-        sender ! true
+      val savingFuture = saveOrganisaatiot(o).map { _ =>
+        log.info(s"${o.size} saved to cache, oppilaitoskoodiIndex: ${oppilaitoskoodiIndex.size}")
+        true
+      }
+      if (sender != ActorRef.noSender) {
+        savingFuture.pipeTo(sender)
+      } else {
+        Await.result(savingFuture, 1.minute)
+      }
 
     case CacheChildOids(parentOid, childOids) =>
       saveChildOids(parentOid, childOids)
