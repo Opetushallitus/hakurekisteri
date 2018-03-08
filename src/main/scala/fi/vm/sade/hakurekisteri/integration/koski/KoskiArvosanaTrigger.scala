@@ -166,7 +166,7 @@ object KoskiArvosanaTrigger {
             var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
             var useLuokkaAste = luokkaAste
             if (henkilonSuoritukset.exists(_._5.getOrElse("").startsWith("9")) && useSuoritus.komo.equals(Oids.perusopetusKomoOid)) {
-              useLuokka = henkilonSuoritukset.filter(_._5.get.startsWith("9")).head._3
+              useLuokka = henkilonSuoritukset.find(_._5.getOrElse("").startsWith("9")).head._3
               useLuokkaAste = Some("9")
             } else {
               useLuokka = luokka
@@ -304,18 +304,18 @@ object KoskiArvosanaTrigger {
     d.getYear
   }
 
-  def matchOpetusOid(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String): String = {
+  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus): (String, Option[String]) = {
     koulutusmoduuliTunnisteKoodiarvo match {
-      case "perusopetuksenoppimaara" => Oids.perusopetusKomoOid
-      case "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
-      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => DUMMYOID //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
-      case "perusopetuksenvuosiluokka" => "luokka"
-      case "valma" => Oids.valmaKomoOid
-      case "telma" => Oids.telmaKomoOid
-      case "luva" => Oids.lukioonvalmistavaKomoOid
-      case "perusopetuksenlisaopetus" => Oids.lisaopetusKomoOid
-      case "ammatillinentutkinto" if !viimeisinTila.equals("KESKEYTYNYT") =>  Oids.ammatillinenKomoOid //KESKEYTYNEITÄ AMMATILLISIA SUORITUKSIA EI HALUTA SUREEN
-      case _ => DUMMYOID
+      case "perusopetuksenoppimaara" => (Oids.perusopetusKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
+      case "aikuistenperusopetuksenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
+      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => (DUMMYOID, None) //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
+      case "perusopetuksenvuosiluokka" => ("luokka", suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
+      case "valma" => (Oids.valmaKomoOid, None)
+      case "telma" => (Oids.telmaKomoOid, None)
+      case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
+      case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
+      case "ammatillinentutkinto" if !viimeisinTila.equals("KESKEYTYNYT") =>  (Oids.ammatillinenKomoOid, None) //KESKEYTYNEITÄ AMMATILLISIA SUORITUKSIA EI HALUTA SUREEN
+      case _ => (DUMMYOID, None)
     }
   }
 
@@ -434,17 +434,17 @@ object KoskiArvosanaTrigger {
           case (_,_,_) => valmistumisPaiva
         }
 
-        var luokkataso: Option[String] = None
-        if (suoritus.koulutusmoduuli.tunniste.isDefined) {
-          luokkataso = Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo) //Luokkasuorituksen koodiarvo, 9 tarkoittaa 9.luokkaa jne. Olennainen vain peruskoulusuorituksille.
-        } else if (suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo.equals("aikuistenperusopetuksenoppimaara")) {
+        /*var luokkataso: Option[String] = None
+        if (suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo.equals("aikuistenperusopetuksenoppimaara")) {
           luokkataso = Some(AIKUISTENPERUS_LUOKKAASTE)
-        }
+        } else if (suoritus.koulutusmoduuli.tunniste.isDefined) {
+          luokkataso = Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo) //Luokkasuorituksen koodiarvo, 9 tarkoittaa 9.luokkaa jne. Olennainen vain peruskoulusuorituksille.
+        }*/
 
-        var komoOid = suoritus.tyyppi match {
+        var (komoOid, luokkataso) = suoritus.tyyppi match {
           case Some(k) =>
-            matchOpetusOid(k.koodiarvo, lastTila)
-          case _ => DUMMYOID
+            matchOpetusOidAndLuokkataso(k.koodiarvo, lastTila, suoritus)
+          case _ => (DUMMYOID, None)
         }
 
         var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
