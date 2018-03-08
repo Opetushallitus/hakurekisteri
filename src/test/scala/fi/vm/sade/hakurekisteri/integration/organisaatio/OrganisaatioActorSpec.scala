@@ -70,19 +70,20 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
   }
 
   test("OrganisaatioActor should return organisaatio from cache using organisaatio oid") {
-    withSystem(
-      implicit system => {
-        implicit val ec = system.dispatcher
-        val (endPoint, organisaatioActor) = initOrganisaatioActor()
+    1.to(10).foreach { n =>
+      withSystem(
+        implicit system => {
+          implicit val ec = system.dispatcher
+          val (endPoint, organisaatioActor) = initOrganisaatioActor()
+          waitFuture((organisaatioActor ? "1.2.246.562.10.16546622305").mapTo[Option[Organisaatio]])(o => {
+            o.get.oppilaitosKoodi.get should be ("05127")
+          })
 
-        waitFuture((organisaatioActor ? "1.2.246.562.10.16546622305").mapTo[Option[Organisaatio]])(o => {
-          o.get.oppilaitosKoodi.get should be ("05127")
-        })
-
-        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
-        verify(endPoint, times(0)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305"))
-      }
-    )
+          verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
+          verify(endPoint, times(0)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305"))
+        }
+      )
+    }
   }
 
   test("OrganisaatioActor should return organisaatio from cache using oppilaitoskoodi") {
