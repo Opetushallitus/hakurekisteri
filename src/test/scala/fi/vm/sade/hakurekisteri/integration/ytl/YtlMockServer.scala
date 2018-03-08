@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.io.IOException
 import java.net.SocketException
 import java.util.UUID
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
