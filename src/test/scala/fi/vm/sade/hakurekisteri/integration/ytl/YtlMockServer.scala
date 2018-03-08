@@ -1,16 +1,18 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
+import java.io.IOException
+import java.net.SocketException
 import java.util.UUID
-import javax.servlet.http.{HttpServletResponse, HttpServletRequest, HttpServlet}
+import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 
 import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.apache.commons.io.IOUtils
 import org.eclipse.jetty.security.authentication.BasicAuthenticator
-import org.eclipse.jetty.security.{ConstraintSecurityHandler, ConstraintMapping, HashLoginService}
+import org.eclipse.jetty.security.{ConstraintMapping, ConstraintSecurityHandler, HashLoginService}
 import org.eclipse.jetty.server.{RequestLog, Server}
-import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
+import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.security.{Constraint, Credential}
 import org.scalatest.{Outcome, Suite, SuiteMixin}
 
@@ -41,13 +43,22 @@ trait YtlMockFixture extends SuiteMixin {
     statementBody()
     outcome
   }
+
+  def makePostFail(times: Int): Unit = {
+    ytlMockServer.makePostFail(times)
+  }
 }
 
 
 class YtlMockServlet extends HttpServlet {
   val fakeProsesses: mutable.Map[String,Integer] = mutable.Map()
+  private var postFailureCounter: Int = 0
 
   override protected def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+    if (postFailureCounter > 0) {
+      postFailureCounter = postFailureCounter - 1
+      throw new SocketException(s"Itse aiheutettu virhe, vielä $postFailureCounter virheellistä vastausta tulossa")
+    }
     val fetchBulk = "/api/oph-transfer/bulk"
     val uri = req.getRequestURI
     consumeBodySoThatClientCanWriteEverythingItWants(req)
@@ -95,6 +106,10 @@ class YtlMockServlet extends HttpServlet {
   private def consumeBodySoThatClientCanWriteEverythingItWants(req: HttpServletRequest) = {
     IOUtils.toString(req.getInputStream, "UTF-8")
   }
+
+  def makePostFail(times: Int): Unit = {
+    postFailureCounter = times
+  }
 }
 
 
@@ -108,6 +123,8 @@ class YtlMockServer {
 
   val server = new Server(port);
 
+  private var servlet: YtlMockServlet = _
+
   def start(): Unit = {
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setSecurityHandler(basicAuth(username, password, "Private!"));
@@ -119,7 +136,8 @@ class YtlMockServer {
     }
     server.setRequestLog(v)
     server.setHandler(context);
-    context.addServlet(new ServletHolder(new YtlMockServlet()),"/*");
+    servlet = new YtlMockServlet()
+    context.addServlet(new ServletHolder(servlet),"/*");
     server.start();
     while (!server.isRunning) {
       println("Waiting")
@@ -152,4 +170,7 @@ class YtlMockServer {
     return csh;
   }
 
+  def makePostFail(times: Int): Unit = {
+    servlet.makePostFail(times)
+  }
 }

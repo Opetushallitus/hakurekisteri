@@ -46,7 +46,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     a.getHttpBuilder.disableAutomaticRetries()
     a.getHttpBuilder.addInterceptorFirst(new PreemptiveAuthInterceptor(credentials))
     val client = a.buildOphClient("ytlHttpClient", config)
-    client
+    client.retryOnError(3)
   }
 
   val client = buildClient(builder)

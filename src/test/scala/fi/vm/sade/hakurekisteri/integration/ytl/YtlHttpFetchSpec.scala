@@ -70,6 +70,14 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     println("Memory increased:" + (usedMemoryAfter - usedMemoryBefore))
   }
 
+  test("Single failure is retried") {
+    makePostFail(1)
+    val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = ytlHttpFetch.fetch("1", List("050996-9574"))
+    val student = students.next().right.map(_._2.next()).right.get
+    student.lastname should equal ("Testinen")
+    student.firstnames should equal ("Jussi Johannes")
+  }
+
   def createVeryLargeZip(groupUuid: String, uuid: String): Unit = {
     val output = fileSystem.asInstanceOf[YtlFileFileSystem].getOutputStream(groupUuid, uuid)
     val zout = new ZipOutputStream(output)
