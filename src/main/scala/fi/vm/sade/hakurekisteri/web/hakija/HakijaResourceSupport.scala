@@ -29,14 +29,14 @@ trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaV
 
   def getFormatFromTypeParam() = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
 
-  def prepareAsyncResult(query: Any, process: Future[Any]) = {
+  def prepareAsyncResult(query: Any, process: Future[Any], requestTimeout: Duration = 120.seconds) = {
     val t0 = Platform.currentTime
     contentType = getContentType(getFormatFromTypeParam()) match {
       case Left(t) => t
       case Right(ex) => throw ex
     }
     new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+      override implicit def timeout: Duration = requestTimeout
       val is = process
       process.onFailure { case e: Throwable => logger.error(e, "Exception thrown from async processing") }
     }
