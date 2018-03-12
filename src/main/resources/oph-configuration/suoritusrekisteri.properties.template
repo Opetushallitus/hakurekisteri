@@ -93,6 +93,7 @@ suoritusrekisteri.http.client.connection.timeout.ms=10000
 suoritusrekisteri.http.client.max.retries=1
 suoritusrekisteri.http.client.request.timeout.ms=6000000
 suoritusrekisteri.http.client.slow.request.ms=1000
+suoritusrekisteri.kkhakijaresource.v2.max.minutes={{ suoritusrekisteri_kkhakijaresource_v2_max_minutes | default('5')}}
 suoritusrekisteri.refresh.time.hours.hakemus=2
 suoritusrekisteri.refresh.time.hours.haku=6
 suoritusrekisteri.refresh.time.hours.valintatulos=2
