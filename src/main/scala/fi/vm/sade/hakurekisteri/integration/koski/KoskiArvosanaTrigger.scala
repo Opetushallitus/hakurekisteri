@@ -105,41 +105,29 @@ object KoskiArvosanaTrigger {
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
     def findMatchingLuokkatietoAndSuoritus(sureSuoritukset: Seq[Suoritus], sureLuokkatiedot: Seq[Opiskelija]): (Option[Suoritus], Option[Opiskelija]) = {
-      //logger.info(s"Etsitään suoritus-luokkatieto-pari")
       val tieto = sureLuokkatiedot.find(lt => sureSuoritukset.exists(_.asInstanceOf[VirallinenSuoritus].myontaja.equals(lt.oppilaitosOid)))
       var suoritus = Option.empty[Suoritus]
       if (tieto.isDefined) {
         suoritus = sureSuoritukset.find(s => s.asInstanceOf[VirallinenSuoritus].myontaja.equals(tieto.get.oppilaitosOid))
-      } else {
-        suoritus = Option.empty
       }
       (suoritus, tieto)
     }
 
-    //Teoria: Suorituksen voi poistaa, jos samalla oppilaitoksella löytyy suresta luokkatieto, jossa lähteenä koski ja luokka tyhjä.
-    //Ongelma: myös suoritusten oppilaitokset saattavat olla väärin
     def detectAndFixFalseYsiness(suorituksetSuressa: Seq[Suoritus], koskiSuoritus: VirallinenSuoritus, kaikkiKoskiSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])]): Unit = {
       if (!kaikkiKoskiSuoritukset.exists(_._5.getOrElse("").startsWith("9"))) {
         //logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" on peruskoulusuoritus, joka ei sisällä 9. luokan suoritusta. Päätellään tästä, että kyseessä on mahdollinen valeysi.")
         fetchExistingLuokkatiedot(koskiSuoritus.henkilo).onComplete(luokkatiedot => {
-          //logger.info(s"Detect valeysit : Luokkatieto: " + luokkatiedot)
-          //logger.info(s"Detect valeysit : Suoritukset: " + suorituksetSuressa.toString())
           if (suorituksetSuressa.exists(_.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid))) {
             //logger.info(s"Detect valeysit : Sureen on aiemmin tallennettu perusopetussuoritus! ")
             val (poistettavaSuoritus, poistettavaLuokkatieto) = findMatchingLuokkatietoAndSuoritus(suorituksetSuressa, luokkatiedot.get)
             if (poistettavaLuokkatieto.isDefined && poistettavaSuoritus.isDefined && poistettavaLuokkatieto.get.source.equals("koski") && !poistettavaLuokkatieto.get.luokka.startsWith("9")) {
               logger.info(s"Detect valeysit : (HenkilöOid: " + koskiSuoritus.henkilo+ " ) Tässä kohtaa poistettaisiin suoritusresurssi id:llä " +
                 poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id + "sekä luokkatietoresurssi id:llä " + poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id)
-              //suoritusRekisteri ? DeleteResource(poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id, "koski-integraatio-fix")
-              //opiskelijaRekisteri ? DeleteResource(poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id, "koski-integraatio-fix")
-            } else {
-              //logger.info(s"Ehdot täyttyivät muuten, mutta sureen tallennettua sopivaa suoritus-luokkatieto-paria ei löytynyt.")
+              //suoritusRekisteri ? DeleteResource(poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_fix")
+              //opiskelijaRekisteri ? DeleteResource(poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_fix")
             }
           }
         })
-
-      } else {
-        //logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" kaikki kunnossa.")
       }
     }
 
@@ -314,7 +302,7 @@ object KoskiArvosanaTrigger {
       case "telma" => (Oids.telmaKomoOid, None)
       case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
       case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
-      case "ammatillinentutkinto" if !viimeisinTila.equals("KESKEYTYNYT") =>  (Oids.ammatillinenKomoOid, None) //KESKEYTYNEITÄ AMMATILLISIA SUORITUKSIA EI HALUTA SUREEN
+      case "ammatillinentutkinto" =>  (Oids.ammatillinenKomoOid, None)
       case _ => (DUMMYOID, None)
     }
   }
@@ -433,13 +421,6 @@ object KoskiArvosanaTrigger {
           case (None, Some(kt), _) => parseLocalDate(kt.alku)
           case (_,_,_) => valmistumisPaiva
         }
-
-        /*var luokkataso: Option[String] = None
-        if (suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo.equals("aikuistenperusopetuksenoppimaara")) {
-          luokkataso = Some(AIKUISTENPERUS_LUOKKAASTE)
-        } else if (suoritus.koulutusmoduuli.tunniste.isDefined) {
-          luokkataso = Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo) //Luokkasuorituksen koodiarvo, 9 tarkoittaa 9.luokkaa jne. Olennainen vain peruskoulusuorituksille.
-        }*/
 
         var (komoOid, luokkataso) = suoritus.tyyppi match {
           case Some(k) =>
