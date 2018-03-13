@@ -129,6 +129,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     Some(2015),
     false,
     None,
+    None,
     None
   )
 

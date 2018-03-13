@@ -40,7 +40,7 @@ class HakijaResource(hakijaActor: ActorRef)
     extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  override protected def applicationDescription: String = "Hakijatietojen rajapinta"
+  override protected def applicationDescription: String = "Hakijatietojen rajapinta V1"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   implicit val defaultTimeout: Timeout = 120.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
