@@ -203,9 +203,7 @@ class BaseIntegrations(rekisterit: Registers,
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
   koskiService.processModifiedKoski()
-  //koskiService.traverseKoskiDataInChunks(fixValeysit = true)
-  //val startFix: Long = 1519707600000L //2018-02-27 07:00 Suunniteltu korjaamaan Espoon kristillinen opisto
-  //val endFix: Long = 1519840800000L //2018-02-28 20:00
+  koskiService.traverseKoskiDataInChunks(fixValeysit = true)
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()
