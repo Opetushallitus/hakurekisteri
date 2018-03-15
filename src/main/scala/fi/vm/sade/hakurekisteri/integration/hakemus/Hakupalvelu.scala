@@ -440,7 +440,7 @@ object AkkaHakupalvelu {
           matkapuhelin = "",
           puhelin = "",
           sahkoposti = hakemus.email,
-          kotikunta = hakemus.kotikunta.getOrElse(""),
+          kotikunta = hakemus.kotikunta.getOrElse("999"),
           sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
           etunimet = hakemus.henkilo.etunimet.getOrElse(""),
           kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
