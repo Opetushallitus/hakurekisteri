@@ -139,7 +139,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           hakemus.lahiosoite,
           hakemus.postinumero,
           hakemus.postitoimipaikka,
-          hakemus.kotikunta,
+          hakemus.kotikunta.map(s => if (s.length == 3 && s.forall(Character.isDigit)) s else "999"), // HLE-377
           hakemus.asuinmaa,
           hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
           hakemus.kkPohjakoulutus)
