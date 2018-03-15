@@ -48,7 +48,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   }
 
   //Käydään läpi Koskessa muuttuneet opiskeluoikeudet aikavälillä, ja jaetaan jokainen aikaviipale pienempiin rajapintakutsuihin sivuittain.
-  def traverseKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(97)),
+  def traverseKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(100)),
                                 timeToWaitUntilNextBatch: FiniteDuration = 2.minutes,
                                 searchWindowSize: Long = TimeUnit.DAYS.toMillis(15),
                                 repairTargetTime: Date = new Date(Platform.currentTime),
@@ -91,7 +91,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
 
   var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
   //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
-  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(1)),
+  //TODO: myös tämä käyttämään sivutusta
+  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(30)),
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({

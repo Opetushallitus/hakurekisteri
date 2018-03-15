@@ -121,10 +121,10 @@ object KoskiArvosanaTrigger {
             //logger.info(s"Detect valeysit : Sureen on aiemmin tallennettu perusopetussuoritus! ")
             val (poistettavaSuoritus, poistettavaLuokkatieto) = findMatchingLuokkatietoAndSuoritus(suorituksetSuressa, luokkatiedot.get)
             if (poistettavaLuokkatieto.isDefined && poistettavaSuoritus.isDefined && poistettavaLuokkatieto.get.source.equals("koski") && !poistettavaLuokkatieto.get.luokka.startsWith("9")) {
-              logger.info(s"Detect valeysit : (HenkilöOid: " + koskiSuoritus.henkilo+ " ) Tässä kohtaa poistettaisiin suoritusresurssi id:llä " +
+              logger.info(s"Detect valeysit : (HenkilöOid: " + koskiSuoritus.henkilo+ " ) Poistetaan suoritusresurssi id:llä " +
                 poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id + "sekä luokkatietoresurssi id:llä " + poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id)
-              //suoritusRekisteri ? DeleteResource(poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_fix")
-              //opiskelijaRekisteri ? DeleteResource(poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_fix")
+              suoritusRekisteri ? DeleteResource(poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_valeysifix")
+              opiskelijaRekisteri ? DeleteResource(poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_valeysifix")
             }
           }
         })
