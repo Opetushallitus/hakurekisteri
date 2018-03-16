@@ -47,7 +47,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  //Käydään läpi Koskessa muuttuneet opiskeluoikeudet aikavälillä, ja jaetaan jokainen aikaviipale pienempiin rajapintakutsuihin sivuittain.
+  //Tällä voi käydä läpi määritellyn aikaikkunan verran dataa Koskesta, jos joskus tulee tarve käsitellä aiempaa koskidataa uudelleen. Ei tarkoitus olla oletuksena ajossa.
   def traverseKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(100)),
                                 timeToWaitUntilNextBatch: FiniteDuration = 2.minutes,
                                 searchWindowSize: Long = TimeUnit.DAYS.toMillis(15),
@@ -89,10 +89,12 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     }
   }
 
+  //Päivitetään minuutin välein minuutin aikaikkunallinen dataa. Aloitetaan käynnistettäessä kauempaa menneisyydestä, otetaan nykyhetki vähitellen kiinni.
+  //HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
+  //On tärkeää laahata hieman menneisyydessä, koska hyvin lähellä nykyhetkeä saattaa jäädä tietoa siirtymättä Sureen
+  //jos Kosken päässä data ei ole ehtinyt kantaan asti ennen kuin sen perään kysellään.
   var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
-  //Aloitetaan 5 minuuttia menneisyydestä, päivitetään minuutin välein minuutin aikaikkunallinen dataa. HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
-  //TODO: myös tämä käyttämään sivutusta
-  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(30)),
+  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(3)),
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
       scheduler.scheduleOnce(refreshFrequency)({
