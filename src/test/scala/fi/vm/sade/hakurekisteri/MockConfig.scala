@@ -22,5 +22,5 @@ class MockConfig extends Config {
 
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
-  override val kkHakijaResourceV2Timeout: Duration = 1.minute
+  override val valintaTulosTimeout: FiniteDuration = 1.minute
 }

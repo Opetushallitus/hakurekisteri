@@ -1,8 +1,10 @@
+import java.util.concurrent.TimeUnit
 import javax.servlet.ServletContext
 
 import _root_.akka.actor.ActorSystem
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakupalvelu, AkkaHakupalvelu, HakemusServiceMock}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
@@ -11,6 +13,7 @@ import fi.vm.sade.hakurekisteri.web.proxies._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{Extraction, _}
 import org.scalatra._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSupport {
@@ -32,7 +35,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       koodisto = anyActorRef,
       suoritukset = anyActorRef,
       valintaTulos = anyActorRef,
-      valintaRekisteri = anyActorRef)
+      valintaRekisteri = anyActorRef,
+      Timeout(1, TimeUnit.MINUTES))
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
     context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")

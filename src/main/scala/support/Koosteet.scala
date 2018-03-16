@@ -1,6 +1,7 @@
 package support
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.hakija.HakijaActor
@@ -29,7 +30,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   val virtaQueue = system.actorOf(Props(new VirtaQueue(integrations.virta, integrations.hakemusService, integrations.oppijaNumeroRekisteri, haut)), "virta-queue")
   val hakupalvelu = new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, integrations.koosteService, haut, integrations.koodisto)
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, integrations.koosteService, haut, integrations.koodisto), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, integrations.koosteService, haut, integrations.koodisto), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos, config.valintaTulosTimeout)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.valintarekisteri, integrations.tarjonta, haut, integrations.hakemusService, integrations.oppijaNumeroRekisteri, config)), "ensikertalainen")
 
@@ -40,6 +41,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
     integrations.koodisto,
     registers.suoritusRekisteri,
     integrations.valintaTulos,
-    integrations.valintarekisteri)(system)
+    integrations.valintarekisteri,
+    Timeout(config.valintaTulosTimeout))(system)
   val siirtotiedostojono = new Siirtotiedostojono(hakijat, kkHakijaService)(system)
 }
