@@ -632,6 +632,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       Some(2015),
       kkHaku =  false,
       None,
+      None,
       None
     )
 

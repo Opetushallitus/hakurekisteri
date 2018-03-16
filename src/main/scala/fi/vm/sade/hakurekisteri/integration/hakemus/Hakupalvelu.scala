@@ -101,9 +101,9 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
     q match {
       case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
         for {
-          (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
+          (haku: Haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio).map(_.filter(_.stateValid))
-          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
+          hakijaSuorituksetMap <- koosteService.getSuoritukset(haku, hakemukset)
           maakoodit <- maatjavaltiot2To1(hakemukset)
         } yield hakemukset
           .map { hakemus =>
@@ -120,7 +120,8 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
             hakuJaLisakysymykset = hakuAndLisakysymykset(hakuOid.get)
             (hakukohdeOid, hakemukset) <- hakukohteet
             maakooditF = maatjavaltiot2To1(hakemukset)
-            suorituksetByOppija = koosteService.getSuoritukset(hakuOid.get, hakemukset.filter(_.stateValid))
+            suorituksetByOppija = (hakuActor ? GetHaku(hakuOid.get)).mapTo[Haku]
+              .flatMap(haku => koosteService.getSuoritukset(haku, hakemukset.filter(_.stateValid)))
             hakemus <- hakemukset if hakemus.stateValid
           } yield for {
             hakijaSuorituksetMap <- suorituksetByOppija
@@ -431,6 +432,15 @@ object AkkaHakupalvelu {
           osaaminen
         ))
     case hakemus: AtaruHakemus =>
+      val kesa: MonthDay = new MonthDay(6, 4)
+      val koulutustausta: Option[Koulutustausta] = None
+      val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
+      val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
+      val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
+      val lahtokoulu: Option[String] = None
+      val myontaja: String = lahtokoulu.getOrElse("")
+      val kieli: String = ""
+      val suorittaja: String = hakemus.personOid.getOrElse("")
       Hakija(
         Henkilo(
           lahiosoite = hakemus.lahiosoite,
@@ -465,7 +475,7 @@ object AkkaHakupalvelu {
           liitteet = Seq.empty,
           muukoulutus = None
         ),
-        Seq.empty,
+        getSuoritus(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid).toSeq,
         Seq.empty,
         Hakemus(
           hakutoiveet = hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
