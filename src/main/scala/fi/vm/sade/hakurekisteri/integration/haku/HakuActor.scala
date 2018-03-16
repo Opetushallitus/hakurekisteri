@@ -125,16 +125,16 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot,
-                oid: String, aika:
-                Ajanjakso, kausi: String,
-                vuosi: Int,
-                koulutuksenAlkamiskausi: Option[String],
-                koulutuksenAlkamisvuosi: Option[Int],
-                kkHaku: Boolean,
-                viimeinenHakuaikaPaattyy: Option[DateTime],
-                kohdejoukkoUri: Option[String],
-                ataruLomakeAvain: Option[String]) {
+case class Haku(
+                 nimi: Kieliversiot,
+                 oid: String, aika:
+                 Ajanjakso, kausi: String,
+                 vuosi: Int,
+                 koulutuksenAlkamiskausi: Option[String],
+                 koulutuksenAlkamisvuosi: Option[Int],
+                 kkHaku: Boolean,
+                 viimeinenHakuaikaPaattyy: Option[DateTime],
+                 kohdejoukkoUri: Option[String]) {
   val isActive: Boolean = aika.isCurrently
 }
 
@@ -142,8 +142,7 @@ object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
     val ajanjakso = Ajanjakso(findStart(haku), loppu)
     Haku(
-      Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)),
-      haku.oid.get,
+      Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)), haku.oid.get,
       ajanjakso,
       haku.hakukausiUri,
       haku.hakukausiVuosi,
@@ -151,8 +150,7 @@ object Haku {
       haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
-      kohdejoukkoUri = haku.kohdejoukkoUri,
-      haku.ataruLomakeAvain
+      kohdejoukkoUri = haku.kohdejoukkoUri
     )
   }
 

@@ -122,7 +122,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       koulutuksenAlkamisvuosi = Some(2015),
       kkHaku = true,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
       None
     )
 
@@ -150,7 +149,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       koulutuksenAlkamisvuosi = Some(2015),
       kkHaku = true,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
       None
     )
 
@@ -178,7 +176,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       koulutuksenAlkamisvuosi = Some(2016),
       kkHaku = true,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
       None
     )
 
@@ -353,7 +350,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
-  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU", None)
+  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
   val kausiKoodiS = TarjontaKoodi(Some("S"))
   val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
   val suoritus1 = VirallinenSuoritus(YoTutkinto.yotutkinto, YoTutkinto.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")

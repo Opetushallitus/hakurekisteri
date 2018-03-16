@@ -26,8 +26,7 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),
     kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
     None,
-    tila = "LUONNOS",
-    None)
+    tila = "LUONNOS")
 
   test("luonnos is not included") {
     tarjontaUnderlyingActor.includeHaku(mockHaku) should be(false)

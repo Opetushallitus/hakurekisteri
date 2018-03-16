@@ -26,7 +26,7 @@ class HakijaResourceV2(hakijaActor: ActorRef)
   implicit val defaultTimeout: Timeout = 120.seconds
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
-  override protected def applicationDescription: String = "Hakijatietojen rajapinta V2"
+  override protected def applicationDescription: String = "Hakijatietojen rajapinta"
 
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
