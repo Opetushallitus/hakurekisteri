@@ -22,7 +22,7 @@ trait IKoskiService {
   def fetchChanged(personOid: String): Future[Seq[KoskiHenkilo]]
 }
 
-case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
+case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases) => Unit)
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)(implicit val system: ActorSystem)  {
 
@@ -53,8 +53,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
                                 searchWindowSize: Long = TimeUnit.DAYS.toMillis(15),
                                 repairTargetTime: Date = new Date(Platform.currentTime),
                                 pageNbr: Int = 0,
-                                pageSizePerFetch: Int = 1500,
-                                fixValeysit: Boolean = false)(implicit scheduler: Scheduler): Unit = {
+                                pageSizePerFetch: Int = 1500)(implicit scheduler: Scheduler): Unit = {
     if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
         var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
@@ -69,20 +68,20 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
             logger.info(s"HistoryCrawler - Aikaikkuna: " + searchWindowStartTime + " - " + searchWindowEndTime + ", Sivu: " + pageNbr +" , Henkilöitä: " + henkilot.size + " kpl.")
-            Try(triggerHenkilot(henkilot, personOidsWithAliases, removeFalseYsit = fixValeysit)) match {
+            Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
               case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
               case _ =>
             }
             if(henkilot.isEmpty) {
               logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
-              traverseKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch = 5.seconds, searchWindowSize, repairTargetTime, pageNbr = 0, pageSizePerFetch, fixValeysit) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
+              traverseKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch = 5.seconds, searchWindowSize, repairTargetTime, pageNbr = 0, pageSizePerFetch) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
             } else {
               logger.info(s"HistoryCrawler - Haetaan saman aikaikkunan seuraava sivu!")
-              traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch = 2.minutes, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch, fixValeysit) //Seuraava sivu samaa aikaikkunaa
+              traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch = 2.minutes, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch) //Seuraava sivu samaa aikaikkunaa
             }
           case Failure(t) =>
             logger.error(t, "HistoryCrawler - fetch data failed, retrying")
-            traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch = 2.minutes, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch, fixValeysit) //Sama sivu samasta aikaikkunasta
+            traverseKoskiDataInChunks(searchWindowStartTime, timeToWaitUntilNextBatch = 2.minutes, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch) //Sama sivu samasta aikaikkunasta
         }
       })} else {
       logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
@@ -122,9 +121,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
       })
   }
 
-  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, removeFalseYsit: Boolean = false): Unit =
+  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases): Unit =
     henkilot.foreach(henkilo => {
-      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases, removeFalseYsit))
+      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases))
     })
 
   def addTrigger(trigger: KoskiTrigger): Unit = triggers = triggers :+ trigger

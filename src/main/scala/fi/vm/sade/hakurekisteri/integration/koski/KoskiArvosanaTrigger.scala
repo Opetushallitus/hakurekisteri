@@ -46,8 +46,7 @@ object KoskiArvosanaTrigger {
                                           arvosanaRekisteri: ActorRef,
                                           opiskelijaRekisteri: ActorRef,
                                           personOidsWithAliases: PersonOidsWithAliases,
-                                          logBypassed: Boolean = false,
-                                          removeFalseYsit: Boolean = false)
+                                          logBypassed: Boolean = false)
                                          (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
 
@@ -104,33 +103,6 @@ object KoskiArvosanaTrigger {
 
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
-    def findMatchingLuokkatietoAndSuoritus(sureSuoritukset: Seq[Suoritus], sureLuokkatiedot: Seq[Opiskelija]): (Option[Suoritus], Option[Opiskelija]) = {
-      val tieto = sureLuokkatiedot.find(lt => sureSuoritukset.exists(_.asInstanceOf[VirallinenSuoritus].myontaja.equals(lt.oppilaitosOid)))
-      var suoritus = Option.empty[Suoritus]
-      if (tieto.isDefined) {
-        suoritus = sureSuoritukset.find(s => s.asInstanceOf[VirallinenSuoritus].myontaja.equals(tieto.get.oppilaitosOid))
-      }
-      (suoritus, tieto)
-    }
-
-    def detectAndFixFalseYsiness(suorituksetSuressa: Seq[Suoritus], koskiSuoritus: VirallinenSuoritus, kaikkiKoskiSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])]): Unit = {
-      if (!kaikkiKoskiSuoritukset.exists(_._5.getOrElse("").startsWith("9"))) {
-        //logger.info(s"Detect valeysit : Henkilöllä "+koskiSuoritus.henkilo+" on peruskoulusuoritus, joka ei sisällä 9. luokan suoritusta. Päätellään tästä, että kyseessä on mahdollinen valeysi.")
-        fetchExistingLuokkatiedot(koskiSuoritus.henkilo).onComplete(luokkatiedot => {
-          if (suorituksetSuressa.exists(_.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid))) {
-            //logger.info(s"Detect valeysit : Sureen on aiemmin tallennettu perusopetussuoritus! ")
-            val (poistettavaSuoritus, poistettavaLuokkatieto) = findMatchingLuokkatietoAndSuoritus(suorituksetSuressa, luokkatiedot.get)
-            if (poistettavaLuokkatieto.isDefined && poistettavaSuoritus.isDefined && poistettavaLuokkatieto.get.source.equals("koski") && !poistettavaLuokkatieto.get.luokka.startsWith("9")) {
-              logger.info(s"Detect valeysit : (HenkilöOid: " + koskiSuoritus.henkilo+ " ) Poistetaan suoritusresurssi id:llä " +
-                poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id + "sekä luokkatietoresurssi id:llä " + poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id)
-              suoritusRekisteri ? DeleteResource(poistettavaSuoritus.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_valeysifix")
-              opiskelijaRekisteri ? DeleteResource(poistettavaLuokkatieto.get.asInstanceOf[Identified[UUID]].id, "koski_integraatio_valeysifix")
-            }
-          }
-        })
-      }
-    }
-
     henkilo.henkilö.oid.foreach(henkiloOid => {
       val allSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])] = createSuorituksetJaArvosanatFromKoski(henkilo)
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
@@ -138,9 +110,6 @@ object KoskiArvosanaTrigger {
         henkilonSuoritukset.foreach {
           case (suor: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaAste: Option[String]) =>
 
-            if(removeFalseYsit && suor.komo.equals(Oids.perusopetusKomoOid) && !luokkaAste.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE)) {
-              detectAndFixFalseYsiness(suoritukset, suor, henkilonSuoritukset)
-            }
             var useArvosanat = arvosanat
             val useSuoritus = suor
             if(suor.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty){
@@ -196,9 +165,9 @@ object KoskiArvosanaTrigger {
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
     KoskiTrigger {
-      (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases, removeFalseYsit: Boolean) => {
+      (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases) => {
         muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, opiskelijaRekisteri,
-                                            personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet), removeFalseYsit = removeFalseYsit)
+                                            personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet))
       }
     }
   }
