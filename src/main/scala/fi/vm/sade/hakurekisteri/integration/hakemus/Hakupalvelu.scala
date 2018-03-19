@@ -524,6 +524,7 @@ object AkkaHakupalvelu {
         case "sosiaalisetsyyt" => Some("2")
         case "todistustenvertailuvaikeudet" => Some("3")
         case "todistustenpuuttuminen" => Some("4")
+        case "riittamatonkielitaito" => Some("5")
         case s => //logger.error(s"invalid discretionary-follow-up value $s");
           None
       }
