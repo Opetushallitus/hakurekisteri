@@ -118,7 +118,8 @@ class KkHakijaService(hakemusService: IHakemusService,
                       koodisto: ActorRef,
                       suoritukset: ActorRef,
                       valintaTulos: ActorRef,
-                      valintaRekisteri: ActorRef)(implicit system: ActorSystem) {
+                      valintaRekisteri: ActorRef,
+                      valintaTulosTimeout: Timeout)(implicit system: ActorSystem) {
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
 
@@ -248,7 +249,8 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private val Pattern = "preference(\\d+)-Koulutus-id".r
 
-  private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
+  private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = valintaTulos.?(q)(valintaTulosTimeout)
+    .mapTo[SijoitteluTulos]
 
   private def getLukuvuosimaksut(hakukohdeOids: Set[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
     val querys = hakukohdeOids.toSeq.map(LukuvuosimaksuQuery(_, auditSession))

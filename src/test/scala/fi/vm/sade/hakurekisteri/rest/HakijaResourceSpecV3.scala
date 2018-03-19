@@ -14,7 +14,7 @@ import scala.concurrent.Await
 class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
-  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
+  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, valintaTulosTimeout)))
   addServlet(new HakijaResourceV3(hakijat), "/")
 
   test("JSON contains osaaminen yleinen_kielitutkinto_fi and valtionhallinnon_kielitutkinto_fi") {

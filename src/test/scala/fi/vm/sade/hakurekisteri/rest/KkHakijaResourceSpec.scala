@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{ActorRef, Props}
+import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
@@ -34,7 +35,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   private val valintaRekisteri = mock[ActorRef]
   private val koodistoMock = mock[ActorRef]
 
-  val service = new KkHakijaService(hakemusService, mock[Hakupalvelu], tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri)
+  val service = new KkHakijaService(hakemusService, mock[Hakupalvelu], tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")
 

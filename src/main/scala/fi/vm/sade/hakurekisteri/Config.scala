@@ -5,6 +5,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.Properties
 
 import akka.actor.ActorSystem
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
@@ -100,7 +101,7 @@ class DefaultConfig extends Config {
   override val maxDbLogLineLength: Int = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.db.max.log.line.length", "configuration key missing: suoritusrekisteri.db.max.log.line.length"))
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
-  override val kkHakijaResourceV2Timeout: Duration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.kkhakijaresource.v2.max.minutes", "configuration key missing: suoritusrekisteri.kkhakijaresource.v2.max.minutes")).minutes
+  override val valintaTulosTimeout: FiniteDuration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.valintatulos.max.minutes", "configuration key missing: suoritusrekisteri.valintatulos.max.minutes")).minutes
 }
 
 class MockDevConfig extends Config {
@@ -114,7 +115,7 @@ class MockDevConfig extends Config {
   override val slowQuery: Long = defaultDbLoggingConfig.slowQueryMillis
   override val reallySlowQuery: Long = defaultDbLoggingConfig.reallySlowQueryMillis
   override val maxDbLogLineLength: Int = defaultDbLoggingConfig.maxLogLineLength
-  override val kkHakijaResourceV2Timeout: Duration = 1.minute
+  override val valintaTulosTimeout: FiniteDuration = 1.minute
 
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -133,7 +134,7 @@ abstract class Config {
   val reallySlowQuery: Long
   val maxDbLogLineLength: Int
 
-  val kkHakijaResourceV2Timeout: Duration
+  val valintaTulosTimeout: FiniteDuration
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path

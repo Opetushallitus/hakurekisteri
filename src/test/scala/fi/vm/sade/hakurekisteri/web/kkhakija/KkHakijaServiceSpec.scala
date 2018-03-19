@@ -4,6 +4,7 @@ import java.util.Date
 
 import akka.actor.{Actor, Props}
 import akka.pattern.pipe
+import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
@@ -50,7 +51,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
 
-  private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri)
+  private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
 
   override def beforeEach() {
     super.beforeEach()

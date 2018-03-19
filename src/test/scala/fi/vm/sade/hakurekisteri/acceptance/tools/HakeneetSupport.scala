@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MINUTES
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
@@ -25,6 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLikeMockito {
+  val valintaTulosTimeout: Timeout = Timeout(1, MINUTES)
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, None, Seq())
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None, None, Seq())
   object OppilaitosZ extends Organisaatio("1.10.6", Map("fi" -> "Oppilaitos Z"), None, Some("00003"), None, None, Seq())
@@ -782,7 +784,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-    val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, valintaTulosTimeout)))
 
     def get(q: HakijaQuery): Future[Any] = {
       hakijaActor ? q

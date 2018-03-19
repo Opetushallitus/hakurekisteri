@@ -177,7 +177,7 @@ case class Osaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_
                      yleinen_kielitutkinto_en: Option[String], valtionhallinnon_kielitutkinto_en: Option[String],
                      yleinen_kielitutkinto_se: Option[String], valtionhallinnon_kielitutkinto_se: Option[String])
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef) extends Actor with ActorLogging {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef, valintaTulosTimeout: Timeout) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 120.seconds
   val tuntematonOppilaitos = "00000"
@@ -343,7 +343,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => (valintaTulosActor ? ValintaTulosQuery(hakuOid, None)).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => valintaTulosActor.?(ValintaTulosQuery(hakuOid, None))(timeout = valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 

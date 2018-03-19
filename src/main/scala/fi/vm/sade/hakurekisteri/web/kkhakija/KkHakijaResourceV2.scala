@@ -41,7 +41,7 @@ class KkHakijaResourceV2(kkHakijaService: KkHakijaService, config: Config)(impli
         Future.successful(result)
       case result => Future.successful(result)
     }
-    prepareAsyncResult(tyyppi, kkhakijatFuture, requestTimeout = config.kkHakijaResourceV2Timeout)
+    prepareAsyncResult(tyyppi, kkhakijatFuture, requestTimeout = config.valintaTulosTimeout)
   }
 
   incident {
