@@ -389,6 +389,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         koskiHenkilo,
         Seq(KoskiOpiskeluoikeus(
           oid = "",
+          päättymispäivä = Option.empty,
           oppilaitos = KoskiOrganisaatio(orgId),
           tila = this.getOpiskeluOikeusJakso,
           lisätiedot = Option.empty,
