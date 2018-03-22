@@ -152,6 +152,7 @@ case class KoskiOpiskeluoikeus(
                  oid: String,
                  oppilaitos: KoskiOrganisaatio,
                  tila: KoskiOpiskeluoikeusjakso,
+                 päättymispäivä: Option[String],
                  lisätiedot: Option[KoskiLisatiedot],
                  suoritukset: Seq[KoskiSuoritus])
 
