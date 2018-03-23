@@ -348,9 +348,11 @@ object KoskiArvosanaTrigger {
     opintopisteet
   }
 
-  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, oppilaitos: KoskiOrganisaatio): (Int, LocalDate, String) = {
-    vahvistus match {
-      case Some(k: KoskiVahvistus) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid)
+  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
+    val oppilaitos = opOikeus.oppilaitos
+    (vahvistus, opOikeus.päättymispäivä) match {
+      case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid)
+      case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid)
       case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid)
     }
   }
@@ -369,83 +371,82 @@ object KoskiArvosanaTrigger {
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])] = {
     var result = Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])]()
     for ( suoritus <- suoritukset ) {
+      val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
 
-        val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus.oppilaitos)
+      var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
-        var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
-
-        var lastTila = tilat match {
-          case t if(t.exists(_.tila.koodiarvo == "valmistunut")) => "VALMIS"
-          case t if(t.exists(_.tila.koodiarvo == "eronnut")) => "KESKEYTYNYT"
-          case t if(t.exists(_.tila.koodiarvo == "erotettu")) => "KESKEYTYNYT"
-          case t if(t.exists(_.tila.koodiarvo == "katsotaaneronneeksi")) => "KESKEYTYNYT"
-          case t if(t.exists(_.tila.koodiarvo == "mitatoity")) => "KESKEYTYNYT"
-          case t if(t.exists(_.tila.koodiarvo == "peruutettu")) => "KESKEYTYNYT"
-          // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
-          case _ => "KESKEN"
-        }
-
-        val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna"), lastTila) match {
-          case (Some(a), _, _) => parseLocalDate(a)
-          case (None, Some(kt), _) => parseLocalDate(kt.alku)
-          case (_,_,_) => valmistumisPaiva
-        }
-
-        var (komoOid, luokkataso) = suoritus.tyyppi match {
-          case Some(k) =>
-            matchOpetusOidAndLuokkataso(k.koodiarvo, lastTila, suoritus)
-          case _ => (DUMMYOID, None)
-        }
-
-        var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
-          case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-          case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-          case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
-          case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
-          case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-          case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-          case _ => (Seq(), yksilollistaminen.Ei)
-        }
-
-        if(komoOid == Oids.valmaKomoOid && lastTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30){
-          lastTila = "KESKEN"
-        }
-
-        var luokka = komoOid match {
-          case Oids.valmaKomoOid => suoritus.ryhmä.getOrElse("VALMA")
-          case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("TELMA")
-          case Oids.lukioonvalmistavaKomoOid => suoritus.ryhmä.getOrElse("LUVA")
-          case Oids.ammatillinenKomoOid => suoritus.ryhmä.getOrElse("AMM")
-          case _ => suoritus.luokka.getOrElse("")
-        }
-        if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
-          luokka = "9"
-        }
-
-        val useValmistumisPaiva = (komoOid, luokkataso.getOrElse("").startsWith("9"), lastTila) match {
-          case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-          case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-          case (Oids.valmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-          case (Oids.telmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-          case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
-          case (_,_,_) => valmistumisPaiva
-        }
-
-        if (komoOid != DUMMYOID && vuosi > 1970) {
-          result = result :+ (VirallinenSuoritus(
-            komoOid,
-            organisaatioOid,
-            lastTila,
-            useValmistumisPaiva,
-            personOid,
-            yksilöllistaminen,
-            suorituskieli.koodiarvo,
-            None,
-            true,
-            root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
-        }
+      var lastTila = tilat match {
+        case t if(t.exists(_.tila.koodiarvo == "valmistunut")) => "VALMIS"
+        case t if(t.exists(_.tila.koodiarvo == "eronnut")) => "KESKEYTYNYT"
+        case t if(t.exists(_.tila.koodiarvo == "erotettu")) => "KESKEYTYNYT"
+        case t if(t.exists(_.tila.koodiarvo == "katsotaaneronneeksi")) => "KESKEYTYNYT"
+        case t if(t.exists(_.tila.koodiarvo == "mitatoity")) => "KESKEYTYNYT"
+        case t if(t.exists(_.tila.koodiarvo == "peruutettu")) => "KESKEYTYNYT"
+        // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
+        case _ => "KESKEN"
       }
-      result
+
+      val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna"), lastTila) match {
+        case (Some(a), _, _) => parseLocalDate(a)
+        case (None, Some(kt), _) => parseLocalDate(kt.alku)
+        case (_,_,_) => valmistumisPaiva
+      }
+
+      var (komoOid, luokkataso) = suoritus.tyyppi match {
+        case Some(k) =>
+          matchOpetusOidAndLuokkataso(k.koodiarvo, lastTila, suoritus)
+        case _ => (DUMMYOID, None)
+      }
+
+      var (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
+        case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
+        case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
+        case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case _ => (Seq(), yksilollistaminen.Ei)
+      }
+
+      if(komoOid == Oids.valmaKomoOid && lastTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30){
+        lastTila = "KESKEN"
+      }
+
+      var luokka = komoOid match {
+        case Oids.valmaKomoOid => suoritus.ryhmä.getOrElse("VALMA")
+        case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("TELMA")
+        case Oids.lukioonvalmistavaKomoOid => suoritus.ryhmä.getOrElse("LUVA")
+        case Oids.ammatillinenKomoOid => suoritus.ryhmä.getOrElse("AMM")
+        case _ => suoritus.luokka.getOrElse("")
+      }
+      if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
+        luokka = "9"
+      }
+
+      val useValmistumisPaiva = (komoOid, luokkataso.getOrElse("").startsWith("9"), lastTila) match {
+        case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+        case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+        case (Oids.valmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+        case (Oids.telmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+        case ("luokka", true, "KESKEN") => parseNextFourthOfJune()
+        case (_,_,_) => valmistumisPaiva
+      }
+
+      if (komoOid != DUMMYOID && vuosi > 1970) {
+        result = result :+ (VirallinenSuoritus(
+          komoOid,
+          organisaatioOid,
+          lastTila,
+          useValmistumisPaiva,
+          personOid,
+          yksilöllistaminen,
+          suorituskieli.koodiarvo,
+          None,
+          true,
+          root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
+      }
+    }
+    result
   }
 }
 

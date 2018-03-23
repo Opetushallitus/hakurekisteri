@@ -202,8 +202,15 @@ class BaseIntegrations(rekisterit: Registers,
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
-  koskiService.processModifiedKoski()
-  koskiService.traverseKoskiDataInChunks()
+
+  private val delay: FiniteDuration = if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "").toBoolean).getOrElse(true)) {
+    1.minute
+  } else {
+    FiniteDuration(Long.MaxValue, TimeUnit.DAYS)
+  }
+
+  koskiService.processModifiedKoski(refreshFrequency = delay)
+  koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay)
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()
