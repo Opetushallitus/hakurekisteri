@@ -125,7 +125,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
             organization: Option[Organisaatio] <- organizationOid.map(o => {
               (organisaatioActor ? o).mapTo[Option[Organisaatio]]
             }).getOrElse(Future.successful(None))
-          } yield HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, organizationOid, organization.flatMap(_.parentOidPath.map(_.replace("/", ","))), None, None, None, None, None)
+          } yield HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, organizationOid, organization.flatMap(_.parentOidPath.map(_.replace("|", ","))), None, None, None, None, None)
       }.toList)
       hakutoiveet.map(toiveet =>
         AtaruHakemus(
