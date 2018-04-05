@@ -530,7 +530,7 @@ object AkkaHakupalvelu {
       }
       val aiempiperuminen = toive.soraOikeudenMenetys.map(s => Try(s.toBoolean).getOrElse(false))
       val terveys = toive.soraTerveys.map(s => Try(s.toBoolean).getOrElse(false))
-      val organisaatioParentOidPath = toive.organizationParentOids.getOrElse("")
+      val organisaatioParentOidPath = toive.organizationParentOids.mkString(",")
       val hakukohdeOid = toive.koulutusId.getOrElse("")
       val koulutuksenKieli: Option[String] = (jno == ensimmainenSuomenkielinenHakukohde, jno == ensimmainenRuotsinkielinenHakukohde, jno == ensimmainenEnglanninkielinenHakukohde, jno == ensimmainenSaamenkielinenHakukohde) match {
         case (true, false, false, false) => Some("FI")
@@ -650,7 +650,7 @@ case class HakutoiveDTO(preferenceNumber: Int,
                         koulutusIdLang: Option[String],
                         koulutusIdVocational: Option[String],
                         organizationOid: Option[String],
-                        organizationParentOids: Option[String],
+                        organizationParentOids: Set[String],
                         kaksoistutkinnonLisakysymys: Option[String],
                         soraOikeudenMenetys: Option[String],
                         soraTerveys: Option[String],
@@ -689,6 +689,14 @@ case class FullHakemus(oid: String,
           preferenceNumber
         }))
 
+    def parseParentOids(s: String): Set[String] = {
+      val parentOids = s.split(",").filterNot(_.isEmpty).toSet
+      if (!parentOids.forall(_.matches("[0-9]+(\\.[0-9]+)+"))) {
+        throw new IllegalArgumentException(s"Could not parse parent oids $s")
+      }
+      parentOids
+    }
+
     preferencesGroupedByOrder.map(_.map {
       case(index, preference) =>
         HakutoiveDTO(
@@ -698,7 +706,7 @@ case class FullHakemus(oid: String,
           preference.get(s"preference${index}-Koulutus-id-lang"),
           preference.get(s"preference${index}-Koulutus-id-vocational"),
           preference.get(s"preference${index}-Opetuspiste-id"),
-          preference.get(s"preference${index}-Opetuspiste-id-parents"),
+          preference.get(s"preference${index}-Opetuspiste-id-parents").map(parseParentOids).getOrElse(Set()),
           preference.get(s"preference${index}_kaksoistutkinnon_lisakysymys"),
           preference.get(s"preference${index}_sora_oikeudenMenetys"),
           preference.get(s"preference${index}_sora_terveys"),

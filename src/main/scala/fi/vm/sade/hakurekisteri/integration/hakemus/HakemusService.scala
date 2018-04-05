@@ -107,9 +107,33 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   def enrichAtaruHakemukset(ataruHakemusDtos: List[AtaruHakemusDto], henkilot: Seq[Henkilo]): Future[List[AtaruHakemus]] = {
     val henkilotByOid = henkilot.map(h => h.oidHenkilo -> h).toMap
 
-    def getHakukohdeTarjoajaOid(hakukohdeOid: String): Future[Option[String]] = {
-      (tarjontaActor ? HakukohdeQuery(hakukohdeOid)).mapTo[Option[Hakukohde]].map(_.flatMap(_.tarjoajaOids.flatMap(_.headOption)))
-    }
+    def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
+      hakukohde <- (tarjontaActor ? HakukohdeQuery(hakukohdeOid)).mapTo[Option[Hakukohde]].flatMap {
+        case Some(h) => Future.successful(h)
+        case None => Future.failed(new RuntimeException(s"Could not find hakukohde $hakukohdeOid"))
+      }
+      tarjoajaOid <- hakukohde.tarjoajaOids.flatMap(_.headOption) match {
+        case Some(oid) => Future.successful(oid)
+        case None => Future.failed(new RuntimeException(s"Could not find tarjoaja for hakukohde ${hakukohde.oid}"))
+      }
+    } yield tarjoajaOid
+
+    def tarjoajanParentOids(tarjoajaOid: String): Future[Set[String]] = for {
+      organisaatio <- (organisaatioActor ? tarjoajaOid).mapTo[Option[Organisaatio]].flatMap {
+        case Some(o) => Future.successful(o)
+        case None => Future.failed(new RuntimeException(s"Could not find tarjoaja $tarjoajaOid"))
+      }
+      parentOids <- organisaatio.parentOidPath match {
+        case Some(path) =>
+          val parentOids = path.replace("/", "|").split("\\|").filterNot(_.isEmpty).toSet
+          if (parentOids.forall(_.matches("[0-9]+(\\.[0-9]+)+"))) {
+            Future.successful(parentOids)
+          } else {
+            Future.failed(new RuntimeException(s"Could not parse parent oids $path of organization ${organisaatio.oid}"))
+          }
+        case None => Future.successful(Set.empty[String])
+      }
+    } yield parentOids
 
     def translateAtaruMaksuvelvollisuus(ataruMaksuvelvollsisuus: String): String = ataruMaksuvelvollsisuus match {
       case "obligated" => "REQUIRED"
@@ -117,32 +141,35 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       case _ => "NOT_CHECKED"
     }
 
-    Future.sequence(ataruHakemusDtos.map(hakemus => {
-      val hakutoiveet = Future.sequence(hakemus.hakukohteet.zipWithIndex.map {
-        case (hakukohdeOid: String, index: Int) =>
-          for {
-            organizationOid: Option[String] <- getHakukohdeTarjoajaOid(hakukohdeOid)
-            organization: Option[Organisaatio] <- organizationOid.map(o => {
-              (organisaatioActor ? o).mapTo[Option[Organisaatio]]
-            }).getOrElse(Future.successful(None))
-          } yield HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, organizationOid, organization.flatMap(_.parentOidPath.map(_.replace("|", ","))), None, None, None, None, None)
-      }.toList)
-      hakutoiveet.map(toiveet =>
-        AtaruHakemus(
-          hakemus.oid,
-          Some(hakemus.personOid),
-          hakemus.applicationSystemId,
-          Some(toiveet),
-          henkilotByOid(hakemus.personOid),
-          hakemus.email,
-          hakemus.matkapuhelin,
-          hakemus.lahiosoite,
-          hakemus.postinumero,
-          hakemus.postitoimipaikka,
-          hakemus.kotikunta.map(s => if (s.length == 3 && s.forall(Character.isDigit)) s else "999"), // HLE-377
-          hakemus.asuinmaa,
-          hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
-          hakemus.kkPohjakoulutus)
+    Future.sequence(
+      ataruHakemusDtos
+        .flatMap(_.hakukohteet)
+        .distinct
+        .map(hakukohdeOid => {
+          val tarjoajaOid = hakukohteenTarjoajaOid(hakukohdeOid)
+          Future.successful(hakukohdeOid).zip(tarjoajaOid.zip(tarjoajaOid.flatMap(tarjoajanParentOids)))
+        })
+    ).map(_.toMap).map(tarjoajaAndParentOids => ataruHakemusDtos.map(hakemus => {
+      val hakutoiveet = hakemus.hakukohteet.toList.zipWithIndex.map {
+        case (hakukohdeOid, index) =>
+          val (tarjoajaOid, parentOids) = tarjoajaAndParentOids(hakukohdeOid)
+          HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, Some(tarjoajaOid), parentOids, None, None, None, None, None)
+      }
+      AtaruHakemus(
+        hakemus.oid,
+        Some(hakemus.personOid),
+        hakemus.applicationSystemId,
+        Some(hakutoiveet),
+        henkilotByOid(hakemus.personOid),
+        hakemus.email,
+        hakemus.matkapuhelin,
+        hakemus.lahiosoite,
+        hakemus.postinumero,
+        hakemus.postitoimipaikka,
+        hakemus.kotikunta.map(s => if (s.length == 3 && s.forall(Character.isDigit)) s else "999"), // HLE-377
+        hakemus.asuinmaa,
+        hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
+        hakemus.kkPohjakoulutus
       )
     }))
   }
@@ -160,9 +187,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     } yield params.organizationOid.fold(ataruHakemukset)(oid => ataruHakemukset.filter(hasAppliedToOrganization(_, oid)))
   }
 
-  private def hasAppliedToOrganization(hakemus: HakijaHakemus, organisaatio: String): Boolean = {
-    hakemus.hakutoiveet.forall(_.exists(_.organizationParentOids.forall(_.contains(organisaatio))))
-  }
+  private def hasAppliedToOrganization(hakemus: HakijaHakemus, organisaatio: String): Boolean =
+    hakemus.hakutoiveet.exists(_.exists(_.organizationParentOids.contains(organisaatio)))
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
     for {
