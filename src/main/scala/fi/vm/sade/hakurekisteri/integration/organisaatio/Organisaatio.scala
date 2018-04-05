@@ -9,5 +9,8 @@ Organisaatio(oid: String,
              parentOidPath: Option[String],
              children: Seq[Organisaatio])
 
+object Organisaatio {
+  def isOrganisaatioOid(s: String): Boolean = s.matches("1(\\.[0-9]+)+")
+}
 
 case class ChildOids(oids: Seq[String])

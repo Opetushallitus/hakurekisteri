@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -691,7 +692,7 @@ case class FullHakemus(oid: String,
 
     def parseParentOids(s: String): Set[String] = {
       val parentOids = s.split(",").filterNot(_.isEmpty).toSet
-      if (!parentOids.forall(_.matches("[0-9]+(\\.[0-9]+)+"))) {
+      if (!parentOids.forall(Organisaatio.isOrganisaatioOid)) {
         throw new IllegalArgumentException(s"Could not parse parent oids $s")
       }
       parentOids

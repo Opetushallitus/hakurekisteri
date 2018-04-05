@@ -126,7 +126,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       parentOids <- organisaatio.parentOidPath match {
         case Some(path) =>
           val parentOids = path.replace("/", "|").split("\\|").filterNot(_.isEmpty).toSet
-          if (parentOids.forall(_.matches("[0-9]+(\\.[0-9]+)+"))) {
+          if (parentOids.forall(Organisaatio.isOrganisaatioOid)) {
             Future.successful(parentOids)
           } else {
             Future.failed(new RuntimeException(s"Could not parse parent oids $path of organization ${organisaatio.oid}"))
