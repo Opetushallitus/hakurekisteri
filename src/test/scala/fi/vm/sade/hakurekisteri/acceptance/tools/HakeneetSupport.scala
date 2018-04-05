@@ -36,9 +36,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"), None, Seq())
 
   object AtaruOpetuspiste1 extends Organisaatio("1.2.246.562.10.39920288212", Map("fi" -> "AtaruOpetuspiste1"), None, None, None,
-    Some("1.2.246.562.10.00000000001,1.2.246.562.10.82388989657,1.2.246.562.10.56753942459"), Seq())
+    Some("1.2.246.562.10.00000000001/1.2.246.562.10.82388989657/1.2.246.562.10.56753942459"), Seq())
   object AtaruOpetuspiste2 extends Organisaatio("1.2.246.562.10.2014041814420657444022", Map("fi" -> "AtaruOpetuspiste2"), None, None, None,
-    Some("1.2.246.562.10.00000000001,1.2.246.562.10.240484683010,1.2.246.562.10.38515028629,1.2.246.562.10.665851030310"), Seq())
+    Some("1.2.246.562.10.00000000001|1.2.246.562.10.240484683010|1.2.246.562.10.38515028629|1.2.246.562.10.665851030310"), Seq())
 
   object FullHakemus1 extends FullHakemus("1.25.1", Some("1.24.1"), "1.1",
     answers = Some(
