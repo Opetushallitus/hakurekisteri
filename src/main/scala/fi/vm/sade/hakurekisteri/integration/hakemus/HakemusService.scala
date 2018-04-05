@@ -150,7 +150,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           Future.successful(hakukohdeOid).zip(tarjoajaOid.zip(tarjoajaOid.flatMap(tarjoajanParentOids)))
         })
     ).map(_.toMap).map(tarjoajaAndParentOids => ataruHakemusDtos.map(hakemus => {
-      val hakutoiveet = hakemus.hakukohteet.toList.zipWithIndex.map {
+      val hakutoiveet = hakemus.hakukohteet.zipWithIndex.map {
         case (hakukohdeOid, index) =>
           val (tarjoajaOid, parentOids) = tarjoajaAndParentOids(hakukohdeOid)
           HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, Some(tarjoajaOid), parentOids, None, None, None, None, None)
