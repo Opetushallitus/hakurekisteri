@@ -205,16 +205,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     }
   }
 
-  private def isAuthorized(parents: Option[String], oid: Option[String]): Boolean = oid match {
-    case None => true
-    case Some(o) => parents.exists(_.contains(o))
-  }
-
   private def getKnownOrganizations(user: Option[User]): Set[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Set())
-
-  private def isAuthorized(parents: Option[String], oids: Set[String]): Boolean = {
-    oids.map(o => parents.getOrElse("").split(",").toSet.contains(o)).find(_ == true).getOrElse(false)
-  }
 
   import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.isHyvaksytty
   import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.isVastaanottanut
@@ -295,12 +286,9 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def queryMatches(q: KkHakijaQuery, toive: HakutoiveDTO, hakukohdeOids: Seq[String]): Boolean = {
-    def anyHakukohdeMatch(hakutoive: String, hakukohdes: Seq[String]) =
-      hakukohdes.isEmpty || hakukohdes.contains(hakutoive)
-
-    anyHakukohdeMatch(toive.koulutusId.getOrElse(""), hakukohdeOids) &&
-      isAuthorized(toive.organizationParentOids, q.organisaatio) &&
-      isAuthorized(toive.organizationParentOids, getKnownOrganizations(q.user))
+    (hakukohdeOids.isEmpty || toive.koulutusId.exists(hakukohdeOids.contains)) &&
+      q.organisaatio.forall(toive.organizationParentOids.contains) &&
+      toive.organizationParentOids.intersect(getKnownOrganizations(q.user)).nonEmpty
   }
 
   private def extractSingleHakemus(h: HakijaHakemus,
