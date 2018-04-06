@@ -17,7 +17,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import redis.embedded.RedisServer
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties with BeforeAndAfterAll {
@@ -72,8 +72,8 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
-          classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286251"), 10.seconds)
-        cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+          classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286251", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
+        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
       }
@@ -129,8 +129,8 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
-          classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286253"), 10.seconds)
-        cached.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+          classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286253", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
+        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
       }

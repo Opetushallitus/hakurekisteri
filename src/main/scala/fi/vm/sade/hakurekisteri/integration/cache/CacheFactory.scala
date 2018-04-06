@@ -91,7 +91,7 @@ object CacheFactory {
         }
       }
 
-      def get(key: K): Future[T] = {
+      private def get(key: K): Future[T] = {
         val prefixKey = k(key)
         val startTime = System.currentTimeMillis
         logger.trace(s"Getting value with key ${prefixKey} from Redis cache")

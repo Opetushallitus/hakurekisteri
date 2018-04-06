@@ -19,8 +19,6 @@ trait MonadCache[F[_], K, T] {
 
   def contains(key: K): F[Boolean]
 
-  def get(key: K): F[T]
-
   def get(key: K, loader: K => F[Option[T]]): F[Option[T]]
 
   def toOption(value: F[T]): F[Option[T]]
@@ -52,7 +50,7 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
 
   def contains(key: K): Future[Boolean] = Future.successful(cache.contains(key) && (cache(key).inserted + expirationDurationMillis) > Platform.currentTime)
 
-  def get(key: K): Future[T] = {
+  private def get(key: K): Future[T] = {
     val cached = cache(key)
     cache = cache + (key -> Cacheable[Future, T](inserted = cached.inserted, f = cached.f))
     cached.f
