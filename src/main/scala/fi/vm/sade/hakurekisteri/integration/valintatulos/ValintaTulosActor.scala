@@ -112,17 +112,10 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     if (!initialLoadingDone) {
       Future.failed(InitialLoadingNotDone())
     } else {
-      // TODO we shouldn't really block in actors, but I don't manage
-      // to change this to asynchronous without causing random test
-      // failures in HakijaResourceSpecV2 ...
-      if (q.hakemusOid.isEmpty && Await.result(cache.contains(q.hakuOid), 30.seconds)) {
-        cache.get(q.hakuOid)
+      if (q.hakemusOid.isEmpty) {
+        cache.get(q.hakuOid, (_: String) => queueForResult(q.hakuOid).map(Some(_))).map(_.get)
       } else {
-        if (q.hakemusOid.isEmpty) {
-          queueForResult(q.hakuOid)
-        } else {
-          callBackend(q.hakuOid, q.hakemusOid)
-        }
+        callBackend(q.hakuOid, q.hakemusOid)
       }
     }
   }
