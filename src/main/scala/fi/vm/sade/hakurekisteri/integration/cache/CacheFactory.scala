@@ -91,31 +91,31 @@ object CacheFactory {
         }
       }
 
-      private def get(key: K): Future[T] = {
+      private def get(key: K): Future[Option[T]] = {
         val prefixKey = k(key)
         val startTime = System.currentTimeMillis
         logger.trace(s"Getting value with key ${prefixKey} from Redis cache")
-        r.get[T](prefixKey).flatMap {
-          case Some(x) =>
+        val f = r.get[T](prefixKey).recoverWith {
+          case e: InvalidClassException =>
+            logger.warn(s"Deserialization failed, removing $prefixKey from Redis cache", e)
+            r.del(prefixKey).map(_ => None)
+        }
+        f.onSuccess {
+          case Some(_) =>
             val duration = System.currentTimeMillis - startTime
             if (duration > slowRedisRequestThresholdMillis) {
               logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")
             }
-            Future.successful(x)
-          case None =>
-            Future.failed(new NotFoundFromSuoritusrekisteriRedisException(prefixKey))
         }
+        f
       }
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
       override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        r.exists(k(key)).flatMap { keyIsIncache =>
-          if (keyIsIncache) {
-            toOption(get(key))
-          } else {
-            updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
-          }
+        get(key).flatMap {
+          case Some(v) => Future.successful(Some(v))
+          case None => updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
         }
       }
 
@@ -144,7 +144,4 @@ object CacheFactory {
       }
     }
   }
-
-  class NotFoundFromSuoritusrekisteriRedisException(prefixKey: String)
-    extends RuntimeException(s"Could not find value with key $prefixKey from Redis cache")
 }
