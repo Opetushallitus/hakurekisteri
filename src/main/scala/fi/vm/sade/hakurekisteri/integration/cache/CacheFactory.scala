@@ -123,41 +123,26 @@ object CacheFactory {
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
-
-      private def close(c: Try[Closeable]) = c.foreach(IOUtils.closeQuietly(_))
-
-      private def resultOrFailure[T](t: Try[T]): T = t match {
-        case Success(s) => s
-        case Failure(t) => throw t
-      }
-
-      private def tryFinally[T](t: Try[T], resources: Try[Closeable]*) = try {
-        resultOrFailure(t)
-      } finally {
-        resources.foreach(close)
-      }
-
       def serialize(data: T): ByteString = {
         val baos = new ByteArrayOutputStream
-        val oos = Try(new ObjectOutputStream(baos))
-
-        def ser: Try[ByteString] = oos.map { o =>
-          o.writeObject(data)
+        val oos = new ObjectOutputStream(baos)
+        try {
+          oos.writeObject(data)
           ByteString(baos.toByteArray)
+        } finally {
+          oos.close()
         }
-
-        tryFinally[ByteString](ser, oos)
       }
 
       def deserialize(bs: ByteString): T = {
-        val ois = Try(new ObjectInputStream(new ByteArrayInputStream(bs.toArray)))
-
-        def des: Try[T] = ois.map(_.readObject.asInstanceOf[T])
-
-        tryFinally[T](des, ois)
+        val ois = new ObjectInputStream(new ByteArrayInputStream(bs.toArray))
+        try {
+          ois.readObject().asInstanceOf[T]
+        } finally {
+          ois.close()
+        }
       }
     }
-
   }
 
   class NotFoundFromSuoritusrekisteriRedisException(prefixKey: String)
