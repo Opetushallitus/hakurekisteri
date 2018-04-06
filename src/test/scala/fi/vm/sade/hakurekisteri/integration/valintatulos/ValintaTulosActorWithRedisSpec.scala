@@ -176,7 +176,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
 
         valintaTulosActor ! BatchUpdateValintatulos((1 to 10).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
 
-        expectFailure[InitialLoadingNotDone]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None, cachedOk = true)).mapTo[SijoitteluTulos])
+        expectFailure[InitialLoadingNotDone]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None)).mapTo[SijoitteluTulos])
       }
     )
   }

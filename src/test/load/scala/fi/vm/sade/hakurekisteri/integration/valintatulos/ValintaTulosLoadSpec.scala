@@ -38,7 +38,7 @@ class ValintaTulosLoadSpec extends FlatSpec with Matchers {
     val batchStart = Platform.currentTime
     hakemusOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[ValintaTulos] = (valintaTulos ? ValintaTulosQuery("1.2.246.562.29.173465377510", Some(h.oid), cachedOk = true)).mapTo[ValintaTulos]
+      val res: Future[ValintaTulos] = (valintaTulos ? ValintaTulosQuery("1.2.246.562.29.173465377510", Some(h.oid))).mapTo[ValintaTulos]
       res.onComplete(t => {
         val end = Platform.currentTime
         println(s"${count.getAndIncrement} (${(end - batchStart) / 1000} seconds): took ${end - start} ms")

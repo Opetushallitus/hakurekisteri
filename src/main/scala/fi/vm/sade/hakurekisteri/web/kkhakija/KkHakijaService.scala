@@ -254,7 +254,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,
                             kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {
-      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
+      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid))
       case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
     }
 
