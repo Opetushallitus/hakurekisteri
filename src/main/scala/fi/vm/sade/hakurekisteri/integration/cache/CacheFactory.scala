@@ -91,31 +91,31 @@ object CacheFactory {
         }
       }
 
-      def get(key: K): Future[T] = {
+      private def get(key: K): Future[Option[T]] = {
         val prefixKey = k(key)
         val startTime = System.currentTimeMillis
         logger.trace(s"Getting value with key ${prefixKey} from Redis cache")
-        r.get[T](prefixKey).flatMap {
-          case Some(x) =>
+        val f = r.get[T](prefixKey).recoverWith {
+          case e: InvalidClassException =>
+            logger.warn(s"Deserialization failed, removing $prefixKey from Redis cache", e)
+            r.del(prefixKey).map(_ => None)
+        }
+        f.onSuccess {
+          case Some(_) =>
             val duration = System.currentTimeMillis - startTime
             if (duration > slowRedisRequestThresholdMillis) {
               logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")
             }
-            Future.successful(x)
-          case None =>
-            Future.failed(new NotFoundFromSuoritusrekisteriRedisException(prefixKey))
         }
+        f
       }
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
       override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        r.exists(k(key)).flatMap { keyIsIncache =>
-          if (keyIsIncache) {
-            toOption(get(key))
-          } else {
-            updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
-          }
+        get(key).flatMap {
+          case Some(v) => Future.successful(Some(v))
+          case None => updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
         }
       }
 
@@ -123,43 +123,25 @@ object CacheFactory {
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
-
-      private def close(c: Try[Closeable]) = c.foreach(IOUtils.closeQuietly(_))
-
-      private def resultOrFailure[T](t: Try[T]): T = t match {
-        case Success(s) => s
-        case Failure(t) => throw t
-      }
-
-      private def tryFinally[T](t: Try[T], resources: Try[Closeable]*) = try {
-        resultOrFailure(t)
-      } finally {
-        resources.foreach(close)
-      }
-
       def serialize(data: T): ByteString = {
         val baos = new ByteArrayOutputStream
-        val oos = Try(new ObjectOutputStream(baos))
-
-        def ser: Try[ByteString] = oos.map { o =>
-          o.writeObject(data)
+        val oos = new ObjectOutputStream(baos)
+        try {
+          oos.writeObject(data)
           ByteString(baos.toByteArray)
+        } finally {
+          oos.close()
         }
-
-        tryFinally[ByteString](ser, oos)
       }
 
       def deserialize(bs: ByteString): T = {
-        val ois = Try(new ObjectInputStream(new ByteArrayInputStream(bs.toArray)))
-
-        def des: Try[T] = ois.map(_.readObject.asInstanceOf[T])
-
-        tryFinally[T](des, ois)
+        val ois = new ObjectInputStream(new ByteArrayInputStream(bs.toArray))
+        try {
+          ois.readObject().asInstanceOf[T]
+        } finally {
+          ois.close()
+        }
       }
     }
-
   }
-
-  class NotFoundFromSuoritusrekisteriRedisException(prefixKey: String)
-    extends RuntimeException(s"Could not find value with key $prefixKey from Redis cache")
 }

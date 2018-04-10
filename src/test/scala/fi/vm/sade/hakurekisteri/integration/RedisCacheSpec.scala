@@ -50,7 +50,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Await.result(cache.contains(cacheKey), 1.second) should be(true)
 
-        Await.result(cache get cacheKey, 10.seconds) should be (cacheEntry)
+        Await.result(cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds) should be (Some(cacheEntry))
       }
     )
   }
@@ -138,7 +138,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
            Thread.sleep(100)
            Await.result(cache.contains(cacheKey), 1.second) should be(true)
-           Await.result(cache.get(cacheKey), 1.second) should be (cacheEntry)
+           Await.result(cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called"))), 1.second) should be (Some(cacheEntry))
 
            verify(mockLoader, times(1)).apply(cacheKey)
          }

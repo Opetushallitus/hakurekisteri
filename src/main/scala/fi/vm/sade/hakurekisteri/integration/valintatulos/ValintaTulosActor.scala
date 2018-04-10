@@ -14,9 +14,7 @@ import scala.util.{Failure, Success}
 
 case class InitialLoadingNotDone() extends Exception("Initial loading not yet done")
 
-case class ValintaTulosQuery(hakuOid: String,
-                             hakemusOid: Option[String],
-                             cachedOk: Boolean = true)
+case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
 
 class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
@@ -114,17 +112,10 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     if (!initialLoadingDone) {
       Future.failed(InitialLoadingNotDone())
     } else {
-      // TODO we shouldn't really block in actors, but I don't manage
-      // to change this to asynchronous without causing random test
-      // failures in HakijaResourceSpecV2 ...
-      if (q.cachedOk && Await.result(cache.contains(q.hakuOid), 30.seconds))
-        cache.get(q.hakuOid)
-      else {
-        if (q.hakemusOid.isEmpty) {
-          queueForResult(q.hakuOid)
-        } else {
-          callBackend(q.hakuOid, q.hakemusOid)
-        }
+      if (q.hakemusOid.isEmpty) {
+        cache.get(q.hakuOid, (_: String) => queueForResult(q.hakuOid).map(Some(_))).map(_.get)
+      } else {
+        callBackend(q.hakuOid, q.hakemusOid)
       }
     }
   }

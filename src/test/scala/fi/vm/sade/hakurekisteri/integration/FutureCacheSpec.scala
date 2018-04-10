@@ -54,7 +54,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
     Thread.sleep(100)
 
-    cache.get(cacheKey)
+    cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called")))
 
     cache.getCache(cacheKey).accessed should be > accessed
   }
