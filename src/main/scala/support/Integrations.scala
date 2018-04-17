@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
-import fi.vm.sade.hakurekisteri.integration.koski.{KoskiArvosanaTrigger, KoskiService, KoskiTrigger}
+import fi.vm.sade.hakurekisteri.integration.koski._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
@@ -51,6 +51,7 @@ trait Integrations {
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
+  val koskiService: IKoskiService
 }
 
 object Integrations {
@@ -73,6 +74,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     }
   })
   override val hakemusService = new HakemusServiceMock
+  override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))

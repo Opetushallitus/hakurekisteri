@@ -1,6 +1,6 @@
 import java.nio.file.Path
-import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
+import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
@@ -19,6 +19,7 @@ import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuori
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2}
+import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{CreateOpiskeluoikeusCommand, OpiskeluoikeusSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
@@ -122,7 +123,8 @@ class ScalatraBootstrap extends LifeCycle {
     ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue), // Continuous Virta queue processing
     ("/ytl", "ytl") -> new YtlResource(integrations.ytl, integrations.ytlIntegration),
     ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system),
-    ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet
+    ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
+    ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService)
   )
 
   private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =
