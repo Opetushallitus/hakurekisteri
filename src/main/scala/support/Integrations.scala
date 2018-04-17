@@ -1,6 +1,5 @@
 package support
 
-import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
