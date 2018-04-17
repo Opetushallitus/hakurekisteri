@@ -1,6 +1,5 @@
 package support
 
-import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
@@ -206,7 +205,7 @@ class BaseIntegrations(rekisterit: Registers,
   private val delay: FiniteDuration = if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "").toBoolean).getOrElse(true)) {
     1.minute
   } else {
-    FiniteDuration(Long.MaxValue, TimeUnit.DAYS)
+    FiniteDuration(5 * 360, TimeUnit.DAYS)
   }
 
   koskiService.processModifiedKoski(refreshFrequency = delay)
