@@ -19,11 +19,16 @@ import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Success, Try}
 
 
+trait KoskiTriggerable {
+  def trigger(a: KoskiHenkiloContainer, b: PersonOidsWithAliases)
+}
+
 case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases) => Unit)
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
+    logger.debug(s"Haetaan aliakset henkilöille=$hs")
     val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
@@ -121,15 +126,32 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
   override def updateHenkilo(oppijaOid: String): Future[Unit] = {
     logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
 
-    val oppijadata: Future[List[KoskiHenkiloContainer]] = virkailijaRestClient
+    val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
       .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
-      .map(container => List(container))
+      .recoverWith {
+        case e: Exception =>
+          logger.error("Kutsu koskeen epäonnistui", e)
+          Future.failed(e)
+      }
+
+    val oppijadata = oppijadatasingle.map(container => List(container))
+      .recoverWith {
+      case e: Exception =>
+        logger.error("Error", e)
+        return Future.failed(e)
+    }
 
     val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
       val (henkilot, personOidsWithAliases) = res
+      logger.debug(s"Haettu henkilöt=$henkilot")
       Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-        case Failure(exception) => Future.failed(exception)
-        case Success(value) => Future.successful(())
+        case Failure(exception) =>
+          logger.error("Error triggering update for henkilö", exception)
+          Future.failed(exception)
+        case Success(value) => {
+          logger.debug("updateHenkilo success")
+          Future.successful(())
+        }
       }
     })
     result

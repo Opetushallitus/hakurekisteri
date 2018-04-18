@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 object KoskiArvosanaTrigger {
 
@@ -110,31 +111,61 @@ object KoskiArvosanaTrigger {
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
     koskihenkilöcontainer.henkilö.oid.foreach(henkiloOid => {
-      val allSuoritukset: Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer)
-      //allsuoritukset ok, tokan localdate on mitä pitää
+      val allSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer)
 
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => { //process future
         val henkilonSuoritukset = allSuoritukset.filter(s => {
-          s._1.asInstanceOf[VirallinenSuoritus].henkilo.equals(henkiloOid)
+          s.suoritus.henkiloOid.equals(henkiloOid)
         })
         henkilonSuoritukset.foreach {
-          case (useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaAste: Option[String]) =>
-
-            //val useSuoritus = suor
+          case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaAste: Option[String]) =>
             val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty){
               henkilonSuoritukset
-                .filter(_._1.asInstanceOf[VirallinenSuoritus].henkilo.equals(useSuoritus.henkilo))
-                .filter(_._1.asInstanceOf[VirallinenSuoritus].myontaja.equals(useSuoritus.myontaja))
-                .filter(_._1.asInstanceOf[VirallinenSuoritus].komo.equals("luokka"))
-                .filter(_._5.getOrElse("").startsWith("9"))
-                .flatMap(_._2)
+                  .filter(_.suoritus match {
+                    case a: VirallinenSuoritus =>
+                      a.henkilo.equals(useSuoritus.henkilo) &&
+                        a.myontaja.equals(useSuoritus.myontaja) &&
+                        a.komo.equals("luokka")
+                    case _ => false
+                  })
+                .filter(_.luokkataso.contains("9"))
+                .flatMap(s => s.arvosanat)
             } else {
               arvosanat
             }
+
+            val useLasnaDate = henkilonSuoritukset
+              .find(_.suoritus match {
+                case a: VirallinenSuoritus =>
+                  a.henkilo.equals(useSuoritus.henkilo) &&
+                    a.myontaja.equals(useSuoritus.myontaja) &&
+                    a.komo.equals("luokka")
+                case _ => false
+              })
+              .filter(_.luokkataso.contains("9"))
+              .map(s => s.lasnadate).getOrElse(lasnaDate)
+
             var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
             var useLuokkaAste = luokkaAste
-            if (henkilonSuoritukset.exists(_._5.getOrElse("").startsWith("9")) && useSuoritus.komo.equals(Oids.perusopetusKomoOid)) {
-              useLuokka = henkilonSuoritukset.find(_._5.getOrElse("").startsWith("9")).head._3
+
+
+            val isNinthGrade = {
+              try {
+                val foo = henkilonSuoritukset.exists(s => {
+                  val luokkatieto = s.luokkataso
+                  val asd = luokkatieto.getOrElse("").startsWith("9")
+                  asd
+                })
+                foo
+              } catch {
+                case e: Throwable =>
+                  logger.error("Error", e)
+                  false
+              }
+            }
+            val isPerusopetus = useSuoritus.komo.equals(Oids.perusopetusKomoOid)
+            if ( isNinthGrade && isPerusopetus ) {
+              useLuokka = henkilonSuoritukset.find(_.luokkataso.getOrElse("").startsWith("9")).head.luokka
               useLuokkaAste = Some("9")
             } else {
               useLuokka = luokka
@@ -143,11 +174,11 @@ object KoskiArvosanaTrigger {
               useLuokkaAste = Some("9")
               useLuokka = AIKUISTENPERUS_LUOKKAASTE+" "+luokka
             }
-            val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_._5.getOrElse("").startsWith("9"))
+            val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
                                                                                                                           || luokkaAste.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
-
+            //usesuorituksen komo on luokka jolloin sitä ei tallenneta
             if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-              val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, lasnaDate, useLuokkaAste)) //LUOKKATIETO
+              val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, useLasnaDate, useLuokkaAste)) //LUOKKATIETO
               if (!suoritusExists(useSuoritus, suoritukset)) {
                 for (
                   suoritus: Suoritus with Identified[UUID] <- saveSuoritus(useSuoritus)
@@ -166,13 +197,19 @@ object KoskiArvosanaTrigger {
                 }
                 saveOpiskelija(opiskelija)
               }
+            } else {
+              println("wat do")
             }
-          case (_, _, _, _, _) =>
+          case _ =>
             println("foo")
           // VapaamuotoinenSuoritus will not be saved
         }
       })
     })
+  }
+
+  def handleSuoritus(): Unit = {
+
   }
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
@@ -188,17 +225,22 @@ object KoskiArvosanaTrigger {
   def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
 
   def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
+
+    logger.debug(s"suoritusLuokka=$suoritusLuokka")
     var alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
 
     var (luokkataso, oppilaitosOid, luokka) = detectOppilaitos(suoritusLuokka)
 
     if (!loppu.isAfter(alku)) {
+      logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false")
       loppu = parseNextFourthOfJune().toDateTimeAtStartOfDay
       if (!loppu.isAfter(alku)) {
         alku = new DateTime(0L) //Sanity
       }
     }
+
+    logger.debug(s"alku=$alku")
 
     //luokkatieto käytännössä
     val op = Opiskelija(
@@ -250,7 +292,8 @@ object KoskiArvosanaTrigger {
     Arvosana(suoritus = null, arvio = arvo, aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
   }
 
-  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])] = {
+
+  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[SuoritusArvosanat] = {
     getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
 
@@ -261,7 +304,7 @@ object KoskiArvosanaTrigger {
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
 
-  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])] = {
+  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[SuoritusArvosanat] = {
     (for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
@@ -383,8 +426,10 @@ object KoskiArvosanaTrigger {
     fourthOfJune
   }
 
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])] = {
-    var result = Seq[(Suoritus, Seq[Arvosana], String, LocalDate, Option[String])]()
+  case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
+
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
+    var result = Seq[SuoritusArvosanat]()
     for ( suoritus <- suoritukset ) {
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
 
@@ -406,7 +451,7 @@ object KoskiArvosanaTrigger {
         case (None, Some(kt)) => parseLocalDate(kt.alku)
         case (_,_) => valmistumisPaiva
       }
-
+      val foo = lasnaDate.toString("yyyy-MM-dd")
       val (komoOid, luokkataso) = suoritus.tyyppi match {
         case Some(k) =>
           matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus)
@@ -478,7 +523,7 @@ object KoskiArvosanaTrigger {
       }
 
       if (komoOid != DUMMYOID && vuosi > 1970) {
-        val suoritus = (VirallinenSuoritus(
+        val suoritus = SuoritusArvosanat(VirallinenSuoritus(
             komoOid,
             organisaatioOid,
             suoritusTila,
@@ -493,9 +538,13 @@ object KoskiArvosanaTrigger {
         result = result :+ suoritus
       }
     }
-
     result
   }
+}
+
+
+object KoskiArvosanaTriggerHelper {
+
 }
 
 case class SuoritusLuokka(suoritus: VirallinenSuoritus, luokka: String, lasnaDate: LocalDate, luokkataso: Option[String] = None)
