@@ -122,7 +122,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
 
     val oppijadata: Future[List[KoskiHenkiloContainer]] = virkailijaRestClient
-      .readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
+      .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
+      .map(container => List(container))
 
     val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
       val (henkilot, personOidsWithAliases) = res
