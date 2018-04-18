@@ -50,10 +50,12 @@ object KoskiArvosanaTrigger {
                                          (implicit ec: ExecutionContext): Unit = {
     implicit val timeout: Timeout = 2.minutes
 
-    def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] =
+    def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] = {
+      logger.debug("saveSuoritus={}", suor)
       (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor, personOidsWithAliases)).mapTo[Suoritus with Identified[UUID]].recoverWith {
         case t: AskTimeoutException => saveSuoritus(suor)
       }
+    }
 
     def fetchExistingSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
       val q = SuoritusQuery(henkilo = Some(henkiloOid))
@@ -199,7 +201,7 @@ object KoskiArvosanaTrigger {
     }
 
     //luokkatieto käytännössä
-    Opiskelija(
+    val op = Opiskelija(
       oppilaitosOid = oppilaitosOid,
       luokkataso = luokkataso,
       luokka = luokka,
@@ -208,6 +210,8 @@ object KoskiArvosanaTrigger {
       loppuPaiva = Some(loppu),
       source = "koski"
     )
+    logger.debug("createOpiskelija={}", op)
+    op
   }
 
   def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritus: SuoritusLuokka, komoOid: String): (String, String, String) = {
@@ -474,19 +478,22 @@ object KoskiArvosanaTrigger {
       }
 
       if (komoOid != DUMMYOID && vuosi > 1970) {
-        result = result :+ (VirallinenSuoritus(
-          komoOid,
-          organisaatioOid,
-          suoritusTila,
-          useValmistumisPaiva,
-          personOid,
-          yksilöllistaminen,
-          suorituskieli.koodiarvo,
-          None,
-          true,
-          root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
+        val suoritus = (VirallinenSuoritus(
+            komoOid,
+            organisaatioOid,
+            suoritusTila,
+            useValmistumisPaiva,
+            personOid,
+            yksilöllistaminen,
+            suorituskieli.koodiarvo,
+            None,
+        true,
+            root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
+        logger.debug("createSuoritusArvosanat={}", suoritus)
+        result = result :+ suoritus
       }
     }
+
     result
   }
 }
