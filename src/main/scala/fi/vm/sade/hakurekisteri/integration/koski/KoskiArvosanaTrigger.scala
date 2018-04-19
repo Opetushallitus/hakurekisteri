@@ -426,7 +426,7 @@ object KoskiArvosanaTrigger {
   }
 
 
-  def luvaKurssienMaara(osasuoritukset: Seq[KoskiOsasuoritus]): Int = {
+  def getNumberOfAcceptedLuvaCourses(osasuoritukset: Seq[KoskiOsasuoritus]): Int = {
     val hyvaksytty = osasuoritukset
       .filter(s => s.tyyppi.koodiarvo == "luvaoppiaine" || s.tyyppi.koodiarvo == "luvalukionoppiaine")
       .filter(s => s.arviointi.exists(_.hyväksytty.contains(true)))
@@ -505,9 +505,19 @@ object KoskiArvosanaTrigger {
           }
 
         case Oids.lukioonvalmistavaKomoOid =>
-          if(luvaKurssienMaara(suoritus.osasuoritukset) >= 25) {
+          if(getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset) >= 25) {
             "VALMIS"
           } else "KESKEN"
+
+        case Oids.perusopetusKomoOid =>
+          if(suoritus.jääLuokalle.contains(true)) {
+            "KESKEYTYNYT"
+          } else suoritusTila
+
+        case s if s.startsWith("luokka") =>
+          if(suoritus.jääLuokalle.contains(true)) {
+            "KESKEYTYNYT"
+          } else suoritusTila
 
         case _ => suoritusTila
       }

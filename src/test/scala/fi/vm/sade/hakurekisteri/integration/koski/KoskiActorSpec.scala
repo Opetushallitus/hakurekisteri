@@ -324,7 +324,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         yksilöllistettyOppimäärä = None,
         osasuoritukset = Seq(getOsasuoritus("MA", Some("9"))),
         ryhmä = None,
-        alkamispäivä = alkamisPaiva
+        alkamispäivä = alkamisPaiva,
+        jääLuokalle = None
       )
       this.copy(suoritukset = uudetSuoritukset)
     }
@@ -347,7 +348,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         yksilöllistettyOppimäärä = None,
         osasuoritukset = osasuoritus,
         ryhmä = None,
-        alkamispäivä = None
+        alkamispäivä = None,
+        jääLuokalle = None
       )
     }
 
@@ -365,7 +367,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         yksilöllistettyOppimäärä = None,
         osasuoritukset = osasuoritus,
         ryhmä = None,
-        alkamispäivä = None
+        alkamispäivä = None,
+        jääLuokalle = None
       )
     }
 

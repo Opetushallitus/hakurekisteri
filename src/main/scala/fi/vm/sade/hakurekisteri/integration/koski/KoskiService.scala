@@ -209,7 +209,9 @@ case class KoskiSuoritus(
                   yksilöllistettyOppimäärä: Option[Boolean],
                   osasuoritukset: Seq[KoskiOsasuoritus],
                   ryhmä: Option[String],
-                  alkamispäivä: Option[String])
+                  alkamispäivä: Option[String],
+                  //jääLuokalle is only used for peruskoulu
+                  jääLuokalle: Option[Boolean])
 
 case class KoskiOsasuoritus(
                  koulutusmoduuli: KoskiKoulutusmoduuli,
