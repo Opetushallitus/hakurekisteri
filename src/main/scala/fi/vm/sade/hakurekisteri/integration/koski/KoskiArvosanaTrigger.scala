@@ -8,8 +8,8 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija.{IdentifiedOpiskelija, Opiskelija, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource, LogMessage}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 object KoskiArvosanaTrigger {
 
@@ -134,39 +133,29 @@ object KoskiArvosanaTrigger {
               arvosanat
             }
 
-            val useLasnaDate = henkilonSuoritukset
-              .find(_.suoritus match {
-                case a: VirallinenSuoritus =>
-                  a.henkilo.equals(useSuoritus.henkilo) &&
-                    a.myontaja.equals(useSuoritus.myontaja) &&
-                    a.komo.equals("luokka")
-                case _ => false
-              })
-              .filter(_.luokkataso.contains("9"))
-              .map(s => s.lasnadate).getOrElse(lasnaDate)
+
 
             var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
             var useLuokkaAste = luokkaAste
+            var useLasnaDate = lasnaDate
 
-
-            val isNinthGrade = {
-              try {
-                val foo = henkilonSuoritukset.exists(s => {
-                  val luokkatieto = s.luokkataso
-                  val asd = luokkatieto.getOrElse("").startsWith("9")
-                  asd
-                })
-                foo
-              } catch {
-                case e: Throwable =>
-                  logger.error("Error", e)
-                  false
-              }
-            }
+            val isNinthGrade = henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
             val isPerusopetus = useSuoritus.komo.equals(Oids.perusopetusKomoOid)
+
             if ( isNinthGrade && isPerusopetus ) {
               useLuokka = henkilonSuoritukset.find(_.luokkataso.getOrElse("").startsWith("9")).head.luokka
               useLuokkaAste = Some("9")
+              useLasnaDate = henkilonSuoritukset
+                .find(_.suoritus match {
+                  case a: VirallinenSuoritus =>
+                    a.henkilo.equals(useSuoritus.henkilo) &&
+                      a.myontaja.equals(useSuoritus.myontaja) &&
+                      a.komo.equals("luokka")
+                  case _ => false
+                })
+                .filter(_.luokkataso.contains("9"))
+                .map(s => s.lasnadate).getOrElse(lasnaDate) //fall back to this suoritus lasnadate
+
             } else {
               useLuokka = luokka
             }
@@ -176,9 +165,13 @@ object KoskiArvosanaTrigger {
             }
             val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
                                                                                                                           || luokkaAste.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
-            //usesuorituksen komo on luokka jolloin sitä ei tallenneta
+
+            //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
+            //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
             if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-              val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, useLasnaDate, useLuokkaAste)) //LUOKKATIETO
+
+              //LUOKKATIETO
+              val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, useLasnaDate, useLuokkaAste))
               if (!suoritusExists(useSuoritus, suoritukset)) {
                 for (
                   suoritus: Suoritus with Identified[UUID] <- saveSuoritus(useSuoritus)
