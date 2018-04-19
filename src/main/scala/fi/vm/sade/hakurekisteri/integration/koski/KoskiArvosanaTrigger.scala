@@ -438,6 +438,7 @@ object KoskiArvosanaTrigger {
 
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
+    var failedNinthGrade = false
     for ( suoritus <- suoritukset ) {
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
 
@@ -490,6 +491,11 @@ object KoskiArvosanaTrigger {
 
       //TODO process here or before the upper parts reference suoritustila??
       //see https://confluence.oph.ware.fi/confluence/display/AJTS/Koski-Sure+arvosanasiirrot
+      val vuosiluokkiinSitoutumatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
+        case Some(x) => x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
+        case None => false
+      }
+
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
           if (suoritus.vahvistus.isEmpty) {
@@ -510,12 +516,12 @@ object KoskiArvosanaTrigger {
           } else "KESKEN"
 
         case Oids.perusopetusKomoOid =>
-          if(suoritus.jääLuokalle.contains(true)) {
+          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || vuosiluokkiinSitoutumatonOpetus) {
             "KESKEYTYNYT"
           } else suoritusTila
 
         case s if s.startsWith("luokka") =>
-          if(suoritus.jääLuokalle.contains(true)) {
+          if(suoritus.jääLuokalle.contains(true) || vuosiluokkiinSitoutumatonOpetus)  {
             "KESKEYTYNYT"
           } else suoritusTila
 
@@ -531,6 +537,8 @@ object KoskiArvosanaTrigger {
       }
       if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
         luokka = "9"
+        if (suoritusTila == "KESKEYTYNYT")
+          failedNinthGrade = true
       }
 
       val useValmistumisPaiva = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
@@ -558,6 +566,10 @@ object KoskiArvosanaTrigger {
         result = result :+ suoritus
       }
     }
+
+
+
+
     result
   }
 }

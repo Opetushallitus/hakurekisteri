@@ -147,6 +147,24 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     virallinen.tila should equal("KESKEYTYNYT")
   }
 
+  it should "parse peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true.json data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    val lisätiedot = henkilo.opiskeluoikeudet.head.lisätiedot
+    lisätiedot shouldBe defined
+    lisätiedot.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
+
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    result should have length 4
+
+    val suoritus = result(2)
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    virallinen.tila should equal("KESKEYTYNYT")
+  }
+
 
   class TestSureActor extends Actor {
     import akka.pattern.pipe
