@@ -274,7 +274,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       tyyppi = KoskiKoodi("", ""),
       arviointi = Seq(arvosana9),
       pakollinen = Some(true),
-      yksilöllistettyOppimäärä = Some(false)
+      yksilöllistettyOppimäärä = Some(false),
+      osasuoritukset = None
     )
 
     def setOpiskeluOikeusJakso(tilat: Seq[KoskiTila]) = {
@@ -296,7 +297,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         tyyppi = KoskiKoodi("", ""),
         arviointi = arv,
         pakollinen = Some(true),
-        yksilöllistettyOppimäärä = Some(yksilollistetty)
+        yksilöllistettyOppimäärä = Some(yksilollistetty),
+        osasuoritukset = None
       )
     }
 
@@ -388,7 +390,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       KoskiHenkiloContainer(
         koskiHenkilo,
         Seq(KoskiOpiskeluoikeus(
-          oid = "",
+          oid = Some(""),
           päättymispäivä = Option.empty,
           oppilaitos = KoskiOrganisaatio(orgId),
           tila = this.getOpiskeluOikeusJakso,

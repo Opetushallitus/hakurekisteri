@@ -133,8 +133,6 @@ object KoskiArvosanaTrigger {
               arvosanat
             }
 
-
-
             var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
             var useLuokkaAste = luokkaAste
             var useLasnaDate = lasnaDate
@@ -419,6 +417,15 @@ object KoskiArvosanaTrigger {
     fourthOfJune
   }
 
+
+  def luvaKurssienMaara(osasuoritukset: Seq[KoskiOsasuoritus]): Int = {
+    val hyvaksytty = osasuoritukset
+      .filter(s => s.tyyppi.koodiarvo == "luvaoppiaine" || s.tyyppi.koodiarvo == "luvalukionoppiaine")
+      .filter(s => s.arviointi.exists(_.hyväksytty.contains(true)))
+
+    hyvaksytty.size
+  }
+
   case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
@@ -429,12 +436,12 @@ object KoskiArvosanaTrigger {
       var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
       var suoritusTila = tilat match {
-        case t if(t.exists(_.tila.koodiarvo == "valmistunut")) => "VALMIS"
-        case t if(t.exists(_.tila.koodiarvo == "eronnut")) => "KESKEYTYNYT"
-        case t if(t.exists(_.tila.koodiarvo == "erotettu")) => "KESKEYTYNYT"
-        case t if(t.exists(_.tila.koodiarvo == "katsotaaneronneeksi")) => "KESKEYTYNYT"
-        case t if(t.exists(_.tila.koodiarvo == "mitatoity")) => "KESKEYTYNYT"
-        case t if(t.exists(_.tila.koodiarvo == "peruutettu")) => "KESKEYTYNYT"
+        case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
+        case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
+        case t if t.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
+        case t if t.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
+        case t if t.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
+        case t if t.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
         // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
         case _ => "KESKEN"
       }
@@ -472,6 +479,7 @@ object KoskiArvosanaTrigger {
       if(komoOid == Oids.valmaKomoOid && suoritusTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30) {
         suoritusTila = "KESKEN"
       }
+
       //TODO process here or before the upper parts reference suoritustila??
       //see https://confluence.oph.ware.fi/confluence/display/AJTS/Koski-Sure+arvosanasiirrot
       suoritusTila = komoOid match {
@@ -488,9 +496,9 @@ object KoskiArvosanaTrigger {
           } else suoritusTila
 
         case Oids.lukioonvalmistavaKomoOid =>
-          if(opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) >= 25) {
+          if(luvaKurssienMaara(suoritus.osasuoritukset) >= 25) {
             "VALMIS"
-          } else suoritusTila
+          } else "KESKEN"
 
         case _ => suoritusTila
       }

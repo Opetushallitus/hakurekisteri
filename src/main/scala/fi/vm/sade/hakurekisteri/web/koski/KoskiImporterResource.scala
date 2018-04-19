@@ -43,6 +43,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
     implicit val user = getAdmin
     val personOid = params("oppijaOid")
     val res = koskiService.updateHenkilo(personOid)
+    res
   }
 
 }

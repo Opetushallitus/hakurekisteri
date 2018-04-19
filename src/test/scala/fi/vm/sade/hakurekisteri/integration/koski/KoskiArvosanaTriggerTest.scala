@@ -15,11 +15,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar {
+
+  implicit val formats = org.json4s.DefaultFormats
+
+  private val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
+
   it should "parse a koski henkilo" in {
-    implicit val formats = org.json4s.DefaultFormats
-
-
-    val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
     val json: String = scala.io.Source.fromFile(jsonDir + "testikiira.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     assert(henkilo != null)
@@ -30,7 +31,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val expectedDate = new LocalDate(2017,8,1)
     suoritusB.lasnadate should equal (expectedDate)
     val oidsWithAliases = PersonOidsWithAliases(Set("1.2.246.562.24.71123947024"), Map.empty)
-
+/*
+    TODO fix actor threading problem
     val system = ActorSystem("MySpec")
     val a = system.actorOf(Props(new TestSureActor()).withDispatcher(CallingThreadDispatcher.Id))
 
@@ -41,6 +43,31 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     //val f: Unit = trigger.f(henkilo, oidsWithAliases)
     //Thread.sleep(100000)
     println("great success")
+    */
+  }
+
+  it should "parse 7 course LUVA data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "LUVA.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    assert(henkilo != null)
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    result should have length 1
+    val suoritus: SuoritusArvosanat = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinen.tila should equal("KESKEN")
+  }
+
+  it should "parse 25 course LUVA data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_25_kurssia.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    assert(henkilo != null)
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    result should have length 1
+    val suoritus: SuoritusArvosanat = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinen.tila should equal("VALMIS")
   }
 
 

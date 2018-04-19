@@ -183,7 +183,7 @@ case class KoskiHenkilo(
                          sukunimi: Option[String]) {
 }
 case class KoskiOpiskeluoikeus(
-                 oid: String,
+                 oid: Option[String], //LUVA data does not have an OID
                  oppilaitos: KoskiOrganisaatio,
                  tila: KoskiOpiskeluoikeusjakso,
                  päättymispäivä: Option[String],
@@ -216,7 +216,8 @@ case class KoskiOsasuoritus(
                  tyyppi: KoskiKoodi,
                  arviointi: Seq[KoskiArviointi],
                  pakollinen: Option[Boolean],
-                 yksilöllistettyOppimäärä: Option[Boolean]
+                 yksilöllistettyOppimäärä: Option[Boolean],
+                 osasuoritukset: Option[Seq[KoskiOsasuoritus]]
              )
 
 case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean])
