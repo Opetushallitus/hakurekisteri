@@ -49,7 +49,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
   it should "parse 7 course LUVA data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    assert(henkilo != null)
+    henkilo should not be null
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     result should have length 1
     val suoritus: SuoritusArvosanat = result.head
@@ -61,7 +61,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
   it should "parse 25 course LUVA data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_25_kurssia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    assert(henkilo != null)
+    henkilo should not be null
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     result should have length 1
     val suoritus: SuoritusArvosanat = result.head
@@ -70,6 +70,35 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     virallinen.tila should equal("VALMIS")
   }
 
+  it should "parse VALMA data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    result should have length 1
+
+    val suoritus = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    virallinen.tila should equal("VALMIS")
+  }
+
+  it should "parse VALMA_kesken data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    result should have length 1
+
+    val suoritus = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    virallinen.tila should equal("KESKEN")
+  }
 
   class TestSureActor extends Actor {
     import akka.pattern.pipe

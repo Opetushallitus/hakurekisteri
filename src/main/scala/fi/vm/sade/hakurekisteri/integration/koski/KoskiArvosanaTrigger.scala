@@ -397,6 +397,14 @@ object KoskiArvosanaTrigger {
     opintopisteet
   }
 
+  def getValmaOsaamispisteet(suoritus: KoskiSuoritus): BigDecimal = {
+    suoritus.osasuoritukset
+      .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
+      .flatMap(_.koulutusmoduuli.laajuus)
+      .map(_.arvo.getOrElse(BigDecimal(0)))
+      .sum
+  }
+
   def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
     val oppilaitos = opOikeus.oppilaitos
     (vahvistus, opOikeus.päättymispäivä) match {
@@ -489,11 +497,12 @@ object KoskiArvosanaTrigger {
           } else suoritusTila
 
         case Oids.valmaKomoOid =>
-          if(suoritusTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30){
+          val pisteet = getValmaOsaamispisteet(suoritus)
+          if(pisteet < 30){
             "KESKEN"
-          } else if(opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) >= 30) {
+          } else {
             "VALMIS"
-          } else suoritusTila
+          }
 
         case Oids.lukioonvalmistavaKomoOid =>
           if(luvaKurssienMaara(suoritus.osasuoritukset) >= 25) {
