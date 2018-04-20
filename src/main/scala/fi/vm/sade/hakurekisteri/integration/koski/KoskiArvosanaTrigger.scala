@@ -110,8 +110,11 @@ object KoskiArvosanaTrigger {
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
     koskihenkilöcontainer.henkilö.oid.foreach(henkiloOid => {
-      val allSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer)
 
+      //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
+      //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
+      val allSuorituksetGroups: Seq[Seq[SuoritusArvosanat]] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer)
+      allSuorituksetGroups.foreach(allSuoritukset =>
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => { //process future
         val henkilonSuoritukset = allSuoritukset.filter(s => {
           s.suoritus.henkiloOid.equals(henkiloOid)
@@ -195,7 +198,7 @@ object KoskiArvosanaTrigger {
             println("foo")
           // VapaamuotoinenSuoritus will not be saved
         }
-      })
+      }))
     })
   }
 
@@ -284,7 +287,7 @@ object KoskiArvosanaTrigger {
   }
 
 
-  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[SuoritusArvosanat] = {
+  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[Seq[SuoritusArvosanat]] = {
     getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
 
@@ -295,12 +298,13 @@ object KoskiArvosanaTrigger {
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
 
-  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[SuoritusArvosanat] = {
-    (for (
+  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
+    val result: Seq[Seq[SuoritusArvosanat]] = for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
       createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset, opiskeluoikeus.tila.opiskeluoikeusjaksot, opiskeluoikeus)
-    }).flatten
+    }
+    result
   }
 
   def parseYear(dateStr: String): Int = {
@@ -468,7 +472,19 @@ object KoskiArvosanaTrigger {
       }
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
-        case Oids.perusopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case Oids.perusopetusKomoOid =>
+          val (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+          if(suoritus.vahvistus.isDefined) {
+            val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
+            val d = parseLocalDate("2018-06-04")
+            if (vahvistusDate.isAfter(d)) {
+              (Seq(), yks)
+            } else {
+              (as, yks)
+            }
+          } else {
+            (as, yks)
+          }
         case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
         case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
