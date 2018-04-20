@@ -31,7 +31,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   it should "empty KoskiHenkilo should return list" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer().build
-    ) should contain theSameElementsAs Seq()
+    ).flatten should contain theSameElementsAs Seq()
   }
 
   it should "list should return peruskoulutus with kieli arvosana" in {
@@ -40,7 +40,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setPeruskouluKieli()
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -62,7 +62,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .setLuokka("9E")
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -88,7 +88,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .setLuokka("9A", Some("2017-03-03"))
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -114,7 +114,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", Some("5"), false), ("IHME JA KUMMA", Some("10"), false), ("TE", Some("11"), false)))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -136,7 +136,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -160,7 +160,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .setOpiskeluOikeusJakso(Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "kesken", koodistoUri = "uri"))))
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "KESKEN",
       nextFourthOfJune,
@@ -181,7 +181,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setSuorituksetForPeruskoulu(List(("YL", Some("4"), true), ("OP", None, true), ("DDR", None, false)))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -202,7 +202,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         .setSuorituksetForKymppi(List(("KT", Some("10")), ("KE", Some("8"))))
         .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
         .build
-    ) should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.lisaopetusKomoOid,
+    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.lisaopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
