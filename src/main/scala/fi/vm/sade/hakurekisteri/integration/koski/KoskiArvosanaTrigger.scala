@@ -560,16 +560,12 @@ object KoskiArvosanaTrigger {
             yksilöllistaminen,
             suorituskieli.koodiarvo,
             None,
-        true,
+            true,
             root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
         logger.debug("createSuoritusArvosanat={}", suoritus)
         result = result :+ suoritus
       }
     }
-
-
-
-
     result
   }
 }

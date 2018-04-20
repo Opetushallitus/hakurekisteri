@@ -192,6 +192,21 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     result should have length 4
   }
 
+  it should "not parse arvosanat from lukio_päättötodistus.json" in {
+    /*
+    Lukion päättötodistuksen (abiturienttien) arvosanat: Suoritusta ei pidä luoda, sillä hakijalla on jo
+    hakemuksen perusteella luotu suoritus suoritusrekisterissä. Haetaan arvosanat hakijoille
+    joiden lukion oppimäärän suoritus on vahvistettu KOSKI -palvelussa.
+    Tässä vaiheessa ei haeta vielä lukion päättötodistukseen tehtyjä korotuksia.
+     */
+
+    val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    result should have length 0
+  }
+
 
   class TestSureActor extends Actor {
     import akka.pattern.pipe
