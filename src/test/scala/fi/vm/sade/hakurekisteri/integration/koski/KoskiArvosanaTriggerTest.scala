@@ -130,6 +130,23 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     virallinen.tila should equal("VALMIS")
   }
 
+  it should "parse peruskoulu_lisäopetus.json arvosanat" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_lisäopetus.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+
+    val suoritus = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    virallinen.tila should equal("VALMIS")
+
+    suoritus.arvosanat should have length 13
+  }
+
 
   it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_jää_luokalle.json").mkString
@@ -145,6 +162,13 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
     virallinen.tila should equal("KESKEYTYNYT")
+    suoritus.arvosanat should have length 0
+
+    val paattotodistus = result(3)
+
+    val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinenpaattotodistus.komo shouldNot be("luokka")
+    paattotodistus.arvosanat should have length 0
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true.json data" in {
