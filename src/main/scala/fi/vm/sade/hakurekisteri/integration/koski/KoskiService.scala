@@ -224,7 +224,12 @@ case class KoskiOsasuoritus(
 
 case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean])
 
-case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi], kieli: Option[KoskiKieli], koulutustyyppi: Option[KoskiKoodi], laajuus: Option[KoskiValmaLaajuus])
+case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi],
+                                kieli: Option[KoskiKieli],
+                                koulutustyyppi:
+                                Option[KoskiKoodi],
+                                laajuus: Option[KoskiValmaLaajuus],
+                                pakollinen: Option[Boolean])
 
 case class KoskiValmaLaajuus(arvo: Option[BigDecimal], yksikkö: KoskiKoodi)
 

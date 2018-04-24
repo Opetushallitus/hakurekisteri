@@ -2,19 +2,22 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{CallingThreadDispatcher, TestActors}
+import fi.vm.sade.hakurekisteri.integration.ActorSystemSupport
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.LocalDate
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.scalatest.concurrent.AsyncAssertions
+import org.scalatest.FunSpec
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar {
+class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar with AsyncAssertions {
 
   implicit val formats = org.json4s.DefaultFormats
 
@@ -31,8 +34,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val expectedDate = new LocalDate(2017,8,1)
     suoritusB.lasnadate should equal (expectedDate)
     val oidsWithAliases = PersonOidsWithAliases(Set("1.2.246.562.24.71123947024"), Map.empty)
-/*
-    TODO fix actor threading problem
+
+    //TODO fix actor threading problem
     val system = ActorSystem("MySpec")
     val a = system.actorOf(Props(new TestSureActor()).withDispatcher(CallingThreadDispatcher.Id))
 
@@ -40,10 +43,13 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
       system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
       system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
       oidsWithAliases, true)
+    //val trigger: KoskiTrigger = KoskiArvosanaTrigger(a, system.actorOf(TestActors.echoActorProps), system.actorOf(TestActors.echoActorProps))(system.dispatcher)
+    //val trigger = KoskiTrigger(henkilo, oidsWithAliases)
     //val f: Unit = trigger.f(henkilo, oidsWithAliases)
     //Thread.sleep(100000)
+    //
     println("great success")
-    */
+
   }
 
   it should "parse 7 course LUVA data" in {
@@ -260,6 +266,21 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     //val f: Unit = trigger.f(henkilo, oidsWithAliases)
     //Thread.sleep(100000) TODO FIX THREADING
     println("great success")
+  }
+
+  it should "parse ammu_heluna.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "ammu_heluna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultGroup should have length 1
+
+    val s = resultGroup.head
+    s should have length 3
+    val kokonaisuus = s.head
+    val kotitaloudet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("KO"))
+    kotitaloudet.filter(_.valinnainen == false) should have length 1
+    kotitaloudet.filter(_.valinnainen) should have length 1
   }
 
 

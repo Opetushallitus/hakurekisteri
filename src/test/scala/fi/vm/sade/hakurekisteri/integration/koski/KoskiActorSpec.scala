@@ -20,7 +20,11 @@ import scala.collection.Seq
 import scala.concurrent.duration._
 import scala.language.{implicitConversions, reflectiveCalls}
 
-
+/**
+  * Doesn't actually seem to test any "actor"?
+  *
+  * More tests at {@link fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTriggerTest}
+  */
 class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions
   with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
 
@@ -254,7 +258,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       tunniste = None,
       kieli = None,
       koulutustyyppi = None,
-      laajuus = None)
+      laajuus = None,
+      pakollinen = None)
 
     var organisaatio = KoskiOrganisaatio("orgId")
 
@@ -267,7 +272,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       tunniste = Some(KoskiKoodi("A1", "uri")),
       kieli = Some(KoskiKieli("FI", "")),
       koulutustyyppi = None,
-      laajuus = None)
+      laajuus = None,
+      pakollinen = None)
 
     var kieliOsasuoritus = KoskiOsasuoritus(
       koulutusmoduuli = suomenkieliKoulutusmoduuli,
@@ -307,7 +313,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         tunniste = Some(KoskiKoodi(aine, "uri")),
         kieli = None,
         koulutustyyppi = None,
-        laajuus = None)
+        laajuus = None,
+        pakollinen = None)
     }
 
     def setLuokka(luokka: String, alkamisPaiva: Option[String] = None): HenkiloContainerBuilder = {

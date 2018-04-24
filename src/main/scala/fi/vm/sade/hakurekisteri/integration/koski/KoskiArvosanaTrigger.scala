@@ -8,6 +8,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -202,8 +203,19 @@ object KoskiArvosanaTrigger {
     })
   }
 
-  def handleSuoritus(): Unit = {
+  //does some stuff
+  def preProcessVirallinenSuoritus(virallinenSuoritusArvosanat: VirallinenSuoritusArvosanat): VirallinenSuoritusArvosanat = {
+    val useSuoritus: VirallinenSuoritus = virallinenSuoritusArvosanat.suoritus
+    val arvosanat: Seq[Arvosana] = virallinenSuoritusArvosanat.arvosanat
+    val luokka: String = virallinenSuoritusArvosanat.luokka
+    val lasnaDate: LocalDate = virallinenSuoritusArvosanat.lasnadate
+    val luokkaAste: Option[String] = virallinenSuoritusArvosanat.luokkataso
 
+
+
+
+
+    VirallinenSuoritusArvosanat(useSuoritus, arvosanat, luokka, lasnaDate, luokkaAste)
   }
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
@@ -342,6 +354,7 @@ object KoskiArvosanaTrigger {
   }
 
   def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot]): (Seq[Arvosana], Yksilollistetty) = {
+    var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
     var res:Seq[Arvosana] = Seq()
     for {
@@ -357,11 +370,28 @@ object KoskiArvosanaTrigger {
             case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
             case _ => None
           }
-          val valinnainen = (tunniste.koodiarvo) match {
-            case (a) if eivalinnaiset.contains(a) => false
-            case _ => true
+          if(suoritus.koulutusmoduuli.tunniste.get.koodiarvo.equals("KO")) {
+            println("foo")
           }
-          res = res :+ createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen)
+          val isValinnainen = !suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
+/*
+          val valinnainen = tunniste.koodiarvo match {
+            case (a) if eivalinnaiset.contains(a) => false
+            case _ =>
+              ordering = Some(0) //ordering is requried by valinnainen arvosana //TODO find out what it does
+              isPakollinen
+          }
+          */
+          var ord: Option[Int] = None
+
+          if (isValinnainen) {
+            val n = ordering.getOrElse(tunniste.koodiarvo, 0)
+            ord = Some(n)
+            ordering(tunniste.koodiarvo) = n + 1
+          }
+
+          res = res :+ createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, isValinnainen, ord)
+
         }
       })
     }
@@ -439,6 +469,7 @@ object KoskiArvosanaTrigger {
   }
 
   case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
+  case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
   /**
     * Returns true if data contains luokka 7,8 and 9 plus päättötodistus
