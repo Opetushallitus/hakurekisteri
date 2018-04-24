@@ -2,15 +2,16 @@ package fi.vm.sade.hakurekisteri.web.koski
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
-import org.scalatra.FutureSupport
+import org.scalatra.{AsyncResult, FutureSupport}
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 
 
@@ -39,11 +40,16 @@ class KoskiImporterResource(koskiService: IKoskiService)
   }
 
   get("/:oppijaOid", operation(read)) {
-    val t0 = Platform.currentTime
-    implicit val user = getAdmin
+    implicit val user: User = getAdmin
     val personOid = params("oppijaOid")
-    val res = koskiService.updateHenkilo(personOid)
-    res
+    audit.log(LogMessage.builder()
+      .id(user.username)
+      .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
+      .setResourceId(personOid)
+      .build())
+    new AsyncResult {
+      override val is: Future[_] = koskiService.updateHenkilo(personOid)
+    }
   }
 
 }
