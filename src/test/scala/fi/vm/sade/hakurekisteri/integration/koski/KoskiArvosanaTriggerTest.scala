@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{CallingThreadDispatcher, TestActors}
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.ActorSystemSupport
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
@@ -279,6 +280,27 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     s should have length 3
     val kokonaisuus = s.head
     val kotitaloudet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("KO"))
+
+
+
+    val b2kielet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("B2"))
+    b2kielet should have length 1
+    b2kielet.filter(_.valinnainen == false) should have length b2kielet.length
+    b2kielet.filter(_.valinnainen == true) should have length 0
+
+
+    val a1kielet: Seq[Arvosana] = kokonaisuus.arvosanat.filter(_.aine.contentEquals("A1"))
+    a1kielet should have length 2
+    a1kielet.filter(_.valinnainen == false) should have length 1
+    a1kielet.filter(_.valinnainen == true) should have length 1
+
+/*
+    val b1kielet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("B1"))
+    b1kielet should have length 2
+    b1kielet.filter(_.valinnainen == false) should have length 1
+    b1kielet.filter(_.valinnainen == true) should have length 1
+*/
+
     kotitaloudet.filter(_.valinnainen == false) should have length 1
     kotitaloudet.filter(_.valinnainen) should have length 1
   }

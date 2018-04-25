@@ -28,17 +28,19 @@ object KoskiArvosanaTrigger {
 
   import scala.language.implicitConversions
 
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
-  val AIKUISTENPERUS_LUOKKAASTE = "AIK"
-  val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
-  val root_org_id = "1.2.246.562.10.00000000001"
-  val kielet = Seq("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
-  val oppiaineet = Seq("HI", "MU", "BI", "PS", "KT", "KO", "FI", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
-  val eivalinnaiset = kielet ++ oppiaineet ++ Seq("AI")
-  val peruskoulunaineet = kielet ++ oppiaineet ++ Seq("AI")
+  private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
+  private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
+  private val root_org_id = "1.2.246.562.10.00000000001"
+  private val valinnaisetkielet = Set("A1", "B1")
+  private val valinnaiset = Set("KO") ++ valinnaisetkielet
+  private val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
+  private val oppiaineet = Set("HI", "MU", "BI", "PS", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
+  private val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
+  private val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
 
-  val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
+  private val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
   // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
@@ -373,24 +375,31 @@ object KoskiArvosanaTrigger {
           if(suoritus.koulutusmoduuli.tunniste.get.koodiarvo.equals("KO")) {
             println("foo")
           }
-          val isValinnainen = !suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
-/*
-          val valinnainen = tunniste.koodiarvo match {
-            case (a) if eivalinnaiset.contains(a) => false
-            case _ =>
-              ordering = Some(0) //ordering is requried by valinnainen arvosana //TODO find out what it does
-              isPakollinen
+
+          val isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
+          var isPakollinen = eivalinnaiset.contains(tunniste.koodiarvo)
+
+          if(!isPakollinenmoduuli && valinnaiset.contains(tunniste.koodiarvo)) {
+            isPakollinen = false
           }
-          */
+
+          /*
+                    val valinnainen = tunniste.koodiarvo match {
+                      case (a) if eivalinnaiset.contains(a) => false
+                      case _ =>
+                        ordering = Some(0) //ordering is requried by valinnainen arvosana //TODO find out what it does
+                        isPakollinen
+                    }
+                    */
           var ord: Option[Int] = None
 
-          if (isValinnainen) {
+          if (!isPakollinen) {
             val n = ordering.getOrElse(tunniste.koodiarvo, 0)
             ord = Some(n)
             ordering(tunniste.koodiarvo) = n + 1
           }
-
-          res = res :+ createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, isValinnainen, ord)
+          //val isValinnainen = !eivalinnaiset.contains(tunniste.koodiarvo) && !suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
+          res = res :+ createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord)
 
         }
       })
@@ -641,15 +650,15 @@ object KoskiArvosanaTrigger {
       }
     }
 
-    def isPerusopetus: Boolean = result.exists(s => {
+    val isPerusopetus: Boolean = result.exists(s => {
       val suoritus = s.suoritus.asInstanceOf[VirallinenSuoritus]
       Oids.perusopetusKomoOid == suoritus.komo
     })
 
-    def hasNinthGrade: Boolean = result.exists(s => {
+    val hasNinthGrade: Boolean = result.exists(s => {
       //val suoritus = s._1.asInstanceOf[VirallinenSuoritus]
       val luokka = s.luokkataso
-      luokka.contains("9")
+      luokka.contains("9") || s.luokka.startsWith("9")
     })
 
     //todo this doens't have to be a sort of post-processing for the result list, could be done prior with koski data

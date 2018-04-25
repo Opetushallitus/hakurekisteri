@@ -276,7 +276,64 @@
           "koodistoUri" : "suorituksentyyppi",
           "koodistoVersio" : 1
         }
-      }, {
+      },{
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "A1",
+            "nimi" : {
+              "fi" : "A1-kieli",
+              "sv" : "A1-språk"
+            },
+            "lyhytNimi" : {
+              "fi" : "A1-kieli",
+              "sv" : "A1-språk"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "EN",
+            "nimi" : {
+              "fi" : "englanti",
+              "sv" : "engelska",
+              "en" : "English"
+            },
+            "lyhytNimi" : {
+              "fi" : "englanti",
+              "sv" : "engelska",
+              "en" : "English"
+            },
+            "koodistoUri" : "kielivalikoima",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "8",
+            "nimi" : {
+              "fi" : "hyvä"
+            },
+            "lyhytNimi" : {
+              "fi" : "8"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      },{
         "koulutusmoduuli" : {
           "tunniste" : {
             "koodiarvo" : "A1",
@@ -375,6 +432,63 @@
             },
             "lyhytNimi" : {
               "fi" : "10"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "B1",
+            "nimi" : {
+              "fi" : "B1-kieli",
+              "sv" : "B1-språk"
+            },
+            "lyhytNimi" : {
+              "fi" : "B1-kieli",
+              "sv" : "B1-språk"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "SV",
+            "nimi" : {
+              "fi" : "ruotsi",
+              "sv" : "svenska",
+              "en" : "Swedish"
+            },
+            "lyhytNimi" : {
+              "fi" : "ruotsi",
+              "sv" : "svenska",
+              "en" : "Swedish"
+            },
+            "koodistoUri" : "kielivalikoima",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "8",
+            "nimi" : {
+              "fi" : "hyvä"
+            },
+            "lyhytNimi" : {
+              "fi" : "8"
             },
             "koodistoUri" : "arviointiasteikkoyleissivistava",
             "koodistoVersio" : 1

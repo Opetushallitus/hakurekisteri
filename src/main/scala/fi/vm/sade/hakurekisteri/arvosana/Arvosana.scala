@@ -24,6 +24,8 @@ case class Arvosana(suoritus: UUID,
 
   override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 
+
+
   private[Arvosana] case class ArvosanaCore(suoritus: UUID,
                                             aine: String,
                                             lisatieto: Option[String],
