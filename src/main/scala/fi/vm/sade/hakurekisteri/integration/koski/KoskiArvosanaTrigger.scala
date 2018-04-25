@@ -110,7 +110,8 @@ object KoskiArvosanaTrigger {
       case _ => false
     }
 
-    def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana = Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
+    def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
+      Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
     koskihenkilöcontainer.henkilö.oid.foreach(henkiloOid => {
 
@@ -174,7 +175,6 @@ object KoskiArvosanaTrigger {
             //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
             if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
 
-              //LUOKKATIETO
               val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, useLasnaDate, useLuokkaAste))
               if (!suoritusExists(useSuoritus, suoritukset)) {
                 for (
@@ -643,7 +643,7 @@ object KoskiArvosanaTrigger {
             yksilöllistaminen,
             suorituskieli.koodiarvo,
             None,
-            true,
+            vahv = true,
             root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
         logger.debug("createSuoritusArvosanat={}", suoritus)
         result = result :+ suoritus

@@ -48,7 +48,7 @@ case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: Str
 
   private[VapaamuotoinenSuoritus] case class VapaaSisalto(henkilo: String, tyyppi: String, index: Int)
 
-  val kkTutkinto = tyyppi == "kkTutkinto"
+  val kkTutkinto: Boolean = tyyppi == "kkTutkinto"
 
   override val core = VapaaSisalto(henkilo, tyyppi, index)
 
@@ -142,6 +142,64 @@ object ItseilmoitettuLukioTutkinto {
 
 }
 
+object VALMASuoritus {
+  def apply(komo: String,
+            myontaja: String,
+            tila: String,
+            valmistuminen: LocalDate,
+            henkilo: String,
+            yksilollistaminen: Yksilollistetty,
+            suoritusKieli: String,
+            opiskeluoikeus: Option[UUID] = None,
+            vahv:Boolean = true,
+            lahde: String,
+            lahdeArvot: Map[String,String] = Map.empty): VirallinenSuoritus = {
+
+    VirallinenSuoritus(
+      komo,
+      myontaja,
+      tila,
+      valmistuminen,
+      henkilo,
+      yksilollistaminen,
+      suoritusKieli,
+      opiskeluoikeus,
+      vahv,
+      lahde,
+      suoritustyyppi = Some("perusopetuksen oppiaineen suoritus"),
+      lahdeArvot)
+  }
+}
+
+object LUVASuoritus {
+  def apply(komo: String,
+            myontaja: String,
+            tila: String,
+            valmistuminen: LocalDate,
+            henkilo: String,
+            yksilollistaminen: Yksilollistetty,
+            suoritusKieli: String,
+            opiskeluoikeus: Option[UUID] = None,
+            vahv:Boolean = true,
+            lahde: String,
+            lahdeArvot: Map[String,String] = Map.empty): VirallinenSuoritus = {
+
+    VirallinenSuoritus(
+      komo,
+      myontaja,
+      tila,
+      valmistuminen,
+      henkilo,
+      yksilollistaminen,
+      suoritusKieli,
+      opiskeluoikeus,
+      vahv,
+      lahde,
+      suoritustyyppi = Some("perusopetuksen oppiaineen suoritus"),
+      lahdeArvot)
+  }
+}
+
 case class VirallinenSuoritus(komo: String,
                               myontaja: String,
                               tila: String,
@@ -152,13 +210,21 @@ case class VirallinenSuoritus(komo: String,
                               opiskeluoikeus: Option[UUID] = None,
                               vahv:Boolean = true,
                               lahde: String,
-                              lahdeArvot: Map[String,String] = Map.empty) extends Suoritus(henkilo, vahv, lahde)  {
+                              suoritustyyppi: Option[String] = None,
+                              lahdeArvot: Map[String,String] = Map.empty
+                              ) extends Suoritus(henkilo, vahv, lahde)  {
 
-  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean)
+  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean, tyyppi: String)
 
-  override val core = VirallinenSisalto(henkilo, komo, myontaja, vahv)
+  private val useTyyppi: Option[String] = if (Oids.valmaKomoOid.equals(komo) || Oids.lukioonvalmistavaKomoOid.equals(komo)) {
+    Some("perusopetuksen oppiaineen suoritus")
+  } else {
+    suoritustyyppi
+  }
 
-  override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source, lahdeArvot) with Identified[UUID] {
+  override val core = VirallinenSisalto(henkilo, komo, myontaja, vahv, useTyyppi.orNull)
+
+  override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source, suoritustyyppi, lahdeArvot) with Identified[UUID] {
     val id: UUID = identity
   }
 

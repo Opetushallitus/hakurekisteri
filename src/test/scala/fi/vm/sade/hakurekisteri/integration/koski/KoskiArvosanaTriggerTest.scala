@@ -63,6 +63,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEN")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
 
   it should "parse 25 course LUVA data" in {
@@ -75,6 +77,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("VALMIS")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
 
   it should "parse VALMA data" in {
@@ -90,6 +94,9 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
     virallinen.tila should equal("VALMIS")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+
   }
 
   it should "parse VALMA_kesken data" in {

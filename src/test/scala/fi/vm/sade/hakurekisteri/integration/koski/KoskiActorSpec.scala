@@ -77,11 +77,12 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       None,
       true,
       OrganisaatioOids.oph,
+      None,
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
     ), "", parseLocalDate("2016-02-02"), None),
-      SuoritusArvosanat (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(
+      SuoritusArvosanat (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), Seq(
         Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
       ), "9E", parseLocalDate("2016-02-02"), None))
   }
@@ -103,11 +104,12 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       None,
       true,
       OrganisaatioOids.oph,
+      None,
       Map.empty), Seq(
       Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
       Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
     ), "", parseLocalDate("2016-02-02"), None),
-      SuoritusArvosanat(VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), Seq(
+      SuoritusArvosanat(VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), Seq(
         Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
       ), "9A", parseLocalDate("2017-03-03"), None))
   }
@@ -217,6 +219,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       None,
       true,
       OrganisaatioOids.oph,
+      None,
       Map.empty), Seq(
         Arvosana(suoritus = null, arvio = Arvio410("10"), "KT", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
         Arvosana(suoritus = null, arvio = Arvio410("8"), "KE", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
@@ -226,21 +229,21 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
     KoskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
-        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "", parseLocalDate("2017-01-01"))
+        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10")
   }
 
   it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
     KoskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
-        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "10C", parseLocalDate("2017-01-01"))
+        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10C")
   }
 
   it should "createOpiskelija should create opiskelija" in {
     KoskiArvosanaTrigger.createOpiskelija("henkilo_oid",
       SuoritusLuokka(VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
-        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
+        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
       ) should equal (
       Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
     )
