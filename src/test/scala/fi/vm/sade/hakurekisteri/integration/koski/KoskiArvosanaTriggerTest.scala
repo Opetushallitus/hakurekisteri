@@ -283,6 +283,15 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     kotitaloudet.filter(_.valinnainen) should have length 1
   }
 
+  it should "not accept data without 9nth grade finished in 8_luokka.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultGroup should have length 1
+    resultGroup.head should have length 0
+
+  }
 
   class TestSureActor extends Actor {
     import akka.pattern.pipe

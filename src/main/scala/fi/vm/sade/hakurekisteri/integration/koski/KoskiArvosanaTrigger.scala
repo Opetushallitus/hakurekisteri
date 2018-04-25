@@ -640,7 +640,24 @@ object KoskiArvosanaTrigger {
         result = result :+ suoritus
       }
     }
-    result
+
+    def isPerusopetus: Boolean = result.exists(s => {
+      val suoritus = s.suoritus.asInstanceOf[VirallinenSuoritus]
+      Oids.perusopetusKomoOid == suoritus.komo
+    })
+
+    def hasNinthGrade: Boolean = result.exists(s => {
+      //val suoritus = s._1.asInstanceOf[VirallinenSuoritus]
+      val luokka = s.luokkataso
+      luokka.contains("9")
+    })
+
+    //todo this doens't have to be a sort of post-processing for the result list, could be done prior with koski data
+    if(isPerusopetus && !hasNinthGrade) {
+      Seq()
+    } else {
+      result
+    }
   }
 }
 
