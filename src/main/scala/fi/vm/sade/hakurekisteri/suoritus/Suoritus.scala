@@ -142,64 +142,6 @@ object ItseilmoitettuLukioTutkinto {
 
 }
 
-object VALMASuoritus {
-  def apply(komo: String,
-            myontaja: String,
-            tila: String,
-            valmistuminen: LocalDate,
-            henkilo: String,
-            yksilollistaminen: Yksilollistetty,
-            suoritusKieli: String,
-            opiskeluoikeus: Option[UUID] = None,
-            vahv:Boolean = true,
-            lahde: String,
-            lahdeArvot: Map[String,String] = Map.empty): VirallinenSuoritus = {
-
-    VirallinenSuoritus(
-      komo,
-      myontaja,
-      tila,
-      valmistuminen,
-      henkilo,
-      yksilollistaminen,
-      suoritusKieli,
-      opiskeluoikeus,
-      vahv,
-      lahde,
-      suoritustyyppi = Some("perusopetuksen oppiaineen suoritus"),
-      lahdeArvot)
-  }
-}
-
-object LUVASuoritus {
-  def apply(komo: String,
-            myontaja: String,
-            tila: String,
-            valmistuminen: LocalDate,
-            henkilo: String,
-            yksilollistaminen: Yksilollistetty,
-            suoritusKieli: String,
-            opiskeluoikeus: Option[UUID] = None,
-            vahv:Boolean = true,
-            lahde: String,
-            lahdeArvot: Map[String,String] = Map.empty): VirallinenSuoritus = {
-
-    VirallinenSuoritus(
-      komo,
-      myontaja,
-      tila,
-      valmistuminen,
-      henkilo,
-      yksilollistaminen,
-      suoritusKieli,
-      opiskeluoikeus,
-      vahv,
-      lahde,
-      suoritustyyppi = Some("perusopetuksen oppiaineen suoritus"),
-      lahdeArvot)
-  }
-}
-
 case class VirallinenSuoritus(komo: String,
                               myontaja: String,
                               tila: String,
