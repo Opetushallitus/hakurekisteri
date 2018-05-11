@@ -717,6 +717,234 @@
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
               }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "HI",
+                  "nimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "perusteenDiaarinumero": "OPH-1280-2017",
+                "laajuus": {
+                  "arvo": 1,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.51720121923",
+                "oppilaitosnumero": {
+                  "koodiarvo": "10054",
+                  "nimi": {
+                    "fi": "Omnia Koulutus",
+                    "sv": "Omnia Koulutus"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Omnian ammattiopisto"
+                  },
+                  "koodistoUri": "oppilaitosnumero",
+                  "koodistoVersio": 1
+                },
+                "nimi": {
+                  "fi": "Omnia Koulutus",
+                  "sv": "Omnia Koulutus"
+                },
+                "kotipaikka": {
+                  "koodiarvo": "049",
+                  "nimi": {
+                    "fi": "Espoo",
+                    "sv": "Esbo"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 2
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2018-05-09",
+                "paikkakunta": {
+                  "koodiarvo": "049",
+                  "nimi": {
+                    "fi": "Espoo",
+                    "sv": "Esbo"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 2
+                },
+                "myöntäjäOrganisaatio": {
+                  "oid": "1.2.246.562.10.51720121923",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10054",
+                    "nimi": {
+                      "fi": "Omnia Koulutus",
+                      "sv": "Omnia Koulutus"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Omnian ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Omnia Koulutus",
+                    "sv": "Omnia Koulutus"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "049",
+                    "nimi": {
+                      "fi": "Espoo",
+                      "sv": "Esbo"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                },
+                "myöntäjäHenkilöt": [
+                  {
+                    "nimi": "f",
+                    "titteli": {
+                      "fi": "f"
+                    },
+                    "organisaatio": {
+                      "oid": "1.2.246.562.10.51720121923",
+                      "oppilaitosnumero": {
+                        "koodiarvo": "10054",
+                        "nimi": {
+                          "fi": "Omnia Koulutus",
+                          "sv": "Omnia Koulutus"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Omnian ammattiopisto"
+                        },
+                        "koodistoUri": "oppilaitosnumero",
+                        "koodistoVersio": 1
+                      },
+                      "nimi": {
+                        "fi": "Omnia Koulutus",
+                        "sv": "Omnia Koulutus"
+                      },
+                      "kotipaikka": {
+                        "koodiarvo": "049",
+                        "nimi": {
+                          "fi": "Espoo",
+                          "sv": "Esbo"
+                        },
+                        "koodistoUri": "kunta",
+                        "koodistoVersio": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "suoritustapa": {
+                "koodiarvo": "koulutus",
+                "nimi": {
+                  "fi": "Koulutus",
+                  "sv": "Utbildning"
+                },
+                "koodistoUri": "perusopetuksensuoritustapa",
+                "koodistoVersio": 1
+              },
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "HI1",
+                      "nimi": {
+                        "fi": "Suomen historian käännekohdat"
+                      },
+                      "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                      "koodistoVersio": 1
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "10",
+                        "nimi": {
+                          "fi": "erinomainen"
+                        },
+                        "lyhytNimi": {
+                          "fi": "10"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "aikuistenperusopetuksenkurssi",
+                    "nimi": {
+                      "fi": "Aikuisten perusopetuksen kurssi"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+                "nimi": {
+                  "fi": "Perusopetuksen oppiaineen oppimäärä",
+                  "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
             }
           ],
           "tyyppi": {

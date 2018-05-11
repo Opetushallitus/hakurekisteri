@@ -179,7 +179,8 @@ object KoskiArvosanaTrigger {
 
                 val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, useLasnaDate, useLuokkaAste))
                 val existingSuoritukset = suoritukset.getOrElse(Seq())
-                if (suoritusExists(useSuoritus, existingSuoritukset)) {
+                val hasExistingSuoritus = suoritusExists(useSuoritus, existingSuoritukset)
+                if (hasExistingSuoritus) {
                   for (
                     suoritus: VirallinenSuoritus with Identified[UUID] <- fetchSuoritus(henkiloOid, useSuoritus.myontaja, useSuoritus.komo)
                   ) {
@@ -536,7 +537,7 @@ object KoskiArvosanaTrigger {
             (as, yks)
           }
         case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-        case Oids.valmaKomoOid => (Seq(), yksilollistaminen.Ei)
+        case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)

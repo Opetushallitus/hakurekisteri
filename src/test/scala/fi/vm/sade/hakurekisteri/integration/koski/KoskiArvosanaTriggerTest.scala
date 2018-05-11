@@ -85,12 +85,14 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritus = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    result.head.arvosanat should have length 1
 
     virallinen.tila should equal("VALMIS")
 
