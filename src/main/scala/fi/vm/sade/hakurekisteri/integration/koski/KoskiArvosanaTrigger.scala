@@ -18,6 +18,7 @@ import org.joda.time.{DateTime, LocalDate}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -468,13 +469,19 @@ object KoskiArvosanaTrigger {
     fourthOfJune
   }
 
-
   def getNumberOfAcceptedLuvaCourses(osasuoritukset: Seq[KoskiOsasuoritus]): Int = {
-    val hyvaksytty = osasuoritukset
-      .filter(s => s.tyyppi.koodiarvo == "luvaoppiaine" || s.tyyppi.koodiarvo == "luvalukionoppiaine")
+    var suoritukset = 0
+    if(osasuoritukset.isEmpty) return suoritukset
+
+    val hyvaksytty: Seq[KoskiOsasuoritus] = osasuoritukset
+      .filter(s => s.tyyppi.koodiarvo == "luvakurssi" || s.tyyppi.koodiarvo == "luvalukionoppiaine")
       .filter(s => s.arviointi.exists(_.hyväksytty.contains(true)))
 
-    hyvaksytty.size
+    suoritukset = hyvaksytty.size
+    for (os <- osasuoritukset) {
+      suoritukset = suoritukset + getNumberOfAcceptedLuvaCourses(os.osasuoritukset.getOrElse(Seq()))
+    }
+    suoritukset
   }
 
   case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
@@ -578,7 +585,8 @@ object KoskiArvosanaTrigger {
           }
 
         case Oids.lukioonvalmistavaKomoOid =>
-          if(getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset) >= 25) {
+          val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
+          if(nSuoritukset >= 25) {
             "VALMIS"
           } else "KESKEN"
 
