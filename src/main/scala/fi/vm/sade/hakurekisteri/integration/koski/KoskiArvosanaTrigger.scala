@@ -6,7 +6,7 @@ import akka.actor.ActorRef
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
@@ -353,7 +353,7 @@ object KoskiArvosanaTrigger {
   }
 
   def isPKValue(arvosana: String): Boolean = {
-    peruskoulunArvosanat.contains(arvosana)
+    peruskoulunArvosanat.contains(arvosana) || arvosana == "H" //hylätty
   }
 
   def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot]): (Seq[Arvosana], Yksilollistetty) = {
@@ -373,10 +373,6 @@ object KoskiArvosanaTrigger {
             case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
             case _ => None
           }
-          if(suoritus.koulutusmoduuli.tunniste.get.koodiarvo.equals("KO")) {
-            println("foo")
-          }
-
           val isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
           var isPakollinen = eivalinnaiset.contains(tunniste.koodiarvo)
 
@@ -399,8 +395,13 @@ object KoskiArvosanaTrigger {
             ord = Some(n)
             ordering(tunniste.koodiarvo) = n + 1
           }
-          //val isValinnainen = !eivalinnaiset.contains(tunniste.koodiarvo) && !suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
-          res = res :+ createArvosana(personOid, Arvio410(arviointi.arvosana.koodiarvo), tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord)
+
+          val arvio = if(arviointi.arvosana.koodiarvo == "H") {
+            ArvioHyvaksytty("hylatty")
+          } else {
+            Arvio410(arviointi.arvosana.koodiarvo)
+          }
+          res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord)
 
         }
       })

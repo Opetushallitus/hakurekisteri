@@ -370,6 +370,20 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     //println("great success")
   }
 
+  it should "parse 1.2.246.562.24.40546864498.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "1.2.246.562.24.40546864498.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultGroup should have length 1
+    resultGroup.head should have length 2
+
+    val arvosanat: Seq[SuoritusArvosanat] = resultGroup.head
+    arvosanat should have length 2
+    val numKo = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset.count(_.koulutusmoduuli.tunniste.get.koodiarvo.contentEquals("KO"))
+    arvosanat.head.arvosanat.filter(_.aine.contentEquals("KO")) should have length numKo
+  }
+
   class TestSureActor extends Actor {
     import akka.pattern.pipe
 
