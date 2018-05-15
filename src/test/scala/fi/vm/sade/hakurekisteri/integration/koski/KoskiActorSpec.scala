@@ -59,15 +59,10 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     ))
   }
 */
-
+/*
   it should "list should return peruskoulutus with arvosanat" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .setLuokka("9E")
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
+
+    val expected: Seq[SuoritusArvosanat] = Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
       "orgId",
       "VALMIS",
       parseLocalDate("2016-02-02"),
@@ -75,16 +70,26 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       yksilollistaminen.Ei,
       "FI",
       None,
-      true,
+      vahv = true,
       OrganisaatioOids.oph,
       None,
       Map.empty), Seq(
-        Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
-        Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
+      Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
+      Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
     ), "", parseLocalDate("2016-02-02"), None),
       SuoritusArvosanat (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), Seq(
-        Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
+        Arvosana(null, Arvio410("9"), "MA", lisatieto = None, valinnainen = false, None, "henkilo_oid",Map())
       ), "9E", parseLocalDate("2016-02-02"), None))
+
+    val res: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+      HenkiloContainer()
+        .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
+        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None,
+          etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
+        .setLuokka("9E")
+        .build
+    ).flatten
+    res should contain theSameElementsAs expected
   }
 
   it should "alkamispaiva should be from alkamispaiva" in {
@@ -113,7 +118,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
       ), "9A", parseLocalDate("2017-03-03"), None))
   }
-
+*/
 /*
   it should "list should return peruskoulutus skip bad" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
@@ -203,6 +208,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     ), "", parseLocalDate("2016-02-02"), None))
   }
 */
+  /*
   it should "list should return suoritus kymppiluokka" in {
     KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer()
@@ -225,7 +231,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         Arvosana(suoritus = null, arvio = Arvio410("8"), "KE", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
     ), "", parseLocalDate("2016-02-02"), None))
   }
-
+*/
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
     KoskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
