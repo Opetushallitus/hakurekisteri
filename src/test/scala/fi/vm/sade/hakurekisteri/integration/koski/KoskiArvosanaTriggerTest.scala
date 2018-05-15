@@ -460,8 +460,40 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val suoritusarvosanat: SuoritusArvosanat = res.head.head
     val arvosanat = suoritusarvosanat.arvosanat.filter(_.aine == "LI")
     arvosanat should have length 2
-    arvosanat.exists(_.valinnainen == true)
-    arvosanat.exists(_.valinnainen == false)
+    arvosanat.exists(_.valinnainen == true) shouldBe true
+    arvosanat.exists(_.valinnainen == false) shouldBe true
+  }
+
+  it should "parse perusopetus_valinnaisuus_conflu_7.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "perusopetus_valinnaisuus_conflu_7.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val res: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+
+    res should have length 1
+    val suoritusarvosanat: SuoritusArvosanat = res.head.head
+    val musiikkiarvosanat = suoritusarvosanat.arvosanat.filter(_.aine == "MU")
+    musiikkiarvosanat should have length 2
+    musiikkiarvosanat.exists(_.valinnainen == true) shouldBe true
+    musiikkiarvosanat.exists(_.valinnainen == false) shouldBe true
+
+
+    val fyssaarvosanat = suoritusarvosanat.arvosanat.filter(_.aine == "FY")
+    fyssaarvosanat should have length 2
+    fyssaarvosanat.exists(_.valinnainen == true) shouldBe true
+    fyssaarvosanat.exists(_.valinnainen == false) shouldBe true
+
+    val kotitalous = suoritusarvosanat.arvosanat.filter(_.aine == "KO")
+    kotitalous should have length 2
+    kotitalous.exists(_.valinnainen == true) shouldBe true
+    kotitalous.exists(_.valinnainen == false) shouldBe true
+
+    val hissa = suoritusarvosanat.arvosanat.filter(_.aine == "HI")
+    hissa should have length 2
+    hissa.exists(_.valinnainen == true) shouldBe true
+    hissa.exists(_.valinnainen == false) shouldBe true
   }
 
   class TestSureActor extends Actor {
