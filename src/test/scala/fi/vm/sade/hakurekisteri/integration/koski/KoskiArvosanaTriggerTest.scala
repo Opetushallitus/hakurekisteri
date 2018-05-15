@@ -25,7 +25,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
   it should "parse a koski henkilo" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "testikiira.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    assert(henkilo != null)
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     val suoritusA = result.head
     val suoritusB = result(1)
@@ -56,6 +57,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(KoskiKoodi("luva", "opiskeluoikeudentyyppi"))
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus: SuoritusArvosanat = result.head
@@ -69,7 +71,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_23_kurssia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     val numcourses: Int = KoskiArvosanaTrigger.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
@@ -86,7 +88,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_25_kurssia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     val numcourses: Int = KoskiArvosanaTrigger.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 25
@@ -104,7 +106,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "VALMA.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(KoskiKoodi("ammatillinenkoulutus", "opiskeluoikeudentyyppi"))
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
@@ -124,7 +126,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_kesken.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
@@ -140,7 +142,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_lisäopetus_ei_vahvistettu.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
@@ -155,7 +157,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_lisäopetus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
@@ -170,7 +172,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_lisäopetus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
-
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
@@ -188,6 +190,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_jää_luokalle.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     henkilo.opiskeluoikeudet.head.suoritukset(2).jääLuokalle shouldEqual Some(true)
 
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
@@ -212,6 +215,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val henkiloList: List[KoskiHenkiloContainer] = parse(json).extract[List[KoskiHenkiloContainer]]
     val henkilo = henkiloList.head
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val lisätiedot = henkilo.opiskeluoikeudet.head.lisätiedot
     lisätiedot shouldBe defined
     lisätiedot.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
@@ -248,6 +252,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
   }
@@ -256,6 +261,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_vahvistus_4_6_2018_jälkeen.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     result(3).arvosanat should have length 0
@@ -272,6 +278,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 0
   }
@@ -280,6 +287,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "BUG-1711.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup.head should have length 2 //kaksi opiskeluoikeutta joissa molemmissa yksi luokkatieto -> neljä suoritusarvosanaa
     resultGroup(1) should have length 2 //kaksi opiskeluoikeutta joissa molemmissa yksi luokkatieto -> neljä suoritusarvosanaa
@@ -303,6 +311,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "ammu_heluna.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
 
@@ -315,8 +324,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val b2kielet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("B2"))
     b2kielet should have length 1
-    b2kielet.filter(_.valinnainen == false) should have length b2kielet.length
-    b2kielet.filter(_.valinnainen == true) should have length 0
+    b2kielet.filter(_.valinnainen == true) should have length 1
 
 
     val a1kielet: Seq[Arvosana] = kokonaisuus.arvosanat.filter(_.aine.contentEquals("A1"))
@@ -338,6 +346,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
   it should "not accept data without 9nth grade finished in 8_luokka.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     henkilo should not be null
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
@@ -348,6 +357,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "jäänyt_luokalle_peruskoulu.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     resultGroup.head should have length 3
@@ -374,6 +384,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val json: String = scala.io.Source.fromFile(jsonDir + "1.2.246.562.24.40546864498.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     resultGroup.head should have length 2
@@ -382,6 +393,75 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     arvosanat should have length 2
     val numKo = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset.count(_.koulutusmoduuli.tunniste.get.koodiarvo.contentEquals("KO"))
     arvosanat.head.arvosanat.filter(_.aine.contentEquals("KO")) should have length numKo
+  }
+
+  it should "parse VALMA_korotettava_historia.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_korotettava_historia.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultGroup should have length 2
+    resultGroup.last should have length 1
+    val arvosanat: Seq[SuoritusArvosanat] = resultGroup.last
+  }
+
+  it should "parse testi_satu_valinnaiset.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "testi_satu_valinnaiset.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val s = henkilo.opiskeluoikeudet.head.suoritukset.flatMap(_.osasuoritukset)
+
+    val sourcematikat = henkilo.opiskeluoikeudet.flatMap(p => p.suoritukset)
+      .flatMap(_.osasuoritukset)
+      .filter(f => f.koulutusmoduuli.tunniste.get.koodiarvo == "MA")
+
+    val sourcekässät = henkilo.opiskeluoikeudet.flatMap(p => p.suoritukset)
+      .flatMap(_.osasuoritukset)
+      .filter(f => f.koulutusmoduuli.tunniste.get.koodiarvo == "KS")
+
+    sourcematikat.exists(_.koulutusmoduuli.pakollinen.contains(true))
+    sourcematikat.exists(_.koulutusmoduuli.pakollinen.contains(false))
+
+    sourcekässät.exists(_.koulutusmoduuli.pakollinen.contains(true))
+    sourcekässät.exists(_.koulutusmoduuli.pakollinen.contains(false))
+
+    val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultGroup should have length 1
+    val head = resultGroup.head.head
+    val matikat = head.arvosanat.filter(_.aine.contentEquals("MA"))
+    val kässät = head.arvosanat.filter(_.aine.contentEquals("KS"))
+    matikat should have length 2
+    kässät should have length 2
+    matikat.count(_.valinnainen == true) shouldBe 1
+    matikat.count(_.valinnainen == false) shouldBe 1
+
+    kässät.count(_.valinnainen == true) shouldBe 1
+    kässät.count(_.valinnainen == false) shouldBe 1
+  }
+
+  it should "parse testi3_satu_valinnaisuus.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "testi3_satu_valinnaisuus.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val s = henkilo.opiskeluoikeudet.head.suoritukset.flatMap(_.osasuoritukset)
+
+    val sourceliikunnat = henkilo.opiskeluoikeudet.flatMap(p => p.suoritukset)
+      .flatMap(_.osasuoritukset)
+      .filter(f => f.koulutusmoduuli.tunniste.get.koodiarvo == "LI")
+
+    sourceliikunnat should have length 2
+
+    val res: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+
+    res should have length 1
+    val suoritusarvosanat: SuoritusArvosanat = res.head.head
+    val arvosanat = suoritusarvosanat.arvosanat.filter(_.aine == "LI")
+    arvosanat should have length 2
+    arvosanat.exists(_.valinnainen == true)
+    arvosanat.exists(_.valinnainen == false)
   }
 
   class TestSureActor extends Actor {

@@ -188,7 +188,8 @@ case class KoskiOpiskeluoikeus(
                  tila: KoskiOpiskeluoikeusjakso,
                  päättymispäivä: Option[String],
                  lisätiedot: Option[KoskiLisatiedot],
-                 suoritukset: Seq[KoskiSuoritus])
+                 suoritukset: Seq[KoskiSuoritus],
+                 tyyppi: Option[KoskiKoodi])
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 

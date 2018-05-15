@@ -41,6 +41,10 @@ object KoskiArvosanaTrigger {
   private val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
   private val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
 
+  private val kieletRegex = kielet.map(str => str.r)
+  private val oppiaineetRegex = oppiaineet.map(str => s"$str\\d?".r)
+  private val peruskouluaineetRegex = kieletRegex ++ oppiaineetRegex ++ Set("AI".r)
+
   private val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
   // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
@@ -332,6 +336,7 @@ object KoskiArvosanaTrigger {
   def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus): (String, Option[String]) = {
     koulutusmoduuliTunnisteKoodiarvo match {
       case "perusopetuksenoppimaara" => (Oids.perusopetusKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
+      case "perusopetuksenoppiaineenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
       case "aikuistenperusopetuksenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
       case "aikuistenperusopetuksenoppimaaranalkuvaihe" => (DUMMYOID, None) //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
       case "perusopetuksenvuosiluokka" => ("luokka", suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
@@ -349,7 +354,10 @@ object KoskiArvosanaTrigger {
   }
 
   def isPK(osasuoritus: KoskiOsasuoritus): Boolean = {
-    peruskoulunaineet.contains(osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo)
+    val koodi = osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo
+    val isPK = peruskouluaineetRegex.exists(r => r.findFirstIn(koodi).isDefined)
+    //peruskoulunaineet.contains()
+    isPK
   }
 
   def isPKValue(arvosana: String): Boolean = {
@@ -373,21 +381,20 @@ object KoskiArvosanaTrigger {
             case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
             case _ => None
           }
-          val isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
-          var isPakollinen = eivalinnaiset.contains(tunniste.koodiarvo)
-
-          if(!isPakollinenmoduuli && valinnaiset.contains(tunniste.koodiarvo)) {
-            isPakollinen = false
+          var isPakollinenmoduuli = false
+          var isPakollinen = false
+          if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
+            isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.get
+            isPakollinen = suoritus.koulutusmoduuli.pakollinen.get
           }
+          else {
+            isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
+            var isPakollinen = eivalinnaiset.contains(tunniste.koodiarvo)
 
-          /*
-                    val valinnainen = tunniste.koodiarvo match {
-                      case (a) if eivalinnaiset.contains(a) => false
-                      case _ =>
-                        ordering = Some(0) //ordering is requried by valinnainen arvosana //TODO find out what it does
-                        isPakollinen
-                    }
-                    */
+            if(!isPakollinenmoduuli && valinnaiset.contains(tunniste.koodiarvo)) {
+              isPakollinen = false
+            }
+          }
           var ord: Option[Int] = None
 
           if (!isPakollinen) {
@@ -443,11 +450,12 @@ object KoskiArvosanaTrigger {
   }
 
   def getValmaOsaamispisteet(suoritus: KoskiSuoritus): BigDecimal = {
-    suoritus.osasuoritukset
+    val sum = suoritus.osasuoritukset
       .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
       .flatMap(_.koulutusmoduuli.laajuus)
       .map(_.arvo.getOrElse(BigDecimal(0)))
       .sum
+    sum
   }
 
   def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
@@ -526,6 +534,9 @@ object KoskiArvosanaTrigger {
           matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus)
         case _ => (DUMMYOID, None)
       }
+      if(komoOid == DUMMYOID && opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")) {
+        println("foo")
+      }
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
         case Oids.perusopetusKomoOid =>
@@ -555,7 +566,7 @@ object KoskiArvosanaTrigger {
         //abiturienttien arvosanat haetaan hakijoille joiden lukion oppimäärän suoritus on vahvistettu KOSKI -palvelussa. Tässä vaiheessa ei haeta vielä lukion päättötodistukseen tehtyjä korotuksia.
         case Oids.lukioKomoOid => (Seq(), yksilollistaminen.Ei)
           //if suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS") =>
-          //(osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot), yksilollistaminen.Ei)
+            //(osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot), yksilollistaminen.Ei)
 
         case _ => (Seq(), yksilollistaminen.Ei)
       }
@@ -648,7 +659,11 @@ object KoskiArvosanaTrigger {
 
     val isPerusopetus: Boolean = result.exists(s => {
       val suoritus = s.suoritus.asInstanceOf[VirallinenSuoritus]
-      Oids.perusopetusKomoOid == suoritus.komo
+      if(opiskeluoikeus.tyyppi.isDefined) {
+        Oids.perusopetusKomoOid == suoritus.komo && opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetus")
+      } else {
+        Oids.perusopetusKomoOid == suoritus.komo
+      }
     })
 
     val hasNinthGrade: Boolean = result.exists(s => {
