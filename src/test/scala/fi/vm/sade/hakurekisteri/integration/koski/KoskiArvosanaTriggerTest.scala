@@ -392,7 +392,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val arvosanat: Seq[SuoritusArvosanat] = resultGroup.head
     arvosanat should have length 2
     val numKo = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset.count(_.koulutusmoduuli.tunniste.get.koodiarvo.contentEquals("KO"))
-    arvosanat.head.arvosanat.filter(_.aine.contentEquals("KO")) should have length numKo
+    arvosanat.head.arvosanat.filter(_.aine.contentEquals("KO")) should have length numKo - 1 //one KO has only 1 vuosiviikkotunti, it's not accepted
   }
 
   it should "parse VALMA_korotettava_historia.json" in {
@@ -481,8 +481,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
 
     val fyssaarvosanat = suoritusarvosanat.arvosanat.filter(_.aine == "FY")
-    fyssaarvosanat should have length 2
-    fyssaarvosanat.exists(_.valinnainen == true) shouldBe true
+    fyssaarvosanat should have length 1
+    fyssaarvosanat.exists(_.valinnainen == true) shouldBe false //too short courses are pruned
     fyssaarvosanat.exists(_.valinnainen == false) shouldBe true
 
     val kotitalous = suoritusarvosanat.arvosanat.filter(_.aine == "KO")
