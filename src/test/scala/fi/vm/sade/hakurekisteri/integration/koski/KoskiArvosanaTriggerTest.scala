@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{CallingThreadDispatcher, TestActors}
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
@@ -404,7 +405,22 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 2
     resultGroup.last should have length 1
-    val arvosanat: Seq[SuoritusArvosanat] = resultGroup.last
+    val suoritusarvosanat: Seq[SuoritusArvosanat] = resultGroup.last
+    suoritusarvosanat should have length 1
+    val suoritusarvosana: SuoritusArvosanat = suoritusarvosanat.head
+    suoritusarvosana.arvosanat.exists(_.aine == "HI1") shouldBe true
+
+    val virallinensuoritus = suoritusarvosana.suoritus.asInstanceOf[VirallinenSuoritus]
+    val luokkaAste = Some(9)
+    val AIKUISTENPERUS_LUOKKAASTE = "AIK"
+
+    val foo = virallinensuoritus.komo.equals(Oids.perusopetusKomoOid)
+    val bar = suoritusarvosanat.exists(_.luokkataso.getOrElse("").startsWith("9")) || luokkaAste.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE)
+    val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = foo && bar
+
+    if (virallinensuoritus.komo.equals("luokka") || !(peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !virallinensuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+      fail("should not be here")
+    }
   }
 
   it should "parse testi_satu_valinnaiset.json" in {

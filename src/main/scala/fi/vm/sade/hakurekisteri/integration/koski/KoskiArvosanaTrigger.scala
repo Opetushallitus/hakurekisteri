@@ -342,19 +342,23 @@ object KoskiArvosanaTrigger {
     d.getYear
   }
 
-  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus): (String, Option[String]) = {
-    koulutusmoduuliTunnisteKoodiarvo match {
-      case "perusopetuksenoppimaara" => (Oids.perusopetusKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
-      case "perusopetuksenoppiaineenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
-      case "aikuistenperusopetuksenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
-      case "aikuistenperusopetuksenoppimaaranalkuvaihe" => (DUMMYOID, None) //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
-      case "perusopetuksenvuosiluokka" => ("luokka", suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
-      case "valma" => (Oids.valmaKomoOid, None)
-      case "telma" => (Oids.telmaKomoOid, None)
-      case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
-      case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
-      case "ammatillinentutkinto" =>  (Oids.ammatillinenKomoOid, None)
-      case _ => (DUMMYOID, None)
+  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
+    if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")) {
+        (Oids.lisaopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
+    } else {
+      koulutusmoduuliTunnisteKoodiarvo match {
+        case "perusopetuksenoppimaara" => (Oids.perusopetusKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
+        case "perusopetuksenoppiaineenoppimaara" => (Oids.perusopetusKomoOid, None)
+        case "aikuistenperusopetuksenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
+        case "aikuistenperusopetuksenoppimaaranalkuvaihe" => (DUMMYOID, None) //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
+        case "perusopetuksenvuosiluokka" => ("luokka", suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
+        case "valma" => (Oids.valmaKomoOid, None)
+        case "telma" => (Oids.telmaKomoOid, None)
+        case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
+        case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
+        case "ammatillinentutkinto" => (Oids.ammatillinenKomoOid, None)
+        case _ => (DUMMYOID, None)
+      }
     }
   }
 
@@ -545,7 +549,7 @@ object KoskiArvosanaTrigger {
       val foo = lasnaDate.toString("yyyy-MM-dd")
       val (komoOid, luokkataso) = suoritus.tyyppi match {
         case Some(k) =>
-          matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus)
+          matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
         case _ => (DUMMYOID, None)
       }
       if(komoOid == DUMMYOID && opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")) {
