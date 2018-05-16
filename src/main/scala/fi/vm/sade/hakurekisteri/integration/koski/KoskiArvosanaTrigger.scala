@@ -102,9 +102,9 @@ object KoskiArvosanaTrigger {
       (suoritusRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
     }
 
-    def deteleArvosana(s: Arvosana with Identified[UUID]): Unit = {
+    def deleteArvosana(s: Arvosana with Identified[UUID]): Unit = {
       val id: String = s.id.toString
-      suoritusRekisteri ! DeleteResource(id, "koski")
+      arvosanaRekisteri ! DeleteResource(id, "koski")
     }
 
     def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
@@ -197,7 +197,7 @@ object KoskiArvosanaTrigger {
 
                     var ss: Future[VirallinenSuoritus with Identified[UUID]] = updateSuoritus(suoritus, useSuoritus)
                     fetchArvosanat(suoritus).onComplete(arvosanat => {
-                      arvosanat.getOrElse(Seq()).foreach(arvosana => deteleArvosana(arvosana))
+                      arvosanat.getOrElse(Seq()).foreach(arvosana => deleteArvosana(arvosana))
                     })
 
                     useArvosanat.foreach(newarvosana => {
