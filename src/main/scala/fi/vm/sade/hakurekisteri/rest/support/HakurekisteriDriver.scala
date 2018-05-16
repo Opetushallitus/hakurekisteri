@@ -9,18 +9,18 @@ import slick.jdbc.{JdbcStatementBuilderComponent, PostgresProfile}
 
 object HakurekisteriDriver extends PostgresProfile {
 
-  override val columnTypes = new super.JdbcTypes {
-    override val uuidJdbcType = new UUIDJdbcType {
-      override def sqlTypeName(sym: Option[FieldSymbol]) = "VARCHAR"
-      override def setValue(v: UUID, p: PreparedStatement, idx: Int) = p.setObject(idx, v.toString, sqlType)
-      override def updateValue(v: UUID, r: ResultSet, idx: Int) = r.updateObject(idx, v.toString)
-      override def getValue(r: ResultSet, idx: Int) = UUID.fromString(r.getString(idx))
+  override val columnTypes: HakurekisteriDriver.JdbcTypes = new super.JdbcTypes {
+    override val uuidJdbcType: UUIDJdbcType = new UUIDJdbcType {
+      override def sqlTypeName(sym: Option[FieldSymbol]): String = "VARCHAR"
+      override def setValue(v: UUID, p: PreparedStatement, idx: Int): Unit = p.setObject(idx, v.toString, sqlType)
+      override def updateValue(v: UUID, r: ResultSet, idx: Int): Unit = r.updateObject(idx, v.toString)
+      override def getValue(r: ResultSet, idx: Int): UUID = UUID.fromString(r.getString(idx))
       override def valueToSQLLiteral(value: UUID) = s"'${value.toString}'"
       override def hasLiteralForm = true
     }
   }
-  override val api = new API with HakurekisteriColumns {
-    override implicit lazy val uuidColumnType = columnTypes.uuidJdbcType
+  override val api: HakurekisteriDriver.API with HakurekisteriColumns = new API with HakurekisteriColumns {
+    override implicit lazy val uuidColumnType: columnTypes.UUIDJdbcType = columnTypes.uuidJdbcType
   }
 
   import api._
