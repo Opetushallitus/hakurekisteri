@@ -616,7 +616,7 @@ object KoskiArvosanaTrigger {
 
         case Oids.lukioonvalmistavaKomoOid =>
           val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
-          if(nSuoritukset >= 25) {
+          if(nSuoritukset >= 25 || suoritus.vahvistus.isDefined) {
             "VALMIS"
           } else "KESKEN"
 
