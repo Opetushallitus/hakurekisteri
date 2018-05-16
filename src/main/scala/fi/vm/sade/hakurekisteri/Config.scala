@@ -37,6 +37,7 @@ object OrganisaatioOids {
 
 object PohjakoulutusOids {
   val perusopetus = "1.2.246.562.13.62959769647"
+  val perusopetuksenOppiaineenOppimaara = "TODO perusopetuksenOppiaineenOppimäärä"
   val lukio = "TODO lukio komo oid"
   val ammatillinen = "TODO ammatillinen komo oid"
   val ulkomainen = "1.2.246.562.13.86722481404"
@@ -77,6 +78,7 @@ object Oids {
   val ulkomainenkorvaavaKomoOid = KomoOids.pohjakoulutus.ulkomainen
   val lukioKomoOid = KomoOids.pohjakoulutus.lukio
   val ammatillinenKomoOid = KomoOids.pohjakoulutus.ammatillinen
+  val perusopetuksenOppiaineenOppimaaraOid = KomoOids.pohjakoulutus.perusopetuksenOppiaineenOppimaara
 
   val lisaopetusKomoOid = KomoOids.lisapistekoulutus.kymppi
   val lisaopetusTalousKomoOid = KomoOids.lisapistekoulutus.talous
