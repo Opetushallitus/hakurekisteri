@@ -430,6 +430,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritusarvosana.arvosanat.exists(_.aine == "HI1") shouldBe true
 
     val virallinensuoritus = suoritusarvosana.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinensuoritus.komo shouldEqual Oids.perusopetuksenOppiaineenOppimaaraOid
+
     val luokkaAste = Some(9)
     val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 

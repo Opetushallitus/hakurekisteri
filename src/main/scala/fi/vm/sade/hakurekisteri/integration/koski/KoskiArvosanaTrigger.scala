@@ -343,8 +343,8 @@ object KoskiArvosanaTrigger {
   }
 
   def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
-    if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")) {
-        (Oids.lisaopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
+    if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus") && koulutusmoduuliTunnisteKoodiarvo == "perusopetuksenoppiaineenoppimaara") {
+        (Oids.perusopetuksenOppiaineenOppimaaraOid, Some(AIKUISTENPERUS_LUOKKAASTE))
     } else {
       koulutusmoduuliTunnisteKoodiarvo match {
         case "perusopetuksenoppimaara" => (Oids.perusopetusKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
@@ -575,6 +575,7 @@ object KoskiArvosanaTrigger {
           }
         case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case Oids.perusopetuksenOppiaineenOppimaaraOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
