@@ -561,6 +561,29 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
   }
 
+  it should "parse kymppiluokkatesti_kesken_conflu_2.json" in {
+    /*
+    Hetu 140601A511L (kymppiluokkalainen). Lisäsin koskeen sekä viime vuonna suoritetun perusopetuksen,
+    että tänä vuonna suoritettavan 10-luokan ja muutaman arvosanan korotuksen. → 10-luokka arvosanoineen siirtyi,
+    mutta suressa suorituksen tilana näkyy 'Keskeytynyt', vaikka Koskessa on läsnä.
+    Pitäisi olla suressakin keskeneräisenä.(Minna Turunen 8.5.)
+
+    val json: String = scala.io.Source.fromFile(jsonDir + "kymppiluokkatesti_kesken_conflu_2.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+
+    val seq: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    seq should not be empty
+
+    val res = seq.head
+    res should have length 2
+    val kymppiluokka = res(1)
+    //kymppiluokka.luokka shouldEqual "10"
+    */
+  }
+
   class TestSureActor extends Actor {
     import akka.pattern.pipe
 
