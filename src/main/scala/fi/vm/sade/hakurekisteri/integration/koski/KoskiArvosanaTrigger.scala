@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
@@ -102,6 +102,11 @@ object KoskiArvosanaTrigger {
       (suoritusRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
     }
 
+    def deteleArvosana(s: Arvosana with Identified[UUID]): Unit = {
+      val id: String = s.id.toString
+      suoritusRekisteri ! DeleteResource(id, "koski")
+    }
+
     def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
       arvosanat.filter(a => a.aine == aine).head
     }
@@ -189,9 +194,14 @@ object KoskiArvosanaTrigger {
                   for (
                     suoritus: VirallinenSuoritus with Identified[UUID] <- fetchSuoritus(henkiloOid, useSuoritus.myontaja, useSuoritus.komo)
                   ) {
-                    var ss = updateSuoritus(suoritus, useSuoritus)
-                    useArvosanat.foreach(a => {
-                      arvosanaRekisteri ? toArvosana(a)(suoritus.id)("koski")
+
+                    var ss: Future[VirallinenSuoritus with Identified[UUID]] = updateSuoritus(suoritus, useSuoritus)
+                    fetchArvosanat(suoritus).onComplete(arvosanat => {
+                      arvosanat.getOrElse(Seq()).foreach(arvosana => deteleArvosana(arvosana))
+                    })
+
+                    useArvosanat.foreach(newarvosana => {
+                      arvosanaRekisteri ? toArvosana(newarvosana)(suoritus.id)("koski")
                     })
                   }
                   saveOpiskelija(opiskelija)
