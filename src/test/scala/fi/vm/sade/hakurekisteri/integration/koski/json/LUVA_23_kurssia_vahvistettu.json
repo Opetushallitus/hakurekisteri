@@ -146,6 +146,78 @@
               "koodistoVersio": 2
             }
           },
+          "vahvistus": {
+            "päivä": "2018-04-11",
+            "paikkakunta": {
+              "koodiarvo": "609",
+              "nimi": {
+                "fi": "Pori",
+                "sv": "Björneborg"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.80915578621",
+              "oppilaitosnumero": {
+                "koodiarvo": "00546",
+                "nimi": {
+                  "fi": "Porin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Porin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Porin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "609",
+                "nimi": {
+                  "fi": "Pori",
+                  "sv": "Björneborg"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Jarkko Kivelä",
+                "titteli": {
+                  "fi": "Vs. rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.80915578621",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00546",
+                    "nimi": {
+                      "fi": "Porin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Porin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Porin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "609",
+                    "nimi": {
+                      "fi": "Pori",
+                      "sv": "Björneborg"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
           "suorituskieli": {
             "koodiarvo": "FI",
             "nimi": {

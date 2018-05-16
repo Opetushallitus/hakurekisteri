@@ -86,6 +86,25 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
+
+  it should "parse vahvistettu 23 course LUVA data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_23_kurssia_vahvistettu.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val numcourses: Int = KoskiArvosanaTrigger.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    numcourses shouldBe 23
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+    val suoritus: SuoritusArvosanat = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinen.tila should equal("VALMIS")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+  }
+
   it should "parse 25 course LUVA data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_25_kurssia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
