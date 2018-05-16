@@ -643,7 +643,8 @@ object KoskiArvosanaTrigger {
       }
 
       val useValmistumisPaiva = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
-        case (Oids.perusopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
+        case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => parseNextFourthOfJune()
+        case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
         case (Oids.perusopetusKomoOid, _, "VALMIS") =>
           if (suoritus.vahvistus.isDefined) parseLocalDate(suoritus.vahvistus.get.päivä)
           else parseNextFourthOfJune()

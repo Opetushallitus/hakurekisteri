@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.LocalDate
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.concurrent.AsyncAssertions
@@ -494,6 +495,35 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     hissa should have length 2
     hissa.exists(_.valinnainen == true) shouldBe true
     hissa.exists(_.valinnainen == false) shouldBe true
+  }
+
+  it should "parse luokallejaanyt_conflu_10.json" in {
+    /*
+    Valmistumispäivämäärä ei päivittynyt todistuksen vahvistuspäivämääräkentästä kosken puolelta sureen,
+    ennen kuin opiskeluoideuden tilan oli muuttanut valmiiksi koskessa. Olisi pitänyt päivittyä jo silloin,
+    kun päättötodistus vahvistettiin. (Vaikka opiskeluoikeuden tila oli kesken)
+    Testattu tapauksella 080501A660R
+     */
+
+    val json: String = scala.io.Source.fromFile(jsonDir + "luokallejaanyt_conflu_10.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val res: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    res should have length 1
+    val arvosanat: Seq[SuoritusArvosanat] = res.head
+    arvosanat should have length 3
+
+    val ptodistus = arvosanat.head
+    val suoritus = ptodistus.suoritus
+    suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.asInstanceOf[VirallinenSuoritus]
+
+    val expectedDate = LocalDate.parse("2018-05-07", DateTimeFormat.forPattern("yyyy-MM-dd"))
+
+    virallinen.valmistuminen shouldBe expectedDate
+
   }
 
   class TestSureActor extends Actor {
