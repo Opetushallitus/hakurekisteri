@@ -103,8 +103,7 @@ object KoskiArvosanaTrigger {
     }
 
     def deleteArvosana(s: Arvosana with Identified[UUID]): Unit = {
-      val id: String = s.id.toString
-      arvosanaRekisteri ! DeleteResource(id, "koski")
+      arvosanaRekisteri ! DeleteResource(s.id, "koski")
     }
 
     def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
