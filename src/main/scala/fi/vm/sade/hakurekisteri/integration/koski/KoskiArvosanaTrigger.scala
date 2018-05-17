@@ -612,8 +612,9 @@ object KoskiArvosanaTrigger {
 
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
-          if (suoritus.vahvistus.isEmpty) {
-            "KESKEYTYNYT"
+          suoritusTila
+          if (suoritus.vahvistus.isDefined) {
+            "VALMIS"
           } else suoritusTila
 
         case Oids.valmaKomoOid =>
