@@ -136,7 +136,7 @@ object KoskiArvosanaTrigger {
           })
           henkilonSuoritukset.foreach {
             case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaAste: Option[String]) =>
-
+              logger.info(s"Suoritus $useSuoritus")
               //TODO luokalle jääneiden tietojen käsittely oikein
               val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty){
                 henkilonSuoritukset
@@ -213,7 +213,9 @@ object KoskiArvosanaTrigger {
                     })
 
                     useArvosanat.foreach(newarvosana => {
-                      arvosanaRekisteri ? toArvosana(newarvosana)(suoritus.id)("koski")
+                      val a: Arvosana = toArvosana(newarvosana)(suoritus.id)("koski")
+                      logger.info(s"inserting arvosana $a")
+                      arvosanaRekisteri ! a
                     })
                   }
                   saveOpiskelija(opiskelija)
