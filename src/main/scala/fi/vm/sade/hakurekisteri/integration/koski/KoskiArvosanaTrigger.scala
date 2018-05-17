@@ -139,6 +139,7 @@ object KoskiArvosanaTrigger {
               logger.info(s"Suoritus $useSuoritus")
               //TODO luokalle jääneiden tietojen käsittely oikein
               val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty){
+                logger.info("if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty) == true")
                 henkilonSuoritukset
                     .filter(hs => hs.suoritus match {
                       case a: VirallinenSuoritus =>
@@ -153,6 +154,7 @@ object KoskiArvosanaTrigger {
               } else {
                 arvosanat
               }
+              logger.info(s"useArvosanat: $useArvosanat")
 
               var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
               var useLuokkaAste = luokkaAste
