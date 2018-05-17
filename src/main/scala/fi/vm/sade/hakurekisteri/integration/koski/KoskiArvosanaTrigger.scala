@@ -22,6 +22,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 object KoskiArvosanaTrigger {
 
@@ -103,7 +104,8 @@ object KoskiArvosanaTrigger {
     }
 
     def deleteArvosana(s: Arvosana with Identified[UUID]): Unit = {
-      arvosanaRekisteri ! DeleteResource(s.id, "koski")
+      logger.info("Poistetaan arvosana " + s + "UUID:lla" + s.id)
+      arvosanaRekisteri ! DeleteResource(s.id, "koski-arvosanat")
     }
 
     def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
@@ -195,8 +197,10 @@ object KoskiArvosanaTrigger {
                   ) {
 
                     var ss: Future[VirallinenSuoritus with Identified[UUID]] = updateSuoritus(suoritus, useSuoritus)
-                    fetchArvosanat(suoritus).onComplete(arvosanat => {
-                      arvosanat.getOrElse(Seq()).foreach(arvosana => deleteArvosana(arvosana))
+
+                    fetchArvosanat(suoritus).onComplete({
+                      case Success(existingArvosanas) => existingArvosanas.foreach(arvosana => deleteArvosana(arvosana))
+                      case Failure(t) => logger.error("Jokin meni pieleen vanhojen arvosanojen haussa, joten niitä ei voitu poistaa: " + t.getMessage)
                     })
 
                     useArvosanat.foreach(newarvosana => {
