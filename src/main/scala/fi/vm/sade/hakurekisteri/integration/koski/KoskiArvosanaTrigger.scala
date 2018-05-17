@@ -100,6 +100,7 @@ object KoskiArvosanaTrigger {
       })
 
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
+      logger.info("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
       (suoritusRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
     }
 
@@ -204,7 +205,10 @@ object KoskiArvosanaTrigger {
                     var ss: Future[VirallinenSuoritus with Identified[UUID]] = updateSuoritus(suoritus, useSuoritus)
 
                     fetchArvosanat(suoritus).onComplete({
-                      case Success(existingArvosanas) => existingArvosanas.foreach(arvosana => deleteArvosana(arvosana))
+                      case Success(existingArvosanas) => {
+                        logger.info("fetchArvosanat success, result: " + existingArvosanas)
+                        existingArvosanas.foreach(arvosana => deleteArvosana(arvosana))
+                      }
                       case Failure(t) => logger.error("Jokin meni pieleen vanhojen arvosanojen haussa, joten niitä ei voitu poistaa: " + t.getMessage)
                     })
 
