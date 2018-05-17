@@ -104,9 +104,9 @@ object KoskiArvosanaTrigger {
       (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
     }
 
-    def deleteArvosana(s: Arvosana with Identified[UUID]): Unit = {
+    def deleteArvosana(s: Arvosana with Identified[UUID]): Future[Any] = {
       logger.info("Poistetaan arvosana " + s + "UUID:lla" + s.id)
-      arvosanaRekisteri ! DeleteResource(s.id, "koski-arvosanat")
+      arvosanaRekisteri ? DeleteResource(s.id, "koski-arvosanat")
     }
 
     def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
@@ -207,15 +207,24 @@ object KoskiArvosanaTrigger {
                     fetchArvosanat(suoritus).onComplete({
                       case Success(existingArvosanas) => {
                         logger.info("fetchArvosanat success, result: " + existingArvosanas)
-                        existingArvosanas.foreach(arvosana => deleteArvosana(arvosana))
+                        val pendingDeletes: Future[Seq[Any]] = Future.sequence(existingArvosanas.map(arvosana => deleteArvosana(arvosana)))
+                        pendingDeletes.onComplete({
+                          case Success(s) =>
+                            useArvosanat.foreach(newarvosana => {
+                              val a: Arvosana = toArvosana(newarvosana)(suoritus.id)("koski")
+                              logger.info(s"inserting arvosana $a")
+                              arvosanaRekisteri ! a
+                            })
+                          case Failure(t) =>
+                            logger.error("Jokin meni pieleen vanhojen arvosanojen poistossa", t)
+                            useArvosanat.foreach(newarvosana => {
+                              val a: Arvosana = toArvosana(newarvosana)(suoritus.id)("koski")
+                              logger.info(s"inserting arvosana $a")
+                              arvosanaRekisteri ! a
+                            })
+                        })
                       }
                       case Failure(t) => logger.error("Jokin meni pieleen vanhojen arvosanojen haussa, joten niitä ei voitu poistaa: " + t.getMessage)
-                    })
-
-                    useArvosanat.foreach(newarvosana => {
-                      val a: Arvosana = toArvosana(newarvosana)(suoritus.id)("koski")
-                      logger.info(s"inserting arvosana $a")
-                      arvosanaRekisteri ! a
                     })
                   }
                   saveOpiskelija(opiskelija)
