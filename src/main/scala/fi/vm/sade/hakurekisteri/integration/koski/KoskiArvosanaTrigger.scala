@@ -190,11 +190,16 @@ object KoskiArvosanaTrigger {
 
                 val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, useLuokka, useLasnaDate, useLuokkaAste))
                 val existingSuoritukset = suoritukset.getOrElse(Seq())
+                if(existingSuoritukset.isEmpty) {
+                  logger.info("Aiemmin sureen tallennettuja suorituksia ei ole. Suoritukset: " + suoritukset + ", " + suoritukset.get)
+                }
                 val hasExistingSuoritus = suoritusExists(useSuoritus, existingSuoritukset)
                 if (hasExistingSuoritus) {
+                  logger.info("Päivitetään olemassaolevaa suoritusta.")
                   for (
                     suoritus: VirallinenSuoritus with Identified[UUID] <- fetchSuoritus(henkiloOid, useSuoritus.myontaja, useSuoritus.komo)
                   ) {
+                    logger.info("Käsitellään olemassaoleva suoritus " + suoritus)
 
                     var ss: Future[VirallinenSuoritus with Identified[UUID]] = updateSuoritus(suoritus, useSuoritus)
 
