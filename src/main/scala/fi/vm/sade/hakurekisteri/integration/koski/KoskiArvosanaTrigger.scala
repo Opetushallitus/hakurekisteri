@@ -101,7 +101,7 @@ object KoskiArvosanaTrigger {
 
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
       logger.info("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
-      (suoritusRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
+      (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
     }
 
     def deleteArvosana(s: Arvosana with Identified[UUID]): Unit = {
