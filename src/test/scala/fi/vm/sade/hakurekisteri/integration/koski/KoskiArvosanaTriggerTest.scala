@@ -428,7 +428,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val suoritusarvosanat: Seq[SuoritusArvosanat] = resultGroup.last
     suoritusarvosanat should have length 1
     val suoritusarvosana: SuoritusArvosanat = suoritusarvosanat.head
-    suoritusarvosana.arvosanat.exists(_.aine == "HI1") shouldBe true
+    suoritusarvosana.arvosanat.exists(_.aine == "HI") shouldBe true
     val virallinensuoritus = suoritusarvosana.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinensuoritus.komo shouldEqual Oids.perusopetuksenOppiaineenOppimaaraOid
 

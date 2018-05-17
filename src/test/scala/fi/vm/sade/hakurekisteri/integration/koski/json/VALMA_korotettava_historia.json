@@ -304,8 +304,8 @@
     },
     {
       "oid": "1.2.246.562.15.60462134218",
-      "versionumero": 4,
-      "aikaleima": "2018-05-09T14:42:16.284685",
+      "versionumero": 5,
+      "aikaleima": "2018-05-16T15:51:14.806592",
       "oppilaitos": {
         "oid": "1.2.246.562.10.51720121923",
         "oppilaitosnumero": {
@@ -569,44 +569,6 @@
             "koodistoUri": "kieli",
             "koodistoVersio": 1
           },
-          "osasuoritukset": [
-            {
-              "koulutusmoduuli": {
-                "tunniste": {
-                  "koodiarvo": "HI1",
-                  "nimi": {
-                    "fi": "Suomen historian käännekohdat"
-                  },
-                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
-                  "koodistoVersio": 1
-                }
-              },
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "10",
-                    "nimi": {
-                      "fi": "erinomainen"
-                    },
-                    "lyhytNimi": {
-                      "fi": "10"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
-              "tyyppi": {
-                "koodiarvo": "aikuistenperusopetuksenkurssi",
-                "nimi": {
-                  "fi": "Aikuisten perusopetuksen kurssi"
-                },
-                "koodistoUri": "suorituksentyyppi",
-                "koodistoVersio": 1
-              }
-            }
-          ],
           "tyyppi": {
             "koodiarvo": "perusopetuksenoppiaineenoppimaara",
             "nimi": {

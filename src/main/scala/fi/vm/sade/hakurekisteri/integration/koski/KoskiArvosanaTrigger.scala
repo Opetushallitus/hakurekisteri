@@ -129,6 +129,8 @@ object KoskiArvosanaTrigger {
       //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
       //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
       val allSuorituksetGroups: Seq[Seq[SuoritusArvosanat]] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer)
+      val foo: Seq[Seq[Arvosana]] = allSuorituksetGroups.flatten.map(_.arvosanat)
+      foo.foreach(s => logger.info(s"arvosanat length: ${s.length}"))
       allSuorituksetGroups.foreach(allSuoritukset =>
         fetchExistingSuoritukset(henkiloOid).onComplete(suoritukset => { //NOTE, processes the Future that encloses the list, does not actually iterate through the list
           val henkilonSuoritukset = allSuoritukset.filter(s => {
@@ -601,7 +603,14 @@ object KoskiArvosanaTrigger {
           }
         case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-        case Oids.perusopetuksenOppiaineenOppimaaraOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+        case Oids.perusopetuksenOppiaineenOppimaaraOid =>
+          var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
+          if(suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) {
+            s = s :+ KoskiOsasuoritus(suoritus.koulutusmoduuli, suoritus.tyyppi.getOrElse(KoskiKoodi("","")), suoritus.arviointi.getOrElse(Seq()), suoritus.pakollinen, None, None)
+          }
+          osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot)
+
+
         case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
