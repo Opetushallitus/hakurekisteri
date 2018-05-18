@@ -5,7 +5,7 @@ import akka.testkit.{CallingThreadDispatcher, TestActors}
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.SuoritusArvosanat
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.{AIKUISTENPERUS_LUOKKAASTE, SuoritusArvosanat}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.LocalDate
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
@@ -30,11 +30,17 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+
+    val ysit = getYsiluokat(result)
     val suoritusA = result.head
     val suoritusB = result(1)
 
     val expectedDate = new LocalDate(2017,8,1)
     suoritusB.lasnadate should equal (expectedDate)
+
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9A"
+    getYsiluokat(result).head.luokka shouldEqual "9A"
+
     val oidsWithAliases = PersonOidsWithAliases(Set("1.2.246.562.24.71123947024"), Map.empty)
 /*
     //TODO fix actor threading problem
@@ -226,6 +232,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritus.arvosanat should have length 0
 
     val paattotodistus = result(3)
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
 
     val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinenpaattotodistus.komo shouldNot be("luokka")
@@ -244,7 +251,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
-
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
     val suoritus = result(2)
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
@@ -277,6 +284,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
   }
 
   it should "not parse arvosanat from peruskoulu_9_luokka_päättötodistus_vahvistus_4_6_2018_jälkeen.json" in {
@@ -286,6 +294,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
     result(3).arvosanat should have length 0
   }
 
@@ -338,16 +347,14 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     resultGroup should have length 1
 
     val s = resultGroup.head
+    getPerusopetusPäättötodistus(s).get.luokka shouldEqual "9C"
     s should have length 3
     val kokonaisuus = s.head
     val kotitaloudet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("KO"))
 
-
-
     val b2kielet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("B2"))
     b2kielet should have length 1
     b2kielet.filter(_.valinnainen == true) should have length 1
-
 
     val a1kielet: Seq[Arvosana] = kokonaisuus.arvosanat.filter(_.aine.contentEquals("A1"))
     a1kielet should have length 2
@@ -383,7 +390,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val resultGroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     resultGroup.head should have length 3
-
+    getPerusopetusPäättötodistus(resultGroup.head).get.luokka shouldEqual "9C"
     //TODO fix actor threading problem
     /*val system = ActorSystem("MySpec")
     val a = system.actorOf(Props(new TestSureActor()).withDispatcher(CallingThreadDispatcher.Id))
@@ -412,6 +419,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     resultGroup.head should have length 2
 
     val arvosanat: Seq[SuoritusArvosanat] = resultGroup.head
+    getPerusopetusPäättötodistus(arvosanat).get.luokka shouldEqual "9H"
     arvosanat should have length 2
     val numKo = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset.count(_.koulutusmoduuli.tunniste.get.koodiarvo.contentEquals("KO"))
     arvosanat.head.arvosanat.filter(_.aine.contentEquals("KO")) should have length numKo - 1 //one KO has only 1 vuosiviikkotunti, it's not accepted
@@ -603,6 +611,56 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     virallinen.komo shouldEqual Oids.lisaopetusKomoOid
     virallinen.tila shouldEqual "KESKEN"
 
+  }
+
+  it should "parse luokkatietoinen-testi.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "luokkatietoinen-testi.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resgroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resgroup should have length 1
+
+    val res: Seq[SuoritusArvosanat] = resgroup.head
+    res should have length 3
+
+    res.exists(_.luokka.contentEquals("9A")) shouldEqual true
+    res.exists(_.luokka.contentEquals("9D")) shouldEqual true
+
+    val luokkatieto = res.filter(_.luokka.contentEquals("9D")).head
+    val virallinensuoritus = luokkatieto.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinensuoritus.tila shouldEqual "KESKEN"
+
+    val päättötodistus: SuoritusArvosanat = res.filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid)).head
+
+    val AIKUISTENPERUS_LUOKKAASTE = "AIK"
+    res.foreach {
+      case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
+
+        val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (res.exists(_.luokkataso.getOrElse("").startsWith("9"))
+          || luokkaTaso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
+        if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+          peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus shouldBe true
+          useSuoritus.tila shouldEqual "KESKEN"
+        } else {
+          val ismatch = luokka.contentEquals("9A") || luokka.contentEquals("9D")
+          ismatch shouldBe true
+        }
+    }
+
+    //päättötodistus.luokka shouldBe empty
+    //päättötodistus.suoritus.asInstanceOf[VirallinenSuoritus].tila shouldEqual "KESKEN"
+    //päättötodistus.suoritus.vahvistettu shouldBe false
+
+  }
+
+  def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
+    arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
+  }
+
+  def getYsiluokat(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
+    arvosanat.filter(a => a.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals("luokka") && a.luokka.startsWith("9"))
   }
 
   class TestSureActor extends Actor {
