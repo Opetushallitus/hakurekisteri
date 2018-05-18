@@ -17,9 +17,31 @@ class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with Lo
   val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, valintaTulosTimeout)))
   addServlet(new HakijaResourceV3(hakijat), "/")
 
+  test("fails with bad request if there is no query parameter") {
+    get("/") {
+      status should be (400)
+      body should include ("pakolliset parametrit puuttuvat")
+    }
+  }
+
+  test("fails with bad request if there is no organisaatio query parameter") {
+    get("/?haku=dummy") {
+      status should be (400)
+      body should include ("pakolliset parametrit puuttuvat")
+    }
+  }
+
+  test("fails with bad request if there is no haku query parameter") {
+    get("/?organisaatio=dummy") {
+      status should be (400)
+      body should include ("pakolliset parametrit puuttuvat")
+    }
+  }
+
   test("JSON contains osaaminen yleinen_kielitutkinto_fi and valtionhallinnon_kielitutkinto_fi") {
     Hakupalvelu has FullHakemus1
-    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
+    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json&organisaatio=1.10.3") {
+      println(body)
       body should include("\"yleinen_kielitutkinto_fi\":\"true\"")
       body should include("\"valtionhallinnon_kielitutkinto_fi\":\"true\"")
       body should include("\"koulutuksenKieli\":\"FI\"")
@@ -28,7 +50,7 @@ class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with Lo
 
   test("JSON contains foreign huoltajan nimi") {
     Hakupalvelu has FullHakemus5
-    get("/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json") {
+    get("/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json&organisaatio=1.11.5") {
       body should include("\"sukunimi\":\"Hyvaksytty\"")
     }
   }
