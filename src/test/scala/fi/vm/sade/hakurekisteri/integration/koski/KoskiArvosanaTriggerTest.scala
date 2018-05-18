@@ -655,12 +655,87 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
   }
 
+  it should "parse luokallejääjä_testi.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "luokallejääjä_testi.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    res should have length 1
+    val pt = getPerusopetusPäättötodistus(res.head).get
+    val ysiluokat = getYsiluokat(res.head)
+    ysiluokat should have length 1
+    ysiluokat.head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
+    pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
+  }
+
+  it should "get correct end date from last ysiluokka" in {
+    val koskikomo = KoskiKoulutusmoduuli(None, None, None, None, None)
+
+    val vahvistus = KoskiVahvistus("2000-04-01", KoskiOrganisaatio(""))
+    val vahvistus2 = KoskiVahvistus("2000-05-03", KoskiOrganisaatio(""))
+    val vahvistus3 = KoskiVahvistus("2000-05-02", KoskiOrganisaatio(""))
+
+    val ks1 = KoskiSuoritus(luokka = Some("9"),
+                           koulutusmoduuli = koskikomo,
+                            tyyppi = None,
+                            kieli = None,
+                            pakollinen = None,
+                            toimipiste = None,
+                            vahvistus = Some(vahvistus),
+                            suorituskieli = None,
+                            arviointi = None,
+                            yksilöllistettyOppimäärä = None,
+                            osasuoritukset = Seq(),
+                            ryhmä = None,
+                            alkamispäivä = None,
+                            jääLuokalle = None)
+
+    val ks2 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = Some(vahvistus2),
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val ks3 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = Some(vahvistus3),
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val suoritukset: Seq[KoskiSuoritus] = Seq(ks1,ks2,ks3)
+    val maybedate: Option[LocalDate] = KoskiArvosanaTrigger.getEndDateFromLastNinthGrade(suoritukset)
+
+    maybedate.get shouldEqual KoskiArvosanaTrigger.parseLocalDate("2000-05-03")
+
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
 
   def getYsiluokat(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
-    arvosanat.filter(a => a.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals("luokka") && a.luokka.startsWith("9"))
+    val luokat = arvosanat.filter(a => a.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals("luokka") && a.luokka.startsWith("9"))
+    luokat
   }
 
   class TestSureActor extends Actor {

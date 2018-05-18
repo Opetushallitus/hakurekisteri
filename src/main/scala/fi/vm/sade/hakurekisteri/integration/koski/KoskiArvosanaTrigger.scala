@@ -494,6 +494,24 @@ object KoskiArvosanaTrigger {
     suoritukset
   }
 
+  def getEndDateFromLastNinthGrade(suoritukset: Seq[KoskiSuoritus]): Option[LocalDate] = {
+    val mostrecent = suoritukset.filter(s => s.luokka.getOrElse("").startsWith("9"))
+        .sortWith((a,b) => {
+          val aDate = parseLocalDate(a.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(""))).päivä)
+          val bDate = parseLocalDate(b.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(""))).päivä)
+          aDate.compareTo(bDate) > 0})
+
+    if(mostrecent.nonEmpty) {
+      if(mostrecent.head.vahvistus.isDefined) {
+        Some(parseLocalDate(mostrecent.head.vahvistus.get.päivä))
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+  }
+
   case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
   case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
@@ -639,9 +657,11 @@ object KoskiArvosanaTrigger {
           failedNinthGrade = true*/
       }
 
-      val useValmistumisPaiva = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
+      val useValmistumisPaiva: LocalDate = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => parseNextFourthOfJune()
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
+        case (Oids.perusopetusKomoOid, _, "KESKEYTYNYT") if suoritus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetuksenoppimaara") =>
+          getEndDateFromLastNinthGrade(suoritukset).getOrElse(valmistumisPaiva)
         case (Oids.perusopetusKomoOid, _, "VALMIS") =>
           if (suoritus.vahvistus.isDefined) parseLocalDate(suoritus.vahvistus.get.päivä)
           else parseNextFourthOfJune()
