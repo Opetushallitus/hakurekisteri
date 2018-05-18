@@ -23,7 +23,7 @@ trait KoskiTriggerable {
   def trigger(a: KoskiHenkiloContainer, b: PersonOidsWithAliases)
 }
 
-case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases) => Unit)
+case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
@@ -123,8 +123,12 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     })
   }
 
-  override def updateHenkilo(oppijaOid: String): Future[Unit] = {
-    logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
+  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false): Future[Unit] = {
+    if (!createLukio) {
+      logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
+    } else {
+      logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
+    }
 
     val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
       .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
@@ -144,7 +148,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
       val (henkilot, personOidsWithAliases) = res
       logger.debug(s"Haettu henkilöt=$henkilot")
-      Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+      Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
         case Failure(exception) =>
           logger.error("Error triggering update for henkilö", exception)
           Future.failed(exception)
@@ -157,9 +161,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
     result
   }
 
-  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases): Unit =
+  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Unit =
     henkilot.foreach(henkilo => {
-      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases))
+      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases, createLukio))
     })
 
 }

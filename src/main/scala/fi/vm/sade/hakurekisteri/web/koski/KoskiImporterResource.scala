@@ -48,7 +48,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilo(personOid)
+      override val is: Future[_] = koskiService.updateHenkilo(personOid, createLukio = true) //parametri devauksen ajan true
     }
   }
 
