@@ -619,13 +619,14 @@ object KoskiArvosanaTrigger {
         case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-
-
+        case Oids.lukioKomoOid =>
+          if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
+            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+          } else {
+            (Seq(), yksilollistaminen.Ei)
+          }
         //https://confluence.oph.ware.fi/confluence/display/AJTS/Koski-Sure+arvosanasiirrot
         //abiturienttien arvosanat haetaan hakijoille joiden lukion oppimäärän suoritus on vahvistettu KOSKI -palvelussa. Tässä vaiheessa ei haeta vielä lukion päättötodistukseen tehtyjä korotuksia.
-        case Oids.lukioKomoOid => (Seq(), yksilollistaminen.Ei)
-          //if suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS") =>
-            //(osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot), yksilollistaminen.Ei)
 
         case _ => (Seq(), yksilollistaminen.Ei)
       }
