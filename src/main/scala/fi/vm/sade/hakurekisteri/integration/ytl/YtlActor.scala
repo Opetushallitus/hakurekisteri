@@ -36,7 +36,7 @@ class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemus
     case HakuList(current) => haut = current
 
     case k: Kokelas =>
-      log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
+      log.info(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
       context.actorOf(Props(new YoSuoritusUpdateActor(k.yo, suoritusRekisteri)))
       kokelaat = kokelaat + (k.oid -> k)
       k.lukio foreach (suoritusRekisteri ! _)
@@ -400,7 +400,7 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
   }
 }
 
-class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: ActorRef) extends Actor {
+class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: ActorRef) extends Actor with ActorLogging {
   private def ennenVuotta1990Valmistuneet(s: Seq[_]) = s.map {
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
       v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
@@ -410,6 +410,7 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: A
     case s: Seq[_] =>
       fetch.foreach(_.cancel())
       if (s.isEmpty) {
+        log.info(s"Saving yo-suoritus ${yoSuoritus}")
         suoritusRekisteri ! yoSuoritus
       } else {
         val suoritukset = ennenVuotta1990Valmistuneet(s)
@@ -417,6 +418,7 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: A
           context.parent ! suoritukset.head
           context.stop(self)
         } else {
+          log.info(s"Saving yo-suoritus ${yoSuoritus}")
           suoritusRekisteri ! yoSuoritus
         }
       }

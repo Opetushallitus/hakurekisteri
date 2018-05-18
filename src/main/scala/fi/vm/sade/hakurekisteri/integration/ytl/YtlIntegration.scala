@@ -150,7 +150,6 @@ class YtlIntegration(properties: OphProperties,
   private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val allSucceeded = new AtomicBoolean(true)
-    var zipInputStream:Option[ZipInputStream] = None
     try {
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
@@ -159,7 +158,7 @@ class YtlIntegration(properties: OphProperties,
           audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}"))
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
-          zipInputStream = Some(zip)
+          try {
           logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count! total students received: ${students.size}")
           students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
             case Some(personOid) =>
@@ -174,6 +173,9 @@ class YtlIntegration(properties: OphProperties,
               None
           }
           ).foreach(persistKokelas)
+          } finally {
+            IOUtils.closeQuietly(zip)
+          }
       }
     } catch {
       case e: Throwable =>
@@ -181,7 +183,6 @@ class YtlIntegration(properties: OphProperties,
         logger.error(s"YTL sync all failed!", e)
         audit.log(message(s"Ytl sync failed: ${e.getMessage}"))
     } finally {
-      zipInputStream.foreach(IOUtils.closeQuietly)
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
 
       val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")

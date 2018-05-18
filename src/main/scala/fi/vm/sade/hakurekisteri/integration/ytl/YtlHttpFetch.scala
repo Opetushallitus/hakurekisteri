@@ -32,7 +32,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   val log = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
   implicit val formats = Student.formatsStudent
-  val chunkSize = config.getOrElse("ytl.http.chunksize", "50000").toInt
+  val chunkSize = config.getOrElse("ytl.http.chunksize", "5000").toInt
   val username = config.getProperty("ytl.http.username")
   val password = config.getProperty("ytl.http.password")
   val bufferSize = config.getOrElse("ytl.http.buffersize", "4096").toInt // 4K
