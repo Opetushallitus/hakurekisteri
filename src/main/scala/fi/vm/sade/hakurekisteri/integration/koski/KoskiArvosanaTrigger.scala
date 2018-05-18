@@ -621,6 +621,7 @@ object KoskiArvosanaTrigger {
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
         case Oids.lukioKomoOid =>
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
+            logger.info("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
             osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
           } else {
             (Seq(), yksilollistaminen.Ei)
@@ -716,7 +717,7 @@ object KoskiArvosanaTrigger {
             root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
         logger.debug("createSuoritusArvosanat={}", suoritus)
         if (createLukioArvosanat && komoOid == Oids.lukioKomoOid ) {
-          logger.info("created lukio arvosanas: {}",suoritus)
+          logger.info("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
         }
         result = result :+ suoritus
       }
