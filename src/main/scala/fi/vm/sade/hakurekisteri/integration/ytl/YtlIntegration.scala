@@ -169,6 +169,7 @@ class YtlIntegration(properties: OphProperties,
             handleStudents(hetuToPersonOid, students)
           } finally {
             IOUtils.closeQuietly(zip)
+            logger.info(s"Synced with group uuid $groupUuid batch $index containing ${students.size} students!")
           }
         }
       }
