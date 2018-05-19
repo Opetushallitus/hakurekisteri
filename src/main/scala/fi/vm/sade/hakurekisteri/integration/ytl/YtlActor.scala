@@ -36,7 +36,7 @@ class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemus
     case HakuList(current) => haut = current
 
     case k: Kokelas =>
-      log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
+      log.info(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
       context.actorOf(Props(new YoSuoritusUpdateActor(k.yo, suoritusRekisteri)))
       kokelaat = kokelaat + (k.oid -> k)
       k.lukio foreach (suoritusRekisteri ! _)
