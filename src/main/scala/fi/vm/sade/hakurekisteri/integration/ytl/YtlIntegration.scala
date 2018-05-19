@@ -165,12 +165,14 @@ class YtlIntegration(properties: OphProperties,
       logger.info(s"HetuToPersonOid maps contains ${hetuToPersonOid.keySet.size} entries")
       ytlHttpClient.fetchWithGroupUuid(groupUuid).zipWithIndex.foreach {
         case ((zip, students), index) => {
-          logger.info(s"Syncing with group uuid $groupUuid batch $index containing ${students.size} students!")
+          //logger.info(s"Syncing with group uuid $groupUuid batch $index containing ${students.size} students!")
+          logger.info(s"Syncing with group uuid $groupUuid batch $index")
           try {
             handleStudents(hetuToPersonOid, students)
           } finally {
             IOUtils.closeQuietly(zip)
-            logger.info(s"Synced with group uuid $groupUuid batch $index containing ${students.size} students!")
+            //logger.info(s"Synced with group uuid $groupUuid batch $index containing ${students.size} students!")
+            logger.info(s"Synced with group uuid $groupUuid batch $index")
           }
         }
       }
@@ -225,7 +227,6 @@ class YtlIntegration(properties: OphProperties,
 
   private def handleStudents(hetuToPersonOid: Map[String, String], students: Iterator[Student]) = {
     logger.info(s"HetuToPersonOid maps contains ${hetuToPersonOid.keySet.size} entries (batch)")
-    logger.info(s"Students iterator contains ${students.size} entries")
     var counter = 0;
     students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
       case Some(personOid) =>
