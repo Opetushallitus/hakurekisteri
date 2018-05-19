@@ -164,7 +164,7 @@ class YtlIntegration(properties: OphProperties,
       val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
       ytlHttpClient.fetchWithGroupUuid(groupUuid).zipWithIndex.foreach {
         case ((zip, students), index) => {
-          logger.info(s"Syncing with group uuid $groupUuid batch $index containing ${students.size} students!")
+          logger.info(s"Syncing with group uuid $groupUuid batch $index")
           try {
             handleStudents(hetuToPersonOid, students)
           } finally {
@@ -187,7 +187,7 @@ class YtlIntegration(properties: OphProperties,
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           try {
-            logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count! total students received: ${students.size}")
+            logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count!")
             handleStudents(hetuToPersonOid, students)
           } finally {
             IOUtils.closeQuietly(zip)
