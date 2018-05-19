@@ -170,6 +170,7 @@ class YtlIntegration(properties: OphProperties,
           } finally {
             IOUtils.closeQuietly(zip)
           }
+          Thread.sleep(10 * 60 * 1000)
         }
       }
     })
