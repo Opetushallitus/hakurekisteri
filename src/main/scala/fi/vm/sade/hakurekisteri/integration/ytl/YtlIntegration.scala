@@ -162,6 +162,7 @@ class YtlIntegration(properties: OphProperties,
   def syncWithGroupUuid(groupUuid: String): Unit = {
     fetchActiveKKPersons(groupUuid, persons => {
       val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
+      logger.info(s"HetuToPersonOid maps contains ${hetuToPersonOid.keySet.size} entries")
       ytlHttpClient.fetchWithGroupUuid(groupUuid).zipWithIndex.foreach {
         case ((zip, students), index) => {
           logger.info(s"Syncing with group uuid $groupUuid batch $index containing ${students.size} students!")
@@ -223,6 +224,9 @@ class YtlIntegration(properties: OphProperties,
   }
 
   private def handleStudents(hetuToPersonOid: Map[String, String], students: Iterator[Student]) = {
+    logger.info(s"HetuToPersonOid maps contains ${hetuToPersonOid.keySet.size} entries (batch)")
+    logger.info(s"Students iterator contains ${students.size} entries")
+    var counter = 0;
     students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
       case Some(personOid) =>
         Try(StudentToKokelas.convert(personOid, student)) match {
@@ -234,7 +238,11 @@ class YtlIntegration(properties: OphProperties,
       case None =>
         logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
         None
-    }).foreach(persistKokelas)
+    }).foreach(kokelas => {
+      persistKokelas(kokelas)
+      counter += 1
+    })
+    logger.info(s"Persisted ${counter} kokelas")
   }
 
   private def persistKokelas(kokelas: Kokelas): Unit = {
