@@ -109,6 +109,13 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   def fetch(groupUuid: String, hetus: Seq[String]): Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
     hetus.grouped(chunkSize).map(fetch(groupUuid))
 
+  def fetchWithGroupUuid(groupUuid: String): Iterator[(ZipInputStream, Iterator[Student])] = {
+    fileSystem.read(groupUuid).map(z => {
+      val zip = new ZipInputStream(z)
+      (zip, zipToStudents(zip).map(_._2))
+    })
+  }
+
   @tailrec
   private def fetchStatus(uuid: String): Either[Throwable,Status] = {
     log.debug(s"Fetching with opertationUuid $uuid")

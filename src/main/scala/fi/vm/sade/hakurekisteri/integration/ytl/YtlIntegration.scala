@@ -104,6 +104,29 @@ class YtlIntegration(properties: OphProperties,
 
   def getLastFetchStatus: Option[LastFetchStatus] = Option(lastFetchStatus.get())
 
+  private def fetchInChunks(hakuOids: Set[String]): Future[Set[HetuPersonOid]] = {
+    def fetchChunk(chunk: Set[String]): Future[Set[HetuPersonOid]] = {
+      Future.sequence(chunk.map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))).map(_.flatten)
+    }
+
+    hakuOids.grouped(10).foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
+      case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
+    }
+  }
+  private def fetchActiveKKPersons(uuid: String, operation: Set[HetuPersonOid] => Unit): Unit = {
+    fetchInChunks(activeKKHakuOids.get()).onComplete {
+      case Success(persons) =>
+        logger.info(s"(Group UUID: ${uuid} ) success fetching personOids, total found: ${persons.size}.")
+        operation.apply(persons)
+
+      case Failure(e: Throwable) =>
+        logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+        sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+        audit.log(message(s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}"))
+        atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
+        throw e
+    }
+  }
   /**
     * Begins async synchronization. Throws an exception if an error occurs during it.
     */
@@ -132,19 +155,24 @@ class YtlIntegration(properties: OphProperties,
         }
       }
       logger.info(s"Fetching in chunks, activeKKHakuOids: ${activeKKHakuOids.get()}")
-      fetchInChunks(activeKKHakuOids.get()).onComplete {
-        case Success(persons) =>
-          logger.info(s"(Group UUID: ${currentStatus.uuid} ) success fetching personOids, total found: ${persons.size}.")
-          handleHakemukset(currentStatus.uuid, persons)
-
-        case Failure(e: Throwable) =>
-          logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-          sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-          audit.log(message(s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}"))
-          atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
-          throw e
-      }
+      fetchActiveKKPersons(currentStatus.uuid, persons => handleHakemukset(currentStatus.uuid, persons))
     }
+  }
+
+  def syncWithGroupUuid(groupUuid: String): Unit = {
+    fetchActiveKKPersons(groupUuid, persons => {
+      val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
+      ytlHttpClient.fetchWithGroupUuid(groupUuid).zipWithIndex.foreach {
+        case ((zip, students), index) => {
+          logger.info(s"Syncing with group uuid $groupUuid batch $index containing ${students.size} students!")
+          try {
+            handleStudents(hetuToPersonOid, students)
+          } finally {
+            IOUtils.closeQuietly(zip)
+          }
+        }
+      }
+    })
   }
 
   private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
@@ -154,8 +182,8 @@ class YtlIntegration(properties: OphProperties,
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
-          logger.error(s"failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}", e)
-          audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}"))
+          logger.error(s"failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}", e)
+          audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}"))
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           try {
@@ -184,14 +212,28 @@ class YtlIntegration(properties: OphProperties,
         audit.log(message(s"Ytl sync failed: ${e.getMessage}"))
     } finally {
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
-
       val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
-      if(!allSucceeded.get()) {
+      if (!allSucceeded.get()) {
         sendFailureEmail(msg)
       }
       audit.log(message(s"Ytl sync ended $msg!"))
-      atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
+      atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
     }
+  }
+
+  private def handleStudents(hetuToPersonOid: Map[String, String], students: Iterator[Student]) = {
+    students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
+      case Some(personOid) =>
+        Try(StudentToKokelas.convert(personOid, student)) match {
+          case Success(candidate) => Some(candidate)
+          case Failure(exception) =>
+            logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
+            None
+        }
+      case None =>
+        logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
+        None
+    }).foreach(persistKokelas)
   }
 
   private def persistKokelas(kokelas: Kokelas): Unit = {

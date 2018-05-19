@@ -36,6 +36,13 @@ class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val sys
     ytlIntegration.syncAll()
     Accepted("YTL sync started")
   }
+  post("/group_uuid_request/:group_uuid") {
+    shouldBeAdmin
+    val groupUuid = params("group_uuid")
+    logger.info(s"Rewriting YTL data with group uuid $groupUuid")
+    ytlIntegration.syncWithGroupUuid(groupUuid)
+    Accepted(s"YTL sync with group uuid $groupUuid started")
+  }
   get("/http_request/:personOid") {
     shouldBeAdmin
     val personOid = params("personOid")
