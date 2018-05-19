@@ -113,7 +113,7 @@ class YtlIntegration(properties: OphProperties,
       case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
     }
   }
-  private def fetchActiveKKPersons(uuid: String, operation: Set[HetuPersonOid] => Unit): Future[Set[HetuPersonOid]] = {
+  private def fetchActiveKKPersons(uuid: String, operation: Set[HetuPersonOid] => Unit): Unit = {
     fetchInChunks(activeKKHakuOids.get()).onComplete {
       case Success(persons) =>
         logger.info(s"(Group UUID: ${uuid} ) success fetching personOids, total found: ${persons.size}.")
@@ -155,7 +155,7 @@ class YtlIntegration(properties: OphProperties,
         }
       }
       logger.info(s"Fetching in chunks, activeKKHakuOids: ${activeKKHakuOids.get()}")
-      fetchActiveKKPersons(currentStatus.uuid, _ => handleHakemukset(currentStatus.uuid, _))
+      fetchActiveKKPersons(currentStatus.uuid, persons => handleHakemukset(currentStatus.uuid, persons))
     }
   }
 
