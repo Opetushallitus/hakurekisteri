@@ -115,6 +115,10 @@ app.factory "MuokkaaTiedot", [
             value: komo.telma
             text: getOphMsg("suoritusrekisteri.komo." + komo.telma, "Työhön ja itsenäiseen elämään valmentava koulutus")
           }
+          {
+            value: komo.perusopetuksenOppiaineenOppimaaraOid
+            text: getOphMsg("suoritusrekisteri.komo." + komo.perusopetuksenOppiaineenOppimaara, "Perusopetuksen oppiaineen oppimäärä")
+          }
         ]
         $scope.ammatillinenKielikoeText = getOphMsg("suoritusrekisteri.komo." + $scope.ammatillisenKielikoeKomo, "Ammatillisen koulutuksen kielikoe")
 
@@ -149,6 +153,7 @@ app.factory "MuokkaaTiedot", [
             kansanopisto: data.kansanopistoKomoOid
             valma: data.valmaKomoOid
             telma: data.telmaKomoOid
+            perusopetuksenOppiaineenOppimaara: data.perusopetuksenOppiaineenOppimaaraOid
         ).error(->komosLoaded.reject("cannot get komos"))
         return komosLoaded.promise
 
