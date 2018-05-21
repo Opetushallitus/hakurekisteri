@@ -267,7 +267,8 @@ var restData = {
         "ylioppilastutkintolautakunta": "1.2.246.562.10.43628088406",
         "kansanopistoKomoOid": "kansanopisto",
         "valmaKomoOid": "valma",
-        "telmaKomoOid": "telma"
+        "telmaKomoOid": "telma",
+        "perusopetuksenOppiaineenOppimaaraOid": "TODO perusopetuksenOppiaineenOppimäärä"
     },
     rajoitukset: {
         "opoUpdateGraduation": true

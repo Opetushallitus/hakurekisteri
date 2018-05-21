@@ -116,7 +116,7 @@ app.factory "MuokkaaTiedot", [
             text: getOphMsg("suoritusrekisteri.komo." + komo.telma, "Työhön ja itsenäiseen elämään valmentava koulutus")
           }
           {
-            value: komo.perusopetuksenOppiaineenOppimaaraOid
+            value: komo.perusopetuksenOppiaineenOppimaara
             text: getOphMsg("suoritusrekisteri.komo." + komo.perusopetuksenOppiaineenOppimaara, "Perusopetuksen oppiaineen oppimäärä")
           }
         ]
