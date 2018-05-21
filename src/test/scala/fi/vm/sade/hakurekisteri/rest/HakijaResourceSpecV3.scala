@@ -41,7 +41,6 @@ class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with Lo
   test("JSON contains osaaminen yleinen_kielitutkinto_fi and valtionhallinnon_kielitutkinto_fi") {
     Hakupalvelu has FullHakemus1
     get("/?haku=1&hakuehto=Kaikki&tyyppi=Json&organisaatio=1.10.3") {
-      println(body)
       body should include("\"yleinen_kielitutkinto_fi\":\"true\"")
       body should include("\"valtionhallinnon_kielitutkinto_fi\":\"true\"")
       body should include("\"koulutuksenKieli\":\"FI\"")
