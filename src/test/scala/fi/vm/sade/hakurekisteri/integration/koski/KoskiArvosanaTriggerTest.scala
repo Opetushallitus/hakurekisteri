@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.{AIKUISTENPERUS_LUOKKAASTE, SuoritusArvosanat}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.LocalDate
+import org.joda.time.{LocalDate, LocalDateTime}
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -284,7 +284,10 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
-    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
+    val pt = getPerusopetusPäättötodistus(result).get
+    pt.luokka shouldEqual "9C"
+    pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2016-06-04")
+
   }
 
   it should "not parse arvosanat from peruskoulu_9_luokka_päättötodistus_vahvistus_4_6_2018_jälkeen.json" in {
@@ -727,6 +730,24 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     maybedate.get shouldEqual KoskiArvosanaTrigger.parseLocalDate("2000-05-03")
 
+  }
+
+  it should "parse 1.2.246.562.24.14978931242.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "1.2.246.562.24.14978931242.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo.opiskeluoikeudet.head.aikaleima shouldEqual Some("2018-05-15T11:59:16.690066")
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resultgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgroup should have length 1
+    val result: Seq[SuoritusArvosanat] = resultgroup.head
+    result should have length 2
+    val arvosanat = result.head
+
+    val expectedDate = LocalDate.parse("2018-05-15")
+    arvosanat.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual expectedDate
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {

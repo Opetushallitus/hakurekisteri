@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResou
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{DateTime, LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
@@ -661,7 +661,12 @@ object KoskiArvosanaTrigger {
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => parseNextFourthOfJune()
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
         case (Oids.perusopetusKomoOid, _, "KESKEYTYNYT") if suoritus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetuksenoppimaara") =>
-          getEndDateFromLastNinthGrade(suoritukset).getOrElse(valmistumisPaiva)
+          val savetime: LocalDateTime = if(opiskeluoikeus.aikaleima.isDefined) {
+            LocalDateTime.parse(opiskeluoikeus.aikaleima.get)
+          } else {
+            LocalDateTime.now()
+          }
+          getEndDateFromLastNinthGrade(suoritukset).getOrElse(savetime.toLocalDate)
         case (Oids.perusopetusKomoOid, _, "VALMIS") =>
           if (suoritus.vahvistus.isDefined) parseLocalDate(suoritus.vahvistus.get.päivä)
           else parseNextFourthOfJune()

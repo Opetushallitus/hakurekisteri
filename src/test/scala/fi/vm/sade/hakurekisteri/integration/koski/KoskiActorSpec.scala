@@ -416,7 +416,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
           tila = this.getOpiskeluOikeusJakso,
           lisätiedot = Option.empty,
           suoritukset = suoritukset,
-          tyyppi = None
+          tyyppi = None,
+          aikaleima = None
         ))
       )
   }

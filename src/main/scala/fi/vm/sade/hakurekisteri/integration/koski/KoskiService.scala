@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import org.joda.time.LocalDate
+import org.joda.time.{LocalDate, LocalDateTime}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -193,7 +193,8 @@ case class KoskiOpiskeluoikeus(
                  päättymispäivä: Option[String],
                  lisätiedot: Option[KoskiLisatiedot],
                  suoritukset: Seq[KoskiSuoritus],
-                 tyyppi: Option[KoskiKoodi])
+                 tyyppi: Option[KoskiKoodi],
+                 aikaleima: Option[String])
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 
