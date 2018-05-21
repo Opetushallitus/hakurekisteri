@@ -273,8 +273,6 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val virallinen2 = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
     virallinen2.tila should equal("KESKEYTYNYT")
-
-
   }
 
   it should "parse arvosanat from peruskoulu_9_luokka_päättötodistus.json" in {
@@ -287,6 +285,10 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val pt = getPerusopetusPäättötodistus(result).get
     pt.luokka shouldEqual "9C"
     pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2016-06-04")
+
+    val ysi = getYsiluokat(result).head
+    val virallinenysi = ysi.suoritus.asInstanceOf[VirallinenSuoritus]
+    println(virallinenysi.valmistuminen)
 
   }
 
@@ -748,6 +750,24 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val expectedDate = LocalDate.parse("2018-05-15")
     arvosanat.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual expectedDate
+  }
+
+  it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resultgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgroup should have length 1
+    val result: Seq[SuoritusArvosanat] = resultgroup.head
+    result should have length 1
+
+    val fysiikat = result.head.arvosanat.filter(_.aine.contentEquals("FY"))
+    fysiikat should have length 1
+    fysiikat.head.valinnainen shouldBe false
+
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
