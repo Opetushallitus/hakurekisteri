@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
+import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat._
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, QueryLogging}
-import org.scalatra.{ApiFormats, AsyncResult}
+import org.scalatra.{ApiFormats, AsyncResult, BadRequest}
 
 import scala.compat.Platform
 import scala.concurrent.Future
@@ -38,6 +39,7 @@ trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaV
     new AsyncResult() {
       override implicit def timeout: Duration = requestTimeout
       val is = process
+      process.recoverWith { case hnfe: HakuNotFoundException => Future.successful(BadRequest(reason = hnfe.getMessage)) }
       process.onFailure { case e: Throwable => logger.error(e, "Exception thrown from async processing") }
     }
   }
