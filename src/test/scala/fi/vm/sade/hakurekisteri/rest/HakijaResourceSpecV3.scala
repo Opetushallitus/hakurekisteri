@@ -50,7 +50,13 @@ class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with Lo
 
   test("JSON contains foreign huoltajan nimi") {
     Hakupalvelu has FullHakemus5
-    get("/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json&organisaatio=1.10.3") {
+    val tarjoajaOrganisaatioOidit: Iterable[String] = for {
+      hakutoiveet <- FullHakemus5.hakutoiveet.toList
+      hakutoive <- hakutoiveet
+      organizationOid <- hakutoive.organizationOid
+    } yield organizationOid
+
+    get(s"/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json&organisaatio=${tarjoajaOrganisaatioOidit.head}") {
       body should include("\"sukunimi\":\"Hyvaksytty\"")
     }
   }
