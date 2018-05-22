@@ -503,7 +503,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         hakutoiveet =  Some(Map(
           "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
           "preference1-Opetuspiste-id" -> "1.10.3",
-          "preference1-Opetuspiste-id-parents" -> "",
+          "preference1-Opetuspiste-id-parents" -> "1.10.3,1.20.3,1.30.3",
           "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
           "preference1-Koulutus-id" -> "1.11.5",
           "preference1-Koulutus-id-aoIdentifier" -> "460",

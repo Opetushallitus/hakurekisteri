@@ -39,10 +39,10 @@ class HakijaResourceV2(hakijaActor: ActorRef)
   }
 
   get("/", operation(queryV2)) {
-    if(params.get("haku").getOrElse("").isEmpty)
-      throw new IllegalArgumentException(s"Haku can not be empty")
     val q = HakijaQuery(params, currentUser, 2)
-        val tyyppi = getFormatFromTypeParam()
+    if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
+
+    val tyyppi = getFormatFromTypeParam()
     if(tyyppi == ApiFormat.Xml) {
       prepareAsyncResult(tyyppi, Future.successful(new IllegalArgumentException("tyyppi Xml is not supported")))
     }
@@ -60,6 +60,7 @@ class HakijaResourceV2(hakijaActor: ActorRef)
   }
 
   incident {
+    case HakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
     case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }

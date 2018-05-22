@@ -65,6 +65,8 @@ class HakijaResource(hakijaActor: ActorRef)
     val t0 = Platform.currentTime
     val q = HakijaQuery(params, currentUser, 1)
 
+    if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
+
     val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
     contentType = getContentType(tyyppi)
 
@@ -87,6 +89,7 @@ class HakijaResource(hakijaActor: ActorRef)
   }
 
   incident {
+    case HakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
     case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }

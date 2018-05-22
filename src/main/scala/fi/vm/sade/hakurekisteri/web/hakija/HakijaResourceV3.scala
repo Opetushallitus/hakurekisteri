@@ -39,9 +39,8 @@ class HakijaResourceV3(hakijaActor: ActorRef)
   }
 
   get("/", operation(queryV2)) {
-    if(params.get("haku").getOrElse("").isEmpty)
-      throw new IllegalArgumentException(s"Haku can not be empty")
     val q = HakijaQuery(params, currentUser, 3)
+    if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
     val tyyppi = getFormatFromTypeParam()
     val thisResponse = response
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
@@ -55,6 +54,7 @@ class HakijaResourceV3(hakijaActor: ActorRef)
   }
 
   incident {
+    case HakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
     case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }

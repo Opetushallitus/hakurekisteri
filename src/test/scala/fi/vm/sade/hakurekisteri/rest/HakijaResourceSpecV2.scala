@@ -17,41 +17,56 @@ class HakijaResourceSpecV2 extends ScalatraFunSuite with HakeneetSupport with Lo
   val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, valintaTulosTimeout)))
   addServlet(new HakijaResourceV2(hakijat), "/")
 
-  test("XML is not supported anymore") {
-    get("/?haku=1&hakuehto=Kaikki&tyyppi=Xml") {
-      body should include("tyyppi Xml is not supported")
+  test("fails with bad request if there is no query parameter") {
+    get("/") {
+      status should be (400)
+      body should include ("pakolliset parametrit puuttuvat")
     }
   }
 
-  test("Haku oid must be given") {
-    get("/?hakuehto=Kaikki&tyyppi=Json") {
-      body should include("Haku can not be empty")
+  test("fails with bad request if there is no organisaatio query parameter") {
+    get("/?haku=dummy") {
+      status should be (400)
+      body should include ("pakolliset parametrit puuttuvat")
+    }
+  }
+
+  test("fails with bad request if there is no haku query parameter") {
+    get("/?organisaatio=dummy") {
+      status should be (400)
+      body should include ("pakolliset parametrit puuttuvat")
+    }
+  }
+
+  test("XML is not supported anymore") {
+    get("/?haku=1&hakuehto=Kaikki&tyyppi=Xml&organisaatio=dummy") {
+      body should include("tyyppi Xml is not supported")
     }
   }
 
   test("JSON contains postoffice") {
     Hakupalvelu has FullHakemus1
-    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
+    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json&organisaatio=1.10.3&haku=dummy") {
       body should include("\"postitoimipaikka\":\"Posti_00100\"")
     }
   }
 
   test("JSON contains foreign postoffice") {
     Hakupalvelu has FullHakemus3
-    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
+    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json&organisaatio=1.10.4&haku=dummy") {
       body should include("\"postitoimipaikka\":\"Parc la Vuori\"")
     }
   }
 
   test("JSON contains foreign huoltajan nimi") {
     Hakupalvelu has FullHakemus3
-    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
+    get("/?haku=1&hakuehto=Kaikki&tyyppi=Json&organisaatio=1.10.4&haku=dummy") {
       body should include("\"huoltajannimi\":\"huoltajannimi\"")
     }
   }
 
   test("result is binary and not empty when asked in Excel") {
-    get("/?haku=1&hakuehto=Kaikki&tyyppi=Excel") {
+    get("/?haku=1&hakuehto=Kaikki&tyyppi=Excel&organisaatio=dummy&haku=dummy") {
       body.length should not be 0
       header("Content-Type") should include("application/octet-stream")
       header("Content-Disposition") should be("attachment;filename=hakijat.xls")
