@@ -52,7 +52,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
     }
   }
 
-  get("/haku/:hakuOid", operation(read)) {
+  get("/haku/:hakuOid", operation(updateForHaku)) {
     implicit val user: User = getAdmin
     val hakuOid = params("hakuOid")
     audit.log(LogMessage.builder()
