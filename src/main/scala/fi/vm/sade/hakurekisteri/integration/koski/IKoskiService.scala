@@ -32,5 +32,5 @@ class KoskiServiceMock extends IKoskiService {
   FiniteDuration, searchWindowSize: Long, repairTargetTime: Date, pageNbr: Int, pageSizePerFetch: Int)
                                         (implicit scheduler: Scheduler): Unit = {}
 
-  override def updateHenkilotForHaku(hakuOid: String): Future[Unit] = {Future.successful(Unit)}
+  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean): Future[Unit] = {Future.successful(Unit)}
 }
