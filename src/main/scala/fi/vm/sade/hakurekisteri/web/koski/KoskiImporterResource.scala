@@ -54,14 +54,14 @@ class KoskiImporterResource(koskiService: IKoskiService)
 
   get("/haku/:hakuOid", operation(read)) {
     implicit val user: User = getAdmin
-    val personOid = params("hakuOid")
+    val hakuOid = params("hakuOid")
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
-      .setResourceId(personOid)
+      .setResourceId(hakuOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilo(personOid, createLukio = true) //parametri devauksen ajan true
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid) //parametri devauksen ajan true
     }
   }
 
