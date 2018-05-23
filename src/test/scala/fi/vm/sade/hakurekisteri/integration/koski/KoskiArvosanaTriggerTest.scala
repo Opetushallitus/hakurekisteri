@@ -800,6 +800,44 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
   }
 
+  it should "parse telma_testi_valmis.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_valmis.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgrp should have length 1
+    val result = resultgrp.head
+    result should have length 1
+
+    val arvosanat = result.head.arvosanat
+    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    arvosanat should have length 0
+    virallinensuoritus.tila shouldEqual "VALMIS"
+  }
+
+  it should "parse telma_testi_kesken.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgrp should have length 1
+    val result = resultgrp.head
+    result should have length 1
+
+    val arvosanat = result.head.arvosanat
+    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    arvosanat should have length 0
+    virallinensuoritus.tila shouldEqual "KESKEN"
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }

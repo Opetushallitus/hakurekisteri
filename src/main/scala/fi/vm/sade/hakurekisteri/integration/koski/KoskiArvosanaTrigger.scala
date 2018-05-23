@@ -587,7 +587,7 @@ object KoskiArvosanaTrigger {
           }
           osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None)
 
-        case Oids.telmaKomoOid => (Seq(), yksilollistaminen.Ei)
+        case Oids.telmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lukioKomoOid =>
@@ -621,7 +621,7 @@ object KoskiArvosanaTrigger {
             "VALMIS"
           } else suoritusTila
 
-        case Oids.valmaKomoOid =>
+        case Oids.valmaKomoOid | Oids.telmaKomoOid =>
           val pisteet = getValmaOsaamispisteet(suoritus)
           if(pisteet < 30){
             "KESKEN"
