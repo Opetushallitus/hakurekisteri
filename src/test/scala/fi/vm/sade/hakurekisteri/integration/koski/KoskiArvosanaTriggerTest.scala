@@ -319,6 +319,36 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     result should have length 0
   }
 
+  it should "parse arvosanat from lukio_päättötodistus.json when switch to enable lukio import is enabled" in {
+    /*
+    Lukion päättötodistuksen (abiturienttien) arvosanat: Suoritusta ei pidä luoda, sillä hakijalla on jo
+    hakemuksen perusteella luotu suoritus suoritusrekisterissä. Haetaan arvosanat hakijoille
+    joiden lukion oppimäärän suoritus on vahvistettu KOSKI -palvelussa.
+    Tässä vaiheessa ei haeta vielä lukion päättötodistukseen tehtyjä korotuksia.
+     */
+
+    val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
+    result should have length 1
+
+    val suoritusArvosanat = result.head
+    val virallinensuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
+    val arvosanat = suoritusArvosanat.arvosanat
+/*
+    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "B3", "MA", "BI", "GE", "FY", "KE", "KT", "FI", "PS", "HI", "YH", "LI", "MU", "KU", "TE", "ITT", "TO", "OA")
+*/
+    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "B3", "MA", "BI", "GE", "FY", "KE", "KT", "FI", "PS", "HI", "YH", "LI", "MU", "KU", "TE")
+    val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
+
+    aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
+
+    virallinensuoritus.tila shouldEqual "VALMIS"
+
+  }
+
   it should "parse BUG-1711.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "BUG-1711.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
