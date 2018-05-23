@@ -349,6 +349,29 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
   }
 
+
+  it should "parse arvosanat from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
+
+    val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus2.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
+    result should have length 1
+
+    val suoritusArvosanat = result.head
+    val virallinensuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
+    val arvosanat = suoritusArvosanat.arvosanat
+
+    val expectedAineet: Set[String] = Set("AI","B1","B3","MA")
+    val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
+
+    aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
+
+    virallinensuoritus.tila shouldEqual "VALMIS"
+
+  }
+
   it should "parse BUG-1711.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "BUG-1711.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
