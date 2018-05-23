@@ -13,4 +13,13 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
     .responseMessage(ModelResponseMessage(404, "oppija not found"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
 
+  val updateForHaku = apiOperation[Boolean]("paivitaOpiskelijatKoskestaHaulle")
+    .summary("Päivittää haun hakijoiden tiedot koskesta")
+    .notes("Palauttaa true jos päivitys onnistui, muutoin false")
+    .parameter(pathParam[String]("hakuOid")
+      .description("haun oid").required)
+    .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(404, "oppija not found"))
+    .responseMessage(ModelResponseMessage(500, "error in service"))
+
 }

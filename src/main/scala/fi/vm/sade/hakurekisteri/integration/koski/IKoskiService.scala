@@ -11,6 +11,7 @@ import scala.concurrent.duration._
 trait IKoskiService {
   var triggers: Seq[KoskiTrigger] = Seq()
 
+  def updateHenkilotForHaku(hakuOid: String): Future[Unit]
   def updateHenkilo(oppijaOid: String, createLukio: Boolean = false): Future[Unit]
   def addTrigger(trigger: KoskiTrigger): Unit = triggers = triggers :+ trigger
 
@@ -30,4 +31,6 @@ class KoskiServiceMock extends IKoskiService {
   override def traverseKoskiDataInChunks(searchWindowStartTime: Date, timeToWaitUntilNextBatch:
   FiniteDuration, searchWindowSize: Long, repairTargetTime: Date, pageNbr: Int, pageSizePerFetch: Int)
                                         (implicit scheduler: Scheduler): Unit = {}
+
+  override def updateHenkilotForHaku(hakuOid: String): Future[Unit] = {Future.successful(Unit)}
 }

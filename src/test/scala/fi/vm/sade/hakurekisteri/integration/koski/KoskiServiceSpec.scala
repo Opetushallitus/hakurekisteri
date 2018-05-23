@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import akka.actor.ActorSystem
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import org.mockito.Mockito._
 import org.scalatest._
@@ -19,7 +20,7 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
   val endPoint = mock[Endpoint]
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/koski"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val koskiService = new KoskiService(virkailijaRestClient = client, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10)
+  val koskiService = new KoskiService(virkailijaRestClient = client, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10, hakemusService = new HakemusServiceMock())
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
 
   it should "return suoritukset" in {

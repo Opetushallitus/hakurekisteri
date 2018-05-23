@@ -8,6 +8,7 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakijaHakemus, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.joda.time.{LocalDate, LocalDateTime}
@@ -25,7 +26,10 @@ trait KoskiTriggerable {
 
 case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
 
-class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
+class KoskiService(
+                    virkailijaRestClient: VirkailijaRestClient,
+                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+                    hakemusService: IHakemusService, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
@@ -121,6 +125,18 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient, oppijaNumeroRekis
           processModifiedKoski(searchWindowStartTime, refreshFrequency)
       }
     })
+  }
+
+  override def updateHenkilotForHaku(hakuOid: String): Future[Unit] = {
+    hakemusService.hakemuksetForHaku(hakuOid, None).onComplete {
+      case Success(hakemukset: Seq[HakijaHakemus]) =>
+        val personOids: Seq[String] = hakemukset.flatMap(_.personOid)
+        personOids.foreach(personOid => updateHenkilo(personOid, createLukio = true))
+      case Failure(e) => logger.error("Error updating henkilöt for haku", e)
+      case _ => logger.error(s"Tuntematon virhe päivittäessä koskesta henkilöitä haulle $hakuOid")
+    }
+
+    Future.failed(new RuntimeException)
   }
 
   override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false): Future[Unit] = {
