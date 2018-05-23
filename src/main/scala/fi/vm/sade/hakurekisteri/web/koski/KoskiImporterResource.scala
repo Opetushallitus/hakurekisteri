@@ -42,7 +42,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
   get("/:oppijaOid", operation(read)) {
     implicit val user: User = getAdmin
     val personOid = params("oppijaOid")
-    val haeLukio: Boolean = params.get("haelukio").get.toBoolean
+    val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
@@ -56,7 +56,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
   get("/haku/:hakuOid", operation(updateForHaku)) {
     implicit val user: User = getAdmin
     val hakuOid = params("hakuOid")
-    val haeLukio: Boolean = params.get("haelukio").get.toBoolean
+    val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
