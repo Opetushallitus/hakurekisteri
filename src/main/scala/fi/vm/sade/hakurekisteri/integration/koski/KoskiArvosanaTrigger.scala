@@ -553,9 +553,6 @@ object KoskiArvosanaTrigger {
           matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus, createLukioArvosanat)
         case _ => (DUMMYOID, None)
       }
-      if(komoOid == DUMMYOID && opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")) {
-        println("foo")
-      }
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
         case Oids.perusopetusKomoOid =>
