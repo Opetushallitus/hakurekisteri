@@ -128,9 +128,9 @@ class KoskiService(
   }
 
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false): Future[Unit] = {
-    hakemusService.hakemuksetForHaku(hakuOid, None).onComplete {
-      case Success(hakemukset: Seq[HakijaHakemus]) =>
-        val personOids: Seq[String] = hakemukset.flatMap(_.personOid)
+    hakemusService.personOidsForHaku(hakuOid, None).onComplete {
+      case Success(personOidsSet: Set[String]) =>
+        val personOids: Seq[String] = personOidsSet.toSeq
         personOids.foreach(personOid => updateHenkilo(personOid, createLukio))
       case Failure(e) => logger.error("Error updating henkilöt for haku", e)
       case _ => logger.error(s"Tuntematon virhe päivittäessä koskesta henkilöitä haulle $hakuOid")
