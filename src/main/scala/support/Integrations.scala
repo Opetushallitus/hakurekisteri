@@ -1,5 +1,6 @@
 package support
 
+import java.util.Date
 import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -206,10 +207,11 @@ class BaseIntegrations(rekisterit: Registers,
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
 
+  val traverseStart: Long  = 1509487200000L // Wed Nov 01 2017 00:00:00. Käydään läpi koko Koskidata arvosanojen siirtoa varten.
   if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
     val delay: FiniteDuration = 1.minute
     koskiService.processModifiedKoski(refreshFrequency = delay)
-    koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay)
+    koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay, searchWindowStartTime = new Date(traverseStart))
   }
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
