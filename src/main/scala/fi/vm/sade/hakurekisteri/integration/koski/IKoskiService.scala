@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 trait IKoskiService {
   var triggers: Seq[KoskiTrigger] = Seq()
 
-  def updateHenkilotForHaku(hakuOid: String): Future[Unit]
+  def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false): Future[Unit]
   def updateHenkilo(oppijaOid: String, createLukio: Boolean = false): Future[Unit]
   def addTrigger(trigger: KoskiTrigger): Unit = triggers = triggers :+ trigger
 
