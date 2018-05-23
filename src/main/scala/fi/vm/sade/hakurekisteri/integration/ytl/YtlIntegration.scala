@@ -159,7 +159,7 @@ class YtlIntegration(properties: OphProperties,
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           try {
-            logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count! total students received: ${students.size}")
+            logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count!")
             students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
               case Some(personOid) =>
                 Try(StudentToKokelas.convert(personOid, student)) match {
