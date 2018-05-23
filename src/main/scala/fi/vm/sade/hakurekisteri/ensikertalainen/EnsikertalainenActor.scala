@@ -256,7 +256,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
 
   private def aikaisinValmistuminen(suoritukset: Seq[Suoritus]): Option[DateTime] = {
     val valmistumishetket = suoritukset.collect {
-      case VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _, _) => valmistuminen.toDateTimeAtStartOfDay
+      case VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _, _, _) => valmistuminen.toDateTimeAtStartOfDay
     }
     if (valmistumishetket.isEmpty) None else Some(valmistumishetket.minBy(_.getMillis))
   }

@@ -1,6 +1,8 @@
 package support
 
 import java.util.Date
+import java.text.DateFormat
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
@@ -11,7 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
-import fi.vm.sade.hakurekisteri.integration.koski.{KoskiArvosanaTrigger, KoskiService, KoskiTrigger}
+import fi.vm.sade.hakurekisteri.integration.koski._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
@@ -51,6 +53,7 @@ trait Integrations {
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
+  val koskiService: IKoskiService
 }
 
 object Integrations {
@@ -73,6 +76,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     }
   })
   override val hakemusService = new HakemusServiceMock
+  override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
@@ -160,7 +164,7 @@ class BaseIntegrations(rekisterit: Registers,
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo")
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system)
   val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
-  val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri)(system)
+  val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
@@ -202,8 +206,13 @@ class BaseIntegrations(rekisterit: Registers,
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
-  koskiService.processModifiedKoski()
-  koskiService.traverseKoskiDataInChunks()
+
+  val traverseStart: Long  = 1509487200000L // Wed Nov 01 2017 00:00:00. Käydään läpi koko Koskidata arvosanojen siirtoa varten.
+  if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
+    val delay: FiniteDuration = 1.minute
+    koskiService.processModifiedKoski(refreshFrequency = delay)
+    koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay, searchWindowStartTime = new Date(traverseStart))
+  }
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()

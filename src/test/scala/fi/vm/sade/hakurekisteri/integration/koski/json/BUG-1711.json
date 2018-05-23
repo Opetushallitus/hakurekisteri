@@ -1,0 +1,549 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.10101010101",
+    "hetu": "123456A897V",
+    "syntymäaika": "2002-10-19",
+    "etunimet": "Test Testi Testaaja",
+    "kutsumanimi": "Testitestaaja",
+    "sukunimi": "TestaajanHenkilö",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
+    "kansalaisuus": [
+      {
+        "koodiarvo": "246",
+        "nimi": {
+          "fi": "Suomi",
+          "sv": "Finland",
+          "en": "Finland"
+        },
+        "lyhytNimi": {
+          "fi": "FI",
+          "sv": "FI",
+          "en": "FI"
+        },
+        "koodistoUri": "maatjavaltiot2",
+        "koodistoVersio": 1
+      }
+    ],
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.96925245878",
+      "versionumero": 2,
+      "aikaleima": "2018-04-12T13:51:30.973557",
+      "lähdejärjestelmänId": {
+        "id": "169585",
+        "lähdejärjestelmä": {
+          "koodiarvo": "primus",
+          "nimi": {
+            "fi": "primus"
+          },
+          "koodistoUri": "lahdejarjestelma",
+          "koodistoVersio": 1
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.45721175581",
+        "oppilaitosnumero": {
+          "koodiarvo": "03727",
+          "nimi": {
+            "fi": "Martinkallion koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Martinkallion koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Martinkallion koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "049",
+          "nimi": {
+            "fi": "Espoo",
+            "sv": "Esbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.90008375488",
+        "nimi": {
+          "fi": "Espoon kaupunki",
+          "sv": "Esbo stad"
+        },
+        "yTunnus": "0101263-6",
+        "kotipaikka": {
+          "koodiarvo": "049",
+          "nimi": {
+            "fi": "Espoo",
+            "sv": "Esbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2013-11-22",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "lisätiedot": {
+        "perusopetuksenAloittamistaLykätty": false,
+        "aloittanutEnnenOppivelvollisuutta": false,
+        "kotiopetus": {
+          "alku": "2013-11-22"
+        },
+        "vuosiluokkiinSitoutumatonOpetus": false
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "9",
+              "nimi": {
+                "fi": "9. vuosiluokka",
+                "sv": "Årskurs 9"
+              },
+              "koodistoUri": "perusopetuksenluokkaaste",
+              "koodistoVersio": 1
+            },
+            "perusteenDiaarinumero": "104/011/2014"
+          },
+          "luokka": "X9",
+          "toimipiste": {
+            "oid": "1.2.246.562.10.45721175581",
+            "oppilaitosnumero": {
+              "koodiarvo": "03727",
+              "nimi": {
+                "fi": "Martinkallion koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Martinkallion koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Martinkallion koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "049",
+              "nimi": {
+                "fi": "Espoo",
+                "sv": "Esbo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "alkamispäivä": "2017-08-10",
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "jääLuokalle": false,
+          "osasuoritukset": [],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenvuosiluokka",
+            "nimi": {
+              "fi": "Perusopetuksen vuosiluokka",
+              "sv": "Årskurs i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "perusteenDiaarinumero": "104/011/2014",
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 9
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "16",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning"
+              },
+              "lyhytNimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning"
+              },
+              "koodistoUri": "koulutustyyppi"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.45721175581",
+            "oppilaitosnumero": {
+              "koodiarvo": "03727",
+              "nimi": {
+                "fi": "Martinkallion koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Martinkallion koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Martinkallion koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "049",
+              "nimi": {
+                "fi": "Espoo",
+                "sv": "Esbo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "nimi": {
+          "fi": "Perusopetus",
+          "sv": "Grundläggande utbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2013-11-22"
+    },
+    {
+      "oid": "1.2.246.562.15.65491015015",
+      "versionumero": 2,
+      "aikaleima": "2018-04-18T14:16:47.872266",
+      "lähdejärjestelmänId": {
+        "id": "497196",
+        "lähdejärjestelmä": {
+          "koodiarvo": "primus",
+          "nimi": {
+            "fi": "primus"
+          },
+          "koodistoUri": "lahdejarjestelma",
+          "koodistoVersio": 1
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.23920811728",
+        "oppilaitosnumero": {
+          "koodiarvo": "03079",
+          "nimi": {
+            "fi": "Pasilan peruskoulu"
+          },
+          "lyhytNimi": {
+            "fi": "Alppilan yläaste"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Pasilan peruskoulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.346830761110",
+        "nimi": {
+          "fi": "Helsingin kaupunki",
+          "sv": "Helsingfors stad"
+        },
+        "yTunnus": "0201256-6",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "päättymispäivä": "2018-03-16",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2018-01-08",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2018-03-16",
+            "tila": {
+              "koodiarvo": "eronnut",
+              "nimi": {
+                "fi": "Eronnut",
+                "sv": "Utskriven"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "lisätiedot": {
+        "perusopetuksenAloittamistaLykätty": false,
+        "aloittanutEnnenOppivelvollisuutta": false,
+        "vuosiluokkiinSitoutumatonOpetus": true
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "9",
+              "nimi": {
+                "fi": "9. vuosiluokka",
+                "sv": "Årskurs 9"
+              },
+              "koodistoUri": "perusopetuksenluokkaaste",
+              "koodistoVersio": 1
+            },
+            "perusteenDiaarinumero": "1/011/2004"
+          },
+          "luokka": "SHKK",
+          "toimipiste": {
+            "oid": "1.2.246.562.10.23920811728",
+            "oppilaitosnumero": {
+              "koodiarvo": "03079",
+              "nimi": {
+                "fi": "Pasilan peruskoulu"
+              },
+              "lyhytNimi": {
+                "fi": "Alppilan yläaste"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Pasilan peruskoulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "alkamispäivä": "2017-08-10",
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "jääLuokalle": false,
+          "osasuoritukset": [],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenvuosiluokka",
+            "nimi": {
+              "fi": "Perusopetuksen vuosiluokka",
+              "sv": "Årskurs i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "perusteenDiaarinumero": "1/011/2004",
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 9
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.23920811728",
+            "oppilaitosnumero": {
+              "koodiarvo": "03079",
+              "nimi": {
+                "fi": "Pasilan peruskoulu"
+              },
+              "lyhytNimi": {
+                "fi": "Alppilan yläaste"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Pasilan peruskoulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "nimi": {
+          "fi": "Perusopetus",
+          "sv": "Grundläggande utbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2018-01-08"
+    }
+  ]
+}

@@ -16,6 +16,10 @@ case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String,
   private[Opiskelija] case class OpiskelijaCore(oppilaitosOid: String, luokkataso: String, henkiloOid: String)
 
   override val core = OpiskelijaCore(oppilaitosOid: String, luokkataso: String, henkiloOid: String)
+
+  override def toString: String = {
+    s"Opiskelija(oppilaitosOid=$oppilaitosOid, luokkataso=$luokkataso, luokka=$luokka, henkiloOid=$henkiloOid, alkuPaiva=$alkuPaiva, loppuPaiva=$loppuPaiva, source=$source)"
+  }
 }
 
 class IdentifiedOpiskelija(o: Opiskelija, val id: UUID) extends Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva, o.source) with Identified[UUID]

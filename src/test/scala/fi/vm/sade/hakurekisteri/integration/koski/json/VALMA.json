@@ -1,0 +1,981 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.89229375773",
+    "hetu": "290949-163V",
+    "syntymäaika": "1949-09-29",
+    "etunimet": "Valma",
+    "kutsumanimi": "Valma",
+    "sukunimi": "Kassi-Alma",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.93496511754",
+      "versionumero": 1,
+      "aikaleima": "2018-04-26T16:15:05.984540",
+      "lähdejärjestelmänId": {
+        "id": "31529",
+        "lähdejärjestelmä": {
+          "koodiarvo": "primus",
+          "nimi": {
+            "fi": "primus"
+          },
+          "koodistoUri": "lahdejarjestelma",
+          "koodistoVersio": 1
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.62363571621",
+        "oppilaitosnumero": {
+          "koodiarvo": "10074",
+          "nimi": {
+            "fi": "Kainuun ammattiopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Kainuun ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Kainuun ammattiopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "205",
+          "nimi": {
+            "fi": "Kajaani",
+            "sv": "Kajana"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.67019405611",
+        "nimi": {
+          "fi": "Kajaanin kaupunki"
+        },
+        "yTunnus": "0214958-9",
+        "kotipaikka": {
+          "koodiarvo": "205",
+          "nimi": {
+            "fi": "Kajaani",
+            "sv": "Kajana"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "arvioituPäättymispäivä": "2017-06-03",
+      "päättymispäivä": "2017-06-02",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2016-08-22",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2017-06-02",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999901",
+              "nimi": {
+                "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "VALMA",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 6
+            },
+            "perusteenDiaarinumero": "5/011/2015",
+            "laajuus": {
+              "arvo": 60,
+              "yksikkö": {
+                "koodiarvo": "6",
+                "nimi": {
+                  "fi": "osaamispistettä",
+                  "sv": "kompetenspoäng",
+                  "en": "ECVET competence points"
+                },
+                "lyhytNimi": {
+                  "fi": "osp",
+                  "sv": "kp",
+                  "en": "competence points"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "18",
+              "nimi": {
+                "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "VALMA",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.62363571621",
+            "oppilaitosnumero": {
+              "koodiarvo": "10074",
+              "nimi": {
+                "fi": "Kainuun ammattiopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Kainuun ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Kainuun ammattiopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "205",
+              "nimi": {
+                "fi": "Kajaani",
+                "sv": "Kajana"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2017-06-02",
+            "paikkakunta": {
+              "koodiarvo": "205",
+              "nimi": {
+                "fi": "Kajaani",
+                "sv": "Kajana"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 1
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.62363571621",
+              "oppilaitosnumero": {
+                "koodiarvo": "10074",
+                "nimi": {
+                  "fi": "Kainuun ammattiopisto"
+                },
+                "lyhytNimi": {
+                  "fi": "Kainuun ammattiopisto"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Kainuun ammattiopisto"
+              },
+              "kotipaikka": {
+                "koodiarvo": "205",
+                "nimi": {
+                  "fi": "Kajaani",
+                  "sv": "Kajana"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Raimo Sivonen",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.62363571621",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10074",
+                    "nimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Kainuun ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "205",
+                    "nimi": {
+                      "fi": "Kajaani",
+                      "sv": "Kajana"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "300001",
+                  "nimi": {
+                    "fi": "Ammatilliseen koulutukseen orientoituminen ja työelämän perusvalmiuksien hankkiminen",
+                    "sv": "Orientering i yrkesutbildningen och grundförutsättningar för arbetslivet"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 10,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "Hyväksytty",
+                    "nimi": {
+                      "fi": "Hyväksytty",
+                      "sv": "Godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hyväksytty"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-12-22",
+                  "arvioitsijat": [
+                    {
+                      "nimi": "Kähkönen Aki"
+                    }
+                  ],
+                  "hyväksytty": true
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2016-12-22",
+                "paikkakunta": {
+                  "koodiarvo": "205",
+                  "nimi": {
+                    "fi": "Kajaani",
+                    "sv": "Kajana"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 1
+                },
+                "myöntäjäOrganisaatio": {
+                  "oid": "1.2.246.562.10.62363571621",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10074",
+                    "nimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Kainuun ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "205",
+                    "nimi": {
+                      "fi": "Kajaani",
+                      "sv": "Kajana"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                },
+                "myöntäjäHenkilöt": [
+                  {
+                    "nimi": "Raimo Sivonen",
+                    "titteli": {
+                      "fi": "Rehtori"
+                    },
+                    "organisaatio": {
+                      "oid": "1.2.246.562.10.62363571621",
+                      "oppilaitosnumero": {
+                        "koodiarvo": "10074",
+                        "nimi": {
+                          "fi": "Kainuun ammattiopisto"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Kainuun ammattiopisto"
+                        },
+                        "koodistoUri": "oppilaitosnumero",
+                        "koodistoVersio": 1
+                      },
+                      "nimi": {
+                        "fi": "Kainuun ammattiopisto"
+                      },
+                      "kotipaikka": {
+                        "koodiarvo": "205",
+                        "nimi": {
+                          "fi": "Kajaani",
+                          "sv": "Kajana"
+                        },
+                        "koodistoUri": "kunta",
+                        "koodistoVersio": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "valmakoulutuksenosa",
+                "nimi": {
+                  "fi": "Ammatilliseen peruskoulutukseen valmentavan koulutuksen osa"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "300003",
+                  "nimi": {
+                    "fi": "Työssäoppimiseen ja oppisopimuskoulutukseen valmentautuminen",
+                    "sv": "Förberedelse inför inlärning i arbetet och läroavtalsutbildning"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 20,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "Hyväksytty",
+                    "nimi": {
+                      "fi": "Hyväksytty",
+                      "sv": "Godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hyväksytty"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-09",
+                  "arvioitsijat": [
+                    {
+                      "nimi": "Kähkönen Aki"
+                    }
+                  ],
+                  "hyväksytty": true
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2017-05-09",
+                "paikkakunta": {
+                  "koodiarvo": "205",
+                  "nimi": {
+                    "fi": "Kajaani",
+                    "sv": "Kajana"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 1
+                },
+                "myöntäjäOrganisaatio": {
+                  "oid": "1.2.246.562.10.62363571621",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10074",
+                    "nimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Kainuun ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "205",
+                    "nimi": {
+                      "fi": "Kajaani",
+                      "sv": "Kajana"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                },
+                "myöntäjäHenkilöt": [
+                  {
+                    "nimi": "Raimo Sivonen",
+                    "titteli": {
+                      "fi": "Rehtori"
+                    },
+                    "organisaatio": {
+                      "oid": "1.2.246.562.10.62363571621",
+                      "oppilaitosnumero": {
+                        "koodiarvo": "10074",
+                        "nimi": {
+                          "fi": "Kainuun ammattiopisto"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Kainuun ammattiopisto"
+                        },
+                        "koodistoUri": "oppilaitosnumero",
+                        "koodistoVersio": 1
+                      },
+                      "nimi": {
+                        "fi": "Kainuun ammattiopisto"
+                      },
+                      "kotipaikka": {
+                        "koodiarvo": "205",
+                        "nimi": {
+                          "fi": "Kajaani",
+                          "sv": "Kajana"
+                        },
+                        "koodistoUri": "kunta",
+                        "koodistoVersio": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "valmakoulutuksenosa",
+                "nimi": {
+                  "fi": "Ammatilliseen peruskoulutukseen valmentavan koulutuksen osa"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "300004",
+                  "nimi": {
+                    "fi": "Arjen taitojen ja hyvinvoinnin vahvistaminen",
+                    "sv": "Stärkande av förmågan att klara sig i vardagslivet och av välbefinnandet"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 20,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "Hyväksytty",
+                    "nimi": {
+                      "fi": "Hyväksytty",
+                      "sv": "Godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hyväksytty"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-09",
+                  "arvioitsijat": [
+                    {
+                      "nimi": "Kähkönen Aki"
+                    }
+                  ],
+                  "hyväksytty": true
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2017-05-09",
+                "paikkakunta": {
+                  "koodiarvo": "205",
+                  "nimi": {
+                    "fi": "Kajaani",
+                    "sv": "Kajana"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 1
+                },
+                "myöntäjäOrganisaatio": {
+                  "oid": "1.2.246.562.10.62363571621",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10074",
+                    "nimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Kainuun ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Kainuun ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "205",
+                    "nimi": {
+                      "fi": "Kajaani",
+                      "sv": "Kajana"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                },
+                "myöntäjäHenkilöt": [
+                  {
+                    "nimi": "Raimo Sivonen",
+                    "titteli": {
+                      "fi": "Rehtori"
+                    },
+                    "organisaatio": {
+                      "oid": "1.2.246.562.10.62363571621",
+                      "oppilaitosnumero": {
+                        "koodiarvo": "10074",
+                        "nimi": {
+                          "fi": "Kainuun ammattiopisto"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Kainuun ammattiopisto"
+                        },
+                        "koodistoUri": "oppilaitosnumero",
+                        "koodistoVersio": 1
+                      },
+                      "nimi": {
+                        "fi": "Kainuun ammattiopisto"
+                      },
+                      "kotipaikka": {
+                        "koodiarvo": "205",
+                        "nimi": {
+                          "fi": "Kajaani",
+                          "sv": "Kajana"
+                        },
+                        "koodistoUri": "kunta",
+                        "koodistoVersio": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "valmakoulutuksenosa",
+                "nimi": {
+                  "fi": "Ammatilliseen peruskoulutukseen valmentavan koulutuksen osa"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "HI",
+                  "nimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "perusteenDiaarinumero": "OPH-1280-2017",
+                "laajuus": {
+                  "arvo": 1,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.51720121923",
+                "oppilaitosnumero": {
+                  "koodiarvo": "10054",
+                  "nimi": {
+                    "fi": "Omnia Koulutus",
+                    "sv": "Omnia Koulutus"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Omnian ammattiopisto"
+                  },
+                  "koodistoUri": "oppilaitosnumero",
+                  "koodistoVersio": 1
+                },
+                "nimi": {
+                  "fi": "Omnia Koulutus",
+                  "sv": "Omnia Koulutus"
+                },
+                "kotipaikka": {
+                  "koodiarvo": "049",
+                  "nimi": {
+                    "fi": "Espoo",
+                    "sv": "Esbo"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 2
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2018-05-09",
+                "paikkakunta": {
+                  "koodiarvo": "049",
+                  "nimi": {
+                    "fi": "Espoo",
+                    "sv": "Esbo"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 2
+                },
+                "myöntäjäOrganisaatio": {
+                  "oid": "1.2.246.562.10.51720121923",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10054",
+                    "nimi": {
+                      "fi": "Omnia Koulutus",
+                      "sv": "Omnia Koulutus"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Omnian ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Omnia Koulutus",
+                    "sv": "Omnia Koulutus"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "049",
+                    "nimi": {
+                      "fi": "Espoo",
+                      "sv": "Esbo"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                },
+                "myöntäjäHenkilöt": [
+                  {
+                    "nimi": "f",
+                    "titteli": {
+                      "fi": "f"
+                    },
+                    "organisaatio": {
+                      "oid": "1.2.246.562.10.51720121923",
+                      "oppilaitosnumero": {
+                        "koodiarvo": "10054",
+                        "nimi": {
+                          "fi": "Omnia Koulutus",
+                          "sv": "Omnia Koulutus"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Omnian ammattiopisto"
+                        },
+                        "koodistoUri": "oppilaitosnumero",
+                        "koodistoVersio": 1
+                      },
+                      "nimi": {
+                        "fi": "Omnia Koulutus",
+                        "sv": "Omnia Koulutus"
+                      },
+                      "kotipaikka": {
+                        "koodiarvo": "049",
+                        "nimi": {
+                          "fi": "Espoo",
+                          "sv": "Esbo"
+                        },
+                        "koodistoUri": "kunta",
+                        "koodistoVersio": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "suoritustapa": {
+                "koodiarvo": "koulutus",
+                "nimi": {
+                  "fi": "Koulutus",
+                  "sv": "Utbildning"
+                },
+                "koodistoUri": "perusopetuksensuoritustapa",
+                "koodistoVersio": 1
+              },
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "HI1",
+                      "nimi": {
+                        "fi": "Suomen historian käännekohdat"
+                      },
+                      "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                      "koodistoVersio": 1
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "10",
+                        "nimi": {
+                          "fi": "erinomainen"
+                        },
+                        "lyhytNimi": {
+                          "fi": "10"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "aikuistenperusopetuksenkurssi",
+                    "nimi": {
+                      "fi": "Aikuisten perusopetuksen kurssi"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+                "nimi": {
+                  "fi": "Perusopetuksen oppiaineen oppimäärä",
+                  "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "valma",
+            "nimi": {
+              "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+              "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "lisätiedot": {
+        "oikeusMaksuttomaanAsuntolapaikkaan": true,
+        "henkilöstökoulutus": false,
+        "koulutusvienti": false
+      },
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2016-08-22"
+    }
+  ]
+}

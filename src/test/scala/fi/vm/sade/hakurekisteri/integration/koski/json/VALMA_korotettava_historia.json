@@ -1,0 +1,598 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.80793695690",
+    "hetu": "090598-705V",
+    "syntymäaika": "1998-05-09",
+    "etunimet": "Ville",
+    "kutsumanimi": "Ville",
+    "sukunimi": "Valma-Korottava",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.21407851761",
+      "versionumero": 5,
+      "aikaleima": "2018-05-11T12:18:50.740469",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.51720121923",
+        "oppilaitosnumero": {
+          "koodiarvo": "10054",
+          "nimi": {
+            "fi": "Omnia Koulutus",
+            "sv": "Omnia Koulutus"
+          },
+          "lyhytNimi": {
+            "fi": "Omnian ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Omnia Koulutus",
+          "sv": "Omnia Koulutus"
+        },
+        "kotipaikka": {
+          "koodiarvo": "049",
+          "nimi": {
+            "fi": "Espoo",
+            "sv": "Esbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.53642770753",
+        "nimi": {
+          "fi": "Espoon seudun koulutuskuntayhtymä Omnia"
+        },
+        "yTunnus": "0502454-6",
+        "kotipaikka": {
+          "koodiarvo": "049",
+          "nimi": {
+            "fi": "Espoo",
+            "sv": "Esbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2017-08-09",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999901",
+              "nimi": {
+                "fi": "Ammatilliseen koulutukseen valmentava koulutus (VALMA)",
+                "sv": "Handledande utbildning för yrkesutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "VALMA",
+                "sv": "Handledande utbildning för yrkesutbildning"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 9
+            },
+            "perusteenDiaarinumero": "OPH-2658-2017",
+            "koulutustyyppi": {
+              "koodiarvo": "18",
+              "nimi": {
+                "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "VALMA",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.51720121923",
+            "oppilaitosnumero": {
+              "koodiarvo": "10054",
+              "nimi": {
+                "fi": "Omnia Koulutus",
+                "sv": "Omnia Koulutus"
+              },
+              "lyhytNimi": {
+                "fi": "Omnian ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Omnia Koulutus",
+              "sv": "Omnia Koulutus"
+            },
+            "kotipaikka": {
+              "koodiarvo": "049",
+              "nimi": {
+                "fi": "Espoo",
+                "sv": "Esbo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "100041",
+                  "nimi": {
+                    "fi": "Ajoneuvomyyntityö",
+                    "sv": "Fordonsförsäljning"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Ajoneuvomyyntityö",
+                    "sv": "Fordonsförsäljning"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 20,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "5"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinen15",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2018-05-09",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "valmakoulutuksenosa",
+                "nimi": {
+                  "fi": "Ammatilliseen peruskoulutukseen valmentavan koulutuksen osa"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "korotuksia",
+                  "nimi": {
+                    "fi": "korotuksia"
+                  }
+                },
+                "kuvaus": {
+                  "fi": "korotuksia"
+                },
+                "laajuus": {
+                  "arvo": 10,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                },
+                "pakollinen": false
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "Hyväksytty",
+                    "nimi": {
+                      "fi": "Hyväksytty",
+                      "sv": "Godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hyväksytty"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2018-05-09",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "valmakoulutuksenosa",
+                "nimi": {
+                  "fi": "Ammatilliseen peruskoulutukseen valmentavan koulutuksen osa"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "valma",
+            "nimi": {
+              "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+              "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2017-08-09"
+    },
+    {
+      "oid": "1.2.246.562.15.60462134218",
+      "versionumero": 5,
+      "aikaleima": "2018-05-16T15:51:14.806592",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.51720121923",
+        "oppilaitosnumero": {
+          "koodiarvo": "10054",
+          "nimi": {
+            "fi": "Omnia Koulutus",
+            "sv": "Omnia Koulutus"
+          },
+          "lyhytNimi": {
+            "fi": "Omnian ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Omnia Koulutus",
+          "sv": "Omnia Koulutus"
+        },
+        "kotipaikka": {
+          "koodiarvo": "049",
+          "nimi": {
+            "fi": "Espoo",
+            "sv": "Esbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.53642770753",
+        "nimi": {
+          "fi": "Espoon seudun koulutuskuntayhtymä Omnia"
+        },
+        "yTunnus": "0502454-6",
+        "kotipaikka": {
+          "koodiarvo": "049",
+          "nimi": {
+            "fi": "Espoo",
+            "sv": "Esbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "päättymispäivä": "2018-05-09",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2018-01-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2018-05-09",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "6",
+              "nimi": {
+                "fi": "Muuta kautta rahoitettu",
+                "sv": "Finansierad på annat sätt"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "HI",
+              "nimi": {
+                "fi": "Historia",
+                "sv": "Historia"
+              },
+              "lyhytNimi": {
+                "fi": "Historia",
+                "sv": "Historia"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 1,
+              "yksikkö": {
+                "koodiarvo": "4",
+                "nimi": {
+                  "fi": "kurssia",
+                  "sv": "kurser",
+                  "en": "course units"
+                },
+                "lyhytNimi": {
+                  "fi": "kurssia",
+                  "sv": "kurser",
+                  "en": "courses"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.51720121923",
+            "oppilaitosnumero": {
+              "koodiarvo": "10054",
+              "nimi": {
+                "fi": "Omnia Koulutus",
+                "sv": "Omnia Koulutus"
+              },
+              "lyhytNimi": {
+                "fi": "Omnian ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Omnia Koulutus",
+              "sv": "Omnia Koulutus"
+            },
+            "kotipaikka": {
+              "koodiarvo": "049",
+              "nimi": {
+                "fi": "Espoo",
+                "sv": "Esbo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "10",
+                "nimi": {
+                  "fi": "erinomainen"
+                },
+                "lyhytNimi": {
+                  "fi": "10"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2018-05-09",
+            "paikkakunta": {
+              "koodiarvo": "049",
+              "nimi": {
+                "fi": "Espoo",
+                "sv": "Esbo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.51720121923",
+              "oppilaitosnumero": {
+                "koodiarvo": "10054",
+                "nimi": {
+                  "fi": "Omnia Koulutus",
+                  "sv": "Omnia Koulutus"
+                },
+                "lyhytNimi": {
+                  "fi": "Omnian ammattiopisto"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Omnia Koulutus",
+                "sv": "Omnia Koulutus"
+              },
+              "kotipaikka": {
+                "koodiarvo": "049",
+                "nimi": {
+                  "fi": "Espoo",
+                  "sv": "Esbo"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "f",
+                "titteli": {
+                  "fi": "f"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.51720121923",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10054",
+                    "nimi": {
+                      "fi": "Omnia Koulutus",
+                      "sv": "Omnia Koulutus"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Omnian ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Omnia Koulutus",
+                    "sv": "Omnia Koulutus"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "049",
+                    "nimi": {
+                      "fi": "Espoo",
+                      "sv": "Esbo"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2018-01-01"
+    }
+  ]
+}

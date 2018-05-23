@@ -126,3 +126,6 @@ smtp.sender={{ryhmasahkoposti_smtp_sender}}
 
 # YTL sync error message recipients
 suoritusrekisteri.ytl.error.report.recipients={{suoritusrekisteri_ytl_error_report_recipients}}
+
+# Koski integration settings
+suoritusrekisteri.use.koski.integration={{ suoritusrekisteri_use_koski_integration | default('false') }}

@@ -26,7 +26,7 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
   override def deduplicationQuery(o: Suoritus)(t: SuoritusTable): Rep[Boolean] = o match {
     case VapaamuotoinenSuoritus(henkilo, _, _, _, tyyppi, index, _) =>
       t.henkiloOid === henkilo && (t.tyyppi === tyyppi).asColumnOf[Boolean] && (t.index === index).asColumnOf[Boolean]
-    case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _, _) =>
+    case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _, _, _) =>
       (t.komo === komo).asColumnOf[Boolean] && t.myontaja === myontaja && t.henkiloOid === henkilo && (t.vahvistettu === vahv).asColumnOf[Boolean]
   }
 
@@ -44,7 +44,7 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
     i match {
       case VapaamuotoinenSuoritus(henkilo, _, _, _, tyyppi, index, _) =>
         (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) && (t.tyyppi === tyyppi).asColumnOf[Boolean] && (t.index === index).asColumnOf[Boolean]
-      case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _, _) =>
+      case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _, _, _) =>
         (t.komo === komo).asColumnOf[Boolean] && t.myontaja === myontaja && (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) && (t.vahvistettu === vahv).asColumnOf[Boolean]}
   }
 

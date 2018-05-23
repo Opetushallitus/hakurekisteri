@@ -1,0 +1,2565 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.76634224464",
+    "hetu": "031199-7662",
+    "syntymäaika": "1999-11-03",
+    "etunimet": "Luva Case Kaksi",
+    "kutsumanimi": "Kaksi",
+    "sukunimi": "Luvitus",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.99278105137",
+      "versionumero": 1,
+      "aikaleima": "2018-04-26T15:11:54.015204",
+      "lähdejärjestelmänId": {
+        "id": "522107",
+        "lähdejärjestelmä": {
+          "koodiarvo": "primus",
+          "nimi": {
+            "fi": "primus"
+          },
+          "koodistoUri": "lahdejarjestelma",
+          "koodistoVersio": 1
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.27156680475",
+        "oppilaitosnumero": {
+          "koodiarvo": "00539",
+          "nimi": {
+            "fi": "Töölön yhteiskoulun aikuislukio"
+          },
+          "lyhytNimi": {
+            "fi": "Töölön yhteiskoulun aikuislukio"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Töölön yhteiskoulun aikuislukio"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.41668460458",
+        "nimi": {
+          "fi": "Töölön Yhteiskoulu Osakeyhtiö"
+        },
+        "yTunnus": "0200376-6",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2016-09-08",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2018-04-11",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999906",
+              "nimi": {
+                "fi": "Lukiokoulutukseen valmistava koulutus",
+                "sv": "Utbildning som förbereder för gymnasieutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "Lukiokoulutukseen valmistava koulutus"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 9
+            },
+            "perusteenDiaarinumero": "56/011/2015"
+          },
+          "oppimäärä": {
+            "koodiarvo": "aikuistenops",
+            "nimi": {
+              "fi": "Lukio suoritetaan aikuisten opetussuunnitelman mukaan",
+              "sv": "Gymnasiet genomförs enligt läroplanen vuxna"
+            },
+            "koodistoUri": "lukionoppimaara",
+            "koodistoVersio": 1
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.27156680475",
+            "oppilaitosnumero": {
+              "koodiarvo": "00539",
+              "nimi": {
+                "fi": "Töölön yhteiskoulun aikuislukio"
+              },
+              "lyhytNimi": {
+                "fi": "Töölön yhteiskoulun aikuislukio"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Töölön yhteiskoulun aikuislukio"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2018-04-11",
+            "paikkakunta": {
+              "koodiarvo": "609",
+              "nimi": {
+                "fi": "Pori",
+                "sv": "Björneborg"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.80915578621",
+              "oppilaitosnumero": {
+                "koodiarvo": "00546",
+                "nimi": {
+                  "fi": "Porin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Porin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Porin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "609",
+                "nimi": {
+                  "fi": "Pori",
+                  "sv": "Björneborg"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Jarkko Kivelä",
+                "titteli": {
+                  "fi": "Vs. rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.80915578621",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00546",
+                    "nimi": {
+                      "fi": "Porin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Porin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Porin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "609",
+                    "nimi": {
+                      "fi": "Pori",
+                      "sv": "Björneborg"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LVAIK",
+                  "nimi": {
+                    "fi": "Äidinkieli ja kirjallisuus"
+                  },
+                  "koodistoUri": "oppiaineetluva",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "AI7",
+                  "nimi": {
+                    "fi": "Suomi toisena kielenä ja kirjallisuus"
+                  },
+                  "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 10,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "H",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "H"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS1",
+                      "nimi": {
+                        "fi": "LVS1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS1"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS2",
+                      "nimi": {
+                        "fi": "LVS2"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS2"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-03-22",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS3",
+                      "nimi": {
+                        "fi": "LVS3"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS3"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-04-11",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS4",
+                      "nimi": {
+                        "fi": "LVS4"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS4"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-11-22",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS5",
+                      "nimi": {
+                        "fi": "LVS5"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS5"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS6",
+                      "nimi": {
+                        "fi": "LVS6"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS6"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-04-11",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS7",
+                      "nimi": {
+                        "fi": "LVS7"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS7"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "H",
+                        "nimi": {
+                          "fi": "hylätty",
+                          "sv": "underkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "H"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-06-02",
+                      "hyväksytty": false
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS8",
+                      "nimi": {
+                        "fi": "LVS8"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS8"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "kuvaus": {
+                        "fi": "Välikoe: 6 1/2"
+                      },
+                      "päivä": "2017-01-08",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS9",
+                      "nimi": {
+                        "fi": "LVS9"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS9"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-02-27",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVS10",
+                      "nimi": {
+                        "fi": "LVS10"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVS10"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "H",
+                        "nimi": {
+                          "fi": "hylätty",
+                          "sv": "underkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "H"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-06-02",
+                      "hyväksytty": false
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "luvaoppiaine",
+                "nimi": {
+                  "fi": "Lukiokoulutukseen valmistavan koulutuksen oppiaine",
+                  "sv": "Läroämne i förberedande utbildning för gymnasieutbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LVMUUTK",
+                  "nimi": {
+                    "fi": "Muut kielet"
+                  },
+                  "koodistoUri": "oppiaineetluva",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "EN",
+                  "nimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "lyhytNimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 3,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "O",
+                    "nimi": {
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
+                    },
+                    "lyhytNimi": {
+                      "fi": "O"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVKA1",
+                      "nimi": {
+                        "fi": "LVKA1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVKA1, englanti"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVKA2",
+                      "nimi": {
+                        "fi": "LVKA2"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVKA2, englanti"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-11-22",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVKA3",
+                      "nimi": {
+                        "fi": "LVKA3"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVKA3, englanti"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-01-08",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "luvaoppiaine",
+                "nimi": {
+                  "fi": "Lukiokoulutukseen valmistavan koulutuksen oppiaine",
+                  "sv": "Läroämne i förberedande utbildning för gymnasieutbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LVMALUO",
+                  "nimi": {
+                    "fi": "Matemaattiset ja luonnontieteelliset opinnot"
+                  },
+                  "koodistoUri": "oppiaineetluva",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 2,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "O",
+                    "nimi": {
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
+                    },
+                    "lyhytNimi": {
+                      "fi": "O"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVLUMA1",
+                      "nimi": {
+                        "fi": "LVLUMA1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVLUMA1"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-11-22",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVLUMA2",
+                      "nimi": {
+                        "fi": "LVLUMA2"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVLUMA2"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-04-11",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "luvaoppiaine",
+                "nimi": {
+                  "fi": "Lukiokoulutukseen valmistavan koulutuksen oppiaine",
+                  "sv": "Läroämne i förberedande utbildning för gymnasieutbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LVYHKU",
+                  "nimi": {
+                    "fi": "Yhteiskuntatietous ja kulttuurintuntemus"
+                  },
+                  "koodistoUri": "oppiaineetluva",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 1,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "O",
+                    "nimi": {
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
+                    },
+                    "lyhytNimi": {
+                      "fi": "O"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVHY1",
+                      "nimi": {
+                        "fi": "LVHY1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVHY1"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-02-27",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "luvaoppiaine",
+                "nimi": {
+                  "fi": "Lukiokoulutukseen valmistavan koulutuksen oppiaine",
+                  "sv": "Läroämne i förberedande utbildning för gymnasieutbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LVOPO",
+                  "nimi": {
+                    "fi": "Opinto-ohjaus"
+                  },
+                  "koodistoUri": "oppiaineetluva",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true,
+                "laajuus": {
+                  "arvo": 2,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVOP1",
+                      "nimi": {
+                        "fi": "LVOP1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVOP1"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "O",
+                        "nimi": {
+                          "fi": "osallistunut",
+                          "sv": "deltagit"
+                        },
+                        "lyhytNimi": {
+                          "fi": "O"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2017-06-02",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVOP2",
+                      "nimi": {
+                        "fi": "LVOP2"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVOP2"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "luvaoppiaine",
+                "nimi": {
+                  "fi": "Lukiokoulutukseen valmistavan koulutuksen oppiaine",
+                  "sv": "Läroämne i förberedande utbildning för gymnasieutbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LVTVT",
+                  "nimi": {
+                    "fi": "Tvt opiskelun tukena"
+                  }
+                },
+                "kuvaus": {
+                  "fi": "Tvt opiskelun tukena, LVTVT"
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 7,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "LVTVT1",
+                      "nimi": {
+                        "fi": "LVTVT1"
+                      }
+                    },
+                    "laajuus": {
+                      "arvo": 1,
+                      "yksikkö": {
+                        "koodiarvo": "4",
+                        "nimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "course units"
+                        },
+                        "lyhytNimi": {
+                          "fi": "kurssia",
+                          "sv": "kurser",
+                          "en": "courses"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "LVTVT1, tvt opiskelun tukena"
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "S",
+                        "nimi": {
+                          "fi": "hyväksytty",
+                          "sv": "godkänd"
+                        },
+                        "lyhytNimi": {
+                          "fi": "S"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2016-10-10",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "suorituskieli": {
+                    "koodiarvo": "FI",
+                    "nimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "lyhytNimi": {
+                      "fi": "suomi",
+                      "sv": "finska",
+                      "en": "Finnish"
+                    },
+                    "koodistoUri": "kieli",
+                    "koodistoVersio": 1
+                  },
+                  "tyyppi": {
+                    "koodiarvo": "luvakurssi",
+                    "nimi": {
+                      "fi": "Lukiokoulutukseen valmistavan koulutuksen kurssi",
+                      "sv": "Kurs i förberedande utbildning för gymnasieutbildning"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "luvaoppiaine",
+                "nimi": {
+                  "fi": "Lukiokoulutukseen valmistavan koulutuksen oppiaine",
+                  "sv": "Läroämne i förberedande utbildning för gymnasieutbildning"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "luva",
+            "nimi": {
+              "fi": "Lukiokoulutukseen valmistava koulutus (LUVA)",
+              "sv": "Förberedande utbildning för gymnasieutbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "luva",
+        "nimi": {
+          "fi": "Lukioon valmistava koulutus (LUVA)",
+          "sv": "Förberedande utbildning för gymnasieutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Luva"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "lisätiedot": {
+        "pidennettyPäättymispäivä": false,
+        "ulkomainenVaihtoopiskelija": false,
+        "oikeusMaksuttomaanAsuntolapaikkaan": false
+      },
+      "alkamispäivä": "2016-09-08"
+    }
+  ]
+}

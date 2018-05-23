@@ -28,7 +28,8 @@ class GuiServlet(implicit val system: ActorSystem) extends HakuJaValintarekister
     ylioppilastutkintolautakunta = Oids.ytlOrganisaatioOid,
     kansanopistoKomoOid = Oids.kansanopistoKomoOid,
     valmaKomoOid = Oids.valmaKomoOid,
-    telmaKomoOid = Oids.telmaKomoOid
+    telmaKomoOid = Oids.telmaKomoOid,
+    perusopetuksenOppiaineenOppimaaraOid = Oids.perusopetuksenOppiaineenOppimaaraOid
   )
 
   get("/") {
@@ -52,4 +53,5 @@ case class GuiOidit(yotutkintoKomoOid: String,
                     ylioppilastutkintolautakunta: String,
                     kansanopistoKomoOid: String,
                     valmaKomoOid: String,
-                    telmaKomoOid: String)
+                    telmaKomoOid: String,
+                    perusopetuksenOppiaineenOppimaaraOid: String)

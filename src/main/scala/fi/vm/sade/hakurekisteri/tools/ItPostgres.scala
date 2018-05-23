@@ -67,7 +67,7 @@ object ItPostgres extends Logging {
       case None =>
         log.info(s"PostgreSQL pid file cannot be read, starting in port $port:")
         s"postgres --config_file=postgresql/postgresql.conf -d 0 -D $dataDirPath -p $port".run()
-        if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(isAcceptingConnections)) {
+        if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(()=> ItPostgres.this.isAcceptingConnections())) {
           throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
         }
         log.info(s"PostgreSQL started in port $port , (re)creating database $dbName")
