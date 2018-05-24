@@ -128,7 +128,6 @@ object KoskiArvosanaTrigger {
       //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
       val allSuorituksetGroups: Seq[Seq[SuoritusArvosanat]] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio)
       val foo: Seq[Seq[Arvosana]] = allSuorituksetGroups.flatten.map(_.arvosanat)
-      foo.foreach(s => logger.debug(s"arvosanat length: ${s.length}"))
       allSuorituksetGroups.foreach(allSuoritukset =>
         fetchExistingSuoritukset(henkiloOid).onComplete(fetchedSuoritukset => { //NOTE, processes the Future that encloses the list, does not actually iterate through the list
           val henkilonSuoritukset = allSuoritukset.filter(s => {
@@ -591,7 +590,7 @@ object KoskiArvosanaTrigger {
         case Oids.lukioKomoOid =>
           implicit val isLukio: Boolean = true
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
-            logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
+            logger.info("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
             osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
           } else {
             (Seq(), yksilollistaminen.Ei)
@@ -692,9 +691,9 @@ object KoskiArvosanaTrigger {
             opiskeluoikeus = None,
             vahv = true,
             lahde = root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
-        logger.debug("createSuoritusArvosanat={}", suoritus)
+        logger.info("createSuoritusArvosanat={}", suoritus)
         if (createLukioArvosanat && komoOid == Oids.lukioKomoOid ) {
-          logger.debug("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
+          logger.info("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
         }
         result = result :+ suoritus
       }
