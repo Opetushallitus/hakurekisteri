@@ -70,7 +70,6 @@ object KoskiArvosanaTrigger {
       val f: Future[Any] = suoritusRekisteri ? SuoritusQueryWithPersonAliases(q, personOidsWithAliases)
       f.mapTo[Seq[Suoritus]].recoverWith {
         case t: AskTimeoutException => {
-          println(t)
           fetchExistingSuoritukset(henkiloOid)
         }
       }
@@ -358,7 +357,7 @@ object KoskiArvosanaTrigger {
     peruskoulunArvosanat.contains(arvosana) || arvosana == "H" //hylätty
   }
 
-  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus]): (Seq[Arvosana], Yksilollistetty) = {
+  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus])(implicit isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
     var res:Seq[Arvosana] = Seq()
@@ -377,7 +376,11 @@ object KoskiArvosanaTrigger {
           }
           var isPakollinenmoduuli = false
           var isPakollinen = false
-          if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
+          if(isLukio) {
+            isPakollinen = true
+            isPakollinenmoduuli = true
+          }
+          else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
             isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.get
             isPakollinen = suoritus.koulutusmoduuli.pakollinen.get
           }
@@ -586,6 +589,7 @@ object KoskiArvosanaTrigger {
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lukioKomoOid =>
+          implicit val isLukio: Boolean = true
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
             logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
             osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)

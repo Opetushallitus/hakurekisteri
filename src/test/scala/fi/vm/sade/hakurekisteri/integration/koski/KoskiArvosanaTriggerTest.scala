@@ -346,9 +346,9 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
 
     virallinensuoritus.tila shouldEqual "VALMIS"
+    arvosanat.forall(_.valinnainen == false) shouldEqual true
 
   }
-
 
   it should "parse arvosanat from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
 
@@ -363,12 +363,17 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val virallinensuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
     val arvosanat = suoritusArvosanat.arvosanat
 
-    val expectedAineet: Set[String] = Set("AI","B1","B3","MA")
+
+    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI", "OP")
     val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
-
     virallinensuoritus.tila shouldEqual "VALMIS"
+
+
+    val arvosanatuple = arvosanat.map(a => (a.aine, a.valinnainen)).toSet
+    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI", "OP").map(s => (s, false))
+    arvosanatuple shouldEqual expectedAineetTuple
 
   }
 
@@ -869,7 +874,141 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val luokat = arvosanat.filter(a => a.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals("luokka") && a.luokka.startsWith("9"))
     luokat
   }
-
+/*
+    [
+      {
+        "koodiarvo": "92131",
+        "nimi": {
+        "fi": "  A-Englanti",
+        "en": "A-Language English"
+      }
+      },
+      {
+        "koodiarvo": "B3",
+        "nimi": {
+        "fi": "B3-kieli",
+        "sv": "B3-språk"
+      },
+        "lyhytNimi": {
+        "fi": "B3-kieli",
+        "sv": "B3-språk"
+      },
+        "koodistoUri": "koskioppiaineetyleissivistava",
+        "koodistoVersio": 1
+      },
+      {
+        "koodiarvo": "MA",
+        "nimi": {
+        "fi": "Matematiikka",
+        "sv": "Matematik"
+      },
+        "lyhytNimi": {
+        "fi": "Matematiikka",
+        "sv": "Matematik"
+      },
+        "koodistoUri": "koskioppiaineetyleissivistava",
+        "koodistoVersio": 1
+      },
+      {
+        "koodiarvo": "92251",
+        "nimi": {
+        "fi": "  Fysiikka",
+        "en": "Physics"
+      }
+      },
+      {
+        "koodiarvo": "92440",
+        "nimi": {
+        "fi": "  Kemia",
+        "en": "Chemistry"
+      }
+      },
+      {
+        "koodiarvo": "92272",
+        "nimi": {
+        "fi": "  Biologia",
+        "en": "Biology"
+      }
+      },
+      {
+        "koodiarvo": "92282",
+        "nimi": {
+        "fi": "  Maantieto",
+        "en": "Geography"
+      }
+      },
+      {
+        "koodiarvo": "92317",
+        "nimi": {
+        "fi": "  Historia",
+        "en": "History"
+      }
+      },
+      {
+        "koodiarvo": "113710",
+        "nimi": {
+        "fi": "  Yhteiskuntaoppi",
+        "en": "Civics"
+      }
+      },
+      {
+        "koodiarvo": "92289",
+        "nimi": {
+        "fi": "  Uskonto",
+        "en": "Religious studies (Lutheran)"
+      }
+      },
+      {
+        "koodiarvo": "92301",
+        "nimi": {
+        "fi": "  Filosofia",
+        "en": "Philosophy"
+      }
+      },
+      {
+        "koodiarvo": "92307",
+        "nimi": {
+        "fi": "  Psykologia",
+        "en": "Psychology"
+      }
+      },
+      {
+        "koodiarvo": "92341",
+        "nimi": {
+        "fi": "  Musiikki",
+        "en": "Music"
+      }
+      },
+      {
+        "koodiarvo": "92334",
+        "nimi": {
+        "fi": "  Kuvataide",
+        "en": "Art"
+      }
+      },
+      {
+        "koodiarvo": "92550",
+        "nimi": {
+        "fi": "  Liikunta tytöt",
+        "en": "Physical Education (girls)"
+      }
+      },
+      {
+        "koodiarvo": "92354",
+        "nimi": {
+        "fi": "  Terveystieto",
+        "en": "Health Education"
+      }
+      },
+      {
+        "koodiarvo": "92356",
+        "nimi": {
+        "fi": "  Oppilaanohjaus",
+        "en": "Student Advising"
+      }
+      }
+      ]
+*/
   class TestSureActor extends Actor {
     import akka.pattern.pipe
 
