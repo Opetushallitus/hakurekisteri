@@ -49,7 +49,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilo(personOid, false)
+      override val is: Future[_] = koskiService.updateHenkilo(personOid, haeLukio)
     }
   }
 
@@ -63,7 +63,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(hakuOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, false)
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, haeLukio)
     }
   }
 
