@@ -160,11 +160,14 @@ class KoskiService(
         personOids.foreach(personOid => {
           Thread.sleep(1000)
           updateHenkilo(personOid, createLukio)})
-      case Failure(e) => logger.error("Error updating henkilöt for haku", e)
-      case _ => logger.error(s"Tuntematon virhe päivittäessä koskesta henkilöitä haulle $hakuOid")
+        Future.successful({})
+      case Failure(e) =>
+        logger.error("Error updating henkilöt for haku: {}", e)
+        Future.failed(e)
+      case _ => logger.error(s"Tuntematon virhe päivittäessä  koskesta henkilöitä haulle $hakuOid")
+        Future.failed(new RuntimeException)
     }
 
-    Future.failed(new RuntimeException)
   }
 
   override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
@@ -181,14 +184,14 @@ class KoskiService(
       .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
       .recoverWith {
         case e: Exception =>
-          logger.error("Kutsu koskeen epäonnistui", e)
+          logger.error("Kutsu koskeen epäonnistui. {} ", e)
           Future.failed(e)
       }
 
     val oppijadata = oppijadatasingle.map(container => List(container))
       .recoverWith {
       case e: Exception =>
-        logger.error("Error", e)
+        logger.error("Virhe käsiteltäessä oppijadataa: {}", e)
         return Future.failed(e)
     }
 
@@ -197,7 +200,7 @@ class KoskiService(
       logger.debug(s"Haettu henkilöt=$henkilot")
       Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
         case Failure(exception) =>
-          logger.error("Error triggering update for henkilö", exception)
+          logger.error("Error triggering update for henkilö: {}", exception)
           Future.failed(exception)
         case Success(value) => {
           logger.debug("updateHenkilo success")
