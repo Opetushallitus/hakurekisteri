@@ -156,7 +156,10 @@ class KoskiService(
     hakemusService.personOidsForHaku(hakuOid, None).onComplete {
       case Success(personOidsSet: Set[String]) =>
         val personOids: Seq[String] = personOidsSet.toSeq
-        personOids.foreach(personOid => updateHenkilo(personOid, createLukio))
+        logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
+        personOids.foreach(personOid => {
+          Thread.sleep(1000)
+          updateHenkilo(personOid, createLukio)})
       case Failure(e) => logger.error("Error updating henkilöt for haku", e)
       case _ => logger.error(s"Tuntematon virhe päivittäessä koskesta henkilöitä haulle $hakuOid")
     }
