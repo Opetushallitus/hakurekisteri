@@ -237,6 +237,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinenpaattotodistus.komo shouldNot be("luokka")
     paattotodistus.arvosanat should have length 0
+
+    peruskouluB2KieletShouldNotBeValinnainen(result)
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true.json data" in {
@@ -250,6 +252,10 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     lisätiedot.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
 
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+
+
+    peruskouluB2KieletShouldNotBeValinnainen(result)
+
     result should have length 4
     getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
     val suoritus = result(2)
@@ -286,9 +292,9 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     pt.luokka shouldEqual "9C"
     pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2016-06-04")
 
+    peruskouluB2KieletShouldNotBeValinnainen(result)
     val ysi = getYsiluokat(result).head
     val virallinenysi = ysi.suoritus.asInstanceOf[VirallinenSuoritus]
-    println(virallinenysi.valmistuminen)
 
   }
 
@@ -417,7 +423,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val b2kielet = kokonaisuus.arvosanat.filter(_.aine.contentEquals("B2"))
     b2kielet should have length 1
-    b2kielet.filter(_.valinnainen == true) should have length 1
+    b2kielet.filter(_.valinnainen == true) should have length 0
 
     val a1kielet: Seq[Arvosana] = kokonaisuus.arvosanat.filter(_.aine.contentEquals("A1"))
     a1kielet should have length 2
@@ -866,6 +872,21 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     virallinensuoritus.tila shouldEqual "KESKEN"
   }
 
+  it should "parse kielivalinnaisuustest.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "kielivalinnaisuustest.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val res = resgroup.head
+
+    val arvosanat = getPerusopetusPäättötodistus(res).get.arvosanat
+    peruskouluB2KieletShouldNotBeValinnainen(res)
+
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
@@ -874,141 +895,23 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val luokat = arvosanat.filter(a => a.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals("luokka") && a.luokka.startsWith("9"))
     luokat
   }
-/*
-    [
-      {
-        "koodiarvo": "92131",
-        "nimi": {
-        "fi": "  A-Englanti",
-        "en": "A-Language English"
-      }
-      },
-      {
-        "koodiarvo": "B3",
-        "nimi": {
-        "fi": "B3-kieli",
-        "sv": "B3-språk"
-      },
-        "lyhytNimi": {
-        "fi": "B3-kieli",
-        "sv": "B3-språk"
-      },
-        "koodistoUri": "koskioppiaineetyleissivistava",
-        "koodistoVersio": 1
-      },
-      {
-        "koodiarvo": "MA",
-        "nimi": {
-        "fi": "Matematiikka",
-        "sv": "Matematik"
-      },
-        "lyhytNimi": {
-        "fi": "Matematiikka",
-        "sv": "Matematik"
-      },
-        "koodistoUri": "koskioppiaineetyleissivistava",
-        "koodistoVersio": 1
-      },
-      {
-        "koodiarvo": "92251",
-        "nimi": {
-        "fi": "  Fysiikka",
-        "en": "Physics"
-      }
-      },
-      {
-        "koodiarvo": "92440",
-        "nimi": {
-        "fi": "  Kemia",
-        "en": "Chemistry"
-      }
-      },
-      {
-        "koodiarvo": "92272",
-        "nimi": {
-        "fi": "  Biologia",
-        "en": "Biology"
-      }
-      },
-      {
-        "koodiarvo": "92282",
-        "nimi": {
-        "fi": "  Maantieto",
-        "en": "Geography"
-      }
-      },
-      {
-        "koodiarvo": "92317",
-        "nimi": {
-        "fi": "  Historia",
-        "en": "History"
-      }
-      },
-      {
-        "koodiarvo": "113710",
-        "nimi": {
-        "fi": "  Yhteiskuntaoppi",
-        "en": "Civics"
-      }
-      },
-      {
-        "koodiarvo": "92289",
-        "nimi": {
-        "fi": "  Uskonto",
-        "en": "Religious studies (Lutheran)"
-      }
-      },
-      {
-        "koodiarvo": "92301",
-        "nimi": {
-        "fi": "  Filosofia",
-        "en": "Philosophy"
-      }
-      },
-      {
-        "koodiarvo": "92307",
-        "nimi": {
-        "fi": "  Psykologia",
-        "en": "Psychology"
-      }
-      },
-      {
-        "koodiarvo": "92341",
-        "nimi": {
-        "fi": "  Musiikki",
-        "en": "Music"
-      }
-      },
-      {
-        "koodiarvo": "92334",
-        "nimi": {
-        "fi": "  Kuvataide",
-        "en": "Art"
-      }
-      },
-      {
-        "koodiarvo": "92550",
-        "nimi": {
-        "fi": "  Liikunta tytöt",
-        "en": "Physical Education (girls)"
-      }
-      },
-      {
-        "koodiarvo": "92354",
-        "nimi": {
-        "fi": "  Terveystieto",
-        "en": "Health Education"
-      }
-      },
-      {
-        "koodiarvo": "92356",
-        "nimi": {
-        "fi": "  Oppilaanohjaus",
-        "en": "Student Advising"
-      }
-      }
-      ]
-*/
+
+  def getPerusopetusB2Kielet(arvosanat: Seq[SuoritusArvosanat]): Seq[Arvosana] = {
+    val pk: Option[SuoritusArvosanat] = getPerusopetusPäättötodistus(arvosanat)
+    pk match {
+      case Some(t) => t.arvosanat.filter(_.aine.contentEquals("B2"))
+      case None => return Seq.empty
+    }
+  }
+
+  def allPeruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[Seq[SuoritusArvosanat]]): Unit = {
+    arvosanat.foreach(s => peruskouluB2KieletShouldNotBeValinnainen(s))
+  }
+
+  def peruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[SuoritusArvosanat]): Unit = {
+    getPerusopetusB2Kielet(arvosanat).foreach(_.valinnainen shouldEqual false)
+  }
+
   class TestSureActor extends Actor {
     import akka.pattern.pipe
 

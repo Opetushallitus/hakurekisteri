@@ -358,7 +358,7 @@ object KoskiArvosanaTrigger {
     peruskoulunArvosanat.contains(arvosana) || arvosana == "H" //hylätty
   }
 
-  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus])(implicit isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
+  def osasuoritusToArvosana(personOid: String, komoOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus], isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
     var res:Seq[Arvosana] = Seq()
@@ -369,12 +369,14 @@ object KoskiArvosanaTrigger {
       yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
       suoritus.arviointi.foreach(arviointi => {
         if (isPKValue(arviointi.arvosana.koodiarvo)) {
-          val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
+          val tunniste: KoskiKoodi = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
           val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
             case (a: String, b: Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
             case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
             case _ => None
           }
+
+
           var isPakollinenmoduuli = false
           var isPakollinen = false
           if(isLukio) {
@@ -392,6 +394,12 @@ object KoskiArvosanaTrigger {
             if(!isPakollinenmoduuli && valinnaiset.contains(tunniste.koodiarvo)) {
               isPakollinen = false
             }
+          }
+
+          if(komoOid.contentEquals(Oids.perusopetusKomoOid) &&
+            (tunniste.koodiarvo.contentEquals("B2") || tunniste.koodiarvo.contentEquals("A2"))) {
+            isPakollinen = true
+            isPakollinenmoduuli = true
           }
           var ord: Option[Int] = None
 
@@ -590,10 +598,9 @@ object KoskiArvosanaTrigger {
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.lukioKomoOid =>
-          implicit val isLukio: Boolean = true
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
             logger.info("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
+            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true)
           } else {
             (Seq(), yksilollistaminen.Ei)
           }

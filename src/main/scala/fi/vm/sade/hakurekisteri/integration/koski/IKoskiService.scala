@@ -11,8 +11,8 @@ import scala.concurrent.duration._
 trait IKoskiService {
   var triggers: Seq[KoskiTrigger] = Seq()
 
-  def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false): Future[Unit]
-  def updateHenkilo(oppijaOid: String, createLukio: Boolean = false): Future[Unit]
+  def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
+  def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
   def addTrigger(trigger: KoskiTrigger): Unit = triggers = triggers :+ trigger
 
   //Tällä voi käydä läpi määritellyn aikaikkunan verran dataa Koskesta, jos joskus tulee tarve käsitellä aiempaa koskidataa uudelleen.
@@ -26,11 +26,11 @@ trait IKoskiService {
 }
 
 class KoskiServiceMock extends IKoskiService {
-  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false): Future[Unit] = Future.successful(())
+  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = Future.successful(())
 
   override def traverseKoskiDataInChunks(searchWindowStartTime: Date, timeToWaitUntilNextBatch:
   FiniteDuration, searchWindowSize: Long, repairTargetTime: Date, pageNbr: Int, pageSizePerFetch: Int)
                                         (implicit scheduler: Scheduler): Unit = {}
 
-  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean): Future[Unit] = {Future.successful(Unit)}
+  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean, overrideTimeCheck: Boolean = false): Future[Unit] = {Future.successful(Unit)}
 }
