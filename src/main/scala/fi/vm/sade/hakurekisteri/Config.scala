@@ -234,19 +234,68 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val servicePassword = properties.get("suoritusrekisteri.app.password")
 
   val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties)
-  val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
-  val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
-  val ataruConfig = ServiceConfig(casUrl, ataruUrl, serviceUser, servicePassword, properties)
-  val koosteConfig = ServiceConfig(casUrl, koosteServiceUrl, serviceUser, servicePassword, properties)
-  val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
-  val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)
-  val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl, properties = properties)
-  val koskiConfig = ServiceConfig(serviceUrl = koskiServiceUrl, user = serviceUser, password = servicePassword, properties = properties)
-  val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties) {
+  val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.ohjausparametrit-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.ohjausparametrit-service.max-connection-queue-ms").toInt)
+  val hakemusConfig = HakemusConfig(ServiceConfig(casUrl,
+      hakuappServiceUrl,
+      serviceUser,
+      servicePassword,
+      properties,
+      maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.haku-app.max-connections").toInt,
+      maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.haku-app.max-connection-queue-ms").toInt),
+    maxApplications)
+  val ataruConfig = ServiceConfig(casUrl,
+    ataruUrl,
+    serviceUser,
+    servicePassword,
+    properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.ataru.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.ataru.max-connection-queue-ms").toInt)
+  val koosteConfig = ServiceConfig(casUrl,
+    koosteServiceUrl,
+    serviceUser,
+    servicePassword,
+    properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.valintalaskentakoostepalvelu.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.valintalaskentakoostepalvelu.max-connection-queue-ms").toInt)
+  val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.tarjonta-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.tarjonta-service.max-connection-queue-ms").toInt)
+  val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.koodisto-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.koodisto-service.max-connection-queue-ms").toInt)
+  val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.organisaatio-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.organisaatio-service.max-connection-queue-ms").toInt)
+
+  val koskiConfig = ServiceConfig(serviceUrl = koskiServiceUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.koski.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.koski.max-connection-queue-ms").toInt)
+  val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.valinta-tulos-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.valinta-tulos-service.max-connection-queue-ms").toInt) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
   }
-  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
-  val oppijaNumeroRekisteriConfig = ServiceConfig(casUrl = casUrl, serviceUrl = oppijaNumeroRekisteriUrl, user = serviceUser, password = servicePassword, properties = properties)
+  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.valinta-tulos-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.valinta-tulos-service.max-connection-queue-ms").toInt)
+  val oppijaNumeroRekisteriConfig = ServiceConfig(casUrl = casUrl,
+    serviceUrl = oppijaNumeroRekisteriUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.oppijanumerorekisteri-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.oppijanumerorekisteri-service.max-connection-queue-ms").toInt)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
@@ -267,6 +316,12 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     poll <- properties.get("suoritusrekisteri.ytl.poll").flatMap(_.blankOption);
     localStore <- properties.get("suoritusrekisteri.ytl.localstore").flatMap(_.blankOption)
   ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(";").map(LocalTime.parse), localStore)
+
+  private def findMandatoryPropertyValue(key: String): String = {
+    properties.getOrElse(key, {
+      throw new IllegalArgumentException(s"Please add $key to properties.")
+    })
+  }
 }
 
 class EmailConfig(properties: Map[String, String]) {

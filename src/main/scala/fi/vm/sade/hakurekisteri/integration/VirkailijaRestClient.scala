@@ -13,6 +13,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client._
+import com.ning.http.client.extra.ThrottleRequestFilter
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties
@@ -37,7 +38,9 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None,
-                         properties: Map[String, String] = Map.empty) extends HttpConfig(properties)
+                         properties: Map[String, String] = Map.empty,
+                         maxSimultaneousConnections: Int = 50,
+                         maxConnectionQueueMs: Int = 60000) extends HttpConfig(properties)
 
 object OphUrlProperties extends OphProperties("/suoritusrekisteri-oph.properties") {
   addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
@@ -60,7 +63,10 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setIdleConnectionTimeoutInMs(config.httpClientRequestTimeout)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
+    .addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs))
   ))
+  val configToLog = config.copy(password = Some("*****"), properties = Map("properties" -> "censored"))
+  logger.info(s"Initialized internal http client of class ${internalClient.getClass} with config $configToLog")
   private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient, jSessionName, serviceUrlSuffix)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
 
   object Client {
