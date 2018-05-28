@@ -161,7 +161,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
-    virallinen.tila should equal("KESKEN")
+    virallinen.tila should equal("KESKEYTYNYT")
     virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
 /*
@@ -869,7 +869,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
 
     arvosanat should have length 0
-    virallinensuoritus.tila shouldEqual "KESKEN"
+    virallinensuoritus.tila shouldEqual "KESKEYTYNYT"
   }
 
   it should "parse kielivalinnaisuustest.json" in {
@@ -884,6 +884,20 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val arvosanat = getPerusopetusPäättötodistus(res).get.arvosanat
     peruskouluB2KieletShouldNotBeValinnainen(res)
+  }
+
+  it should "parse lukio_et_kt.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "lukio_et_kt.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true)
+    val res: Seq[SuoritusArvosanat] = resgroup.head
+
+    val arvosanat: Seq[Arvosana] = res.head.arvosanat
+    arvosanat.count(_.aine.contentEquals("KT")) shouldEqual 2
 
   }
 
