@@ -61,6 +61,8 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   ))
+  val configToLog = config.copy(password = Some("*****"), properties = Map("properties" -> "censored"))
+  logger.info(s"Initialized internal http client of class ${internalClient.getClass} with config $configToLog")
   private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient, jSessionName, serviceUrlSuffix)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
 
   object Client {
