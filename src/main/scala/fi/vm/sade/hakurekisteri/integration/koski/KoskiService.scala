@@ -171,7 +171,7 @@ class KoskiService(
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
     val batchSize: Int = 100
     val waitBetweenBatchesInMilliseconds: Long = 5000L
-    val groupedOids: Seq[Seq[String]] = personOids.sliding(batchSize).toSeq
+    val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"BulkHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
     var current: Int = 0
@@ -204,14 +204,14 @@ class KoskiService(
       .recoverWith {
         case e: Exception =>
           logger.error("Kutsu koskeen oppijanumerolle {} epäonnistui: {} ", oppijaOid, e)
-          return Future.failed(e)
+          Future.failed(e)
       }
 
     val oppijadata = oppijadatasingle.map(container => List(container))
       .recoverWith {
       case e: Exception =>
-        logger.error("Virhe käsiteltäessä oppijan {} dataa: {}", oppijaOid, e)
-        return Future.failed(e)
+        //logger.error("Virhe käsiteltäessä oppijan {} dataa: {}", oppijaOid, e)
+        Future.failed(e)
     }
 
     val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
