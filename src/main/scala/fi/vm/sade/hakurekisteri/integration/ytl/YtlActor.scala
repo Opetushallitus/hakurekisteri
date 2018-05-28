@@ -9,6 +9,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
+import fi.vm.sade.hakurekisteri.integration.ytl.Koe.convertToOldRole
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time._
@@ -358,7 +359,7 @@ private object Koe {
     "N" -> "81"
   ))
 
-  private def convertToOldRole(id: String, newRole: String, henkiloOid: String): String = {
+  def convertToOldRole(id: String, newRole: String, henkiloOid: String): String = {
     val v: Map[String, String] = EXAM_ROLE_CONVERTER.getOrElse(newRole, throw new RuntimeException(s"(Hakija: ${henkiloOid} ) Unrecognized examRole: ${newRole}"))
     v.getOrElse(id, throw new RuntimeException(s"(Hakija: ${henkiloOid} ) Unrecognized examRole and examId pair: ${newRole} => ${id}"))
   }
@@ -372,8 +373,8 @@ private object Koe {
     }
   }
 }
-case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
-  val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
+case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate, personOid: String) extends Koe {
+  val aine = Aine(koetunnus, Some(Koe.convertToOldRole(koetunnus, aineyhdistelmarooli, personOid)))
   val isValinnainen = isValinnainenRooli(aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
@@ -386,8 +387,8 @@ case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, a
   }
 }
 
-case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate) extends Koe {
-  val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
+case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, aineyhdistelmarooliLegacy: Option[Int], myonnetty: LocalDate, personOid: String) extends Koe {
+  val aine = Aine(koetunnus, Some(Koe.convertToOldRole(koetunnus, aineyhdistelmarooli, personOid)))
   val isValinnainen = isValinnainenRooli(aineyhdistelmarooli) //
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
