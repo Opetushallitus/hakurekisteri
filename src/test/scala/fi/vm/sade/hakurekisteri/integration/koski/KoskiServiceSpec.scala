@@ -50,9 +50,11 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
 
   it should "not clamp time if window begin time is early enough" in {
     val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
-    val endDateSuomiTime = DateTime.parse("2018-05-14T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+    val endDateSuomiTime = DateTime.parse("2018-05-15T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
     val queryTime = DateTime.parse("2018-05-01T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone)).toDate
+
     val searchWindowStartTime: Date = new Date(queryTime.getTime- TimeUnit.DAYS.toMillis(1))
+
     val searchWindowSize: Long = TimeUnit.DAYS.toMillis(15)
     val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
 
