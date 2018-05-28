@@ -170,29 +170,33 @@ class KoskiService(
 
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
     val batchSize: Int = 100
+    val waitBetweenBatchesInMilliseconds: Long = 5000L
     val groupedOids: Seq[Seq[String]] = personOids.sliding(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
-    logger.info(s"BulkHenkiloUpdate: yhteensä ${groupedOids.length} kappaletta $batchSize kokoisia ryhmiä.")
+    logger.info(s"BulkHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
     var current: Int = 0
     groupedOids.foreach(subSeq => {
       current += 1
-      Thread.sleep(5000)
+      Thread.sleep(waitBetweenBatchesInMilliseconds)
       logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
       subSeq.foreach(personOid => {
         updateHenkilo(personOid, createLukio, bulkOperation = true)
       })
     })
-    return Future.successful({})
+    return Future.successful({}) //todo: fiksumpi (tai joku) käsittely virheille
   }
 
   override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, bulkOperation: Boolean = false): Future[Unit] = {
     if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
       return Future.successful({})
     }
-    if (!createLukio && !bulkOperation) {
-      logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
-    } else if (!bulkOperation) {
-      logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
+
+    if(!bulkOperation){
+      if (!createLukio) {
+        logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
+      } else {
+        logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
+      }
     }
 
     val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
