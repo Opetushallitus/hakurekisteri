@@ -152,6 +152,7 @@ class KoskiService(
     if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
       return Future.successful({})
     }
+    var result: Future[Unit] = Future.successful({})
 
     hakemusService.personOidsForHaku(hakuOid, None).onComplete {
       case Success(personOidsSet: Set[String]) =>
@@ -160,14 +161,13 @@ class KoskiService(
         personOids.foreach(personOid => {
           Thread.sleep(1000)
           updateHenkilo(personOid, createLukio)})
-        Future.successful({})
       case Failure(e) =>
         logger.error("Error updating henkilöt for haku: {}", e)
-        Future.failed(e)
+        result = Future.failed(e)
       case _ => logger.error(s"Tuntematon virhe päivittäessä  koskesta henkilöitä haulle $hakuOid")
-        Future.failed(new RuntimeException)
+        result = Future.failed(new RuntimeException)
     }
-
+    result
   }
 
   override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
