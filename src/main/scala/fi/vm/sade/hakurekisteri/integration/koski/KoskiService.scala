@@ -158,9 +158,7 @@ class KoskiService(
       case Success(personOidsSet: Set[String]) =>
         val personOids: Seq[String] = personOidsSet.toSeq
         logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-        personOids.foreach(personOid => {
-          Thread.sleep(1000)
-          updateHenkilo(personOid, createLukio)})
+        result = handleBulkHenkiloUpdate(personOids, createLukio)
       case Failure(e) =>
         logger.error("Error updating henkilöt for haku: {}", e)
         result = Future.failed(e)
@@ -170,13 +168,30 @@ class KoskiService(
     result
   }
 
-  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
+  def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
+    val batchSize: Int = 100
+    val groupedOids: Seq[Seq[String]] = personOids.sliding(batchSize).toSeq
+    val totalGroups: Int = groupedOids.length
+    logger.info(s"BulkHenkiloUpdate: yhteensä ${groupedOids.length} kappaletta $batchSize kokoisia ryhmiä.")
+    var current: Int = 0
+    groupedOids.foreach(subSeq => {
+      current += 1
+      Thread.sleep(5000)
+      logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
+      subSeq.foreach(personOid => {
+        updateHenkilo(personOid, createLukio, bulkOperation = true)
+      })
+    })
+    return Future.successful({})
+  }
+
+  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, bulkOperation: Boolean = false): Future[Unit] = {
     if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
       return Future.successful({})
     }
-    if (!createLukio) {
+    if (!createLukio && !bulkOperation) {
       logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
-    } else {
+    } else if (!bulkOperation) {
       logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
     }
 
@@ -184,14 +199,14 @@ class KoskiService(
       .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
       .recoverWith {
         case e: Exception =>
-          logger.error("Kutsu koskeen epäonnistui. {} ", e)
-          Future.failed(e)
+          logger.error("Kutsu koskeen oppijanumerolle {} epäonnistui: {} ", oppijaOid, e)
+          return Future.failed(e)
       }
 
     val oppijadata = oppijadatasingle.map(container => List(container))
       .recoverWith {
       case e: Exception =>
-        logger.error("Virhe käsiteltäessä oppijadataa: {}", e)
+        logger.error("Virhe käsiteltäessä oppijan {} dataa: {}", oppijaOid, e)
         return Future.failed(e)
     }
 
@@ -200,7 +215,7 @@ class KoskiService(
       logger.debug(s"Haettu henkilöt=$henkilot")
       Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
         case Failure(exception) =>
-          logger.error("Error triggering update for henkilö: {}", exception)
+          logger.error("Error triggering update for henkilö {} : {}", oppijaOid, exception)
           Future.failed(exception)
         case Success(value) => {
           logger.debug("updateHenkilo success")
