@@ -1,0 +1,1072 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.55403239892",
+    "hetu": "280598-990A",
+    "syntymäaika": "1998-05-28",
+    "etunimet": "Satu",
+    "kutsumanimi": "Satu",
+    "sukunimi": "Testi7abi",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.74458635906",
+      "versionumero": 6,
+      "aikaleima": "2018-05-28T13:15:23.033262",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.40463601514",
+        "oppilaitosnumero": {
+          "koodiarvo": "00768",
+          "nimi": {
+            "fi": "Sotkamon lukio"
+          },
+          "lyhytNimi": {
+            "fi": "Sotkamon lukio"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Sotkamon lukio"
+        },
+        "kotipaikka": {
+          "koodiarvo": "765",
+          "nimi": {
+            "fi": "Sotkamo",
+            "sv": "Sotkamo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.92937879366",
+        "nimi": {
+          "fi": "Sotkamon kunta"
+        },
+        "yTunnus": "0189766-5",
+        "kotipaikka": {
+          "koodiarvo": "765",
+          "nimi": {
+            "fi": "Sotkamo",
+            "sv": "Sotkamo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "päättymispäivä": "2018-05-28",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2017-08-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2018-05-28",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "309902",
+              "nimi": {
+                "fi": "Lukion oppimäärä",
+                "sv": "Gymnasiets lärokurs"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 9
+            },
+            "perusteenDiaarinumero": "60/011/2015"
+          },
+          "oppimäärä": {
+            "koodiarvo": "nuortenops",
+            "nimi": {
+              "fi": "Lukio suoritetaan nuorten opetussuunnitelman mukaan",
+              "sv": "Gymnasiet genomförs enligt läroplanen för unga"
+            },
+            "koodistoUri": "lukionoppimaara",
+            "koodistoVersio": 1
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.40463601514",
+            "oppilaitosnumero": {
+              "koodiarvo": "00768",
+              "nimi": {
+                "fi": "Sotkamon lukio"
+              },
+              "lyhytNimi": {
+                "fi": "Sotkamon lukio"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Sotkamon lukio"
+            },
+            "kotipaikka": {
+              "koodiarvo": "765",
+              "nimi": {
+                "fi": "Sotkamo",
+                "sv": "Sotkamo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2018-05-28",
+            "paikkakunta": {
+              "koodiarvo": "765",
+              "nimi": {
+                "fi": "Sotkamo",
+                "sv": "Sotkamo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.40463601514",
+              "oppilaitosnumero": {
+                "koodiarvo": "00768",
+                "nimi": {
+                  "fi": "Sotkamon lukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Sotkamon lukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Sotkamon lukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "765",
+                "nimi": {
+                  "fi": "Sotkamo",
+                  "sv": "Sotkamo"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Satu",
+                "titteli": {
+                  "fi": "OPH"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.40463601514",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00768",
+                    "nimi": {
+                      "fi": "Sotkamon lukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Sotkamon lukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Sotkamon lukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "765",
+                    "nimi": {
+                      "fi": "Sotkamo",
+                      "sv": "Sotkamo"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA",
+                  "nimi": {
+                    "fi": "Matematiikka",
+                    "sv": "Matematik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Matematiikka",
+                    "sv": "Matematik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "oppimäärä": {
+                  "koodiarvo": "MAB",
+                  "nimi": {
+                    "fi": "Matematiikka, lyhyt oppimäärä",
+                    "sv": "Matematik, kort lärokurs"
+                  },
+                  "koodistoUri": "oppiainematematiikka",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "BI",
+                  "nimi": {
+                    "fi": "Biologia",
+                    "sv": "Biologi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Biologia",
+                    "sv": "Biologi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "HI",
+                  "nimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KE",
+                  "nimi": {
+                    "fi": "Kemia",
+                    "sv": "Kemi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kemia",
+                    "sv": "Kemi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "FI",
+                  "nimi": {
+                    "fi": "Filosofia",
+                    "sv": "Filosofi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Filosofia",
+                    "sv": "Filosofi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "FY",
+                  "nimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LI",
+                  "nimi": {
+                    "fi": "Liikunta",
+                    "sv": "Gymnastik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Liikunta",
+                    "sv": "Gymnastik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "PS",
+                  "nimi": {
+                    "fi": "Psykologia",
+                    "sv": "Psykologi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Psykologia",
+                    "sv": "Psykologi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "H",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "H"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": false
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ET",
+                  "nimi": {
+                    "fi": "Uskonto/Elämänkatsomustieto",
+                    "sv": "Religion/Livsåskådningskunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Uskonto/Elämänkatsomustieto",
+                    "sv": "Religion/Livsåskådningskunskap"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "YH",
+                  "nimi": {
+                    "fi": "Yhteiskuntaoppi",
+                    "sv": "Samhällslära"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Yhteiskuntaoppi",
+                    "sv": "Samhällslära"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "GE",
+                  "nimi": {
+                    "fi": "Maantieto",
+                    "sv": "Geografi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Maantieto",
+                    "sv": "Geografi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "TE",
+                  "nimi": {
+                    "fi": "Terveystieto",
+                    "sv": "Hälsokunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Terveystieto",
+                    "sv": "Hälsokunskap"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "AI",
+                  "nimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "AI1",
+                  "nimi": {
+                    "fi": "Suomen kieli ja kirjallisuus"
+                  },
+                  "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "A1",
+                  "nimi": {
+                    "fi": "A1-kieli",
+                    "sv": "A1-språk"
+                  },
+                  "lyhytNimi": {
+                    "fi": "A1-kieli",
+                    "sv": "A1-språk"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "EN",
+                  "nimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "lyhytNimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "B1",
+                  "nimi": {
+                    "fi": "B1-kieli",
+                    "sv": "B1-språk"
+                  },
+                  "lyhytNimi": {
+                    "fi": "B1-kieli",
+                    "sv": "B1-språk"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "SV",
+                  "nimi": {
+                    "fi": "ruotsi",
+                    "sv": "svenska",
+                    "en": "Swedish"
+                  },
+                  "lyhytNimi": {
+                    "fi": "ruotsi",
+                    "sv": "svenska",
+                    "en": "Swedish"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "tyyppi": {
+                "koodiarvo": "lukionmuuopinto",
+                "nimi": {
+                  "fi": "Lukion muu opinto"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MS",
+                  "nimi": {
+                    "fi": "Muut suoritukset"
+                  },
+                  "koodistoUri": "lukionmuutopinnot",
+                  "koodistoVersio": 1
+                }
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "BI5",
+                      "nimi": {
+                        "fi": "Biologian sovellukset"
+                      },
+                      "koodistoUri": "lukionkurssit",
+                      "koodistoVersio": 1
+                    },
+                    "kurssinTyyppi": {
+                      "koodiarvo": "soveltava",
+                      "nimi": {
+                        "fi": "Soveltava"
+                      },
+                      "koodistoUri": "lukionkurssintyyppi",
+                      "koodistoVersio": 1
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "5",
+                        "nimi": {
+                          "fi": "välttävä"
+                        },
+                        "lyhytNimi": {
+                          "fi": "5"
+                        },
+                        "koodistoUri": "arviointiasteikkoyleissivistava",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2018-05-28",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "lukionkurssi",
+                    "nimi": {
+                      "fi": "Lukion kurssi",
+                      "sv": "Kurs i gymnasiet"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ]
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KT",
+                  "nimi": {
+                    "fi": "Uskonto/Elämänkatsomustieto",
+                    "sv": "Religion/Livsåskådningskunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Uskonto/Elämänkatsomustieto",
+                    "sv": "Religion/Livsåskådningskunskap"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "lukionoppiaine",
+                "nimi": {
+                  "fi": "Lukion oppiaine",
+                  "sv": "Läroämne i gymnasiet"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "lukionoppimaara",
+            "nimi": {
+              "fi": "Lukion oppimäärä",
+              "sv": "Gymnasiets lärokurs"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "lukiokoulutus",
+        "nimi": {
+          "fi": "Lukiokoulutus",
+          "sv": "Gymnasieutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Lukiokoulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2017-08-01"
+    }
+  ]
+}

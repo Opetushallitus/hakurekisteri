@@ -361,9 +361,23 @@ object KoskiArvosanaTrigger {
   def osasuoritusToArvosana(personOid: String, komoOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus], isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
+
+    //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
+    //while sure only supports the former. Thus we must convert "ET" codes into "KT"
+    val modsuoritukset = osasuoritukset.map(s => {
+      if(s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("ET")) {
+        val koulmod = s.koulutusmoduuli
+        val uskontoElamankatsomusTieto = KoskiKoulutusmoduuli(Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")),
+          koulmod.kieli, koulmod.koulutustyyppi, koulmod.laajuus, koulmod.pakollinen)
+        KoskiOsasuoritus(uskontoElamankatsomusTieto, s.tyyppi, s.arviointi, s.pakollinen, s.yksilöllistettyOppimäärä, s.osasuoritukset)
+      } else {
+        s
+      }
+
+    })
     var res:Seq[Arvosana] = Seq()
     for {
-      suoritus <- osasuoritukset
+      suoritus <- modsuoritukset
       if isPK(suoritus)
     } yield {
       yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
@@ -631,7 +645,7 @@ object KoskiArvosanaTrigger {
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
           val pisteet = getValmaOsaamispisteet(suoritus)
           if(pisteet < 30){
-            "KESKEN"
+            "KESKEYTYNYT"
           } else {
             "VALMIS"
           }
