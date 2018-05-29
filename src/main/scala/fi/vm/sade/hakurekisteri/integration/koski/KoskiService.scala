@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.text.SimpleDateFormat
+import java.util
 import java.util.{Date, TimeZone}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -149,12 +150,29 @@ class KoskiService(
 
   }
 
+  //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
+  //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli tunti.
+  var lastActivated: Long = 0
+  var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(15)
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
-    if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
-      return Future.successful({})
-    }
-    var result: Future[Unit] = Future.successful({})
 
+    if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
+      logger.warning("Haun tietojen päivitys yritettiin käynnistää, vaikka koski-integraatio on aikaleimasuljettu.")
+      return Future.failed(new Exception("Haun tietojen päivitys yritettiin käynnistää, vaikka koski-integraatio on aikaleimasuljettu."))
+    }
+
+    if(lastActivated + minimumTimeBetweenStarts < System.currentTimeMillis()) {
+      logger.info(s"Käynnistetään haun hakijoiden tietojen päivitys hakuOidille $hakuOid")
+      if(createLukio) {
+        logger.info(s"Päivitetään myös lukion arvosanat hakuOidille $hakuOid")
+      }
+      lastActivated = System.currentTimeMillis()
+    } else {
+      logger.error(s"Haun henkilöiden päivitystä ei voida aloittaa, koska edellisestä käynnistyksestä ei ole vielä kulunut $minimumTimeBetweenStarts millisekuntia.")
+      return Future.failed(new Exception("Haun tietojen päivitys yritettiin käynnistää, edellisestä käynnistyksestä on alle $minimumTimeBetweenStarts millisekuntia."))
+    }
+
+    var result: Future[Unit] = Future.successful({})
     hakemusService.personOidsForHaku(hakuOid, None).onComplete {
       case Success(personOidsSet: Set[String]) =>
         val personOids: Seq[String] = personOidsSet.toSeq
@@ -187,20 +205,11 @@ class KoskiService(
       logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
       logger.info(s"Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
       subSeq.foreach(personOid => Try({
-        val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
+        val oppijaData = virkailijaRestClient
           .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
-          .recoverWith {
-            case e: Exception =>
-              throw e
-          }
+          .map(container => List(container))
 
-        val oppijadata = oppijadatasingle.map(container => List(container))
-          .recoverWith {
-            case e: Exception =>
-              throw e
-          }
-
-        val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
+        val result: Future[Unit] = oppijaData.flatMap(fetchPersonAliases).flatMap(res  => {
           val (henkilot, personOidsWithAliases) = res
           logger.debug(s"Haettu henkilöt=$henkilot")
           Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
