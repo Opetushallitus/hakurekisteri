@@ -87,7 +87,7 @@ object KoskiArvosanaTrigger {
       (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
       flatMap(suoritukset => suoritukset.headOption match {
         case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
-        case Some(_) if suoritukset.length > 1 => Future.failed(new MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
+        case Some(_) if suoritukset.length > 1 => Future.failed(MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
       })
 
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
