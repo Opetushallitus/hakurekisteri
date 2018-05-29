@@ -69,10 +69,9 @@ object KoskiArvosanaTrigger {
       val q = SuoritusQuery(henkilo = Some(henkiloOid))
       val f: Future[Any] = suoritusRekisteri ? SuoritusQueryWithPersonAliases(q, personOidsWithAliases)
       f.mapTo[Seq[Suoritus]].recoverWith {
-        case t: AskTimeoutException => {
+        case t: AskTimeoutException =>
           logger.error(s"Got timeout exception when fetching existing suoritukset for henkilo $henkiloOid , retrying", t)
           fetchExistingSuoritukset(henkiloOid)
-        }
       }
     }
 
