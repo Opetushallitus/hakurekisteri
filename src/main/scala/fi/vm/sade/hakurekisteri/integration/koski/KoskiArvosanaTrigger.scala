@@ -61,7 +61,9 @@ object KoskiArvosanaTrigger {
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] = {
       logger.debug("saveSuoritus={}", suor)
       (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor, personOidsWithAliases)).mapTo[Suoritus with Identified[UUID]].recoverWith {
-        case t: AskTimeoutException => saveSuoritus(suor)
+        case t: AskTimeoutException =>
+          logger.error(s"Got timeout exception when saving suoritus $suor , retrying", t)
+          saveSuoritus(suor)
       }
     }
 
