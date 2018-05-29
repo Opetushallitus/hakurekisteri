@@ -205,6 +205,7 @@ class KoskiService(
       logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
       logger.info(s"Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
       subSeq.foreach(personOid => Try({
+
         val oppijaData = virkailijaRestClient
           .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
           .map(container => List(container))
