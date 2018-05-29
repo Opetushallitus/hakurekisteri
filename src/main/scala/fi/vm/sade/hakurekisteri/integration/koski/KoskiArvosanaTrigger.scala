@@ -36,7 +36,7 @@ object KoskiArvosanaTrigger {
   private val valinnaisetkielet = Set("A1", "B1")
   private val valinnaiset = Set("KO") ++ valinnaisetkielet
   private val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
-  private val oppiaineet = Set("HI", "MU", "BI", "PS", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
+  private val oppiaineet = Set( "HI", "MU", "BI", "PS", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
   private val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
   private val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
 
@@ -632,11 +632,12 @@ object KoskiArvosanaTrigger {
         case Some(x) => x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
         case None => false
       }
+      val isVahvistettu = suoritus.vahvistus.isDefined
 
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
           suoritusTila
-          if (suoritus.vahvistus.isDefined) {
+          if (isVahvistettu) {
             "VALMIS"
           } else suoritusTila
 
@@ -650,17 +651,17 @@ object KoskiArvosanaTrigger {
 
         case Oids.lukioonvalmistavaKomoOid =>
           val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
-          if(nSuoritukset >= 25 || suoritus.vahvistus.isDefined) {
+          if(nSuoritukset >= 25 || isVahvistettu) {
             "VALMIS"
           } else "KESKEN"
 
         case Oids.perusopetusKomoOid =>
-          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || vuosiluokkiinSitoutumatonOpetus) {
+          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
             "KESKEYTYNYT"
           } else suoritusTila
 
         case s if s.startsWith("luokka") =>
-          if(suoritus.jääLuokalle.contains(true) || vuosiluokkiinSitoutumatonOpetus)  {
+          if(suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu))  {
             "KESKEYTYNYT"
           } else suoritusTila
 

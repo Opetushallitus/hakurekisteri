@@ -262,7 +262,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
-    virallinen.tila should equal("KESKEYTYNYT")
+    virallinen.tila should equal("VALMIS")
 
 
     val henkilo2 = henkiloList(1)
@@ -278,7 +278,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     suoritus2.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen2 = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
-    virallinen2.tila should equal("KESKEYTYNYT")
+    virallinen2.tila should equal("VALMIS")
   }
 
   it should "parse arvosanat from peruskoulu_9_luokka_päättötodistus.json" in {
@@ -370,7 +370,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val arvosanat = suoritusArvosanat.arvosanat
 
 
-    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI", "OP")
+    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI")
     val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
@@ -378,7 +378,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
 
     val arvosanatuple = arvosanat.map(a => (a.aine, a.valinnainen)).toSet
-    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI", "OP").map(s => (s, false))
+    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
     arvosanatuple shouldEqual expectedAineetTuple
 
   }
