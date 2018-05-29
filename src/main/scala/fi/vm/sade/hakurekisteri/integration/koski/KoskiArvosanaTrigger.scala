@@ -432,7 +432,12 @@ object KoskiArvosanaTrigger {
           if (!isPakollinen) {
             val n = ordering.getOrElse(tunniste.koodiarvo, 0)
             ord = Some(n)
-            ordering(tunniste.koodiarvo) = n + 1
+            val id = if(suoritus.koulutusmoduuli.kieli.isDefined) {
+              tunniste.koodiarvo.concat(suoritus.koulutusmoduuli.kieli.get.koodiarvo)
+            } else {
+              tunniste.koodiarvo
+            }
+            ordering(id) = n + 1
           }
 
           val arvio = if(arviointi.arvosana.koodiarvo == "H") {
