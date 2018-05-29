@@ -898,6 +898,20 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val arvosanat: Seq[Arvosana] = res.head.arvosanat
     arvosanat.count(_.aine.contentEquals("KT")) shouldEqual 2
+  }
+
+  it should "parse perusopetus_valinnaisuus_B1_yhteinen_ja_valinnainen.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "perusopetus_valinnaisuus_B1_yhteinen_ja_valinnainen.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resgroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val pt = getPerusopetusPäättötodistus(resgroup.head)
+    pt.get.arvosanat.filter(_.aine.contentEquals("B1")) should have length 2
+    pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && a.valinnainen) should have length 1
+    pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && !a.valinnainen) should have length 1
 
   }
 
