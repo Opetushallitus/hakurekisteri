@@ -163,7 +163,9 @@ object KoskiArvosanaTrigger {
                     fetchArvosanat(suoritus).onComplete({
                       case Success(existingArvosanas) => {
                         logger.debug("fetchArvosanat success, result: " + existingArvosanas)
-                        val pendingDeletes: Future[Seq[Any]] = Future.sequence(existingArvosanas.map(arvosana => deleteArvosana(arvosana)))
+                        val pendingDeletes: Future[Seq[Any]] = Future.sequence(existingArvosanas
+                            .filter(_.source.contentEquals("koski"))
+                            .map(arvosana => deleteArvosana(arvosana)))
                         pendingDeletes.onComplete({
                           case Success(s) =>
                             arvosanat.foreach(newarvosana => {
