@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
@@ -169,6 +170,11 @@ class KoskiService(
   }
 
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
+    if(endDateSuomiTime.isBeforeNow) {
+      return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
+    }
+    var successful: AtomicInteger = new AtomicInteger(0)
+    val failed: AtomicInteger = new AtomicInteger(0)
     val batchSize: Int = 100
     val waitBetweenBatchesInMilliseconds: Long = 5000L
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
@@ -179,24 +185,54 @@ class KoskiService(
       current += 1
       Thread.sleep(waitBetweenBatchesInMilliseconds)
       logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
-      subSeq.foreach(personOid => {
-        updateHenkilo(personOid, createLukio, bulkOperation = true)
+      logger.info(s"Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
+      subSeq.foreach(personOid => Try({
+        val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
+          .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
+          .recoverWith {
+            case e: Exception =>
+              throw e
+          }
+
+        val oppijadata = oppijadatasingle.map(container => List(container))
+          .recoverWith {
+            case e: Exception =>
+              throw e
+          }
+
+        val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
+          val (henkilot, personOidsWithAliases) = res
+          logger.debug(s"Haettu henkilöt=$henkilot")
+          Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
+            case Failure(e) =>
+              logger.error("Error triggering update for henkilö {} : {}", personOid, e)
+              Future.failed(e)
+            case Success(value) => {
+              logger.debug("updateHenkilo success")
+              Future.successful(())
+            }
+          }
+        })
+        result
+      }) match {
+        case Success(s) =>
+          successful.incrementAndGet()
+        case Failure(e) =>
+          failed.incrementAndGet()
       })
     })
-    return Future.successful({}) //todo: fiksumpi (tai joku) käsittely virheille
+    Future.successful({})
   }
 
-  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, bulkOperation: Boolean = false): Future[Unit] = {
+  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
     if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
       return Future.successful({})
     }
 
-    if(!bulkOperation){
-      if (!createLukio) {
-        logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
-      } else {
-        logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
-      }
+    if (!createLukio) {
+      logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
+    } else {
+      logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
     }
 
     val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
