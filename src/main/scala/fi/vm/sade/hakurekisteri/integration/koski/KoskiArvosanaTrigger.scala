@@ -83,12 +83,15 @@ object KoskiArvosanaTrigger {
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
-    def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] =
-      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
-      flatMap(suoritukset => suoritukset.headOption match {
-        case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
-        case Some(_) if suoritukset.length > 1 => Future.failed(MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
-      })
+    def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] = {
+      val q = SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))
+      val queryWithPersonAliases = SuoritusQueryWithPersonAliases(q, personOidsWithAliases)
+      (suoritusRekisteri ? queryWithPersonAliases).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
+        flatMap(suoritukset => suoritukset.headOption match {
+          case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
+          case Some(_) if suoritukset.length > 1 => Future.failed(MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
+        })
+    }
 
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
       logger.debug("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
