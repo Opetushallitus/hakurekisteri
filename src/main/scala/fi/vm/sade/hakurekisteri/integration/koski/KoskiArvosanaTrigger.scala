@@ -8,7 +8,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
@@ -80,20 +80,10 @@ object KoskiArvosanaTrigger {
       }
     }
 
-    def fetchExistingLuokkatiedot(henkiloOid: String): Future[Seq[Opiskelija]] = {
-      val q = OpiskelijaQuery(henkilo = Some(henkiloOid))
-      (opiskelijaRekisteri ? q).mapTo[Seq[Opiskelija]].recoverWith {
-        case t: AskTimeoutException => fetchExistingLuokkatiedot(henkiloOid)
-      }
-    }
-
     def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
     (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
-
-    def updateArvosana(arvosana: Arvosana with Identified[UUID], arv: Arvosana): Future[Arvosana with Identified[UUID]] =
-      (suoritusRekisteri ? arvosana.copy(arvio = arv.arvio)).mapTo[Arvosana with Identified[UUID]]
 
     def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] =
       (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
@@ -110,10 +100,6 @@ object KoskiArvosanaTrigger {
     def deleteArvosana(s: Arvosana with Identified[UUID]): Future[Any] = {
       logger.debug("Poistetaan arvosana " + s + "UUID:lla" + s.id)
       arvosanaRekisteri ? DeleteResource(s.id, "koski-arvosanat")
-    }
-
-    def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
-      arvosanat.filter(a => a.aine == aine).head
     }
 
     def saveOpiskelija(opiskelija: Opiskelija): Unit = {
