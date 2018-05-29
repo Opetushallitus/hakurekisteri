@@ -35,10 +35,13 @@ object KoskiArvosanaTrigger {
   private val root_org_id = "1.2.246.562.10.00000000001"
   private val valinnaisetkielet = Set("A1", "B1")
   private val valinnaiset = Set("KO") ++ valinnaisetkielet
+
   private val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
   private val oppiaineet = Set( "HI", "MU", "BI", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
   private val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
   private val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
+  private val lukioaineet = peruskoulunaineet ++ Set("PS") //lukio has psychology as a mandatory subject
+  private val lukioaineetRegex = lukioaineet.map(_.r)
 
   private val kieletRegex = kielet.map(str => str.r)
   private val oppiaineetRegex = oppiaineet.map(str => s"$str\\d?".r)
@@ -354,9 +357,16 @@ object KoskiArvosanaTrigger {
     isPK
   }
 
+  def isLukioSuoritus(osasuoritus: KoskiOsasuoritus): Boolean = {
+    val koodi = osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo
+    lukioaineetRegex.exists(r => r.findFirstIn(koodi).isDefined)
+  }
+
   def isPKValue(arvosana: String): Boolean = {
     peruskoulunArvosanat.contains(arvosana) || arvosana == "H" //hylätty
   }
+
+
 
   def osasuoritusToArvosana(personOid: String, komoOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus], isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
@@ -378,7 +388,7 @@ object KoskiArvosanaTrigger {
     var res:Seq[Arvosana] = Seq()
     for {
       suoritus <- modsuoritukset
-      if isPK(suoritus)
+      if isPK(suoritus) || (isLukio && isLukioSuoritus(suoritus))
     } yield {
       yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
       suoritus.arviointi.foreach(arviointi => {
