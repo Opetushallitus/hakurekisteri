@@ -134,10 +134,10 @@ class KoskiService(
       searchWindowEndTime = clamptTimeToEnd(searchWindowEndTime)
       fetchChanged(
         params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
-          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ))
+          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime ))
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
-          logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + clampedSearchWindowStartTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
+          logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
           Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
             case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
             case _ =>
