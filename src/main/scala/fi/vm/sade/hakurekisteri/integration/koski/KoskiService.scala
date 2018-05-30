@@ -130,7 +130,7 @@ class KoskiService(
         searchWindowEndTime = new Date(searchWindowStartTime.getTime + searchWindowSize + maximumCatchup)
         catchup = true
       }
-      val clampedSearchWindowStartTime = clamptTimeToEnd(searchWindowEndTime)
+      val clampedSearchWindowStartTime = clamptTimeToEnd(searchWindowStartTime)
       searchWindowEndTime = clamptTimeToEnd(searchWindowEndTime)
       fetchChanged(
         params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
