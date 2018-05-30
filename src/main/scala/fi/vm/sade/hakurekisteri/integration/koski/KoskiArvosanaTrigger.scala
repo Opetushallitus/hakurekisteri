@@ -8,7 +8,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
@@ -34,11 +34,15 @@ object KoskiArvosanaTrigger {
   private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
   private val root_org_id = "1.2.246.562.10.00000000001"
   private val valinnaisetkielet = Set("A1", "B1")
+  private val a2b2Kielet = Set("A2", "B2")
   private val valinnaiset = Set("KO") ++ valinnaisetkielet
+
   private val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
-  private val oppiaineet = Set("HI", "MU", "BI", "PS", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA", "YL", "OP")
+  private val oppiaineet = Set( "HI", "MU", "BI", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
   private val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
   private val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
+  private val lukioaineet = peruskoulunaineet ++ Set("PS") //lukio has psychology as a mandatory subject
+  private val lukioaineetRegex = lukioaineet.map(_.r)
 
   private val kieletRegex = kielet.map(str => str.r)
   private val oppiaineetRegex = oppiaineet.map(str => s"$str\\d?".r)
@@ -77,27 +81,20 @@ object KoskiArvosanaTrigger {
       }
     }
 
-    def fetchExistingLuokkatiedot(henkiloOid: String): Future[Seq[Opiskelija]] = {
-      val q = OpiskelijaQuery(henkilo = Some(henkiloOid))
-      (opiskelijaRekisteri ? q).mapTo[Seq[Opiskelija]].recoverWith {
-        case t: AskTimeoutException => fetchExistingLuokkatiedot(henkiloOid)
-      }
-    }
-
     def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
     (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
-    def updateArvosana(arvosana: Arvosana with Identified[UUID], arv: Arvosana): Future[Arvosana with Identified[UUID]] =
-      (suoritusRekisteri ? arvosana.copy(arvio = arv.arvio)).mapTo[Arvosana with Identified[UUID]]
-
-    def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] =
-      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
-      flatMap(suoritukset => suoritukset.headOption match {
-        case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
-        case Some(_) if suoritukset.length > 1 => Future.failed(new MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
-      })
+    def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] = {
+      val q = SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))
+      val queryWithPersonAliases = SuoritusQueryWithPersonAliases(q, personOidsWithAliases)
+      (suoritusRekisteri ? queryWithPersonAliases).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
+        flatMap(suoritukset => suoritukset.headOption match {
+          case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
+          case Some(_) if suoritukset.length > 1 => Future.failed(MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
+        })
+    }
 
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
       logger.debug("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
@@ -107,10 +104,6 @@ object KoskiArvosanaTrigger {
     def deleteArvosana(s: Arvosana with Identified[UUID]): Future[Any] = {
       logger.debug("Poistetaan arvosana " + s + "UUID:lla" + s.id)
       arvosanaRekisteri ? DeleteResource(s.id, "koski-arvosanat")
-    }
-
-    def fetchArvosana(arvosanat: Seq[Arvosana with Identified[UUID]], aine: String): Arvosana with Identified[UUID] = {
-      arvosanat.filter(a => a.aine == aine).head
     }
 
     def saveOpiskelija(opiskelija: Opiskelija): Unit = {
@@ -130,7 +123,6 @@ object KoskiArvosanaTrigger {
       //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
       val allSuorituksetGroups: Seq[Seq[SuoritusArvosanat]] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio)
       val foo: Seq[Seq[Arvosana]] = allSuorituksetGroups.flatten.map(_.arvosanat)
-      foo.foreach(s => logger.debug(s"arvosanat length: ${s.length}"))
       allSuorituksetGroups.foreach(allSuoritukset =>
         fetchExistingSuoritukset(henkiloOid).onComplete(fetchedSuoritukset => { //NOTE, processes the Future that encloses the list, does not actually iterate through the list
           val henkilonSuoritukset = allSuoritukset.filter(s => {
@@ -163,7 +155,9 @@ object KoskiArvosanaTrigger {
                     fetchArvosanat(suoritus).onComplete({
                       case Success(existingArvosanas) => {
                         logger.debug("fetchArvosanat success, result: " + existingArvosanas)
-                        val pendingDeletes: Future[Seq[Any]] = Future.sequence(existingArvosanas.map(arvosana => deleteArvosana(arvosana)))
+                        val pendingDeletes: Future[Seq[Any]] = Future.sequence(existingArvosanas
+                            .filter(_.source.contentEquals("koski"))
+                            .map(arvosana => deleteArvosana(arvosana)))
                         pendingDeletes.onComplete({
                           case Success(s) =>
                             arvosanat.foreach(newarvosana => {
@@ -198,6 +192,7 @@ object KoskiArvosanaTrigger {
           }
         })
       )
+      logger.info("Henkilön {} koski-tiedot tallennettu", henkiloOid)
     })
   }
 
@@ -355,30 +350,57 @@ object KoskiArvosanaTrigger {
     isPK
   }
 
+  def isLukioSuoritus(osasuoritus: KoskiOsasuoritus): Boolean = {
+    val koodi = osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo
+    lukioaineetRegex.exists(r => r.findFirstIn(koodi).isDefined)
+  }
+
   def isPKValue(arvosana: String): Boolean = {
     peruskoulunArvosanat.contains(arvosana) || arvosana == "H" //hylätty
   }
 
-  def osasuoritusToArvosana(personOid: String, orgOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus]): (Seq[Arvosana], Yksilollistetty) = {
+
+
+  def osasuoritusToArvosana(personOid: String, komoOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus], isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
+
+    //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
+    //while sure only supports the former. Thus we must convert "ET" codes into "KT"
+    val modsuoritukset = osasuoritukset.map(s => {
+      if(s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("ET")) {
+        val koulmod = s.koulutusmoduuli
+        val uskontoElamankatsomusTieto = KoskiKoulutusmoduuli(Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")),
+          koulmod.kieli, koulmod.koulutustyyppi, koulmod.laajuus, koulmod.pakollinen)
+        KoskiOsasuoritus(uskontoElamankatsomusTieto, s.tyyppi, s.arviointi, s.pakollinen, s.yksilöllistettyOppimäärä, s.osasuoritukset)
+      } else {
+        s
+      }
+
+    })
     var res:Seq[Arvosana] = Seq()
     for {
-      suoritus <- osasuoritukset
-      if isPK(suoritus)
+      suoritus <- modsuoritukset
+      if isPK(suoritus) || (isLukio && isLukioSuoritus(suoritus))
     } yield {
       yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
       suoritus.arviointi.foreach(arviointi => {
         if (isPKValue(arviointi.arvosana.koodiarvo)) {
-          val tunniste = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
+          val tunniste: KoskiKoodi = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
           val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
             case (a: String, b: Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
             case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
             case _ => None
           }
+
+
           var isPakollinenmoduuli = false
           var isPakollinen = false
-          if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
+          if(isLukio) {
+            isPakollinen = true
+            isPakollinenmoduuli = true
+          }
+          else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
             isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.get
             isPakollinen = suoritus.koulutusmoduuli.pakollinen.get
           }
@@ -390,12 +412,23 @@ object KoskiArvosanaTrigger {
               isPakollinen = false
             }
           }
+
+          if(komoOid.contentEquals(Oids.perusopetusKomoOid) &&
+            (tunniste.koodiarvo.contentEquals("B2") || tunniste.koodiarvo.contentEquals("A2"))) {
+            isPakollinen = true
+            isPakollinenmoduuli = true
+          }
           var ord: Option[Int] = None
 
           if (!isPakollinen) {
             val n = ordering.getOrElse(tunniste.koodiarvo, 0)
             ord = Some(n)
-            ordering(tunniste.koodiarvo) = n + 1
+            val id = if(suoritus.koulutusmoduuli.kieli.isDefined) {
+              tunniste.koodiarvo.concat(suoritus.koulutusmoduuli.kieli.get.koodiarvo)
+            } else {
+              tunniste.koodiarvo
+            }
+            ordering(id) = n + 1
           }
 
           val arvio = if(arviointi.arvosana.koodiarvo == "H") {
@@ -405,8 +438,8 @@ object KoskiArvosanaTrigger {
           }
 
           val laajuus = suoritus.koulutusmoduuli.laajuus.getOrElse(KoskiValmaLaajuus(None, KoskiKoodi("","")))
-          if(!isPakollinen && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
-            //nop, only add electives that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
+          if((!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
+            //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
           } else {
             res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord)
           }
@@ -525,8 +558,11 @@ object KoskiArvosanaTrigger {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
-    for ( suoritus <- suoritukset ) {
 
+    for {
+      suoritus <- suoritukset
+    } yield {
+      val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
       var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
@@ -563,7 +599,15 @@ object KoskiArvosanaTrigger {
           if(failedNinthGrade) {
             as = Seq.empty
           }
-          if(suoritus.vahvistus.isDefined) {
+
+          val foo = as.map(_.arvio.toString)
+
+          val containsOneFailure: Boolean = as.exists(a => a.arvio match {
+            case Arvio410(arvosana) => arvosana.contentEquals("4")
+            case _ => false
+          })
+
+          if(isVahvistettu) {
             val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
             val d = parseLocalDate("2018-06-04")
             if (vahvistusDate.isAfter(d)) {
@@ -571,8 +615,10 @@ object KoskiArvosanaTrigger {
             } else {
               (as, yks)
             }
-          } else {
+          } else if (containsOneFailure) {
             (as, yks)
+          } else {
+            (Seq(), yks)
           }
         case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
@@ -589,7 +635,7 @@ object KoskiArvosanaTrigger {
         case Oids.lukioKomoOid =>
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
             logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
+            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true)
           } else {
             (Seq(), yksilollistaminen.Ei)
           }
@@ -613,31 +659,31 @@ object KoskiArvosanaTrigger {
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
           suoritusTila
-          if (suoritus.vahvistus.isDefined) {
+          if (isVahvistettu) {
             "VALMIS"
           } else suoritusTila
 
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
           val pisteet = getValmaOsaamispisteet(suoritus)
           if(pisteet < 30){
-            "KESKEN"
+            "KESKEYTYNYT"
           } else {
             "VALMIS"
           }
 
         case Oids.lukioonvalmistavaKomoOid =>
           val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
-          if(nSuoritukset >= 25 || suoritus.vahvistus.isDefined) {
+          if(nSuoritukset >= 25 || isVahvistettu) {
             "VALMIS"
           } else "KESKEN"
 
         case Oids.perusopetusKomoOid =>
-          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || vuosiluokkiinSitoutumatonOpetus) {
+          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
             "KESKEYTYNYT"
           } else suoritusTila
 
         case s if s.startsWith("luokka") =>
-          if(suoritus.jääLuokalle.contains(true) || vuosiluokkiinSitoutumatonOpetus)  {
+          if(suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu))  {
             "KESKEYTYNYT"
           } else suoritusTila
 

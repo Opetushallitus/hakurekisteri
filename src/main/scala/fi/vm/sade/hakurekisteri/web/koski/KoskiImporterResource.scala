@@ -49,7 +49,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilo(personOid, false)
+      override val is: Future[_] = koskiService.updateHenkilo(personOid, haeLukio)
     }
   }
 
@@ -57,13 +57,14 @@ class KoskiImporterResource(koskiService: IKoskiService)
     implicit val user: User = getAdmin
     val hakuOid = params("hakuOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
+    val useBulk: Boolean = params.getAsOrElse("bulk", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
       .setResourceId(hakuOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, false)
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, createLukio = haeLukio, useBulkOperation = useBulk)
     }
   }
 

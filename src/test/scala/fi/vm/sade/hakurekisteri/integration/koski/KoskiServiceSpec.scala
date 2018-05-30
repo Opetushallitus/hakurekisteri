@@ -1,10 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
+import java.text.DateFormat
+import java.time.format.DateTimeFormatter
+import java.util.{Date, TimeZone}
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
@@ -27,5 +33,33 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
     when(endPoint.request(forUrl("http://localhost/koski/api/oppija?muuttunutJ%C3%A4lkeen=2010-01-01&muuttunutEnnen=2100-01-01T12%3A00")))
       .thenReturn((200, List(), getJson("koski_1130")))
     Await.result(koskiService.fetchChanged(0, koskiService.SearchParams(muuttunutJälkeen = "2010-01-01")), 10.seconds).size should be (3)
+  }
+
+  it should "clamp search window time to at most 4.6.2018 23:59:59" in {
+
+    val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
+    val endDateSuomiTime = DateTime.parse("2018-06-05T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+    val queryTime = DateTime.parse("2018-05-28T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone)).toDate
+    val searchWindowStartTime: Date = new Date(queryTime.getTime- TimeUnit.DAYS.toMillis(1))
+    val searchWindowSize: Long = TimeUnit.DAYS.toMillis(15)
+    val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
+    val end: Date = koskiService.clamptTimeToEnd(searchWindowEndTime)
+
+    end shouldEqual endDateSuomiTime.minusSeconds(1).toDate
+  }
+
+  it should "not clamp time if window begin time is early enough" in {
+    val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
+    val endDateSuomiTime = DateTime.parse("2018-05-15T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+    val queryTime = DateTime.parse("2018-05-01T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone)).toDate
+
+    val searchWindowStartTime: Date = new Date(queryTime.getTime- TimeUnit.DAYS.toMillis(1))
+
+    val searchWindowSize: Long = TimeUnit.DAYS.toMillis(15)
+    val searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
+
+    val end: Date = koskiService.clamptTimeToEnd(searchWindowEndTime)
+
+    end shouldEqual endDateSuomiTime.toDate
   }
 }
