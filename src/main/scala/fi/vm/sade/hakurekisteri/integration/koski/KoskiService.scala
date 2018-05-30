@@ -207,21 +207,24 @@ class KoskiService(
     groupedOids.foreach(subSeq => {
       current += 1
       Thread.sleep(waitBetweenBatchesInMilliseconds)
-      logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
-      logger.info(s"Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
+      logger.info(s"BulkHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
+      logger.info(s"BulkHenkiloUpdate: Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
 
       Future.traverse(subSeq)(makeKoskiCallForSinglePerson).onComplete({
-        case Success(k) => {
-          fetchPersonAliases(k).flatMap(res => {
+        case Success(koskiDataForBatch) => {
+          logger.info(s"Koskikutsu onnistui, tulosjoukon koko: ${koskiDataForBatch.size}")
+          if(koskiDataForBatch.size < batchSize)
+            failed.addAndGet(batchSize - koskiDataForBatch.size)
+          fetchPersonAliases(koskiDataForBatch).flatMap(res => {
             val (henkilot, personOidsWithAliases) = res
             Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
               case Failure(e) =>
-                logger.error("Error triggering update for henkilö: {}", e)
-                failed.incrementAndGet()
+                logger.error("BulkHenkiloUpdate: Error triggering update for henkilö: {}", e)
+                //failed.incrementAndGet()
                 Future.failed(e)
               case Success(value) => {
                 logger.debug("updateHenkilo success")
-                successful.incrementAndGet()
+                //successful.incrementAndGet()
                 Future.successful(())
               }
             }
@@ -229,6 +232,7 @@ class KoskiService(
         }
         case Failure(e) =>
           failed.incrementAndGet()
+          logger.error("Virhe bulkhenkilöupdatessa: {}", e)
       })
     })
     Future.successful({})
