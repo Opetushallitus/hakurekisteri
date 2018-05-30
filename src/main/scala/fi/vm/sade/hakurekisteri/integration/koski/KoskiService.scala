@@ -155,7 +155,7 @@ class KoskiService(
   //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli tunti.
   var lastActivated: Long = 0
   var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(15)
-  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
+  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
 
     if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
       logger.warning("Haun tietojen päivitys yritettiin käynnistää, vaikka koski-integraatio on aikaleimasuljettu.")
@@ -178,7 +178,11 @@ class KoskiService(
       case Success(personOidsSet: Set[String]) =>
         val personOids: Seq[String] = personOidsSet.toSeq
         logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-        result = handleBulkHenkiloUpdate(personOids, createLukio)
+        if(useBulk) {
+          result = handleBulkHenkiloUpdate(personOids, createLukio)
+        } else {
+          result = handleHenkiloUpdate(personOids, createLukio)
+        }
       case Failure(e) =>
         logger.error("Error updating henkilöt for haku: {}", e)
         result = Future.failed(e)
@@ -192,6 +196,27 @@ class KoskiService(
     virkailijaRestClient.readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
+  def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
+    if(endDateSuomiTime.isBeforeNow) {
+      return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
+    }
+    val batchSize: Int = 25
+    val waitBetweenBatchesInMilliseconds: Long = 5000L
+    val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
+    val totalGroups: Int = groupedOids.length
+    logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
+    var current: Int = 0
+    groupedOids.foreach(subSeq => {
+      current += 1
+      Thread.sleep(waitBetweenBatchesInMilliseconds)
+      logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
+
+      subSeq.foreach(oppija => updateHenkilo(oppija, createLukio))
+
+    })
+    Future.successful({})
+  }
+
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
     if(endDateSuomiTime.isBeforeNow) {
       return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
@@ -199,7 +224,7 @@ class KoskiService(
     var successful: AtomicInteger = new AtomicInteger(0)
     val failed: AtomicInteger = new AtomicInteger(0)
     val batchSize: Int = 100
-    val waitBetweenBatchesInMilliseconds: Long = 5000L
+    val waitBetweenBatchesInMilliseconds: Long = 10000L
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"BulkHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
@@ -220,11 +245,11 @@ class KoskiService(
             Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
               case Failure(e) =>
                 logger.error("BulkHenkiloUpdate: Error triggering update for henkilö: {}", e)
-                //failed.incrementAndGet()
+                failed.incrementAndGet()
                 Future.failed(e)
               case Success(value) => {
                 logger.debug("updateHenkilo success")
-                //successful.incrementAndGet()
+                successful.incrementAndGet()
                 Future.successful(())
               }
             }
