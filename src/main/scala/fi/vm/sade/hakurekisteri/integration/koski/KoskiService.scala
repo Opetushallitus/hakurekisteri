@@ -152,9 +152,9 @@ class KoskiService(
   }
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
-  //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli tunti.
+  //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
   var lastActivated: Long = 0
-  var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(15)
+  var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(5)
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
 
     if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
