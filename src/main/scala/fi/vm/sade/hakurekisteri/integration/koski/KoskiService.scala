@@ -120,6 +120,7 @@ class KoskiService(
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
     if(endDateSuomiTime.isBeforeNow) {
+      logger.info("Cutoff date of {} reached, stopping", endDateSuomiTime.toString)
       return
     }
     scheduler.scheduleOnce(refreshFrequency)({
