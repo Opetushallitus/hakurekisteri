@@ -556,8 +556,11 @@ object KoskiArvosanaTrigger {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
-    for ( suoritus <- suoritukset ) {
 
+    for {
+      suoritus <- suoritukset
+    } yield {
+      val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
       var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
 
@@ -594,7 +597,15 @@ object KoskiArvosanaTrigger {
           if(failedNinthGrade) {
             as = Seq.empty
           }
-          if(suoritus.vahvistus.isDefined) {
+
+          val foo = as.map(_.arvio.toString)
+
+          val containsOneFailure: Boolean = as.exists(a => a.arvio match {
+            case Arvio410(arvosana) => arvosana.contentEquals("4")
+            case _ => false
+          })
+
+          if(isVahvistettu) {
             val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
             val d = parseLocalDate("2018-06-04")
             if (vahvistusDate.isAfter(d)) {
@@ -602,8 +613,10 @@ object KoskiArvosanaTrigger {
             } else {
               (as, yks)
             }
-          } else {
+          } else if (containsOneFailure) {
             (as, yks)
+          } else {
+            (Seq(), yks)
           }
         case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
         case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
@@ -640,7 +653,6 @@ object KoskiArvosanaTrigger {
         case Some(x) => x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
         case None => false
       }
-      val isVahvistettu = suoritus.vahvistus.isDefined
 
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>

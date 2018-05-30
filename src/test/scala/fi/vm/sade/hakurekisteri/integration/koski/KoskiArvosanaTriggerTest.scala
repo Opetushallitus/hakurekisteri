@@ -241,6 +241,31 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     peruskouluB2KieletShouldNotBeValinnainen(result)
   }
 
+  it should "parse peruskoulu_9_luokka_päättötodistus_ei_vahvistusta.json data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_ei_vahvistusta.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 4
+    val pt = getPerusopetusPäättötodistus(result).get
+    pt.arvosanat should have length 0
+  }
+
+  it should "parse peruskoulu_9_luokka_päättötodistus_ei_vahvistusta_yksi_nelonen.json data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_ei_vahvistusta_yksi_nelonen.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo.opiskeluoikeudet.filter(_.tyyppi.get.koodiarvo.contentEquals("perusopetuksenoppimaara"))
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 4
+    val pt = getPerusopetusPäättötodistus(result).get
+    pt.arvosanat should have length 18
+  }
+
   it should "parse peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true.json data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true.json").mkString
     val henkiloList: List[KoskiHenkiloContainer] = parse(json).extract[List[KoskiHenkiloContainer]]
@@ -573,7 +598,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
   it should "parse testi3_satu_valinnaisuus.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "testi3_satu_valinnaisuus.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val s = henkilo.opiskeluoikeudet.head.suoritukset.flatMap(_.osasuoritukset)
