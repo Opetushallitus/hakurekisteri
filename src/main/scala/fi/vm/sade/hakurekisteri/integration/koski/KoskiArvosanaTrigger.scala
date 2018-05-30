@@ -721,9 +721,9 @@ object KoskiArvosanaTrigger {
             opiskeluoikeus = None,
             vahv = true,
             lahde = root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
-        logger.info("createSuoritusArvosanat={}", suoritus)
+        logger.debug("createSuoritusArvosanat={}", suoritus)
         if (createLukioArvosanat && komoOid == Oids.lukioKomoOid ) {
-          logger.info("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
+          logger.debug("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
         }
         result = result :+ suoritus
       }
