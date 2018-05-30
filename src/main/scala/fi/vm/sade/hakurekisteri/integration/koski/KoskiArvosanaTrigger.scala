@@ -34,6 +34,7 @@ object KoskiArvosanaTrigger {
   private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
   private val root_org_id = "1.2.246.562.10.00000000001"
   private val valinnaisetkielet = Set("A1", "B1")
+  private val a2b2Kielet = Set("A2", "B2")
   private val valinnaiset = Set("KO") ++ valinnaisetkielet
 
   private val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
@@ -437,7 +438,7 @@ object KoskiArvosanaTrigger {
           }
 
           val laajuus = suoritus.koulutusmoduuli.laajuus.getOrElse(KoskiValmaLaajuus(None, KoskiKoodi("","")))
-          if(!isPakollinen && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
+          if((!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
             //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
           } else {
             res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord)
