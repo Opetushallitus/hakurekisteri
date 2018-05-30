@@ -200,8 +200,8 @@ class KoskiService(
     if(endDateSuomiTime.isBeforeNow) {
       return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
     }
-    val batchSize: Int = 25
-    val waitBetweenBatchesInMilliseconds: Long = 5000L
+    val batchSize: Int = 20
+    val waitBetweenBatchesInMilliseconds: Long = 10000L
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
