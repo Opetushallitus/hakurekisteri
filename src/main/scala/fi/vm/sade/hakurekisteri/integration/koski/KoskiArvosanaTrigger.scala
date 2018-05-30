@@ -191,6 +191,7 @@ object KoskiArvosanaTrigger {
           }
         })
       )
+      logger.info("Henkilön {} koski-tiedot tallennettu", henkiloOid)
     })
   }
 
