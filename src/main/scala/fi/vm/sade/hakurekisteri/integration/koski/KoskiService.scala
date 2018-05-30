@@ -188,6 +188,10 @@ class KoskiService(
     result
   }
 
+  def makeKoskiCallForSinglePerson(personOid: String): Future[KoskiHenkiloContainer] = {
+    virkailijaRestClient.readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
+  }
+
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
     if(endDateSuomiTime.isBeforeNow) {
       return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
@@ -205,29 +209,24 @@ class KoskiService(
       Thread.sleep(waitBetweenBatchesInMilliseconds)
       logger.info(s"Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
       logger.info(s"Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
-      subSeq.foreach(personOid => Try({
 
-        val oppijaData = virkailijaRestClient
-          .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
-          .map(container => List(container))
-
-        val result: Future[Unit] = oppijaData.flatMap(fetchPersonAliases).flatMap(res  => {
-          val (henkilot, personOidsWithAliases) = res
-          logger.debug(s"Haettu henkilöt=$henkilot")
-          Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
-            case Failure(e) =>
-              logger.error("Error triggering update for henkilö {} : {}", personOid, e)
-              Future.failed(e)
-            case Success(value) => {
-              logger.debug("updateHenkilo success")
-              Future.successful(())
+      Future.traverse(subSeq)(makeKoskiCallForSinglePerson).onComplete({
+        case Success(k) => {
+          fetchPersonAliases(k).flatMap(res => {
+            val (henkilot, personOidsWithAliases) = res
+            Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
+              case Failure(e) =>
+                logger.error("Error triggering update for henkilö: {}", e)
+                failed.incrementAndGet()
+                Future.failed(e)
+              case Success(value) => {
+                logger.debug("updateHenkilo success")
+                successful.incrementAndGet()
+                Future.successful(())
+              }
             }
-          }
-        })
-        result
-      }) match {
-        case Success(s) =>
-          successful.incrementAndGet()
+          })
+        }
         case Failure(e) =>
           failed.incrementAndGet()
       })
