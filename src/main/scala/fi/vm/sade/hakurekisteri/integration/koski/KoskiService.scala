@@ -142,7 +142,7 @@ class KoskiService(
             case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
             case _ =>
           }
-          processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
+          processModifiedKoski(searchWindowEndTime, refreshFrequency)
         case Failure(t) =>
           logger.error(t, "processModifiedKoski - fetching modified henkilot failed, retrying")
           processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
