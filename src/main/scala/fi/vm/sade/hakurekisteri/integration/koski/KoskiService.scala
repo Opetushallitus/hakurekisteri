@@ -305,15 +305,34 @@ class KoskiService(
     result
   }
 
-  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Unit =
-    henkilot.foreach(henkilo => {
-      triggers.foreach( trigger => trigger.f(henkilo, personOidsWithAliases, createLukio))
+  //Poistaa KoskiHenkiloContainerin sisältä sellaiset opiskeluoikeudet, jotka liittyvät ylioppilastutkintoarvosanoihin, koska KoskiArvosanaTrigger ei osaa
+  //käsitellä niitä oikein. Jos poistetaan viimeinen opiskeluoikeus, heitetään koko container roskiin.
+  private def removeYTLOpiskeluoikeusFromOpiskeluoikeukses(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
+    var result = Seq[KoskiHenkiloContainer]()
+
+    logger.debug(s"Poistetaan datasta ylioppilastutkintoarvosanat sisältävä opiskeluoikeus. KoskiHenkiloContainereja ennen filtteröintiä: ${data.length}")
+    data.foreach(container => {
+      val oikeudet = container.opiskeluoikeudet.filter(oikeus => {
+        !(oikeus.tyyppi.isDefined && oikeus.tyyppi.get.koodiarvo.equals("ylioppilastutkinto"))
+      })
+      if(oikeudet.length > 0) //Jos ollaan poistettu kaikki opiskeluoikeudet, voidaan unohtaa koko container.
+        result = result :+ container.copy(opiskeluoikeudet = oikeudet)
     })
+    logger.debug(s"Palautetaan containerit, määrä: ${result.length}")
+    result
+  }
 
+  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Unit = {
+    val filteredHenkilot = removeYTLOpiskeluoikeusFromOpiskeluoikeukses(henkilot)
+    if(filteredHenkilot.length > 0) {
+      filteredHenkilot.foreach(henkilo => {
+        triggers.foreach(trigger => trigger.f(henkilo, personOidsWithAliases, createLukio))
+      })
+    } else {
+      logger.debug("Ei triggeröidä mitään, koska Container-kokoelma on tyhjä.")
+    }
+  }
 }
-
-
-
 
 case class Tila(alku: String, tila: KoskiKoodi, loppu: Option[String])
 
