@@ -172,7 +172,7 @@ case class VirallinenSuoritus(komo: String,
 
   override def toString: String = {
     s"VirallinenSuoritus(komo=$komo, myontaja=$myontaja, tila=$tila, valmistuminen=$valmistuminen, henkilo=$henkilo, " +
-      s"yksilollistaminen=$yksilollistaminen, suorituskieli=$suoritusKieli, opiskeluoikeus=$opiskeluoikeus, vahv=$vahv" +
+      s"yksilollistaminen=$yksilollistaminen, suorituskieli=$suoritusKieli, opiskeluoikeus=$opiskeluoikeus, vahv=$vahv " +
       s"lahde=$lahde, lahdeArvot=${lahdeArvot.toString()})"
   }
 }
