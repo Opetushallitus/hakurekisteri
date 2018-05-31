@@ -312,7 +312,7 @@ class KoskiService(
     //logger.debug(s"Poistetaan datasta ylioppilastutkintoarvosanat sisältävä opiskeluoikeus. KoskiHenkiloContainereja ennen filtteröintiä: ${data.length}")
     data.foreach(container => {
       val oikeudet = container.opiskeluoikeudet.filter(oikeus => {
-        (oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined)
+        (oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined && !oikeus.tila.opiskeluoikeusjaksot.isEmpty)
       })
       if(oikeudet.length > 0) //Jos ollaan poistettu kaikki opiskeluoikeudet, voidaan unohtaa koko container.
         result = result :+ container.copy(opiskeluoikeudet = oikeudet)
