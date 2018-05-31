@@ -351,7 +351,7 @@ case class KoskiHenkilo(
 }
 case class KoskiOpiskeluoikeus(
                  oid: Option[String], //LUVA data does not have an OID
-                 oppilaitos: KoskiOrganisaatio,
+                 oppilaitos: Option[KoskiOrganisaatio],
                  tila: KoskiOpiskeluoikeusjakso,
                  päättymispäivä: Option[String],
                  lisätiedot: Option[KoskiLisatiedot],
@@ -363,7 +363,7 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 
 case class KoskiTila(alku: String, tila:KoskiKoodi)
 
-case class KoskiOrganisaatio(oid: String)
+case class KoskiOrganisaatio(oid: Option[String])
 
 case class KoskiSuoritus(
                   luokka: Option[String],

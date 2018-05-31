@@ -492,11 +492,14 @@ object KoskiArvosanaTrigger {
   }
 
   def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
-    val oppilaitos = opOikeus.oppilaitos
+    if(!(opOikeus.oppilaitos.isDefined && opOikeus.oppilaitos.get.oid.isDefined)) {
+      throw new RuntimeException("Opiskeluoikeudella on oltava oppilaitos!")
+    }
+    val oppilaitos = opOikeus.oppilaitos.get
     (vahvistus, opOikeus.päättymispäivä) match {
-      case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid)
-      case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid)
-      case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid)
+      case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid.getOrElse(DUMMYOID))
+      case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid.getOrElse(DUMMYOID))
+      case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid.getOrElse(DUMMYOID))
     }
   }
 
@@ -529,8 +532,8 @@ object KoskiArvosanaTrigger {
   def getEndDateFromLastNinthGrade(suoritukset: Seq[KoskiSuoritus]): Option[LocalDate] = {
     val mostrecent = suoritukset.filter(s => s.luokka.getOrElse("").startsWith("9"))
         .sortWith((a,b) => {
-          val aDate = parseLocalDate(a.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(""))).päivä)
-          val bDate = parseLocalDate(b.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(""))).päivä)
+          val aDate = parseLocalDate(a.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(Some("")))).päivä)
+          val bDate = parseLocalDate(b.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(Some("")))).päivä)
           aDate.compareTo(bDate) > 0})
 
     if(mostrecent.nonEmpty) {
