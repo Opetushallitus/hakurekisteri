@@ -271,7 +271,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       laajuus = None,
       pakollinen = None)
 
-    var organisaatio = KoskiOrganisaatio("orgId")
+    var organisaatio = KoskiOrganisaatio(Some("orgId"))
 
     var arvosana9 = KoskiArviointi(arvosana = KoskiKoodi(koodiarvo = "9", koodistoUri = ""), hyväksytty = Some(true))
 
@@ -334,7 +334,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         tyyppi = Some (KoskiKoodi ("perusopetuksenvuosiluokka", "") ),
         kieli = None,
         pakollinen = None,
-        toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
+        toimipiste = Some (KoskiOrganisaatio (Some("orgOid")) ),
         vahvistus = Some (KoskiVahvistus (päivä = "2016-02-02", myöntäjäOrganisaatio = organisaatio) ),
         suorituskieli = None, // default FI tai sitten Muuta
         arviointi = None,
@@ -358,7 +358,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         tyyppi = Some (KoskiKoodi ("perusopetuksenoppimaara", "") ),
         kieli = None,
         pakollinen = None,
-        toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
+        toimipiste = Some (KoskiOrganisaatio (Some("orgOid")) ),
         vahvistus = Some (KoskiVahvistus (päivä = "2016-02-02", myöntäjäOrganisaatio = organisaatio) ),
         suorituskieli = None, // default FI tai sitten Muuta
         arviointi = None,
@@ -377,7 +377,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         tyyppi = Some (KoskiKoodi ("perusopetuksenlisaopetus", "") ),
         kieli = None,
         pakollinen = None,
-        toimipiste = Some (KoskiOrganisaatio ("orgOid") ),
+        toimipiste = Some (KoskiOrganisaatio (Some("orgOid")) ),
         vahvistus = Some (KoskiVahvistus (päivä = "2016-02-02", myöntäjäOrganisaatio = organisaatio) ),
         suorituskieli = None, // default FI tai sitten Muuta
         arviointi = None,
@@ -412,7 +412,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         Seq(KoskiOpiskeluoikeus(
           oid = Some(""),
           päättymispäivä = Option.empty,
-          oppilaitos = KoskiOrganisaatio(orgId),
+          oppilaitos = Some(KoskiOrganisaatio(Some(orgId))),
           tila = this.getOpiskeluOikeusJakso,
           lisätiedot = Option.empty,
           suoritukset = suoritukset,

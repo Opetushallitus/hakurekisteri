@@ -767,9 +767,9 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
   it should "get correct end date from last ysiluokka" in {
     val koskikomo = KoskiKoulutusmoduuli(None, None, None, None, None)
 
-    val vahvistus = KoskiVahvistus("2000-04-01", KoskiOrganisaatio(""))
-    val vahvistus2 = KoskiVahvistus("2000-05-03", KoskiOrganisaatio(""))
-    val vahvistus3 = KoskiVahvistus("2000-05-02", KoskiOrganisaatio(""))
+    val vahvistus = KoskiVahvistus("2000-04-01", KoskiOrganisaatio(Some("")))
+    val vahvistus2 = KoskiVahvistus("2000-05-03", KoskiOrganisaatio(Some("")))
+    val vahvistus3 = KoskiVahvistus("2000-05-02", KoskiOrganisaatio(Some("")))
 
     val ks1 = KoskiSuoritus(luokka = Some("9"),
                            koulutusmoduuli = koskikomo,
