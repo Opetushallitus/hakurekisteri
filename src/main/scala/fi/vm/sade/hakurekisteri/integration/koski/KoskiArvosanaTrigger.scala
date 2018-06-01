@@ -625,10 +625,6 @@ object KoskiArvosanaTrigger {
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
         case Oids.perusopetusKomoOid =>
           var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
-          if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo == "aikuistenperusopetus") {
-            //filter optional courses because they have wrong units for sure (they use courses instead of vuosiviikkotunti)
-            as = as.filter(!_.valinnainen)
-          }
           if(failedNinthGrade) {
             as = Seq.empty
           }
