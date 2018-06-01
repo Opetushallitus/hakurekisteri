@@ -207,7 +207,7 @@ class BaseIntegrations(rekisterit: Registers,
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
 
-  val traverseStart: Long  = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(16)
+  val traverseStart: Long  = 1514764800000L//System.currentTimeMillis() - TimeUnit.DAYS.toMillis(16)
   if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
     val delay: FiniteDuration = 1.minute
     koskiService.processModifiedKoski(refreshFrequency = delay)
