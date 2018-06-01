@@ -777,29 +777,25 @@ object KoskiArvosanaTrigger {
     */
   private def postProcessPOOData(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
     val (oppiaineenOppimaarat, muut) = arvosanat.partition(sa => sa.suoritus match {
-      case VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkilo, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahv, lahde, suoritustyyppi, lahdeArvot) =>
-        komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)
+      case v: VirallinenSuoritus => v.komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)
       case _ => false
     })
 
     val newSuoritukset = oppiaineenOppimaarat
       .groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
       .map(entry => {
-        val org = entry._1
         val suoritukset = entry._2
-
         var suoritusArvosanatToBeSaved = suoritukset.head
-        var maxDate = LocalDate.parse("1900-01-01")
 
         val allArvosanat: Set[Arvosana] = suoritukset.flatMap(_.arvosanat).toSet
+
         suoritukset.foreach(suoritusArvosanat => {
           val vs = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
-          if (vs.valmistuminen.isAfter(maxDate)) {
-            maxDate = vs.valmistuminen
+          if (vs.valmistuminen.isAfter(suoritusArvosanatToBeSaved.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen)) {
             suoritusArvosanatToBeSaved = suoritusArvosanat
           }
         })
-        SuoritusArvosanat(suoritusArvosanatToBeSaved.suoritus, allArvosanat.toSeq, suoritusArvosanatToBeSaved.luokka, maxDate, suoritusArvosanatToBeSaved.luokkataso)
+        suoritusArvosanatToBeSaved.copy(arvosanat = allArvosanat.toSeq)
       })
 
     muut ++ newSuoritukset
