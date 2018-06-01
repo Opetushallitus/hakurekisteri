@@ -1,20 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.text.SimpleDateFormat
-import java.util
-import java.util.{Date, TimeZone}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.{Date, TimeZone}
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakijaHakemus, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, DateTimeZone, LocalDate, LocalDateTime}
+import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -391,7 +387,7 @@ case class KoskiOsasuoritus(
                  osasuoritukset: Option[Seq[KoskiOsasuoritus]]
              )
 
-case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean])
+case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String])
 
 case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi],
                                 kieli: Option[KoskiKieli],

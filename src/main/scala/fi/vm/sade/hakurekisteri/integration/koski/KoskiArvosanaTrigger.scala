@@ -117,7 +117,7 @@ object KoskiArvosanaTrigger {
     }
 
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
-      Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
+      Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
     koskihenkilöcontainer.henkilö.oid.foreach(henkiloOid => {
       //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
@@ -283,8 +283,21 @@ object KoskiArvosanaTrigger {
     case _ => ("", "", "")
   }
 
-  def createArvosana(personOid: String, arvo: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None): Arvosana = {
-    Arvosana(suoritus = null, arvio = arvo, aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
+  def createArvosana(personOid: String,
+                     arvo: Arvio,
+                     aine: String,
+                     lisatieto: Option[String],
+                     valinnainen: Boolean,
+                     jarjestys: Option[Int] = None,
+                     koskiArviointiPäivä: LocalDate): Arvosana = {
+    Arvosana(suoritus = null,
+      arvio = arvo,
+      aine, lisatieto,
+      valinnainen,
+      myonnetty = Some(koskiArviointiPäivä),
+      source = personOid,
+      Map(),
+      jarjestys = jarjestys)
   }
 
 
@@ -361,8 +374,13 @@ object KoskiArvosanaTrigger {
   }
 
 
-
-  def osasuoritusToArvosana(personOid: String, komoOid: String, osasuoritukset: Seq[KoskiOsasuoritus], lisatiedot: Option[KoskiLisatiedot], oikeus: Option[KoskiOpiskeluoikeus], isLukio: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
+  def osasuoritusToArvosana(personOid: String,
+                            komoOid: String,
+                            osasuoritukset: Seq[KoskiOsasuoritus],
+                            lisatiedot: Option[KoskiLisatiedot],
+                            oikeus: Option[KoskiOpiskeluoikeus],
+                            isLukio: Boolean = false,
+                            suorituksenValmistumispäivä: LocalDate): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
 
@@ -442,7 +460,8 @@ object KoskiArvosanaTrigger {
           if((!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
             //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
           } else {
-            res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord)
+            val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)
+            res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
           }
         }
       })
@@ -625,7 +644,7 @@ object KoskiArvosanaTrigger {
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
         case Oids.perusopetusKomoOid =>
-          var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
+          var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
           if(failedNinthGrade) {
             as = Seq.empty
           }
@@ -650,22 +669,22 @@ object KoskiArvosanaTrigger {
           } else {
             (Seq(), yks)
           }
-        case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
-        case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
+        case "luokka" => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+        case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.perusopetuksenOppiaineenOppimaaraOid =>
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
           if(suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) {
             s = s :+ KoskiOsasuoritus(suoritus.koulutusmoduuli, suoritus.tyyppi.getOrElse(KoskiKoodi("","")), suoritus.arviointi.getOrElse(Seq()), suoritus.pakollinen, None, None)
           }
-          osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None)
+          osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
 
-        case Oids.telmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
-        case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
-        case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None)
+        case Oids.telmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+        case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+        case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.lukioKomoOid =>
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
             logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true)
+            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true, suorituksenValmistumispäivä = valmistumisPaiva)
           } else {
             (Seq(), yksilollistaminen.Ei)
           }

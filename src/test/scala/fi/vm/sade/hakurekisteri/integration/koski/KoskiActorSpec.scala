@@ -1,16 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.UUID
-
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.{SuoritusArvosanat, parseLocalDate}
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.parseLocalDate
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.{Oids, OrganisaatioOids, SpecsLikeMockito}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.DateTime
 import org.json4s._
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
@@ -273,7 +270,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
     var organisaatio = KoskiOrganisaatio(Some("orgId"))
 
-    var arvosana9 = KoskiArviointi(arvosana = KoskiKoodi(koodiarvo = "9", koodistoUri = ""), hyväksytty = Some(true))
+    var arvosana9 = KoskiArviointi(arvosana = KoskiKoodi(koodiarvo = "9", koodistoUri = ""), hyväksytty = Some(true), päivä = Some("2018-05-28"))
 
     var opiskeluOikeusJakso = KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot = Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "valmistunut", koodistoUri = "uri"))))
 
@@ -348,7 +345,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     }
 
     def getArvosana(arvosana: String): KoskiArviointi = {
-      KoskiArviointi(arvosana = KoskiKoodi(koodiarvo = arvosana, koodistoUri = "arviointiasteikkoyleissivistava"), hyväksytty = None)
+      KoskiArviointi(arvosana = KoskiKoodi(koodiarvo = arvosana, koodistoUri = "arviointiasteikkoyleissivistava"), hyväksytty = None, päivä = Some("2018-05-28"))
     }
 
     def getPeruskouluSuoritus(osasuoritus: Seq[KoskiOsasuoritus]): KoskiSuoritus = {
