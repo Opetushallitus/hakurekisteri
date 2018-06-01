@@ -881,8 +881,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     result should have length 1
 
     val fysiikat = result.head.arvosanat.filter(_.aine.contentEquals("FY"))
-    fysiikat should have length 1
-    fysiikat.head.valinnainen shouldBe false
+    fysiikat should have length 2
+    fysiikat.sortBy(_.valinnainen).head.valinnainen shouldBe false
 
   }
 
