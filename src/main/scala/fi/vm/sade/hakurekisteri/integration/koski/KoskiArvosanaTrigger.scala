@@ -554,13 +554,43 @@ object KoskiArvosanaTrigger {
     failed && !succeeded
   }
 
+
+  private def shouldProcessData(suoritus: KoskiSuoritus, tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus, createLukioArvosanat: Boolean): Boolean = {
+    val suoritusTila = tilat match {
+      case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
+      case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
+      case t if t.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
+      case t if t.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
+      case t if t.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
+      case t if t.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
+      // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
+      case _ => "KESKEN"
+    }
+    val (komoOid, luokkataso) = suoritus.tyyppi match {
+      case Some(k) =>
+        matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus, createLukioArvosanat)
+      case _ => (DUMMYOID, None)
+    }
+
+    komoOid match {
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+        //check oppiaine failures
+        lazy val hasFailures = suoritus.osasuoritukset
+          .filter(_.arviointi.nonEmpty)
+          .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
+        suoritus.vahvistus.isDefined || hasFailures
+
+      case _ => true
+    }
+  }
+
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus, createLukioArvosanat: Boolean): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
 
     for {
-      suoritus <- suoritukset
+      suoritus <- suoritukset if shouldProcessData(suoritus, tilat, opiskeluoikeus, createLukioArvosanat)
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)

@@ -248,9 +248,9 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    result should have length 4
-    val pt = getPerusopetusPäättötodistus(result).get
-    pt.arvosanat should have length 0
+    result should have length 3
+    val pt = getPerusopetusPäättötodistus(result)
+    pt shouldBe None
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_ei_vahvistusta_yksi_nelonen.json data" in {
@@ -697,14 +697,15 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     seq should have length 2
 
     val res = seq(1)
-    res should have length 1
+    res should have length 0
+    /*
     val suor: SuoritusArvosanat = res.head
 
     suor.suoritus should not be null
     val virallinen = suor.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.komo shouldEqual Oids.lisaopetusKomoOid
     virallinen.tila shouldEqual "KESKEN"
-
+*/
   }
 
   it should "parse luokkatietoinen-testi.json" in {
@@ -755,13 +756,14 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
-    res should have length 1
-    val pt = getPerusopetusPäättötodistus(res.head).get
-    val ysiluokat = getYsiluokat(res.head)
+    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resgroup should have length 1
+    val pt = getPerusopetusPäättötodistus(resgroup.head).get
+    val ysiluokat = getYsiluokat(resgroup.head)
     ysiluokat should have length 1
     ysiluokat.head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
     pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
+
   }
 
   it should "get correct end date from last ysiluokka" in {

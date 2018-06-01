@@ -193,6 +193,44 @@
           }
         },
         {
+          "vahvistus": {
+            "päivä": "2016-06-04",
+            "paikkakunta": {
+              "koodiarvo": "179",
+              "nimi": {
+                "fi": "Jyväskylä"
+              },
+              "koodistoUri": "kunta"
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.14613773812",
+              "oppilaitosnumero": {
+                "koodiarvo": "00204",
+                "koodistoUri": "oppilaitosnumero"
+              },
+              "nimi": {
+                "fi": "Jyväskylän normaalikoulu"
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.14613773812",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00204",
+                    "koodistoUri": "oppilaitosnumero"
+                  },
+                  "nimi": {
+                    "fi": "Jyväskylän normaalikoulu"
+                  }
+                }
+              }
+            ]
+          },
           "koulutusmoduuli": {
             "perusteenDiaarinumero": "104/011/2014",
             "tunniste": {
@@ -456,6 +494,44 @@
           }
         },
         {
+          "vahvistus": {
+            "päivä": "2016-06-04",
+            "paikkakunta": {
+              "koodiarvo": "179",
+              "nimi": {
+                "fi": "Jyväskylä"
+              },
+              "koodistoUri": "kunta"
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.14613773812",
+              "oppilaitosnumero": {
+                "koodiarvo": "00204",
+                "koodistoUri": "oppilaitosnumero"
+              },
+              "nimi": {
+                "fi": "Jyväskylän normaalikoulu"
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.14613773812",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00204",
+                    "koodistoUri": "oppilaitosnumero"
+                  },
+                  "nimi": {
+                    "fi": "Jyväskylän normaalikoulu"
+                  }
+                }
+              }
+            ]
+          },
           "koulutusmoduuli": {
             "perusteenDiaarinumero": "1/011/2004",
             "tunniste": {
