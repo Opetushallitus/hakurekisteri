@@ -1,0 +1,5919 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.1111111",
+    "syntymäaika": "1970-01-01",
+    "etunimet": "Test",
+    "kutsumanimi": "TestTest",
+    "sukunimi": "TestTestTestTest",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.111111",
+      "versionumero": 1,
+      "aikaleima": "2005-05-25T11:16:14.819536",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.11111111",
+        "oppilaitosnumero": {
+          "koodiarvo": "123456",
+          "nimi": {
+            "fi": "FizzBuzz"
+          },
+          "lyhytNimi": {
+            "fi": "FizzBuzz"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "FizzBuzz"
+        },
+        "kotipaikka": {
+          "koodiarvo": "123",
+          "nimi": {
+            "fi": "FizzBuzz",
+            "sv": "FizzBuzz"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2005-06-23",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "lisätiedot": {
+        "vuosiluokkiinSitoutumatonOpetus": false
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "AI",
+              "nimi": {
+                "fi": "Äidinkieli ja kirjallisuus",
+                "sv": "Modersmålet och litteratur"
+              },
+              "lyhytNimi": {
+                "fi": "Äidinkieli ja kirjallisuus",
+                "sv": "Modersmålet och litteratur"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "kieli": {
+              "koodiarvo": "AI7",
+              "nimi": {
+                "fi": "Suomi toisena kielenä ja kirjallisuus",
+                "sv": "Finska som andraspråk och litteratur"
+              },
+              "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 9.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "7",
+                "nimi": {
+                  "fi": "tyydyttävä",
+                  "sv": "nöjaktig"
+                },
+                "lyhytNimi": {
+                  "fi": "7"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-12-08",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192039",
+                  "nimi": {
+                    "fi": "s21 Opiskelutaitojen vahvistaminen"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-12-01",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192057",
+                  "nimi": {
+                    "fi": "s22 Luonnontieteen tekstit tutummiksi"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-08",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "117339",
+                  "nimi": {
+                    "fi": "s2p12 Sanoista lauseita"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-10-14",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192059",
+                  "nimi": {
+                    "fi": "s23 Yhteiskunnallisten aineiden tekstit tutummiksi"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-10-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192061",
+                  "nimi": {
+                    "fi": "s24 Median tekstejä ja kuvia"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-31",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192063",
+                  "nimi": {
+                    "fi": "s25 Tiedonhankintataitojen syventäminen"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-08",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192064",
+                  "nimi": {
+                    "fi": "s26 Uutistekstit"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-02-19",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192065",
+                  "nimi": {
+                    "fi": "s27 Mielipiteen ilmaiseminen ja perusteleminen"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-02-19",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192067",
+                  "nimi": {
+                    "fi": "s29 Kulttuurinen moninaisuus - moninainen kulttuuri"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-06-02",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "AI",
+              "nimi": {
+                "fi": "Äidinkieli ja kirjallisuus",
+                "sv": "Modersmålet och litteratur"
+              },
+              "lyhytNimi": {
+                "fi": "Äidinkieli ja kirjallisuus",
+                "sv": "Modersmålet och litteratur"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "kieli": {
+              "koodiarvo": "AI6",
+              "nimi": {
+                "fi": "Muu oppilaan äidinkieli",
+                "sv": "Annat modersmål"
+              },
+              "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 8.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "5",
+                "nimi": {
+                  "fi": "välttävä",
+                  "sv": "försvarlig"
+                },
+                "lyhytNimi": {
+                  "fi": "5"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2018-02-19",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213406",
+                  "nimi": {
+                    "fi": "ena1 Kehittyvä kielitaito: Työelämässä toiminen ja muita muodollisia tilanteita"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-12-01",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213407",
+                  "nimi": {
+                    "fi": "ena2 Kehittyvä kielitaito: Palvelu- ja viranomaistilanteet ja osallistuva kansalainen"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-03-03",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213408",
+                  "nimi": {
+                    "fi": "ena3 Kehittyvä kielitaito: Kertomuksia minusta ja ympäristöstäni"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-31",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213409",
+                  "nimi": {
+                    "fi": "ena4 Kehittyvä kielitaito: Ajankohtaiset ilmiöt"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-10-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213410",
+                  "nimi": {
+                    "fi": "ena5 Kulttuurikohtaamisia"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2018-02-19",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213411",
+                  "nimi": {
+                    "fi": "ena6 Globaalienglanti"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2018-02-19",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213412",
+                  "nimi": {
+                    "fi": "ena7 Liikkuvuus ja kansainvälisyys"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2018-02-19",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213413",
+                  "nimi": {
+                    "fi": "ena8 Avaimet elinikäiseen kieltenopiskeluun"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2018-02-19",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "MA",
+              "nimi": {
+                "fi": "Matematiikka",
+                "sv": "Matematik"
+              },
+              "lyhytNimi": {
+                "fi": "Matematiikka",
+                "sv": "Matematik"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 8.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Matematiikka (ma)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "5",
+                "nimi": {
+                  "fi": "välttävä",
+                  "sv": "försvarlig"
+                },
+                "lyhytNimi": {
+                  "fi": "5"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-12-12",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192124",
+                  "nimi": {
+                    "fi": "ma1 Luvut ja laskutoimitukset I (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-03-16",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192125",
+                  "nimi": {
+                    "fi": "ma2 Luvut ja laskutoimitukset II (pakollinen kurssi)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-04-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192127",
+                  "nimi": {
+                    "fi": "ma3 Lausekkeet (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-06-02",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192131",
+                  "nimi": {
+                    "fi": "ma4 Yhtälöt (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-12",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192135",
+                  "nimi": {
+                    "fi": "ma5 Geometria (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-12-01",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192137",
+                  "nimi": {
+                    "fi": "ma6 Prosentit (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-03-03",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192141",
+                  "nimi": {
+                    "fi": "ma7  Funktiot ja tilastot (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-04-12",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192142",
+                  "nimi": {
+                    "fi": "ma8 Geometria ja trigonometria (pakollinen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-31",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "KT",
+              "nimi": {
+                "fi": "Uskonto/Elämänkatsomustieto",
+                "sv": "Religion/Livsåskådningskunskap"
+              },
+              "lyhytNimi": {
+                "fi": "Uskonto",
+                "sv": "Religion"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 1.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": " Elämänkatsomustieto et"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "5",
+                "nimi": {
+                  "fi": "välttävä",
+                  "sv": "försvarlig"
+                },
+                "lyhytNimi": {
+                  "fi": "5"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-12-13",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192162",
+                  "nimi": {
+                    "fi": "et1 Katsomukset ja ihmisoikeudet"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "HI",
+              "nimi": {
+                "fi": "Historia",
+                "sv": "Historia"
+              },
+              "lyhytNimi": {
+                "fi": "Historia",
+                "sv": "Historia"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 2.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Historia (hi)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "7",
+                "nimi": {
+                  "fi": "tyydyttävä",
+                  "sv": "nöjaktig"
+                },
+                "lyhytNimi": {
+                  "fi": "7"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-04-12",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213424",
+                  "nimi": {
+                    "fi": "hi2 Antiikista uuden ajan murrokseen (valinnainen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-03-03",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213425",
+                  "nimi": {
+                    "fi": "hi3 Teollisuusyhteiskunnan synnystä nykyaikaan (valinnainen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-04-12",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "YH",
+              "nimi": {
+                "fi": "Yhteiskuntaoppi",
+                "sv": "Samhällslära"
+              },
+              "lyhytNimi": {
+                "fi": "Yhteiskuntaoppi",
+                "sv": "Samhällslära"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 2.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Yhteiskuntaoppi (yh)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "6",
+                "nimi": {
+                  "fi": "kohtalainen",
+                  "sv": "hjälplig"
+                },
+                "lyhytNimi": {
+                  "fi": "6"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-12-07",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192183",
+                  "nimi": {
+                    "fi": "yh1 Yhteiskuntajärjestelmä sekä julkiset palvelut"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-04-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192184",
+                  "nimi": {
+                    "fi": "yh2 Työelämän tuntemus ja oma talous"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-07",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "FY",
+              "nimi": {
+                "fi": "Fysiikka",
+                "sv": "Fysik"
+              },
+              "lyhytNimi": {
+                "fi": "Fysiikka",
+                "sv": "Fysik"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 2.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Fysiikka (fy)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "5",
+                "nimi": {
+                  "fi": "välttävä",
+                  "sv": "försvarlig"
+                },
+                "lyhytNimi": {
+                  "fi": "5"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-12-08",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192187",
+                  "nimi": {
+                    "fi": "fy1 Fysiikka omassa elämässä ja elinympäristössä"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-12-01",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192188",
+                  "nimi": {
+                    "fi": "fy2 Fysiikka maailmankuvan rakentajana (valinnainen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-08",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "KE",
+              "nimi": {
+                "fi": "Kemia",
+                "sv": "Kemi"
+              },
+              "lyhytNimi": {
+                "fi": "Kemia",
+                "sv": "Kemi"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 3.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Kemia (ke)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "5",
+                "nimi": {
+                  "fi": "välttävä",
+                  "sv": "försvarlig"
+                },
+                "lyhytNimi": {
+                  "fi": "5"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-04-12",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192191",
+                  "nimi": {
+                    "fi": "ke1 Kemia omassa elämässä ja elinympäristössä"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-06-02",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192192",
+                  "nimi": {
+                    "fi": "ke2 Kemia yhteiskunnassa"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2016-10-14",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192193",
+                  "nimi": {
+                    "fi": "ke3Aineiden kemiaa"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-04-12",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "BI",
+              "nimi": {
+                "fi": "Biologia",
+                "sv": "Biologi"
+              },
+              "lyhytNimi": {
+                "fi": "Biologia",
+                "sv": "Biologi"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 3.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Biologia (bi)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "6",
+                "nimi": {
+                  "fi": "kohtalainen",
+                  "sv": "hjälplig"
+                },
+                "lyhytNimi": {
+                  "fi": "6"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-10-13",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192195",
+                  "nimi": {
+                    "fi": "bi1 Mitä elämä on?"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-03-03",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192196",
+                  "nimi": {
+                    "fi": "bi2 Kaupunkiekologia ja kestävä tulevaisuus (valinnainen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-31",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192197",
+                  "nimi": {
+                    "fi": "bi3 Ihmisen biologia (valinnainen)"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-10-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "GE",
+              "nimi": {
+                "fi": "Maantieto",
+                "sv": "Geografi"
+              },
+              "lyhytNimi": {
+                "fi": "Maantieto",
+                "sv": "Geografi"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 1.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Maantieto (ge)"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "5",
+                "nimi": {
+                  "fi": "välttävä",
+                  "sv": "försvarlig"
+                },
+                "lyhytNimi": {
+                  "fi": "5"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-04-12",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192199",
+                  "nimi": {
+                    "fi": "ge1 Muuttuva maapallo ja kestävä tulevaisuus"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-04-12",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "TE",
+              "nimi": {
+                "fi": "Terveystieto",
+                "sv": "Hälsokunskap"
+              },
+              "lyhytNimi": {
+                "fi": "Terveystieto",
+                "sv": "Hälsokunskap"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "kuvaus": {
+              "fi": "Terveystieto te"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "H",
+                "nimi": {
+                  "fi": "hylätty",
+                  "sv": "underkänd"
+                },
+                "lyhytNimi": {
+                  "fi": "H"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": false
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-05-31",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192213",
+                  "nimi": {
+                    "fi": "Te Terve elämä"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "H",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "H"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-31",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "TE",
+              "nimi": {
+                "fi": "Terveystieto",
+                "sv": "Hälsokunskap"
+              },
+              "lyhytNimi": {
+                "fi": "Terveystieto",
+                "sv": "Hälsokunskap"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "kuvaus": {
+              "fi": "Terveystieto te"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.1112333",
+            "oppilaitosnumero": {
+              "koodiarvo": "456789",
+              "nimi": {
+                "fi": "Hello"
+              },
+              "lyhytNimi": {
+                "fi": "Hello"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "H",
+                "nimi": {
+                  "fi": "hylätty",
+                  "sv": "underkänd"
+                },
+                "lyhytNimi": {
+                  "fi": "H"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": false
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-05-31",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg2",
+              "oppilaitosnumero": {
+                "koodiarvo": "abcd",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio2"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio2"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio2"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192213",
+                  "nimi": {
+                    "fi": "Te Terve elämä"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "H",
+                    "nimi": {
+                      "fi": "hylätty",
+                      "sv": "underkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "H"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-05-31",
+                  "hyväksytty": false
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "213436",
+              "nimi": {
+                "fi": "Opinto-ohjaus ja työelämätaidot"
+              }
+            },
+            "laajuus": {
+              "arvo": 2.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Opinto-ohjaus ja työelämätaidot"
+            },
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "pakollinen": false
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "S",
+                "nimi": {
+                  "fi": "hyväksytty",
+                  "sv": "godkänd"
+                },
+                "lyhytNimi": {
+                  "fi": "S"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-10-13",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213437",
+                  "nimi": {
+                    "fi": "ot1 Jatko-opinnot ja ammatinvalinta"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-04-21",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213438",
+                  "nimi": {
+                    "fi": "ot2 Työelämäosaaminen"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-10-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "213441",
+              "nimi": {
+                "fi": "Muut perusopetukseen soveltuvat aineet ja valinnaiset kurssit"
+              }
+            },
+            "laajuus": {
+              "arvo": 3.0,
+              "yksikkö": {
+                "koodiarvo": "3",
+                "nimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "lyhytNimi": {
+                  "fi": "vuosiviikkotuntia",
+                  "sv": "årsveckotimmar",
+                  "en": "weekly lessons per year"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            },
+            "kuvaus": {
+              "fi": "Muut perusopetukseen soveltuvat aineet ja valinnaiset kurssit"
+            },
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "pakollinen": false
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.12354894348",
+            "oppilaitosnumero": {
+              "koodiarvo": "12345",
+              "nimi": {
+                "fi": "Foobar fizzbuzz"
+              },
+              "lyhytNimi": {
+                "fi": "Fizzbuzz"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Fizzbuzz"
+            },
+            "kotipaikka": {
+              "koodiarvo": "123",
+              "nimi": {
+                "fi": "ASD",
+                "sv": "ASD"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "7",
+                "nimi": {
+                  "fi": "tyydyttävä",
+                  "sv": "nöjaktig"
+                },
+                "lyhytNimi": {
+                  "fi": "7"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2017-12-12",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "myöntäjäOrg",
+              "oppilaitosnumero": {
+                "koodiarvo": "00551",
+                "nimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "lyhytNimi": {
+                  "fi": "Helsingin aikuislukio"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Helsingin aikuislukio"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Niina Peltonen",
+                "titteli": {
+                  "fi": "rehtori"
+                },
+                "organisaatio": {
+                  "oid": "myöntäjäOrg",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "00551",
+                    "nimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Helsingin aikuislukio"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Helsingin aikuislukio"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192215",
+                  "nimi": {
+                    "fi": "TVT:n perusteita I"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-04-21",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "192216",
+                  "nimi": {
+                    "fi": "TVT:n perusteita II"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "S",
+                    "nimi": {
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
+                    },
+                    "lyhytNimi": {
+                      "fi": "S"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-12-12",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "213481",
+                  "nimi": {
+                    "fi": "ku1 kuvataidekurssi"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 1.0,
+                  "yksikkö": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "lyhytNimi": {
+                      "fi": "vuosiviikkotuntia",
+                      "sv": "årsveckotimmar",
+                      "en": "weekly lessons per year"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2017-01-13",
+                  "hyväksytty": true
+                }
+              ],
+              "suorituskieli": {
+                "koodiarvo": "FI",
+                "nimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "lyhytNimi": {
+                  "fi": "suomi",
+                  "sv": "finska",
+                  "en": "Finnish"
+                },
+                "koodistoUri": "kieli",
+                "koodistoVersio": 1
+              },
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2005-06-23"
+    }
+  ]
+}

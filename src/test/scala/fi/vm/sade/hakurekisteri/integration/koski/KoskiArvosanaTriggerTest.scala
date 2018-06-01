@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{CallingThreadDispatcher, TestActors}
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.{AIKUISTENPERUS_LUOKKAASTE, SuoritusArvosanat}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -544,21 +544,46 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     if (virallinensuoritus.komo.equals("luokka") || !(peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !virallinensuoritus.komo.equals(Oids.perusopetusKomoOid))) {
       fail("should not be here")
     }
+  }
 
-/*
-    val system = ActorSystem("MySpec")
-    val a = system.actorOf(Props(new TestSureActor()).withDispatcher(CallingThreadDispatcher.Id))
-    val oidsWithAliases = PersonOidsWithAliases(Set("1.2.246.562.24.80793695690"), Map.empty)
-    KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo, a,
-      system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
-      system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
-      oidsWithAliases, true)
-    val trigger: KoskiTrigger = KoskiArvosanaTrigger(a, system.actorOf(TestActors.echoActorProps), system.actorOf(TestActors.echoActorProps))(system.dispatcher)
-    //val trigger = KoskiTrigger(henkilo, oidsWithAliases)
-    val f: Unit = trigger.f(henkilo, oidsWithAliases)
-    Thread.sleep(100000)
-    //
-    println("great success")*/
+  it should "combine multiple perusopetuksen oppiaineen oppimäärä data that share the same organisation" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "perusopetuksenOppimaaraCombine.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+
+    //aine appended by grade
+    val myöntäjäOrgAineet = List("AI7", "AI5", "MA5", "KT5", "HI7", "YH6", "FY5", "KE5", "BI6", "GE5", "TEH")
+    val myöntäjäOrg2Aineet = List("TEH")
+
+    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultGroup should have length 1
+    val result = resultGroup.head
+    val resultByOrg = result.groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
+
+    resultByOrg.keys.toSeq.sorted shouldEqual Seq("myöntäjäOrg", "myöntäjäOrg2")
+
+    resultByOrg("myöntäjäOrg").filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
+    resultByOrg("myöntäjäOrg2").filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
+
+    resultByOrg("myöntäjäOrg").head.arvosanat.map(a => a.aine.concat(a.arvio match {
+      case Arvio410(arvosana) => arvosana
+      case ArvioYo(arvosana, pisteet) => arvosana
+      case ArvioOsakoe(arvosana) => arvosana
+      case ArvioHyvaksytty(arvosana) => if (arvosana.contentEquals("hylatty")) "H" else arvosana
+    })).sorted shouldEqual myöntäjäOrgAineet.sorted
+
+
+    resultByOrg("myöntäjäOrg2").head.arvosanat.map(a => a.aine.concat(a.arvio match {
+      case Arvio410(arvosana) => arvosana
+      case ArvioYo(arvosana, pisteet) => arvosana
+      case ArvioOsakoe(arvosana) => arvosana
+      case ArvioHyvaksytty(arvosana) => if (arvosana.contentEquals("hylatty")) "H" else arvosana
+    })).sorted shouldEqual myöntäjäOrg2Aineet.sorted
+
+    resultByOrg("myöntäjäOrg").head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2018-02-19")
+    resultByOrg("myöntäjäOrg").head.suoritus.asInstanceOf[VirallinenSuoritus].myontaja shouldEqual "myöntäjäOrg"
   }
 
   it should "parse testi_satu_valinnaiset.json" in {

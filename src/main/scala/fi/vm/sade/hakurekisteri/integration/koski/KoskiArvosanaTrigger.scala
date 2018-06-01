@@ -17,6 +17,7 @@ import org.joda.time.{DateTime, LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
+import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -788,10 +789,54 @@ object KoskiArvosanaTrigger {
     })
 
     //Postprocessing
-    //This basically hoists luokka data from SuoritusArvosanat objects that have komo of "luokka"
-    //This is necessary because the saving that happens above in the object doesn't save luokka komo data, instead
-    //it just saves the whole perusopetus komo that contains grades and such.
-    val postprocessedSeq: Seq[SuoritusArvosanat] = result.map(suoritusArvosanat => {
+    result = postprocessPeruskouluData(result)
+    result = postProcessPOOData(result) //POO as in peruskoulun oppiaineen oppimäärä
+
+    //todo this doens't have to be a sort of post-processing for the result list, could be done prior with koski data
+    if(isPerusopetus && !hasNinthGrade) {
+      Seq()
+    } else {
+      result
+    }
+  }
+
+  /**
+    * We need to save only one suoritus that contains all POO data, furthermore that POO data has to have the last valid
+    * valmistumis date possible. Otherwise saving goes all wonky. Assumes that SuoritusArvosana suoritus is a VirallinenSuoritus.
+    */
+  private def postProcessPOOData(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
+    val (oppiaineenOppimaarat, muut) = arvosanat.partition(sa => sa.suoritus match {
+      case v: VirallinenSuoritus => v.komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)
+      case _ => false
+    })
+
+    val newSuoritukset = oppiaineenOppimaarat
+      .groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
+      .map(entry => {
+        val suoritukset = entry._2
+        var suoritusArvosanatToBeSaved = suoritukset.head
+
+        val allArvosanat: Set[Arvosana] = suoritukset.flatMap(_.arvosanat).toSet
+
+        suoritukset.foreach(suoritusArvosanat => {
+          val vs = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
+          if (vs.valmistuminen.isAfter(suoritusArvosanatToBeSaved.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen)) {
+            suoritusArvosanatToBeSaved = suoritusArvosanat
+          }
+        })
+        suoritusArvosanatToBeSaved.copy(arvosanat = allArvosanat.toSeq)
+      })
+
+    muut ++ newSuoritukset
+  }
+
+  /**
+  This basically hoists luokka data from SuoritusArvosanat objects that have komo of "luokka"
+  This is necessary because the saving that happens above in the object doesn't save luokka komo data, instead
+  it just saves the whole perusopetus komo that contains grades and such.
+    */
+  private def postprocessPeruskouluData(result: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
+    result.map(suoritusArvosanat => {
       var useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
       val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && suoritusArvosanat.arvosanat.isEmpty){
         logger.debug("if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty) == true")
@@ -851,15 +896,6 @@ object KoskiArvosanaTrigger {
         vahv = true,
         lahde = root_org_id), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
     })
-
-
-
-    //todo this doens't have to be a sort of post-processing for the result list, could be done prior with koski data
-    if(isPerusopetus && !hasNinthGrade) {
-      Seq()
-    } else {
-      postprocessedSeq
-    }
   }
 }
 
