@@ -967,6 +967,25 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
   }
 
+  it should "interpret A2 and B2 langs as pakollinen in lisäopetus" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "A2B2ValinnaisetPakollisina_lisäopetus.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    val res: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    res should have length 2
+
+    val perusopetus = res.head
+    val lisäopetus = res(1)
+
+    val aineet = Set("A2", "B2")
+    val perusA2B2 = getPerusopetusPäättötodistus(perusopetus).get.arvosanat.filter(a => aineet.contains(a.aine))
+    perusA2B2 should have length 0
+
+    val lisäA2B2 = lisäopetus.flatMap(_.arvosanat.filter(a => aineet.contains(a.aine)))
+    lisäA2B2 should have length 2
+    lisäA2B2.map(_.valinnainen) shouldEqual Seq(false, false)
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
