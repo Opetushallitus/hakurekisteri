@@ -2,26 +2,62 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.apache.commons.io.IOUtils
 import org.joda.time.LocalDate
 import org.json4s.jackson.JsonMethods
 import org.scalatest.{FlatSpec, ShouldMatchers}
+import org.springframework.core.io.ClassPathResource
+
+import scala.collection.JavaConverters._
 
 class ArvosanaMyonnettyParserSpec extends FlatSpec with ShouldMatchers with HakurekisteriJsonSupport with JsonMethods {
-  private val jsonString: String = scala.io.Source.fromFile("src/test/resources/fi/vm/sade/hakurekisteri/integration/koski/henkilo_from_koski.json").getLines().mkString
-
   it should "parse dates for arvosanas" in {
-    val testDataJson = parse(jsonString)
-    val koskiHenkiloContainer = testDataJson.extract[KoskiHenkiloContainer]
-
-    val osaSuoritukset: Seq[KoskiOsasuoritus] = for {
-      opiskeluoikeus <- koskiHenkiloContainer.opiskeluoikeudet
-      suoritus <- opiskeluoikeus.suoritukset
-      osasuoritus <- suoritus.osasuoritukset
-    } yield osasuoritus
+    val osaSuoritukset: Seq[KoskiOsasuoritus] = readOsasuoritukset("henkilo_from_koski.json")
 
     val biologia = osaSuoritukset.find(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "BI"))
     biologia shouldBe defined
     val determinedDate = ArvosanaMyonnettyParser.findArviointipäivä(biologia.get, "personOid", "aine", new LocalDate(1970, 1, 1))
-    determinedDate should be(new LocalDate(2018, 12, 31))
+    determinedDate should be(Some(new LocalDate(2018, 12, 31)))
+  }
+
+  it should "only take arvosana specific myonto dates when they are after suoritus valmistuminen date" in {
+    val osaSuoritukset: Seq[KoskiOsasuoritus] = readOsasuoritukset("henkilo_from_koski.json")
+
+    val suorituksenValmistumisPvm: LocalDate = new LocalDate(2018, 6, 2)
+
+    val biologia = osaSuoritukset.find(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "BI"))
+    biologia shouldBe defined
+    val biologiaDate = ArvosanaMyonnettyParser.findArviointipäivä(biologia.get, "personOid", "aine", suorituksenValmistumisPvm)
+    biologiaDate should be(Some(new LocalDate(2018, 12, 31)))
+
+    val terveystieto = osaSuoritukset.find(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "TE"))
+    terveystieto shouldBe defined
+    val terveystietoDate = ArvosanaMyonnettyParser.findArviointipäivä(terveystieto.get, "personOid", "terveystieto", suorituksenValmistumisPvm)
+    terveystietoDate should be(None)
+  }
+
+  it should "not store arvosana specific myonto dates when they are null in Koski" in {
+    val osaSuoritukset: Seq[KoskiOsasuoritus] = readOsasuoritukset("henkilo_without_arviointipvm_from_koski.json")
+
+    val ensimmainenVierasKieli = osaSuoritukset.find(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "BI"))
+    ensimmainenVierasKieli shouldBe defined
+    val vieraanKielenMyontoPvm = ArvosanaMyonnettyParser.findArviointipäivä(ensimmainenVierasKieli.get, "personOid", "bilsa", new LocalDate(2018, 6, 19))
+    vieraanKielenMyontoPvm should be(None)
+  }
+
+  private def readOsasuoritukset(fileNameInSamePackage: String) = {
+    val jsonString: String = readFileFromClasspath(fileNameInSamePackage)
+    val koskiHenkiloContainer = parse(jsonString).extract[KoskiHenkiloContainer]
+
+    for {
+      opiskeluoikeus <- koskiHenkiloContainer.opiskeluoikeudet
+      suoritus <- opiskeluoikeus.suoritukset
+      osasuoritus <- suoritus.osasuoritukset
+    } yield osasuoritus
+  }
+
+  private def readFileFromClasspath(fileNameInSamePackage: String) = {
+    val classPathResource = new ClassPathResource(fileNameInSamePackage, getClass)
+    IOUtils.readLines(classPathResource.getInputStream, "UTF-8").asScala.mkString
   }
 }

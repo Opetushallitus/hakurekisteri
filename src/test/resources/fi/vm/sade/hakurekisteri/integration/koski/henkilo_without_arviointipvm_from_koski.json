@@ -1,0 +1,357 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.89890561214",
+    "hetu" : "040698-931R",
+    "syntymäaika" : "1998-06-04",
+    "etunimet" : "Frank Balthazar",
+    "kutsumanimi" : "Frank",
+    "sukunimi": "Tester",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 1
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.62445294085",
+    "versionumero" : 7,
+    "aikaleima" : "2018-05-29T15:44:56.906767",
+    "lähdejärjestelmänId" : {
+      "id" : "528",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.96894821105",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "01693",
+        "nimi" : {
+          "fi" : "Valkealan kristillinen kansanopisto"
+        },
+        "lyhytNimi" : {
+          "fi" : "Valkealan kristillinen kansanopisto"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Valkealan kristillinen kansanopisto"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "286",
+        "nimi" : {
+          "fi" : "Kouvola",
+          "sv" : "Kouvola"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.82454214766",
+      "nimi" : {
+        "fi" : "Valkealan Kristillisen Kansanopiston kannatusyhdistys r.y."
+      },
+      "yTunnus" : "0163408-0",
+      "kotipaikka" : {
+        "koodiarvo" : "286",
+        "nimi" : {
+          "fi" : "Kouvola",
+          "sv" : "Kouvola"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "päättymispäivä" : "2018-06-01",
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2017-08-21",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2018-06-01",
+        "tila" : {
+          "koodiarvo" : "valmistunut",
+          "nimi" : {
+            "fi" : "Valmistunut",
+            "sv" : "Utexaminerad"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "vuosiluokkiinSitoutumatonOpetus" : false
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "OPH-1280-2017",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 9
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "17",
+          "nimi" : {
+            "fi" : "Aikuisten perusopetus",
+            "sv" : "Grundläggande utbildning för vuxna",
+            "en" : "Aikuisten perusopetus"
+          },
+          "lyhytNimi" : {
+            "fi" : "Aikuisten perusopetus",
+            "sv" : "Grundläggande utbildning för vuxna",
+            "en" : "Aikuisten perusopetus"
+          },
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.96894821105",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "01693",
+          "nimi" : {
+            "fi" : "Valkealan kristillinen kansanopisto"
+          },
+          "lyhytNimi" : {
+            "fi" : "Valkealan kristillinen kansanopisto"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Valkealan kristillinen kansanopisto"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "286",
+          "nimi" : {
+            "fi" : "Kouvola",
+            "sv" : "Kouvola"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "vahvistus" : {
+        "päivä" : "2018-06-01",
+        "paikkakunta" : {
+          "koodiarvo" : "286",
+          "nimi" : {
+            "fi" : "Kouvola",
+            "sv" : "Kouvola"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.96894821105",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "01693",
+            "nimi" : {
+              "fi" : "Valkealan kristillinen kansanopisto"
+            },
+            "lyhytNimi" : {
+              "fi" : "Valkealan kristillinen kansanopisto"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Valkealan kristillinen kansanopisto"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "286",
+            "nimi" : {
+              "fi" : "Kouvola",
+              "sv" : "Kouvola"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "Jussi Peurala",
+          "titteli" : {
+            "fi" : "rehtori"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.96894821105",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "01693",
+              "nimi" : {
+                "fi" : "Valkealan kristillinen kansanopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Valkealan kristillinen kansanopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Valkealan kristillinen kansanopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "286",
+              "nimi" : {
+                "fi" : "Kouvola",
+                "sv" : "Kouvola"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "BI",
+            "nimi" : {
+              "fi" : "Biologia",
+              "sv" : "Biologi"
+            },
+            "lyhytNimi" : {
+              "fi" : "Biologia",
+              "sv" : "Biologi"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "perusteenDiaarinumero" : "OPH-1280-2017"
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "aikuistenperusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Aikuisten perusopetuksen oppiaine"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "aikuistenperusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Aikuisten perusopetuksen oppimäärä",
+          "sv" : "Lärökurs i den grundläggande utbildningen för vuxna"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "aikuistenperusopetus",
+      "nimi" : {
+        "fi" : "Aikuisten perusopetus",
+        "sv" : "Grundläggande utbildning för vuxna"
+      },
+      "lyhytNimi" : {
+        "fi" : "Aikuisten perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2017-08-21"
+  } ]
+}

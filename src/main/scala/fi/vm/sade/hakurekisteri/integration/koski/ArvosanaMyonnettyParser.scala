@@ -11,7 +11,7 @@ object ArvosanaMyonnettyParser {
   def findArviointipäivä(suoritus: KoskiOsasuoritus,
                          personOid: String,
                          aine: String,
-                         suorituksenValmistumispäivä: LocalDate): LocalDate = {
+                         suorituksenValmistumispäivä: LocalDate): Option[LocalDate] = {
     def flattenSuoritukset(s: KoskiOsasuoritus): Seq[KoskiOsasuoritus] = {
       val seq = s.osasuoritukset.toSeq.flatten.flatMap(flattenSuoritukset)
       seq.++(List(s))
@@ -24,18 +24,14 @@ object ArvosanaMyonnettyParser {
     findMyonnettyToUse(osaSuoritusDateString, personOid, aine, suorituksenValmistumispäivä)
   }
 
-  private def findMyonnettyToUse(koskiArviointiPäivä: Option[String], personOid: String, aine: String, suorituksenValmistumispäivä: LocalDate): LocalDate = {
+  private def findMyonnettyToUse(koskiArviointiPäivä: Option[String], personOid: String, aine: String, suorituksenValmistumispäivä: LocalDate): Option[LocalDate] = {
     Try (koskiArviointiPäivä.map(new LocalDate(_))) match {
-      case Success(Some(dateToUse)) => dateToUse
-      case Success(None) =>
-        logger.warn(s"Ei löytynyt arvioinnin päivää hakijan '$personOid' aineelle '$aine'; lähtöarvo oli '$koskiArviointiPäivä' . " +
-          s"Tallennetaan suorituksen valmistumispäivä $suorituksenValmistumispäivä arvosanalle.")
-        suorituksenValmistumispäivä
-      case Failure(e) => {
+      case Success(dateFromKoski@Some(foundArviointiPvm)) if foundArviointiPvm.isAfter(suorituksenValmistumispäivä) => dateFromKoski
+      case Failure(e) =>
         logger.warn(s"Virhe käsitellessä arvioinnin päivää '$koskiArviointiPäivä' hakijan '$personOid' aineelle '$aine' ." +
-          s"Tallennetaan suorituksen valmistumispäivä $suorituksenValmistumispäivä arvosanalle.", e)
-        suorituksenValmistumispäivä
-      }
+          s"Tallennetaan arvosanan myöntöpäiväksi tyhjä.", e)
+        None
+      case _ => None
     }
   }
 }

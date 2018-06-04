@@ -17,7 +17,6 @@ import org.joda.time.{DateTime, LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -289,12 +288,12 @@ object KoskiArvosanaTrigger {
                      lisatieto: Option[String],
                      valinnainen: Boolean,
                      jarjestys: Option[Int] = None,
-                     koskiArviointiPäivä: LocalDate): Arvosana = {
+                     koskiArviointiPäiväJosSuorituksenValmistumisenJälkeen: Option[LocalDate]): Arvosana = {
     Arvosana(suoritus = null,
       arvio = arvo,
       aine, lisatieto,
       valinnainen,
-      myonnetty = Some(koskiArviointiPäivä),
+      myonnetty = koskiArviointiPäiväJosSuorituksenValmistumisenJälkeen,
       source = personOid,
       Map(),
       jarjestys = jarjestys)
