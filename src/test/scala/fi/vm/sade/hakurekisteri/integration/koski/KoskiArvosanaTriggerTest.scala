@@ -880,10 +880,10 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val result: Seq[SuoritusArvosanat] = resultgroup.head
     result should have length 1
 
-    val fysiikat = result.head.arvosanat.filter(_.aine.contentEquals("FY"))
-    fysiikat should have length 2
-    fysiikat.sortBy(_.valinnainen).head.valinnainen shouldBe false
+    val valinnaisetAineet = result.head.arvosanat.filter(_.valinnainen == true).map(_.aine)
+    valinnaisetAineet should contain ("LI")
 
+    valinnaisetAineet shouldNot contain ("MU")
   }
 
   it should "parse telma_testi_valmis.json" in {
@@ -999,7 +999,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val pk: Option[SuoritusArvosanat] = getPerusopetusPäättötodistus(arvosanat)
     pk match {
       case Some(t) => t.arvosanat.filter(_.aine.contentEquals("B2"))
-      case None => return Seq.empty
+      case None => Seq.empty
     }
   }
 
