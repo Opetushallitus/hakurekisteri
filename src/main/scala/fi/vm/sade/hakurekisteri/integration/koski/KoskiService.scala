@@ -31,7 +31,7 @@ class KoskiService(
                     hakemusService: IHakemusService, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
-  private val endDateSuomiTime = DateTime.parse("2018-06-05T00:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+  private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
@@ -67,10 +67,10 @@ class KoskiService(
   //Oletusparametreilla hakee muutoset päivän taaksepäin, jotta Sure selviää alle 24 tunnin downtimeistä ilman Koskidatan puuttumista.
   override def traverseKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
                                 timeToWaitUntilNextBatch: FiniteDuration = 2.minutes,
-                                searchWindowSize: Long = TimeUnit.DAYS.toMillis(15),
+                                searchWindowSize: Long = TimeUnit.DAYS.toMillis(10),
                                 repairTargetTime: Date = new Date(Platform.currentTime),
                                 pageNbr: Int = 0,
-                                pageSizePerFetch: Int = 1500)(implicit scheduler: Scheduler): Unit = {
+                                pageSizePerFetch: Int = 3000)(implicit scheduler: Scheduler): Unit = {
     if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
         var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
@@ -174,15 +174,11 @@ class KoskiService(
       case Success(personOidsSet: Set[String]) =>
         val personOids: Seq[String] = personOidsSet.toSeq
         logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-        if(useBulk) {
-          result = handleBulkHenkiloUpdate(personOids, createLukio)
-        } else {
-          result = handleHenkiloUpdate(personOids, createLukio)
-        }
+        result = handleHenkiloUpdate(personOids, createLukio)
       case Failure(e) =>
         logger.error("Error updating henkilöt for haku: {}", e)
         result = Future.failed(e)
-      case _ => logger.error(s"Tuntematon virhe päivittäessä  koskesta henkilöitä haulle $hakuOid")
+      case _ => logger.error(s"Tuntematon virhe päivittäessä Koskesta henkilöitä haulle $hakuOid")
         result = Future.failed(new RuntimeException)
     }
     result
@@ -213,6 +209,7 @@ class KoskiService(
     Future.successful({})
   }
 
+  //Fixme Huom. Keskeneräinen - tämä ei välttämättä toimi luotettavasti virhetilanteissa. Käytä handleHenkiloUpdatea, joka on sekä luotettavampi että tehottomampi.
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
     if(endDateSuomiTime.isBeforeNow) {
       return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
