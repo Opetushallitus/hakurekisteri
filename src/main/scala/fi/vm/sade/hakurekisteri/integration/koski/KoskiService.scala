@@ -54,12 +54,12 @@ class KoskiService(
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
-  def clamptTimeToEnd(date: Date): Date = {
+  def clampTimeToEnd(date: Date): Date = {
     val dt = new DateTime(date)
     if (dt.isBefore(endDateSuomiTime)) {
       date
     } else {
-      endDateSuomiTime.minusSeconds(1).toDate
+      endDateSuomiTime.toDate
     }
   }
 
@@ -71,14 +71,20 @@ class KoskiService(
                                 repairTargetTime: Date = new Date(Platform.currentTime),
                                 pageNbr: Int = 0,
                                 pageSizePerFetch: Int = 3000)(implicit scheduler: Scheduler): Unit = {
+    if(searchWindowStartTime.getTime >= endDateSuomiTime.getMillis) {
+      logger.info(s"HistoryCrawler - Törmättiin Koski-integraation sulkevaan aikaleimaan. " +
+        s"Lopetetaan läpikäynti. Kaikki ennen aikaleimaa {} muuttunut data on käyty läpi.", endDateSuomiTime.toString)
+      return
+    }
+
     if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
         var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
         if (searchWindowEndTime.getTime > repairTargetTime.getTime) {
           searchWindowEndTime = new Date(repairTargetTime.getTime)
         }
-        val clampedSearchWindowStartTime = clamptTimeToEnd(searchWindowStartTime)
-        searchWindowEndTime = clamptTimeToEnd(searchWindowEndTime)
+        val clampedSearchWindowStartTime = clampTimeToEnd(searchWindowStartTime)
+        searchWindowEndTime = clampTimeToEnd(searchWindowEndTime)
         fetchChangedWithPagination(
           params = SearchParamsWithPagination(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
             muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime),
@@ -116,7 +122,7 @@ class KoskiService(
                            refreshFrequency: FiniteDuration = 1.minute,
                            searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
     if(endDateSuomiTime.isBeforeNow) {
-      logger.info("Cutoff date of {} reached, stopping", endDateSuomiTime.toString)
+      logger.info("processModifiedKoski - Cutoff date of {} reached, stopping", endDateSuomiTime.toString)
       return
     }
     scheduler.scheduleOnce(refreshFrequency)({
@@ -126,8 +132,8 @@ class KoskiService(
         searchWindowEndTime = new Date(searchWindowStartTime.getTime + searchWindowSize + maximumCatchup)
         catchup = true
       }
-      val clampedSearchWindowStartTime = clamptTimeToEnd(searchWindowStartTime)
-      searchWindowEndTime = clamptTimeToEnd(searchWindowEndTime)
+      val clampedSearchWindowStartTime = clampTimeToEnd(searchWindowStartTime)
+      searchWindowEndTime = clampTimeToEnd(searchWindowEndTime)
       fetchChanged(
         params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
           muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime ))
