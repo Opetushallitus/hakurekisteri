@@ -432,7 +432,7 @@ object KoskiArvosanaTrigger {
             }
           }
 
-          if(komoOid.contentEquals(Oids.perusopetusKomoOid) &&
+          if( (komoOid.contentEquals(Oids.perusopetusKomoOid) || komoOid.contentEquals(Oids.lisaopetusKomoOid)) &&
             (tunniste.koodiarvo.contentEquals("B2") || tunniste.koodiarvo.contentEquals("A2"))) {
             isPakollinen = true
             isPakollinenmoduuli = true
