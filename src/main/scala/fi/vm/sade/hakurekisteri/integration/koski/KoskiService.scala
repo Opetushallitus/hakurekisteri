@@ -302,10 +302,9 @@ class KoskiService(
   }
 
   //Poistaa KoskiHenkiloContainerin sisältä sellaiset opiskeluoikeudet, joilla ei ole oppilaitosta jolla on määritelty oid.
+  //Vaaditaan lisäksi, että käsiteltävillä opiskeluoikeuksilla on ainakin yksi tilatieto.
   private def removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
     var result = Seq[KoskiHenkiloContainer]()
-
-    //logger.debug(s"Poistetaan datasta ylioppilastutkintoarvosanat sisältävä opiskeluoikeus. KoskiHenkiloContainereja ennen filtteröintiä: ${data.length}")
     data.foreach(container => {
       val oikeudet = container.opiskeluoikeudet.filter(oikeus => {
         (oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined && !oikeus.tila.opiskeluoikeusjaksot.isEmpty)
@@ -313,7 +312,6 @@ class KoskiService(
       if(oikeudet.length > 0) //Jos ollaan poistettu kaikki opiskeluoikeudet, voidaan unohtaa koko container.
         result = result :+ container.copy(opiskeluoikeudet = oikeudet)
     })
-    //logger.debug(s"Palautetaan containerit, määrä: ${result.length}")
     result
   }
 
