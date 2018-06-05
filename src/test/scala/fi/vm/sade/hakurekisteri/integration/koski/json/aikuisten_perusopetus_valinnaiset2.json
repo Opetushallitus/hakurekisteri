@@ -1,18 +1,18 @@
 {
   "henkilö": {
-    "oid": "1.2.246.562.24.25873696891",
-    "hetu": "020202-975V",
-    "syntymäaika": "1902-02-02",
-    "etunimet": "Ilkka Testi",
-    "kutsumanimi": "Ilkka",
-    "sukunimi": "Jantunen-Testi",
+    "oid": "1.2.246.562.24.81274248183",
+    "hetu": "240413A9922",
+    "syntymäaika": "2013-04-24",
+    "etunimet": "Eeva-Kaarina Testi",
+    "kutsumanimi": "Eeva-Kaarina",
+    "sukunimi": "Halme-Testi",
     "turvakielto": false
   },
   "opiskeluoikeudet": [
     {
-      "oid": "1.2.246.562.15.21152339087",
-      "versionumero": 3,
-      "aikaleima": "2018-06-04T17:12:50.130500",
+      "oid": "1.2.246.562.15.24837346873",
+      "versionumero": 6,
+      "aikaleima": "2018-06-04T13:15:52.482966",
       "oppilaitos": {
         "oid": "1.2.246.562.10.76140499609",
         "oppilaitosnumero": {
@@ -61,7 +61,7 @@
       "tila": {
         "opiskeluoikeusjaksot": [
           {
-            "alku": "2016-08-02",
+            "alku": "2017-08-10",
             "tila": {
               "koodiarvo": "lasna",
               "nimi": {
@@ -273,12 +273,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "hyvä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -330,12 +330,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "9",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "kiitettävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "9"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -387,12 +387,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "9",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "kiitettävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "9"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -429,12 +429,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "hyvä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -471,12 +471,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "9",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "kiitettävä"
+                      "fi": "hyvä"
                     },
                     "lyhytNimi": {
-                      "fi": "9"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -513,12 +513,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "9",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "kiitettävä"
+                      "fi": "hyvä"
                     },
                     "lyhytNimi": {
-                      "fi": "9"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -555,12 +555,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "9",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "kiitettävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "9"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -597,12 +597,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "9",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "kiitettävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "9"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -639,12 +639,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "hyvä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -681,12 +681,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "9",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "kiitettävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "9"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -891,12 +891,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "9",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "kiitettävä"
+                      "fi": "hyvä"
                     },
                     "lyhytNimi": {
-                      "fi": "9"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -933,12 +933,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "8",
+                    "koodiarvo": "7",
                     "nimi": {
-                      "fi": "hyvä"
+                      "fi": "tyydyttävä"
                     },
                     "lyhytNimi": {
-                      "fi": "8"
+                      "fi": "7"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -1042,14 +1042,14 @@
             {
               "koulutusmoduuli": {
                 "tunniste": {
-                  "koodiarvo": "A2",
+                  "koodiarvo": "B2",
                   "nimi": {
-                    "fi": "A2-kieli",
-                    "sv": "A2-språk"
+                    "fi": "B2-kieli",
+                    "sv": "B2-språk"
                   },
                   "lyhytNimi": {
-                    "fi": "A2-kieli",
-                    "sv": "A2-språk"
+                    "fi": "B2-kieli",
+                    "sv": "B2-språk"
                   },
                   "koodistoUri": "koskioppiaineetyleissivistava",
                   "koodistoVersio": 1
@@ -1071,7 +1071,7 @@
                 },
                 "pakollinen": false,
                 "laajuus": {
-                  "arvo": 2,
+                  "arvo": 2.0,
                   "yksikkö": {
                     "koodiarvo": "4",
                     "nimi": {
@@ -1117,36 +1117,36 @@
             {
               "koulutusmoduuli": {
                 "tunniste": {
-                  "koodiarvo": "B2",
+                  "koodiarvo": "A2",
                   "nimi": {
-                    "fi": "B2-kieli",
-                    "sv": "B2-språk"
+                    "fi": "A2-kieli",
+                    "sv": "A2-språk"
                   },
                   "lyhytNimi": {
-                    "fi": "B2-kieli",
-                    "sv": "B2-språk"
+                    "fi": "A2-kieli",
+                    "sv": "A2-språk"
                   },
                   "koodistoUri": "koskioppiaineetyleissivistava",
                   "koodistoVersio": 1
                 },
                 "kieli": {
-                  "koodiarvo": "FR",
+                  "koodiarvo": "RU",
                   "nimi": {
-                    "fi": "ranska",
-                    "sv": "franska",
-                    "en": "French"
+                    "fi": "venäjä",
+                    "sv": "ryska",
+                    "en": "Russian"
                   },
                   "lyhytNimi": {
-                    "fi": "ranska",
-                    "sv": "franska",
-                    "en": "French"
+                    "fi": "venäjä",
+                    "sv": "ryska",
+                    "en": "Russian"
                   },
                   "koodistoUri": "kielivalikoima",
                   "koodistoVersio": 1
                 },
                 "pakollinen": false,
                 "laajuus": {
-                  "arvo": 2,
+                  "arvo": 2.0,
                   "yksikkö": {
                     "koodiarvo": "4",
                     "nimi": {
@@ -1167,12 +1167,12 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "7",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "tyydyttävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "7"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -1206,67 +1206,7 @@
                 },
                 "pakollinen": false,
                 "laajuus": {
-                  "arvo": 1,
-                  "yksikkö": {
-                    "koodiarvo": "3",
-                    "nimi": {
-                      "fi": "VVT",
-                      "sv": "VVT",
-                      "en": "VVT units"
-                    },
-                    "lyhytNimi": {
-                      "fi": "VVT",
-                      "sv": "VVT",
-                      "en": "VVT"
-                    },
-                    "koodistoUri": "opintojenlaajuusyksikko",
-                    "koodistoVersio": 1
-                  }
-                }
-              },
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "10",
-                    "nimi": {
-                      "fi": "erinomainen"
-                    },
-                    "lyhytNimi": {
-                      "fi": "10"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
-              "tyyppi": {
-                "koodiarvo": "aikuistenperusopetuksenoppiaine",
-                "nimi": {
-                  "fi": "Aikuisten perusopetuksen oppiaine"
-                },
-                "koodistoUri": "suorituksentyyppi",
-                "koodistoVersio": 1
-              }
-            },
-            {
-              "koulutusmoduuli": {
-                "tunniste": {
-                  "koodiarvo": "KS",
-                  "nimi": {
-                    "fi": "Käsityö",
-                    "sv": "Slöjd"
-                  },
-                  "lyhytNimi": {
-                    "fi": "Käsityö",
-                    "sv": "Slöjd"
-                  },
-                  "koodistoUri": "koskioppiaineetyleissivistava",
-                  "koodistoVersio": 1
-                },
-                "pakollinen": false,
-                "laajuus": {
-                  "arvo": 2,
+                  "arvo": 1.0,
                   "yksikkö": {
                     "koodiarvo": "4",
                     "nimi": {
@@ -1287,12 +1227,80 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "9",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "kiitettävä"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "AI",
+                  "nimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "AI1",
+                  "nimi": {
+                    "fi": "Suomen kieli ja kirjallisuus"
+                  },
+                  "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 2.0,
+                  "yksikkö": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "course units"
+                    },
+                    "lyhytNimi": {
+                      "fi": "kurssia",
+                      "sv": "kurser",
+                      "en": "courses"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -1333,7 +1341,7 @@
         "koodistoUri": "opiskeluoikeudentyyppi",
         "koodistoVersio": 1
       },
-      "alkamispäivä": "2016-08-02"
+      "alkamispäivä": "2017-08-10"
     }
   ]
 }

@@ -868,8 +868,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     arvosanat.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual expectedDate
   }
 
-  it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset.json" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset.json").mkString
+  it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset2.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset2.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
 
     henkilo should not be null
@@ -880,10 +880,12 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val result: Seq[SuoritusArvosanat] = resultgroup.head
     result should have length 1
 
-    val valinnaisetAineet = result.head.arvosanat.filter(_.valinnainen == true).map(_.aine)
-    valinnaisetAineet should contain ("LI")
+    result.head.arvosanat.filter(_.aine.contentEquals("B2")).head.valinnainen shouldEqual false
+    result.head.arvosanat.filter(_.aine.contentEquals("A2")).head.valinnainen shouldEqual false
 
-    valinnaisetAineet shouldNot contain ("MU")
+    val valinnaisetAineet = result.head.arvosanat.filter(_.valinnainen == true).map(_.aine)
+    valinnaisetAineet shouldNot contain("KU")
+    valinnaisetAineet shouldNot contain("AI")
   }
 
   it should "parse telma_testi_valmis.json" in {
@@ -964,7 +966,6 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     pt.get.arvosanat.filter(_.aine.contentEquals("B1")) should have length 2
     pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && a.valinnainen) should have length 1
     pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && !a.valinnainen) should have length 1
-
   }
 
   it should "interpret A2 and B2 langs as pakollinen in lisäopetus" in {
@@ -985,7 +986,18 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     lisäA2B2 should have length 2
     lisäA2B2.map(_.valinnainen) shouldEqual Seq(false, false)
   }
+/*
+  it should "foo" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "foo.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val fl = henkilo.opiskeluoikeudet.filter(_.tila.opiskeluoikeusjaksot.nonEmpty)
 
+
+
+    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo.copy(opiskeluoikeudet = fl), createLukioArvosanat = true)
+    println(res)
+  }
+*/
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
