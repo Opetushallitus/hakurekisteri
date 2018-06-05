@@ -461,12 +461,25 @@ object KoskiArvosanaTrigger {
           }
 
           val laajuus = suoritus.koulutusmoduuli.laajuus.getOrElse(KoskiValmaLaajuus(None, KoskiKoodi("","")))
-          if( isAikuistenPerusopetus && !isPakollinen && laajuus.yksikkö.koodiarvo != "3" ||
-              (!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
-            //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
+
+          val isAikuistenValinnainen = isAikuistenPerusopetus && !isPakollinen
+          lazy val isAikuistenKurssiLargeEnough = isAikuistenPerusopetus && laajuus.yksikkö.koodiarvo.contentEquals("4") && laajuus.arvo.getOrElse(BigDecimal(0)) >= 3
+          lazy val isAikuistenKurssiVVTLargeEnough = isAikuistenPerusopetus && laajuus.yksikkö.koodiarvo.contentEquals("3") && laajuus.arvo.getOrElse(BigDecimal(0)) >= 2
+          lazy val isA2B2 = a2b2Kielet.contains(tunniste.koodiarvo)
+
+
+          if(isAikuistenValinnainen) {
+            if(isAikuistenKurssiLargeEnough || isAikuistenKurssiVVTLargeEnough || isA2B2) {
+              val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)
+              res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
+            }
           } else {
-            val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)
-            res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
+            if( (!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
+              //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
+            } else {
+              val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)
+              res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
+            }
           }
         }
       })

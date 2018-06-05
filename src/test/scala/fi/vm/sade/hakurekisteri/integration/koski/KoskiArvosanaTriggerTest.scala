@@ -885,7 +885,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
 
     val valinnaisetAineet = result.head.arvosanat.filter(_.valinnainen == true).map(_.aine)
     valinnaisetAineet shouldNot contain("KU")
-    valinnaisetAineet shouldNot contain("AI")
+    valinnaisetAineet should contain("AI")
   }
 
   it should "parse telma_testi_valmis.json" in {
@@ -986,18 +986,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     lisäA2B2 should have length 2
     lisäA2B2.map(_.valinnainen) shouldEqual Seq(false, false)
   }
-/*
-  it should "foo" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "foo.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    val fl = henkilo.opiskeluoikeudet.filter(_.tila.opiskeluoikeusjaksot.nonEmpty)
 
-
-
-    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo.copy(opiskeluoikeudet = fl), createLukioArvosanat = true)
-    println(res)
-  }
-*/
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
