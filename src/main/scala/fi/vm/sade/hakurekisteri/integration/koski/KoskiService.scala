@@ -159,11 +159,6 @@ class KoskiService(
   var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(5)
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
 
-    if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
-      logger.warning("Haun tietojen päivitys yritettiin käynnistää, vaikka koski-integraatio on aikaleimasuljettu.")
-      return Future.failed(new Exception("Haun tietojen päivitys yritettiin käynnistää, vaikka koski-integraatio on aikaleimasuljettu."))
-    }
-
     if(lastActivated + minimumTimeBetweenStarts < System.currentTimeMillis()) {
       logger.info(s"Käynnistetään haun hakijoiden tietojen päivitys hakuOidille $hakuOid")
       if(createLukio) {
@@ -195,9 +190,6 @@ class KoskiService(
   }
 
   def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
-    if(endDateSuomiTime.isBeforeNow) {
-      return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
-    }
     val batchSize: Int = 20
     val waitBetweenBatchesInMilliseconds: Long = 10000L
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
@@ -217,9 +209,6 @@ class KoskiService(
 
   //Fixme Huom. Keskeneräinen - tämä ei välttämättä toimi luotettavasti virhetilanteissa. Käytä handleHenkiloUpdatea, joka on sekä luotettavampi että tehottomampi.
   def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
-    if(endDateSuomiTime.isBeforeNow) {
-      return Future.failed(new RuntimeException(s"Koski-sure-integraatio ei toiminnassa aikaleiman takia"))
-    }
     var successful: AtomicInteger = new AtomicInteger(0)
     val failed: AtomicInteger = new AtomicInteger(0)
     val batchSize: Int = 100
@@ -263,9 +252,6 @@ class KoskiService(
   }
 
   override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
-    if(!overrideTimeCheck && endDateSuomiTime.isBeforeNow) {
-      return Future.successful({})
-    }
 
     if (!createLukio) {
       logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)

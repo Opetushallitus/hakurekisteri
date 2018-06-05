@@ -211,7 +211,7 @@ class BaseIntegrations(rekisterit: Registers,
   if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
     val delay: FiniteDuration = 1.minute
     koskiService.processModifiedKoski(refreshFrequency = delay)
-    koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay, searchWindowStartTime = new Date(traverseStart))
+    //koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay, searchWindowStartTime = new Date(traverseStart))
   }
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
