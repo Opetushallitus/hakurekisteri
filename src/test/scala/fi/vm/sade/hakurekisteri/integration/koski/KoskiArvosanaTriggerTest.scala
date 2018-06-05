@@ -868,8 +868,8 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     arvosanat.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual expectedDate
   }
 
-  it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset.json" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset.json").mkString
+  it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset2.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset2.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
 
     henkilo should not be null
@@ -880,10 +880,12 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val result: Seq[SuoritusArvosanat] = resultgroup.head
     result should have length 1
 
-    val fysiikat = result.head.arvosanat.filter(_.aine.contentEquals("FY"))
-    fysiikat should have length 2
-    fysiikat.sortBy(_.valinnainen).head.valinnainen shouldBe false
+    result.head.arvosanat.filter(_.aine.contentEquals("B2")).head.valinnainen shouldEqual false
+    result.head.arvosanat.filter(_.aine.contentEquals("A2")).head.valinnainen shouldEqual false
 
+    val valinnaisetAineet = result.head.arvosanat.filter(_.valinnainen == true).map(_.aine)
+    valinnaisetAineet shouldNot contain("KU")
+    valinnaisetAineet should contain("AI")
   }
 
   it should "parse telma_testi_valmis.json" in {
@@ -964,7 +966,6 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     pt.get.arvosanat.filter(_.aine.contentEquals("B1")) should have length 2
     pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && a.valinnainen) should have length 1
     pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && !a.valinnainen) should have length 1
-
   }
 
   it should "interpret A2 and B2 langs as pakollinen in lisäopetus" in {
@@ -999,7 +1000,7 @@ class KoskiArvosanaTriggerTest extends FlatSpec with Matchers with MockitoSugar 
     val pk: Option[SuoritusArvosanat] = getPerusopetusPäättötodistus(arvosanat)
     pk match {
       case Some(t) => t.arvosanat.filter(_.aine.contentEquals("B2"))
-      case None => return Seq.empty
+      case None => Seq.empty
     }
   }
 
