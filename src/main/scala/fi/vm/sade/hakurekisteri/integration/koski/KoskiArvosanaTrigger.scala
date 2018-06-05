@@ -462,11 +462,14 @@ object KoskiArvosanaTrigger {
 
           val laajuus = suoritus.koulutusmoduuli.laajuus.getOrElse(KoskiValmaLaajuus(None, KoskiKoodi("","")))
 
-          val isAikuistenValinnainen = isAikuistenPerusopetus && !isPakollinen
-          lazy val isAikuistenKurssiLargeEnough = isAikuistenPerusopetus && laajuus.yksikkö.koodiarvo.contentEquals("4") && laajuus.arvo.getOrElse(BigDecimal(0)) >= 3
-          lazy val isAikuistenKurssiVVTLargeEnough = isAikuistenPerusopetus && laajuus.yksikkö.koodiarvo.contentEquals("3") && laajuus.arvo.getOrElse(BigDecimal(0)) >= 2
+
+          lazy val isKurssiLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("4")
+          lazy val isVVTLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("3")
+          lazy val isAikuistenKurssiLargeEnough = isAikuistenPerusopetus && isKurssiLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) >= 3
+          lazy val isAikuistenKurssiVVTLargeEnough = isAikuistenPerusopetus && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) >= 2
           lazy val isA2B2 = a2b2Kielet.contains(tunniste.koodiarvo)
 
+          val isAikuistenValinnainen = isAikuistenPerusopetus && !isPakollinen
 
           if(isAikuistenValinnainen) {
             if(isAikuistenKurssiLargeEnough || isAikuistenKurssiVVTLargeEnough || isA2B2) {
@@ -474,8 +477,10 @@ object KoskiArvosanaTrigger {
               res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
             }
           } else {
-            if( (!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && laajuus.yksikkö.koodiarvo == "3" && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
-              //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3)
+            //check for A2B2 langs because they aren't saved as elective courses, they are converted to mandatory on SURE side of things. The laajuus
+            //check needs to be done on them too, not just elective grades.
+            if( (!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
+              //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3), everything else is saved
             } else {
               val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)
               res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
