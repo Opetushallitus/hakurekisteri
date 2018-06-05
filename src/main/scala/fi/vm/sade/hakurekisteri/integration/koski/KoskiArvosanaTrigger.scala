@@ -17,12 +17,10 @@ import org.joda.time.{DateTime, LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
-import scala.math.BigDecimal
-
-import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.math.BigDecimal
 import scala.util.{Failure, Success}
 
 object KoskiArvosanaTrigger {
@@ -115,7 +113,6 @@ object KoskiArvosanaTrigger {
       //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
       //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
       val allSuorituksetGroups: Seq[Seq[SuoritusArvosanat]] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio)
-      val foo: Seq[Seq[Arvosana]] = allSuorituksetGroups.flatten.map(_.arvosanat)
       allSuorituksetGroups.foreach(allSuoritukset =>
         fetchExistingSuoritukset(henkiloOid).onComplete(fetchedSuoritukset => { //NOTE, processes the Future that encloses the list, does not actually iterate through the list
           val henkilonSuoritukset = allSuoritukset.filter(s => {
