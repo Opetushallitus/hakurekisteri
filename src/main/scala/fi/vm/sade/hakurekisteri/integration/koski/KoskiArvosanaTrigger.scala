@@ -288,7 +288,7 @@ object KoskiArvosanaTrigger {
       aine, lisatieto,
       valinnainen,
       myonnetty = koskiArviointiPäiväJosSuorituksenValmistumisenJälkeen,
-      source = personOid,
+      source = "koski",
       Map(),
       jarjestys = jarjestys)
   }
