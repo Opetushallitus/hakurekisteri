@@ -89,16 +89,6 @@ object KoskiArvosanaTrigger {
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
-    def fetchSuoritus(henkiloOid: String, oppilaitosOid: String, komo: String): Future[VirallinenSuoritus with Identified[UUID]] = {
-      val q = SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(komo))
-      val queryWithPersonAliases = SuoritusQueryWithPersonAliases(q, personOidsWithAliases)
-      (suoritusRekisteri ? queryWithPersonAliases).mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
-        flatMap(suoritukset => suoritukset.headOption match {
-          case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
-          case Some(_) if suoritukset.length > 1 => Future.failed(MultipleSuoritusException(henkiloOid, oppilaitosOid, komo))
-        })
-    }
-
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
       logger.debug("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
       (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
@@ -148,13 +138,13 @@ object KoskiArvosanaTrigger {
                 val hasExistingSuoritus = suoritusExists(useSuoritus, existingSuoritukset)
                 if (hasExistingSuoritus) {
                   logger.debug("Päivitetään olemassaolevaa suoritusta.")
-                  for (
-                    suoritus: VirallinenSuoritus with Identified[UUID] <- fetchSuoritus(henkiloOid, useSuoritus.myontaja, useSuoritus.komo)
-                  ) {
-                    logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
+                  val suoritus = existingSuoritukset.map(_.asInstanceOf[VirallinenSuoritus with Identified[UUID]])
+                    .find(s => s.henkiloOid == henkiloOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
+                  logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
 
-                    var ss: Future[VirallinenSuoritus with Identified[UUID]] = updateSuoritus(suoritus, useSuoritus)
-
+                  val suoritusSave = updateSuoritus(suoritus, useSuoritus)
+                  suoritusSave.onSuccess { case savedSuoritus =>
+                    logger.debug(s"Suorituksen $useSuoritus tallennus on palannut")
                     fetchArvosanat(suoritus).onComplete({
                       case Success(existingArvosanas) => {
                         logger.debug("fetchArvosanat success, result: " + existingArvosanas)
@@ -180,6 +170,10 @@ object KoskiArvosanaTrigger {
                       case Failure(t) => logger.error("Jokin meni pieleen vanhojen arvosanojen haussa, joten niitä ei voitu poistaa: " + t.getMessage)
                     })
                   }
+                  suoritusSave.onFailure { case t =>
+                      logger.error(s"Suorituksen $useSuoritus (vanha suoritus: $suoritus) tallentaminen epäonnistui", t)
+                  }
+
                   saveOpiskelija(opiskelija)
                 } else {
                   for (
