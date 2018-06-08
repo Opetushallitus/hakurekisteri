@@ -244,11 +244,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     .mapTo[SijoitteluTulos]
 
   private def getLukuvuosimaksut(hakukohdeOids: Set[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
-    val querys = hakukohdeOids.toSeq.map(LukuvuosimaksuQuery(_, auditSession))
-
-    val maksutByHakukohde: Seq[Future[Seq[Lukuvuosimaksu]]] = querys.map(q => (valintaRekisteri ? q).mapTo[Seq[Lukuvuosimaksu]])
-    val sequenced: Future[Seq[Seq[Lukuvuosimaksu]]] = Future.sequence(maksutByHakukohde)
-    sequenced.map[Seq[Lukuvuosimaksu]](_.flatten)
+    (valintaRekisteri ? LukuvuosimaksuQuery(hakukohdeOids, auditSession)).mapTo[Seq[Lukuvuosimaksu]]
   }
 
   private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,

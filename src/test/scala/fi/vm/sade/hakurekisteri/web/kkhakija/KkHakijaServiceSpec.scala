@@ -378,11 +378,15 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   class MockedValintarekisteriActor extends Actor {
+    private val mockedMaksus: Seq[Lukuvuosimaksu] = List(
+      Lukuvuosimaksu(personOidWithLukuvuosimaksu, paymentRequiredHakukohdeWithMaksettu, Maksuntila.maksettu, "muokkaaja", new Date()),
+      Lukuvuosimaksu(personOidWithLukuvuosimaksu, noPaymentRequiredHakukohdeButMaksettu, Maksuntila.maksettu, "muokkaaja2", new LocalDate().minusDays(1).toDate)
+    )
+
     override def receive: Actor.Receive = {
-      case LukuvuosimaksuQuery(hakukohdeOid, _) if hakukohdeOid == paymentRequiredHakukohdeWithMaksettu =>
-        sender ! Seq(Lukuvuosimaksu(personOidWithLukuvuosimaksu, paymentRequiredHakukohdeWithMaksettu, Maksuntila.maksettu, "muokkaaja", new Date()))
-      case LukuvuosimaksuQuery(hakukohdeOid, _) if hakukohdeOid == noPaymentRequiredHakukohdeButMaksettu =>
-        sender ! Seq(Lukuvuosimaksu(personOidWithLukuvuosimaksu, noPaymentRequiredHakukohdeButMaksettu, Maksuntila.maksettu, "muokkaaja2", new LocalDate().minusDays(1).toDate))
+      case LukuvuosimaksuQuery(hakukohdeOids, _) if hakukohdeOids.contains(paymentRequiredHakukohdeWithMaksettu) ||
+        hakukohdeOids.contains(noPaymentRequiredHakukohdeButMaksettu) =>
+        sender ! mockedMaksus
       case _ =>
         sender ! Nil
     }
