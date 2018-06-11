@@ -1,21 +1,17 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.pattern.ask
-import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
+import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time._
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.Try
 
 class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
@@ -35,14 +31,21 @@ class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemus
   override def receive: Actor.Receive = {
     case HakuList(current) => haut = current
 
-    case k: Kokelas =>
-      log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
-      context.actorOf(Props(new YoSuoritusUpdateActor(k.yo, suoritusRekisteri)))
-      kokelaat = kokelaat + (k.oid -> k)
-      k.lukio foreach (suoritusRekisteri ! _)
+    case k: KokelasWithPersonAliases =>
+      val kokelas = k.kokelas
+      log.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo} lukio: ${kokelas.lukio}")
+      context.actorOf(Props(new YoSuoritusUpdateActor(kokelas.yo, k.personOidsWithAliases, suoritusRekisteri)))
+      kokelaat = kokelaat + (kokelas.oid -> kokelas)
+      kokelas.lukio.foreach(lukio => {
+        val insertResourceMessage = InsertResource[UUID,Suoritus](lukio, k.personOidsWithAliases)
+        suoritusRekisteri ! insertResourceMessage
+      })
 
-    case vs: VirallinenSuoritus with Identified[_] if vs.id.isInstanceOf[UUID] && vs.komo == YoTutkinto.yotutkinto =>
-      val s = vs.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
+    case insert: InsertResource[_, _] if insert.resource.isInstanceOf[VirallinenSuoritus] &&
+                                         insert.resource.isInstanceOf[Identified[_]] &&
+                                         insert.resource.asInstanceOf[Identified[_]].id.isInstanceOf[UUID] &&
+                                         insert.resource.asInstanceOf[VirallinenSuoritus].komo == YoTutkinto.yotutkinto =>
+      val s = insert.resource.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
       ) {
@@ -73,6 +76,11 @@ class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemus
           log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
       }
 
+    case unknown =>
+      val errorMessage = s"Got unknown message '$unknown'"
+      log.error(errorMessage)
+      sender ! new IllegalArgumentException(errorMessage)
+
   }
 }
 
@@ -81,6 +89,8 @@ case class Kokelas(oid: String,
                    lukio: Option[Suoritus],
                    yoTodistus: Seq[Koe],
                    osakokeet: Seq[Koe])
+
+case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
 
 object IsSaving
 
@@ -400,7 +410,9 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
   }
 }
 
-class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: ActorRef) extends Actor {
+class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
+                            personOidsWithAliases: PersonOidsWithAliases,
+                            suoritusRekisteri: ActorRef) extends Actor {
   private def ennenVuotta1990Valmistuneet(s: Seq[_]) = s.map {
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
       v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
@@ -410,18 +422,18 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: A
     case s: Seq[_] =>
       fetch.foreach(_.cancel())
       if (s.isEmpty) {
-        suoritusRekisteri ! yoSuoritus
+        suoritusRekisteri ! InsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
       } else {
         val suoritukset = ennenVuotta1990Valmistuneet(s)
         if (suoritukset.nonEmpty) {
-          context.parent ! suoritukset.head
+          context.parent ! InsertResource[UUID,Suoritus](suoritukset.head, personOidsWithAliases)
           context.stop(self)
         } else {
-          suoritusRekisteri ! yoSuoritus
+          suoritusRekisteri ! InsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
         }
       }
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
-      context.parent ! v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
+      context.parent ! InsertResource[UUID,Suoritus](v.asInstanceOf[VirallinenSuoritus with Identified[UUID]], personOidsWithAliases)
       context.stop(self)
   }
 
@@ -429,7 +441,9 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: A
 
   override def preStart(): Unit = {
     implicit val ec = context.dispatcher
-    fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, suoritusRekisteri, SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))))
+    val suoritusQuery = SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))
+    val queryWithPersonAliases = SuoritusQueryWithPersonAliases(suoritusQuery, personOidsWithAliases)
+    fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, suoritusRekisteri, queryWithPersonAliases))
   }
 }
 
