@@ -1,25 +1,25 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.concurrent.{Executors, TimeUnit}
 import java.util.function.UnaryOperator
-import java.util.zip.ZipInputStream
 import java.util.{Date, UUID}
-import javax.mail.Message.RecipientType
-import javax.mail.Session
-import javax.mail.internet.{InternetAddress, MimeMessage}
 
 import akka.actor.ActorRef
 import fi.vm.sade.auditlog.hakurekisteri.LogMessage
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.web.AuditLogger.audit
 import fi.vm.sade.properties.OphProperties
+import javax.mail.Message.RecipientType
+import javax.mail.Session
+import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
-import scala.collection.Set
 import scala.concurrent._
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeeded: Option[Boolean]) {
@@ -29,6 +29,7 @@ case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeed
 class YtlIntegration(properties: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      hakemusService: IHakemusService,
+                     oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
                      ytlActor: ActorRef,
                      config: Config) {
   private val logger = LoggerFactory.getLogger(getClass)
@@ -39,7 +40,7 @@ class YtlIntegration(properties: OphProperties,
 
   def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
 
-  def sync(hakemus: HakijaHakemus): Try[Kokelas] = {
+  def sync(hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases): Try[Kokelas] = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       if(hakemus.stateValid) {
         hakemus.personOid match {
@@ -54,7 +55,7 @@ class YtlIntegration(properties: OphProperties,
                     Failure(new RuntimeException(noData))
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
-                    persistKokelas(kokelas)
+                    persistKokelas(kokelas, personOidsWithAliases)
                     Success(kokelas)
                 }
               case None =>
@@ -81,15 +82,16 @@ class YtlIntegration(properties: OphProperties,
 
   def sync(personOid: String): Future[Seq[Try[Kokelas]]] = {
     hakemusService.hakemuksetForPerson(personOid)
-      .map(_.collect {
-        case h: FullHakemus if h.stateValid && h.personOid.isDefined => h
+      .zip(oppijaNumeroRekisteri.enrichWithAliases(Set(personOid)))
+      .map(pair => pair._1.collect {
+        case h: FullHakemus if h.stateValid && h.personOid.isDefined => pair.copy(_1 = h)
       }).flatMap {
-      hakemukset =>
-        if(hakemukset.isEmpty) {
+      hakemuksetWithPersonOids =>
+        if (hakemuksetWithPersonOids.isEmpty) {
           logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
           Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
         } else {
-          Future.successful(hakemukset.map(sync))
+          Future.successful(hakemuksetWithPersonOids.map(pair => sync(pair._1, pair._2)))
         }
     }
   }
@@ -149,6 +151,8 @@ class YtlIntegration(properties: OphProperties,
 
   private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
+    val personOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
+      Duration(1, TimeUnit.MINUTES))
     val allSucceeded = new AtomicBoolean(true)
     try {
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
@@ -171,7 +175,7 @@ class YtlIntegration(properties: OphProperties,
               case None =>
                 logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
                 None
-            }).foreach(persistKokelas)
+            }).foreach(kokelas => persistKokelas(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
           } finally {
             IOUtils.closeQuietly(zip)
           }
@@ -192,8 +196,8 @@ class YtlIntegration(properties: OphProperties,
     }
   }
 
-  private def persistKokelas(kokelas: Kokelas): Unit = {
-    ytlActor ! kokelas
+  private def persistKokelas(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases): Unit = {
+    ytlActor ! KokelasWithPersonAliases(kokelas, personOidsWithAliases)
   }
   private def message(msg:String) = LogMessage.builder().message(msg).add("operaatio","YTL_SYNC").build()
 

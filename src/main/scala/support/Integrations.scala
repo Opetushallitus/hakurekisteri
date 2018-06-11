@@ -83,6 +83,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor()(system))
   override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
   override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config)(system))
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytl: ActorRef = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
@@ -91,7 +92,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )), "ytl")
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, ytl, config)
+  override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytl, config)
 
   override val proxies = new MockProxies
   override val hakemusClient = null
@@ -103,7 +104,6 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       case a: HasPermission => sender ! true
     }
   }))
-  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
 }
 
 
@@ -178,7 +178,7 @@ class BaseIntegrations(rekisterit: Registers,
   )), "ytl")
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, ytl, config)
+  val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytl, config)
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
@@ -193,11 +193,8 @@ class BaseIntegrations(rekisterit: Registers,
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
   val koskiArvosanaTrigger: KoskiTrigger = KoskiArvosanaTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
-  val ytlTrigger: Trigger = Trigger { (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) => Try(ytlIntegration.sync(hakemus)) match {
-      case Failure(e) =>
-        logger.error(s"YTL sync failed for hakemus with OID ${hakemus.oid}", e)
-      case _ => // pass
-    }
+  val ytlTrigger: Trigger = Trigger { (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) =>
+    Try(ytlIntegration.sync(hakemus, personOidsWithAliases.intersect(hakemus.personOid.toSet)))
   }
 
   hakemusService.addTrigger(arvosanaTrigger)

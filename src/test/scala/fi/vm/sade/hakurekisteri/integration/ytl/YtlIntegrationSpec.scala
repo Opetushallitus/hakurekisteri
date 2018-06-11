@@ -65,7 +65,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       config.integrations.ytlConfig
     )), "ytl")
 
-  private val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, ytlActor, mock[Config])
+  private val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, ytlActor, mock[Config])
   private val activeHakuOid = "1.2.246.562.29.26435854158"
 
   override protected def beforeEach(): Unit = {
@@ -150,7 +150,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       jarjestys = None)
     allArvosanasFromDatabase.head should be(arvosanaToExpect)
 
-    val expectedNumberOfOnrCalls = allSuoritusFromDatabase.size * 2 // NB: This should decrease with BUG-1780
+    val expectedNumberOfOnrCalls = 1
     Mockito.verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls)).enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))
     Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
   }
