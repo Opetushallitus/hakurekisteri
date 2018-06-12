@@ -2,13 +2,10 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import org.apache.commons.io.IOUtils
+import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
 import org.joda.time.LocalDate
 import org.json4s.jackson.JsonMethods
 import org.scalatest.{FlatSpec, ShouldMatchers}
-import org.springframework.core.io.ClassPathResource
-
-import scala.collection.JavaConverters._
 
 class ArvosanaMyonnettyParserSpec extends FlatSpec with ShouldMatchers with HakurekisteriJsonSupport with JsonMethods {
   it should "parse dates for arvosanas" in {
@@ -46,7 +43,7 @@ class ArvosanaMyonnettyParserSpec extends FlatSpec with ShouldMatchers with Haku
   }
 
   private def readOsasuoritukset(fileNameInSamePackage: String) = {
-    val jsonString: String = readFileFromClasspath(fileNameInSamePackage)
+    val jsonString: String = ClassPathUtil.readFileFromClasspath(getClass, fileNameInSamePackage)
     val koskiHenkiloContainer = parse(jsonString).extract[KoskiHenkiloContainer]
 
     for {
@@ -54,10 +51,5 @@ class ArvosanaMyonnettyParserSpec extends FlatSpec with ShouldMatchers with Haku
       suoritus <- opiskeluoikeus.suoritukset
       osasuoritus <- suoritus.osasuoritukset
     } yield osasuoritus
-  }
-
-  private def readFileFromClasspath(fileNameInSamePackage: String) = {
-    val classPathResource = new ClassPathResource(fileNameInSamePackage, getClass)
-    IOUtils.readLines(classPathResource.getInputStream, "UTF-8").asScala.mkString
   }
 }
