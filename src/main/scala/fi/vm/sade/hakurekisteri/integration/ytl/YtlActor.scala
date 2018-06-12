@@ -412,7 +412,7 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
 
 class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
                             personOidsWithAliases: PersonOidsWithAliases,
-                            suoritusRekisteri: ActorRef) extends Actor {
+                            suoritusRekisteri: ActorRef) extends Actor with ActorLogging {
   private def ennenVuotta1990Valmistuneet(s: Seq[_]) = s.map {
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
       v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
@@ -435,6 +435,11 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
       context.parent ! InsertResource[UUID,Suoritus](v.asInstanceOf[VirallinenSuoritus with Identified[UUID]], personOidsWithAliases)
       context.stop(self)
+
+    case unknown =>
+      val errorMessage = s"Got unknown message '$unknown'"
+      log.error(errorMessage)
+      sender ! new IllegalArgumentException(errorMessage)
   }
 
   var fetch: Option[Cancellable] = None
@@ -448,7 +453,7 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
 }
 
 
-class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor {
+class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor with ActorLogging {
   def isKorvaava(old: Arvosana) = (uusi: Arvosana) =>
     uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto &&
       (uusi.valinnainen == old.valinnainen || (uusi.valinnainen != old.valinnainen && uusi.lahdeArvot != old.lahdeArvot))
@@ -467,6 +472,11 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
       uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) foreach (arvosanaRekisteri ! _)
       context.stop(self)
     case Kokelas(_, _, _ , todistus, osakokeet) => kokeet = todistus ++ osakokeet
+
+    case unknown =>
+      val errorMessage = s"Got unknown message '$unknown'"
+      log.error(errorMessage)
+      sender ! new IllegalArgumentException(errorMessage)
   }
 
   var fetch: Option[Cancellable] = None
