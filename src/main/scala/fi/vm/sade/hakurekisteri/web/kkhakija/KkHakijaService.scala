@@ -177,7 +177,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   private def createV2Hakijas(q: KkHakijaQuery, hakemukset: Seq[HakijaHakemus], haku: Haku, hakukohdeOids: Seq[String]) = {
     val maksuvelvollisuudet: Set[String] = hakemukset.flatMap(_ match {
       case h: FullHakemus => h.preferenceEligibilities.filter(_.maksuvelvollisuus.isDefined).map(_.aoId)
-      case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED ").keys
+      case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
     }).toSet
 
     getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
