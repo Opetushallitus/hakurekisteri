@@ -1,0 +1,1678 @@
+[
+  {
+    "graduationSchoolOphOid": "1.2.246.562.10.96398657237",
+    "graduationSchoolYtlNumber": 1316,
+    "ssn": "281000-967A",
+    "lastname": "Vänskä",
+    "firstnames": "Markku",
+    "graduationDate": "2013-06-01",
+    "graduationPeriod": "2013K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "BB",
+        "examRoleLegacy": "21",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 136,
+        "sections": [
+          {
+            "sectionPoints": 36,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 26,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 10,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 10,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 0,
+            "sectionId": "RT01"
+          },
+          {
+            "sectionPoints": 33,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BB",
+        "examRoleLegacy": "21",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 136,
+        "sections": [
+          {
+            "sectionPoints": 36,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 26,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 10,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 10,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 0,
+            "sectionId": "RT01"
+          },
+          {
+            "sectionPoints": 33,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BB",
+        "examRoleLegacy": "21",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 136,
+        "sections": [
+          {
+            "sectionPoints": 36,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 26,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 10,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 10,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 0,
+            "sectionId": "RT01"
+          },
+          {
+            "sectionPoints": 33,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "M",
+        "points": 236,
+        "sections": [
+          {
+            "sectionPoints": 54,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 40,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 18,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 17,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 5,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 78,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "M",
+        "points": 236,
+        "sections": [
+          {
+            "sectionPoints": 54,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 40,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 18,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 17,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 5,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 78,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "M",
+        "points": 236,
+        "sections": [
+          {
+            "sectionPoints": 54,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 40,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 18,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 17,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 5,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 78,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2013K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "A",
+        "points": 37,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2013K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "A",
+        "points": 37,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2013K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "A",
+        "points": 37,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2013K",
+        "examId": "GE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "A",
+        "points": 11,
+        "sections": [
+          {
+            "sectionPoints": 11,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2013K",
+        "examId": "GE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "A",
+        "points": 11,
+        "sections": [
+          {
+            "sectionPoints": 11,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2013K",
+        "examId": "GE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "A",
+        "points": 11,
+        "sections": [
+          {
+            "sectionPoints": 11,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "ssn": "091001A941F",
+    "lastname": "Aalto",
+    "firstnames": "Eino",
+    "graduationDate": null,
+    "graduationPeriod": "2004K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "BI",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 34,
+        "sections": [
+          {
+            "sectionPoints": 34,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BI",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 34,
+        "sections": [
+          {
+            "sectionPoints": 34,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BI",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 34,
+        "sections": [
+          {
+            "sectionPoints": 34,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": null,
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 32,
+        "sections": [
+          {
+            "sectionPoints": 32,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": null,
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 32,
+        "sections": [
+          {
+            "sectionPoints": 32,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": null,
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 32,
+        "sections": [
+          {
+            "sectionPoints": 32,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "ssn": "081007-982P",
+    "lastname": "Aalto",
+    "firstnames": "Aija",
+    "graduationDate": null,
+    "graduationPeriod": null,
+    "hasCompletedMandatoryExams": false,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "B",
+        "points": 18,
+        "sections": [
+          {
+            "sectionPoints": 18,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "B",
+        "points": 18,
+        "sections": [
+          {
+            "sectionPoints": 18,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "B",
+        "points": 18,
+        "sections": [
+          {
+            "sectionPoints": 18,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": null,
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 18,
+        "sections": [
+          {
+            "sectionPoints": 18,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": null,
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 18,
+        "sections": [
+          {
+            "sectionPoints": 18,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": null,
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 18,
+        "sections": [
+          {
+            "sectionPoints": 18,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "graduationSchoolOphOid": "1.2.246.562.10.96398657237",
+    "graduationSchoolYtlNumber": 1316,
+    "ssn": "111028-9213",
+    "lastname": "Aalto",
+    "firstnames": "Christian",
+    "graduationDate": "2012-06-02",
+    "graduationPeriod": "2012K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "M",
+        "points": 66,
+        "sections": [
+          {
+            "sectionPoints": 45,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "M",
+        "points": 66,
+        "sections": [
+          {
+            "sectionPoints": 45,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "M",
+        "points": 66,
+        "sections": [
+          {
+            "sectionPoints": 45,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 220,
+        "sections": [
+          {
+            "sectionPoints": 49,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 40,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 20,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 18,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 5,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 67,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 220,
+        "sections": [
+          {
+            "sectionPoints": 49,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 40,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 20,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 18,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 5,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 67,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 220,
+        "sections": [
+          {
+            "sectionPoints": 49,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 40,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 20,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 18,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 5,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 67,
+            "sectionId": "KK01"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "graduationSchoolOphOid": "1.2.246.562.10.96398657237",
+    "graduationSchoolYtlNumber": 1316,
+    "ssn": "060141-9297",
+    "lastname": "Heiskanen",
+    "firstnames": "Monica",
+    "graduationDate": "2012-06-02",
+    "graduationPeriod": "2012K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": null,
+        "examRoleShort": "mother-tongue",
+        "grade": "B",
+        "points": 42,
+        "sections": [
+          {
+            "sectionPoints": 30,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": null,
+        "examRoleShort": "mother-tongue",
+        "grade": "B",
+        "points": 42,
+        "sections": [
+          {
+            "sectionPoints": 30,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": null,
+        "examRoleShort": "mother-tongue",
+        "grade": "B",
+        "points": 42,
+        "sections": [
+          {
+            "sectionPoints": 30,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "HI",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "M",
+        "points": 24,
+        "sections": [
+          {
+            "sectionPoints": 24,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "HI",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "M",
+        "points": 24,
+        "sections": [
+          {
+            "sectionPoints": 24,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "HI",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "M",
+        "points": 24,
+        "sections": [
+          {
+            "sectionPoints": 24,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "N",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "N",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "N",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "graduationSchoolOphOid": "1.2.246.562.10.70411521654",
+    "graduationSchoolYtlNumber": 1648,
+    "ssn": "101206-919A",
+    "lastname": "Aavikko",
+    "firstnames": "Tove",
+    "graduationDate": "2012-06-02",
+    "graduationPeriod": "2012K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 25,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 25,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 25,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "M",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 21,
+        "sections": [
+          {
+            "sectionPoints": 21,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "M",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 21,
+        "sections": [
+          {
+            "sectionPoints": 21,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "M",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 21,
+        "sections": [
+          {
+            "sectionPoints": 21,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012S",
+        "examId": "FY",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 17,
+        "sections": [
+          {
+            "sectionPoints": 17,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012S",
+        "examId": "FY",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 17,
+        "sections": [
+          {
+            "sectionPoints": 17,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012S",
+        "examId": "FY",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 17,
+        "sections": [
+          {
+            "sectionPoints": 17,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012S",
+        "examId": "M",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 15,
+        "sections": [
+          {
+            "sectionPoints": 15,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012S",
+        "examId": "M",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 15,
+        "sections": [
+          {
+            "sectionPoints": 15,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012S",
+        "examId": "M",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 15,
+        "sections": [
+          {
+            "sectionPoints": 15,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "ssn": "121096-901M",
+    "lastname": "Kunnas",
+    "firstnames": "Yrjö",
+    "graduationDate": "2011-06-04",
+    "graduationPeriod": "2011K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "FY",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 32,
+        "sections": [
+          {
+            "sectionPoints": 32,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 32,
+        "sections": [
+          {
+            "sectionPoints": 32,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "KE",
+        "examRoleLegacy": "71",
+        "examRoleShort": "optional-subject",
+        "grade": "M",
+        "points": 32,
+        "sections": [
+          {
+            "sectionPoints": 32,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "ssn": "030288-9552",
+    "lastname": "Harila",
+    "firstnames": "Jasmin",
+    "graduationDate": null,
+    "graduationPeriod": null,
+    "hasCompletedMandatoryExams": false,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "GE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "A",
+        "points": 12,
+        "sections": [
+          {
+            "sectionPoints": 12,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "GE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "A",
+        "points": 12,
+        "sections": [
+          {
+            "sectionPoints": 12,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "GE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "A",
+        "points": 12,
+        "sections": [
+          {
+            "sectionPoints": 12,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "graduationSchoolOphOid": "1.2.246.562.10.70411521654",
+    "graduationSchoolYtlNumber": 1648,
+    "ssn": "210253-989R",
+    "lastname": "Aalto",
+    "firstnames": "Jorma",
+    "graduationDate": "2012-06-02",
+    "graduationPeriod": "2012K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "C",
+        "points": 51,
+        "sections": [
+          {
+            "sectionPoints": 30,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "C",
+        "points": 51,
+        "sections": [
+          {
+            "sectionPoints": 30,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": "11",
+        "examRoleShort": "mother-tongue",
+        "grade": "C",
+        "points": 51,
+        "sections": [
+          {
+            "sectionPoints": 30,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 21,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "E",
+        "points": 257,
+        "sections": [
+          {
+            "sectionPoints": 46,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 27,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 48,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 20,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 27,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 9,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 80,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "E",
+        "points": 257,
+        "sections": [
+          {
+            "sectionPoints": 46,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 27,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 48,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 20,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 27,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 9,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 80,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "E",
+        "points": 257,
+        "sections": [
+          {
+            "sectionPoints": 46,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 27,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 48,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 20,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 27,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 9,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 80,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "N",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 20,
+        "sections": [
+          {
+            "sectionPoints": 20,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "N",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 20,
+        "sections": [
+          {
+            "sectionPoints": 20,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "N",
+        "examRoleLegacy": "42",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 20,
+        "sections": [
+          {
+            "sectionPoints": 20,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "TE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 17,
+        "sections": [
+          {
+            "sectionPoints": 17,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "TE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 17,
+        "sections": [
+          {
+            "sectionPoints": 17,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "TE",
+        "examRoleLegacy": "41",
+        "examRoleShort": "mandatory-subject",
+        "grade": "B",
+        "points": 17,
+        "sections": [
+          {
+            "sectionPoints": 17,
+            "sectionId": "T000"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  },
+  {
+    "graduationSchoolOphOid": "1.2.246.562.10.70411521654",
+    "graduationSchoolYtlNumber": 1648,
+    "ssn": "210955-920N",
+    "lastname": "Pyysalo",
+    "firstnames": "Kristiina",
+    "graduationDate": "2012-06-02",
+    "graduationPeriod": "2012K",
+    "hasCompletedMandatoryExams": true,
+    "exams": [
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": null,
+        "examRoleShort": "mother-tongue",
+        "grade": "C",
+        "points": 49,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": null,
+        "examRoleShort": "mother-tongue",
+        "grade": "C",
+        "points": 49,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "A",
+        "examRoleLegacy": null,
+        "examRoleShort": "mother-tongue",
+        "grade": "C",
+        "points": 49,
+        "sections": [
+          {
+            "sectionPoints": 25,
+            "sectionId": "T001"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "T002"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BI",
+        "examRoleLegacy": null,
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BI",
+        "examRoleLegacy": null,
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "BI",
+        "examRoleLegacy": null,
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 28,
+        "sections": [
+          {
+            "sectionPoints": 28,
+            "sectionId": "T000"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 216,
+        "sections": [
+          {
+            "sectionPoints": 45,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 38,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 16,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 6,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 75,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 216,
+        "sections": [
+          {
+            "sectionPoints": 45,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 38,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 16,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 6,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 75,
+            "sectionId": "KK01"
+          }
+        ]
+      },
+      {
+        "period": "2012K",
+        "examId": "EA",
+        "examRoleLegacy": "31",
+        "examRoleShort": "mandatory-subject",
+        "grade": "C",
+        "points": 216,
+        "sections": [
+          {
+            "sectionPoints": 45,
+            "sectionId": "HM02"
+          },
+          {
+            "sectionPoints": 12,
+            "sectionId": "HT01"
+          },
+          {
+            "sectionPoints": 38,
+            "sectionId": "LM02"
+          },
+          {
+            "sectionPoints": 16,
+            "sectionId": "LT02"
+          },
+          {
+            "sectionPoints": 24,
+            "sectionId": "RM01"
+          },
+          {
+            "sectionPoints": 6,
+            "sectionId": "RT03"
+          },
+          {
+            "sectionPoints": 75,
+            "sectionId": "KK01"
+          }
+        ]
+      }
+    ],
+    "language": "fi"
+  }
+]
