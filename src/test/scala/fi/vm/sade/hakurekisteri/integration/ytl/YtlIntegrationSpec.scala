@@ -10,7 +10,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioYo, Arvosana, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HetuPersonOid}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus}
@@ -23,9 +23,11 @@ import org.json4s.Formats
 import org.json4s.jackson.JsonMethods
 import org.mockito
 import org.mockito.Mockito
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
-import support.{BareRegisters, DbJournals}
+import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -43,7 +45,18 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   private val config: MockConfig = new MockConfig
   private val journals: DbJournals = new DbJournals(config)
 
-  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, MockPersonAliasesProvider)
+  private val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = mock[IOppijaNumeroRekisteri]
+  private val personAliasesProvider: PersonAliasesProvider = new PersonAliasesProvider {
+    override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+      if (henkiloOids.isEmpty) {
+        Future.successful(PersonOidsWithAliases(Set(), Map()))
+      } else {
+        oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
+      }
+    }
+  }
+
+  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider)
 
   private val ytlActor: ActorRef = system.actorOf(Props(new YtlActor(
       rekisterit.ytlSuoritusRekisteri,
@@ -56,6 +69,12 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   private val activeHakuOid = "1.2.246.562.29.26435854158"
 
   override protected def beforeEach(): Unit = {
+    Mockito.when(oppijaNumeroRekisteri.enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))).thenAnswer(new Answer[Future[PersonOidsWithAliases]] {
+      override def answer(invocation: InvocationOnMock): Future[PersonOidsWithAliases] = {
+        val henkiloOids = invocation.getArgumentAt(0, classOf[Set[String]])
+        Future.successful(PersonOidsWithAliases(henkiloOids, henkiloOids.map(h => (h, Set(h))).toMap, henkiloOids))
+      }
+    })
     ItPostgres.reset()
     ytlIntegration.setAktiivisetKKHaut(Set(activeHakuOid))
   }
@@ -130,6 +149,10 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       lahdeArvot = Map("koetunnus" -> "EA", "aineyhdistelmarooli" -> "31"),
       jarjestys = None)
     allArvosanasFromDatabase.head should be(arvosanaToExpect)
+
+    val expectedNumberOfOnrCalls = allSuoritusFromDatabase.size * 2 // NB: This should decrease with BUG-1780
+    Mockito.verify(oppijaNumeroRekisteri, Mockito.times(20)).enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))
+    Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
   }
 
   private def findAllSuoritusFromDatabase: Seq[VirallinenSuoritus with Identified[UUID]] = {
