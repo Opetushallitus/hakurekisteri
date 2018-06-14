@@ -151,7 +151,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     allArvosanasFromDatabase.head should be(arvosanaToExpect)
 
     val expectedNumberOfOnrCalls = allSuoritusFromDatabase.size * 2 // NB: This should decrease with BUG-1780
-    Mockito.verify(oppijaNumeroRekisteri, Mockito.times(20)).enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))
+    Mockito.verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls)).enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))
     Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
   }
 
