@@ -10,7 +10,7 @@ import org.apache.commons.io.IOUtils
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait CacheFactory {
@@ -18,12 +18,14 @@ trait CacheFactory {
   val defaultExpirationDuration: Long = 60.minutes.toMillis
   def prefix(clazz:Class[_], prefix:String) = s"${clazz.getName}:${prefix}"
 
-  def getInstance[K, T](expirationDurationMillis:Long,
+  def getInstance[K, T <: Serializable](expirationDurationMillis:Long,
                         clazz:Class[_],
-                        cacheKeyPrefix:String):MonadCache[Future, K, T] = getInstance[K, T](expirationDurationMillis, prefix(clazz, cacheKeyPrefix))
+                        cacheKeyPrefix:String)(implicit m: Manifest[T]): MonadCache[Future, K, T] = {
+    getInstance[K, T](expirationDurationMillis, prefix(clazz, cacheKeyPrefix))
+  }
 
-  def getInstance[K, T](expirationDurationMillis:Long,
-                        cacheKeyPrefix:String):MonadCache[Future, K, T]
+  def getInstance[K, T <: Serializable](expirationDurationMillis:Long,
+                        cacheKeyPrefix:String)(implicit m: Manifest[T]): MonadCache[Future, K, T]
 }
 
 object CacheFactory {
@@ -33,7 +35,9 @@ object CacheFactory {
   }
 
   class InMemoryCacheFactory extends CacheFactory {
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new InMemoryFutureCache[K, T](expirationDurationMillis)
+    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String)(implicit m: Manifest[T]): InMemoryFutureCache[K, T] = {
+      new InMemoryFutureCache[K, T](expirationDurationMillis)
+    }
   }
 
   class RedisCacheFactory(config: OphProperties)(implicit system: ActorSystem) extends CacheFactory {
@@ -46,13 +50,15 @@ object CacheFactory {
       RedisClient(host = host, port = port)
     }
 
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String) = new RedisCache[K, T](
-      r,
-      expirationDurationMillis,
-      cacheKeyPrefix,
-      config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
-      config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt,
-      config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt)
+    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String)(implicit m: Manifest[T]) = {
+      new RedisCache[K, T](
+        r,
+        expirationDurationMillis,
+        cacheKeyPrefix,
+        config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
+        config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt,
+        config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt)
+    }
 
     class RedisCache[K, T](val r: RedisClient,
                            val expirationDurationMillis: Long,
@@ -60,15 +66,95 @@ object CacheFactory {
                            limitOfWaitingClientsToLog: Int,
                            cacheHandlingThreadPoolSize: Int,
                            slowRedisRequestThresholdMillis: Int
-                          ) extends MonadCache[Future, K, T] {
+                          )(implicit m: Manifest[T])  extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
       implicit val executor: ExecutionContext = ExecutorUtil.createExecutor(cacheHandlingThreadPoolSize, s"cache-access-$cacheKeyPrefix")
 
       implicit val byteStringFormatter = new ByteStringFormatterImpl[T]
+      implicit val byteStringFormatterLong = ByteStringFormatterLongImpl
 
       private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog)
+
+      private val versionPrefixKey = s"${cacheKeyPrefix}:version"
+      private val newVersion = {
+        val clazz = m.runtimeClass
+        val streamClass = java.io.ObjectStreamClass.lookup(clazz)
+        streamClass.getSerialVersionUID
+      }
+
+      init()
+
+      private def init(): Unit = {
+        val f: Future[Boolean] = getVersion.flatMap {
+          case Some(oldVersion) =>
+            clearCacheIfVersionHasChanged(oldVersion)
+          case None =>
+            setVersion(newVersion)
+        }
+        f.onFailure{case t =>
+          throw new RedisCacheInitializationException(s"Failed to initialize cache with prefix $cacheKeyPrefix", t)
+        }
+        Await.result(f, 2.minute)
+      }
+
+      def getVersion: Future[Option[Long]] = {
+        r.get[Long](versionPrefixKey)
+      }
+
+      private def clearCacheIfVersionHasChanged(oldVersion: Long): Future[Boolean] = {
+        if (oldVersion != newVersion) {
+          logger.info(s"Serial version UID has changed from $oldVersion to $newVersion. Deleting all keys.")
+
+          /*var cursor = -1
+          while (cursor != 0) {
+            cursor = Await.result(deletingScan(cursor,  s"${cacheKeyPrefix}:*"), 1.minute)
+          }*/
+          deleteKeysSlow(s"${cacheKeyPrefix}:*").flatMap { _ =>
+            setVersion(newVersion)
+          }
+        } else {
+          logger.info(s"Serial version UID has not changed, is still $newVersion.")
+          Future.successful(true)
+        }
+      }
+
+      private def deleteKeysSlow(pattern: String): Future[Long] = {
+        r.keys(pattern).flatMap { keys =>
+          if (keys.nonEmpty) {
+            logger.info(s"Deleting ${keys.length} keys matching pattern $pattern")
+            r.del(keys: _*)
+          } else {
+            Future.successful(0l)
+          }
+        }
+      }
+
+      private def deletingScan(cursor: Int, pattern: String): Future[Int] = {
+        r.scan(cursor = cursor, count = Some(1000), matchGlob = Some(pattern))
+          .flatMap { result =>
+            val keys = result.data
+            logger.info(s"Scan returned ${keys.length} matching keys at index ${result.index} for pattern ${pattern}")
+            val fInner = if (keys.nonEmpty) {
+              logger.info(s"Deleting ${keys.mkString(",")}")
+              r.del(keys: _*)
+            } else {
+              Future.successful(Unit)
+            }
+            fInner.map { _ => result.index }
+          }
+      }
+
+      private def setVersion(version: Long): Future[Boolean] = {
+        logger.warn(s"Storing version value $version to Redis cache with key $versionPrefixKey")
+        val f: Future[Boolean] = r.set[Long](versionPrefixKey, version, Some(expirationDurationMillis))
+        f.onSuccess{case b: Boolean =>
+          if (!b) {
+            throw new RuntimeException(s"Failed to store version in Redis cache with prefix $cacheKeyPrefix")
+        }}
+        f
+      }
 
       def +(key: K, value: T): Future[_] =  {
         val prefixKey = k(key)
@@ -142,6 +228,35 @@ object CacheFactory {
           ois.close()
         }
       }
+    }
+
+    object ByteStringFormatterLongImpl extends ByteStringFormatter[Long] {
+      def serialize(data: Long): ByteString = {
+        val baos = new ByteArrayOutputStream
+        val oos = new ObjectOutputStream(baos)
+        try {
+          oos.writeObject(data)
+          ByteString(baos.toByteArray)
+        } finally {
+          oos.close()
+        }
+      }
+
+      def deserialize(bs: ByteString): Long = {
+        val ois = new ObjectInputStream(new ByteArrayInputStream(bs.toArray))
+        try {
+          ois.readObject().asInstanceOf[Long]
+        } finally {
+          ois.close()
+        }
+      }
+    }
+  }
+
+  class RedisCacheInitializationException(message: String) extends Exception(message) {
+    def this(message: String, cause: Throwable) {
+      this(message)
+      initCause(cause)
     }
   }
 }

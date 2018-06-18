@@ -71,7 +71,7 @@ case class ValintaTulosHakutoive(hakukohdeOid: String,
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
-trait SijoitteluTulos {
+trait SijoitteluTulos extends Serializable {
   def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
   def valintatila(hakemus: String, kohde: String): Option[Valintatila]
   def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila]
