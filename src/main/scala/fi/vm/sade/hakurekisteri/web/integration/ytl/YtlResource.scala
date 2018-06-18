@@ -39,7 +39,7 @@ class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val sys
   get("/http_request/:personOid") {
     shouldBeAdmin
     val personOid = params("personOid")
-    logger.info("Fetching YTL data for person OID")
+    logger.info(s"Fetching YTL data for person OID $personOid")
 
     val done: Seq[Try[Kokelas]] = Await.result(ytlIntegration.sync(personOid), 10.seconds)
     val exists = done.exists{
