@@ -52,7 +52,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(true)
+        cache.shouldContain(cacheKey)
 
         Await.result(cache.get(cacheKey, stringLoader), 10.seconds) should be (Some(cacheEntry))
       }
@@ -68,13 +68,13 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(true)
+        cache.shouldContain(cacheKey)
 
         cache - cacheKey
 
         Thread.sleep(500)
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(false)
+        cache.shouldNotContain(cacheKey)
       }
     )
   }
@@ -93,7 +93,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(true)
+        cache.shouldContain(cacheKey)
       }
     )
   }
@@ -113,8 +113,8 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
         val cache4 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
         val cache5 =  redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix5")
 
-        Await.result(cache5.contains(cacheKey), 1.second) should be(false)
-        Await.result(cache4.contains(cacheKey), 1.second) should be(true)
+        cache5.shouldNotContain(cacheKey)
+        cache4.shouldContain(cacheKey)
       }
     )
   }
@@ -141,7 +141,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
            results.foreach(_ should be(Some(cacheEntry)))
 
            Thread.sleep(100)
-           Await.result(cache.contains(cacheKey), 1.second) should be(true)
+           cache.shouldContain(cacheKey)
            Await.result(cache.get(cacheKey, stringLoader), 1.second) should be (Some(cacheEntry))
 
            verify(mockLoader, times(1)).apply(cacheKey)
@@ -159,7 +159,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cache.contains("version"), 1.second) should be(true)
+        cache.shouldContain("version")
         Await.result(cache.getVersion, 1.second) should be(Some(javaStringSerialVersionUID))
       }
     )
@@ -174,7 +174,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cacheOfStrings.contains("version"), 1.second) should be(true)
+        cacheOfStrings.shouldContain("version")
 
         Await.result(cacheOfStrings.getVersion, 1.second) shouldBe Some(javaStringSerialVersionUID)
 
@@ -188,7 +188,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
   }
 
-  it should "clear cache when version changes" in {
+  it should "clear cache when the version changes" in {
     withSystem(
       implicit system => {
         val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix8")
@@ -197,19 +197,19 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cacheOfStrings.contains(cacheKey), 1.second) should be(true)
+        cacheOfStrings.shouldContain(cacheKey)
 
         val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, getClass, "prefix8")
 
         Thread.sleep(500)
 
-        Await.result(cacheOfStrings.contains(cacheKey), 1.second) should be(false)
-        Await.result(cacheOfThrowables.contains(cacheKey), 1.second) should be(false)
+        cacheOfStrings.shouldNotContain(cacheKey)
+        cacheOfThrowables.shouldNotContain(cacheKey)
       }
     )
   }
 
-  it should "not clear cache when creating new instance with same version" in {
+  it should "not clear cache when creating a new instance with same version" in {
     withSystem(
       implicit system => {
         val cache1 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix9")
@@ -218,20 +218,20 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cache1.contains(cacheKey), 1.second) should be(true)
+        cache1.shouldContain(cacheKey)
 
         val cache2 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix9")
 
         Thread.sleep(500)
 
-        Await.result(cache1.contains(cacheKey), 1.second) should be(true)
-        Await.result(cache2.contains(cacheKey), 1.second) should be(true)
+        cache1.shouldContain(cacheKey)
+        cache2.shouldContain(cacheKey)
         Await.result(cache1.get(cacheKey, stringLoader), 1.second) should be(Await.result(cache2.get(cacheKey, stringLoader), 1.second))
       }
     )
   }
 
-  it should "not clear other caches when one changes" in {
+  it should "not clear other caches when one cache changes" in {
     withSystem(
       implicit system => {
         val cacheOfStrings1  = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix10")
@@ -243,31 +243,28 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Thread.sleep(500)
 
-        Await.result(cacheOfStrings1.contains(cacheKey), 1.second) should be(true)
-        Await.result(cacheOfStrings2.contains(anotherKey), 1.second) should be(true)
-        Await.result(cacheOfStrings1.contains(anotherKey), 1.second) should be(false)
-        Await.result(cacheOfStrings2.contains(cacheKey), 1.second) should be(false)
+        cacheOfStrings1.shouldContain(cacheKey)
+        cacheOfStrings2.shouldContain(anotherKey)
+        cacheOfStrings1.shouldNotContain(anotherKey)
+        cacheOfStrings2.shouldNotContain(cacheKey)
 
         val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, getClass, "prefix10")
 
         Thread.sleep(500)
 
-        Await.result(cacheOfStrings1.contains(cacheKey), 1.second) should be(false)
-        Await.result(cacheOfStrings2.contains(anotherKey), 1.second) should be(true)
+        cacheOfStrings1.shouldNotContain(cacheKey)
+        cacheOfStrings2.shouldContain(anotherKey)
       }
     )
   }
 
-  def shouldContain(implicit cache: MonadCache[Future, String, Any], key: String): Unit = {
-    containsShouldBe(cache, key, expected = true)
-  }
+  implicit class EnrichedCache[T](val cache: MonadCache[Future, String, T]) {
+    def shouldContain(key: String): Unit = containsShouldBe(this.cache, key, expected = true)
+    def shouldNotContain(key: String): Unit = containsShouldBe(this.cache, key, expected = false)
 
-  def shouldNotContain(cache: MonadCache[Future, String, Any], key: String): Unit = {
-    containsShouldBe(cache, key, expected = false)
-  }
-
-  def containsShouldBe(cache: MonadCache[Future, String, Any], key: String, expected: Boolean): Unit = {
-    Await.result(cache.contains(key), 1.second) should be(expected)
+    def containsShouldBe[T](cache: MonadCache[Future, String, T], key: String, expected: Boolean): Unit = {
+      Await.result(cache.contains(key), 1.second) should be(expected)
+    }
   }
 
   override def afterAll() = {
