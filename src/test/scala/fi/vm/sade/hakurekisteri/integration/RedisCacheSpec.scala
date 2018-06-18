@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, MonadCache}
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito.{times, verify, when}
@@ -38,6 +38,10 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   val concurrencyTestLoopCount: Int = 5
   val concurrencyTestParallelRequestCount: Int = 10
   val concurrencyTestResultsWaitDuration: Duration = 10.seconds
+  private val stringLoader: String => Future[Nothing] = (_: String) => Future.failed(new RuntimeException("should not be called"))
+
+  private val javaStringSerialVersionUID: Long = -6849794470754667710l
+  private val throwableSerialVersionUID: Long = -3042686055658047285l
 
   it should "add an entry to cache" in {
    withSystem(
@@ -50,7 +54,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
         Await.result(cache.contains(cacheKey), 1.second) should be(true)
 
-        Await.result(cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds) should be (Some(cacheEntry))
+        Await.result(cache.get(cacheKey, stringLoader), 10.seconds) should be (Some(cacheEntry))
       }
     )
   }
@@ -138,12 +142,132 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
 
            Thread.sleep(100)
            Await.result(cache.contains(cacheKey), 1.second) should be(true)
-           Await.result(cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called"))), 1.second) should be (Some(cacheEntry))
+           Await.result(cache.get(cacheKey, stringLoader), 1.second) should be (Some(cacheEntry))
 
            verify(mockLoader, times(1)).apply(cacheKey)
          }
        )
     }
+  }
+
+  it should "store version to cache" in {
+    withSystem(
+      implicit system => {
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix6")
+
+        cache + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        Await.result(cache.contains("version"), 1.second) should be(true)
+        Await.result(cache.getVersion, 1.second) should be(Some(javaStringSerialVersionUID))
+      }
+    )
+  }
+
+  it should "update version in cache when it changes" in {
+    withSystem(
+      implicit system => {
+        val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix7")
+
+        cacheOfStrings + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings.contains("version"), 1.second) should be(true)
+
+        Await.result(cacheOfStrings.getVersion, 1.second) shouldBe Some(javaStringSerialVersionUID)
+
+        val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, getClass, "prefix7")
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings.getVersion, 1.second) should be(Some(throwableSerialVersionUID))
+        Await.result(cacheOfThrowables.getVersion, 1.second) should be(Some(throwableSerialVersionUID))
+      }
+    )
+  }
+
+  it should "clear cache when version changes" in {
+    withSystem(
+      implicit system => {
+        val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix8")
+
+        cacheOfStrings + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings.contains(cacheKey), 1.second) should be(true)
+
+        val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, getClass, "prefix8")
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings.contains(cacheKey), 1.second) should be(false)
+        Await.result(cacheOfThrowables.contains(cacheKey), 1.second) should be(false)
+      }
+    )
+  }
+
+  it should "not clear cache when creating new instance with same version" in {
+    withSystem(
+      implicit system => {
+        val cache1 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix9")
+
+        cache1 + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        Await.result(cache1.contains(cacheKey), 1.second) should be(true)
+
+        val cache2 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix9")
+
+        Thread.sleep(500)
+
+        Await.result(cache1.contains(cacheKey), 1.second) should be(true)
+        Await.result(cache2.contains(cacheKey), 1.second) should be(true)
+        Await.result(cache1.get(cacheKey, stringLoader), 1.second) should be(Await.result(cache2.get(cacheKey, stringLoader), 1.second))
+      }
+    )
+  }
+
+  it should "not clear other caches when one changes" in {
+    withSystem(
+      implicit system => {
+        val cacheOfStrings1  = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix10")
+        val cacheOfStrings2 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix11")
+
+        cacheOfStrings1 + (cacheKey, cacheEntry)
+        val anotherKey = "anotherkey"
+        cacheOfStrings2 + (anotherKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings1.contains(cacheKey), 1.second) should be(true)
+        Await.result(cacheOfStrings2.contains(anotherKey), 1.second) should be(true)
+        Await.result(cacheOfStrings1.contains(anotherKey), 1.second) should be(false)
+        Await.result(cacheOfStrings2.contains(cacheKey), 1.second) should be(false)
+
+        val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, getClass, "prefix10")
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings1.contains(cacheKey), 1.second) should be(false)
+        Await.result(cacheOfStrings2.contains(anotherKey), 1.second) should be(true)
+      }
+    )
+  }
+
+  def shouldContain(implicit cache: MonadCache[Future, String, Any], key: String): Unit = {
+    containsShouldBe(cache, key, expected = true)
+  }
+
+  def shouldNotContain(cache: MonadCache[Future, String, Any], key: String): Unit = {
+    containsShouldBe(cache, key, expected = false)
+  }
+
+  def containsShouldBe(cache: MonadCache[Future, String, Any], key: String, expected: Boolean): Unit = {
+    Await.result(cache.contains(key), 1.second) should be(expected)
   }
 
   override def afterAll() = {
