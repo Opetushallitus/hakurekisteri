@@ -107,32 +107,21 @@ object CacheFactory {
         if (oldVersion != newVersion) {
           logger.info(s"Serial version UID has changed from $oldVersion to $newVersion. Deleting all keys.")
 
-          /*var cursor = -1
-          while (cursor != 0) {
-            cursor = Await.result(deletingScan(cursor,  s"${cacheKeyPrefix}:*"), 1.minute)
-          }*/
-          deleteKeysSlow(s"${cacheKeyPrefix}:*").flatMap { _ =>
-            setVersion(newVersion)
-          }
+          val pattern = s"${cacheKeyPrefix}:*"
+          var cursor = 0
+          do {
+            cursor = Await.result(deletingScan(cursor,  pattern), 1.minute)
+          } while (cursor != 0)
+
+          setVersion(newVersion)
         } else {
           logger.info(s"Serial version UID has not changed, is still $newVersion.")
           Future.successful(true)
         }
       }
 
-      private def deleteKeysSlow(pattern: String): Future[Long] = {
-        r.keys(pattern).flatMap { keys =>
-          if (keys.nonEmpty) {
-            logger.info(s"Deleting ${keys.length} keys matching pattern $pattern")
-            r.del(keys: _*)
-          } else {
-            Future.successful(0l)
-          }
-        }
-      }
-
       private def deletingScan(cursor: Int, pattern: String): Future[Int] = {
-        r.scan(cursor = cursor, count = Some(1000), matchGlob = Some(pattern))
+        r.scan(cursor = cursor, matchGlob = Some(pattern))
           .flatMap { result =>
             val keys = result.data
             logger.info(s"Scan returned ${keys.length} matching keys at index ${result.index} for pattern ${pattern}")
