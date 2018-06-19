@@ -12,7 +12,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
   val cacheFactory = MockCacheFactory.get
 
-  def newCache(ttl: Long = 10.seconds.toMillis) = cacheFactory.getInstance[String, String](ttl, getClass, "moi")
+  def newCache(ttl: Long = 10.seconds.toMillis) = cacheFactory.getInstance[String, String](ttl, this.getClass, classOf[String], "moi")
     .asInstanceOf[InMemoryFutureCache[String,String]]
 
   behavior of "FutureCache"
