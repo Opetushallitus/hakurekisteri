@@ -84,7 +84,14 @@ object CacheFactory {
       private val versionPrefixKey = s"${cacheKeyPrefix}:version"
       private val newVersion: Long = {
         val streamClass = java.io.ObjectStreamClass.lookup(classOfT)
-        streamClass.getSerialVersionUID
+        try {
+          streamClass.getSerialVersionUID
+        } catch {
+          case e: NullPointerException =>
+            val msg = s"Class ${classOfT.getName} is not serializable - getSerialVersionUID resulted in NullPointerException"
+            logger.error(msg)
+            throw new RedisCacheInitializationException(msg)
+        }
       }
 
       init()

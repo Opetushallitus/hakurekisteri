@@ -72,7 +72,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
-          classOf[ValintaTulosActor], classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286251", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
+          classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos").get("1.2.246.562.29.90697286251", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
         cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
@@ -129,7 +129,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
-          classOf[ValintaTulosActor], classOf[ValintaTulosActor], "sijoittelu-tulos").get("1.2.246.562.29.90697286253", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
+          classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos").get("1.2.246.562.29.90697286253", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
         cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
@@ -199,7 +199,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
 
         Thread.sleep(300)
 
-        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], classOf[ValintaTulosActor], "sijoittelu-tulos")
+        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos")
         Await.result(cache.contains("1.2.246.562.29.11"), 1.second) should be(true)
         Await.result(cache.contains("1.2.246.562.29.12"), 1.second) should be(true)
         Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(false)
@@ -226,7 +226,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
 
         Thread.sleep(300)
 
-        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], classOf[ValintaTulosActor], "sijoittelu-tulos")
+        val cache = cacheFactory.getInstance[String, SijoitteluTulos](1111, classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos")
         Await.result(cache.contains("1.2.246.562.29.11"), 1.second) should be(true)
         Await.result(cache.contains("1.2.246.562.29.12"), 1.second) should be(true)
         Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(true)
