@@ -80,3 +80,4 @@ Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käyt
 
 * Hakemusten synkronoinnin voi pakottaa kutsumalla GET /suoritusrekisteri/rest/v1/haut/refresh/hakemukset
 (synkronointi ajetaan automaattisesti parin tunnin välein)
+
