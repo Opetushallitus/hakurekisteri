@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory.RedisCacheInitializationException
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, MonadCache}
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
 import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohde
@@ -284,6 +285,16 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
         val koodiVersion = Await.result(cacheOfKoodis.getVersion, 1.minute).get
 
         koodiVersion shouldNot be(hakukohdeVersion)
+      }
+    )
+  }
+
+  it should "throw an exception if initializing cache with non-serializable classOfT" in {
+    withSystem(
+      implicit system => {
+        intercept[RedisCacheInitializationException] {
+          redisCacheFactory.getInstance[String, String](3.minutes.toMillis, this.getClass, classOf[ActorSystem], "prefix15")
+        }
       }
     )
   }
