@@ -91,15 +91,16 @@ object CacheFactory {
 
       private def init(): Unit = {
         if (classOfT.getName.equals("scala.Option")) {
-          logger.error("Given classOfT parameter was an Option. Please use the inner type instead, e.g. " +
-            "classOf[A] instead of classOf[Option[A]]. Otherwise changes to the serializable class will " +
-            "not be detected and deserialization may break.")
+          logger.error("In cache with prefix $cacheKeyPrefix, given classOfT parameter was an Option. Please use the" +
+            " inner type instead, e.g. classOf[A] instead of classOf[Option[A]]. Otherwise changes to the serializable" +
+            " class will not be detected and deserialization may break.")
         }
 
         val runTimeTypeClass = manifest[T].runtimeClass
         if (!runTimeTypeClass.equals(classOfT)) {
-          logger.warn(s"Class of type parameter T ${runTimeTypeClass.getName} was not the same as given classOfT ${classOfT.getClass}. " +
-            "This is not a problem if the former is a wrapper for the latter, such as an Option.")
+          logger.warn(s"In cache with prefix $cacheKeyPrefix, class of type parameter T (${runTimeTypeClass.getName})" +
+            s" was not the same as given classOfT (${classOfT.getClass})." +
+            " This is not a problem if the former is a wrapper for the latter, such as an Option.")
         }
 
         val f: Future[Boolean] = getVersion.flatMap {
@@ -121,7 +122,7 @@ object CacheFactory {
 
       private def clearCacheIfVersionHasChanged(oldVersion: Long): Future[Boolean] = {
         if (oldVersion != newVersion) {
-          logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion. Deleting all keys.")
+          logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion in cache with prefix $cacheKeyPrefix. Deleting all keys.")
 
           val pattern = s"${cacheKeyPrefix}:*"
           val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "10").toInt
@@ -144,18 +145,20 @@ object CacheFactory {
           .flatMap { result =>
             val keys = result.data
             val keysCount = keys.length
-            logger.info(s"SCAN returned ${keysCount} matching keys between indices $startIndex and ${result.index} for PATTERN ${pattern}")
+            logger.trace(s"SCAN returned ${keysCount} matching keys for PATTERN ${pattern}")
             val fInner: Future[Long] = if (keys.nonEmpty) {
-              logger.info(s"Deleting ${keys.mkString(",")}")
+              logger.info(s"Deleting ${keys.length} keys between indices $startIndex and ${result.index}")
               r.del(keys: _*)
             } else {
               Future.successful(0l)
             }
             fInner.map { deletedCount =>
+              if (deletedCount > 0) {
+                logger.info(s"Successfully deleted $deletedCount keys")
+              }
               if (keysCount != deletedCount) {
                 logger.warn(s"Number of keys from SCAN was $keysCount but DEL command returned $deletedCount")
               }
-              logger.info(s"Deleted $deletedCount keys")
               result.index
             }
           }
