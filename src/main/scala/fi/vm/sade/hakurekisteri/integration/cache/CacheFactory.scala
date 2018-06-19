@@ -20,12 +20,14 @@ trait CacheFactory {
 
   def getInstance[K, T <: Serializable](expirationDurationMillis:Long,
                         clazz:Class[_],
+                        classOfT: Class[_],
                         cacheKeyPrefix:String)(implicit m: Manifest[T]): MonadCache[Future, K, T] = {
-    getInstance[K, T](expirationDurationMillis, prefix(clazz, cacheKeyPrefix))
+    getInstance[K, T](classOfT, expirationDurationMillis, prefix(clazz, cacheKeyPrefix))
   }
 
-  def getInstance[K, T <: Serializable](expirationDurationMillis:Long,
-                        cacheKeyPrefix:String)(implicit m: Manifest[T]): MonadCache[Future, K, T]
+  def getInstance[K, T <: Serializable](classOfT: Class[_],
+                                        expirationDurationMillis:Long,
+                                        cacheKeyPrefix:String)(implicit m: Manifest[T]): MonadCache[Future, K, T]
 }
 
 object CacheFactory {
@@ -35,7 +37,7 @@ object CacheFactory {
   }
 
   class InMemoryCacheFactory extends CacheFactory {
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String)(implicit m: Manifest[T]): InMemoryFutureCache[K, T] = {
+    override def getInstance[K, T](classOfT: Class[_], expirationDurationMillis: Long, cacheKeyPrefix: String)(implicit m: Manifest[T]): InMemoryFutureCache[K, T] = {
       new InMemoryFutureCache[K, T](expirationDurationMillis)
     }
   }
@@ -50,9 +52,10 @@ object CacheFactory {
       RedisClient(host = host, port = port)
     }
 
-    override def getInstance[K, T](expirationDurationMillis: Long, cacheKeyPrefix: String)(implicit m: Manifest[T]) = {
+    override def getInstance[K, T](classOfT: Class[_], expirationDurationMillis: Long, cacheKeyPrefix: String)(implicit m: Manifest[T]) = {
       new RedisCache[K, T](
         r,
+        classOfT,
         expirationDurationMillis,
         cacheKeyPrefix,
         config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
@@ -61,6 +64,7 @@ object CacheFactory {
     }
 
     class RedisCache[K, T](val r: RedisClient,
+                           classOfT: Class[_],
                            val expirationDurationMillis: Long,
                            val cacheKeyPrefix: String,
                            limitOfWaitingClientsToLog: Int,
@@ -79,14 +83,25 @@ object CacheFactory {
 
       private val versionPrefixKey = s"${cacheKeyPrefix}:version"
       private val newVersion: Long = {
-        val clazz = m.runtimeClass
-        val streamClass = java.io.ObjectStreamClass.lookup(clazz)
+        val streamClass = java.io.ObjectStreamClass.lookup(classOfT)
         streamClass.getSerialVersionUID
       }
 
       init()
 
       private def init(): Unit = {
+        if (classOfT.getName.equals("scala.Option")) {
+          logger.error("Given classOfT parameter was an Option. Please use the inner type instead, e.g. " +
+            "classOf[A] instead of classOf[Option[A]]. Otherwise changes to the serializable class will " +
+            "not be detected and deserialization may break.")
+        }
+
+        val runTimeTypeClass = manifest[T].runtimeClass
+        if (!runTimeTypeClass.equals(classOfT)) {
+          logger.warn(s"Class of type parameter T ${runTimeTypeClass.getName} was not the same as given classOfT ${classOfT.getClass}. " +
+            "This is not a problem if the former is a wrapper for the latter, such as an Option.")
+        }
+
         val f: Future[Boolean] = getVersion.flatMap {
           case Some(oldVersion) =>
             clearCacheIfVersionHasChanged(oldVersion)

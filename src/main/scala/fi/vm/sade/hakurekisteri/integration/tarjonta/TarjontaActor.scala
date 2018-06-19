@@ -78,9 +78,9 @@ case class KoulutusNotFoundException(message: String) extends TarjontaException(
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
 class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
-  private val koulutusCache = cacheFactory.getInstance[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "koulutus")
-  private val komoCache = cacheFactory.getInstance[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "komo")
-  private val hakukohdeCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, getClass, "hakukohde")
+  private val koulutusCache = cacheFactory.getInstance[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[HakukohteenKoulutukset], "koulutus")
+  private val komoCache = cacheFactory.getInstance[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[KomoResponse], "komo")
+  private val hakukohdeCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[Hakukohde], "hakukohde")
 
   val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
   implicit val ec: ExecutionContext = context.dispatcher

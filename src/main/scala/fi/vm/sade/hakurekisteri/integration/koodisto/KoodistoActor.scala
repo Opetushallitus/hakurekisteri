@@ -26,9 +26,9 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
 
   implicit val ec: ExecutionContext =  context.dispatcher
 
-  private val koodiCache = cacheFactory.getInstance[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis, getClass, "koodi")
-  private val relaatioCache = cacheFactory.getInstance[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis, getClass, "relaatio")
-  private val koodiArvotCache = cacheFactory.getInstance[String, KoodistoKoodiArvot](config.integrations.koodistoCacheHours.hours.toMillis, getClass, "koodi-arvo")
+  private val koodiCache = cacheFactory.getInstance[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[Koodi], "koodi")
+  private val relaatioCache = cacheFactory.getInstance[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[GetRinnasteinenKoodiArvoQuery], "relaatio")
+  private val koodiArvotCache = cacheFactory.getInstance[String, KoodistoKoodiArvot](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[KoodistoKoodiArvot],"koodi-arvo")
   val maxRetries = config.integrations.koodistoConfig.httpClientMaxRetries
 
   override def receive: Receive = {

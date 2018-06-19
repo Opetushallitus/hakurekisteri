@@ -36,8 +36,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
-  private val cache = cacheFactory.getInstance[String, Organisaatio](timeToLive.toMillis, getClass, "organisaatio")
-  private val childOidCache = cacheFactory.getInstance[String, ChildOids](timeToLive.toMillis, getClass, "child-oids")
+  private val cache = cacheFactory.getInstance[String, Organisaatio](timeToLive.toMillis, this.getClass, classOf[Organisaatio], "organisaatio")
+  private val childOidCache = cacheFactory.getInstance[String, ChildOids](timeToLive.toMillis, this.getClass, classOf[ChildOids], "child-oids")
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Future[_] = {
