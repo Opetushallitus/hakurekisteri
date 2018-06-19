@@ -78,7 +78,7 @@ object CacheFactory {
       private val updateConcurrencyHandler = new RedisUpdateConcurrencyHandler[K,T](r, limitOfWaitingClientsToLog)
 
       private val versionPrefixKey = s"${cacheKeyPrefix}:version"
-      private val newVersion = {
+      private val newVersion: Long = {
         val clazz = m.runtimeClass
         val streamClass = java.io.ObjectStreamClass.lookup(clazz)
         streamClass.getSerialVersionUID
@@ -91,6 +91,7 @@ object CacheFactory {
           case Some(oldVersion) =>
             clearCacheIfVersionHasChanged(oldVersion)
           case None =>
+            logger.info(s"No version key in cache with prefix $cacheKeyPrefix. It will be assumed that the version has not changed.")
             setVersion(newVersion)
         }
         f.onFailure{case t =>
@@ -105,14 +106,17 @@ object CacheFactory {
 
       private def clearCacheIfVersionHasChanged(oldVersion: Long): Future[Boolean] = {
         if (oldVersion != newVersion) {
-          logger.info(s"Serial version UID has changed from $oldVersion to $newVersion. Deleting all keys.")
+          logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion. Deleting all keys.")
 
           val pattern = s"${cacheKeyPrefix}:*"
-          var cursor = 0
+          val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "10").toInt
+          logger.info(s"Scanning Redis cache with COUNT $count")
+          var index = 0
           do {
-            cursor = Await.result(deletingScan(cursor,  pattern), 1.minute)
-          } while (cursor != 0)
+            index = Await.result(deletingScan(index, count, pattern), 1.minute)
+          } while (index != 0)
 
+          logger.info("Finished scanning and deleting.")
           setVersion(newVersion)
         } else {
           logger.info(s"Serial version UID has not changed, is still $newVersion.")
@@ -120,23 +124,30 @@ object CacheFactory {
         }
       }
 
-      private def deletingScan(cursor: Int, pattern: String): Future[Int] = {
-        r.scan(cursor = cursor, matchGlob = Some(pattern))
+      private def deletingScan(startIndex: Int, scanCount: Int, pattern: String): Future[Int] = {
+        r.scan(cursor = startIndex, count = Some(scanCount), matchGlob = Some(pattern))
           .flatMap { result =>
             val keys = result.data
-            logger.info(s"Scan returned ${keys.length} matching keys at index ${result.index} for pattern ${pattern}")
-            val fInner = if (keys.nonEmpty) {
+            val keysCount = keys.length
+            logger.info(s"SCAN returned ${keysCount} matching keys between indices $startIndex and ${result.index} for PATTERN ${pattern}")
+            val fInner: Future[Long] = if (keys.nonEmpty) {
               logger.info(s"Deleting ${keys.mkString(",")}")
               r.del(keys: _*)
             } else {
-              Future.successful(Unit)
+              Future.successful(0l)
             }
-            fInner.map { _ => result.index }
+            fInner.map { deletedCount =>
+              if (keysCount != deletedCount) {
+                logger.warn(s"Number of keys from SCAN was $keysCount but DEL command returned $deletedCount")
+              }
+              logger.info(s"Deleted $deletedCount keys")
+              result.index
+            }
           }
       }
 
       private def setVersion(version: Long): Future[Boolean] = {
-        logger.warn(s"Storing version value $version to Redis cache with key $versionPrefixKey")
+        logger.warn(s"Storing new version value $version to Redis cache with key $versionPrefixKey")
         val f: Future[Boolean] = r.set[Long](versionPrefixKey, version, Some(expirationDurationMillis))
         f.onSuccess{case b: Boolean =>
           if (!b) {
