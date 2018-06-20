@@ -736,7 +736,8 @@ case class AtaruHakemusDto(oid: String,
                            kotikunta: Option[String],
                            asuinmaa: String,
                            paymentObligations: Map[String, String],
-                           kkPohjakoulutus: List[String])
+                           kkPohjakoulutus: List[String],
+                           korkeakoulututkintoVuosi: Option[Int])
 
 case class AtaruHakemus(oid: String,
                         personOid: Option[String],
@@ -751,7 +752,8 @@ case class AtaruHakemus(oid: String,
                         kotikunta: Option[String],
                         asuinmaa: String,
                         paymentObligations: Map[String, String],
-                        kkPohjakoulutus: List[String]) extends HakijaHakemus {
+                        kkPohjakoulutus: List[String],
+                        korkeakoulututkintoVuosi: Option[Int]) extends HakijaHakemus {
 
   val hetu: Option[String] = henkilo.hetu
   val stateValid: Boolean = true
