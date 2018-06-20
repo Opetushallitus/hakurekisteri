@@ -98,7 +98,7 @@ object CacheFactory {
 
       private def init(): Unit = {
         if (classOfT.getName.equals("scala.Option")) {
-          logger.error("In cache with prefix $cacheKeyPrefix, given classOfT parameter was an Option. Please use the" +
+          logger.error(s"In cache with prefix $cacheKeyPrefix, given classOfT parameter was an Option. Please use the" +
             " inner type instead, e.g. classOf[A] instead of classOf[Option[A]]. Otherwise changes to the serializable" +
             " class will not be detected and deserialization may break.")
         }
@@ -106,7 +106,7 @@ object CacheFactory {
         val runTimeTypeClass = manifest[T].runtimeClass
         if (!runTimeTypeClass.equals(classOfT)) {
           logger.warn(s"In cache with prefix $cacheKeyPrefix, class of type parameter T (${runTimeTypeClass.getName})" +
-            s" was not the same as given classOfT (${classOfT.getClass})." +
+            s" was not the same as given classOfT (${classOfT.getName})." +
             " This is not a problem if the former is a wrapper for the latter, such as an Option.")
         }
 
@@ -142,7 +142,7 @@ object CacheFactory {
           logger.info("Finished scanning and deleting.")
           setVersion(newVersion)
         } else {
-          logger.info(s"Serial version UID has not changed, is still $newVersion.")
+          logger.info(s"Serial version UID has not changed in cache with prefix $cacheKeyPrefix., is still $newVersion.")
           Future.successful(true)
         }
       }
