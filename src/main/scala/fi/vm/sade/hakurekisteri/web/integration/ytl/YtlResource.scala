@@ -9,11 +9,11 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, Use
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
-class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport {
+class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport {
 
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -42,15 +42,17 @@ class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val sys
     logger.info(s"Fetching YTL data for person OID $personOid")
 
     val done: Seq[Try[Kokelas]] = Await.result(ytlIntegration.sync(personOid), 10.seconds)
-    val exists = done.exists{
+    val exists = done.exists {
       case Success(s) => true
-      case _ => false
+      case Failure(e) =>
+        logger.error(e, s"Failure in syncing YTL data for person OID $personOid . Results: $done")
+        false
     }
-    if(exists) {
+    if (exists) {
       Accepted()
     } else {
+      logger.error(s"Failure in syncing YTL data for person OID $personOid . Returning error to caller. Got ${done.size} results: $done")
       InternalServerError()
     }
   }
-
 }
