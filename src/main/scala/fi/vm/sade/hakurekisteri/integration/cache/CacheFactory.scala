@@ -132,14 +132,18 @@ object CacheFactory {
           logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion in cache with prefix $cacheKeyPrefix. Deleting all keys.")
 
           val pattern = s"${cacheKeyPrefix}:*"
-          val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "10").toInt
+          val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "200").toInt
           logger.info(s"Scanning Redis cache with COUNT $count")
+
           var index = 0
+          var totalDeleted = 0L
           do {
-            index = Await.result(deletingScan(index, count, pattern), 1.minute)
+            val (newIndex, deletedCount) = Await.result(deletingScan(index, count, pattern), 1.minute)
+            index = newIndex
+            totalDeleted += deletedCount
           } while (index != 0)
 
-          logger.info("Finished scanning and deleting.")
+          logger.info(s"Finished scanning and deleting. Total number of keys successfully deleted: $totalDeleted")
           setVersion(newVersion)
         } else {
           logger.info(s"Serial version UID has not changed in cache with prefix $cacheKeyPrefix., is still $newVersion.")
@@ -147,26 +151,26 @@ object CacheFactory {
         }
       }
 
-      private def deletingScan(startIndex: Int, scanCount: Int, pattern: String): Future[Int] = {
+      private def deletingScan(startIndex: Int, scanCount: Int, pattern: String): Future[(Int,Long)] = {
         r.scan(cursor = startIndex, count = Some(scanCount), matchGlob = Some(pattern))
           .flatMap { result =>
             val keys = result.data
             val keysCount = keys.length
-            logger.trace(s"SCAN returned ${keysCount} matching keys for PATTERN ${pattern}")
             val fInner: Future[Long] = if (keys.nonEmpty) {
-              logger.info(s"Deleting ${keys.length} keys between indices $startIndex and ${result.index}")
+              logger.info(s"SCAN returned $keysCount matching keys for PATTERN ${pattern} between indices $startIndex and ${result.index}, deleting.")
               r.del(keys: _*)
             } else {
-              Future.successful(0l)
+              logger.trace(s"SCAN returned no matching keys for PATTERN ${pattern} between indices $startIndex and ${result.index}.")
+              Future.successful(0L)
             }
             fInner.map { deletedCount =>
               if (deletedCount > 0) {
-                logger.info(s"Successfully deleted $deletedCount keys")
+                logger.trace(s"Successfully deleted $deletedCount keys")
               }
               if (keysCount != deletedCount) {
                 logger.warn(s"Number of keys from SCAN was $keysCount but DEL command returned $deletedCount")
               }
-              result.index
+              (result.index, deletedCount)
             }
           }
       }
