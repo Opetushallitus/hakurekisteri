@@ -1,21 +1,19 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.testkit.{TestActorRef, TestProbe}
-import fi.vm.sade.hakurekisteri.{Config, MockConfig}
+import akka.actor.ActorSystem
+import akka.testkit.TestProbe
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, Security}
-import fi.vm.sade.scalaproperties.OphProperties
+import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import org.junit.runner.RunWith
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.FlatSpec
 
 import scala.concurrent.Future
 
@@ -29,7 +27,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   val fileSystem = YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
   val config: Config = new MockConfig
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, new TestProbe(system).ref, config)
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri, new TestProbe(system).ref, config)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
