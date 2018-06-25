@@ -104,10 +104,9 @@ object CacheFactory {
         }
 
         val runTimeTypeClass = manifest[T].runtimeClass
-        if (!runTimeTypeClass.equals(classOfT)) {
+        if (!runTimeTypeClass.equals(classOfT) && !runTimeTypeClass.getName.equals("scala.Option")) {
           logger.warn(s"In cache with prefix $cacheKeyPrefix, class of type parameter T (${runTimeTypeClass.getName})" +
-            s" was not the same as given classOfT (${classOfT.getName})." +
-            " This is not a problem if the former is a wrapper for the latter, such as an Option.")
+            s" was not the same as given classOfT (${classOfT.getName}).")
         }
 
         val f: Future[Boolean] = getVersion.flatMap {
