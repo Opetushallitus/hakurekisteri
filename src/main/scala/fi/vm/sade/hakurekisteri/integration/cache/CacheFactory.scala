@@ -110,8 +110,12 @@ object CacheFactory {
         }
 
         val f: Future[Boolean] = getVersion.flatMap {
-          case Some(oldVersion) =>
-            clearCacheIfVersionHasChanged(oldVersion)
+          case Some(oldVersion) if oldVersion == newVersion =>
+            logger.info(s"Serial version UID has not changed in cache with prefix $cacheKeyPrefix, is still $newVersion.")
+            Future.successful(true)
+          case Some(oldVersion)  =>
+            logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion in cache with prefix $cacheKeyPrefix. Deleting all keys.")
+            clearCache(oldVersion)
           case None =>
             logger.info(s"No version key in cache with prefix $cacheKeyPrefix. It will be assumed that the version has not changed.")
             setVersion(newVersion)
@@ -126,10 +130,7 @@ object CacheFactory {
         r.get[Long](versionPrefixKey)
       }
 
-      private def clearCacheIfVersionHasChanged(oldVersion: Long): Future[Boolean] = {
-        if (oldVersion != newVersion) {
-          logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion in cache with prefix $cacheKeyPrefix. Deleting all keys.")
-
+      private def clearCache(oldVersion: Long): Future[Boolean] = {
           val pattern = s"${cacheKeyPrefix}:*"
           val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "200").toInt
           logger.info(s"Scanning Redis cache with COUNT $count")
@@ -144,10 +145,6 @@ object CacheFactory {
 
           logger.info(s"Finished scanning and deleting. Total number of keys successfully deleted: $totalDeleted")
           setVersion(newVersion)
-        } else {
-          logger.info(s"Serial version UID has not changed in cache with prefix $cacheKeyPrefix., is still $newVersion.")
-          Future.successful(true)
-        }
       }
 
       private def deletingScan(startIndex: Int, scanCount: Int, pattern: String): Future[(Int,Long)] = {
