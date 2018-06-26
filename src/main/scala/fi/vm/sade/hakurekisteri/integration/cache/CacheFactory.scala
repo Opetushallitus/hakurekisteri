@@ -109,10 +109,10 @@ object CacheFactory {
             s" was not the same as given classOfT (${classOfT.getName}).")
         }
 
-        val f: Future[Boolean] = getVersion.flatMap {
+        val f: Future[Unit] = getVersion.flatMap {
           case Some(oldVersion) if oldVersion == newVersion =>
             logger.info(s"Serial version UID has not changed in cache with prefix $cacheKeyPrefix, is still $newVersion.")
-            Future.successful(true)
+            Future.successful(())
           case Some(oldVersion)  =>
             logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion in cache with prefix $cacheKeyPrefix. Deleting all keys.")
             clearCache(oldVersion)
@@ -130,7 +130,7 @@ object CacheFactory {
         r.get[Long](versionPrefixKey)
       }
 
-      private def clearCache(oldVersion: Long): Future[Boolean] = {
+      private def clearCache(oldVersion: Long): Future[Unit] = {
           val pattern = s"${cacheKeyPrefix}:*"
           val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "200").toInt
           logger.info(s"Scanning Redis cache with COUNT $count")
@@ -153,7 +153,7 @@ object CacheFactory {
             val keys = result.data
             val keysCount = keys.length
             val fInner: Future[Long] = if (keys.nonEmpty) {
-              logger.info(s"SCAN returned $keysCount matching keys for PATTERN ${pattern} between indices $startIndex and ${result.index}, deleting.")
+              logger.trace(s"SCAN returned $keysCount matching keys for PATTERN ${pattern} between indices $startIndex and ${result.index}, deleting.")
               r.del(keys: _*)
             } else {
               logger.trace(s"SCAN returned no matching keys for PATTERN ${pattern} between indices $startIndex and ${result.index}.")
@@ -171,14 +171,16 @@ object CacheFactory {
           }
       }
 
-      private def setVersion(version: Long): Future[Boolean] = {
+      private def setVersion(version: Long): Future[Unit] = {
         logger.warn(s"Storing new version value $version to Redis cache with key $versionPrefixKey")
-        val f: Future[Boolean] = r.set[Long](versionPrefixKey, version, Some(expirationDurationMillis))
-        f.onSuccess{case b: Boolean =>
-          if (!b) {
-            throw new RuntimeException(s"Failed to store version in Redis cache with prefix $cacheKeyPrefix")
-        }}
-        f
+        r.set[Long](versionPrefixKey, version, Some(expirationDurationMillis))
+          .flatMap { b: Boolean =>
+            if (!b) {
+              Future.failed(new RuntimeException(s"Failed to store version in Redis cache with prefix $cacheKeyPrefix"))
+            } else {
+              Future.successful(())
+            }
+          }
       }
 
       def +(key: K, value: T): Future[_] =  {
