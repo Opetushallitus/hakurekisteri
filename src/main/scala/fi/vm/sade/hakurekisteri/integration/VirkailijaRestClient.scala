@@ -132,6 +132,14 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         } else Future.failed(t)
     }
 
+  private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger, resource: A): Future[B] =
+    Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
+      case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+        if (retryCount.getAndIncrement <= maxRetries) {
+          logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
+        } else Future.failed(t)
+    }
   private def result(t: Try[_]): String = t match {
     case Success(_) => "success"
     case Failure(e) => s"failure: $e"
@@ -172,13 +180,14 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     result
   }
 
-  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
-    postObjectWithCodes[A,B](uriKey, Seq(acceptedResponseCode), resource, args:_*)
+  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A, basicAuth: Boolean = false): Future[B] = {
+    postObjectWithCodes[A,B](uriKey, Seq(acceptedResponseCode), 0, resource, basicAuth, args:_*)
   }
 
-  def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], resource: A, args: AnyRef*): Future[B] = {
+  def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, resource: A, basicAuth: Boolean, args: AnyRef*): Future[B] = {
+    val retryCount = new AtomicInteger(1)
     val url = OphUrlProperties.url(uriKey, args:_*)
-    val result = Client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource))
+    val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
     logLongQuery(result, url)
     result
   }

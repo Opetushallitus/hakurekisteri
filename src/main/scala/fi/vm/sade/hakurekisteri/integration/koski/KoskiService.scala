@@ -32,6 +32,7 @@ class KoskiService(
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+  private val logger = Logging.getLogger(system, this)
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
@@ -39,13 +40,10 @@ class KoskiService(
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
 
-  private val logger = Logging.getLogger(system, this)
-
   case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
   case class SearchParamsWithPagination (muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00", pageSize: Int, pageNumber: Int)
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    //logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString)
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
@@ -155,8 +153,8 @@ class KoskiService(
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
   //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
-  var lastActivated: Long = 0
-  var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(5)
+  private var lastActivated: Long = 0
+  val minimumTimeBetweenStarts: Long = TimeUnit.MINUTES.toMillis(5)
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
 
     if(lastActivated + minimumTimeBetweenStarts < System.currentTimeMillis()) {
@@ -185,12 +183,8 @@ class KoskiService(
     result
   }
 
-  def makeKoskiCallForSinglePerson(personOid: String): Future[KoskiHenkiloContainer] = {
-    virkailijaRestClient.readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
-  }
-
   def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
-    val batchSize: Int = 20
+    val batchSize: Int = 1000
     val waitBetweenBatchesInMilliseconds: Long = 10000L
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
@@ -201,85 +195,27 @@ class KoskiService(
       Thread.sleep(waitBetweenBatchesInMilliseconds)
       logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
 
-      subSeq.foreach(oppija => updateHenkilo(oppija, createLukio))
+      updateHenkilot(subSeq.toSet, createLukio)
 
     })
     Future.successful({})
   }
 
-  //Fixme Huom. Keskeneräinen - tämä ei välttämättä toimi luotettavasti virhetilanteissa. Käytä handleHenkiloUpdatea, joka on sekä luotettavampi että tehottomampi.
-  def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
-    var successful: AtomicInteger = new AtomicInteger(0)
-    val failed: AtomicInteger = new AtomicInteger(0)
-    val batchSize: Int = 100
-    val waitBetweenBatchesInMilliseconds: Long = 10000L
-    val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
-    val totalGroups: Int = groupedOids.length
-    logger.info(s"BulkHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
-    var current: Int = 0
-    groupedOids.foreach(subSeq => {
-      current += 1
-      Thread.sleep(waitBetweenBatchesInMilliseconds)
-      logger.info(s"BulkHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
-      logger.info(s"BulkHenkiloUpdate: Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
-
-      Future.traverse(subSeq)(makeKoskiCallForSinglePerson).onComplete({
-        case Success(koskiDataForBatch) => {
-          logger.info(s"Koskikutsu onnistui, tulosjoukon koko: ${koskiDataForBatch.size}")
-          if(koskiDataForBatch.size < batchSize)
-            failed.addAndGet(batchSize - koskiDataForBatch.size)
-          fetchPersonAliases(koskiDataForBatch).flatMap(res => {
-            val (henkilot, personOidsWithAliases) = res
-            Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
-              case Failure(e) =>
-                logger.error("BulkHenkiloUpdate: Error triggering update for henkilö: {}", e)
-                failed.incrementAndGet()
-                Future.failed(e)
-              case Success(value) => {
-                logger.debug("updateHenkilo success")
-                successful.incrementAndGet()
-                Future.successful(())
-              }
-            }
-          })
-        }
-        case Failure(e) =>
-          failed.incrementAndGet()
-          logger.error("Virhe bulkhenkilöupdatessa: {}", e)
-      })
-    })
-    Future.successful({})
-  }
-
-  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
-
-    if (!createLukio) {
-      logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
-    } else {
-      logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
-    }
-
-    val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
-      .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
+  override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
+    val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
+      .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.oids", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
         case e: Exception =>
-          logger.error("Kutsu koskeen oppijanumerolle {} epäonnistui: {} ", oppijaOid, e)
+          logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
           Future.failed(e)
       }
 
-    val oppijadata = oppijadatasingle.map(container => List(container))
-      .recoverWith {
-      case e: Exception =>
-        //logger.error("Virhe käsiteltäessä oppijan {} dataa: {}", oppijaOid, e)
-        Future.failed(e)
-    }
-
-    val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
+    val result: Future[Unit] = oppijat.flatMap(fetchPersonAliases).flatMap(res  => {
       val (henkilot, personOidsWithAliases) = res
       logger.debug(s"Haettu henkilöt=$henkilot")
       Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
         case Failure(exception) =>
-          logger.error("Error triggering update for henkilö {} : {}", oppijaOid, exception)
+          logger.error("Error triggering update for henkilö {} : {}", oppijaOids, exception)
           Future.failed(exception)
         case Success(value) => {
           logger.debug("updateHenkilo success")
@@ -293,20 +229,17 @@ class KoskiService(
   //Poistaa KoskiHenkiloContainerin sisältä sellaiset opiskeluoikeudet, joilla ei ole oppilaitosta jolla on määritelty oid.
   //Vaaditaan lisäksi, että käsiteltävillä opiskeluoikeuksilla on ainakin yksi tilatieto.
   private def removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
-    var result = Seq[KoskiHenkiloContainer]()
-    data.foreach(container => {
+    data.flatMap(container => {
       val oikeudet = container.opiskeluoikeudet.filter(oikeus => {
-        (oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined && !oikeus.tila.opiskeluoikeusjaksot.isEmpty)
+        oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined && oikeus.tila.opiskeluoikeusjaksot.nonEmpty
       })
-      if(oikeudet.length > 0) //Jos ollaan poistettu kaikki opiskeluoikeudet, voidaan unohtaa koko container.
-        result = result :+ container.copy(opiskeluoikeudet = oikeudet)
+      if(oikeudet.nonEmpty) Seq(container.copy(opiskeluoikeudet = oikeudet)) else Seq()
     })
-    result
   }
 
   private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Unit = {
     val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
-    if(filteredHenkilot.length > 0) {
+    if(filteredHenkilot.nonEmpty) {
       filteredHenkilot.foreach(henkilo => {
         triggers.foreach(trigger => trigger.f(henkilo, personOidsWithAliases, createLukio))
       })
@@ -363,6 +296,7 @@ case class KoskiSuoritus(
                   alkamispäivä: Option[String],
                   //jääLuokalle is only used for peruskoulu
                   jääLuokalle: Option[Boolean],
+                  tutkintonimike: Seq[KoskiKoodi] = Nil,
                   tila: Option[KoskiKoodi] = None)
 
 case class KoskiOsasuoritus(
