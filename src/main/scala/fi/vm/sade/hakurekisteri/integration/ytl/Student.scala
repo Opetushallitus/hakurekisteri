@@ -140,9 +140,9 @@ object StudentToKokelas {
 
   def convert(oid: String, s: Student): Kokelas = {
     val suoritus: VirallinenSuoritus = toYoTutkinto(oid, s)
-    val yoTodistus = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate))
+    val yoTodistus = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate, oid))
     val osakokeet = s.exams.flatMap(exam => exam.sections.map(section => {
-      Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate)
+      Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate, oid)
     }))
     Kokelas(oid,suoritus,None,yoTodistus,osakokeet)
   }
