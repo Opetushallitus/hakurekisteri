@@ -185,14 +185,12 @@ class KoskiService(
 
   def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
     val batchSize: Int = 1000
-    val waitBetweenBatchesInMilliseconds: Long = 10000L
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
     var current: Int = 0
     groupedOids.foreach(subSeq => {
       current += 1
-      Thread.sleep(waitBetweenBatchesInMilliseconds)
       logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
 
       updateHenkilot(subSeq.toSet, createLukio)
@@ -212,7 +210,7 @@ class KoskiService(
 
     val result: Future[Unit] = oppijat.flatMap(fetchPersonAliases).flatMap(res  => {
       val (henkilot, personOidsWithAliases) = res
-      logger.debug(s"Haettu henkilöt=$henkilot")
+      logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä!")
       Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
         case Failure(exception) =>
           logger.error("Error triggering update for henkilö {} : {}", oppijaOids, exception)
