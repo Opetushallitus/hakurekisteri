@@ -203,7 +203,7 @@ class KoskiService(
 
   override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
-      .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.oids", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
+      .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
         case e: Exception =>
           logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
