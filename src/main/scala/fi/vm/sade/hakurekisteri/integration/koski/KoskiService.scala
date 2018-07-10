@@ -123,16 +123,13 @@ class KoskiService(
     }
     val now = System.currentTimeMillis()
     synchronized {
-      val reallyOldAndStillRunning = (now - startTimestamp) > timeoutAfter
-      if(oneJobAtATime.isCompleted || reallyOldAndStillRunning) {
-        if(!oneJobAtATime.isCompleted && reallyOldAndStillRunning) {
-          logger.error(s"${TimeUnit.HOURS.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} tuntia vanha Koskikutsu oli vielä käynnissä!")
-        }
+      if(oneJobAtATime.isCompleted) {
+        logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}")
         oneJobAtATime = hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate)
         startTimestamp = System.currentTimeMillis()
         Future.successful({})
       } else {
-        val err = s"${TimeUnit.MINUTES.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} minuuttia vanha Koskikutsu on vielä käynnissä!"
+        val err = s"${TimeUnit.MINUTES.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} minuuttia vanha Koskesta päivittäminen on vielä käynnissä!"
         logger.error(err)
         Future.failed(new RuntimeException(err))
       }
