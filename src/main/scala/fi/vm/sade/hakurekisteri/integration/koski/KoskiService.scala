@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.{Date, TimeZone}
 
 import akka.actor.{ActorSystem, Scheduler}
@@ -111,76 +110,33 @@ class KoskiService(
     }
   }
 
-  //Päivitetään minuutin välein minuutin aikaikkunallinen muuttunutta dataa Koskesta.
-  //HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
-  //On tärkeää laahata hieman menneisyydessä, koska hyvin lähellä nykyhetkeä saattaa jäädä tietoa siirtymättä Sureen
-  //jos Kosken päässä data ei ole ehtinyt kantaan asti ennen kuin sen perään kysellään.
-  var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
-  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)),
-                           refreshFrequency: FiniteDuration = 1.minute,
-                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
-    if(endDateSuomiTime.isBeforeNow) {
-      logger.info("processModifiedKoski - Cutoff date of {} reached, stopping", endDateSuomiTime.toString)
-      return
-    }
-    scheduler.scheduleOnce(refreshFrequency)({
-      var catchup = false //Estetään prosessoijaa jättäytymästä vähitellen yhä enemmän jälkeen vaihtelevien käsittelyaikojen takia
-      var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
-      if (searchWindowStartTime.getTime < (Platform.currentTime - TimeUnit.MINUTES.toMillis(5))) {
-        searchWindowEndTime = new Date(searchWindowStartTime.getTime + searchWindowSize + maximumCatchup)
-        catchup = true
-      }
-      val clampedSearchWindowStartTime = clampTimeToEnd(searchWindowStartTime)
-      searchWindowEndTime = clampTimeToEnd(searchWindowEndTime)
-      fetchChanged(
-        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
-          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime ))
-      ).flatMap(fetchPersonAliases).onComplete {
-        case Success((henkilot, personOidsWithAliases)) =>
-          logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
-          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-            case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
-            case _ =>
-          }
-          processModifiedKoski(searchWindowEndTime, refreshFrequency)
-        case Failure(t) =>
-          logger.error(t, "processModifiedKoski - fetching modified henkilot failed, retrying")
-          processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
-      }
-    })
-
-  }
-
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
   //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
-  private var lastActivated: Long = 0
-  val minimumTimeBetweenStarts: Long = TimeUnit.MINUTES.toMillis(5)
+  private var startTimestamp: Long = 0
+  val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
+  private var oneJobAtATime = Future.successful({})
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
-
-    if(lastActivated + minimumTimeBetweenStarts < System.currentTimeMillis()) {
-      logger.info(s"Käynnistetään haun hakijoiden tietojen päivitys hakuOidille $hakuOid")
-      if(createLukio) {
-        logger.info(s"Päivitetään myös lukion arvosanat hakuOidille $hakuOid")
+    def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
+      val personOids: Seq[String] = personOidsSet.toSeq
+      logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
+      handleHenkiloUpdate(personOids, createLukio)
+    }
+    val now = System.currentTimeMillis()
+    synchronized {
+      val reallyOldAndStillRunning = (now - startTimestamp) > timeoutAfter
+      if(oneJobAtATime.isCompleted || reallyOldAndStillRunning) {
+        if(reallyOldAndStillRunning) {
+          logger.error(s"${TimeUnit.HOURS.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} tuntia vanha Koskikutsu oli vielä käynnissä!")
+        }
+        oneJobAtATime = hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate)
+        startTimestamp = System.currentTimeMillis()
+        Future.successful({})
+      } else {
+        val err = s"${TimeUnit.MINUTES.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} minuuttia vanha Koskikutsu on vielä käynnissä!"
+        logger.error(err)
+        Future.failed(new RuntimeException(err))
       }
-      lastActivated = System.currentTimeMillis()
-    } else {
-      logger.error(s"Haun henkilöiden päivitystä ei voida aloittaa, koska edellisestä käynnistyksestä ei ole vielä kulunut $minimumTimeBetweenStarts millisekuntia.")
-      return Future.failed(new Exception("Haun tietojen päivitys yritettiin käynnistää, edellisestä käynnistyksestä on alle $minimumTimeBetweenStarts millisekuntia."))
     }
-
-    var result: Future[Unit] = Future.successful({})
-    hakemusService.personOidsForHaku(hakuOid, None).onComplete {
-      case Success(personOidsSet: Set[String]) =>
-        val personOids: Seq[String] = personOidsSet.toSeq
-        logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-        result = handleHenkiloUpdate(personOids, createLukio)
-      case Failure(e) =>
-        logger.error("Error updating henkilöt for haku: {}", e)
-        result = Future.failed(e)
-      case _ => logger.error(s"Tuntematon virhe päivittäessä Koskesta henkilöitä haulle $hakuOid")
-        result = Future.failed(new RuntimeException)
-    }
-    result
   }
 
   def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
@@ -188,15 +144,19 @@ class KoskiService(
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
-    var current: Int = 0
-    groupedOids.foreach(subSeq => {
-      current += 1
-      logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
 
-      updateHenkilot(subSeq.toSet, createLukio)
+    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
+      batches match {
+        case Nil => Future.successful({})
+        case batch :: tail => {
+          val (subSeq, index) = batch
+          logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
+          updateHenkilot(subSeq.toSet, createLukio).flatMap(s => handleBatch(tail))
+        }
+      }
+    }
 
-    })
-    Future.successful({})
+    handleBatch(groupedOids.zipWithIndex)
   }
 
   override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
