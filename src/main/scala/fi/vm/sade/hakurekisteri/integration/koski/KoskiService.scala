@@ -112,7 +112,7 @@ class KoskiService(
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
   //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
-  private var startTimestamp: Long = 0
+  private var startTimestamp: Long = 0L
   val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
   private var oneJobAtATime = Future.successful({})
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
@@ -125,7 +125,7 @@ class KoskiService(
     synchronized {
       val reallyOldAndStillRunning = (now - startTimestamp) > timeoutAfter
       if(oneJobAtATime.isCompleted || reallyOldAndStillRunning) {
-        if(reallyOldAndStillRunning) {
+        if(!oneJobAtATime.isCompleted && reallyOldAndStillRunning) {
           logger.error(s"${TimeUnit.HOURS.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} tuntia vanha Koskikutsu oli vielä käynnissä!")
         }
         oneJobAtATime = hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate)
