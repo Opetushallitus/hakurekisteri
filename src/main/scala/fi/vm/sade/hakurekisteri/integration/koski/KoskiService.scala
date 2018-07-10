@@ -156,7 +156,12 @@ class KoskiService(
       }
     }
 
-    handleBatch(groupedOids.zipWithIndex)
+    val f = handleBatch(groupedOids.zipWithIndex)
+    f.onComplete {
+      case Success(_) => logger.info("Koskipäivitys valmistui!")
+      case Failure(e) => logger.error(s"Koskipäivitys epäonnistui: ${e.getMessage}")
+    }
+    f
   }
 
   override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
