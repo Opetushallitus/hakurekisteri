@@ -143,14 +143,11 @@ class KoskiService(
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
 
     def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
-      batches match {
-        case Nil => Future.successful({})
-        case batch :: tail => {
-          val (subSeq, index) = batch
-          logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
-          updateHenkilot(subSeq.toSet, createLukio).flatMap(s => handleBatch(tail))
-        }
-      }
+      batches.headOption.map(batch => {
+        val (subSeq, index) = batch
+        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
+        updateHenkilot(subSeq.toSet, createLukio).flatMap(s => handleBatch(batches.tail))
+      }).getOrElse(Future.successful({}))
     }
 
     val f = handleBatch(groupedOids.zipWithIndex)
