@@ -111,6 +111,45 @@ class KoskiService(
     }
   }
 
+  //Päivitetään minuutin välein minuutin aikaikkunallinen muuttunutta dataa Koskesta.
+  //HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
+  //On tärkeää laahata hieman menneisyydessä, koska hyvin lähellä nykyhetkeä saattaa jäädä tietoa siirtymättä Sureen
+  //jos Kosken päässä data ei ole ehtinyt kantaan asti ennen kuin sen perään kysellään.
+  var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
+  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)),
+                           refreshFrequency: FiniteDuration = 1.minute,
+                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
+    if(endDateSuomiTime.isBeforeNow) {
+      logger.info("processModifiedKoski - Cutoff date of {} reached, stopping", endDateSuomiTime.toString)
+      return
+    }
+    scheduler.scheduleOnce(refreshFrequency)({
+      var catchup = false //Estetään prosessoijaa jättäytymästä vähitellen yhä enemmän jälkeen vaihtelevien käsittelyaikojen takia
+      var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
+      if (searchWindowStartTime.getTime < (Platform.currentTime - TimeUnit.MINUTES.toMillis(5))) {
+        searchWindowEndTime = new Date(searchWindowStartTime.getTime + searchWindowSize + maximumCatchup)
+        catchup = true
+      }
+      val clampedSearchWindowStartTime = clampTimeToEnd(searchWindowStartTime)
+      searchWindowEndTime = clampTimeToEnd(searchWindowEndTime)
+      fetchChanged(
+        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
+          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime ))
+      ).flatMap(fetchPersonAliases).onComplete {
+        case Success((henkilot, personOidsWithAliases)) =>
+          logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
+          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
+            case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
+            case _ =>
+          }
+          processModifiedKoski(searchWindowEndTime, refreshFrequency)
+        case Failure(t) =>
+          logger.error(t, "processModifiedKoski - fetching modified henkilot failed, retrying")
+          processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
+      }
+    })
+  }
+
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
   //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
   private var startTimestamp: Long = 0L
