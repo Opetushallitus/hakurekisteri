@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import org.joda.time.{DateTime, DateTimeZone}
 
+import scala.annotation.tailrec
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -143,11 +144,13 @@ class KoskiService(
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
 
     def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
-      batches.headOption.map(batch => {
-        val (subSeq, index) = batch
+      if(batches.isEmpty) {
+        Future.successful({})
+      } else {
+        val (subSeq, index) = batches.head
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
         updateHenkilot(subSeq.toSet, createLukio).flatMap(s => handleBatch(batches.tail))
-      }).getOrElse(Future.successful({}))
+      }
     }
 
     val f = handleBatch(groupedOids.zipWithIndex)
