@@ -457,7 +457,7 @@ object AkkaHakupalvelu {
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
           hetu = hakemus.henkilo.hetu.getOrElse(""),
           syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))).getOrElse(""),
-          markkinointilupa = None,
+          markkinointilupa = Some(hakemus.koulutusmarkkinointilupa),
           kiinnostunutoppisopimuksesta = None,
           huoltajannimi = "",
           huoltajanpuhelinnumero = "",
@@ -737,7 +737,10 @@ case class AtaruHakemusDto(oid: String,
                            asuinmaa: String,
                            paymentObligations: Map[String, String],
                            kkPohjakoulutus: List[String],
-                           korkeakoulututkintoVuosi: Option[Int])
+                           korkeakoulututkintoVuosi: Option[Int],
+                           koulutusmarkkinointilupa: Boolean,
+                           valintatuloksenJulkaisulupa: Boolean,
+                           sahkoisenAsioinninLupa: Boolean)
 
 case class AtaruHakemus(oid: String,
                         personOid: Option[String],
@@ -753,7 +756,10 @@ case class AtaruHakemus(oid: String,
                         asuinmaa: String,
                         paymentObligations: Map[String, String],
                         kkPohjakoulutus: List[String],
-                        korkeakoulututkintoVuosi: Option[Int]) extends HakijaHakemus {
+                        korkeakoulututkintoVuosi: Option[Int],
+                        koulutusmarkkinointilupa: Boolean,
+                        valintatuloksenJulkaisulupa: Boolean,
+                        sahkoisenAsioinninLupa: Boolean) extends HakijaHakemus {
 
   val hetu: Option[String] = henkilo.hetu
   val stateValid: Boolean = true

@@ -3,8 +3,8 @@ package fi.vm.sade.hakurekisteri.integration.kooste
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakijaHakemus}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakijaHakemus}
 
 import scala.concurrent.Future
 

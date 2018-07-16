@@ -38,8 +38,8 @@ object Trigger {
     def processHakemusWithPersonOid(hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases): Unit = hakemus match {
       case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _) if hakemus.hetu.isDefined =>
         f(personOid, hakemus.hetu.get, applicationSystemId, personOidsWithAliases)
-      case h: AtaruHakemus if h.personOid.isDefined && h.hetu.isDefined =>
-        f(h.personOid.get, h.hetu.get, h.applicationSystemId, personOidsWithAliases)
+      case AtaruHakemus(_, Some(personOid), applicationSystemId, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) if hakemus.hetu.isDefined =>
+        f(personOid, hakemus.hetu.get, applicationSystemId, personOidsWithAliases)
       case _ =>
     }
 
@@ -170,7 +170,10 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         hakemus.asuinmaa,
         hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
         hakemus.kkPohjakoulutus,
-        hakemus.korkeakoulututkintoVuosi
+        hakemus.korkeakoulututkintoVuosi,
+        hakemus.koulutusmarkkinointilupa,
+        hakemus.valintatuloksenJulkaisulupa,
+        hakemus.sahkoisenAsioinninLupa
       )
     }))
   }
