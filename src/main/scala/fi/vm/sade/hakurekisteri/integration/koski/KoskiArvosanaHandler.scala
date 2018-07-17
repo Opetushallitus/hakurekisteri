@@ -23,8 +23,22 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.math.BigDecimal
 import scala.util.{Failure, Success}
 
-object KoskiArvosanaTrigger {
+case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
+case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
+object KoskiArvosanaHandler {
+
+  def parseLocalDate(s: String): LocalDate =
+    if (s.length() > 10) {
+      DateTimeFormat.forPattern("yyyy-MM-ddZ").parseLocalDate(s)
+    } else {
+      DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
+    }
+
+}
+
+class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {
+  import KoskiArvosanaHandler._
   private val logger = LoggerFactory.getLogger(getClass)
 
   import scala.language.implicitConversions
@@ -54,13 +68,9 @@ object KoskiArvosanaTrigger {
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
-                                          suoritusRekisteri: ActorRef,
-                                          arvosanaRekisteri: ActorRef,
-                                          opiskelijaRekisteri: ActorRef,
                                           personOidsWithAliases: PersonOidsWithAliases,
                                           logBypassed: Boolean = false,
-                                          createLukio: Boolean = false)
-                                         (implicit ec: ExecutionContext): Unit = {
+                                          createLukio: Boolean = false): Future[Any] = {
     implicit val timeout: Timeout = 2.minutes
 
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] = {
@@ -97,8 +107,8 @@ object KoskiArvosanaTrigger {
       arvosanaRekisteri ? DeleteResource(s.id, "koski-arvosanat")
     }
 
-    def saveOpiskelija(opiskelija: Opiskelija): Unit = {
-      opiskelijaRekisteri ! opiskelija
+    def saveOpiskelija(opiskelija: Opiskelija): Future[Any] = {
+      opiskelijaRekisteri ? opiskelija
     }
 
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
@@ -109,85 +119,79 @@ object KoskiArvosanaTrigger {
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
       Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
-    koskihenkilöcontainer.henkilö.oid.foreach(henkiloOid => {
-      //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
-      //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
-      val allSuorituksetGroups: Seq[Seq[SuoritusArvosanat]] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio)
-      allSuorituksetGroups.foreach(allSuoritukset =>
-        fetchExistingSuoritukset(henkiloOid).onComplete(fetchedSuoritukset => { //NOTE, processes the Future that encloses the list, does not actually iterate through the list
-          val henkilonSuoritukset = allSuoritukset.filter(s => {
-            s.suoritus.henkiloOid.equals(henkiloOid)
-          })
-          henkilonSuoritukset.foreach {
-            case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
-              logger.debug(s"Suoritus $useSuoritus")
-              val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
-                                                                                                                            || luokkaTaso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
-              //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
-              //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
-              if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+    def saveSuoritusAndArvosanat(henkilöOid: String, fetchedSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]): Future[Any] = {
+      val opiskelija = createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
+      val existingSuoritukset = fetchedSuoritukset
+      if (existingSuoritukset.isEmpty) {
+        logger.debug("Aiemmin sureen tallennettuja suorituksia ei ole. Suoritukset: " + fetchedSuoritukset + ", " + fetchedSuoritukset)
+      }
 
-                val opiskelija = createOpiskelija(henkiloOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
-                val existingSuoritukset = fetchedSuoritukset.getOrElse(Seq())
-                if(existingSuoritukset.isEmpty) {
-                  logger.debug("Aiemmin sureen tallennettuja suorituksia ei ole. Suoritukset: " + fetchedSuoritukset + ", " + fetchedSuoritukset.get)
-                }
-                val hasExistingSuoritus = suoritusExists(useSuoritus, existingSuoritukset)
-                if (hasExistingSuoritus) {
-                  logger.debug("Päivitetään olemassaolevaa suoritusta.")
-                  val suoritus = existingSuoritukset.map(_.asInstanceOf[VirallinenSuoritus with Identified[UUID]])
-                    .find(s => s.henkiloOid == henkiloOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
-                  logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
+      val suoritusSave: Future[Any] =
+        if (suoritusExists(useSuoritus, existingSuoritukset)) {
+          logger.debug("Päivitetään olemassaolevaa suoritusta.")
+          val suoritus = existingSuoritukset.map(_.asInstanceOf[VirallinenSuoritus with Identified[UUID]])
+            .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
+          logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
+          val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)("koski"))
 
-                  val suoritusSave = updateSuoritus(suoritus, useSuoritus)
-                  suoritusSave.onSuccess { case savedSuoritus =>
-                    logger.debug(s"Suorituksen $useSuoritus tallennus on palannut")
-                    fetchArvosanat(suoritus).onComplete({
-                      case Success(existingArvosanas) => {
-                        logger.debug("fetchArvosanat success, result: " + existingArvosanas)
-                        val pendingDeletes: Future[Seq[Any]] = Future.sequence(existingArvosanas
-                            .filter(_.source.contentEquals("koski"))
-                            .map(arvosana => deleteArvosana(arvosana)))
-                        pendingDeletes.onComplete({
-                          case Success(s) =>
-                            arvosanat.foreach(newarvosana => {
-                              val a: Arvosana = toArvosana(newarvosana)(suoritus.id)("koski")
-                              logger.debug(s"inserting arvosana $a")
-                              arvosanaRekisteri ! a
-                            })
-                          case Failure(t) =>
-                            logger.error("Jokin meni pieleen vanhojen arvosanojen poistossa", t)
-                            arvosanat.foreach(newarvosana => {
-                              val a: Arvosana = toArvosana(newarvosana)(suoritus.id)("koski")
-                              logger.debug(s"inserting arvosana $a")
-                              arvosanaRekisteri ! a
-                            })
-                        })
-                      }
-                      case Failure(t) => logger.error("Jokin meni pieleen vanhojen arvosanojen haussa, joten niitä ei voitu poistaa: " + t.getMessage)
-                    })
-                  }
-                  suoritusSave.onFailure { case t =>
-                      logger.error(s"Suorituksen $useSuoritus (vanha suoritus: $suoritus) tallentaminen epäonnistui", t)
-                  }
-
-                  saveOpiskelija(opiskelija)
-                } else {
-                  for (
-                    suoritus: Suoritus with Identified[UUID] <- saveSuoritus(useSuoritus)
-                  ) arvosanat.foreach(arvosana =>
-                    arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
-                  )
-                  saveOpiskelija(opiskelija)
-                }
-              }
-            case _ =>
-            // VapaamuotoinenSuoritus will not be saved
+          def saveArvosana(a: Arvosana): Future[Any] = {
+            arvosanaRekisteri ? a
           }
-        })
-      )
-      logger.info("Henkilön {} koski-tiedot tallennettu", henkiloOid)
-    })
+
+          updateSuoritus(suoritus, useSuoritus)
+            .flatMap(_ => fetchArvosanat(suoritus))
+            .flatMap(existingArvosanat => Future.sequence(existingArvosanat
+              .filter(_.source.contentEquals("koski"))
+              .map(arvosana => deleteArvosana(arvosana))))
+            .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
+            .flatMap(_ => saveOpiskelija(opiskelija))
+        } else {
+          def arvosanaToInsertResource(arvosana: Arvosana, suoritus: Suoritus with Identified[UUID]) = {
+            InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
+          }
+
+          saveSuoritus(useSuoritus).flatMap(suoritus =>
+            Future.sequence(arvosanat.map(a => arvosanaRekisteri ? arvosanaToInsertResource(a, suoritus)))
+          ).flatMap(_ => saveOpiskelija(opiskelija))
+        }
+
+      suoritusSave
+    }
+
+    koskihenkilöcontainer.henkilö.oid match {
+      case Some(henkilöOid) => {
+        val henkilonSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio).flatten
+          .filter(s => henkilöOid.equals(s.suoritus.henkiloOid))
+
+        henkilonSuoritukset match {
+          case Nil => Future.successful({})
+          case _ => {
+            //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
+            //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
+            fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
+              //NOTE, processes the Future that encloses the list, does not actually iterate through the list
+              Future.sequence(henkilonSuoritukset.map {
+                case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
+                  logger.debug(s"Suoritus $useSuoritus")
+                  val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
+                    || luokkaTaso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
+                  //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
+                  //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
+                  if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+                    saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso)
+                  } else {
+                    Future.successful({})
+                  }
+                case _ => Future.successful({})
+              }).flatMap(_ => Future.successful({}))
+            })
+
+          }
+        }
+
+      }
+      case None => Future.successful({})
+    }
   }
 
   //does some stuff
@@ -201,14 +205,6 @@ object KoskiArvosanaTrigger {
     VirallinenSuoritusArvosanat(useSuoritus, arvosanat, luokka, lasnaDate, luokkaAste)
   }
 
-  def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext): KoskiTrigger = {
-    KoskiTrigger {
-      (koskiHenkilo: KoskiHenkiloContainer, personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean) => {
-        muodostaKoskiSuorituksetJaArvosanat(koskiHenkilo, suoritusRekisteri, arvosanaRekisteri, opiskelijaRekisteri,
-                                            personOidsWithAliases.intersect(koskiHenkilo.henkilö.oid.toSet), createLukio = createLukio)
-      }
-    }
-  }
 
   def maxDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s1 else s2
   def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
@@ -297,13 +293,6 @@ object KoskiArvosanaTrigger {
   def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer, createLukioArvosanat: Boolean = false): Seq[Seq[SuoritusArvosanat]] = {
     getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet, createLukioArvosanat)
   }
-
-  def parseLocalDate(s: String): LocalDate =
-    if (s.length() > 10) {
-      DateTimeFormat.forPattern("yyyy-MM-ddZ").parseLocalDate(s)
-    } else {
-      DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
-    }
 
   def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus], createLukioArvosanat: Boolean): Seq[Seq[SuoritusArvosanat]] = {
     val result: Seq[Seq[SuoritusArvosanat]] = for (
@@ -581,8 +570,6 @@ object KoskiArvosanaTrigger {
     }
   }
 
-  case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
-  case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
   private def isFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]) : Boolean = {
     val ysiluokat = suoritukset.filter(_.luokka.getOrElse("").startsWith("9"))
@@ -798,10 +785,10 @@ object KoskiArvosanaTrigger {
             opiskeluoikeus = None,
             vahv = true,
             lahde = root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
-        logger.debug("createSuoritusArvosanat={}", suoritus)
+        /*logger.debug("createSuoritusArvosanat={}", suoritus)
         if (createLukioArvosanat && komoOid == Oids.lukioKomoOid ) {
           logger.debug("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
-        }
+        }*/
         result = result :+ suoritus
       }
     }
@@ -887,7 +874,7 @@ object KoskiArvosanaTrigger {
       } else {
         suoritusArvosanat.arvosanat
       }
-      logger.debug(s"useArvosanat: $useArvosanat")
+      //logger.debug(s"useArvosanat: $useArvosanat")
 
       var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
       var useLuokkaAste = suoritusArvosanat.luokkataso

@@ -164,7 +164,8 @@ class BaseIntegrations(rekisterit: Registers,
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo")
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system)
   val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
-  val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService)(system)
+  val koskiArvosanaHandler = new KoskiArvosanaHandler(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
+  val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiArvosanaHandler)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
@@ -192,14 +193,13 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
-  val koskiArvosanaTrigger: KoskiTrigger = KoskiArvosanaTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
+
   val ytlTrigger: Trigger = Trigger { (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) =>
     Try(ytlIntegration.sync(hakemus, personOidsWithAliases.intersect(hakemus.personOid.toSet)))
   }
 
   hakemusService.addTrigger(arvosanaTrigger)
   hakemusService.addTrigger(ytlTrigger)
-  koskiService.addTrigger(koskiArvosanaTrigger)
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()

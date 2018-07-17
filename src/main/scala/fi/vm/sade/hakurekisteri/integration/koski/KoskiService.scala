@@ -11,7 +11,6 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import org.joda.time.{DateTime, DateTimeZone}
 
-import scala.annotation.tailrec
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -28,7 +27,7 @@ case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolea
 class KoskiService(
                     virkailijaRestClient: VirkailijaRestClient,
                     oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-                    hakemusService: IHakemusService, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
+                    hakemusService: IHakemusService, koskiArvosanaHandler: KoskiArvosanaHandler, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
@@ -91,9 +90,8 @@ class KoskiService(
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
             logger.info(s"HistoryCrawler - Aikaikkuna: " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime + ", Sivu: " + pageNbr +" , Henkilöitä: " + henkilot.size + " kpl.")
-            Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-              case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
-              case _ =>
+            saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
+              case e => logger.error(e, "HistoryCrawler - Exception in trigger!")
             }
             if(henkilot.isEmpty) {
               logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
@@ -138,9 +136,8 @@ class KoskiService(
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
           logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
-          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-            case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
-            case _ =>
+          saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
+            case e => logger.error(e, "processModifiedKoski - Exception in trigger!")
           }
           processModifiedKoski(searchWindowEndTime, refreshFrequency)
         case Failure(t) =>
@@ -209,20 +206,11 @@ class KoskiService(
           Future.failed(e)
       }
 
-    val result: Future[Unit] = oppijat.flatMap(fetchPersonAliases).flatMap(res  => {
+    oppijat.flatMap(fetchPersonAliases).flatMap(res => {
       val (henkilot, personOidsWithAliases) = res
       logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä!")
-      Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
-        case Failure(exception) =>
-          logger.error("Error triggering update for henkilö {} : {}", oppijaOids, exception)
-          Future.failed(exception)
-        case Success(value) => {
-          logger.debug("updateHenkilo success")
-          Future.successful(())
-        }
-      }
+      saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, createLukio)
     })
-    result
   }
 
   //Poistaa KoskiHenkiloContainerin sisältä sellaiset opiskeluoikeudet, joilla ei ole oppilaitosta jolla on määritelty oid.
@@ -236,14 +224,14 @@ class KoskiService(
     })
   }
 
-  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Unit = {
+  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Future[Unit] = {
     val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
     if(filteredHenkilot.nonEmpty) {
-      filteredHenkilot.foreach(henkilo => {
-        triggers.foreach(trigger => trigger.f(henkilo, personOidsWithAliases, createLukio))
-      })
+      Future.sequence(filteredHenkilot.map(henkilo =>
+        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), createLukio)
+      )).flatMap(_ => Future.successful({}))
     } else {
-      logger.debug("Ei triggeröidä mitään, koska Container-kokoelma on tyhjä.")
+      Future.successful({})
     }
   }
 }
