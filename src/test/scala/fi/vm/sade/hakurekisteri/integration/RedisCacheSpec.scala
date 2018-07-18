@@ -1,7 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory.RedisCacheInitializationException
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, MonadCache}
+import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
+import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohde
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito.{times, verify, when}
@@ -38,19 +41,23 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   val concurrencyTestLoopCount: Int = 5
   val concurrencyTestParallelRequestCount: Int = 10
   val concurrencyTestResultsWaitDuration: Duration = 10.seconds
+  private val stringLoader: String => Future[Nothing] = (_: String) => Future.failed(new RuntimeException("should not be called"))
+
+  private val javaStringSerialVersionUID: Long = -6849794470754667710l
+  private val throwableSerialVersionUID: Long = -3042686055658047285l
 
   it should "add an entry to cache" in {
    withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix1")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix1")
 
         cache + (cacheKey, cacheEntry)
 
         Thread.sleep(500)
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(true)
+        cache.shouldContain(cacheKey)
 
-        Await.result(cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds) should be (Some(cacheEntry))
+        Await.result(cache.get(cacheKey, stringLoader), 10.seconds) should be (Some(cacheEntry))
       }
     )
   }
@@ -58,19 +65,19 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "remove an entry from cache" in {
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String, String](3.minutes.toMillis, getClass, "prefix2")
+        val cache = redisCacheFactory.getInstance[String, String](3.minutes.toMillis, this.getClass, classOf[String], "prefix2")
 
         cache + (cacheKey, cacheEntry)
 
         Thread.sleep(500)
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(true)
+        cache.shouldContain(cacheKey)
 
         cache - cacheKey
 
         Thread.sleep(500)
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(false)
+        cache.shouldNotContain(cacheKey)
       }
     )
   }
@@ -78,7 +85,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "be usable from multiple actor systems" in {
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix3")
 
         cache + (cacheKey, cacheEntry)
 
@@ -87,9 +94,9 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix3")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix3")
 
-        Await.result(cache.contains(cacheKey), 1.second) should be(true)
+        cache.shouldContain(cacheKey)
       }
     )
   }
@@ -97,7 +104,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   it should "use prefixes" in {
     withSystem(
       implicit system => {
-        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix4")
 
         cache + (cacheKey, cacheEntry)
 
@@ -106,11 +113,11 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     )
     withSystem(
       implicit system => {
-        val cache4 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix4")
-        val cache5 =  redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, "prefix5")
+        val cache4 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix4")
+        val cache5 =  redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix5")
 
-        Await.result(cache5.contains(cacheKey), 1.second) should be(false)
-        Await.result(cache4.contains(cacheKey), 1.second) should be(true)
+        cache5.shouldNotContain(cacheKey)
+        cache4.shouldContain(cacheKey)
       }
     )
   }
@@ -119,7 +126,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     1.to(concurrencyTestLoopCount).foreach { counter =>
       withSystem(
          implicit system => {
-           val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, getClass, s"prefixLoaderApi$counter")
+           val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], s"prefixLoaderApi$counter")
 
            val mockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
            when(mockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
@@ -137,12 +144,167 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
            results.foreach(_ should be(Some(cacheEntry)))
 
            Thread.sleep(100)
-           Await.result(cache.contains(cacheKey), 1.second) should be(true)
-           Await.result(cache.get(cacheKey, (_: String) => Future.failed(new RuntimeException("should not be called"))), 1.second) should be (Some(cacheEntry))
+           cache.shouldContain(cacheKey)
+           Await.result(cache.get(cacheKey, stringLoader), 1.second) should be (Some(cacheEntry))
 
            verify(mockLoader, times(1)).apply(cacheKey)
          }
        )
+    }
+  }
+
+  it should "store version to cache" in {
+    withSystem(
+      implicit system => {
+        val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix6")
+
+        cache + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        cache.shouldContain("version")
+        Await.result(cache.getVersion, 1.second) should be(Some(javaStringSerialVersionUID))
+      }
+    )
+  }
+
+  it should "update version in cache when it changes" in {
+    withSystem(
+      implicit system => {
+        val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix7")
+
+        cacheOfStrings + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        cacheOfStrings.shouldContain("version")
+
+        Await.result(cacheOfStrings.getVersion, 1.second) shouldBe Some(javaStringSerialVersionUID)
+
+        val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, this.getClass, classOf[Throwable], "prefix7")
+
+        Thread.sleep(500)
+
+        Await.result(cacheOfStrings.getVersion, 1.second) should be(Some(throwableSerialVersionUID))
+        Await.result(cacheOfThrowables.getVersion, 1.second) should be(Some(throwableSerialVersionUID))
+      }
+    )
+  }
+
+  it should "clear cache when the version changes" in {
+    withSystem(
+      implicit system => {
+        val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix8")
+
+        cacheOfStrings + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        cacheOfStrings.shouldContain(cacheKey)
+
+        val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, this.getClass, classOf[Throwable], "prefix8")
+
+        Thread.sleep(500)
+
+        cacheOfStrings.shouldNotContain(cacheKey)
+        cacheOfThrowables.shouldNotContain(cacheKey)
+      }
+    )
+  }
+
+  it should "not clear cache when creating a new instance with same version" in {
+    withSystem(
+      implicit system => {
+        val cache1 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix9")
+
+        cache1 + (cacheKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        cache1.shouldContain(cacheKey)
+
+        val cache2 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix9")
+
+        Thread.sleep(500)
+
+        cache1.shouldContain(cacheKey)
+        cache2.shouldContain(cacheKey)
+        Await.result(cache1.get(cacheKey, stringLoader), 1.second) should be(Await.result(cache2.get(cacheKey, stringLoader), 1.second))
+      }
+    )
+  }
+
+  it should "not clear other caches when one cache changes" in {
+    withSystem(
+      implicit system => {
+        val cacheOfStrings1  = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix10")
+        val cacheOfStrings2 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix11")
+
+        cacheOfStrings1 + (cacheKey, cacheEntry)
+        val anotherKey = "anotherkey"
+        cacheOfStrings2 + (anotherKey, cacheEntry)
+
+        Thread.sleep(500)
+
+        cacheOfStrings1.shouldContain(cacheKey)
+        cacheOfStrings2.shouldContain(anotherKey)
+        cacheOfStrings1.shouldNotContain(anotherKey)
+        cacheOfStrings2.shouldNotContain(cacheKey)
+
+        val cacheOfThrowables = redisCacheFactory.getInstance[String,Throwable](3.minutes.toMillis, this.getClass, classOf[Throwable], "prefix10")
+
+        Thread.sleep(500)
+
+        cacheOfStrings1.shouldNotContain(cacheKey)
+        cacheOfStrings2.shouldContain(anotherKey)
+      }
+    )
+  }
+
+  it should "resolve the correct version for a case class option" in {
+    withSystem(
+      implicit system => {
+        val expectedVersion: Long = java.io.ObjectStreamClass.lookup(manifest[Hakukohde].runtimeClass).getSerialVersionUID
+
+        val cacheOfHakukohdes = redisCacheFactory.getInstance[String, Option[Hakukohde]](3.minutes.toMillis, this.getClass, classOf[Hakukohde], "prefix12")
+
+        Await.result(cacheOfHakukohdes.getVersion, 1.minute).get shouldBe expectedVersion
+      }
+    )
+  }
+
+  it should "resolve different versions for options of different case classes" in {
+    withSystem(
+      implicit system => {
+        manifest[Option[Hakukohde]] shouldNot be(manifest[Option[GetRinnasteinenKoodiArvoQuery]])
+
+        val cacheOfHakukohdes = redisCacheFactory.getInstance[String, Option[Hakukohde]](3.minutes.toMillis, this.getClass, classOf[Hakukohde], "prefix13")
+        val hakukohdeVersion = Await.result(cacheOfHakukohdes.getVersion, 1.minute).get
+
+        val cacheOfKoodis = redisCacheFactory.getInstance[String, Option[GetRinnasteinenKoodiArvoQuery]](3.minutes.toMillis, this.getClass, classOf[GetRinnasteinenKoodiArvoQuery], "prefix14")
+        val koodiVersion = Await.result(cacheOfKoodis.getVersion, 1.minute).get
+
+        koodiVersion shouldNot be(hakukohdeVersion)
+      }
+    )
+  }
+
+  it should "throw an exception if initializing cache with non-serializable classOfT" in {
+    withSystem(
+      implicit system => {
+        intercept[RedisCacheInitializationException] {
+          redisCacheFactory.getInstance[String, String](3.minutes.toMillis, this.getClass, classOf[ActorSystem], "prefix15")
+        }
+      }
+    )
+  }
+
+  implicit class EnrichedCache[T](val cache: MonadCache[Future, String, T]) {
+    def shouldContain(key: String): Unit = containsShouldBe(this.cache, key, expected = true)
+    def shouldNotContain(key: String): Unit = containsShouldBe(this.cache, key, expected = false)
+
+    def containsShouldBe[T](cache: MonadCache[Future, String, T], key: String, expected: Boolean): Unit = {
+      Await.result(cache.contains(key), 1.second) should be(expected)
     }
   }
 

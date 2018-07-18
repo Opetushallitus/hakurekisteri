@@ -21,6 +21,8 @@ trait MonadCache[F[_], K, T] {
 
   def get(key: K, loader: K => F[Option[T]]): F[Option[T]]
 
+  def getVersion: Future[Option[Long]]
+
   def toOption(value: F[T]): F[Option[T]]
 
   protected def k(key: K, prefix:String) = s"${prefix}:${key}"
@@ -112,6 +114,8 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
   private def createSynchonizedList: java.util.List[Promise[Option[T]]] = {
     Collections.synchronizedList(new java.util.ArrayList[Promise[Option[T]]]())
   }
+
+  override def getVersion: Future[Option[Long]] = Future.successful(Some(0l))
 }
 
 case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, accessed: Long = Platform.currentTime, f: F[T])
