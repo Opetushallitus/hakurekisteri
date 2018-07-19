@@ -785,10 +785,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
             opiskeluoikeus = None,
             vahv = true,
             lahde = root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
-        /*logger.debug("createSuoritusArvosanat={}", suoritus)
-        if (createLukioArvosanat && komoOid == Oids.lukioKomoOid ) {
-          logger.debug("created lukio arvosanas: {} for suoritus {} with lasnaDate {} and luokkataso {}",arvosanat, suoritus, lasnaDate, luokkataso)
-        }*/
         result = result :+ suoritus
       }
     }
@@ -874,8 +870,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       } else {
         suoritusArvosanat.arvosanat
       }
-      //logger.debug(s"useArvosanat: $useArvosanat")
-
+      
       var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
       var useLuokkaAste = suoritusArvosanat.luokkataso
       var useLasnaDate = suoritusArvosanat.lasnadate
