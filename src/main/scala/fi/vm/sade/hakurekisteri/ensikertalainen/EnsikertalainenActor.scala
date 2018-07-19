@@ -189,7 +189,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
       case FullHakemus(_, Some(personOid), _, _, _, _, _) =>
         (personOid, None)
       case h: AtaruHakemus =>
-        (h.henkilo.oidHenkilo, None)
+        (h.henkilo.oidHenkilo, h.korkeakoulututkintoVuosi)
     }
   }
 

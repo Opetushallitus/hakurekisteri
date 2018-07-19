@@ -110,11 +110,11 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
 
     trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
-      Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty, List.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+      Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty, List.empty, None), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
     trigger.f(FullHakemus("oid", None, "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     trigger.f(AtaruHakemus("ataruOid", None, "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
-      Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty, List.empty), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
+      Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", Map.empty, List.empty, None), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
   }
 
