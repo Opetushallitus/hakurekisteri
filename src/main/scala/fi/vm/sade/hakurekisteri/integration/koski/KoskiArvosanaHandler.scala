@@ -166,7 +166,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       suoritusSave
     }
 
-    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat]) = {
+    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
         //NOTE, processes the Future that encloses the list, does not actually iterate through the list
         Future.sequence(henkilonSuoritukset.map {
