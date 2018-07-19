@@ -166,6 +166,25 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       suoritusSave
     }
 
+    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat]) = {
+      fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
+        //NOTE, processes the Future that encloses the list, does not actually iterate through the list
+        Future.sequence(henkilonSuoritukset.map {
+          case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
+            //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
+            //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
+            if (!useSuoritus.komo.equals("luokka") &&
+              (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset) ||
+                !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+              saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso)
+            } else {
+              Future.successful({})
+            }
+          case _ => Future.successful({})
+        }).flatMap(_ => Future.successful({}))
+      })
+    }
+
     koskihenkilöcontainer.henkilö.oid match {
       case Some(henkilöOid) => {
         val henkilonSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio).flatten
@@ -173,27 +192,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
         henkilonSuoritukset match {
           case Nil => Future.successful({})
-          case _ => {
-            //prosessoidaan opiskeluoikeuskohtaisesti, muutoin useArvosana ja useLuokka prosessoinnit saattaa
-            //ottaa arvoja väärästä opiskeluoikeudesta (BUG-1711)
-            fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
-              //NOTE, processes the Future that encloses the list, does not actually iterate through the list
-              Future.sequence(henkilonSuoritukset.map {
-                case s @ SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
-                  //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
-                  //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
-                  if (!useSuoritus.komo.equals("luokka") &&
-                    (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset) ||
-                      !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-                    saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso)
-                  } else {
-                    Future.successful({})
-                  }
-                case _ => Future.successful({})
-              }).flatMap(_ => Future.successful({}))
-            })
-
-          }
+          case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset)
         }
 
       }
