@@ -115,9 +115,10 @@ object CacheFactory {
             Future.successful(())
           case Some(oldVersion)  =>
             logger.warn(s"Serial version UID has changed from $oldVersion to $newVersion in cache with prefix $cacheKeyPrefix. Deleting all keys.")
-            clearCache(oldVersion)
+            clearCache()
           case None =>
-            logger.info(s"No version key in cache with prefix $cacheKeyPrefix. It will be assumed that the version has not changed.")
+            logger.info(s"No version key in cache with prefix $cacheKeyPrefix. Deleting all keys just in case the version has changed.")
+            clearCache()
             setVersion(newVersion)
         }
         f.onFailure{case t =>
@@ -130,7 +131,7 @@ object CacheFactory {
         r.get[Long](versionPrefixKey)
       }
 
-      private def clearCache(oldVersion: Long): Future[Unit] = {
+      private def clearCache(): Future[Unit] = {
           val pattern = s"${cacheKeyPrefix}:*"
           val count = config.getOrElse("suoritusrekisteri.cache.redis.scancount", "200").toInt
           logger.info(s"Scanning Redis cache with COUNT $count")
