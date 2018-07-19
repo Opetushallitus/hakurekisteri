@@ -40,31 +40,31 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         sender ! Seq()
     }
   })
-  val KoskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+  val koskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
 
 
   it should "empty KoskiHenkilo should return list" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+    koskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer().build
     ).flatten should contain theSameElementsAs Seq()
   }
 
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
-    KoskiArvosanaTrigger.detectOppilaitos(
+    koskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10")
   }
 
   it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
-    KoskiArvosanaTrigger.detectOppilaitos(
+    koskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10C")
   }
 
   it should "createOpiskelija should create opiskelija" in {
-    KoskiArvosanaTrigger.createOpiskelija("henkilo_oid",
+    koskiArvosanaTrigger.createOpiskelija("henkilo_oid",
       SuoritusLuokka(VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
       ) should equal (

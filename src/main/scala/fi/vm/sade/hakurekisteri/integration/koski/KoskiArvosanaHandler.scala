@@ -23,7 +23,19 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.math.BigDecimal
 import scala.util.{Failure, Success}
 
-case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
+case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String]) {
+  private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
+
+  def peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset: Seq[SuoritusArvosanat]): Boolean = {
+    suoritus match {
+      case v: VirallinenSuoritus =>
+        v.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
+          || luokkataso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
+      case _ => false
+    }
+  }
+
+}
 case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
 object KoskiArvosanaHandler {
@@ -119,12 +131,8 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
       Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
-    def saveSuoritusAndArvosanat(henkilöOid: String, fetchedSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]): Future[Any] = {
+    def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]): Future[Any] = {
       val opiskelija = createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
-      val existingSuoritukset = fetchedSuoritukset
-      if (existingSuoritukset.isEmpty) {
-        logger.debug("Aiemmin sureen tallennettuja suorituksia ei ole. Suoritukset: " + fetchedSuoritukset + ", " + fetchedSuoritukset)
-      }
 
       val suoritusSave: Future[Any] =
         if (suoritusExists(useSuoritus, existingSuoritukset)) {
@@ -171,13 +179,12 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
             fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
               //NOTE, processes the Future that encloses the list, does not actually iterate through the list
               Future.sequence(henkilonSuoritukset.map {
-                case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
-                  logger.debug(s"Suoritus $useSuoritus")
-                  val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9"))
-                    || luokkaTaso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
+                case s @ SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
                   //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
                   //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
-                  if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+                  if (!useSuoritus.komo.equals("luokka") &&
+                    (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset) ||
+                      !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
                     saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso)
                   } else {
                     Future.successful({})
@@ -870,7 +877,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       } else {
         suoritusArvosanat.arvosanat
       }
-      
+
       var useLuokka = "" //Käytännössä vapaa tekstikenttä. Luokkatiedon "luokka".
       var useLuokkaAste = suoritusArvosanat.luokkataso
       var useLasnaDate = suoritusArvosanat.lasnadate

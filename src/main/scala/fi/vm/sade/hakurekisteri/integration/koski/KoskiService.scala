@@ -24,10 +24,11 @@ trait KoskiTriggerable {
 
 case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
 
-class KoskiService(
-                    virkailijaRestClient: VirkailijaRestClient,
-                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-                    hakemusService: IHakemusService, koskiArvosanaHandler: KoskiArvosanaHandler, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
+class KoskiService(virkailijaRestClient: VirkailijaRestClient,
+                   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+                   hakemusService: IHakemusService,
+                   koskiArvosanaHandler: KoskiArvosanaHandler,
+                   pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
@@ -217,9 +218,7 @@ class KoskiService(
   //Vaaditaan lisäksi, että käsiteltävillä opiskeluoikeuksilla on ainakin yksi tilatieto.
   private def removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
     data.flatMap(container => {
-      val oikeudet = container.opiskeluoikeudet.filter(oikeus => {
-        oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined && oikeus.tila.opiskeluoikeusjaksot.nonEmpty
-      })
+      val oikeudet = container.opiskeluoikeudet.filter(_.isStateContainingOpiskeluoikeus)
       if(oikeudet.nonEmpty) Seq(container.copy(opiskeluoikeudet = oikeudet)) else Seq()
     })
   }
@@ -259,7 +258,11 @@ case class KoskiOpiskeluoikeus(
                  lisätiedot: Option[KoskiLisatiedot],
                  suoritukset: Seq[KoskiSuoritus],
                  tyyppi: Option[KoskiKoodi],
-                 aikaleima: Option[String])
+                 aikaleima: Option[String]) {
+
+  def isStateContainingOpiskeluoikeus =
+    oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
+}
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 
