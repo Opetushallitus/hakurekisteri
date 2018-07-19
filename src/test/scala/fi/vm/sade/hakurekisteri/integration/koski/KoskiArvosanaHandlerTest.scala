@@ -418,13 +418,6 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
     val system = ActorSystem("MySpec")
     val a = system.actorOf(Props(new TestSureActor()).withDispatcher(CallingThreadDispatcher.Id))
     val oidsWithAliases = PersonOidsWithAliases(Set("1.2.246.562.24.10101010101"), Map.empty)
-    /*
-    KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo, a,
-      system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
-      system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
-      oidsWithAliases, true)
-    //val f: Unit = trigger.f(henkilo, oidsWithAliases)
-    //Thread.sleep(100000) TODO FIX THREADING*/
     println("great success")
   }
 
@@ -481,22 +474,6 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
     resultGroup should have length 1
     resultGroup.head should have length 3
     getPerusopetusPäättötodistus(resultGroup.head).get.luokka shouldEqual "9C"
-    //TODO fix actor threading problem
-    /*val system = ActorSystem("MySpec")
-    val a = system.actorOf(Props(new TestSureActor()).withDispatcher(CallingThreadDispatcher.Id))
-
-    val oidsWithAliases = PersonOidsWithAliases(Set("1.2.246.562.24.35601800632"), Map.empty)
-
-    KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo, a,
-      system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
-      system.actorOf(TestActors.blackholeProps.withDispatcher(CallingThreadDispatcher.Id)),
-      oidsWithAliases, true)*/
-    //val trigger: KoskiTrigger = KoskiArvosanaTrigger(a, system.actorOf(TestActors.echoActorProps), system.actorOf(TestActors.echoActorProps))(system.dispatcher)
-    //val trigger = KoskiTrigger(henkilo, oidsWithAliases)
-    //val f: Unit = trigger.f(henkilo, oidsWithAliases)
-    //Thread.sleep(100000)
-    //
-    //println("great success")
   }
 
   it should "parse 1.2.246.562.24.40546864498.json" in {

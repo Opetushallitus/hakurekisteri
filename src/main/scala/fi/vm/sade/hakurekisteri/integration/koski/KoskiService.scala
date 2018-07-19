@@ -17,13 +17,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Success, Try}
 
-
-trait KoskiTriggerable {
-  def trigger(a: KoskiHenkiloContainer, b: PersonOidsWithAliases)
-}
-
-case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
-
 class KoskiService(virkailijaRestClient: VirkailijaRestClient,
                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
                    hakemusService: IHakemusService,

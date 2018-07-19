@@ -9,7 +9,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 trait IKoskiService {
-  var triggers: Seq[KoskiTrigger] = Seq()
 
   def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulkOperation: Boolean = false): Future[Unit]
   def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
