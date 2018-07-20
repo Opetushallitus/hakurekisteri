@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.{Date, TimeZone}
 
 import akka.actor.{ActorSystem, Scheduler}
@@ -18,20 +17,15 @@ import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Success, Try}
 
-
-trait KoskiTriggerable {
-  def trigger(a: KoskiHenkiloContainer, b: PersonOidsWithAliases)
-}
-
-case class KoskiTrigger(f: (KoskiHenkiloContainer, PersonOidsWithAliases, Boolean) => Unit)
-
-class KoskiService(
-                    virkailijaRestClient: VirkailijaRestClient,
-                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-                    hakemusService: IHakemusService, pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
+class KoskiService(virkailijaRestClient: VirkailijaRestClient,
+                   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+                   hakemusService: IHakemusService,
+                   koskiArvosanaHandler: KoskiArvosanaHandler,
+                   pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+  private val logger = Logging.getLogger(system, this)
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
@@ -39,13 +33,10 @@ class KoskiService(
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
 
-  private val logger = Logging.getLogger(system, this)
-
   case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
   case class SearchParamsWithPagination (muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00", pageSize: Int, pageNumber: Int)
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    //logger.info(s"Haetaan henkilöt ja opiskeluoikeudet Koskesta, muuttuneet välillä: " + params.muuttunutJälkeen.toString + " - " + params.muuttunutEnnen.toString)
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
@@ -93,9 +84,8 @@ class KoskiService(
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
             logger.info(s"HistoryCrawler - Aikaikkuna: " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime + ", Sivu: " + pageNbr +" , Henkilöitä: " + henkilot.size + " kpl.")
-            Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-              case Failure(e) => logger.error(e, "HistoryCrawler - Exception in trigger!")
-              case _ =>
+            saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
+              case e => logger.error(e, "HistoryCrawler - Exception in trigger!")
             }
             if(henkilot.isEmpty) {
               logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
@@ -140,9 +130,8 @@ class KoskiService(
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
           logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
-          Try(triggerHenkilot(henkilot, personOidsWithAliases)) match {
-            case Failure(e) => logger.error(e, "processModifiedKoski - Exception in trigger!")
-            case _ =>
+          saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
+            case e => logger.error(e, "processModifiedKoski - Exception in trigger!")
           }
           processModifiedKoski(searchWindowEndTime, refreshFrequency)
         case Failure(t) =>
@@ -150,168 +139,91 @@ class KoskiService(
           processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
       }
     })
-
   }
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
   //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
-  var lastActivated: Long = 0
-  var minimumTimeBetweenStarts = TimeUnit.MINUTES.toMillis(5)
+  private var startTimestamp: Long = 0L
+  val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
+  private var oneJobAtATime = Future.successful({})
   override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
-
-    if(lastActivated + minimumTimeBetweenStarts < System.currentTimeMillis()) {
-      logger.info(s"Käynnistetään haun hakijoiden tietojen päivitys hakuOidille $hakuOid")
-      if(createLukio) {
-        logger.info(s"Päivitetään myös lukion arvosanat hakuOidille $hakuOid")
+    def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
+      val personOids: Seq[String] = personOidsSet.toSeq
+      logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
+      handleHenkiloUpdate(personOids, createLukio)
+    }
+    val now = System.currentTimeMillis()
+    synchronized {
+      if(oneJobAtATime.isCompleted) {
+        logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}")
+        oneJobAtATime = hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate)
+        startTimestamp = System.currentTimeMillis()
+        Future.successful({})
+      } else {
+        val err = s"${TimeUnit.MINUTES.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} minuuttia vanha Koskesta päivittäminen on vielä käynnissä!"
+        logger.error(err)
+        Future.failed(new RuntimeException(err))
       }
-      lastActivated = System.currentTimeMillis()
-    } else {
-      logger.error(s"Haun henkilöiden päivitystä ei voida aloittaa, koska edellisestä käynnistyksestä ei ole vielä kulunut $minimumTimeBetweenStarts millisekuntia.")
-      return Future.failed(new Exception("Haun tietojen päivitys yritettiin käynnistää, edellisestä käynnistyksestä on alle $minimumTimeBetweenStarts millisekuntia."))
     }
-
-    var result: Future[Unit] = Future.successful({})
-    hakemusService.personOidsForHaku(hakuOid, None).onComplete {
-      case Success(personOidsSet: Set[String]) =>
-        val personOids: Seq[String] = personOidsSet.toSeq
-        logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-        result = handleHenkiloUpdate(personOids, createLukio)
-      case Failure(e) =>
-        logger.error("Error updating henkilöt for haku: {}", e)
-        result = Future.failed(e)
-      case _ => logger.error(s"Tuntematon virhe päivittäessä Koskesta henkilöitä haulle $hakuOid")
-        result = Future.failed(new RuntimeException)
-    }
-    result
-  }
-
-  def makeKoskiCallForSinglePerson(personOid: String): Future[KoskiHenkiloContainer] = {
-    virkailijaRestClient.readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", personOid)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
   def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
-    val batchSize: Int = 20
-    val waitBetweenBatchesInMilliseconds: Long = 10000L
+    val batchSize: Int = 1000
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
-    var current: Int = 0
-    groupedOids.foreach(subSeq => {
-      current += 1
-      Thread.sleep(waitBetweenBatchesInMilliseconds)
-      logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
 
-      subSeq.foreach(oppija => updateHenkilo(oppija, createLukio))
-
-    })
-    Future.successful({})
-  }
-
-  //Fixme Huom. Keskeneräinen - tämä ei välttämättä toimi luotettavasti virhetilanteissa. Käytä handleHenkiloUpdatea, joka on sekä luotettavampi että tehottomampi.
-  def handleBulkHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
-    var successful: AtomicInteger = new AtomicInteger(0)
-    val failed: AtomicInteger = new AtomicInteger(0)
-    val batchSize: Int = 100
-    val waitBetweenBatchesInMilliseconds: Long = 10000L
-    val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
-    val totalGroups: Int = groupedOids.length
-    logger.info(s"BulkHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
-    var current: Int = 0
-    groupedOids.foreach(subSeq => {
-      current += 1
-      Thread.sleep(waitBetweenBatchesInMilliseconds)
-      logger.info(s"BulkHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $current / $totalGroups")
-      logger.info(s"BulkHenkiloUpdate: Tähän mennessä onnistuneita ${successful.get()}, virheitä ${failed.get()}")
-
-      Future.traverse(subSeq)(makeKoskiCallForSinglePerson).onComplete({
-        case Success(koskiDataForBatch) => {
-          logger.info(s"Koskikutsu onnistui, tulosjoukon koko: ${koskiDataForBatch.size}")
-          if(koskiDataForBatch.size < batchSize)
-            failed.addAndGet(batchSize - koskiDataForBatch.size)
-          fetchPersonAliases(koskiDataForBatch).flatMap(res => {
-            val (henkilot, personOidsWithAliases) = res
-            Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
-              case Failure(e) =>
-                logger.error("BulkHenkiloUpdate: Error triggering update for henkilö: {}", e)
-                failed.incrementAndGet()
-                Future.failed(e)
-              case Success(value) => {
-                logger.debug("updateHenkilo success")
-                successful.incrementAndGet()
-                Future.successful(())
-              }
-            }
-          })
-        }
-        case Failure(e) =>
-          failed.incrementAndGet()
-          logger.error("Virhe bulkhenkilöupdatessa: {}", e)
-      })
-    })
-    Future.successful({})
-  }
-
-  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
-
-    if (!createLukio) {
-      logger.info(s"Haetaan henkilö ja opiskeluoikeudet Koskesta oidille " + oppijaOid)
-    } else {
-      logger.info(s"Haetaan henkilö ja opiskeluoikeudet sekä luodaan lukion suoritus arvosanoineen Koskesta oidille " + oppijaOid)
+    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
+      if(batches.isEmpty) {
+        Future.successful({})
+      } else {
+        val (subSeq, index) = batches.head
+        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
+        updateHenkilot(subSeq.toSet, createLukio).flatMap(s => handleBatch(batches.tail))
+      }
     }
 
-    val oppijadatasingle: Future[KoskiHenkiloContainer] = virkailijaRestClient
-      .readObjectWithBasicAuth[KoskiHenkiloContainer]("koski.oppija.oid", oppijaOid)(acceptedResponseCode = 200, maxRetries = 2)
+    val f = handleBatch(groupedOids.zipWithIndex)
+    f.onComplete {
+      case Success(_) => logger.info("Koskipäivitys valmistui!")
+      case Failure(e) => logger.error(s"Koskipäivitys epäonnistui: ${e.getMessage}")
+    }
+    f
+  }
+
+  override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = {
+    val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
+      .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
         case e: Exception =>
-          logger.error("Kutsu koskeen oppijanumerolle {} epäonnistui: {} ", oppijaOid, e)
+          logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
           Future.failed(e)
       }
 
-    val oppijadata = oppijadatasingle.map(container => List(container))
-      .recoverWith {
-      case e: Exception =>
-        //logger.error("Virhe käsiteltäessä oppijan {} dataa: {}", oppijaOid, e)
-        Future.failed(e)
-    }
-
-    val result: Future[Unit] = oppijadata.flatMap(fetchPersonAliases).flatMap(res  => {
+    oppijat.flatMap(fetchPersonAliases).flatMap(res => {
       val (henkilot, personOidsWithAliases) = res
-      logger.debug(s"Haettu henkilöt=$henkilot")
-      Try(triggerHenkilot(henkilot, personOidsWithAliases, createLukio)) match {
-        case Failure(exception) =>
-          logger.error("Error triggering update for henkilö {} : {}", oppijaOid, exception)
-          Future.failed(exception)
-        case Success(value) => {
-          logger.debug("updateHenkilo success")
-          Future.successful(())
-        }
-      }
+      logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä!")
+      saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, createLukio)
     })
-    result
   }
 
   //Poistaa KoskiHenkiloContainerin sisältä sellaiset opiskeluoikeudet, joilla ei ole oppilaitosta jolla on määritelty oid.
   //Vaaditaan lisäksi, että käsiteltävillä opiskeluoikeuksilla on ainakin yksi tilatieto.
   private def removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
-    var result = Seq[KoskiHenkiloContainer]()
-    data.foreach(container => {
-      val oikeudet = container.opiskeluoikeudet.filter(oikeus => {
-        (oikeus.oppilaitos.isDefined && oikeus.oppilaitos.get.oid.isDefined && !oikeus.tila.opiskeluoikeusjaksot.isEmpty)
-      })
-      if(oikeudet.length > 0) //Jos ollaan poistettu kaikki opiskeluoikeudet, voidaan unohtaa koko container.
-        result = result :+ container.copy(opiskeluoikeudet = oikeudet)
+    data.flatMap(container => {
+      val oikeudet = container.opiskeluoikeudet.filter(_.isStateContainingOpiskeluoikeus)
+      if(oikeudet.nonEmpty) Seq(container.copy(opiskeluoikeudet = oikeudet)) else Seq()
     })
-    result
   }
 
-  private def triggerHenkilot(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Unit = {
+  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Future[Unit] = {
     val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
-    if(filteredHenkilot.length > 0) {
-      filteredHenkilot.foreach(henkilo => {
-        triggers.foreach(trigger => trigger.f(henkilo, personOidsWithAliases, createLukio))
-      })
+    if(filteredHenkilot.nonEmpty) {
+      Future.sequence(filteredHenkilot.map(henkilo =>
+        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), createLukio)
+      )).flatMap(_ => Future.successful({}))
     } else {
-      logger.debug("Ei triggeröidä mitään, koska Container-kokoelma on tyhjä.")
+      Future.successful({})
     }
   }
 }
@@ -339,7 +251,11 @@ case class KoskiOpiskeluoikeus(
                  lisätiedot: Option[KoskiLisatiedot],
                  suoritukset: Seq[KoskiSuoritus],
                  tyyppi: Option[KoskiKoodi],
-                 aikaleima: Option[String])
+                 aikaleima: Option[String]) {
+
+  def isStateContainingOpiskeluoikeus =
+    oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
+}
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 
@@ -363,6 +279,7 @@ case class KoskiSuoritus(
                   alkamispäivä: Option[String],
                   //jääLuokalle is only used for peruskoulu
                   jääLuokalle: Option[Boolean],
+                  tutkintonimike: Seq[KoskiKoodi] = Nil,
                   tila: Option[KoskiKoodi] = None)
 
 case class KoskiOsasuoritus(

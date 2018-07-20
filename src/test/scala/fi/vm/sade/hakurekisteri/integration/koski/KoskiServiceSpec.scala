@@ -5,11 +5,13 @@ import java.time.format.DateTimeFormatter
 import java.util.{Date, TimeZone}
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorSystem}
+import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito._
 import org.scalatest._
@@ -17,7 +19,8 @@ import org.scalatest.mock.MockitoSugar
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.{Success, Try}
 
 class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with LocalhostProperties {
 
@@ -26,8 +29,26 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
   val endPoint = mock[Endpoint]
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/koski"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val koskiService = new KoskiService(virkailijaRestClient = client, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10, hakemusService = new HakemusServiceMock())
+  val testRef = TestActorRef(new Actor {
+    override def receive: Actor.Receive = {
+      case q =>
+        sender ! Seq()
+    }
+  })
+  val arvosanaHandler: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+  val koskiService = new KoskiService(virkailijaRestClient = client,
+    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10,
+    hakemusService = new HakemusServiceMock(),
+    koskiArvosanaHandler = arvosanaHandler)
+
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
+
+  it should "return successful future for handleHenkiloUpdate" in {
+    when(endPoint.request(forUrl("http://localhost/koski/api/sure/oids")))
+      .thenReturn((200, List(), "[]"))
+    val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), createLukio = true)
+    Await.result(future, 10.seconds)
+  }
 
   it should "return suoritukset" in {
     when(endPoint.request(forUrl("http://localhost/koski/api/oppija?muuttunutJ%C3%A4lkeen=2010-01-01&muuttunutEnnen=2100-01-01T12%3A00")))

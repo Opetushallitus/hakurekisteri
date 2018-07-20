@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
+import akka.actor.{Actor, ActorSystem}
+import akka.testkit.TestActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTrigger.parseLocalDate
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaHandler._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -14,6 +16,8 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.Seq
+import scala.compat.Platform
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.{implicitConversions, reflectiveCalls}
 
@@ -28,223 +32,39 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   implicit val formats = DefaultFormats
   implicit val timeout: Timeout = 5.second
   val koskiConfig = ServiceConfig(serviceUrl = "http://localhost/koski/api/oppija")
+  implicit val system = ActorSystem(s"test-system-${Platform.currentTime.toString}")
+  implicit def executor: ExecutionContext = system.dispatcher
+  val testRef = TestActorRef(new Actor {
+    override def receive: Actor.Receive = {
+      case q =>
+        sender ! Seq()
+    }
+  })
+  val koskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+
 
   it should "empty KoskiHenkilo should return list" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+    koskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer().build
     ).flatten should contain theSameElementsAs Seq()
   }
-/*
-  it should "list should return peruskoulutus with kieli arvosana" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setPeruskouluKieli()
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .setLuokka("9C", None)
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Ei,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      Map.empty), Seq(Arvosana( suoritus = null, arvio = Arvio410("9"), "A1", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())), "", parseLocalDate("2016-02-02"), None
-    ))
-  }
-*/
-/*
-  it should "list should return peruskoulutus with arvosanat" in {
 
-    val expected: Seq[SuoritusArvosanat] = Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Ei,
-      "FI",
-      None,
-      vahv = true,
-      OrganisaatioOids.oph,
-      None,
-      Map.empty), Seq(
-      Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
-      Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None),
-      SuoritusArvosanat (VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), Seq(
-        Arvosana(null, Arvio410("9"), "MA", lisatieto = None, valinnainen = false, None, "henkilo_oid",Map())
-      ), "9E", parseLocalDate("2016-02-02"), None))
-
-    val res: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None,
-          etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .setLuokka("9E")
-        .build
-    ).flatten
-    res should contain theSameElementsAs expected
-  }
-
-  it should "alkamispaiva should be from alkamispaiva" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("HI", Some("9"), false), ("MU", Some("8"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .setLuokka("9A", Some("2017-03-03"))
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Ei,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      None,
-      Map.empty), Seq(
-      Arvosana(suoritus = null, arvio = Arvio410("9"), "HI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
-      Arvosana(suoritus = null, arvio = Arvio410("8"), "MU", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None),
-      SuoritusArvosanat(VirallinenSuoritus("luokka", "orgId", "VALMIS", parseLocalDate("2016-02-02"), "henkilo_oid", yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), Seq(
-        Arvosana(null, Arvio410("9"), "MA", lisatieto = None, false, None, "henkilo_oid",Map())
-      ), "9A", parseLocalDate("2017-03-03"), None))
-  }
-*/
-/*
-  it should "list should return peruskoulutus skip bad" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", Some("5"), false), ("IHME JA KUMMA", Some("10"), false), ("TE", Some("11"), false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Ei,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      Map.empty), Seq(
-        Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
-        Arvosana(suoritus = null, arvio = Arvio410("5"), "PS", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None))
-  }
-
-  it should "Suoritus should be osittain yksilöllistetty" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Osittain,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      Map.empty), Seq(
-        Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None))
-  }
-
-  it should "Kesken should set enddate as next fourth of june" in {
-
-    val nextFourthOfJune = KoskiArvosanaTrigger.parseNextFourthOfJune()
-
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("BI", Some("4"), false), ("PS", None, true)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .setOpiskeluOikeusJakso(Seq(KoskiTila(alku = "2016-01-01", tila = KoskiKoodi(koodiarvo = "kesken", koodistoUri = "uri"))))
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "KESKEN",
-      nextFourthOfJune,
-      "henkilo_oid",
-      yksilollistaminen.Osittain,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      Map.empty), Seq(
-        Arvosana(suoritus = null, arvio = Arvio410("4"), "BI", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None))
-  }
-
-  it should "Suoritus should be kokonaan yksilöllistetty" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForPeruskoulu(List(("YL", Some("4"), true), ("OP", None, true), ("DDR", None, false)))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.perusopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Kokonaan,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      Map.empty), Seq(
-        Arvosana(suoritus = null, arvio = Arvio410("4"), "YL", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None))
-  }
-*/
-  /*
-  it should "list should return suoritus kymppiluokka" in {
-    KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer()
-        .setSuorituksetForKymppi(List(("KT", Some("10")), ("KE", Some("8"))))
-        .setHenkilo(KoskiHenkilo(oid = Some("henkilo_oid"), hetu = Some("010101-0101"), syntymäaika = None, etunimet = Some("Test"), kutsumanimi = Some("Test"), sukunimi = Some("Tester")))
-        .build
-    ).flatten should contain theSameElementsAs Seq(SuoritusArvosanat(VirallinenSuoritus(Oids.lisaopetusKomoOid,
-      "orgId",
-      "VALMIS",
-      parseLocalDate("2016-02-02"),
-      "henkilo_oid",
-      yksilollistaminen.Ei,
-      "FI",
-      None,
-      true,
-      OrganisaatioOids.oph,
-      None,
-      Map.empty), Seq(
-        Arvosana(suoritus = null, arvio = Arvio410("10"), "KT", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map()),
-        Arvosana(suoritus = null, arvio = Arvio410("8"), "KE", lisatieto = None, valinnainen = false, myonnetty = None, source = "henkilo_oid", Map())
-    ), "", parseLocalDate("2016-02-02"), None))
-  }
-*/
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
-    KoskiArvosanaTrigger.detectOppilaitos(
+    koskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10")
   }
 
   it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
-    KoskiArvosanaTrigger.detectOppilaitos(
+    koskiArvosanaTrigger.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10C")
   }
 
   it should "createOpiskelija should create opiskelija" in {
-    KoskiArvosanaTrigger.createOpiskelija("henkilo_oid",
+    koskiArvosanaTrigger.createOpiskelija("henkilo_oid",
       SuoritusLuokka(VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
       ) should equal (

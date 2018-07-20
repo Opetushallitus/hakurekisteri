@@ -9,11 +9,9 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 trait IKoskiService {
-  var triggers: Seq[KoskiTrigger] = Seq()
 
   def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulkOperation: Boolean = false): Future[Unit]
-  def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
-  def addTrigger(trigger: KoskiTrigger): Unit = triggers = triggers :+ trigger
+  def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
 
   //Tällä voi käydä läpi määritellyn aikaikkunan verran dataa Koskesta, jos joskus tulee tarve käsitellä aiempaa koskidataa uudelleen.
   //Oletusparametreilla hakee muutoset päivän taaksepäin, jotta Sure selviää alle 24 tunnin downtimeistä ilman Koskidatan puuttumista.
@@ -26,7 +24,7 @@ trait IKoskiService {
 }
 
 class KoskiServiceMock extends IKoskiService {
-  override def updateHenkilo(oppijaOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = Future.successful(())
+  override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = Future.successful(())
 
   override def traverseKoskiDataInChunks(searchWindowStartTime: Date, timeToWaitUntilNextBatch:
   FiniteDuration, searchWindowSize: Long, repairTargetTime: Date, pageNbr: Int, pageSizePerFetch: Int)

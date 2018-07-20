@@ -49,7 +49,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilo(personOid, haeLukio)
+      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), haeLukio)
     }
   }
 
