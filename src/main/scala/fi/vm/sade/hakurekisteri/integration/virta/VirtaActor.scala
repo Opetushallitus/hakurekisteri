@@ -98,7 +98,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
     val virtaOpiskeluOikeus = res.filter(p => Oids.cscOrganisaatioOid.matches(p.source))
 
     val pendingDeletes: Seq[Future[Any]] = for {
-      vrtOO: Opiskeluoikeus <- virtaOpiskeluOikeus
+      vrtOO <- virtaOpiskeluOikeus
     } yield {
       opiskeluoikeusActor ? DeleteResource(vrtOO.id, "virta-actor")
     }
