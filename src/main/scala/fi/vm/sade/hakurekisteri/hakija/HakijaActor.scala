@@ -268,6 +268,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       maaFuture
   }
 
+  def getMaakoodit(koodiArvot: List[String]): Future[List[String]] = {
+    val maaFutures: List[Future[String]] = koodiArvot.map(a => getMaakoodi(a))
+    val fullList = Future.sequence(maaFutures)
+    fullList
+  }
+
   def getPostitoimipaikka(maa: String, postitoimipaikka: String, postinumero: String): Future[String] = maa match {
     case "246" =>
       val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
@@ -403,7 +409,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def enrichHakijat(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(for {
     hakija <- hakijat
   } yield for {
-      kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus)
+      kansalaisuus <- getMaakoodit(hakija.henkilo.kansalaisuus)
       maa <- getMaakoodi(hakija.henkilo.maa)
       postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postitoimipaikka, hakija.henkilo.postinumero)
     } yield {

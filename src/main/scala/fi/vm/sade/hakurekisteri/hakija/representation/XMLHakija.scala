@@ -14,7 +14,7 @@ import scala.util.matching.Regex
 import scala.xml.Node
 
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                     postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
+                     postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: List[String], matkapuhelin: Option[String],
                      muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
                      aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
 

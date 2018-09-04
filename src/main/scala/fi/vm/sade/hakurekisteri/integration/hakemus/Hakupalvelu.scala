@@ -391,7 +391,7 @@ object AkkaHakupalvelu {
           kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
           turvakielto = getHenkiloTietoOrBlank(_.Turvakielto),
           oppijanumero = hakemus.personOid.getOrElse(""),
-          kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
+          kansalaisuus = List(getHenkiloTietoOrElse(_.kansalaisuus, "FIN")),
           kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
           asiointiKieli = kieli,
           opetuskieli = opetuskieli.getOrElse(""),
@@ -447,9 +447,8 @@ object AkkaHakupalvelu {
           kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
           turvakielto = hakemus.henkilo.turvakielto.toString,
           oppijanumero = hakemus.henkilo.oidHenkilo,
-          kansalaisuus = hakemus.henkilo.kansalaisuus.headOption
-            .flatMap(k => maakoodit.get(k.kansalaisuusKoodi))
-            .getOrElse("FIN"),
+          kansalaisuus = hakemus.henkilo.kansalaisuus
+            .flatMap(k => maakoodit.get(k.kansalaisuusKoodi)),
           kaksoiskansalaisuus = "",
           asiointiKieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi.toUpperCase).getOrElse("FI"),
           opetuskieli = "",
