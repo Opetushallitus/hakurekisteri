@@ -31,7 +31,7 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
       hakija.postinumero,
       hakija.postitoimipaikka,
       hakija.maa,
-      hakija.kansalaisuus,
+      hakija.kansalaisuus.mkString(","),
       hakija.kaksoiskansalaisuus.getOrElse(""),
       hakija.matkapuhelin.getOrElse(""),
       hakija.puhelin.getOrElse(""),
