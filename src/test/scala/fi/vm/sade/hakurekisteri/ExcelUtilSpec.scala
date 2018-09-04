@@ -22,7 +22,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
       postinumero = "00000",
       postitoimipaikka = "NotHelsinki",
       maa = "246",
-      kansalaisuus = "246",
+      kansalaisuus = List("246"),
       matkapuhelin = None,
       muupuhelin = None,
       sahkoposti = None,

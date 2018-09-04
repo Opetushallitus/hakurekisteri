@@ -42,7 +42,7 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       h.postinumero,
       h.postitoimipaikka,
       h.maa,
-      h.kansalaisuus,
+      h.kansalaisuus.mkString(","),
       h.matkapuhelin.getOrElse(""),
       h.muupuhelin.getOrElse(""),
       h.sahkoposti.getOrElse(""),
