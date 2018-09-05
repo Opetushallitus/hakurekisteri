@@ -8,7 +8,7 @@ import scala.sys.process._
 
 class HakureRekisteriMochaTest extends FlatSpec with CleanSharedTestJettyBeforeEach with Matchers {
   "Mocha tests" should "pass" in {
-    val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-p", "./node_modules/.bin/phantomjs", "-R", "spec", "http://localhost:" + port + "/test/runner.html")
+    val pb = Seq("node_modules/mocha-headless-chrome/bin/start", "-r", "spec", "-f", "http://localhost:" + port + "/test/runner.html")
     val res = pb.!
     res should be(0)
   }
