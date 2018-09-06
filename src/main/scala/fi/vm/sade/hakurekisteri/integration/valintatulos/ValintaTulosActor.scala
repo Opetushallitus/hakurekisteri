@@ -110,13 +110,13 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
     if (!initialLoadingDone) {
-      Future.failed(InitialLoadingNotDone())
+      //Future.failed(InitialLoadingNotDone())
+      log.warning("initialLoadingDone=false. Päästetään kuitenkin pyyntö läpi (OY-238). hakuOid:" + q.hakuOid)
+    }
+    if (q.hakemusOid.isEmpty) {
+      cache.get(q.hakuOid, (_: String) => queueForResult(q.hakuOid).map(Some(_))).map(_.get)
     } else {
-      if (q.hakemusOid.isEmpty) {
-        cache.get(q.hakuOid, (_: String) => queueForResult(q.hakuOid).map(Some(_))).map(_.get)
-      } else {
-        callBackend(q.hakuOid, q.hakemusOid)
-      }
+      callBackend(q.hakuOid, q.hakemusOid)
     }
   }
 
