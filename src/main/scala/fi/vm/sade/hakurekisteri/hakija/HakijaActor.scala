@@ -441,7 +441,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           kotikunta = h.kotikunta,
           kansalaisuus = Some(kansalaisuus),
           kaksoiskansalaisuus = h.kaksoiskansalaisuus,
-          kansalaisuudet = None,
+          kansalaisuudet = if (h.kaksoiskansalaisuus.isDefined) Some(List(kansalaisuus,h.kaksoiskansalaisuus.get)) else Some(List(kansalaisuus)),
           asiointiKieli = h.asiointiKieli,
           opetuskieli = h.opetuskieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
