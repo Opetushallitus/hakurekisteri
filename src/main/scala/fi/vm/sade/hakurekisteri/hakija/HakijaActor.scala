@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus}
+import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.kkhakija.Query
 
 import scala.concurrent.duration._
@@ -188,6 +189,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
         case 1 => XMLQuery(q) pipeTo sender
         case 2 => JSONQuery(q) pipeTo sender
         case 3 => JSONQueryV3(q) pipeTo sender
+        case 4 => JSONQueryV4(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
@@ -296,6 +298,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     getXmlHakemus(hakija).map(data2JsonHakijaV3(hakija))
   }
 
+  def hakija2JSONHakijaV4(hakija: Hakija): Future[JSONHakijaV4] = {
+    getXmlHakemus(hakija).map(data2JsonHakijaV4(hakija))
+  }
+
   def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
     val hakutoiveet2 = hakemus.hakutoiveet.map(toive => toive.copy(koulutuksenKieli = None))
     val hakemus2 = hakemus.copy(osaaminen = None, hakutoiveet = hakutoiveet2)
@@ -304,6 +310,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def data2JsonHakijaV3(hakija: Hakija)(hakemus: XMLHakemus) = {
     JSONHakija(hakija, hakemus)
+  }
+
+  def data2JsonHakijaV4(hakija: Hakija)(hakemus: XMLHakemus) = {
+    JSONHakijaV4(hakija, hakemus)
   }
 
   def data2JsonHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
@@ -320,6 +330,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def hakijat2JsonHakijatV3(hakijat: Seq[Hakija]): Future[Seq[JSONHakija]] =
     hakijat.map(hakija2JSONHakijaV3).join
+
+  def hakijat2JsonHakijatV4(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV4]] =
+    hakijat.map(hakija2JSONHakijaV4).join
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
     hakijas.map(tila(tulos.valintatila, tulos.vastaanottotila, tulos.ilmoittautumistila)).map(yhteispisteet(tulos.pisteet))
@@ -403,7 +416,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def enrichHakijat(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(for {
     hakija <- hakijat
   } yield for {
-      kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus)
+      kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus.getOrElse(""))
       maa <- getMaakoodi(hakija.henkilo.maa)
       postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postitoimipaikka, hakija.henkilo.postinumero)
     } yield {
@@ -426,8 +439,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           puhelin = h.puhelin,
           sahkoposti = h.sahkoposti,
           kotikunta = h.kotikunta,
-          kansalaisuus = kansalaisuus,
+          kansalaisuus = Some(kansalaisuus),
           kaksoiskansalaisuus = h.kaksoiskansalaisuus,
+          kansalaisuudet = None,
           asiointiKieli = h.asiointiKieli,
           opetuskieli = h.opetuskieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
@@ -460,6 +474,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = getHakijat(q).flatMap(hakijat2XmlHakijat).map(XMLHakijat)
   def JSONQuery(q: HakijaQuery): Future[JSONHakijat] = getHakijat(q).flatMap(hakijat2JsonHakijatV2).map(JSONHakijat)
   def JSONQueryV3(q: HakijaQuery): Future[JSONHakijat] = getHakijat(q).flatMap(hakijat2JsonHakijatV3).map(JSONHakijat)
+  def JSONQueryV4(q: HakijaQuery): Future[JSONHakijatV4] = getHakijat(q).flatMap(hakijat2JsonHakijatV4).map(JSONHakijatV4)
+
 }
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User], version: Int) extends Query

@@ -57,7 +57,7 @@ object XMLHakija {
       postinumero = hakija.henkilo.postinumero,
       postitoimipaikka = hakija.henkilo.postitoimipaikka,
       maa = hakija.henkilo.maa,
-      kansalaisuus = hakija.henkilo.kansalaisuus,
+      kansalaisuus = hakija.henkilo.kansalaisuus.getOrElse(""),
       matkapuhelin = hakija.henkilo.matkapuhelin.blankOption,
       muupuhelin = hakija.henkilo.puhelin.blankOption,
       sahkoposti = hakija.henkilo.sahkoposti.blankOption,
