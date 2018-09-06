@@ -374,6 +374,12 @@ object AkkaHakupalvelu {
 
       def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
 
+      def parseKansalaisuusList(a: (HakemusHenkilotiedot) => Option[String], b: (HakemusHenkilotiedot) => Option[String] ): Option[List[String]] = {
+        val primary = getHenkiloTietoOrElse(a, "")
+        val secondary = getHenkiloTietoOrElse(b, "")
+        if(secondary.equals("")) Some(List(primary)) else Some(List(primary,secondary))
+      }
+
       Hakija(
         Henkilo(
           lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
@@ -391,7 +397,7 @@ object AkkaHakupalvelu {
           oppijanumero = hakemus.personOid.getOrElse(""),
           kansalaisuus = Some(getHenkiloTietoOrElse(_.kansalaisuus, "FIN")),
           kaksoiskansalaisuus = Some(getHenkiloTietoOrBlank(_.kaksoiskansalaisuus)),
-          kansalaisuudet = None,
+          kansalaisuudet = parseKansalaisuusList(_.kansalaisuus, _.kaksoiskansalaisuus),
           asiointiKieli = kieli,
           opetuskieli = opetuskieli.getOrElse(""),
           eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
