@@ -139,7 +139,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           if(query.version == 1) {
             KkExcelUtil.write(bytes, hakijat)
           } else {
-            KkExcelUtilV3.write(bytes, hakijat)
+            KkExcelUtilV2.write(bytes, hakijat)
           }
           bytes.toByteArray
       }

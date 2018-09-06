@@ -1,13 +1,14 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
+import fi.vm.sade.hakurekisteri.integration.tarjonta.Koulutus
 import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 
-object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
+object KkExcelUtilV2 extends HakijatExcelWriter[Seq[Hakija]] {
 
   private val headers = Seq(
     "Hetu", "Syntymäaika", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero",
-    "Postitoimipaikka", "Maa", "Kansalaisuudet", "Matkapuhelin", "Puhelin", "Sahkoposti", "Lukuvuosimaksu", "Kotikunta", "Sukupuoli",
+    "Postitoimipaikka", "Maa", "Kansalaisuus", "Kaksoiskansalaisuus", "Matkapuhelin", "Puhelin", "Sahkoposti", "Lukuvuosimaksu", "Kotikunta", "Sukupuoli",
     "Aidinkieli", "Asiointikieli", "Koulusivistyskieli", "Koulutusmarkkinointilupa", "On ylioppilas", "Suoritusvuosi",
     "Haku", "Hakuvuosi", "Hakukausi", "Hakemusnumero", "Organisaatio", "Hakukohde", "Hakukohteen kk-id", "Avoin vayla",
     "Valinnan tila", "Vastaanottotieto", "Ilmoittautumiset", "Pohjakoulutus", "Julkaisulupa", "Hakukelpoisuus",
@@ -18,7 +19,7 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
 
   override def getHeaders(hakijat: Seq[Hakija]): Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
   
-  override def getRows(hakijat: Seq[Hakija]): Set[Row] = hakijat.flatMap(hakija => hakija.hakemukset.map(hakemus => {
+  override def getRows(hakijat: Seq[Hakija]): Set[Row] = hakijat.flatMap((hakija) => hakija.hakemukset.map(hakemus => {
     val rivi = Seq(
       hakija.hetu,
       hakija.syntymaaika.getOrElse(""),
@@ -30,7 +31,8 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
       hakija.postinumero,
       hakija.postitoimipaikka,
       hakija.maa,
-      hakija.kansalaisuudet.mkString(", "),
+      hakija.kansalaisuus.getOrElse(""),
+      hakija.kaksoiskansalaisuus.getOrElse(""),
       hakija.matkapuhelin.getOrElse(""),
       hakija.puhelin.getOrElse(""),
       hakija.sahkoposti.getOrElse(""),

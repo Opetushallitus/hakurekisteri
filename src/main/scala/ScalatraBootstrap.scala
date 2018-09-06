@@ -18,7 +18,7 @@ import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{CreateOpiskeluoikeusCommand, OpiskeluoikeusSwaggerApi}
@@ -112,6 +112,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v3/hakijat", "rest/v3/hakijat") -> new HakijaResourceV3(koosteet.hakijat),
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(koosteet.kkHakijaService),
     ("/rest/v2/kkhakijat", "rest/v2/kkhakijat") -> new KkHakijaResourceV2(koosteet.kkHakijaService, config),
+    ("/rest/v3/kkhakijat", "rest/v3/kkhakijat") -> new KkHakijaResourceV3(koosteet.kkHakijaService, config),
     ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemusService, koosteet.ensikertalainen, integrations.oppijaNumeroRekisteri),
     ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
