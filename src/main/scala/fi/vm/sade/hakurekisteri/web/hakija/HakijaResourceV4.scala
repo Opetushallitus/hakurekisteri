@@ -22,7 +22,7 @@ import scala.util.Try
 
 class HakijaResourceV4(hakijaActor: ActorRef)
                       (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[JSONHakijatV4])
-  extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijatV4] with DownloadSupport with QueryLogging with HakijaResourceSupport  {
+  extends HakuJaValintarekisteriStack with HakijaSwaggerApiV4 with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijatV4] with DownloadSupport with QueryLogging with HakijaResourceSupport  {
   implicit val defaultTimeout: Timeout = 120.seconds
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
