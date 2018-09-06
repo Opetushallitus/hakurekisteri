@@ -317,7 +317,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
 
     val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
 
-    hakijat.last.kansalaisuus should be ("999")
+    hakijat.last.kansalaisuus should be (Some("999"))
     hakijat.last.maa should be ("999")
     hakijat.head.kotikunta should be ("999")
   }
