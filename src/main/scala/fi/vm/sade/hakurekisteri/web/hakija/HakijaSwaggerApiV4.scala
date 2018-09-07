@@ -106,7 +106,7 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("postinumero", null, DataType.String),
     ModelField("postitoimipaikka", null, DataType.String),
     ModelField("maa", null, DataType.String),
-    ModelField("kansalaisuus", null, DataType.String),
+    ModelField("kansalaisuudet", null, DataType.GenList(DataType.String)),
     ModelField("matkapuhelin", null, DataType.String, required = false),
     ModelField("sahkoposti", null, DataType.String, required = false),
     ModelField("kotikunta", null, DataType.String, required = false),
