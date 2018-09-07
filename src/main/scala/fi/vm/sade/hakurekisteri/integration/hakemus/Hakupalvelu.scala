@@ -379,7 +379,7 @@ object AkkaHakupalvelu {
       def parseKansalaisuusList(a: (HakemusHenkilotiedot) => Option[String], b: (HakemusHenkilotiedot) => Option[String] ): Option[List[String]] = {
         val primary = getHenkiloTietoOrElse(a, "")
         val secondary = getHenkiloTietoOrElse(b, "")
-        if(secondary.equals("")) Some(List(primary)) else Some(List(primary,secondary))
+        if (secondary.isEmpty) Some(List(primary)) else Some(List(primary,secondary))
       }
 
       Hakija(
