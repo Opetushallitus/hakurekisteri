@@ -9,7 +9,6 @@
   "devDependencies": {
     "bower": "1.7.7",
     "coffeescript": "1.7.0",
-    "mocha-headless-chrome": "^2.0.1",
-    "puppeteer": "^1.7.0"
+    "mocha-headless-chrome": "^2.0.1"
   }
 }
