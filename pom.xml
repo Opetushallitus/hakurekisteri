@@ -1601,13 +1601,13 @@
         <repository>
             <id>ophsnapshots</id>
             <name>oph-snapshots</name>
-            <url>https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local/</url>
+            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local/</url>
             <layout>default</layout>
         </repository>
         <repository>
             <id>ophreleases</id>
             <name>oph-releases</name>
-            <url>https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local/</url>
+            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local/</url>
             <layout>default</layout>
         </repository>
         <repository>
