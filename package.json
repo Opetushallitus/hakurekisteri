@@ -8,8 +8,7 @@
   "version": "0.0.1",
   "devDependencies": {
     "bower": "1.7.7",
-    "coffee-script": "1.7.0",
-    "mocha-phantomjs": "3.5.3",
-    "phantomjs": "1.9.16"
+    "coffeescript": "1.7.0",
+    "mocha-headless-chrome": "^2.0.1"
   }
 }

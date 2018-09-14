@@ -14,7 +14,7 @@
         <script src="lib/jquery.min.js"></script>
         <script>
             mocha.ui('bdd');
-            mocha.reporter('html');
+            mocha.reporter('spec');
             mocha.timeout(60000);
         </script>
         <script src="util/testHelpers.js"></script>
@@ -31,16 +31,12 @@
         <script src="spec/opiskelijatiedotPageSpec.js"></script>
         <script>
             $(document).ready(function() {
-                if (window.mochaPhantomJS) {
-                    mochaPhantomJS.run()
-                } else {
-                    var runner = mocha.run();
-                    $(document).keyup(function(e) {
-                        if(e.keyCode==27) {
-                            runner._abort = true
-                        }
-                    });
-                }
+                var runner = mocha.run();
+                $(document).keyup(function(e) {
+                    if(e.keyCode==27) {
+                        runner._abort = true
+                    }
+                });
             })
 
         </script>
