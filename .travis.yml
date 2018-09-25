@@ -5,16 +5,9 @@ jdk:
 services:
   - docker
   - postgresql
-
 cache:
   directories:
   - $HOME/.m2
-
-before_script:
-  - DB_NAME=suoritusrekisteri
-  - psql -c "create database $DB_NAME;" -U postgres
-  - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
-
 notifications:
   flowdock:
     secure: "cqvHuDSaJVytJQGhnhObBcDkp30fznnCfExSYdsPJQu/5GUW0GJEe9zbgnuJWfMy4IaX7MdhagIus20AUJw3YkwJW5YxtBxEyxqRepJ7GdZXrlR4ieG0zdDn+1neljFhZ5Ywo29wN45j4ORqgnjr2pBUuZBSbHTxzj6kHIqwn+w="
@@ -30,9 +23,28 @@ install:
   - export TZ=Europe/Helsinki
   - git clone https://github.com/Opetushallitus/ci-tools.git
   - source ci-tools/common/setup-tools.sh
+  - export ARTIFACT_NAME="suoritusrekisteri"
   - nvm use node 6
   - npm install bower
   - node_modules/bower/bin/bower update
 
+before_script:
+  - DB_NAME=suoritusrekisteri
+  - psql -c "create database $DB_NAME;" -U postgres
+  - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
+
 script:
   - mvn clean install -Dbranch=${TRAVIS_BRANCH} -Drevision=${TRAVIS_COMMIT} -DbuildNumber=${TRAVIS_BUILD_NUMBER} -DpostgresRunningOnPort=5432
+
+  - mv target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
+  - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
+
+  - export BASE_IMAGE="base-legacy:0.1"
+  - ./ci-tools/common/pull-image.sh
+  - ./ci-tools/build/build-fatjar.sh $ARTIFACT_NAME
+
+deploy:
+  - provider: script
+    script: ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
+    on:
+      all_branches: true
