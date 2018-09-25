@@ -137,7 +137,10 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       val suoritusSave: Future[Any] =
         if (suoritusExists(useSuoritus, existingSuoritukset)) {
           logger.debug("Päivitetään olemassaolevaa suoritusta.")
-          val suoritus = existingSuoritukset.map(_.asInstanceOf[VirallinenSuoritus with Identified[UUID]])
+          val suoritus = existingSuoritukset.flatMap {
+            case s: VirallinenSuoritus with Identified[UUID] => Some(s)
+            case _ => None
+          }
             .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
           logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
           val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)("koski"))
@@ -794,9 +797,13 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         result = result :+ suoritus
       }
     }
-
-    val isPerusopetus: Boolean = result.exists(s => {
-      val suoritus = s.suoritus.asInstanceOf[VirallinenSuoritus]
+    def asVirallinenSuoritus(s: Suoritus): Option[VirallinenSuoritus] = {
+      s match {
+        case v: VirallinenSuoritus => Some(v)
+        case _ => None
+      }
+    }
+    val isPerusopetus: Boolean = result.map(_.suoritus).flatMap(asVirallinenSuoritus).exists(suoritus => {
       if(opiskeluoikeus.tyyppi.isDefined) {
         Oids.perusopetusKomoOid == suoritus.komo && opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetus")
       } else {
@@ -805,7 +812,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     })
 
     val hasNinthGrade: Boolean = result.exists(s => {
-      //val suoritus = s._1.asInstanceOf[VirallinenSuoritus]
       val luokka = s.luokkataso
       luokka.contains("9") || s.luokka.startsWith("9")
     })
@@ -832,7 +838,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       case _ => false
     })
 
-    val newSuoritukset = oppiaineenOppimaarat
+    val newSuoritukset = oppiaineenOppimaarat.filter(_.suoritus.isInstanceOf[VirallinenSuoritus])
       .groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
       .map(entry => {
         val suoritukset = entry._2
@@ -858,7 +864,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   it just saves the whole perusopetus komo that contains grades and such.
     */
   private def postprocessPeruskouluData(result: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
-    result.map(suoritusArvosanat => {
+    result.filter(_.suoritus.isInstanceOf[VirallinenSuoritus]).map(suoritusArvosanat => {
       var useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
       val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && suoritusArvosanat.arvosanat.isEmpty){
         logger.debug("if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty) == true")
