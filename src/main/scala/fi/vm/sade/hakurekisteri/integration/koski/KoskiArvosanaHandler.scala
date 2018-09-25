@@ -138,7 +138,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         if (suoritusExists(useSuoritus, existingSuoritukset)) {
           logger.debug("Päivitetään olemassaolevaa suoritusta.")
           val suoritus = existingSuoritukset.flatMap {
-            case s: VirallinenSuoritus with Identified[UUID] => Some(s)
+            case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
             case _ => None
           }
             .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
