@@ -84,7 +84,7 @@ class YtlIntegration(properties: OphProperties,
     hakemusService.hakemuksetForPerson(personOid)
       .zip(oppijaNumeroRekisteri.enrichWithAliases(Set(personOid)))
       .map(pair => pair._1.collect {
-        case h: FullHakemus if h.stateValid && h.personOid.isDefined => pair.copy(_1 = h)
+        case h if h.stateValid && h.personOid.isDefined => pair.copy(_1 = h)
       }).flatMap {
       hakemuksetWithPersonOids =>
         if (hakemuksetWithPersonOids.isEmpty) {
