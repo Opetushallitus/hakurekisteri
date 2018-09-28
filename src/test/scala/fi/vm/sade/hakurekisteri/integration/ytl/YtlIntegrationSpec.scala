@@ -118,7 +118,10 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     Await.result(rekisterit.ytlSuoritusRekisteri ? createTestSuoritus(henkiloOid),
       Duration(30, TimeUnit.SECONDS))
 
-    ytlActor ! StudentToKokelas.convert(henkiloOid, createTestStudent(ssn))
+    ytlActor ! KokelasWithPersonAliases(StudentToKokelas.convert(henkiloOid, createTestStudent(ssn)),
+      PersonOidsWithAliases(Set(henkiloOid), Map(henkiloOid -> Set(henkiloOid))))
+
+    Thread.sleep(3000)
 
     val suoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
 
