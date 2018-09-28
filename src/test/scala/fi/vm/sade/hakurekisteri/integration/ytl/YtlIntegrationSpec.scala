@@ -18,6 +18,8 @@ import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.scalaproperties.OphProperties
+import hakurekisteri.perusopetus.Yksilollistetty
+import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, LocalDateTime}
 import org.json4s.Formats
 import org.json4s.jackson.JsonMethods
@@ -28,7 +30,7 @@ import org.mockito.stubbing.Answer
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
-
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -69,6 +71,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   private val activeHakuOid = "1.2.246.562.29.26435854158"
 
   override protected def beforeEach(): Unit = {
+    Mockito.reset(hakemusService, oppijaNumeroRekisteri)
     Mockito.when(oppijaNumeroRekisteri.enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))).thenAnswer(new Answer[Future[PersonOidsWithAliases]] {
       override def answer(invocation: InvocationOnMock): Future[PersonOidsWithAliases] = {
         val henkiloOids = invocation.getArgumentAt(0, classOf[Set[String]])
@@ -85,6 +88,43 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   }
 
   behavior of "YtlIntegration"
+  def createTestStudent(ssn: String) = Student(ssn = ssn, lastname = "Test", firstnames = "Test",
+    graduationPeriod = Some(Kevat(2003)),
+    graduationDate = Some(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate("2003-05-31")),
+    graduationSchoolOphOid = Some("1.2.246.562.10.63670951381"),
+    graduationSchoolYtlNumber = Some("1254"),
+    hasCompletedMandatoryExams = Some(true),
+    language = "FI",
+    exams = Seq.empty)
+  def createTestSuoritus(henkiloOid: String) = VirallinenSuoritus(
+    komo = "1.2.246.562.5.2013061010184237348007",
+    myontaja = "1.2.246.562.10.43628088406",
+    henkilo = henkiloOid,
+    yksilollistaminen = yksilollistaminen.Ei,
+    suoritusKieli = "FI",
+    lahde = "1.2.246.562.10.43628088406",
+    tila = "KESKEN",
+    lahdeArvot = Map("hasCompletedMandatoryExams" -> "false"),
+    valmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime("2018-12-21").toLocalDate
+  )
+
+  it should "update existing YTL suoritukset" in {
+    val henkiloOid = "1.2.246.562.24.00000000096"
+    val ssn = "110756-918T"
+    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
+      HetuPersonOid(ssn, henkiloOid)
+    )))
+
+    Await.result(rekisterit.ytlSuoritusRekisteri ? createTestSuoritus(henkiloOid),
+      Duration(30, TimeUnit.SECONDS))
+
+    ytlActor ! StudentToKokelas.convert(henkiloOid, createTestStudent(ssn))
+
+    val suoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
+
+    suoritukset should have size 1
+    suoritukset.head.lahdeArvot should equal(Map("hasCompletedMandatoryExams" -> "true"))
+  }
 
   it should "insert new suoritus and arvosana records from YTL data" in {
     Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
