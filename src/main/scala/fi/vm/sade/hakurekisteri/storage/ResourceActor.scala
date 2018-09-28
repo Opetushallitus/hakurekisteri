@@ -54,6 +54,14 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
         sender ! operationOrFailure(() => insert(resource, personOidsWithAliases))
       }
 
+    case UpsertResource(resource: T, personOidsWithAliases: PersonOidsWithAliases) =>
+      if (personOidsWithAliases.henkiloOids.size > 1) {
+        sender ! Failure(new IllegalArgumentException(s"Got ${personOidsWithAliases.henkiloOids.size} person aliases " +
+          s"for inserting a single resource $resource . This would make the deduplication query unneccessarily heavy."))
+      } else {
+        save(resource, personOidsWithAliases) pipeTo sender
+      }
+
     case LogMessage(message, level) =>
       log.log(level, message)
   }
@@ -61,4 +69,5 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
 
 case class DeleteResource[I](id: I, source: String)
 case class InsertResource[I, T <: Resource[I, T]](resource: T, personOidsWithAliases: PersonOidsWithAliases)
+case class UpsertResource[I, T <: Resource[I, T]](resource: T, personOidsWithAliases: PersonOidsWithAliases)
 case class LogMessage(message: String, level: Logging.LogLevel)

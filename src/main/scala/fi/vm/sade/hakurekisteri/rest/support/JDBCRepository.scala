@@ -122,6 +122,10 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     Future.successful(doSave(t, (i, old) => journal.addUpdate(i.identify(old.id))))
   }
 
+  override def save(t: R, personOidsWithAliases: PersonOidsWithAliases): Future[R with Identified[I]] = {
+    Future.successful(doSave(t, (i, old) => journal.addUpdate(i.identify(old.id)), Some(personOidsWithAliases)))
+  }
+
   override def insert(t: R, personOidsWithAliases: PersonOidsWithAliases): R with Identified[I] =
     journal.runAsSerialized(10, 5.milliseconds, s"Inserting $t",
       deduplicate(t, Some(personOidsWithAliases)).flatMap(_.fold(journal.addUpdate(t.identify))(DBIO.successful))
