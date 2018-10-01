@@ -12,6 +12,8 @@ trait Repository[T, I] {
 
   def save(t:T): Future[T with Identified[I]]
 
+  def save(t: T, personOidsWithAliases: PersonOidsWithAliases): Future[T with Identified[I]]
+
   def insert(t:T, personOidsWithAliases: PersonOidsWithAliases):T with Identified[I]
 
   def listAll():Seq[T with Identified[I]]
@@ -63,6 +65,10 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
           result
 
       })
+  }
+
+  override def save(o: T, personOidsWithAliases: PersonOidsWithAliases): Future[T with Identified[I]] = {
+    save(o)
   }
 
   override def insert(o: T, personOidsWithAliases: PersonOidsWithAliases): T with Identified[I] = {

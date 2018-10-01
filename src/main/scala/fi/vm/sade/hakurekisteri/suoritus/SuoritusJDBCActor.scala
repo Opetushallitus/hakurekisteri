@@ -19,6 +19,7 @@ import support.PersonAliasesProvider
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+import scala.util.Try
 
 class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable], poolSize: Int, personAliasProvider: PersonAliasesProvider)
   extends ResourceActor[Suoritus, UUID] with JDBCRepository[Suoritus, UUID, SuoritusTable] with JDBCService[Suoritus, UUID, SuoritusTable] {
@@ -48,18 +49,23 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
         (t.komo === komo).asColumnOf[Boolean] && t.myontaja === myontaja && (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) && (t.vahvistettu === vahv).asColumnOf[Boolean]}
   }
 
-  override def save(t: Suoritus): Future[Suoritus with Identified[UUID]] = {
-    val fixPersonOid: (Suoritus, Suoritus with Identified[UUID]) => DBIO[Suoritus with Identified[UUID]] = { case (newSuoritus, oldSuoritus) =>
-      val correctedSuoritus = Suoritus.copyWithHenkiloOid(newSuoritus, oldSuoritus.henkiloOid)
-      if (correctedSuoritus == oldSuoritus) {
-        DBIO.successful(oldSuoritus)
-      } else {
-        journal.addUpdate(correctedSuoritus.identify(oldSuoritus.id))
-      }
+  private def fixPersonOid(newSuoritus: Suoritus, oldSuoritus: Suoritus with Identified[UUID]): DBIO[Suoritus with Identified[UUID]] = {
+    val correctedSuoritus = Suoritus.copyWithHenkiloOid(newSuoritus, oldSuoritus.henkiloOid)
+    if (correctedSuoritus == oldSuoritus) {
+      DBIO.successful(oldSuoritus)
+    } else {
+      journal.addUpdate(correctedSuoritus.identify(oldSuoritus.id))
     }
+  }
+
+  override def save(t: Suoritus): Future[Suoritus with Identified[UUID]] = {
     personAliasProvider.enrichWithAliases(Set(t.henkiloOid)).map { p =>
       doSave(t, fixPersonOid, Some(p))
     }
+  }
+
+  override def save(t: Suoritus, personOidsWithAliases: PersonOidsWithAliases): Future[Suoritus with Identified[UUID]] = {
+    Future.fromTry(Try(doSave(t, fixPersonOid, Some(personOidsWithAliases))))
   }
 
   private def replaceResultHenkiloOidsWithQueriedOids(suoritus: Suoritus with Identified[UUID], personOidsWithAliases: PersonOidsWithAliases): Suoritus with Identified[UUID] = {

@@ -6,15 +6,9 @@ import akka.actor._
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
-import fi.vm.sade.hakurekisteri.integration.ytl.Koe.convertToOldRole
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
-import fi.vm.sade.hakurekisteri.suoritus._
-import fi.vm.sade.hakurekisteri.integration.ytl.Koe.convertToOldRole
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.storage.{Identified, UpsertResource}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen, _}
 import org.joda.time._
 
 import scala.concurrent.duration._
@@ -43,15 +37,11 @@ class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemus
       context.actorOf(Props(new YoSuoritusUpdateActor(kokelas.yo, k.personOidsWithAliases, suoritusRekisteri)))
       kokelaat = kokelaat + (kokelas.oid -> kokelas)
       kokelas.lukio.foreach(lukio => {
-        val insertResourceMessage = InsertResource[UUID,Suoritus](lukio, k.personOidsWithAliases)
-        suoritusRekisteri ! insertResourceMessage
+        suoritusRekisteri ! UpsertResource[UUID, Suoritus](lukio, k.personOidsWithAliases)
       })
 
-    case insert: InsertResource[_, _] if insert.resource.isInstanceOf[VirallinenSuoritus] &&
-                                         insert.resource.isInstanceOf[Identified[_]] &&
-                                         insert.resource.asInstanceOf[Identified[_]].id.isInstanceOf[UUID] &&
-                                         insert.resource.asInstanceOf[VirallinenSuoritus].komo == YoTutkinto.yotutkinto =>
-      val s = insert.resource.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
+    case vs: VirallinenSuoritus with Identified[_] if vs.id.isInstanceOf[UUID] && vs.komo == YoTutkinto.yotutkinto =>
+      val s = vs.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
       ) {
@@ -428,18 +418,18 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
     case s: Seq[_] =>
       fetch.foreach(_.cancel())
       if (s.isEmpty) {
-        suoritusRekisteri ! InsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
+        suoritusRekisteri ! UpsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
       } else {
         val suoritukset = ennenVuotta1990Valmistuneet(s)
         if (suoritukset.nonEmpty) {
-          context.parent ! InsertResource[UUID,Suoritus](suoritukset.head, personOidsWithAliases)
+          context.parent ! suoritukset.head
           context.stop(self)
         } else {
-          suoritusRekisteri ! InsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
+          suoritusRekisteri ! UpsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
         }
       }
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
-      context.parent ! InsertResource[UUID,Suoritus](v.asInstanceOf[VirallinenSuoritus with Identified[UUID]], personOidsWithAliases)
+      context.parent ! v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       context.stop(self)
 
     case unknown =>
