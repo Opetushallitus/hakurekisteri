@@ -4,8 +4,9 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
-import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.HenkilonTiedotVirrasta
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResourceActorRef, VirtaResult}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
@@ -40,14 +41,14 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
     contentType = formats("json")
   }
 
-  private def auditlogQuery(username: String, henkilo: String): Unit = {
+  /*private def auditlogQuery(username: String, henkilo: String): Unit = {
     audit.log(LogMessage.builder()
       .id(username)
       .setOperaatio(HakuRekisteriOperation.READ_VIRTA_TIEDOT)
       .setResourceId(henkilo)
       .build()
     )
-  }
+  }*/
 
   get("/:hetu", operation(query)) {
     val hetu = params("hetu")
@@ -58,7 +59,11 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
         oppijaNumeroRekisteri.getByHetu(hetu).flatMap(henkilo => {
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
-              auditlogQuery(user.username, henkilo.oidHenkilo)
+              //auditlogQuery(user.username, henkilo.oidHenkilo)
+              audit.log(auditUtil.getUser(request, user.username),
+                HenkilonTiedotVirrasta,
+                new Target.Builder().setField("hetu", hetu).build(),
+                new Changes.Builder().build())
               virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetu))
             } else {
               Future.successful(VirtaResult(hetu))

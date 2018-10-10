@@ -32,6 +32,7 @@ class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val sy
   }
   post("/http_request") {
     shouldBeAdmin
+    val user = currentUser.get.username
     logger.info("Fetching YTL data for everybody")
     ytlIntegration.syncAll()
     Accepted("YTL sync started")
