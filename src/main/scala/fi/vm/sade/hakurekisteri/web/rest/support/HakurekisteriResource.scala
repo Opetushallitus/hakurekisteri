@@ -43,7 +43,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val res = deleteResource()
       //auditLog(currentUser.get.username, HakurekisteriOperation.RESOURCE_DELETE, resourceName, params("id"))
-      audit.log(auditUtil.getUser(request, currentUser.get.username),
+      audit.log(auditUtil.parseUser(request, currentUser.get.username),
         ResourceDelete,
         new Target.Builder().setField("id", params("id")).build(),
         new Changes.Builder().build())
@@ -64,7 +64,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
         case ActionResult(_, r, headers) =>
           val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
           //auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName, id)
-          audit.log(auditUtil.getUser(request, currentUser.get.username),
+          audit.log(auditUtil.parseUser(request, currentUser.get.username),
             ResourceCreate,
             new Target.Builder().setField("id", params("id")).build(),
             new Changes.Builder().build())
@@ -79,7 +79,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val updated = updateResource()
       //auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName, params("id"))
-      audit.log(auditUtil.getUser(request, currentUser.get.username),
+      audit.log(auditUtil.parseUser(request, currentUser.get.username),
         ResourceUpdate,
         new Target.Builder().setField("id", params("id")).build(),
         new Changes.Builder().build())

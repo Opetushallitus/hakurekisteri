@@ -24,6 +24,14 @@ case object YTLSync extends Operation {
   def name: String = "YTL_SYNC"
 }
 
+case object YTLSyncForAll extends Operation {
+  def name: String = "REQUEST_YTL_SYNC_FOR_ALL"
+}
+
+case object YTLSyncForPerson extends Operation {
+  def name: String = "REQUEST_YTL_SYNC_FOR_PERSON"
+}
+
 case object HenkilonTiedotVirrasta extends Operation {
   def name: String = "HENKILON_TIEDOT_VIRRASTA"
 }
@@ -44,42 +52,45 @@ class AuditUtil {
 
   private val LOG = LoggerFactory.getLogger(classOf[AuditUtil])
 
-  //Jos requestia ei jostain syystä ole saatavilla, käytetään tätä.
-  def getUserWithoutRequest(oidToUse: String): User = {
-    val userOid = oidToUse
+  def getUserWithoutRequest(userOid: String): User = {
+    LOG.info("Creating user without request, userOid: " + userOid)
     val userAgent = "-"
     val session = "-"
     val ip = InetAddress.getLocalHost
-    getUser(userOid, ip, session, userAgent)
+    createUser(userOid, ip, session, userAgent)
   }
 
-  def getUser(request: HttpServletRequest, userName: String = null): User = {
-    LOG.info("Creating user, username: " + userName)
+  def parseUser(request: HttpServletRequest, userOid: String = null): User = {
+    LOG.info("Creating user, userOid: " + userOid)
     if (request == null) {
       LOG.info("No request available, creating user without request information")
-      getUserWithoutRequest(userName)
+      getUserWithoutRequest(userOid)
     } else {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
       val session = getSession(request)
       val ip = getInetAddress(request)
       LOG.info(s"Request available as planned, creating user with agent: $userAgent, session: $session, ip: $ip")
-      getUser(userName, ip, session, userAgent)
+      createUser(userOid, ip, session, userAgent)
     }
   }
 
-  private def getUser(userOid: String, ip: InetAddress, session: String, userAgent: String) = try
+  private def createUser(userOid: String, ip: InetAddress, session: String, userAgent: String) = try
     new User(new Oid(userOid), ip, session, userAgent)
   catch {
     case e: GSSException =>
-      LOG.warn(s"Warning: userOid ($userOid) does not match Oid requirements, creating user without Oid")
+      LOG.warn(s"Warning: userOid ($userOid) does not match Oid requirements, creating audit user without Oid")
       new User(ip, session, userAgent)
   }
 
-  private def getSession(request: HttpServletRequest) = try
-    Option(request.getSession.getId).getOrElse("no session")
-  catch {
+  private def getSession(request: HttpServletRequest) = try {
+    val ses = request.getSession(false)
+    if (ses != null)
+      ses.getId
+    else
+      "no session"
+  } catch {
     case e: Exception =>
-      LOG.error(s"Couldn't log session for request ${request}")
+      LOG.error(s"Couldn't log session for request $request")
       throw new RuntimeException(e)
   }
 
@@ -87,7 +98,7 @@ class AuditUtil {
     InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
   catch {
     case e: Exception =>
-      LOG.error(s"Couldn't log InetAddress for log entry ${e}")
+      LOG.error(s"Couldn't log InetAddress for log entry $e")
       throw new RuntimeException(e)
   }
 }

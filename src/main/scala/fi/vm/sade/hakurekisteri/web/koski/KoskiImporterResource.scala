@@ -45,7 +45,8 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
-    audit.log(auditUtil.getUser(request, user.username),
+
+    audit.log(auditUtil.parseUser(request, user.username),
       OppijanTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("oppijaOid", personOid)
@@ -85,7 +86,8 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     val hakuOid = params("hakuOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
-    audit.log(auditUtil.getUser(request, user.username),
+    val useBulk: Boolean = params.getAsOrElse("bulk", false)
+    audit.log(auditUtil.parseUser(request, user.username),
       HaunHakijoidenTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("hakuOid", hakuOid)

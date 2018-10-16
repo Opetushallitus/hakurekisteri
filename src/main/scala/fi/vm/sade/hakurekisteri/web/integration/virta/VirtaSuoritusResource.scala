@@ -60,7 +60,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
               //auditlogQuery(user.username, henkilo.oidHenkilo)
-              audit.log(auditUtil.getUser(request, user.username),
+              audit.log(auditUtil.parseUser(request, user.username),
                 HenkilonTiedotVirrasta,
                 new Target.Builder().setField("hetu", hetu).build(),
                 new Changes.Builder().build())
