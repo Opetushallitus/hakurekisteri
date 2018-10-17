@@ -33,7 +33,7 @@ case object YTLSyncForPerson extends Operation {
 }
 
 case object HenkilonTiedotVirrasta extends Operation {
-  def name: String = "HENKILON_TIEDOT_VIRRASTA"
+  def name: String = "READ_VIRTA_TIEDOT"
 }
 
 case object ResourceCreate extends Operation {
@@ -63,7 +63,7 @@ object SuoritusAuditBackend {
 }
 
 object LoggerForAudit extends Logger {
-  private val LOGGER = LoggerFactory.getLogger(classOf[UserParser])
+  private val LOGGER = LoggerFactory.getLogger(classOf[Audit])
   def log(msg: String): Unit = {
     LOGGER.info(msg)
   }
