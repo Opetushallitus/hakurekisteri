@@ -6,12 +6,14 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{ResourceCreate, ResourceDelete, ResourceUpdate}
+import fi.vm.sade.auditlog.{Audit, Changes, Target}
+import fi.vm.sade.hakurekisteri.{ResourceCreate, ResourceDelete, ResourceUpdate, SuoritusAudit}
 import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.UserParser.parseUser
+
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
@@ -38,12 +40,14 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   val read: OperationBuilder
   val delete: OperationBuilder
 
+  private val audit = SuoritusAudit.audit
+
   delete("/:id", operation(delete)) {
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = deleteResource()
       //auditLog(currentUser.get.username, HakurekisteriOperation.RESOURCE_DELETE, resourceName, params("id"))
-      audit.log(auditUtil.parseUser(request, currentUser.get.username),
+      audit.log(parseUser(request, currentUser.get.username),
         ResourceDelete,
         new Target.Builder().setField("id", params("id")).build(),
         new Changes.Builder().build())
@@ -64,7 +68,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
         case ActionResult(_, r, headers) =>
           val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
           //auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName, id)
-          audit.log(auditUtil.parseUser(request, currentUser.get.username),
+          audit.log(parseUser(request, currentUser.get.username),
             ResourceCreate,
             new Target.Builder().setField("id", params("id")).build(),
             new Changes.Builder().build())
@@ -79,7 +83,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val updated = updateResource()
       //auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName, params("id"))
-      audit.log(auditUtil.parseUser(request, currentUser.get.username),
+      audit.log(parseUser(request, currentUser.get.username),
         ResourceUpdate,
         new Target.Builder().setField("id", params("id")).build(),
         new Changes.Builder().build())

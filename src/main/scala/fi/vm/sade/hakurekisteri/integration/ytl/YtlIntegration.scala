@@ -6,10 +6,11 @@ import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 
 import akka.actor.ActorRef
-import fi.vm.sade.auditlog.{ApplicationType, Audit, Changes, Target}
-import fi.vm.sade.hakurekisteri.{AuditUtil, Config, LoggerForAudit, YTLSync}
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.UserParser.parseUser
 import fi.vm.sade.properties.OphProperties
 import javax.mail.Message.RecipientType
 import javax.mail.Session
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
+
 
 case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeeded: Option[Boolean]) {
   def inProgress = end.isEmpty
@@ -37,8 +39,7 @@ class YtlIntegration(properties: OphProperties,
   private def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
-  val audit = new Audit(new LoggerForAudit ,"hakurekisteri", ApplicationType.BACKEND)
-  val auditUtil = new AuditUtil
+  private val audit = SuoritusAuditBackend.audit
 
   def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
 
@@ -127,7 +128,7 @@ class YtlIntegration(properties: OphProperties,
     } else {
       logger.info(s"Starting sync all!")
       //audit.log(message("Ytl sync started!"))
-      audit.log(auditUtil.getUserWithoutRequest("system"),
+      audit.log(parseUser(null, "system"),
         YTLSync,
         new Target.Builder().setField("result", "Ytl sync started!").build(),
         new Changes.Builder().build())
@@ -149,7 +150,7 @@ class YtlIntegration(properties: OphProperties,
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           //audit.log(message(s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}"))
-          audit.log(auditUtil.getUserWithoutRequest("system"),
+          audit.log(parseUser(null,"system"),
             YTLSync,
             new Target.Builder().setField("result", s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}").build(),
             new Changes.Builder().build())
@@ -170,7 +171,7 @@ class YtlIntegration(properties: OphProperties,
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}", e)
           //audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}"))
-          audit.log(auditUtil.getUserWithoutRequest("system"),
+          audit.log(parseUser(null, "system"),
             YTLSync,
             new Target.Builder().setField("result", s"Ytl sync failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}").build(),
             new Changes.Builder().build())
@@ -199,7 +200,7 @@ class YtlIntegration(properties: OphProperties,
         allSucceeded.set(false)
         logger.error(s"YTL sync all failed!", e)
         //audit.log(message(s"Ytl sync failed: ${e.getMessage}"))
-        audit.log(auditUtil.getUserWithoutRequest("system"),
+        audit.log(parseUser(null, "system"),
           YTLSync,
           new Target.Builder().setField("result", s"Ytl sync failed: ${e.getMessage}").build(),
           new Changes.Builder().build())
@@ -210,7 +211,7 @@ class YtlIntegration(properties: OphProperties,
         sendFailureEmail(msg)
       }
       //audit.log(message(s"Ytl sync ended $msg!"))
-      audit.log(auditUtil.getUserWithoutRequest("system"),
+      audit.log(parseUser(null,"system"),
         YTLSync,
         new Target.Builder().setField("result", s"Ytl sync ended $msg").build(),
         new Changes.Builder().build())

@@ -5,8 +5,9 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
-import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.HenkilonTiedotVirrasta
+import fi.vm.sade.auditlog.{Audit, Changes, Target}
+import fi.vm.sade.hakurekisteri.{HenkilonTiedotVirrasta, SuoritusAudit}
+import fi.vm.sade.hakurekisteri.UserParser.parseUser
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResourceActorRef, VirtaResult}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
@@ -29,6 +30,8 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Henkilön suoritusten haun rajapinta Virta-palvelusta"
   implicit val defaultTimeout: Timeout = 30.seconds
+
+  private val audit = SuoritusAudit.audit
 
   def hasAccess(personOid: String, user: User): Future[Boolean] =
     if (user.isAdmin) {
@@ -60,7 +63,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
               //auditlogQuery(user.username, henkilo.oidHenkilo)
-              audit.log(auditUtil.parseUser(request, user.username),
+              audit.log(parseUser(request, user.username),
                 HenkilonTiedotVirrasta,
                 new Target.Builder().setField("hetu", hetu).build(),
                 new Changes.Builder().build())
@@ -77,6 +80,5 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
     case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
     case e: Throwable => (id) => InternalServerError(IncidentReport(id, "unexpected error"))
   }
-
 
 }

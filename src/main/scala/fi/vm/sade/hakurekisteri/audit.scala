@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import java.net.InetAddress
 
-import fi.vm.sade.auditlog.{Audit, Logger, Operation, User}
+import fi.vm.sade.auditlog.{ApplicationType, Audit, Logger, Operation, User}
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
 import javax.servlet.http.HttpServletRequest
 import org.ietf.jgss.{GSSException, Oid}
@@ -48,12 +48,32 @@ case object ResourceDelete extends Operation {
   def name: String = "RESOURCE_DELETE"
 }
 
-class AuditUtil {
+object SuoritusAudit {
+  private val auditLogger: Logger = LoggerForAudit
+  val audit = new Audit(auditLogger, "hakurekisteri", ApplicationType.VIRKAILIJA)
+}
 
-  private val LOG = LoggerFactory.getLogger(classOf[AuditUtil])
+object SuoritusAuditBackend {
+  private val auditLogger: Logger = LoggerForAudit
+  val audit = new Audit(auditLogger, "hakurekisteri", ApplicationType.BACKEND)
+}
+
+object LoggerForAudit extends Logger {
+  private val LOGGER = LoggerFactory.getLogger(classOf[Audit])
+  def log(msg: String): Unit = {
+    LOGGER.info(msg)
+  }
+}
+
+class UserParser {
+
+}
+
+object UserParser {
+  private val LOG_FOR_DEBUG = LoggerFactory.getLogger(classOf[UserParser])
 
   def getUserWithoutRequest(userOid: String): User = {
-    LOG.info("Creating user without request, userOid: " + userOid)
+    //LOG_FOR_DEBUG.info("Creating user without request, userOid: " + userOid)
     val userAgent = "-"
     val session = "-"
     val ip = InetAddress.getLocalHost
@@ -61,15 +81,15 @@ class AuditUtil {
   }
 
   def parseUser(request: HttpServletRequest, userOid: String = null): User = {
-    LOG.info("Creating user, userOid: " + userOid)
+    //LOG_FOR_DEBUG.info("Creating user, userOid: " + userOid)
     if (request == null) {
-      LOG.info("No request available, creating user without request information")
+      //LOG_FOR_DEBUG.info("No request available, creating user without request information")
       getUserWithoutRequest(userOid)
     } else {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
       val session = getSession(request)
       val ip = getInetAddress(request)
-      LOG.info(s"Request available as planned, creating user with agent: $userAgent, session: $session, ip: $ip")
+      //LOG_FOR_DEBUG.info(s"Request available as planned, creating user with agent: $userAgent, session: $session, ip: $ip")
       createUser(userOid, ip, session, userAgent)
     }
   }
@@ -78,7 +98,7 @@ class AuditUtil {
     new User(new Oid(userOid), ip, session, userAgent)
   catch {
     case e: GSSException =>
-      LOG.warn(s"Warning: userOid ($userOid) does not match Oid requirements, creating audit user without Oid")
+      //LOG_FOR_DEBUG.warn(s"Warning: userOid ($userOid) does not match Oid requirements, creating audit user without Oid")
       new User(ip, session, userAgent)
   }
 
@@ -90,7 +110,7 @@ class AuditUtil {
       "no session"
   } catch {
     case e: Exception =>
-      LOG.error(s"Couldn't log session for request $request")
+      LOG_FOR_DEBUG.error(s"Couldn't log session for request $request")
       throw new RuntimeException(e)
   }
 
@@ -98,15 +118,8 @@ class AuditUtil {
     InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
   catch {
     case e: Exception =>
-      LOG.error(s"Couldn't log InetAddress for log entry $e")
+      LOG_FOR_DEBUG.error(s"Couldn't log InetAddress for log entry $e")
       throw new RuntimeException(e)
   }
-}
 
-class LoggerForAudit extends Logger {
-  private val LOGGER = LoggerFactory.getLogger(classOf[Audit])
-  def log(msg: String): Unit = {
-    LOGGER.info(msg)
-  }
 }
-
