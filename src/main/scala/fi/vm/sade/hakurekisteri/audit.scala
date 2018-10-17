@@ -40,6 +40,10 @@ case object ResourceCreate extends Operation {
   def name: String = "RESOURCE_CREATE"
 }
 
+case object ResourceRead extends Operation {
+  def name: String = "RESOURCE_READ"
+}
+
 case object ResourceUpdate extends Operation {
   def name: String = "RESOURCE_UPDATE"
 }
@@ -59,7 +63,7 @@ object SuoritusAuditBackend {
 }
 
 object LoggerForAudit extends Logger {
-  private val LOGGER = LoggerFactory.getLogger(classOf[Audit])
+  private val LOGGER = LoggerFactory.getLogger(classOf[UserParser])
   def log(msg: String): Unit = {
     LOGGER.info(msg)
   }

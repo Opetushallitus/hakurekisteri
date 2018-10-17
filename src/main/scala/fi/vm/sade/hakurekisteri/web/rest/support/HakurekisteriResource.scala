@@ -6,14 +6,13 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import fi.vm.sade.auditlog.{Audit, Changes, Target}
-import fi.vm.sade.hakurekisteri.{ResourceCreate, ResourceDelete, ResourceUpdate, SuoritusAudit}
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.UserParser.parseUser
-
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
@@ -114,7 +113,13 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
   get("/:id", operation(read)) {
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
-    else getResource
+    else {
+      audit.log(parseUser(request, currentUser.get.username),
+        ResourceRead,
+        new Target.Builder().setField("id", params("id")).build(),
+        new Changes.Builder().build())
+      getResource
+    }
   }
 
   def getResource: Object = {
