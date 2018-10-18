@@ -6,6 +6,8 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{HakijatLuku, KKHakijatLuku}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.representation.XMLHakijat
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -73,7 +75,10 @@ class HakijaResource(hakijaActor: ActorRef)
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
       val hakuResult = hakijaActor ? q
-
+      audit.log(auditUser,
+        HakijatLuku,
+        new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+        new Changes.Builder().build())
       val hakijatFuture = hakuResult.flatMap {
         case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
           setContentDisposition(tyyppi, response, "hakijat")

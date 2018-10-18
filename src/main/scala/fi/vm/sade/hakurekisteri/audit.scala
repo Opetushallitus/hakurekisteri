@@ -20,6 +20,14 @@ case object HaunHakijoidenTietojenPaivitysKoskesta extends Operation {
   def name: String = "HAUN_HAKIJOIDEN_TIETOJEN_PAIVITYS_KOSKESTA"
 }
 
+case object HakijatLuku extends Operation {
+  def name: String = "HAKIJAT_LUKU"
+}
+
+case object KKHakijatLuku extends Operation {
+  def name: String = "KK_HAKIJAT_LUKU"
+}
+
 case object YTLSync extends Operation {
   def name: String = "YTL_SYNC"
 }

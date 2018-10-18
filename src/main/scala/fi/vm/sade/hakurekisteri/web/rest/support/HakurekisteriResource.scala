@@ -129,7 +129,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       audit.log(auditUser,
         ResourceRead,
-        new Target.Builder().setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + " : " + params(k)).toString()).build(),
+        new Target.Builder().setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
         new Changes.Builder().build())
       val t0 = Platform.currentTime
       queryResource(currentUser, t0)
