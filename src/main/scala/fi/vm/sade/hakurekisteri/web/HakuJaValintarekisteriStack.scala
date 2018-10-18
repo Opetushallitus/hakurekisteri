@@ -1,15 +1,16 @@
 package fi.vm.sade.hakurekisteri.web
 
 import akka.event.LoggingAdapter
-import fi.vm.sade.auditlog.{ApplicationType, Audit}
+import fi.vm.sade.auditlog.{Audit}
+import fi.vm.sade.hakurekisteri.SuoritusAuditVirkailija
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReporting
 import org.scalatra._
-import org.slf4j.LoggerFactory
 
 trait HakuJaValintarekisteriStack extends ScalatraServlet with IncidentReporting with CorsSupport {
 
   val logger: LoggingAdapter
+  val audit: Audit = SuoritusAuditVirkailija.audit
 
   if("DEVELOPMENT" == OphUrlProperties.getProperty("common.corsfilter.mode")) {
     options("/*") {

@@ -12,7 +12,6 @@ import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.UserParser.parseUser
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
@@ -39,14 +38,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   val read: OperationBuilder
   val delete: OperationBuilder
 
-  private val audit = SuoritusAudit.audit
-
   delete("/:id", operation(delete)) {
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = deleteResource()
       //auditLog(currentUser.get.username, HakurekisteriOperation.RESOURCE_DELETE, resourceName, params("id"))
-      audit.log(parseUser(request, currentUser.get.username),
+      audit.log(auditUser,
         ResourceDelete,
         new Target.Builder().setField("id", params("id")).build(),
         new Changes.Builder().build())
@@ -67,9 +64,9 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
         case ActionResult(_, r, headers) =>
           val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
           //auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName, id)
-          audit.log(parseUser(request, currentUser.get.username),
+          audit.log(auditUser,
             ResourceCreate,
-            new Target.Builder().setField("id", params("id")).build(),
+            new Target.Builder().setField("id", params("id")).setField("resourceName", resourceName).build(),
             new Changes.Builder().build())
 
       }
@@ -82,7 +79,8 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val updated = updateResource()
       //auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName, params("id"))
-      audit.log(parseUser(request, currentUser.get.username),
+      update.result.summary
+      audit.log(auditUser,
         ResourceUpdate,
         new Target.Builder().setField("id", params("id")).build(),
         new Changes.Builder().build())
@@ -114,7 +112,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   get("/:id", operation(read)) {
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
     else {
-      audit.log(parseUser(request, currentUser.get.username),
+      audit.log(auditUser,
         ResourceRead,
         new Target.Builder().setField("id", params("id")).setField("resourceName", resourceName).build(),
         new Changes.Builder().build())
@@ -129,7 +127,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   get("/", operation(query))(
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
     else {
-      audit.log(parseUser(request, currentUser.get.username),
+      audit.log(auditUser,
         ResourceRead,
         new Target.Builder().setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + " : " + params(k)).toString()).build(),
         new Changes.Builder().build())

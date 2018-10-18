@@ -4,12 +4,11 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import org.scalatra.json.JacksonJsonSupport
 import fi.vm.sade.auditlog.{Audit, Changes, Target}
-import fi.vm.sade.hakurekisteri.{HaunHakijoidenTietojenPaivitysKoskesta, OppijanTietojenPaivitysKoskesta, SuoritusAudit, OppijoidenTietojenPaivitysKoskesta}
+import fi.vm.sade.hakurekisteri.{HaunHakijoidenTietojenPaivitysKoskesta, OppijanTietojenPaivitysKoskesta, OppijoidenTietojenPaivitysKoskesta}
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
-import fi.vm.sade.hakurekisteri.UserParser.parseUser
 import org.scalatra.{AsyncResult, FutureSupport}
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
@@ -33,8 +32,6 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
 
   override protected def applicationDescription: String = "Koski integraation rest-api"
 
-  val audit: Audit = SuoritusAudit.audit
-
   def getAdmin: User = {
     currentUser match {
       case Some(u) if u.isAdmin => u
@@ -47,9 +44,13 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     implicit val user: User = getAdmin
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
+<<<<<<< HEAD
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
 
     audit.log(parseUser(request, user.username),
+=======
+    audit.log(auditUser,
+>>>>>>> Pieni refaktorointi, selvitetään auditkäyttäjät SecuritySupportin kautta
       OppijanTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("oppijaOid", personOid)
@@ -90,7 +91,7 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
     val useBulk: Boolean = params.getAsOrElse("bulk", false)
-    audit.log(parseUser(request, user.username),
+    audit.log(auditUser,
       HaunHakijoidenTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("hakuOid", hakuOid)

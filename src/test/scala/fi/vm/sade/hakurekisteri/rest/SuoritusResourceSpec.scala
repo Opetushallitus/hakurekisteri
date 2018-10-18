@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri.rest
 
+import java.net.InetAddress
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 
+import javax.servlet.http.HttpServletRequest
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
@@ -38,6 +39,8 @@ class SuoritusResourceTestSecurity extends Security {
   }
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "no session", "-")
+
 }
 
 class SuoritusResourceAdminTestSecurity extends Security {
@@ -48,6 +51,8 @@ class SuoritusResourceAdminTestSecurity extends Security {
   }
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(AdminTestUser)
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "-", "-")
+
 }
 
 class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with AsyncAssertions {

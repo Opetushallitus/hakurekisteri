@@ -52,7 +52,7 @@ case object ResourceDelete extends Operation {
   def name: String = "RESOURCE_DELETE"
 }
 
-object SuoritusAudit {
+object SuoritusAuditVirkailija {
   private val auditLogger: Logger = LoggerForAudit
   val audit = new Audit(auditLogger, "hakurekisteri", ApplicationType.VIRKAILIJA)
 }

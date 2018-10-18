@@ -6,7 +6,7 @@ import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.auditlog.{Audit, Changes, Target}
-import fi.vm.sade.hakurekisteri.{HenkilonTiedotVirrasta, SuoritusAudit}
+import fi.vm.sade.hakurekisteri.{HenkilonTiedotVirrasta}
 import fi.vm.sade.hakurekisteri.UserParser.parseUser
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResourceActorRef, VirtaResult}
@@ -30,8 +30,6 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Henkilön suoritusten haun rajapinta Virta-palvelusta"
   implicit val defaultTimeout: Timeout = 30.seconds
-
-  private val audit = SuoritusAudit.audit
 
   def hasAccess(personOid: String, user: User): Future[Boolean] =
     if (user.isAdmin) {
@@ -63,7 +61,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
               //auditlogQuery(user.username, henkilo.oidHenkilo)
-              audit.log(parseUser(request, user.username),
+              audit.log(auditUser,
                 HenkilonTiedotVirrasta,
                 new Target.Builder().setField("hetu", hetu).build(),
                 new Changes.Builder().build())
