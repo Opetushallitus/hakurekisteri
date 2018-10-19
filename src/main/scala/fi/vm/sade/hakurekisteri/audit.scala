@@ -90,10 +90,8 @@ class UserParser {
 }
 
 object UserParser {
-  private val LOG_FOR_DEBUG = LoggerFactory.getLogger(classOf[UserParser])
 
   def getUserWithoutRequest(userOid: String): User = {
-    //LOG_FOR_DEBUG.info("Creating user without request, userOid: " + userOid)
     val userAgent = "-"
     val session = "-"
     val ip = InetAddress.getLocalHost
@@ -101,15 +99,12 @@ object UserParser {
   }
 
   def parseUser(request: HttpServletRequest, userOid: String = null): User = {
-    //LOG_FOR_DEBUG.info("Creating user, userOid: " + userOid)
     if (request == null) {
-      //LOG_FOR_DEBUG.info("No request available, creating user without request information")
       getUserWithoutRequest(userOid)
     } else {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
       val session = getSession(request)
       val ip = getInetAddress(request)
-      //LOG_FOR_DEBUG.info(s"Request available as planned, creating user with agent: $userAgent, session: $session, ip: $ip")
       createUser(userOid, ip, session, userAgent)
     }
   }
@@ -118,7 +113,6 @@ object UserParser {
     new User(new Oid(userOid), ip, session, userAgent)
   catch {
     case e: GSSException =>
-      //LOG_FOR_DEBUG.warn(s"Warning: userOid ($userOid) does not match Oid requirements, creating audit user without Oid")
       new User(ip, session, userAgent)
   }
 
@@ -130,7 +124,6 @@ object UserParser {
       "no session"
   } catch {
     case e: Exception =>
-      LOG_FOR_DEBUG.error(s"Couldn't log session for request $request")
       throw new RuntimeException(e)
   }
 
@@ -138,7 +131,6 @@ object UserParser {
     InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
   catch {
     case e: Exception =>
-      LOG_FOR_DEBUG.error(s"Couldn't log InetAddress for log entry $e")
       throw new RuntimeException(e)
   }
 

@@ -42,7 +42,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = deleteResource()
-      //auditLog(currentUser.get.username, HakurekisteriOperation.RESOURCE_DELETE, resourceName, params("id"))
       audit.log(auditUser,
         ResourceDelete,
         new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
@@ -63,8 +62,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       res.is.onSuccess {
         case ActionResult(_, r, headers) =>
           val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
-
-          //auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName, id)
           audit.log(auditUser,
             ResourceCreate,
             new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
@@ -78,7 +75,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val updated = updateResource()
-      //auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName, params("id"))
       audit.log(auditUser,
         ResourceUpdate,
         new Target.Builder().setField("resource",resourceName).setField("id", params("id")).build(),
@@ -87,21 +83,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       updated
     }
   }
-
-  /*protected def auditAddMuutokset(muutokset: Map[String, (String, String)])(builder: LogMessageBuilder): LogMessageBuilder = {
-    muutokset.foreach {
-      case (kentta, (vanhaArvo, uusiArvo)) => builder.add(kentta, vanhaArvo, uusiArvo)
-    }
-    builder
-  }
-
-  protected def auditLog(username: String, operation: Operation, resourceName: String, resourceId: String, muutokset: Map[String, (String, String)] = Map()) =
-    audit.log(auditAddMuutokset(muutokset)(LogMessage.builder())
-      .id(username)
-      .setOperaatio(operation)
-      .setResourceName(resourceName)
-      .setResourceId(resourceId)
-      .build())*/
 
   def updateResource(): Object = {
     Try(UUID.fromString(params("id"))).map(updateResource(_, currentUser)).get

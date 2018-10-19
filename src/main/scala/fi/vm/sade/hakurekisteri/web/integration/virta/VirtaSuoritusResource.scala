@@ -42,15 +42,6 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
     contentType = formats("json")
   }
 
-  /*private def auditlogQuery(username: String, henkilo: String): Unit = {
-    audit.log(LogMessage.builder()
-      .id(username)
-      .setOperaatio(HakuRekisteriOperation.READ_VIRTA_TIEDOT)
-      .setResourceId(henkilo)
-      .build()
-    )
-  }*/
-
   get("/:hetu", operation(query)) {
     val hetu = params("hetu")
     val user = currentUser.getOrElse(throw new UserNotAuthorized("not authorized"))
@@ -60,7 +51,6 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
         oppijaNumeroRekisteri.getByHetu(hetu).flatMap(henkilo => {
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
-              //auditlogQuery(user.username, henkilo.oidHenkilo)
               audit.log(auditUser,
                 HenkilonTiedotVirrasta,
                 new Target.Builder().setField("hetu", hetu).build(),

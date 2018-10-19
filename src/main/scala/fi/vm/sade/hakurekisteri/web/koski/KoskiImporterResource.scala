@@ -44,13 +44,9 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     implicit val user: User = getAdmin
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
-<<<<<<< HEAD
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
 
-    audit.log(parseUser(request, user.username),
-=======
     audit.log(auditUser,
->>>>>>> Pieni refaktorointi, selvitetään auditkäyttäjät SecuritySupportin kautta
       OppijanTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("oppijaOid", personOid)
@@ -73,7 +69,7 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
       val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${maxOppijatPostSize}"
       throw new IllegalArgumentException(msg)
     }
-    audit.log(parseUser(request, user.username),
+    audit.log(auditUser,
       OppijoidenTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("oppijaOids", personOids.toString())
