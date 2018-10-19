@@ -3,6 +3,8 @@ package fi.vm.sade.hakurekisteri.web.oppija
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{RekisteritiedotRead, ResourceRead}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
@@ -56,6 +58,11 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
       hakukohde = params.get("hakukohde").flatMap(_.blankOption)
     )
 
+    audit.log(auditUser,
+      ResourceRead,
+      new Target.Builder().setField("resource", "OppijaResource").setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+      new Changes.Builder().build())
+
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
@@ -72,6 +79,11 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     implicit val user = getUser
     val personOid = params("oid")
     val hakuOid = params.get("haku")
+
+    audit.log(auditUser,
+      ResourceRead,
+      new Target.Builder().setField("resource", "OppijaResource").setField("summary", read.result.summary).setField("oppijaOid", params("oid")).build(),
+      new Changes.Builder().build())
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -101,6 +113,11 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     if (ensikertalaisuudet && hakuOid.getOrElse("").isEmpty) {
       BadRequest(null,null,"Haku has to be defined if ensikertalaisuudet is true")
     } else {
+      audit.log(auditUser,
+        ResourceRead,
+        new Target.Builder().setField("resource", "OppijaResource").setField("summary", post.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+        new Changes.Builder().build())
+
       new AsyncResult() {
         override implicit def timeout: Duration = 500.seconds
 

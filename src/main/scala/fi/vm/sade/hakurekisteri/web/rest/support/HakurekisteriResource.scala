@@ -45,7 +45,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       //auditLog(currentUser.get.username, HakurekisteriOperation.RESOURCE_DELETE, resourceName, params("id"))
       audit.log(auditUser,
         ResourceDelete,
-        new Target.Builder().setField("id", params("id")).build(),
+        new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
         new Changes.Builder().build())
       res
     }
@@ -63,12 +63,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       res.is.onSuccess {
         case ActionResult(_, r, headers) =>
           val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
+
           //auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName, id)
           audit.log(auditUser,
             ResourceCreate,
-            new Target.Builder().setField("id", params("id")).setField("resourceName", resourceName).build(),
+            new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
             new Changes.Builder().build())
-
       }
       res
     }
@@ -79,16 +79,14 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val updated = updateResource()
       //auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName, params("id"))
-      update.result.summary
       audit.log(auditUser,
         ResourceUpdate,
-        new Target.Builder().setField("id", params("id")).build(),
+        new Target.Builder().setField("resource",resourceName).setField("id", params("id")).build(),
         new Changes.Builder().build())
 
       updated
     }
   }
-
 
   /*protected def auditAddMuutokset(muutokset: Map[String, (String, String)])(builder: LogMessageBuilder): LogMessageBuilder = {
     muutokset.foreach {
@@ -114,7 +112,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       audit.log(auditUser,
         ResourceRead,
-        new Target.Builder().setField("id", params("id")).setField("resourceName", resourceName).build(),
+        new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
         new Changes.Builder().build())
       getResource
     }
@@ -129,7 +127,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       audit.log(auditUser,
         ResourceRead,
-        new Target.Builder().setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+        new Target.Builder().setField("resource", resourceName).setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
         new Changes.Builder().build())
       val t0 = Platform.currentTime
       queryResource(currentUser, t0)

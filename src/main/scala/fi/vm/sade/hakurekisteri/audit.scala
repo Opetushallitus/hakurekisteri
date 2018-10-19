@@ -52,6 +52,14 @@ case object ResourceRead extends Operation {
   def name: String = "RESOURCE_READ"
 }
 
+case object RekisteritiedotRead extends Operation {
+  def name: String = "REKISTERITIEDOT_READ"
+}
+
+case object RekisteritiedotReadLight extends Operation {
+  def name: String = "REKISTERITIEDOT_READ_LIGHT"
+}
+
 case object ResourceUpdate extends Operation {
   def name: String = "RESOURCE_UPDATE"
 }

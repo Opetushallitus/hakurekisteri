@@ -37,9 +37,10 @@ class SuoritusResourceTestSecurity extends Security {
     override val username: String = "Test"
     override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.39644336305"), "","")
   }
+  private def testAuditUser = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "-", "-")
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
-  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "no session", "-")
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = testAuditUser
 
 }
 
@@ -49,9 +50,10 @@ class SuoritusResourceAdminTestSecurity extends Security {
     override val username: String = "Test"
     override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "","")
   }
+  private def testAuditUser = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "-", "-")
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(AdminTestUser)
-  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "-", "-")
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = testAuditUser
 
 }
 
