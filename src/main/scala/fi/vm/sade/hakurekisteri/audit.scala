@@ -28,6 +28,10 @@ case object KKHakijatLuku extends Operation {
   def name: String = "KK_HAKIJAT_LUKU"
 }
 
+case object AsiakirjaLuku extends Operation {
+  def name: String = "ASIAKIRJA_LUKU"
+}
+
 case object YTLSync extends Operation {
   def name: String = "YTL_SYNC"
 }
@@ -50,6 +54,14 @@ case object ResourceCreate extends Operation {
 
 case object ResourceRead extends Operation {
   def name: String = "RESOURCE_READ"
+}
+
+case object KaikkiHaunEnsikertalaiset extends Operation {
+  def name: String = "KAIKKI_HAUN_ENSIKERTALAISET_READ"
+}
+
+case object EnsikertalainenHaussaQuery extends Operation {
+  def name: String = "ONKO_HENKILO_ENSIKERTALAINEN_HAUSSA_QUERY"
 }
 
 case object RekisteritiedotRead extends Operation {
@@ -90,8 +102,9 @@ class UserParser {
 }
 
 object UserParser {
+  private val logger = LoggerFactory.getLogger(classOf[UserParser])
 
-  def getUserWithoutRequest(userOid: String): User = {
+  private def parseUserWithoutRequest(userOid: String): User = {
     val userAgent = "-"
     val session = "-"
     val ip = InetAddress.getLocalHost
@@ -100,7 +113,7 @@ object UserParser {
 
   def parseUser(request: HttpServletRequest, userOid: String = null): User = {
     if (request == null) {
-      getUserWithoutRequest(userOid)
+      parseUserWithoutRequest(userOid)
     } else {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
       val session = getSession(request)
@@ -124,6 +137,7 @@ object UserParser {
       "no session"
   } catch {
     case e: Exception =>
+      logger.error(s"Virhe sessiota pääteltäessä: $e")
       throw new RuntimeException(e)
   }
 
@@ -131,6 +145,7 @@ object UserParser {
     InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
   catch {
     case e: Exception =>
+      logger.error(s"Virhe ip-osoitetta pääteltäessä: $e")
       throw new RuntimeException(e)
   }
 

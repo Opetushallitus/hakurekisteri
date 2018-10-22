@@ -2,10 +2,12 @@ package fi.vm.sade.hakurekisteri.web.jonotus
 
 import java.io.OutputStream
 import java.lang.Boolean._
-import java.util.concurrent.{TimeoutException, ExecutionException}
+import java.util.concurrent.{ExecutionException, TimeoutException}
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{AsiakirjaLuku, HakijatLuku}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
@@ -43,11 +45,16 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
           Ok()
         } else {
           getContentType(format) match {
-            case Left(ctype) =>
+            case Left(ctype) => {
+              audit.log(auditUser,
+                AsiakirjaLuku,
+                new Target.Builder().setField("id", params.get("id").getOrElse("")).build(),
+                new Changes.Builder().build())
+
               contentType = ctype
               setContentDisposition(format, response, "hakijat")
               response.outputStream.write(bytes)
-
+            }
             case Right(ex) =>
               logger.error("Unsupported content type", ex)
               throw ex

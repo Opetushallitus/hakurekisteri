@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{RekisteritiedotRead, ResourceRead}
+import fi.vm.sade.hakurekisteri.{ResourceRead}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
