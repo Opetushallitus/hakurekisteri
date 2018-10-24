@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.integration.ytl.{YoTutkinto}
+import fi.vm.sade.hakurekisteri.{Oids, PohjakoulutusOids}
+import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 
 sealed trait Role
 
@@ -70,7 +70,7 @@ trait User {
 
   def isAdmin: Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
 
-  def allowByKomo(komo: String, action: String): Boolean = isKkVirkailija && komo.startsWith("koulutus_") && "READ".equals(action)
+  def allowByKomo(komo: String, action: String): Boolean = isKkVirkailija && (komo.startsWith("koulutus_") || komo.equals(PohjakoulutusOids.ammatillinen)) && "READ".equals(action)
 
   def auditSession(): AuditSessionRequest
 }
