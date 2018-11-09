@@ -349,8 +349,6 @@ object AkkaHakupalvelu {
       val kieli: String = hakemus.aidinkieli
       val opetuskieli: Option[String] = koulutustausta.flatMap(_.perusopetuksen_kieli)
       val suorittaja: String = hakemus.personOid.getOrElse("")
-      val julkaisulupa: Boolean = hakemus.julkaisulupa
-
       val yleinen_kielitutkinto_fi = getOsaaminenOsaalue("yleinen_kielitutkinto_fi")
       val valtionhallinnon_kielitutkinto_fi = getOsaaminenOsaalue("valtionhallinnon_kielitutkinto_fi")
       val yleinen_kielitutkinto_sv = getOsaaminenOsaalue("yleinen_kielitutkinto_sv")
@@ -425,7 +423,7 @@ object AkkaHakupalvelu {
         Hakemus(
           hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
           hakemus.oid,
-          julkaisulupa,
+          hakemus.julkaisulupa,
           hakemus.applicationSystemId,
           lisapistekoulutus,
           Seq(),
@@ -471,7 +469,7 @@ object AkkaHakupalvelu {
         Hakemus(
           hakutoiveet = hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
           hakemusnumero = hakemus.oid,
-          julkaisulupa = false,
+          julkaisulupa = hakemus.julkaisulupa,
           hakuOid = hakemus.applicationSystemId,
           lisapistekoulutus = None,
           liitteet = Seq.empty,
@@ -720,7 +718,7 @@ case class FullHakemus(oid: String,
   val koulutustausta: Option[Koulutustausta] = answers.flatMap(_.koulutustausta)
   val lahtokoulu: Option[String] = koulutustausta.flatMap(_.lahtokoulu)
   val aidinkieli: String = henkilotiedot.flatMap(h => h.aidinkieli).getOrElse("FI")
-  val julkaisulupa: Boolean = answers.flatMap(a => a.lisatiedot.flatMap(lisatiedot => lisatiedot.get("lupaJulkaisu").map(julkaisu => julkaisu))).getOrElse("false").toBoolean
+  val julkaisulupa: Boolean = answers.flatMap(_.lisatiedot).flatMap(_.get("lupaJulkaisu")).getOrElse("false").toBoolean
 }
 
 case class AtaruHakemusDto(oid: String,
@@ -735,6 +733,7 @@ case class AtaruHakemusDto(oid: String,
                            postitoimipaikka: Option[String],
                            kotikunta: Option[String],
                            asuinmaa: String,
+                           valintatuloksenJulkaisulupa: Boolean,
                            paymentObligations: Map[String, String],
                            kkPohjakoulutus: List[String],
                            korkeakoulututkintoVuosi: Option[Int])
@@ -751,6 +750,7 @@ case class AtaruHakemus(oid: String,
                         postitoimipaikka: Option[String],
                         kotikunta: Option[String],
                         asuinmaa: String,
+                        julkaisulupa: Boolean,
                         paymentObligations: Map[String, String],
                         kkPohjakoulutus: List[String],
                         korkeakoulututkintoVuosi: Option[Int]) extends HakijaHakemus {

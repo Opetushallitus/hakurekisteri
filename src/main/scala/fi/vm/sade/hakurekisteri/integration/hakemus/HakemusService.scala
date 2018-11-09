@@ -156,21 +156,22 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, Some(tarjoajaOid), parentOids, None, None, None, None, None)
       }
       AtaruHakemus(
-        hakemus.oid,
-        Some(hakemus.personOid),
-        hakemus.applicationSystemId,
-        Some(hakutoiveet),
-        henkilotByOid(hakemus.personOid),
-        hakemus.email,
-        hakemus.matkapuhelin,
-        hakemus.lahiosoite,
-        hakemus.postinumero,
-        hakemus.postitoimipaikka,
-        hakemus.kotikunta.map(s => if (s.length == 3 && s.forall(Character.isDigit)) s else "999"), // HLE-377
-        hakemus.asuinmaa,
-        hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
-        hakemus.kkPohjakoulutus,
-        hakemus.korkeakoulututkintoVuosi
+        oid = hakemus.oid,
+        personOid = Some(hakemus.personOid),
+        applicationSystemId = hakemus.applicationSystemId,
+        hakutoiveet = Some(hakutoiveet),
+        henkilo = henkilotByOid(hakemus.personOid),
+        email = hakemus.email,
+        matkapuhelin = hakemus.matkapuhelin,
+        lahiosoite = hakemus.lahiosoite,
+        postinumero = hakemus.postinumero,
+        postitoimipaikka = hakemus.postitoimipaikka,
+        kotikunta = hakemus.kotikunta.map(s => if (s.length == 3 && s.forall(Character.isDigit)) s else "999"), // HLE-377
+        asuinmaa = hakemus.asuinmaa,
+        julkaisulupa = hakemus.valintatuloksenJulkaisulupa,
+        paymentObligations = hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
+        kkPohjakoulutus = hakemus.kkPohjakoulutus,
+        korkeakoulututkintoVuosi = hakemus.korkeakoulututkintoVuosi
       )
     }))
   }
