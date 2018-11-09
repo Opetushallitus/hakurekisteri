@@ -18,7 +18,8 @@
     "kotikunta": "lsldf",
     "lahiosoite": "lslsl",
     "kkPohjakoulutus": ["kk"],
-    "valintatuloksenJulkaisulupa": true
+    "valintatuloksenJulkaisulupa": true,
+    "koulutusmarkkinointilupa": true
   },
   {
     "oid": "1.2.246.562.11.00000000000000005224",
@@ -39,6 +40,7 @@
     "kotikunta": "lsldf",
     "lahiosoite": "lslsl",
     "kkPohjakoulutus": [],
-    "valintatuloksenJulkaisulupa": true
+    "valintatuloksenJulkaisulupa": true,
+    "koulutusmarkkinointilupa": true
   }
 ]

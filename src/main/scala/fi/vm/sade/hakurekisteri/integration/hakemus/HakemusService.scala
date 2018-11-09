@@ -169,6 +169,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         kotikunta = hakemus.kotikunta.map(s => if (s.length == 3 && s.forall(Character.isDigit)) s else "999"), // HLE-377
         asuinmaa = hakemus.asuinmaa,
         julkaisulupa = hakemus.valintatuloksenJulkaisulupa,
+        markkinointilupa = hakemus.koulutusmarkkinointilupa,
         paymentObligations = hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
         kkPohjakoulutus = hakemus.kkPohjakoulutus,
         korkeakoulututkintoVuosi = hakemus.korkeakoulututkintoVuosi
