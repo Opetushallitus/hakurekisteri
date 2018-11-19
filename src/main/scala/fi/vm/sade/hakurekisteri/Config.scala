@@ -60,7 +60,9 @@ object KomoOids {
   val pohjakoulutus = PohjakoulutusOids
   val ammatillisenKielikoe = "ammatillisenKielikoe"
   val lisapistekoulutus = LisapistekoulutusOids
-  val toisenAsteenVirkailijanKoulutukset = Set(
+  val ammatillinentutkinto = "ammatillinentutkinto komo oid"
+  val erikoisammattitutkintoKomoOid = "erikoisammattitutkinto komo oid"
+  val toisenAsteenVirkailijanKoulutukset = Set(ammatillinentutkinto,erikoisammattitutkintoKomoOid,
     pohjakoulutus.perusopetus, pohjakoulutus.lukio, pohjakoulutus.ammatillinen, pohjakoulutus.ulkomainen,
     lisapistekoulutus.kymppi, lisapistekoulutus.talous, lisapistekoulutus.ammattistartti, lisapistekoulutus.kansanopisto,
     lisapistekoulutus.maahanmuuttajienLukioonValmistava, lisapistekoulutus.maahanmuuttajienAmmatilliseenValmistava,
@@ -78,6 +80,8 @@ object Oids {
   val ulkomainenkorvaavaKomoOid = KomoOids.pohjakoulutus.ulkomainen
   val lukioKomoOid = KomoOids.pohjakoulutus.lukio
   val ammatillinenKomoOid = KomoOids.pohjakoulutus.ammatillinen
+  val ammatillinentutkintoKomoOid = KomoOids.ammatillinentutkinto
+  val erikoisammattitutkintoKomoOid = KomoOids.erikoisammattitutkintoKomoOid
   val perusopetuksenOppiaineenOppimaaraOid = KomoOids.pohjakoulutus.perusopetuksenOppiaineenOppimaara
 
   val lisaopetusKomoOid = KomoOids.lisapistekoulutus.kymppi

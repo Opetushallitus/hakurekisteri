@@ -299,7 +299,9 @@ class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: Acto
       "telma"                             -> Oids.telmaKomoOid,
       "ulkomainen"                        -> Oids.ulkomainenkorvaavaKomoOid,
       "lukio"                             -> Oids.lukioKomoOid,
-      "ammatillinen"                      -> Oids.ammatillinenKomoOid
+      "ammatillinen"                      -> Oids.ammatillinenKomoOid,
+      "ammatillinentutkinto"              -> Oids.ammatillinentutkintoKomoOid,
+      "erikoisammattitutkinto"            -> Oids.erikoisammattitutkintoKomoOid
     )
 
     def apply(h: Node)(lahde: String)(oppiaineet: Seq[String]): ImportArvosanaHenkilo = {
