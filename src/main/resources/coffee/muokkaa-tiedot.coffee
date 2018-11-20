@@ -104,6 +104,14 @@ app.factory "MuokkaaTiedot", [
             text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinen, "Ammatillinen")
           }
           {
+            value: komo.erikoisammattitutkinto
+            text: getOphMsg("suoritusrekisteri.komo." + komo.erikoisammattitutkinto, "Erikoisammattitutkinto")
+          }
+          {
+            value: komo.ammatillinentutkinto
+            text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinentutkinto, "Ammatillinentutkinto")
+          }
+          {
             value: komo.kansanopisto
             text: getOphMsg("suoritusrekisteri.komo." + komo.kansanopisto, "Kansanopiston lukuvuoden mittainen linja")
           }
@@ -149,6 +157,8 @@ app.factory "MuokkaaTiedot", [
             valmentava: data.valmentavaKomoOid
             ylioppilastutkinto: data.yotutkintoKomoOid
             ammatillinen: data.ammatillinenKomoOid
+            erikoisammattitutkinto: data.erikoisammattitutkintoKomoOid
+            ammatillinentutkinto: data.ammatillinentutkintoKomoOid
             lukio: data.lukioKomoOid
             kansanopisto: data.kansanopistoKomoOid
             valma: data.valmaKomoOid
