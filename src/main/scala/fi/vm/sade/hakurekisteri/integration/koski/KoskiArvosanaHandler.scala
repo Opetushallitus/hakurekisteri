@@ -60,24 +60,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
   private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
   private val root_org_id = "1.2.246.562.10.00000000001"
-  private val valinnaisetkielet = Set("A1", "B1")
-  private val a2b2Kielet = Set("A2", "B2")
-  private val valinnaiset = Set("KO") ++ valinnaisetkielet
-
-  private val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
-  private val oppiaineet = Set( "HI", "MU", "BI", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
-  private val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
-  private val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
-  private val lukioaineet = peruskoulunaineet ++ Set("PS") //lukio has psychology as a mandatory subject
-  private val lukioaineetRegex = lukioaineet.map(_.r)
-
-  private val kieletRegex = kielet.map(str => str.r)
-  private val oppiaineetRegex = oppiaineet.map(str => s"$str\\d?".r)
-  private val peruskouluaineetRegex = kieletRegex ++ oppiaineetRegex ++ Set("AI".r)
-
-  private val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
-  // koski to sure mapping oppiaineaidinkielijakirjallisuus -> aidinkielijakirjallisuus
-  val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
                                           personOidsWithAliases: PersonOidsWithAliases,
@@ -333,7 +315,12 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case "telma" => (Oids.telmaKomoOid, None)
         case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
         case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
-        case "ammatillinentutkinto" => (Oids.ammatillinenKomoOid, None)
+        case "ammatillinentutkinto" =>
+          suoritus.koulutusmoduuli.koulutustyyppi match {
+            case Some(KoskiKoodi("12",_)) => (Oids.erikoisammattitutkintoKomoOid, None)
+            case Some(KoskiKoodi("11",_)) => (Oids.ammatillinentutkintoKomoOid, None)
+            case _ => (Oids.ammatillinenKomoOid, None)
+          }
         case "lukionoppimaara" => //Käsitellään lukion oppimäärät vain, jos niiden tallentamista on erikseen kutsussa pyydetty.
           if(createLukioArvosanat)
             (Oids.lukioKomoOid, None)
@@ -347,23 +334,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = {
     arvosana.copy(suoritus = s.id)
   }
-
-  def isPK(osasuoritus: KoskiOsasuoritus): Boolean = {
-    val koodi = osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo
-    val isPK = peruskouluaineetRegex.exists(r => r.findFirstIn(koodi).isDefined)
-    //peruskoulunaineet.contains()
-    isPK
-  }
-
-  def isLukioSuoritus(osasuoritus: KoskiOsasuoritus): Boolean = {
-    val koodi = osasuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo
-    lukioaineetRegex.exists(r => r.findFirstIn(koodi).isDefined)
-  }
-
-  def isPKValue(arvosana: String): Boolean = {
-    peruskoulunArvosanat.contains(arvosana) || arvosana == "H" //hylätty
-  }
-
 
   def osasuoritusToArvosana(personOid: String,
                             komoOid: String,
@@ -393,34 +363,29 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     var res:Seq[Arvosana] = Seq()
     for {
       suoritus <- modsuoritukset
-      if isPK(suoritus) || (isLukio && isLukioSuoritus(suoritus))
+      if suoritus.isPK || (isLukio && suoritus.isLukioSuoritus)
     } yield {
       yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
       suoritus.arviointi.foreach(arviointi => {
-        if (isPKValue(arviointi.arvosana.koodiarvo)) {
+        if (arviointi.isPKValue) {
           val tunniste: KoskiKoodi = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
           val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
-            case (a: String, b: Option[KoskiKieli]) if kielet.contains(a) => Option(b.get.koodiarvo)
-            case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(aidinkieli(b.get.koodiarvo))
+            case (a: String, b: Option[KoskiKieli]) if tunniste.kielet => Option(b.get.koodiarvo)
+            case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(KoskiConstants.aidinkieli(b.get.koodiarvo))
             case _ => None
           }
 
-
-          var isPakollinenmoduuli = false
           var isPakollinen = false
           if(isLukio) {
             isPakollinen = true
-            isPakollinenmoduuli = true
           }
           else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
-            isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.get
             isPakollinen = suoritus.koulutusmoduuli.pakollinen.get
           }
           else {
-            isPakollinenmoduuli = suoritus.koulutusmoduuli.pakollinen.getOrElse(true)
-            var isPakollinen = eivalinnaiset.contains(tunniste.koodiarvo)
+            var isPakollinen = tunniste.eivalinnainen
 
-            if(!isPakollinenmoduuli && valinnaiset.contains(tunniste.koodiarvo)) {
+            if(!suoritus.koulutusmoduuli.pakollinen.getOrElse(true) && tunniste.valinnainen) {
               isPakollinen = false
             }
           }
@@ -428,7 +393,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           if( (komoOid.contentEquals(Oids.perusopetusKomoOid) || komoOid.contentEquals(Oids.lisaopetusKomoOid)) &&
             (tunniste.koodiarvo.contentEquals("B2") || tunniste.koodiarvo.contentEquals("A2"))) {
             isPakollinen = true
-            isPakollinenmoduuli = true
           }
           var ord: Option[Int] = None
 
@@ -456,7 +420,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           lazy val isVVTLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("3")
           lazy val isAikuistenKurssiLargeEnough = isAikuistenPerusopetus && isKurssiLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) >= 3
           lazy val isAikuistenKurssiVVTLargeEnough = isAikuistenPerusopetus && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) >= 2
-          lazy val isA2B2 = a2b2Kielet.contains(tunniste.koodiarvo)
+          lazy val isA2B2 = tunniste.a2b2Kielet
 
           val isAikuistenValinnainen = isAikuistenPerusopetus && !isPakollinen
 
@@ -468,7 +432,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           } else {
             //check for A2B2 langs because they aren't saved as elective courses, they are converted to mandatory on SURE side of things. The laajuus
             //check needs to be done on them too, not just elective grades.
-            if( (!isPakollinen || a2b2Kielet.contains(tunniste.koodiarvo)) && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
+            if( (!isPakollinen || tunniste.a2b2Kielet) && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
               //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3), everything else is saved
             } else {
               val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)
@@ -496,31 +460,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       }
     }
     (res, yksilöllistetty)
-  }
-
-  def opintopisteidenMaaraFromOsasuoritus(osasuoritukset: Seq[KoskiOsasuoritus]): BigDecimal = {
-    var opintopisteet = BigDecimal(0)
-    osasuoritukset.foreach{suoritus => {
-        suoritus.koulutusmoduuli.laajuus match {
-          case Some(kvj) => {
-            if(kvj.yksikkö.koodiarvo == "2"){ // opintopisteet
-              opintopisteet = opintopisteet + kvj.arvo.getOrElse(BigDecimal(0))
-            }
-          }
-          case None =>
-        }
-      }
-    }
-    opintopisteet
-  }
-
-  def getValmaOsaamispisteet(suoritus: KoskiSuoritus): BigDecimal = {
-    val sum = suoritus.osasuoritukset
-      .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
-      .flatMap(_.koulutusmoduuli.laajuus)
-      .map(_.arvo.getOrElse(BigDecimal(0)))
-      .sum
-    sum
   }
 
   def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
@@ -704,7 +643,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case _ => (Seq(), yksilollistaminen.Ei)
       }
 
-      if(komoOid == Oids.valmaKomoOid && suoritusTila == "VALMIS" && opintopisteidenMaaraFromOsasuoritus(suoritus.osasuoritukset) < 30) {
+      if(komoOid == Oids.valmaKomoOid && suoritusTila == "VALMIS" && suoritus.opintopisteidenMaaraAlleKolmekymmentä) {
         suoritusTila = "KESKEN"
       }
 
@@ -723,8 +662,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           } else suoritusTila
 
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
-          val pisteet = getValmaOsaamispisteet(suoritus)
-          if(pisteet < 30){
+          if(suoritus.valmaOsaamispisteetAlleKolmekymmentä){
             "KESKEYTYNYT"
           } else {
             "VALMIS"

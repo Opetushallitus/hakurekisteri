@@ -289,6 +289,8 @@ class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
     case Oids.ulkomainenkorvaavaKomoOid => "ulkomainen"
     case Oids.lukioKomoOid => "lukio"
     case Oids.ammatillinenKomoOid => "ammatillinen"
+    case Oids.ammatillinentutkintoKomoOid => "ammatillinentutkinto"
+    case Oids.erikoisammattitutkintoKomoOid => "erikoisammattitutkinto"
     case Oids.valmaKomoOid => "valma"
     case Oids.telmaKomoOid => "telma"
     case oid => oid
@@ -499,6 +501,8 @@ object ImportHenkilo {
       suoritus("ulkomainen", Oids.ulkomainenkorvaavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
       suoritus("lukio", Oids.lukioKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
       suoritus("ammatillinen", Oids.ammatillinenKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("ammatillinentutkinto", Oids.ammatillinentutkintoKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("erikoisammattitutkinto", Oids.erikoisammattitutkintoKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
       suoritus("valma", Oids.valmaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
       suoritus("telma", Oids.telmaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde)
     ).flatten

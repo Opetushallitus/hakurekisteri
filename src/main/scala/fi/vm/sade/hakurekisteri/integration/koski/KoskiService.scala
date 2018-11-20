@@ -9,12 +9,14 @@ import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiConstants.{KOLMEKYMMENTÄ, ZERO}
 import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
+import scala.math.BigDecimal
 import scala.util.{Failure, Success, Try}
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient,
@@ -257,6 +259,29 @@ case class KoskiOpiskeluoikeus(
     oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
 }
 
+object KoskiConstants {
+  val valinnaisetkielet = Set("A1", "B1")
+  val a2b2Kielet = Set("A2", "B2")
+  val valinnaiset = Set("KO") ++ valinnaisetkielet
+
+  val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
+  val oppiaineet = Set( "HI", "MU", "BI", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
+  val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
+  val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
+  val lukioaineet = peruskoulunaineet ++ Set("PS") //lukio has psychology as a mandatory subject
+  val lukioaineetRegex = lukioaineet.map(_.r)
+
+  val kieletRegex = kielet.map(str => str.r)
+  val oppiaineetRegex = oppiaineet.map(str => s"$str\\d?".r)
+  val peruskouluaineetRegex = kieletRegex ++ oppiaineetRegex ++ Set("AI".r)
+
+  val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
+  val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SE_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
+
+  val ZERO = BigDecimal("0")
+  val KOLMEKYMMENTÄ = BigDecimal("30")
+}
+
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
 
 case class KoskiTila(alku: String, tila:KoskiKoodi)
@@ -280,7 +305,24 @@ case class KoskiSuoritus(
                   //jääLuokalle is only used for peruskoulu
                   jääLuokalle: Option[Boolean],
                   tutkintonimike: Seq[KoskiKoodi] = Nil,
-                  tila: Option[KoskiKoodi] = None)
+                  tila: Option[KoskiKoodi] = None) {
+
+  def valmaOsaamispisteetAlleKolmekymmentä: Boolean = {
+    val sum = osasuoritukset
+      .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
+      .flatMap(_.koulutusmoduuli.laajuus)
+      .map(_.arvo.getOrElse(BigDecimal(0)))
+      .sum
+    sum.<(KOLMEKYMMENTÄ)
+  }
+
+  def opintopisteidenMaaraAlleKolmekymmentä: Boolean = {
+    val pisteet: Seq[BigDecimal] = osasuoritukset.map(_.opintopisteidenMaara)
+
+    pisteet.sum.<(KOLMEKYMMENTÄ)
+  }
+
+}
 
 case class KoskiOsasuoritus(
                  koulutusmoduuli: KoskiKoulutusmoduuli,
@@ -289,9 +331,38 @@ case class KoskiOsasuoritus(
                  pakollinen: Option[Boolean],
                  yksilöllistettyOppimäärä: Option[Boolean],
                  osasuoritukset: Option[Seq[KoskiOsasuoritus]]
-             )
+             ) {
 
-case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String])
+  def opintopisteidenMaara: BigDecimal = {
+    val laajuus: Option[KoskiValmaLaajuus] = koulutusmoduuli.laajuus.filter(_.yksikkö.koodiarvo == "2")
+    val arvo: Option[BigDecimal] = laajuus.flatMap(_.arvo)
+    arvo.getOrElse(ZERO)
+  }
+
+  def isLukioSuoritus: Boolean = {
+
+    koulutusmoduuli.tunniste.map(_.koodiarvo) match {
+      case Some(koodi) =>
+        KoskiConstants.lukioaineetRegex.flatMap(_.findFirstIn(koodi)).nonEmpty
+      case _ => false
+    }
+  }
+
+  def isPK: Boolean = {
+    koulutusmoduuli.tunniste.map(_.koodiarvo) match {
+      case Some(koodi) =>
+        KoskiConstants.peruskouluaineetRegex.flatMap(_.findFirstIn(koodi)).nonEmpty
+      case _ => false
+    }
+  }
+
+}
+
+case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String]) {
+  def isPKValue: Boolean = {
+    KoskiConstants.peruskoulunArvosanat.contains(arvosana.koodiarvo) || arvosana.koodiarvo == "H"
+  }
+}
 
 case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi],
                                 kieli: Option[KoskiKieli],
@@ -302,7 +373,20 @@ case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi],
 
 case class KoskiValmaLaajuus(arvo: Option[BigDecimal], yksikkö: KoskiKoodi)
 
-case class KoskiKoodi(koodiarvo: String, koodistoUri: String)
+case class KoskiKoodi(koodiarvo: String, koodistoUri: String) {
+  def valinnainen: Boolean = {
+    KoskiConstants.valinnaiset.contains(koodiarvo)
+  }
+  def eivalinnainen: Boolean = {
+    KoskiConstants.eivalinnaiset.contains(koodiarvo)
+  }
+  def a2b2Kielet: Boolean = {
+    KoskiConstants.a2b2Kielet.contains(koodiarvo)
+  }
+  def kielet: Boolean = {
+    KoskiConstants.kielet.contains(koodiarvo)
+  }
+}
 
 case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganisaatio)
 

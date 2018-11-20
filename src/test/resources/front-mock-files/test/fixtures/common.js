@@ -263,6 +263,8 @@ var restData = {
         "ulkomainenkorvaavaKomoOid": "1.2.246.562.13.86722481404",
         "lukioKomoOid": "TODO lukio komo oid",
         "ammatillinenKomoOid": "TODO ammatillinen komo oid",
+        "ammatillinentutkintoKomoOid": "ammatillinentutkinto komo oid",
+        "erikoisammattitutkintoKomoOid": "erikoisammattitutkinto komo oid",
         "lukioonvalmistavaKomoOid": "1.2.246.562.5.2013112814572429142840",
         "ylioppilastutkintolautakunta": "1.2.246.562.10.43628088406",
         "kansanopistoKomoOid": "kansanopisto",
