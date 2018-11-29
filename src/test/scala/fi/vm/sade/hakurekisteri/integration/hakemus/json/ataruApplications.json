@@ -10,6 +10,9 @@
     "paymentObligations": {
       "1.2.246.562.20.14800254899": "obligated"
     },
+    "eligibilities": {
+      "1.2.246.562.20.14800254899": "eligible"
+    },
     "asuinmaa": "Suomi",
     "email": "lslsl@ldldl.com",
     "matkapuhelin": "0123123",
@@ -30,7 +33,10 @@
       "1.2.246.562.20.44085996724"
     ],
     "paymentObligations": {
-      "1.2.246.562.20.14800254899": "not-checked"
+      "1.2.246.562.20.14800254899": "unreviewed"
+    },
+    "eligibilities": {
+      "1.2.246.562.20.14800254899": "unreviewed"
     },
     "asuinmaa": "Suomi",
     "email": "lslsl@ldldl.com",
