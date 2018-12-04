@@ -13,6 +13,10 @@ http://www.springframework.org/schema/security/spring-security.xsd">
         <http-basic/>
         <intercept-url pattern="/**" access="permitAll"/>
         <custom-filter before="CAS_FILTER" ref="urlRewriteFilter" />
+        <csrf disabled="true"/>
+        <headers>
+            <frame-options policy="SAMEORIGIN"/>
+        </headers>
     </http>
 
     <authentication-manager>

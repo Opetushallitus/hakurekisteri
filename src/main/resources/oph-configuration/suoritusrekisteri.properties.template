@@ -13,11 +13,8 @@ auth.mode={{auth_mode}}
 env.loglevel={{env_loglevel}}
 host.cas={{host_cas}}
 host.ilb={{host_ilb}}
-host.ldap={{host_ldap}}
+host.alb={{host_alb}}
 host.virkailija={{host_virkailija}}
-ldap.manager.password={{ldap_manager_password}}
-ldap.manager-password={{ldap_manager_password}}
-ldap.manager.userdn={{ldap_manager_userdn}}
 server.name={{ansible_hostname}}
 suoritusrekisteri.app.username={{suoritusrekisteri_app_username}}
 suoritusrekisteri.app.password={{suoritusrekisteri_app_password}}
@@ -68,14 +65,6 @@ cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
 cas.service.valintalaskentakoostepalvelu=https://${host.virkailija}/valintalaskentakoostepalvelu
 cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-service
 cas.service.oppijanumerorekisteri-service=https://${host.virkailija}/oppijanumerorekisteri-service
-ldap.cache.size=10000
-ldap.data.dir=${user.home}/data
-ldap.filter.people=uid\=%u
-ldap.index.cache.size=10000
-ldap.manager-dn=${ldap.manager.userdn}
-ldap.search.base.people=ou=People,dc=opintopolku,dc=fi
-ldap.url=ldap://${host.ldap}
-ldap.url.with.base=ldap\://${host.ldap}/dc\=opintopolku,dc\=fi
 log4j.properties.file=${user.home.conf}/log4j.properties
 suoritusrekisteri.cache.redis.enabled={{redis_suoritusrekisteri_enabled}}
 suoritusrekisteri.cache.redis.host={{redis_suoritusrekisteri_host}}
