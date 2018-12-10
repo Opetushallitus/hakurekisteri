@@ -15,11 +15,13 @@ import org.joda.time.DateTime
 import scala.concurrent.duration._
 
 class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (Seq[A]) => Seq[(A, Set[String], Option[String])], config: Config, organisaatioClient: VirkailijaRestClient)
-  extends FutureOrganizationHierarchy[A, I](filteredActor, (items: Seq[A]) => Future.successful(organizationFinder(items)), config, organisaatioClient = organisaatioClient)
+  extends FutureOrganizationHierarchy[A, I](filteredActor, new AuthorizationSubjectFinder[A] {
+    override def apply(v1: Seq[A]): Future[Seq[(A, Set[String], Option[String])]] = Future.successful(organizationFinder(v1))
+  }, config, organisaatioClient = organisaatioClient)
 
 class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 (filteredActor: ActorRef,
- organizationFinder: (Seq[A]) => concurrent.Future[Seq[(A, Set[String], Option[String])]],
+ authorizationSubjectFinder: AuthorizationSubjectFinder[A],
  config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
   val logger = Logging(context.system, this)
   implicit val timeout: akka.util.Timeout = 450.seconds
@@ -88,7 +90,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
   }
 
   private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] =
-    organizationFinder(resources).map(_.map(o => (o._1, Subject(m.runtimeClass.getSimpleName, o._2, o._3))))
+    authorizationSubjectFinder(resources).map(_.map(o => (o._1, Subject(m.runtimeClass.getSimpleName, o._2, o._3))))
 
   private def isAuthorized(user:User, action: String, item: A): concurrent.Future[Boolean] =
     subjectFinder(Seq(item)).map {
@@ -143,3 +145,5 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
 }
 
 case class Org(oid: String, parent: Option[String], lopetusPvm: Option[DateTime] )
+
+trait AuthorizationSubjectFinder[A] extends Function1[Seq[A], Future[Seq[(A, Set[String], Option[String])]]]

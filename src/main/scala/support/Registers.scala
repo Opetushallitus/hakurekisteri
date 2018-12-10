@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor}
-import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizationSubjectFinder, FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -50,26 +50,29 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
     system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (is: Seq[A]) => is.map(i => (i, orgFinder(i).map(Set(_)).getOrElse(Set()), None)), config, organisaatioClient)), s"$resource-authorizer")
   }
 
-  def suoritusResolver(suoritukset: Seq[Suoritus]): Future[Seq[(Suoritus, Set[String], Option[String])]] = {
-      val kielikoesuoritusIdt = suoritukset.collect {
-        case s: VirallinenSuoritus with Identified[_] if s.komo == KomoOids.ammatillisenKielikoe =>
-          s.id.asInstanceOf[UUID]
-      }.toSet
-      val kielikoesuoritustenMyontajat = if (kielikoesuoritusIdt.isEmpty) {
-        Future.successful(Map.empty[UUID, Set[String]])
-      } else {
-        unauthorized.arvosanaRekisteri.?(ArvosanatQuery(kielikoesuoritusIdt))(Timeout(900, TimeUnit.SECONDS))
-          .mapTo[Seq[Arvosana]].map(arvosanat => arvosanat.groupBy(_.suoritus).mapValues(_.map(_.source).toSet))
-      }
-      kielikoesuoritustenMyontajat.map(ksm => suoritukset.map {
-        case s: VirallinenSuoritus with Identified[_] =>
-          (s, ksm.getOrElse(s.id.asInstanceOf[UUID], Set(s.myontaja)), Some(s.komo))
-        case s: VirallinenSuoritus => (s, Set(s.myontaja), Some(s.komo))
-        case s => (s, Set.empty[String], None)
-      })
-    }
+  private val suoritusResolver: AuthorizationSubjectFinder[Suoritus] = new AuthorizationSubjectFinder[Suoritus] {
+    override def apply(suoritukset: Seq[Suoritus]): Future[Seq[(Suoritus, Set[String], Option[String])]] = {
+          val kielikoesuoritusIdt = suoritukset.collect {
+            case s: VirallinenSuoritus with Identified[_] if s.komo == KomoOids.ammatillisenKielikoe =>
+              s.id.asInstanceOf[UUID]
+          }.toSet
+          val kielikoesuoritustenMyontajat = if (kielikoesuoritusIdt.isEmpty) {
+            Future.successful(Map.empty[UUID, Set[String]])
+          } else {
+            unauthorized.arvosanaRekisteri.?(ArvosanatQuery(kielikoesuoritusIdt))(Timeout(900, TimeUnit.SECONDS))
+              .mapTo[Seq[Arvosana]].map(arvosanat => arvosanat.groupBy(_.suoritus).mapValues(_.map(_.source).toSet))
+          }
+          kielikoesuoritustenMyontajat.map(ksm => suoritukset.map {
+            case s: VirallinenSuoritus with Identified[_] =>
+              (s, ksm.getOrElse(s.id.asInstanceOf[UUID], Set(s.myontaja)), Some(s.komo))
+            case s: VirallinenSuoritus => (s, Set(s.myontaja), Some(s.komo))
+            case s => (s, Set.empty[String], None)
+          })
+        }
+  }
 
-  def arvosanaResolver(arvosanat: Seq[Arvosana]): Future[Seq[(Arvosana, Set[String], Option[String])]] = {
+  private val arvosanaResolver: AuthorizationSubjectFinder[Arvosana] = new AuthorizationSubjectFinder[Arvosana] {
+    override def apply(arvosanat: Seq[Arvosana]): Future[Seq[(Arvosana, Set[String], Option[String])]] = {
       unauthorized.suoritusRekisteri.?(arvosanat.map(_.suoritus))(Timeout(900, TimeUnit.SECONDS)).
         mapTo[Seq[Suoritus with Identified[UUID]]].map(suoritukset => {
         val suorituksetM = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).toMap
@@ -80,6 +83,7 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
         })
       })
     }
+  }
 
   override val suoritusRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusResolver, config, organisaatioClient)), "suoritus-authorizer")
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => Some(opiskelija.oppilaitosOid))
