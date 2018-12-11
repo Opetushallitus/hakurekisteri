@@ -64,9 +64,9 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
           }
           kielikoesuoritustenMyontajat.map(ksm => suoritukset.map {
             case s: VirallinenSuoritus with Identified[_] =>
-              AuthorizationSubject(s.asInstanceOf[Suoritus], ksm.getOrElse(s.id.asInstanceOf[UUID], Set(s.myontaja)), Some(s.komo))
-            case s: VirallinenSuoritus => AuthorizationSubject(s.asInstanceOf[Suoritus], Set(s.myontaja), Some(s.komo))
-            case s => AuthorizationSubject(s, Set.empty[String], None)
+              AuthorizationSubject(s.asInstanceOf[Suoritus], ksm.getOrElse(s.id.asInstanceOf[UUID], Set(s.myontaja)), personOid = Some(s.henkiloOid), komo = Some(s.komo))
+            case s: VirallinenSuoritus => AuthorizationSubject(s.asInstanceOf[Suoritus], Set(s.myontaja), personOid = Some(s.henkiloOid), komo = Some(s.komo))
+            case s => AuthorizationSubject(s, Set.empty[String], personOid = Some(s.henkiloOid), komo = None)
           })
         }
   }
@@ -77,19 +77,19 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
         mapTo[Seq[Suoritus with Identified[UUID]]].map(suoritukset => {
         val suorituksetM = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).toMap
         arvosanat.map(a => suorituksetM(a.suoritus) match {
-          case s: VirallinenSuoritus if s.komo == KomoOids.ammatillisenKielikoe => AuthorizationSubject(a, Set(a.source), None)
-          case s: VirallinenSuoritus => AuthorizationSubject(a, Set(s.myontaja, s.source), None)
-          case s: VapaamuotoinenSuoritus => AuthorizationSubject(a, Set(s.source), None)
+          case s: VirallinenSuoritus if s.komo == KomoOids.ammatillisenKielikoe => AuthorizationSubject(a, Set(a.source), personOid = Some(s.henkiloOid), komo = None)
+          case s: VirallinenSuoritus => AuthorizationSubject(a, Set(s.myontaja, s.source), personOid = Some(s.henkiloOid), komo = None)
+          case s: VapaamuotoinenSuoritus => AuthorizationSubject(a, Set(s.source), personOid = Some(s.henkiloOid), komo = None)
         })
       })
     }
   }
 
   override val suoritusRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusResolver, config, organisaatioClient)), "suoritus-authorizer")
-  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => AuthorizationSubject(opiskelija, Set(opiskelija.oppilaitosOid), None))
-  override val opiskeluoikeusRekisteri = opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => AuthorizationSubject[Opiskeluoikeus](opiskeluoikeus, Set(opiskeluoikeus.myontaja), Some(opiskeluoikeus.komo)))
+  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => AuthorizationSubject(opiskelija, Set(opiskelija.oppilaitosOid), personOid = Some(opiskelija.henkiloOid), komo = None))
+  override val opiskeluoikeusRekisteri = opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => AuthorizationSubject[Opiskeluoikeus](opiskeluoikeus, Set(opiskeluoikeus.myontaja), personOid = Some(opiskeluoikeus.henkiloOid), komo = Some(opiskeluoikeus.komo)))
   override val arvosanaRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, arvosanaResolver, config, organisaatioClient)), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => AuthorizationSubject(era, Set(Oids.ophOrganisaatioOid), None))
+  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => AuthorizationSubject(era, Set(Oids.ophOrganisaatioOid), personOid = None, komo = None))
   override val eraOrgRekisteri: ActorRef = unauthorized.eraOrgRekisteri
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null

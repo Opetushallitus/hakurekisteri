@@ -146,6 +146,6 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
 
 case class Org(oid: String, parent: Option[String], lopetusPvm: Option[DateTime] )
 
-case class AuthorizationSubject[A](item: A, orgs: Set[String], komo: Option[String])
+case class AuthorizationSubject[A](item: A, orgs: Set[String], personOid: Option[String], komo: Option[String])
 
 trait AuthorizationSubjectFinder[A] extends Function1[Seq[A], Future[Seq[AuthorizationSubject[A]]]]
