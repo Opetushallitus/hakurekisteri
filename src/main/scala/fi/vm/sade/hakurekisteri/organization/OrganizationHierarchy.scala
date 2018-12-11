@@ -14,9 +14,9 @@ import org.joda.time.DateTime
 
 import scala.concurrent.duration._
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (Seq[A]) => Seq[(A, Set[String], Option[String])], config: Config, organisaatioClient: VirkailijaRestClient)
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: Seq[A] => Seq[AuthorizationSubject[A]], config: Config, organisaatioClient: VirkailijaRestClient)
   extends FutureOrganizationHierarchy[A, I](filteredActor, new AuthorizationSubjectFinder[A] {
-    override def apply(v1: Seq[A]): Future[Seq[(A, Set[String], Option[String])]] = Future.successful(organizationFinder(v1))
+    override def apply(v1: Seq[A]): Future[Seq[AuthorizationSubject[A]]] = Future.successful(organizationFinder(v1))
   }, config, organisaatioClient = organisaatioClient)
 
 class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
@@ -90,7 +90,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
   }
 
   private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] =
-    authorizationSubjectFinder(resources).map(_.map(o => (o._1, Subject(m.runtimeClass.getSimpleName, o._2, o._3))))
+    authorizationSubjectFinder(resources).map(_.map(o => (o.item, Subject(m.runtimeClass.getSimpleName, o.orgs, o.komo))))
 
   private def isAuthorized(user:User, action: String, item: A): concurrent.Future[Boolean] =
     subjectFinder(Seq(item)).map {
@@ -146,4 +146,6 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
 
 case class Org(oid: String, parent: Option[String], lopetusPvm: Option[DateTime] )
 
-trait AuthorizationSubjectFinder[A] extends Function1[Seq[A], Future[Seq[(A, Set[String], Option[String])]]]
+case class AuthorizationSubject[A](item: A, orgs: Set[String], komo: Option[String])
+
+trait AuthorizationSubjectFinder[A] extends Function1[Seq[A], Future[Seq[AuthorizationSubject[A]]]]
