@@ -1,32 +1,43 @@
 package fi.vm.sade.hakurekisteri.organization
 
 import java.util.UUID
+import java.util.concurrent.{Executors, TimeUnit}
 
 import akka.actor.{Actor, ActorRef, Cancellable, Status}
+import akka.dispatch.ExecutionContexts
 import akka.event.Logging
 import dispatch.Defaults._
 import dispatch._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: Seq[A] => Seq[AuthorizationSubject[A]], config: Config, organisaatioClient: VirkailijaRestClient)
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef,
+                                                                        organizationFinder: Seq[A] => Seq[AuthorizationSubject[A]],
+                                                                        config: Config,
+                                                                        organisaatioClient: VirkailijaRestClient,
+                                                                        hakemusBasedPermissionCheckerActor: ActorRef)
   extends FutureOrganizationHierarchy[A, I](filteredActor, new AuthorizationSubjectFinder[A] {
     override def apply(v1: Seq[A]): Future[Seq[AuthorizationSubject[A]]] = Future.successful(organizationFinder(v1))
-  }, config, organisaatioClient = organisaatioClient)
+  }, config, organisaatioClient = organisaatioClient, hakemusBasedPermissionCheckerActor = hakemusBasedPermissionCheckerActor)
 
 class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 (filteredActor: ActorRef,
  authorizationSubjectFinder: AuthorizationSubjectFinder[A],
- config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
+ config: Config,
+ organisaatioClient: VirkailijaRestClient,
+ hakemusBasedPermissionCheckerActor: ActorRef) extends Actor {
   val logger = Logging(context.system, this)
   implicit val timeout: akka.util.Timeout = 450.seconds
-  private var authorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
+  private var organizationAuthorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
   private var organizationCacheUpdater: Cancellable = _
+  private val ENABLE_HAKEMUS_BASED_AUTHORIZATION = false // TODO : Remove the flag when SEC-68 works
 
   case object Update
 
@@ -48,7 +59,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 
     case a: OrganizationAuthorizer =>
       logger.info("organization paths loaded")
-      authorizer = a
+      organizationAuthorizer = a
 
     case Status.Failure(t) =>
       logger.error(t, "failed to load organization paths")
@@ -90,17 +101,36 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
   }
 
   private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] =
-    authorizationSubjectFinder(resources).map(_.map(o => (o.item, Subject(m.runtimeClass.getSimpleName, o.orgs, o.komo))))
+    authorizationSubjectFinder(resources).map(_.map(o => (o.item, Subject(m.runtimeClass.getSimpleName, o.orgs, oppijaOid = o.personOid, komo = o.komo))))
 
   private def isAuthorized(user:User, action: String, item: A): concurrent.Future[Boolean] =
     subjectFinder(Seq(item)).map {
-      case (_, subject) :: _ => authorizer.checkAccess(user, action, subject)
+      case (_, subject) :: _ => organizationAuthorizer.checkAccess(user, action, subject)
     }
 
   private def authorizedResources(resources: Seq[A], user: User, action: String): Future[Seq[A]] = {
-    subjectFinder(resources).map(_.collect {
-      case (item, subject) if authorizer.checkAccess(user, action, subject) => item
-    })
+    subjectFinder(resources).map { xs =>
+      val uniqueOppijaOids: Set[String] = xs.flatMap(_._2.oppijaOid).toSet
+      (xs, uniqueOppijaOids)
+    }.map { case (itemsWithSubjects, oppijaOids) =>
+      lazy val oppijaOidsThatUserMayReadBasedOnApplication: Set[String] = filterOppijaOidsForHakemusBasedReadAccess(user, oppijaOids)
+      itemsWithSubjects.collect {
+        case (item, subject) if organizationAuthorizer.checkAccess(user, action, subject) ||
+          (ENABLE_HAKEMUS_BASED_AUTHORIZATION && action == "READ" && subject.oppijaOid.exists(oppijaOidsThatUserMayReadBasedOnApplication.contains))
+        => item
+      }
+    }
+  }
+
+  private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]) = {
+    implicit val permissionCheckExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(10))
+    Await.result({
+      logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
+      Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor ? HasPermission(user, o))
+        .mapTo[Boolean]
+        .zip(Future.successful(o))))
+        .map(x => x.filter(_._1).map(_._2))
+    }, Duration(1, MINUTES))
   }
 }
 
@@ -124,7 +154,7 @@ case class AuthorizedDelete[I](id: I, user: User)
 case class AuthorizedCreate[A <: Resource[I, A], I](q: A,  user: User)
 case class AuthorizedUpdate[A <: Resource[I, A] :Manifest, I : Manifest](q: A with Identified[I], user: User)
 
-case class Subject(resource: String, orgs: Set[String], komo: Option[String])
+case class Subject(resource: String, orgs: Set[String], oppijaOid: Option[String], komo: Option[String])
 case class OrganisaatioPerustieto(oid: String, alkuPvm: String, lakkautusPvm: Option[Long], parentOid: String, parentOidPath: String,
                                   ytunnus: Option[String], oppilaitosKoodi: Option[String], oppilaitostyyppi: Option[String], toimipistekoodi: Option[String],
                                   `match`: Boolean, kieletUris: List[String], kotipaikkaUri: String,

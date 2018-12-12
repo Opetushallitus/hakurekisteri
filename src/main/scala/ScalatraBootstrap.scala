@@ -67,9 +67,10 @@ class ScalatraBootstrap extends LifeCycle {
     }
 
     val registers = new BareRegisters(system, journals, journals.database, personAliasesProvider)
-    val authorizedRegisters = new AuthorizedRegisters(registers, system, config)
 
     integrations = Integrations(registers, system, config)
+
+    val authorizedRegisters = new AuthorizedRegisters(registers, system, config, integrations.hakemusBasedPermissionChecker)
 
     config.productionServerConfig = new ProductionServerConfig(integrations, system, security, ec)
 
