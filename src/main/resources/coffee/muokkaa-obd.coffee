@@ -113,7 +113,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       $q.all([
         if(query.oppilaitosOid)
           searchRekisteriTiedot(query).promise
-        else
+        else if (query.henkilo)
           searchOpiskelijat(query).promise
       ]).then ((results) ->
         showCurrentRows collectHenkilot(collect(results))
