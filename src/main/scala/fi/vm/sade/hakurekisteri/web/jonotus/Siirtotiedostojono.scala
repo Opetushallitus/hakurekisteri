@@ -118,6 +118,20 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
               bytes.toByteArray
           }
         }
+      case hakijat: JSONHakijatV4 =>
+        if (hakijat.hakijat.isEmpty) {
+          Array()
+        } else {
+          val bytes = new ByteArrayOutputStream()
+          format match {
+            case ApiFormat.Json =>
+              IOUtils.write(write(hakijat), bytes, charset)
+              bytes.toByteArray
+            case ApiFormat.Excel =>
+              ExcelUtilV4.write(bytes, hakijat)
+              bytes.toByteArray
+          }
+        }
       case _ =>
         logger.error(s"Couldn't handle return type from HakijaActor!")
         throw new scala.RuntimeException("No content to store!")
@@ -136,10 +150,12 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
           IOUtils.write(write(hakijat), bytes, charset)
           bytes.toByteArray
         case ApiFormat.Excel =>
-          if(query.version == 1) {
+          if (query.version == 1) {
             KkExcelUtil.write(bytes, hakijat)
-          } else {
+          } else if (query.version == 2) {
             KkExcelUtilV2.write(bytes, hakijat)
+          } else {
+            KkExcelUtilV3.write(bytes, hakijat)
           }
           bytes.toByteArray
       }
