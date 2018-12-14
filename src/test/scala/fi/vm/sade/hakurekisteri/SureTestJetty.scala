@@ -6,12 +6,14 @@ import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.utils.Timer
 import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortChecker
+import org.apache.commons.lang3.StringUtils
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatra.test.HttpComponentsClient
+import support.LocalDevProxyingServlet
 
 object SureTestJetty extends App {
   new SureTestJetty(8080).start()
@@ -77,6 +79,12 @@ class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Confi
   mockApp.setBaseResource(new ResourceCollection(Array(root + "/src/test/resources/front-mock-files")))
   mockApp.setContextPath("/")
   mockApp.setInitParameter(org.scalatra.servlet.ScalatraListener.LifeCycleKey, "SuoritusrekisteriMocksBootstrap")
+
+  val devOnrPath: String = System.getProperty("sure.local.development.onr")
+  if (StringUtils.isNotBlank(devOnrPath)) {
+    LocalDevProxyingServlet.proxyRequests(mockApp, "/oppijanumerorekisteri-service/*", devOnrPath)
+  }
+
   mockApp.setInitParameter(org.scalatra.EnvironmentKey, "production")
   mockApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
 
