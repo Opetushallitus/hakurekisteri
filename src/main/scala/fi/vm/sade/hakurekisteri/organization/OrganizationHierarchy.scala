@@ -37,7 +37,6 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
   implicit val timeout: akka.util.Timeout = 450.seconds
   private var organizationAuthorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
   private var organizationCacheUpdater: Cancellable = _
-  private val ENABLE_HAKEMUS_BASED_AUTHORIZATION = false // TODO : Remove the flag when SEC-68 works
 
   case object Update
 
@@ -116,7 +115,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
       lazy val oppijaOidsThatUserMayReadBasedOnApplication: Set[String] = filterOppijaOidsForHakemusBasedReadAccess(user, oppijaOids)
       itemsWithSubjects.collect {
         case (item, subject) if organizationAuthorizer.checkAccess(user, action, subject) ||
-          (ENABLE_HAKEMUS_BASED_AUTHORIZATION && action == "READ" && subject.oppijaOid.exists(oppijaOidsThatUserMayReadBasedOnApplication.contains))
+          (action == "READ" && subject.oppijaOid.exists(oppijaOidsThatUserMayReadBasedOnApplication.contains))
         => item
       }
     }
@@ -166,11 +165,7 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
   def checkAccess(user: User, action: String, target: Subject): Boolean = {
     val allowedOrgs = user.orgsFor(action, target.resource)
     val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
-    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
-  }
-
-  private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
-    komo.exists(user.allowByKomo(_, action))
+    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) }
   }
 }
 
