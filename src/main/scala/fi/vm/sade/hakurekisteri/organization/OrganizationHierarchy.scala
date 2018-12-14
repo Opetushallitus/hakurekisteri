@@ -1,10 +1,8 @@
 package fi.vm.sade.hakurekisteri.organization
 
 import java.util.UUID
-import java.util.concurrent.{Executors, TimeUnit}
 
 import akka.actor.{Actor, ActorRef, Cancellable, Status}
-import akka.dispatch.ExecutionContexts
 import akka.event.Logging
 import dispatch.Defaults._
 import dispatch._
@@ -15,7 +13,6 @@ import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
 class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef,
@@ -108,28 +105,35 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     }
 
   private def authorizedResources(resources: Seq[A], user: User, action: String): Future[Seq[A]] = {
-    subjectFinder(resources).map { xs =>
-      val uniqueOppijaOids: Set[String] = xs.flatMap(_._2.oppijaOid).toSet
-      (xs, uniqueOppijaOids)
-    }.map { case (itemsWithSubjects, oppijaOids) =>
-      lazy val oppijaOidsThatUserMayReadBasedOnApplication: Set[String] = filterOppijaOidsForHakemusBasedReadAccess(user, oppijaOids)
-      itemsWithSubjects.collect {
-        case (item, subject) if organizationAuthorizer.checkAccess(user, action, subject) ||
-          (action == "READ" && subject.oppijaOid.exists(oppijaOidsThatUserMayReadBasedOnApplication.contains))
-        => item
+    subjectFinder(resources).map {
+      _.map {
+        case (item, subject) => (item, subject, organizationAuthorizer.checkAccess(user, action, subject))
+      }
+    }.flatMap { xs =>
+      val entriesNotAuthorizedByOrganization = xs.filter(_._3 == false)
+      val oppijaOidsForHakemusBasedAccess: Future[Set[String]] = if (entriesNotAuthorizedByOrganization.nonEmpty && action == "READ") {
+        val uniqueOppijaOids: Set[String] = entriesNotAuthorizedByOrganization.groupBy(_._2.oppijaOid).keySet.flatten
+        filterOppijaOidsForHakemusBasedReadAccess(user, uniqueOppijaOids)
+      } else {
+        Future.successful(Set())
+      }
+      Future.successful(xs).zip(oppijaOidsForHakemusBasedAccess)
+    }.map {
+      case (xs, oppijaOidsAllowedByHakemus) => xs.collect {
+        case (item, _, allowedByOrganization) if allowedByOrganization => item
+      } ++ xs.collect {
+        case (item, subject, allowedByOrganization) if !allowedByOrganization &&
+          subject.oppijaOid.exists(oppijaOidsAllowedByHakemus) => item
       }
     }
   }
 
-  private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]) = {
-    implicit val permissionCheckExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(10))
-    Await.result({
-      logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
-      Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor ? HasPermission(user, o))
-        .mapTo[Boolean]
-        .zip(Future.successful(o))))
-        .map(x => x.filter(_._1).map(_._2))
-    }, Duration(1, MINUTES))
+  private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]): Future[Set[String]] = {
+    logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
+    Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor ? HasPermission(user, o))
+      .mapTo[Boolean]
+      .zip(Future.successful(o))))
+      .map(x => x.filter(_._1).map(_._2))
   }
 }
 
