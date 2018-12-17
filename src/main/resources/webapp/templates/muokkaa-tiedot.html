@@ -31,7 +31,7 @@
             </div>
         </section>
         <!--vain rekisterinpitäjille!-->
-        <section class="panel panel-default">
+        <section class="panel panel-default" ng-if="hasRole('APP_KAYTTOOIKEUS_REKISTERINPITAJA') && hasRole('APP_KOSKI_OPHPAAKAYTTAJA')">
             <header class="panel-heading">
                 <h2 oph-msg="suoritusrekisteri.link.koskitiedot" class="panel-title">Tiedot Koski-järjestelmässä</h2>
             </header>
