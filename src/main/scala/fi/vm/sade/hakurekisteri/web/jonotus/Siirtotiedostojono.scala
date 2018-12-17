@@ -149,14 +149,14 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         case ApiFormat.Json =>
           IOUtils.write(write(hakijat), bytes, charset)
           bytes.toByteArray
-        case ApiFormat.Excel =>
-          if (query.version == 1) {
+        case ApiFormat.Excel => query.version match {
+          case 1 =>
             KkExcelUtil.write(bytes, hakijat)
-          } else if (query.version == 2) {
+          case 2 =>
             KkExcelUtilV2.write(bytes, hakijat)
-          } else {
+          case 3 =>
             KkExcelUtilV3.write(bytes, hakijat)
-          }
+        }
           bytes.toByteArray
       }
     }
