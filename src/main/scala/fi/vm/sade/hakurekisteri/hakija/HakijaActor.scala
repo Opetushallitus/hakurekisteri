@@ -262,6 +262,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
 
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
+    case "" => Future.successful("")
     case arvo =>
       val maaFuture = (koodistoActor.actor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
       maaFuture.onFailure {
@@ -412,11 +413,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
       None
     }
   }
-
   def enrichHakijat(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(for {
     hakija <- hakijat
   } yield for {
       kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus.getOrElse(""))
+      kaksoiskansalaisuus <- getMaakoodi(hakija.henkilo.kaksoiskansalaisuus.getOrElse(""))
       maa <- getMaakoodi(hakija.henkilo.maa)
       postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postitoimipaikka, hakija.henkilo.postinumero)
     } yield {
@@ -440,8 +441,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
           sahkoposti = h.sahkoposti,
           kotikunta = h.kotikunta,
           kansalaisuus = Some(kansalaisuus),
-          kaksoiskansalaisuus = h.kaksoiskansalaisuus,
-          kansalaisuudet = if (h.kaksoiskansalaisuus.isDefined && h.kaksoiskansalaisuus.get.nonEmpty) Some(List(kansalaisuus,h.kaksoiskansalaisuus.get)) else Some(List(kansalaisuus)),
+          kaksoiskansalaisuus = if (kaksoiskansalaisuus.nonEmpty) Some(kaksoiskansalaisuus) else None,
+          kansalaisuudet = if (kaksoiskansalaisuus.nonEmpty) Some(List(kansalaisuus,kaksoiskansalaisuus)) else Some(List(kansalaisuus)),
           asiointiKieli = h.asiointiKieli,
           opetuskieli = h.opetuskieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
