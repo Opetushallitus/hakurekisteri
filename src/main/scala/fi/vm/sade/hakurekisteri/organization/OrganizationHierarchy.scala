@@ -34,6 +34,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
   implicit val timeout: akka.util.Timeout = 450.seconds
   private var organizationAuthorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
   private var organizationCacheUpdater: Cancellable = _
+  private val resourceAuthorizer: ResourceAuthorizer[A] = new ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess, authorizationSubjectFinder)
 
   case object Update
 
@@ -61,7 +62,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
       logger.error(t, "failed to load organization paths")
 
     case AuthorizedQuery(q, user) =>
-      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(authorizedResources(_, user, "READ")) pipeTo sender
+      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(resourceAuthorizer.authorizedResources(_, user, "READ")(organizationAuthorizer)) pipeTo sender
 
     case AuthorizedReadWithOrgsChecked(id, user) =>
       (filteredActor ? id).mapTo[Option[A with Identified[UUID]]] pipeTo sender
@@ -91,38 +92,9 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
       filteredActor forward message
   }
 
-  def checkRights(user: User, action:String)(item:Option[A]) = item match {
+  def checkRights(user: User, action:String)(item:Option[A]): Future[Option[A]] = item match {
     case None => Future.successful(None)
-    case Some(resource) => isAuthorized(user, action, resource).map(authorized => if (authorized) Some(resource) else None)
-  }
-
-  private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] =
-    authorizationSubjectFinder(resources).map(_.map(o => (o.item, Subject(m.runtimeClass.getSimpleName, o.orgs, oppijaOid = o.personOid, komo = o.komo))))
-
-  private def isAuthorized(user:User, action: String, item: A): concurrent.Future[Boolean] =
-    subjectFinder(Seq(item)).map {
-      case (_, subject) :: _ => organizationAuthorizer.checkAccess(user, action, subject)
-    }
-
-  private def authorizedResources(resources: Seq[A], user: User, action: String): Future[Seq[A]] = {
-    subjectFinder(resources).map {
-      _.map {
-        case (item, subject) => (item, subject, organizationAuthorizer.checkAccess(user, action, subject))
-      }
-    }.flatMap { xs =>
-      val entriesNotAuthorizedByOrganization = xs.filter(_._3 == false)
-      val oppijaOidsForHakemusBasedAccess: Future[Set[String]] = if (entriesNotAuthorizedByOrganization.nonEmpty && action == "READ") {
-        val uniqueOppijaOids: Set[String] = entriesNotAuthorizedByOrganization.groupBy(_._2.oppijaOid).keySet.flatten
-        filterOppijaOidsForHakemusBasedReadAccess(user, uniqueOppijaOids)
-      } else {
-        Future.successful(Set())
-      }
-      Future.successful(xs).zip(oppijaOidsForHakemusBasedAccess)
-    }.map {
-      case (xs, oppijasAllowedByHakemus) => xs.collect {
-        case (x, subject, allowedByOrgs) if allowedByOrgs ||subject.oppijaOid.exists(oppijasAllowedByHakemus) => x
-      }
-    }
+    case Some(resource) => resourceAuthorizer.isAuthorized(user, action, resource)(organizationAuthorizer).map(authorized => if (authorized) Some(resource) else None)
   }
 
   private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]): Future[Set[String]] = {
@@ -131,6 +103,39 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
       .mapTo[Boolean]
       .zip(Future.successful(o))))
       .map(x => x.filter(_._1).map(_._2))
+  }
+}
+
+class ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess: (User, Set[String]) => Future[Set[String]],
+                            authorizationSubjectFinder: AuthorizationSubjectFinder[A])(implicit m: Manifest[A]) {
+  def authorizedResources(resources: Seq[A], user: User, action: String)(organizationAuthorizer: OrganizationAuthorizer): Future[Seq[A]] = {
+    subjectFinder(resources).map {
+      _.map {
+        case (item, subject) => (item, subject, organizationAuthorizer.checkAccess(user, action, subject))
+      }
+    }.flatMap { xs =>
+      val entriesNotAuthorizedByOrganization = xs.filter(_._3 == false)
+      val oppijaOidsForHakemusBasedAccess: Future[Set[String]] = if (entriesNotAuthorizedByOrganization.nonEmpty && action == "READ") {
+        val uniqueOppijaOids: Set[String] = entriesNotAuthorizedByOrganization.flatMap(_._2.oppijaOid).toSet
+        filterOppijaOidsForHakemusBasedReadAccess(user, uniqueOppijaOids)
+      } else {
+        Future.successful(Set())
+      }
+      Future.successful(xs).zip(oppijaOidsForHakemusBasedAccess)
+    }.map {
+      case (xs, oppijasAllowedByHakemus) => xs.collect {
+        case (x, subject, allowedByOrgs) if allowedByOrgs || subject.oppijaOid.exists(oppijasAllowedByHakemus) => x
+      }
+    }
+  }
+
+  def isAuthorized(user:User, action: String, item: A)(organizationAuthorizer: OrganizationAuthorizer): concurrent.Future[Boolean] =
+    subjectFinder(Seq(item)).map {
+      case (_, subject) :: _ => organizationAuthorizer.checkAccess(user, action, subject)
+    }
+
+  private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] = {
+    authorizationSubjectFinder(resources).map(_.map(o => (o.item, Subject(m.runtimeClass.getSimpleName, o.orgs, oppijaOid = o.personOid, komo = o.komo))))
   }
 }
 
