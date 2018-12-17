@@ -119,11 +119,8 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
       }
       Future.successful(xs).zip(oppijaOidsForHakemusBasedAccess)
     }.map {
-      case (xs, oppijaOidsAllowedByHakemus) => xs.collect {
-        case (item, _, allowedByOrganization) if allowedByOrganization => item
-      } ++ xs.collect {
-        case (item, subject, allowedByOrganization) if !allowedByOrganization &&
-          subject.oppijaOid.exists(oppijaOidsAllowedByHakemus) => item
+      case (xs, oppijasAllowedByHakemus) => xs.collect {
+        case (x, subject, allowedByOrgs) if allowedByOrgs ||subject.oppijaOid.exists(oppijasAllowedByHakemus) => x
       }
     }
   }
