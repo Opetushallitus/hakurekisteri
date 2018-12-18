@@ -309,7 +309,7 @@ app.factory "MuokkaaTiedot", [
         return
 
       $scope.isOPH = () -> false
-      $scope.showKoskiLink = () false
+      $scope.showKoskiLink = () -> false
       $http.get(window.url("cas.myroles"), {cache: true}).success((data) ->
         $scope.myRoles = angular.fromJson(data)
         if Array.isArray($scope.myRoles)
