@@ -30,8 +30,10 @@
                 </aside>
             </div>
         </section>
+    </div>
         <!--vain rekisterinpitäjille!-->
-        <section class="panel panel-default" ng-if="myroles.includes('APP_KAYTTOOIKEUS_REKISTERINPITAJA') && myroles.includes('APP_KOSKI_OPHPAAKAYTTAJA')">
+    <div class="col-sm-12">
+        <section class="panel panel-default" ng-if="myroles.indexOf('APP_KAYTTOOIKEUS_REKISTERINPITAJA') !== -1 && myroles.indexOf('APP_KOSKI_OPHPAAKAYTTAJA') !== -1">
             <header class="panel-heading">
                 <h2 oph-msg="suoritusrekisteri.link.koskitiedot" class="panel-title">Tiedot Koski-järjestelmässä</h2>
             </header>
