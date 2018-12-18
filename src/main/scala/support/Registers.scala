@@ -45,12 +45,14 @@ class AuthorizedRegisters(unauthorized: Registers,
 
   def opiskeluoikeusAuthorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, authFinder: A => AuthorizationSubject[A]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (is: Seq[A]) => is.map(authFinder), config, organisaatioClient, hakemusBasedPermissionCheckerActor)), s"$resource-authorizer")
+    val organizationFinder = (items: Seq[A]) => items.map(authFinder)
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, organizationFinder, config, organisaatioClient, hakemusBasedPermissionCheckerActor)), s"$resource-authorizer")
   }
 
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, authFinder: A => AuthorizationSubject[A]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (is: Seq[A]) => is.map(authFinder), config, organisaatioClient, hakemusBasedPermissionCheckerActor)), s"$resource-authorizer")
+    val organizationFinder = (items: Seq[A]) => items.map(authFinder)
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, organizationFinder, config, organisaatioClient, hakemusBasedPermissionCheckerActor)), s"$resource-authorizer")
   }
 
   private val suoritusResolver: AuthorizationSubjectFinder[Suoritus] = new AuthorizationSubjectFinder[Suoritus] {
@@ -88,11 +90,45 @@ class AuthorizedRegisters(unauthorized: Registers,
     }
   }
 
-  override val suoritusRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusResolver, config, organisaatioClient, hakemusBasedPermissionCheckerActor)), "suoritus-authorizer")
-  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => AuthorizationSubject(opiskelija, Set(opiskelija.oppilaitosOid), personOid = Some(opiskelija.henkiloOid), komo = None))
-  override val opiskeluoikeusRekisteri = opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => AuthorizationSubject[Opiskeluoikeus](opiskeluoikeus, Set(opiskeluoikeus.myontaja), personOid = Some(opiskeluoikeus.henkiloOid), komo = Some(opiskeluoikeus.komo)))
-  override val arvosanaRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, arvosanaResolver, config, organisaatioClient, hakemusBasedPermissionCheckerActor)), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => AuthorizationSubject(era, Set(Oids.ophOrganisaatioOid), personOid = None, komo = None))
+  override val suoritusRekisteri: ActorRef = {
+    system.actorOf(
+      Props(new FutureOrganizationHierarchy[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusResolver, config, organisaatioClient, hakemusBasedPermissionCheckerActor)),
+      "suoritus-authorizer")
+  }
+
+  override val opiskelijaRekisteri: ActorRef = {
+    val authFinder = { opiskelija: Opiskelija =>
+      AuthorizationSubject(
+        opiskelija,
+        Set(opiskelija.oppilaitosOid),
+        personOid = Some(opiskelija.henkiloOid),
+        komo = None
+      )}
+    authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, authFinder)
+  }
+
+  override val opiskeluoikeusRekisteri: ActorRef = {
+    val authFinder = { opiskeluoikeus: Opiskeluoikeus =>
+      AuthorizationSubject(
+        opiskeluoikeus,
+        Set(opiskeluoikeus.myontaja),
+        personOid = Some(opiskeluoikeus.henkiloOid),
+        komo = Some(opiskeluoikeus.komo)
+      )}
+    opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, authFinder)
+  }
+
+  override val arvosanaRekisteri: ActorRef = {
+    system.actorOf(
+      Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, arvosanaResolver, config, organisaatioClient, hakemusBasedPermissionCheckerActor)),
+      "arvosana-authorizer")
+  }
+
+  override val eraRekisteri: ActorRef = {
+    val authFinder = { era: ImportBatch => AuthorizationSubject(era, Set(Oids.ophOrganisaatioOid), personOid = None, komo = None)}
+    authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, authFinder)
+  }
+
   override val eraOrgRekisteri: ActorRef = unauthorized.eraOrgRekisteri
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null
