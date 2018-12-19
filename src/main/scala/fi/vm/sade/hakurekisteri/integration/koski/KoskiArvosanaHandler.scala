@@ -335,6 +335,29 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     arvosana.copy(suoritus = s.id)
   }
 
+  def isKoskiOsaSuoritusPakollinen(suoritus: KoskiOsasuoritus, isLukio: Boolean, komoOid: String): Boolean = {
+    var isSuoritusPakollinen: Boolean = false
+    if(isLukio) {
+      isSuoritusPakollinen = true
+    }
+    else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
+      isSuoritusPakollinen = suoritus.koulutusmoduuli.pakollinen.get
+    }
+    else {
+      var isPakollinen = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).eivalinnainen
+
+      if(!suoritus.koulutusmoduuli.pakollinen.getOrElse(true) && suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).valinnainen) {
+        isPakollinen = false
+      }
+    }
+
+    if( (komoOid.contentEquals(Oids.perusopetusKomoOid) || komoOid.contentEquals(Oids.lisaopetusKomoOid)) &&
+      (suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("B2") || suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("A2"))) {
+      isSuoritusPakollinen = true
+    }
+    isSuoritusPakollinen
+  }
+
   def osasuoritusToArvosana(personOid: String,
                             komoOid: String,
                             osasuoritukset: Seq[KoskiOsasuoritus],
@@ -365,7 +388,11 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       suoritus <- modsuoritukset
       if suoritus.isPK || (isLukio && suoritus.isLukioSuoritus)
     } yield {
-      yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
+      //OK-227: Otetaan yksilöllistämisessä huomioon vain pakolliset aineet.
+      if (isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)) {
+        yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
+      }
+
       suoritus.arviointi.foreach(arviointi => {
         if (arviointi.isPKValue) {
           val tunniste: KoskiKoodi = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
@@ -375,25 +402,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
             case _ => None
           }
 
-          var isPakollinen = false
-          if(isLukio) {
-            isPakollinen = true
-          }
-          else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
-            isPakollinen = suoritus.koulutusmoduuli.pakollinen.get
-          }
-          else {
-            var isPakollinen = tunniste.eivalinnainen
-
-            if(!suoritus.koulutusmoduuli.pakollinen.getOrElse(true) && tunniste.valinnainen) {
-              isPakollinen = false
-            }
-          }
-
-          if( (komoOid.contentEquals(Oids.perusopetusKomoOid) || komoOid.contentEquals(Oids.lisaopetusKomoOid)) &&
-            (tunniste.koodiarvo.contentEquals("B2") || tunniste.koodiarvo.contentEquals("A2"))) {
-            isPakollinen = true
-          }
+          var isPakollinen = isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)
           var ord: Option[Int] = None
 
           if (!isPakollinen) {
@@ -443,6 +452,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       })
     }
     var yksilöllistetty = yksilollistaminen.Ei
+
     //Yli puolet osasuorituksista yksilöllistettyjä -> kokonaan yksilöllistetty. Osittain yksilöllistetty, jos yli 1 mutta alle tai tasan puolet yksilöllistettyjä.
     if (yksilöllistetyt.count(_.equals(true)) > yksilöllistetyt.count(_.equals(false))) {
       yksilöllistetty = yksilollistaminen.Kokonaan
