@@ -394,7 +394,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
         case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
       }
     }
-    if (q.version == 2 || q.version == 3)
+    if (q.version == 2 || q.version == 3 || q.version == 4)
       hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
     else
       hakutoives
