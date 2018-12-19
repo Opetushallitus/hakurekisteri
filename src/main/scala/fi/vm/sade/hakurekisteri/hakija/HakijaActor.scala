@@ -418,6 +418,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
   } yield for {
       kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus.getOrElse(""))
       kaksoiskansalaisuus <- getMaakoodi(hakija.henkilo.kaksoiskansalaisuus.getOrElse(""))
+      kansalaisuudet <- Future.sequence(hakija.henkilo.kansalaisuudet.getOrElse(List.empty).map(k => getMaakoodi(k)))
       maa <- getMaakoodi(hakija.henkilo.maa)
       postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postitoimipaikka, hakija.henkilo.postinumero)
     } yield {
@@ -442,7 +443,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
           kotikunta = h.kotikunta,
           kansalaisuus = Some(kansalaisuus),
           kaksoiskansalaisuus = if (kaksoiskansalaisuus.nonEmpty) Some(kaksoiskansalaisuus) else None,
-          kansalaisuudet = if (kaksoiskansalaisuus.nonEmpty) Some(List(kansalaisuus,kaksoiskansalaisuus)) else Some(List(kansalaisuus)),
+          kansalaisuudet = Some(kansalaisuudet),
           asiointiKieli = h.asiointiKieli,
           opetuskieli = h.opetuskieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
