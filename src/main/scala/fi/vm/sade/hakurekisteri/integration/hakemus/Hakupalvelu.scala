@@ -737,6 +737,7 @@ case class AtaruHakemusDto(oid: String,
                            valintatuloksenJulkaisulupa: Boolean,
                            koulutusmarkkinointilupa: Boolean,
                            paymentObligations: Map[String, String],
+                           eligibilities: Map[String, String],
                            kkPohjakoulutus: List[String],
                            korkeakoulututkintoVuosi: Option[Int])
 
@@ -755,6 +756,7 @@ case class AtaruHakemus(oid: String,
                         julkaisulupa: Boolean,
                         markkinointilupa: Boolean,
                         paymentObligations: Map[String, String],
+                        eligibilities: Map[String, String],
                         kkPohjakoulutus: List[String],
                         korkeakoulututkintoVuosi: Option[Int]) extends HakijaHakemus {
 

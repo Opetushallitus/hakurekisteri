@@ -135,10 +135,20 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       }
     } yield parentOids
 
-    def translateAtaruMaksuvelvollisuus(ataruMaksuvelvollsisuus: String): String = ataruMaksuvelvollsisuus match {
+    def translateAtaruMaksuvelvollisuus(hakemus: AtaruHakemusDto): Map[String, String] = hakemus.paymentObligations.mapValues {
       case "obligated" => "REQUIRED"
       case "not-obligated" => "NOT_REQUIRED"
-      case _ => "NOT_CHECKED"
+      case "unreviewed" => "NOT_CHECKED"
+      case s => throw new IllegalArgumentException(s"Unknown maksuvelvollisuus state $s on application ${hakemus.oid}")
+    }
+
+    def translateAtaruHakukelpoisuus(hakemus: AtaruHakemusDto): Map[String, String] = hakemus.eligibilities.mapValues {
+      case "eligible" => "ELIGIBLE"
+      case "uneligible" => "INELIGIBLE"
+      case "unreviewed" => "NOT_CHECKED"
+      case "conditionally-eligible" => "CONDITIONALLY_ELIGIBLE"
+      case "automatically-checked-eligible" => "AUTOMATICALLY_CHECKED_ELIGIBLE"
+      case s => throw new IllegalArgumentException(s"Unknown hakukelpoisuus state $s on application ${hakemus.oid}")
     }
 
     Future.sequence(
@@ -170,7 +180,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         asuinmaa = hakemus.asuinmaa,
         julkaisulupa = hakemus.valintatuloksenJulkaisulupa,
         markkinointilupa = hakemus.koulutusmarkkinointilupa,
-        paymentObligations = hakemus.paymentObligations.mapValues(translateAtaruMaksuvelvollisuus),
+        paymentObligations = translateAtaruMaksuvelvollisuus(hakemus),
+        eligibilities = translateAtaruHakukelpoisuus(hakemus),
         kkPohjakoulutus = hakemus.kkPohjakoulutus,
         korkeakoulututkintoVuosi = hakemus.korkeakoulututkintoVuosi
       )

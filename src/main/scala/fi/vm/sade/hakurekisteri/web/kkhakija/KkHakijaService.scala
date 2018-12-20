@@ -340,7 +340,12 @@ class KkHakijaService(hakemusService: IHakemusService,
         lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemus.oid, hakukohteenkoulutukset.koulutukset)
       } yield {
         if (matchHakuehto(sijoitteluTulos, hakemus.oid, hakukohdeOid)(q.hakuehto)) {
-          val hakukelpoisuus = PreferenceEligibility(hakukohdeOid, "", None, Some(hakemus.paymentObligations.getOrElse(hakukohdeOid, "NOT_CHECKED")))
+          val hakukelpoisuus = PreferenceEligibility(
+            aoId = hakukohdeOid,
+            status = hakemus.eligibilities.getOrElse(hakukohdeOid, "NOT_CHECKED"),
+            source = None,
+            maksuvelvollisuus = Some(hakemus.paymentObligations.getOrElse(hakukohdeOid, "NOT_CHECKED"))
+          )
           Some(Hakemus(
             haku = hakemus.applicationSystemId,
             hakuVuosi = haku.vuosi,
