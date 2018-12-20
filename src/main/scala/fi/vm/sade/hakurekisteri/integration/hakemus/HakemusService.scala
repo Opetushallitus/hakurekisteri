@@ -146,6 +146,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       case "eligible" => "ELIGIBLE"
       case "uneligible" => "INELIGIBLE"
       case "unreviewed" => "NOT_CHECKED"
+      case "conditionally-eligible" => "CONDITIONALLY_ELIGIBLE"
+      case "automatically-checked-eligible" => "AUTOMATICALLY_CHECKED_ELIGIBLE"
       case s => throw new IllegalArgumentException(s"Unknown hakukelpoisuus state $s on application ${hakemus.oid}")
     }
 
