@@ -1,0 +1,403 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.66232284065",
+    "hetu": "160999-0934",
+    "syntymäaika": "1999-09-16",
+    "etunimet": "Pekka",
+    "kutsumanimi": "Pekka",
+    "sukunimi": "Henkilo",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.33591187407",
+      "versionumero": 1,
+      "aikaleima": "2018-04-26T15:48:56.931725",
+      "lähdejärjestelmänId": {
+        "id": "81630",
+        "lähdejärjestelmä": {
+          "koodiarvo": "primus",
+          "nimi": {
+            "fi": "primus"
+          },
+          "koodistoUri": "lahdejarjestelma",
+          "koodistoVersio": 1
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.80915578621",
+        "oppilaitosnumero": {
+          "koodiarvo": "00546",
+          "nimi": {
+            "fi": "Porin aikuislukio"
+          },
+          "lyhytNimi": {
+            "fi": "Porin aikuislukio"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Porin aikuislukio"
+        },
+        "kotipaikka": {
+          "koodiarvo": "609",
+          "nimi": {
+            "fi": "Pori",
+            "sv": "Björneborg"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.33969312488",
+        "nimi": {
+          "fi": "Porin kaupunki"
+        },
+        "yTunnus": "0137323-9",
+        "kotipaikka": {
+          "koodiarvo": "609",
+          "nimi": {
+            "fi": "Pori",
+            "sv": "Björneborg"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "päättymispäivä": "2018-04-11",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2017-08-28",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2018-04-11",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999906",
+              "nimi": {
+                "fi": "Lukiokoulutukseen valmistava koulutus",
+                "sv": "Utbildning som förbereder för gymnasieutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "Lukiokoulutukseen valmistava koulutus"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 9
+            },
+            "perusteenDiaarinumero": "56/011/2015"
+          },
+          "oppimäärä": {
+            "koodiarvo": "nuortenops",
+            "nimi": {
+              "fi": "Lukio suoritetaan nuorten opetussuunnitelman mukaan",
+              "sv": "Gymnasiet genomförs enligt läroplanen för unga"
+            },
+            "koodistoUri": "lukionoppimaara",
+            "koodistoVersio": 1
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.80915578621",
+            "oppilaitosnumero": {
+              "koodiarvo": "00546",
+              "nimi": {
+                "fi": "Porin aikuislukio"
+              },
+              "lyhytNimi": {
+                "fi": "Porin aikuislukio"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Porin aikuislukio"
+            },
+            "kotipaikka": {
+              "koodiarvo": "609",
+              "nimi": {
+                "fi": "Pori",
+                "sv": "Björneborg"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [ {
+            "koulutusmoduuli" : {
+              "tunniste" : {
+                "koodiarvo" : "AI",
+                "nimi" : {
+                  "fi" : "Äidinkieli ja kirjallisuus",
+                  "sv" : "Modersmålet och litteratur"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Äidinkieli ja kirjallisuus",
+                  "sv" : "Modersmålet och litteratur"
+                },
+                "koodistoUri" : "koskioppiaineetyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "kieli" : {
+                "koodiarvo" : "AI1",
+                "nimi" : {
+                  "fi" : "Suomen kieli ja kirjallisuus"
+                },
+                "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+                "koodistoVersio" : 1
+              },
+              "pakollinen" : false
+            },
+            "yksilöllistettyOppimäärä" : false,
+            "painotettuOpetus" : false,
+            "arviointi" : [ {
+              "arvosana" : {
+                "koodiarvo" : "10",
+                "nimi" : {
+                  "fi" : "erinomainen"
+                },
+                "lyhytNimi" : {
+                  "fi" : "10"
+                },
+                "koodistoUri" : "arviointiasteikkoyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "hyväksytty" : true
+            } ],
+            "tyyppi" : {
+              "koodiarvo" : "perusopetuksenoppiaine",
+              "nimi" : {
+                "fi" : "Perusopetuksen oppiaine",
+                "sv" : "Läroämne i grundläggande utbildning"
+              },
+              "koodistoUri" : "suorituksentyyppi",
+              "koodistoVersio" : 1
+            }
+          }, {
+            "koulutusmoduuli" : {
+              "tunniste" : {
+                "koodiarvo" : "A1",
+                "nimi" : {
+                  "fi" : "A1-kieli",
+                  "sv" : "A1-språk"
+                },
+                "lyhytNimi" : {
+                  "fi" : "A1-kieli",
+                  "sv" : "A1-språk"
+                },
+                "koodistoUri" : "koskioppiaineetyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "kieli" : {
+                "koodiarvo" : "EN",
+                "nimi" : {
+                  "fi" : "englanti",
+                  "sv" : "engelska",
+                  "en" : "English"
+                },
+                "lyhytNimi" : {
+                  "fi" : "englanti",
+                  "sv" : "engelska",
+                  "en" : "English"
+                },
+                "koodistoUri" : "kielivalikoima",
+                "koodistoVersio" : 1
+              },
+              "pakollinen" : false
+            },
+            "yksilöllistettyOppimäärä" : false,
+            "painotettuOpetus" : false,
+            "arviointi" : [ {
+              "arvosana" : {
+                "koodiarvo" : "10",
+                "nimi" : {
+                  "fi" : "erinomainen"
+                },
+                "lyhytNimi" : {
+                  "fi" : "10"
+                },
+                "koodistoUri" : "arviointiasteikkoyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "hyväksytty" : true
+            } ],
+            "tyyppi" : {
+              "koodiarvo" : "perusopetuksenoppiaine",
+              "nimi" : {
+                "fi" : "Perusopetuksen oppiaine",
+                "sv" : "Läroämne i grundläggande utbildning"
+              },
+              "koodistoUri" : "suorituksentyyppi",
+              "koodistoVersio" : 1
+            }
+          }, {
+            "koulutusmoduuli" : {
+              "tunniste" : {
+                "koodiarvo" : "B1",
+                "nimi" : {
+                  "fi" : "B1-kieli",
+                  "sv" : "B1-språk"
+                },
+                "lyhytNimi" : {
+                  "fi" : "B1-kieli",
+                  "sv" : "B1-språk"
+                },
+                "koodistoUri" : "koskioppiaineetyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "kieli" : {
+                "koodiarvo" : "SV",
+                "nimi" : {
+                  "fi" : "ruotsi",
+                  "sv" : "svenska",
+                  "en" : "Swedish"
+                },
+                "lyhytNimi" : {
+                  "fi" : "ruotsi",
+                  "sv" : "svenska",
+                  "en" : "Swedish"
+                },
+                "koodistoUri" : "kielivalikoima",
+                "koodistoVersio" : 1
+              },
+              "pakollinen" : true
+            },
+            "yksilöllistettyOppimäärä" : true,
+            "painotettuOpetus" : false,
+            "arviointi" : [ {
+              "arvosana" : {
+                "koodiarvo" : "10",
+                "nimi" : {
+                  "fi" : "erinomainen"
+                },
+                "lyhytNimi" : {
+                  "fi" : "10"
+                },
+                "koodistoUri" : "arviointiasteikkoyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "hyväksytty" : true
+            } ],
+            "tyyppi" : {
+              "koodiarvo" : "perusopetuksenoppiaine",
+              "nimi" : {
+                "fi" : "Perusopetuksen oppiaine",
+                "sv" : "Läroämne i grundläggande utbildning"
+              },
+              "koodistoUri" : "suorituksentyyppi",
+              "koodistoVersio" : 1
+            }
+          }, {
+            "koulutusmoduuli" : {
+              "tunniste" : {
+                "koodiarvo" : "MA",
+                "nimi" : {
+                  "fi" : "Matematiikka",
+                  "sv" : "Matematik"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Matematiikka",
+                  "sv" : "Matematik"
+                },
+                "koodistoUri" : "koskioppiaineetyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "pakollinen" : false
+            },
+            "yksilöllistettyOppimäärä" : false,
+            "painotettuOpetus" : false,
+            "arviointi" : [ {
+              "arvosana" : {
+                "koodiarvo" : "10",
+                "nimi" : {
+                  "fi" : "erinomainen"
+                },
+                "lyhytNimi" : {
+                  "fi" : "10"
+                },
+                "koodistoUri" : "arviointiasteikkoyleissivistava",
+                "koodistoVersio" : 1
+              },
+              "hyväksytty" : true
+            } ],
+            "tyyppi" : {
+              "koodiarvo" : "perusopetuksenoppiaine",
+              "nimi" : {
+                "fi" : "Perusopetuksen oppiaine",
+                "sv" : "Läroämne i grundläggande utbildning"
+              },
+              "koodistoUri" : "suorituksentyyppi",
+              "koodistoVersio" : 1
+            }
+          } ],
+          "tyyppi": {
+            "koodiarvo": "luva",
+            "nimi": {
+              "fi": "Lukiokoulutukseen valmistava koulutus (LUVA)",
+              "sv": "Förberedande utbildning för gymnasieutbildning"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "luva",
+        "nimi": {
+          "fi": "Lukioon valmistava koulutus (LUVA)",
+          "sv": "Förberedande utbildning för gymnasieutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Luva"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "lisätiedot": {
+        "pidennettyPäättymispäivä": false,
+        "ulkomainenVaihtoopiskelija": false,
+        "oikeusMaksuttomaanAsuntolapaikkaan": false
+      },
+      "alkamispäivä": "2017-08-28"
+    }
+  ]
+}
