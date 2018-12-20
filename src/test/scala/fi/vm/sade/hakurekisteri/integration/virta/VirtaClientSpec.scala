@@ -104,11 +104,13 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     }}
   }
 
-  it should "return None if no data is found" in {
+  it should "return empty Seqs if no data is found" in {
     val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.4")
 
     waitFuture(response) {(o: Option[VirtaResult]) => {
-      o should be(None)
+      o.get.opiskeluoikeudet should be (Seq())
+      o.get.tutkinnot should be (Seq())
+      o.get.suoritukset should be (Seq())
     }}
   }
 
