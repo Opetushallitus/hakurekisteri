@@ -106,14 +106,12 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
           val tutkinnot = getTutkinnot(responseEnvelope)
           val suoritukset = getOpintosuoritukset(responseEnvelope)
 
-          (opiskeluoikeudet, tutkinnot, suoritukset) match {
-            case (Seq(), Seq(), Seq()) => None
-            case _ => Some(VirtaResult(
-              oppijanumero = oppijanumero,
-              opiskeluoikeudet = opiskeluoikeudet,
-              tutkinnot = tutkinnot,
-              suoritukset = suoritukset))
-          }
+          Some(VirtaResult(
+            oppijanumero = oppijanumero,
+            opiskeluoikeudet = opiskeluoikeudet,
+            tutkinnot = tutkinnot,
+            suoritukset = suoritukset))
+
         } else {
           val bodyString = response.getResponseBody
 
