@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
+import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.json4s._
@@ -958,6 +959,50 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
     val lisäA2B2 = lisäopetus.flatMap(_.arvosanat.filter(a => aineet.contains(a.aine)))
     lisäA2B2 should have length 2
     lisäA2B2.map(_.valinnainen) shouldEqual Seq(false, false)
+  }
+
+  it should "not set osasuoritus as yksilöllistetty if not pakollinen" in {
+    var json: String = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen.json").mkString
+    var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    var osasuoritukset: Seq[KoskiOsasuoritus] = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset
+
+    /*
+    Kaikki pakolliset eivät ole yksilöllistettyjä, ei-pakolliset ovat -> Ei
+    1: pakollinen kyllä, yksilöllistetty ei
+    2: pakollinen kyllä, yksilöllistetty ei
+    3: pakollinen ei, yksilöllistetty kyllä
+    4: pakollinen ei, yksilöllistetty kyllä
+    */
+    var result = KoskiArvosanaTrigger.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result._2 should equal (yksilollistaminen.Ei)
+
+    json  = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen1.json").mkString
+    henkilo = parse(json).extract[KoskiHenkiloContainer]
+    osasuoritukset = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset
+
+    /*
+    Yksi pakollinen yksilöllistetty -> Osittain
+    1: pakollinen kyllä, yksilöllistetty ei
+    2: pakollinen kyllä, yksilöllistetty ei
+    3: pakollinen kyllä, yksilöllistetty kyllä
+    4: pakollinen ei, yksilöllistetty kyllä
+    */
+    result = KoskiArvosanaTrigger.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result._2 should equal (yksilollistaminen.Osittain)
+
+    json  = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen2.json").mkString
+    henkilo = parse(json).extract[KoskiHenkiloContainer]
+    osasuoritukset = henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset
+
+    /*
+    Yksi pakollinen ja yksilöllistetty -> Kokonaan
+    1: pakollinen ei, yksilöllistetty ei
+    2: pakollinen ei, yksilöllistetty ei
+    3: pakollinen kyllä, yksilöllistetty kyllä
+    4: pakollinen ei, yksilöllistetty ei
+    */
+    result = KoskiArvosanaTrigger.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result._2 should equal (yksilollistaminen.Kokonaan)
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
