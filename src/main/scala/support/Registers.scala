@@ -97,25 +97,11 @@ class AuthorizedRegisters(unauthorized: Registers,
   }
 
   override val opiskelijaRekisteri: ActorRef = {
-    val authFinder = { opiskelija: Opiskelija =>
-      AuthorizationSubject(
-        opiskelija,
-        Set(opiskelija.oppilaitosOid),
-        personOid = Some(opiskelija.henkiloOid),
-        komo = None
-      )}
-    authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, authFinder)
+    authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, AuthorizedRegisters.opiskelijaAuthFinder)
   }
 
   override val opiskeluoikeusRekisteri: ActorRef = {
-    val authFinder = { opiskeluoikeus: Opiskeluoikeus =>
-      AuthorizationSubject(
-        opiskeluoikeus,
-        Set(opiskeluoikeus.myontaja),
-        personOid = Some(opiskeluoikeus.henkiloOid),
-        komo = Some(opiskeluoikeus.komo)
-      )}
-    opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, authFinder)
+    opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, AuthorizedRegisters.opiskeluoikeusAuthFinder)
   }
 
   override val arvosanaRekisteri: ActorRef = {
@@ -125,13 +111,32 @@ class AuthorizedRegisters(unauthorized: Registers,
   }
 
   override val eraRekisteri: ActorRef = {
-    val authFinder = { era: ImportBatch => AuthorizationSubject(era, Set(Oids.ophOrganisaatioOid), personOid = None, komo = None)}
-    authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, authFinder)
+    authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, AuthorizedRegisters.eraAuthFinder)
   }
 
   override val eraOrgRekisteri: ActorRef = unauthorized.eraOrgRekisteri
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null
+}
+
+object AuthorizedRegisters {
+  val opiskelijaAuthFinder = { opiskelija: Opiskelija =>
+    AuthorizationSubject(
+      opiskelija,
+      Set(opiskelija.oppilaitosOid),
+      personOid = Some(opiskelija.henkiloOid),
+      komo = None
+    )}
+
+  val opiskeluoikeusAuthFinder: Opiskeluoikeus => AuthorizationSubject[Opiskeluoikeus] = { opiskeluoikeus: Opiskeluoikeus =>
+    AuthorizationSubject(
+      opiskeluoikeus,
+      Set(opiskeluoikeus.myontaja),
+      personOid = Some(opiskeluoikeus.henkiloOid),
+      komo = Some(opiskeluoikeus.komo)
+    )}
+
+  val eraAuthFinder: ImportBatch => AuthorizationSubject[ImportBatch] = { era: ImportBatch => AuthorizationSubject(era, Set(Oids.ophOrganisaatioOid), personOid = None, komo = None)}
 }
 
 trait PersonAliasesProvider {
