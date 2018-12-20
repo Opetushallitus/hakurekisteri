@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
 import scala.concurrent.duration._
@@ -85,24 +85,11 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   def save(r: VirtaResult): Unit = {
 
     implicit val timeout: Timeout = Timeout(1.minute)
-    val oidsWithAliases = PersonOidsWithAliases(Set(r.oppijanumero), Map.empty)
-    opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(oidsWithAliases)
-    val existingOpiskeluoikeudet: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
-      .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
 
     val newOpiskeluOikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(r.oppijanumero)))
     val newSuoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(r.oppijanumero)))
 
-    val res = Await.result(existingOpiskeluoikeudet, Duration(1, TimeUnit.MINUTES))
-    val virtaOpiskeluOikeus = res.filter(p => Oids.cscOrganisaatioOid.matches(p.source))
-
-    val pendingDeletes: Seq[Future[Any]] = for {
-      vrtOO <- virtaOpiskeluOikeus
-    } yield {
-      opiskeluoikeusActor ? DeleteResource(vrtOO.id, "virta-actor")
-    }
-
-    Future.sequence(pendingDeletes).recoverWith {
+    Future.sequence(removeExisting(r)).recoverWith {
       case e: Exception =>
         log.error(e,"Error deleting old virta data")
         Future.failed(e)
@@ -115,6 +102,33 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
         s.foreach(suoritusActor ! _)
       }
     }
+    
+  }
+
+  def removeExisting(r: VirtaResult): Seq[Future[Any]] = {
+
+    implicit val timeout: Timeout = Timeout(1.minute)
+
+    val existingOpiskeluoikeudet: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
+    .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
+    val virtaOpiskeluOikeudet = Await.result(existingOpiskeluoikeudet, Duration(1, TimeUnit.MINUTES))
+    .filter(p => Oids.cscOrganisaatioOid.matches(p.source))
+
+    val existingSuoritukset: Future[Seq[Suoritus with Identified[UUID]]] = (suoritusActor ? SuoritusQuery(Some(r.oppijanumero)))
+    .mapTo[Seq[Suoritus with Identified[UUID]]]
+    val virtaSuoritukset = Await.result(existingSuoritukset, Duration(1, TimeUnit.MINUTES))
+    .filter(p => Oids.cscOrganisaatioOid.matches(p.source))
+
+    val pendingDeletes: Seq[Future[Any]] = for {
+      virtaOpiskeluOikeus <- virtaOpiskeluOikeudet
+      virtaSuoritus <- virtaSuoritukset
+    } yield {
+      opiskeluoikeusActor ? DeleteResource(virtaOpiskeluOikeus.id, "virta-actor")
+      suoritusActor ? DeleteResource(virtaSuoritus.id, "virta-actor")
+    }
+
+    pendingDeletes
+
   }
 
   import akka.pattern.ask
