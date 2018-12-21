@@ -89,46 +89,38 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
     val newOpiskeluOikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(r.oppijanumero)))
     val newSuoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(r.oppijanumero)))
 
-    Future.sequence(removeExisting(r)).recoverWith {
-      case e: Exception =>
-        log.error(e,"Error deleting old virta data")
-        Future.failed(e)
-    } onComplete { _ =>
-      for {
-        o <- newOpiskeluOikeudet
-        s <- newSuoritukset
-      } yield {
-        o.foreach(opiskeluoikeusActor ! _)
-        s.foreach(suoritusActor ! _)
-      }
+    removeExisting(r).onComplete {
+      case scala.util.Failure(e) =>
+        log.error(e, "Error deleting old virta data")
+      case scala.util.Success(_) =>
+        for {
+          o <- newOpiskeluOikeudet
+          s <- newSuoritukset
+        } yield {
+          o.foreach(opiskeluoikeusActor ! _)
+          s.foreach(suoritusActor ! _)
+        }
     }
-    
   }
 
-  def removeExisting(r: VirtaResult): Seq[Future[Any]] = {
+  def removeExisting(r: VirtaResult): Future[Unit] = {
 
     implicit val timeout: Timeout = Timeout(1.minute)
 
-    val existingOpiskeluoikeudet: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
-    .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
-    val virtaOpiskeluOikeudet = Await.result(existingOpiskeluoikeudet, Duration(1, TimeUnit.MINUTES))
-    .filter(p => Oids.cscOrganisaatioOid.matches(p.source))
+    val virtaOpiskeluOikeudetF: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
+      .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
+      .map(_.filter(p => Oids.cscOrganisaatioOid.matches(p.source)))
 
-    val existingSuoritukset: Future[Seq[Suoritus with Identified[UUID]]] = (suoritusActor ? SuoritusQuery(Some(r.oppijanumero)))
-    .mapTo[Seq[Suoritus with Identified[UUID]]]
-    val virtaSuoritukset = Await.result(existingSuoritukset, Duration(1, TimeUnit.MINUTES))
-    .filter(p => Oids.cscOrganisaatioOid.matches(p.source))
+    val virtaSuorituksetF: Future[Seq[Suoritus with Identified[UUID]]] = (suoritusActor ? SuoritusQuery(Some(r.oppijanumero)))
+      .mapTo[Seq[Suoritus with Identified[UUID]]]
+      .map(_.filter(p => Oids.cscOrganisaatioOid.matches(p.source)))
 
-    val pendingDeletes: Seq[Future[Any]] = for {
-      virtaOpiskeluOikeus <- virtaOpiskeluOikeudet
-      virtaSuoritus <- virtaSuoritukset
-    } yield {
-      opiskeluoikeusActor ? DeleteResource(virtaOpiskeluOikeus.id, "virta-actor")
-      suoritusActor ? DeleteResource(virtaSuoritus.id, "virta-actor")
-    }
-
-    pendingDeletes
-
+    for {
+      virtaOpiskeluOikeudet <- virtaOpiskeluOikeudetF
+      virtaSuoritukset <- virtaSuorituksetF
+      _ <- Future.sequence(virtaOpiskeluOikeudet.map(o => opiskeluoikeusActor ? DeleteResource(o.id, "virta-actor")))
+      _ <- Future.sequence(virtaSuoritukset.map(s => suoritusActor ? DeleteResource(s.id, "virta-actor")))
+    } yield ()
   }
 
   import akka.pattern.ask
