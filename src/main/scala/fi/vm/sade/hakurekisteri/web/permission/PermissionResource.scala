@@ -21,18 +21,9 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-
-case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisationOids: Set[String]) {
-  require(personOidsForSamePerson.nonEmpty, "Person oid list empty.")
-  require(!personOidsForSamePerson.exists(_.isEmpty), "Blank person oid in oid list.")
-  require(organisationOids.nonEmpty, "Organisation oid list empty.")
-  require(!organisationOids.exists(_.isEmpty), "Blank organisation oid in organisation oid list.")
-}
-
-case class PermissionCheckResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
-
 class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, timeout: Option[Timeout] = Some(2.minutes))
-                        (implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with QueryLogging {
+                        (implicit system: ActorSystem, sw: Swagger)
+  extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with QueryLogging {
 
   override protected def applicationDescription: String = "Oikeuksien tarkistuksen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -44,46 +35,46 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
     contentType = formats("json")
   }
   
-  private def grantsPermission(resources: Seq[_])(organisaatiot: Set[String]): Boolean = resources.exists {
-    case s: VirallinenSuoritus => organisaatiot.contains(s.myontaja)
-    case o: Opiskelija => organisaatiot.contains(o.oppilaitosOid)
-    case _ => false
-  }
-  
   post("/", operation(checkPermission)) {
     val t0 = Platform.currentTime
     val r: PermissionCheckRequest = read[PermissionCheckRequest](request.body)
 
     new AsyncResult() {
-
       val permissionFuture = for {
         suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Suoritus]]
         opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Opiskelija]]
-      } yield
+      } yield {
         PermissionCheckResponse(
-          accessAllowed = Some(
-            grantsPermission(suoritukset ++ opiskelijat)(r.organisationOids)
-          )
+          accessAllowed = Some(grantsPermission(suoritukset ++ opiskelijat, r.organisationOids))
         )
+      }
 
       logQuery(r, t0, permissionFuture)
 
       override val is: Future[PermissionCheckResponse] = permissionFuture
-
       override implicit def timeout: Duration = 2.minutes
-
     }
   }
-  
+
+  private def grantsPermission(resources: Seq[_], organisaatiot: Set[String]): Boolean = {
+    resources.exists {
+      case s: VirallinenSuoritus if organisaatiot.contains(s.myontaja) =>
+        true
+      case o: Opiskelija if organisaatiot.contains(o.oppilaitosOid) =>
+        true
+      case _ =>
+        false
+    }
+  }
+
   error {
     case t: IllegalArgumentException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
-    case MappingException(_, e: Throwable) if e.getCause != null => e.getCause match {
-      case t: Throwable =>
-        logger.warning(s"cannot parse request object: $t")
-        BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
-    }
+    case MappingException(_, e: Throwable) if e.getCause != null =>
+      val cause: Throwable = e.getCause
+      logger.warning(s"cannot parse request object: $cause")
+      BadRequest(PermissionCheckResponse(errorMessage = Some(cause.getMessage)))
     case t: JsonMappingException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))
@@ -94,5 +85,13 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
       logger.error(t, "error occurred during permission check")
       InternalServerError(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
   }
-
 }
+
+case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisationOids: Set[String]) {
+  require(personOidsForSamePerson.nonEmpty, "Person oid list empty.")
+  require(!personOidsForSamePerson.exists(_.isEmpty), "Blank person oid in oid list.")
+  require(organisationOids.nonEmpty, "Organisation oid list empty.")
+  require(!organisationOids.exists(_.isEmpty), "Blank organisation oid in organisation oid list.")
+}
+
+case class PermissionCheckResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
