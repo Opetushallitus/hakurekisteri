@@ -107,7 +107,6 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
   def removeExisting(r: VirtaResult): Future[Unit] = {
 
     implicit val timeout: Timeout = Timeout(1.minute)
-
     val virtaOpiskeluOikeudetF: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
       .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
       .map(_.filter(p => Oids.cscOrganisaatioOid.matches(p.source)))
@@ -119,9 +118,11 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
     for {
       virtaOpiskeluOikeudet <- virtaOpiskeluOikeudetF
       virtaSuoritukset <- virtaSuorituksetF
-      _ <- Future.sequence(virtaOpiskeluOikeudet.map(o => opiskeluoikeusActor ? DeleteResource(o.id, "virta-actor")))
-      _ <- Future.sequence(virtaSuoritukset.map(s => suoritusActor ? DeleteResource(s.id, "virta-actor")))
-    } yield ()
+    } yield {
+      val oikeuksienPoisto = Future {virtaOpiskeluOikeudet.map(o => opiskeluoikeusActor ? DeleteResource(o.id, "virta-actor"))}
+      val suoritustenPoisto = Future {virtaSuoritukset.map(s => suoritusActor ? DeleteResource(s.id, "virta-actor"))}
+      Future.sequence(Seq(oikeuksienPoisto,suoritustenPoisto))
+    }
   }
 
   import akka.pattern.ask

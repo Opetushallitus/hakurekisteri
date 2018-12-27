@@ -24,6 +24,7 @@ case class VirtaStatus(lastProcessDone: Option[DateTime] = None,
                        queueLength: Long,
                        status: Status)
 case class QueryProsessed(q: VirtaQuery)
+case class RefreshOppijaFromVirta(oppijaOid: String)
 
 object RescheduleVirtaProcessing
 object StartVirtaProcessing
@@ -54,6 +55,11 @@ class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, opp
     //this is hit only when preStart (see below) sends a VirtaQuery
     case q: VirtaQuery if !virtaQueue.contains(q) =>
       virtaQueue.add(q)
+
+    case r: RefreshOppijaFromVirta =>
+      val q = VirtaQuery(r.oppijaOid, None)
+      log.info("Fetching data from Virta for oppija {}, manual refresh", r.oppijaOid)
+      virtaActor ! q
 
     case StartVirtaProcessing if !processing =>
       log.info("started to process virta queries")
