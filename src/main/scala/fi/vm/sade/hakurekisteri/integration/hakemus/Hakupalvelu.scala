@@ -717,7 +717,7 @@ case class FullHakemus(oid: String,
           preference.get(s"preference${index}_kaksoistutkinnon_lisakysymys"),
           preference.get(s"preference${index}_sora_oikeudenMenetys"),
           preference.get(s"preference${index}_sora_terveys"),
-          preference.get(s"preference${index}_urheilijan_ammatillisenLisakysymys"),
+          preference.get(s"preference${index}_urheilijan_ammatillisen_koulutuksen_lisakysymys"),
           preference.get(s"preference${index}-discretionary-follow-up")
         )
     }.toList)
