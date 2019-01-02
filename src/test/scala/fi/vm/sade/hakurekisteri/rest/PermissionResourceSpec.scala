@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.PohjakoulutusOids
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HasPermission, HasPermissionForOrgs}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, VirallinenSuoritus, yksilollistaminen}
@@ -42,7 +43,20 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     }
   }))
 
-  addServlet(new PermissionResource(suoritusActor, opiskelijaActor, Some(1.seconds)), "/")
+  // TODO: use MockIntegrations?
+  val mockPermissionChecker = mockHakemusBasedPermissionChecker(true)
+  val noPermissionForOrgsMockPermissionChecker = mockHakemusBasedPermissionChecker(false)
+
+  def mockHakemusBasedPermissionChecker(hasPermissionForOrgs: Boolean) = {
+    system.actorOf(Props(new Actor {
+      override def receive: Receive = {
+        case _: HasPermission => sender ! true
+        case _: HasPermissionForOrgs => sender ! hasPermissionForOrgs
+      }
+    }))
+  }
+
+  addServlet(new PermissionResource(suoritusActor, opiskelijaActor, hakemusBasedPermissionCheckerActor = mockPermissionChecker, Some(1.seconds)), "/")
 
   test("should return http status 200") {
     val json =
@@ -79,19 +93,6 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
       checkResponse.accessAllowed should be (Some(true))
-    }
-  }
-
-  test("should return false if no matching suoritus or opiskelija found") {
-    val json =
-      """{
-        |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
-        |  "organisationOids": ["1.2.246.562.10.3"]
-        |}""".stripMargin
-
-    post("/", json) {
-      val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.accessAllowed should be (Some(false))
     }
   }
 
@@ -150,6 +151,46 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
   test("should return http 400 if cannot parse request object") {
     post("/", "") {
       response.status should be (400)
+    }
+  }
+
+  test("should return true if matching suoritus found, despite no hakemus based permission") {
+    addServlet(new PermissionResource(suoritusActor, opiskelijaActor, hakemusBasedPermissionCheckerActor = noPermissionForOrgsMockPermissionChecker, Some(1.seconds)), "/noPermission/")
+    val json =
+      """{
+        |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
+        |  "organisationOids": ["1.2.246.562.10.1"]
+        |}""".stripMargin
+
+    post("/noPermission/", json) {
+      val checkResponse = read[PermissionCheckResponse](response.body)
+      checkResponse.accessAllowed should be (Some(true))
+    }
+  }
+
+  test("should return true if matching opiskelija found, despite no hakemus based permission") {
+    val json =
+      """{
+        |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
+        |  "organisationOids": ["1.2.246.562.10.2"]
+        |}""".stripMargin
+
+    post("/noPermission/", json) {
+      val checkResponse = read[PermissionCheckResponse](response.body)
+      checkResponse.accessAllowed should be (Some(true))
+    }
+  }
+
+  test("should return false if no matching suoritus or opiskelija found and no hakemus based permission") {
+    val json =
+      """{
+        |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
+        |  "organisationOids": ["1.2.246.562.10.3"]
+        |}""".stripMargin
+
+    post("/noPermission/", json) {
+      val checkResponse = read[PermissionCheckResponse](response.body)
+      checkResponse.accessAllowed should be (Some(false))
     }
   }
 

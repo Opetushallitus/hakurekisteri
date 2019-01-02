@@ -5,6 +5,7 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonMappingException
+import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermissionForOrgs
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -21,7 +22,11 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, timeout: Option[Timeout] = Some(2.minutes))
+class PermissionResource(suoritusActor: ActorRef,
+                         opiskelijaActor: ActorRef,
+                         hakemusBasedPermissionCheckerActor: ActorRef,
+                         timeout: Option[Timeout] = Some(2.minutes)
+                        )
                         (implicit system: ActorSystem, sw: Swagger)
   extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with QueryLogging {
 
@@ -43,9 +48,11 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
       val permissionFuture = for {
         suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Suoritus]]
         opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Opiskelija]]
+        hakemusGrantsPermission: Boolean <- hakemusGrantsPermission(r.personOidsForSamePerson, r.organisationOids)
       } yield {
+        val result = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids) || hakemusGrantsPermission
         PermissionCheckResponse(
-          accessAllowed = Some(grantsPermission(suoritukset ++ opiskelijat, r.organisationOids))
+          accessAllowed = Some(result)
         )
       }
 
@@ -54,6 +61,13 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
       override val is: Future[PermissionCheckResponse] = permissionFuture
       override implicit def timeout: Duration = 2.minutes
     }
+  }
+
+  def hakemusGrantsPermission(personOidsForSamePerson: Set[String], organisationOids: Set[String]): Future[Boolean] = {
+    val hakemusPermissionsForPersonOids: Set[Future[Boolean]] = personOidsForSamePerson.map(o =>
+      (hakemusBasedPermissionCheckerActor ? HasPermissionForOrgs(organisationOids, o)).mapTo[Boolean]
+    )
+    Future.sequence(hakemusPermissionsForPersonOids).map(_.contains(true))
   }
 
   private def grantsPermission(resources: Seq[_], organisaatiot: Set[String]): Boolean = {

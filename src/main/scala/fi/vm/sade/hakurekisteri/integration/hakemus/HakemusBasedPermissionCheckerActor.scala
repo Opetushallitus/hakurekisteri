@@ -13,6 +13,7 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 case class HasPermission(user: User, hetu: String)
+case class HasPermissionForOrgs(orgs: Set[String], hetu: String)
 case class PermissionRequest(personOidsForSamePerson: Seq[String], organisationOids: Seq[String], loggedInUserRoles: Seq[String])
 case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
@@ -55,7 +56,11 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
 
   override def receive: Receive = {
     case HasPermission(user, forPerson) =>
-      Future.sequence(user.orgsFor("READ", "Virta").map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
+      val orgs: Set[String] = user.orgsFor("READ", "Virta")
+      self ? HasPermissionForOrgs(orgs, forPerson) pipeTo sender
+
+    case HasPermissionForOrgs(orgs, forPerson) =>
+      Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
         .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
         .flatMap(orgs => {
           checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
