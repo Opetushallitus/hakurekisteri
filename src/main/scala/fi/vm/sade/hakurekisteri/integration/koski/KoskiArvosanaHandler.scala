@@ -59,7 +59,8 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
   private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
   private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
-  private val root_org_id = "1.2.246.562.10.00000000001"
+  //private val root_org_id = "1.2.246.562.10.00000000001"
+  private val root_org_id = "koski"
 
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
                                           personOidsWithAliases: PersonOidsWithAliases,
@@ -91,6 +92,16 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
+    def deleteSuoritusAndArvosana(s: VirallinenSuoritus with Identified[UUID]): Future[Any] = {
+      val arvosanat = fetchArvosanat(s).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
+      deleteSuoritus(s)
+    }
+
+    def deleteSuoritus(s: Suoritus with Identified[UUID]): Future[Any] = {
+      logger.debug("Poistetaan suoritus " + s + "UUID:lla" + s.id)
+      suoritusRekisteri ? DeleteResource(s.id, "koski-suoritukset")
+    }
+
     def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
       logger.debug("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
       (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
@@ -110,6 +121,26 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       case _ => false
     }
 
+
+
+    def checkIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat]): Unit = {
+      // Only virallinen suoritus
+      val koskiVirallisetSuoritukset: Seq[VirallinenSuoritus] = henkilonSuoritukset.map(h => h.suoritus).flatMap {
+        case s: VirallinenSuoritus => Some(s)
+        case _ => None
+      }
+
+      val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals("koski")).flatMap {
+        case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
+        case _ => None
+      }
+
+      val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
+      toBeDeletedSuoritukset.foreach(d => {
+          deleteSuoritusAndArvosana(d)
+      })
+    }
+
     def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
       Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
@@ -119,7 +150,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       val suoritusSave: Future[Any] =
         if (suoritusExists(useSuoritus, existingSuoritukset)) {
           logger.debug("Päivitetään olemassaolevaa suoritusta.")
-          val suoritus = existingSuoritukset.flatMap {
+          val suoritus: VirallinenSuoritus with Identified[UUID] = existingSuoritukset.flatMap {
             case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
             case _ => None
           }
@@ -153,6 +184,8 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
+        //OY-227 : Check if there is suoritus which is not included on new suoritukset.
+        checkIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, henkilonSuoritukset)
         //NOTE, processes the Future that encloses the list, does not actually iterate through the list
         Future.sequence(henkilonSuoritukset.map {
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
