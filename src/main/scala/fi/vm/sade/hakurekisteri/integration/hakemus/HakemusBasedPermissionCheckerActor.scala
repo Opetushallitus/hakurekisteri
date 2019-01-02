@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.ask
 import akka.pattern.pipe
 import akka.util.Timeout
@@ -13,12 +13,13 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 case class HasPermission(user: User, hetu: String)
+case class HasPermissionFromOrgs(orgs: Set[String], hetu: String)
 case class PermissionRequest(personOidsForSamePerson: Seq[String], organisationOids: Seq[String], loggedInUserRoles: Seq[String])
 case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
 class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
                                          ataruClient: VirkailijaRestClient,
-                                         organisaatioActor: ActorRef) extends Actor {
+                                         organisaatioActor: ActorRef) extends Actor with ActorLogging {
   private val acceptedResponseCode: Int = 200
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 30.seconds
@@ -53,15 +54,26 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
     ).map(_.accessAllowed.getOrElse(false))
   }
 
+  private def hasPermissionFor(forPerson: String, orgs: Set[String]): Future[Boolean] = {
+    log.info("hasPermissionFor method called")
+    Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
+      .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
+      .flatMap(orgs => {
+        checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
+          case (false, false) => false
+          case _ => true
+        }
+      })
+  }
+
   override def receive: Receive = {
     case HasPermission(user, forPerson) =>
-      Future.sequence(user.orgsFor("READ", "Virta").map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
-        .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
-        .flatMap(orgs => {
-          checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
-            case (false, false) => false
-            case _ => true
-          }
-        }) pipeTo sender
+      log.info("received HasPermission")
+      val orgs: Set[String] = user.orgsFor("READ", "Virta")
+      hasPermissionFor(forPerson, orgs) pipeTo sender
+
+    case HasPermissionFromOrgs(orgs, forPerson) =>
+      log.info("received HasPermissionForOrgs")
+      hasPermissionFor(forPerson, orgs) pipeTo sender
   }
 }
