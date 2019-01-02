@@ -43,12 +43,6 @@ class AuthorizedRegisters(unauthorized: Registers,
   val orgRestExecutor = ExecutorUtil.createExecutor(5, "authorizer-organization-rest-client-pool")
   val organisaatioClient: VirkailijaRestClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(orgRestExecutor, system)
 
-  def opiskeluoikeusAuthorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, authFinder: A => AuthorizationSubject[A]): ActorRef = {
-    val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    val organizationFinder = (items: Seq[A]) => items.map(authFinder)
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, organizationFinder, config, organisaatioClient, hakemusBasedPermissionCheckerActor)), s"$resource-authorizer")
-  }
-
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, authFinder: A => AuthorizationSubject[A]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
     val organizationFinder = (items: Seq[A]) => items.map(authFinder)
@@ -101,7 +95,7 @@ class AuthorizedRegisters(unauthorized: Registers,
   }
 
   override val opiskeluoikeusRekisteri: ActorRef = {
-    opiskeluoikeusAuthorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, AuthorizedRegisters.opiskeluoikeusAuthFinder)
+    authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, AuthorizedRegisters.opiskeluoikeusAuthFinder)
   }
 
   override val arvosanaRekisteri: ActorRef = {
