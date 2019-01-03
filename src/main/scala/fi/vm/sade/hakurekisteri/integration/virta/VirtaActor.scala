@@ -92,21 +92,21 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
 
     removeExisting(r).onComplete {
       case scala.util.Failure(e) =>
-        log.error(e, "Error deleting old virta data")
+        log.error(e, "HenkilöOid {} Vanhojen virtatietojen poistossa tapahtui virhe {}", r.oppijanumero, e)
       case scala.util.Success(_) =>
-        for {
+        (for {
           o <- newOpiskeluOikeudet
           s <- newSuoritukset
-        } yield {
-          o.foreach(opiskeluoikeusActor ! _)
-          s.foreach(suoritusActor ! _)
-        }
+          _ <- Future.sequence(o.map(opiskeluoikeusActor ? _))
+          _ <- Future.sequence(s.map(suoritusActor ? _))
+        } yield ()).onFailure {case t => log.error("HenkilöOid {} Virtatietojen tallennuksessa tapahtui virhe {}", r.oppijanumero, t) }
     }
   }
 
   def removeExisting(r: VirtaResult): Future[Unit] = {
 
     implicit val timeout: Timeout = Timeout(1.minute)
+
     val virtaOpiskeluOikeudetF: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
       .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
       .map(_.filter(p => Oids.cscOrganisaatioOid.matches(p.source)))
@@ -118,11 +118,9 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
     for {
       virtaOpiskeluOikeudet <- virtaOpiskeluOikeudetF
       virtaSuoritukset <- virtaSuorituksetF
-    } yield {
-      val oikeuksienPoisto = Future {virtaOpiskeluOikeudet.map(o => opiskeluoikeusActor ? DeleteResource(o.id, "virta-actor"))}
-      val suoritustenPoisto = Future {virtaSuoritukset.map(s => suoritusActor ? DeleteResource(s.id, "virta-actor"))}
-      Future.sequence(Seq(oikeuksienPoisto,suoritustenPoisto))
-    }
+      _ <- Future.sequence(virtaOpiskeluOikeudet.map(o => opiskeluoikeusActor ? DeleteResource(o.id, "virta-actor")))
+      _ <- Future.sequence(virtaSuoritukset.map(s => suoritusActor ? DeleteResource(s.id, "virta-actor")))
+    } yield ()
   }
 
   import akka.pattern.ask

@@ -66,12 +66,9 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {
       val oppijaOid = params("oppijaOid")
-      logger.info("Saatiin kutsu /refresh/{}", oppijaOid)
       new AsyncResult() {
         override implicit def timeout: Duration = 120.seconds
-
         virtaQueue ! RefreshOppijaFromVirta(oppijaOid)
-
         override val is = virtaStatus
       }
     }
