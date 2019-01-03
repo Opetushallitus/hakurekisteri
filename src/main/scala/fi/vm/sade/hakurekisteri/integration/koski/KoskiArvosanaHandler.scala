@@ -59,7 +59,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
   private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
   private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
-  //private val root_org_id = "1.2.246.562.10.00000000001"
+  //OY-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
   private val root_org_id = "koski"
 
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
