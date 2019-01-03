@@ -45,13 +45,14 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
   get("/:hetu", operation(query)) {
     val hetu = params("hetu")
     val user = currentUser.getOrElse(throw new UserNotAuthorized("not authorized"))
+    val au = security.auditUser
     new AsyncResult() {
       override implicit def timeout: Duration = 30.seconds
       override val is =
         oppijaNumeroRekisteri.getByHetu(hetu).flatMap(henkilo => {
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
-              audit.log(auditUser,
+              audit.log(au,
                 HenkilonTiedotVirrasta,
                 new Target.Builder().setField("hetu", hetu).build(),
                 new Changes.Builder().build())
