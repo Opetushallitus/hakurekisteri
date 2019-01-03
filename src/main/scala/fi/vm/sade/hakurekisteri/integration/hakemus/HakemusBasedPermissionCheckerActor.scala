@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.ask
 import akka.pattern.pipe
 import akka.util.Timeout
@@ -19,7 +19,7 @@ case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessag
 
 class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
                                          ataruClient: VirkailijaRestClient,
-                                         organisaatioActor: ActorRef) extends Actor {
+                                         organisaatioActor: ActorRef) extends Actor with ActorLogging {
   private val acceptedResponseCode: Int = 200
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 30.seconds
@@ -56,10 +56,12 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
 
   override def receive: Receive = {
     case HasPermission(user, forPerson) =>
+      log.info("received HasPermission")
       val orgs: Set[String] = user.orgsFor("READ", "Virta")
       self ? HasPermissionForOrgs(orgs, forPerson) pipeTo sender
 
     case HasPermissionForOrgs(orgs, forPerson) =>
+      log.info("received HasPermissionForOrgs")
       Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
         .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
         .flatMap(orgs => {

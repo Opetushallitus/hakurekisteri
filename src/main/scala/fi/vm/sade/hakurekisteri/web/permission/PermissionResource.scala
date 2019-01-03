@@ -43,6 +43,7 @@ class PermissionResource(suoritusActor: ActorRef,
   post("/", operation(checkPermission)) {
     val t0 = Platform.currentTime
     val r: PermissionCheckRequest = read[PermissionCheckRequest](request.body)
+    logger.info(s"Checking permission for: personOidsForSamePerson ${r.personOidsForSamePerson} organisationOids ${r.organisationOids}.")
 
     new AsyncResult() {
       val permissionFuture = for {
@@ -50,7 +51,12 @@ class PermissionResource(suoritusActor: ActorRef,
         opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Opiskelija]]
         hakemusGrantsPermission: Boolean <- hakemusGrantsPermission(r.personOidsForSamePerson, r.organisationOids)
       } yield {
-        val result = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids) || hakemusGrantsPermission
+        val organisationGrantsPermission = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids)
+        logger.info(s"Finished querying for permissions. organisationGrantsPermission: ${organisationGrantsPermission}, hakemusGrantsPermission: ${hakemusGrantsPermission}.")
+        val result = organisationGrantsPermission || hakemusGrantsPermission
+        if (hakemusGrantsPermission && !organisationGrantsPermission) {
+          logger.info("Permission granted based on hakemus")
+        }
         PermissionCheckResponse(
           accessAllowed = Some(result)
         )
