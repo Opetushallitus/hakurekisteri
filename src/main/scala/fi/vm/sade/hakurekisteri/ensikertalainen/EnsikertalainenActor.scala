@@ -124,23 +124,15 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
       personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
       tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(personOidsWithAliases.henkiloOidsWithLinkedOids, q.hakuOid, q.hakukohdeOid)
       valmistumishetket <- valmistumiset(
-        personOidsWithAliases
-          .diff(tutkintovuodetHakemuksilta.keySet)
-          .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
+        personOidsWithAliases,
         q.suoritukset.getOrElse(Seq())
       )
       opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-        personOidsWithAliases
-          .diff(tutkintovuodetHakemuksilta.keySet)
-          .diff(valmistumishetket.keySet)
-          .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
+        personOidsWithAliases,
         q.opiskeluoikeudet.getOrElse(Seq())
       )
       vastaanottohetket <- vastaanotot(
         personOidsWithAliases
-          .diff(tutkintovuodetHakemuksilta.keySet)
-          .diff(valmistumishetket.keySet)
-          .diff(opiskeluoikeuksienAlkamiset.keySet)
       )
     } yield {
       q.henkiloOids.toSeq.flatMap(henkilo => {
@@ -262,10 +254,11 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def aikaisinMerkitsevaOpiskeluoikeus(suoritukset: Seq[Opiskeluoikeus]): Option[DateTime] = {
-    def greaterOrEqualToSyksy2014(instant: ReadableInstant): Boolean =
-      instant.asInstanceOf[DateTime] == koulutuksenAlkaminenSyksy2014 || instant.asInstanceOf[DateTime].isAfter(koulutuksenAlkaminenSyksy2014)
+    def greaterOrEqualToSyksy2014(instant: ReadableInstant): Boolean = {
+      !instant.isBefore(koulutuksenAlkaminenSyksy2014)
+    }
     val alkamiset = suoritukset.collect {
-      case Opiskeluoikeus(Ajanjakso(alku, _), _, _, _, _) if alku.isInstanceOf[DateTime] && greaterOrEqualToSyksy2014(alku) =>
+      case Opiskeluoikeus(Ajanjakso(alku, _), _, _, _, _) if greaterOrEqualToSyksy2014(alku) =>
         alku.asInstanceOf[DateTime]
     }
     if (alkamiset.isEmpty) None else Some(alkamiset.minBy(_.getMillis))

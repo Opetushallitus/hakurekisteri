@@ -58,14 +58,14 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
       e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
-      valintarek.underlyingActor.counter should be (0)
+      valintarek.underlyingActor.counter should be (1)
     })
     waitFuture(
       (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid, "dummyoid"), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
       e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
-      valintarek.underlyingActor.counter should be (1)
+      valintarek.underlyingActor.counter should be (2)
     })
   }
 
@@ -83,22 +83,21 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
       e.head.menettamisenPeruste should be (Some(OpiskeluoikeusAlkanut(date.toDateTimeAtStartOfDay)))
-      valintarek.underlyingActor.counter should be (0)
+      valintarek.underlyingActor.counter should be (1)
     })
   }
 
   it should "return ensikertalaisuus false based on hakemus" in {
-    val date = new LocalDate()
     val vanhatutkinto = 1990
     val (actor, valintarek) = initEnsikertalainenActor(
       suoritukset = Seq(
-        VirallinenSuoritus(koulutus_699999, myontaja, "VALMIS", new LocalDate(), henkiloOid, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+        VirallinenSuoritus(koulutus_699999, myontaja, "VALMIS", new LocalDate() plusYears 1, henkiloOid, yksilollistaminen.Ei, "FI", None, vahv = true, "")
       ),
       opiskeluoikeudet = Seq(
-        Opiskeluoikeus(date, None, henkiloOid, koulutus_699999, myontaja, "")
+        Opiskeluoikeus(new LocalDate() plusYears 1, None, henkiloOid, koulutus_699999, myontaja, "")
       ),
       hakemukset = Seq(Hakemus().setPersonOid(henkiloOid).setSuorittanutSuomalaisenKkTutkinnon(vanhatutkinto).build),
-      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(date.toDateTimeAtCurrentTime)))
+      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some((new LocalDate().plusYears(1).toDateTimeAtCurrentTime))))
     )
 
     waitFuture(
@@ -106,7 +105,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
     )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
       e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkintoHakemukselta(vanhatutkinto)))
-      valintarek.underlyingActor.counter should be (0)
+      valintarek.underlyingActor.counter should be (1)
     })
   }
 
