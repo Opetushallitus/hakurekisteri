@@ -6,6 +6,8 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.ytl.{HakuList, YtlIntegration}
@@ -17,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
+class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var storedHakus: Seq[Haku] = Seq()
@@ -56,13 +58,20 @@ class HakuActor(tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, vali
       storedHakus = sq.collect{ case h: Haku => h}
       val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
       val ytlHakus = activeHakus.filter(_.kkHaku)
+      //TODO: varmista tää vielä.
+      val active2AsteHakus = activeHakus.filterNot(_.kkHaku)
       val ytlHakuOidsWithNames = ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
       val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
+      val active2AsteHakuOids: Set[String] = active2AsteHakus.map(_.oid).toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
       ytl ! HakuList(ytlHakuOids)
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
+      log.info(s"Asetetaan aktiiviset 2. asteen haut: ${active2AsteHakuOids.toString()} ")
+      koskiService.setAktiiviset2AsteHaut(active2AsteHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
+      log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
+      log.info(s"active 2. aste application systems: [${active2AsteHakuOids.size}]")
       if (starting) {
         starting = false
         vtsUpdate.foreach(_.cancel())

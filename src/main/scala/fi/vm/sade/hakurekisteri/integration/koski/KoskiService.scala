@@ -2,7 +2,8 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-import java.util.{Date, TimeZone}
+import java.util.concurrent.atomic.AtomicReference
+import java.util.{Calendar, Date, TimeZone}
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
@@ -28,6 +29,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
   private val logger = Logging.getLogger(system, this)
+
+  val active2AsteHakuOids = new AtomicReference[Set[String]](Set.empty)
+  def setAktiiviset2AsteHaut(hakuOids: Set[String]): Unit = active2AsteHakuOids.set(hakuOids)
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
@@ -141,6 +145,20 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
           processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
       }
     })
+  }
+
+  //OK-227 : Lukiosuoritusten haun automatisointi. Hakee joka yö klo 2 aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta.
+  override def updateLukioArvosanatForAktiivisetHaut(): () => Unit = { () =>
+    System.out.println("----------------START CRONJOB----------------")
+    var haut1 = active2AsteHakuOids.get()
+    System.out.println("Saatiin aktiivisia hakuja" + haut1.size +" " + haut1)
+    var haut: Set[String] = Set("1.2.246.562.29.676633696010","1.2.246.562.29.69908067932")
+
+    haut.foreach(f => {
+      logger.info(s"Käynnistetään Koskesta lukioarvosanojen ajastettu päivitys haulle ${f}")
+      updateHenkilotForHaku(f, true, false, false)
+    })
+    System.out.println("----------------END CRONJOB----------------")
   }
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
