@@ -54,21 +54,26 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
     ).map(_.accessAllowed.getOrElse(false))
   }
 
+  private def hasPermissionFor(forPerson: String, orgs: Set[String]): Future[Boolean] = {
+    log.info("hasPermissionFor method called")
+    Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
+      .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
+      .flatMap(orgs => {
+        checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
+          case (false, false) => false
+          case _ => true
+        }
+      })
+  }
+
   override def receive: Receive = {
     case HasPermission(user, forPerson) =>
       log.info("received HasPermission")
       val orgs: Set[String] = user.orgsFor("READ", "Virta")
-      self ? HasPermissionForOrgs(orgs, forPerson) pipeTo sender
+      hasPermissionFor(forPerson, orgs) pipeTo sender
 
     case HasPermissionForOrgs(orgs, forPerson) =>
       log.info("received HasPermissionForOrgs")
-      Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
-        .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
-        .flatMap(orgs => {
-          checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
-            case (false, false) => false
-            case _ => true
-          }
-        }) pipeTo sender
+      hasPermissionFor(forPerson, orgs) pipeTo sender
   }
 }
