@@ -5,7 +5,7 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonMappingException
-import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermissionForOrgs
+import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermissionFromOrgs
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -52,7 +52,6 @@ class PermissionResource(suoritusActor: ActorRef,
         hakemusGrantsPermission: Boolean <- hakemusGrantsPermission(r.personOidsForSamePerson, r.organisationOids)
       } yield {
         val organisationGrantsPermission = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids)
-        logger.info(s"Finished querying for permissions. organisationGrantsPermission: ${organisationGrantsPermission}, hakemusGrantsPermission: ${hakemusGrantsPermission}.")
         val result = organisationGrantsPermission || hakemusGrantsPermission
         if (hakemusGrantsPermission && !organisationGrantsPermission) {
           logger.info("Permission granted based on hakemus")
@@ -71,7 +70,7 @@ class PermissionResource(suoritusActor: ActorRef,
 
   def hakemusGrantsPermission(personOidsForSamePerson: Set[String], organisationOids: Set[String]): Future[Boolean] = {
     val hakemusPermissionsForPersonOids: Set[Future[Boolean]] = personOidsForSamePerson.map(o =>
-      (hakemusBasedPermissionCheckerActor ? HasPermissionForOrgs(organisationOids, o)).mapTo[Boolean]
+      (hakemusBasedPermissionCheckerActor ? HasPermissionFromOrgs(organisationOids, o)).mapTo[Boolean]
     )
     Future.sequence(hakemusPermissionsForPersonOids).map(_.contains(true))
   }

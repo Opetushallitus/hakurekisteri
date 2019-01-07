@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 case class HasPermission(user: User, hetu: String)
-case class HasPermissionForOrgs(orgs: Set[String], hetu: String)
+case class HasPermissionFromOrgs(orgs: Set[String], hetu: String)
 case class PermissionRequest(personOidsForSamePerson: Seq[String], organisationOids: Seq[String], loggedInUserRoles: Seq[String])
 case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
@@ -72,7 +72,7 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
       val orgs: Set[String] = user.orgsFor("READ", "Virta")
       hasPermissionFor(forPerson, orgs) pipeTo sender
 
-    case HasPermissionForOrgs(orgs, forPerson) =>
+    case HasPermissionFromOrgs(orgs, forPerson) =>
       log.info("received HasPermissionForOrgs")
       hasPermissionFor(forPerson, orgs) pipeTo sender
   }
