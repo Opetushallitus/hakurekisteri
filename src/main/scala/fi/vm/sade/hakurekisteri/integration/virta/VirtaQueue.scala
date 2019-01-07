@@ -58,8 +58,13 @@ class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, opp
 
     case r: RefreshOppijaFromVirta =>
       val q = VirtaQuery(r.oppijaOid, None)
-      log.info("Fetching data from Virta for oppija {}, manual refresh", r.oppijaOid)
-      virtaActor ! q
+      if (processing) {
+        log.info("Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue", r.oppijaOid)
+        virtaQueue.add(q)
+      } else {
+        log.info("Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ", r.oppijaOid)
+        virtaActor ! q
+      }
 
     case StartVirtaProcessing if !processing =>
       log.info("started to process virta queries")
