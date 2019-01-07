@@ -128,6 +128,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     Some("kausi_k#1"),
     Some(2015),
     false,
+    false,
     None,
     None
   )

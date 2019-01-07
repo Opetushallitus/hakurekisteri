@@ -633,6 +633,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       Some("kausi_k#1"),
       Some(2015),
       kkHaku =  false,
+      toisenAsteenHaku = false,
       None,
       None
     )

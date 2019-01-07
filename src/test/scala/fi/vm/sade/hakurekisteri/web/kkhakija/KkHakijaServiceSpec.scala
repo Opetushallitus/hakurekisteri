@@ -133,6 +133,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       koulutuksenAlkamiskausi = Some("kausi_k#1"),
       koulutuksenAlkamisvuosi = Some(2015),
       kkHaku = true,
+      toisenAsteenHaku = false,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
       None
     )
@@ -160,6 +161,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       koulutuksenAlkamiskausi = Some("kausi_s#1"),
       koulutuksenAlkamisvuosi = Some(2015),
       kkHaku = true,
+      toisenAsteenHaku = false,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
       None
     )
@@ -187,6 +189,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       koulutuksenAlkamiskausi = Some("kausi_s#1"),
       koulutuksenAlkamisvuosi = Some(2016),
       kkHaku = true,
+      toisenAsteenHaku = false,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
       None
     )
