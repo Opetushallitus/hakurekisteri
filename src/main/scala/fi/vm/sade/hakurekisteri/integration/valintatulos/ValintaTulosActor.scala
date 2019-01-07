@@ -2,11 +2,12 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{Actor, ActorLogging, Cancellable}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
+import support.TypedActorRef
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
@@ -177,3 +178,5 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 case class UpdateValintatulos(haku: String)
 
 case class BatchUpdateValintatulos(haut: Set[UpdateValintatulos])
+
+case class ValintaTulosActorRef(actor: ActorRef) extends TypedActorRef

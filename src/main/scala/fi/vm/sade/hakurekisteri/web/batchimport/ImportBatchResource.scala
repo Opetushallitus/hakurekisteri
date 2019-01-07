@@ -4,16 +4,16 @@ import java.io.{ByteArrayInputStream, File, InputStream, PrintWriter}
 import java.text.SimpleDateFormat
 import java.util
 import java.util.{Date, UUID}
-import javax.servlet.http.{HttpServletRequest, Part}
 
+import javax.servlet.http.{HttpServletRequest, Part}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, GetChildOids}
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedQuery, AuthorizedReadWithOrgsChecked, AuthorizedRead}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, GetChildOids, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedQuery, AuthorizedRead, AuthorizedReadWithOrgsChecked}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
-import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
+import fi.vm.sade.hakurekisteri.integration.parametrit.{IsSendingEnabled, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.batchimport.QueryImportBatchReferences
@@ -38,8 +38,8 @@ import scalaz._
 
 class ImportBatchResource(eraOrgRekisteri: ActorRef,
                           eraRekisteri: ActorRef,
-                          orgsActor: ActorRef,
-                          parameterActor: ActorRef,
+                          orgsActor: OrganisaatioActorRef,
+                          parameterActor: ParametritActorRef,
                           config: Config,
                           queryMapper: (Map[String, String]) => Query[ImportBatch])
                          (externalIdField: String,
@@ -107,14 +107,14 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
     }
   }
 
-  override def createEnabled(resource: ImportBatch, user: Option[User]) = (parameterActor ? IsSendingEnabled(batchType)).mapTo[Boolean]
+  override def createEnabled(resource: ImportBatch, user: Option[User]) = (parameterActor.actor ? IsSendingEnabled(batchType)).mapTo[Boolean]
 
   override def updateEnabled(resource: ImportBatch, user: Option[User]) = createEnabled(resource, user)
 
   override def notEnabled = ResourceNotEnabledException
 
   private def parentOidToChildOids(parentOid: String): Future[Seq[String]] = {
-    (orgsActor ? GetChildOids(parentOid)).map{
+    (orgsActor.actor ? GetChildOids(parentOid)).map{
       case Some(childOids: ChildOids) =>
         childOids.oids
       case _ => Seq()

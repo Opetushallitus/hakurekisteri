@@ -10,8 +10,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 
@@ -86,8 +86,8 @@ trait IHakemusService {
 
 class HakemusService(hakuappRestClient: VirkailijaRestClient,
                      ataruHakemusClient: VirkailijaRestClient,
-                     tarjontaActor: ActorRef,
-                     organisaatioActor: ActorRef,
+                     tarjontaActor: TarjontaActorRef,
+                     organisaatioActor: OrganisaatioActorRef,
                      oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
                     (implicit val system: ActorSystem) extends IHakemusService {
 
@@ -108,7 +108,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     val henkilotByOid = henkilot.map(h => h.oidHenkilo -> h).toMap
 
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
-      hakukohde <- (tarjontaActor ? HakukohdeQuery(hakukohdeOid)).mapTo[Option[Hakukohde]].flatMap {
+      hakukohde <- (tarjontaActor.actor ? HakukohdeQuery(hakukohdeOid)).mapTo[Option[Hakukohde]].flatMap {
         case Some(h) => Future.successful(h)
         case None => Future.failed(new RuntimeException(s"Could not find hakukohde $hakukohdeOid"))
       }
@@ -119,7 +119,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     } yield tarjoajaOid
 
     def tarjoajanParentOids(tarjoajaOid: String): Future[Set[String]] = for {
-      organisaatio <- (organisaatioActor ? tarjoajaOid).mapTo[Option[Organisaatio]].flatMap {
+      organisaatio <- (organisaatioActor.actor ? tarjoajaOid).mapTo[Option[Organisaatio]].flatMap {
         case Some(o) => Future.successful(o)
         case None => Future.failed(new RuntimeException(s"Could not find tarjoaja $tarjoajaOid"))
       }

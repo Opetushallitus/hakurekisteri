@@ -3,16 +3,17 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.LocalDate
+import support.TypedActorRef
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 
-class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
+class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   import akka.pattern.pipe
@@ -91,6 +92,8 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
     case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Oids.tuntematonOrganisaatioOid)
-    case o => (organisaatioActor ? Oppilaitos(o))(1.hour).mapTo[OppilaitosResponse].map(_.oppilaitos.oid)
+    case o => (organisaatioActor.actor ? Oppilaitos(o))(1.hour).mapTo[OppilaitosResponse].map(_.oppilaitos.oid)
   }
 }
+
+case class VirtaActorRef(actor: ActorRef) extends TypedActorRef

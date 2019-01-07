@@ -7,6 +7,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor, ImportBatchOrgActor}
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusBasedPermissionCheckerActorRef
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
@@ -34,7 +35,7 @@ class BareRegisters(system: ActorSystem, journals: Journals, db: Database, integ
 class AuthorizedRegisters(unauthorized: Registers,
                           system: ActorSystem,
                           config: Config,
-                          hakemusBasedPermissionCheckerActor: ActorRef) extends Registers {
+                          hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef) extends Registers {
   import akka.pattern.ask
 
   import scala.reflect.runtime.universe._

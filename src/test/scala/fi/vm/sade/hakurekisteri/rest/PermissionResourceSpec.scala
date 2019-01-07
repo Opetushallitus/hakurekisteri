@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.PohjakoulutusOids
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HasPermission, HasPermissionFromOrgs}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission, HasPermissionFromOrgs}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, VirallinenSuoritus, yksilollistaminen}
@@ -48,12 +48,12 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
   val noPermissionForOrgsMockPermissionChecker = mockHakemusBasedPermissionChecker(false)
 
   def mockHakemusBasedPermissionChecker(hasPermissionForOrgs: Boolean) = {
-    system.actorOf(Props(new Actor {
+    new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new Actor {
       override def receive: Receive = {
         case _: HasPermission => sender ! true
         case _: HasPermissionFromOrgs => sender ! hasPermissionForOrgs
       }
-    }))
+    })))
   }
 
   addServlet(new PermissionResource(suoritusActor, opiskelijaActor, hakemusBasedPermissionCheckerActor = mockPermissionChecker, Some(1.seconds)), "/")

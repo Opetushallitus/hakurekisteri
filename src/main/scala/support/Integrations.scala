@@ -11,14 +11,14 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
+import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
 import fi.vm.sade.hakurekisteri.integration.koski._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriQuery}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor, ParametritActorRef}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriActorRef, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosActor, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
@@ -35,21 +35,21 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Try}
 
 trait Integrations {
-  val hakemusBasedPermissionChecker: ActorRef
-  val virta: ActorRef
-  val virtaResource: ActorRef
-  val henkilo: ActorRef
-  val organisaatiot: ActorRef
+  val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef
+  val virta: VirtaActorRef
+  val virtaResource: VirtaResourceActorRef
+  val henkilo: HenkiloActorRef
+  val organisaatiot: OrganisaatioActorRef
   val hakemusService: IHakemusService
   val koosteService: IKoosteService
-  val tarjonta: ActorRef
-  val koodisto: ActorRef
+  val tarjonta: TarjontaActorRef
+  val koodisto: KoodistoActorRef
   val ytl: ActorRef
   val ytlIntegration: YtlIntegration
   val ytlHttp: YtlHttpFetch
-  val parametrit: ActorRef
-  val valintaTulos: ActorRef
-  val valintarekisteri: ActorRef
+  val parametrit: ParametritActorRef
+  val valintaTulos: ValintaTulosActorRef
+  val valintarekisteri: ValintarekisteriActorRef
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
@@ -66,23 +66,23 @@ object Integrations {
 }
 
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
-  override val virta: ActorRef = mockActor("virta", new DummyActor)
-  override val virtaResource: ActorRef = mockActor("virtaResource", new MockVirtaResourceActor)
-  override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
-  override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
+  override val virta: VirtaActorRef = new VirtaActorRef(mockActor("virta", new DummyActor))
+  override val virtaResource: VirtaResourceActorRef = new VirtaResourceActorRef(mockActor("virtaResource", new MockVirtaResourceActor))
+  override val valintaTulos: ValintaTulosActorRef = new ValintaTulosActorRef(mockActor("valintaTulos", new DummyActor))
+  override val valintarekisteri: ValintarekisteriActorRef = new ValintarekisteriActorRef(mockActor("valintarekisteri", new Actor {
     override def receive: Receive = {
       case ValintarekisteriQuery(_, _) => sender ! Seq()
       case a => println(s"DummyActor($self): received $a")
     }
-  })
+  }))
   override val hakemusService = new HakemusServiceMock
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
-  override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
-  override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
-  override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor()(system))
-  override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
-  override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config)(system))
+  override val koodisto: KoodistoActorRef = new KoodistoActorRef(mockActor("koodisto", new DummyActor))
+  override val organisaatiot: OrganisaatioActorRef = new OrganisaatioActorRef(mockActor("organisaatiot", new MockOrganisaatioActor(config)))
+  override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor()(system)))
+  override val henkilo: HenkiloActorRef = new HenkiloActorRef(mockActor("henkilo", new MockHenkiloActor(config)))
+  override val tarjonta: TarjontaActorRef = new TarjontaActorRef(mockActor("tarjonta", new MockTarjontaActor(config)(system)))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytl: ActorRef = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,
@@ -99,11 +99,12 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
-  override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new Actor {
-    override def receive: Receive = {
+  override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(
+    system.actorOf(Props(new Actor {
+      override def receive: Receive = {
       case a: HasPermission => sender ! true
-    }
-  }))
+      }
+    })))
 }
 
 
@@ -159,18 +160,18 @@ class BaseIntegrations(rekisterit: Registers,
     )), name)
 
   val cacheFactory = CacheFactory.apply(OphUrlProperties)(system)
-  val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config, cacheFactory)), "tarjonta")
-  val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)), "organisaatio")
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo")
+  val tarjonta: TarjontaActorRef = new TarjontaActorRef(getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config, cacheFactory)), "tarjonta"))
+  val organisaatiot = new OrganisaatioActorRef(getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)), "organisaatio"))
+  val henkilo = new HenkiloActorRef(system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo"))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system)
   val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
   val koskiArvosanaHandler = new KoskiArvosanaHandler(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
   val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiArvosanaHandler)(system)
   val koosteService = new KoosteService(koosteClient)(system)
-  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
-  val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
-  val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config, cacheFactory)), "valintaTulos")
-  val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
+  val koodisto = new KoodistoActorRef(system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto"))
+  val parametrit = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit"))
+  val valintaTulos = new ValintaTulosActorRef(getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config, cacheFactory)), "valintaTulos"))
+  val valintarekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri"))
   val ytl = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
@@ -188,8 +189,8 @@ class BaseIntegrations(rekisterit: Registers,
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version106)
   )(virtaResourceEc, system)
-  val virta = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
-  val virtaResource = system.actorOf(Props(new VirtaResourceActor(virtaResourceClient)), "virtaResource")
+  val virta = new VirtaActorRef(system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta"))
+  val virtaResource = new VirtaResourceActorRef(system.actorOf(Props(new VirtaResourceActor(virtaResourceClient)), "virtaResource"))
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
@@ -219,6 +220,10 @@ class BaseIntegrations(rekisterit: Registers,
   val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
-  override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot)))
+  override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))
 
+}
+
+trait TypedActorRef {
+  val actor: ActorRef
 }

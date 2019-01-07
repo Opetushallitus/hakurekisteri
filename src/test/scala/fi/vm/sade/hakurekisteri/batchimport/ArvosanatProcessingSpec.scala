@@ -8,9 +8,9 @@ import akka.pattern.ask
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.HttpOrganisaatioActor
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloActorRef, HttpHenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -504,8 +504,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     )
   }
 
-  private def createKoodistoActor(implicit system: ActorSystem): ActorRef =
-    system.actorOf(Props(new MockedKoodistoActor()))
+  private def createKoodistoActor(implicit system: ActorSystem): KoodistoActorRef =
+    new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
 
   private def perusopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
     VirallinenSuoritus(Oids.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123",
@@ -529,17 +529,17 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
   private def createImportBatchOrgActor(system: ActorSystem): ActorRef =
     system.actorOf(Props(new ImportBatchOrgActor(Database.forURL(ItPostgres.getEndpointURL))))
 
-  private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new HttpOrganisaatioActor(
+  private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): OrganisaatioActorRef =
+    new OrganisaatioActorRef(system.actorOf(Props(new HttpOrganisaatioActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))),
       new MockConfig, MockCacheFactory.get
-    )))
+    ))))
 
-  private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new HttpHenkiloActor(
+  private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): HenkiloActorRef =
+    new HenkiloActorRef(system.actorOf(Props(new HttpHenkiloActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(new AsyncHttpClient(asyncProvider))),
       new MockConfig
-    )))
+    ))))
 
   object Fixtures {
     val lahde = "testiarvosanatiedonsiirto"

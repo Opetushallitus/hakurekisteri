@@ -9,8 +9,8 @@ import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActorRef, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -191,12 +191,12 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
             sender ! opiskeluoikeudet
         }
       })),
-      valintarekisterActor = valintarekisteri,
-      tarjontaActor = system.actorOf(Props(new Actor {
+      valintarekisterActor = new ValintarekisteriActorRef(valintarekisteri),
+      tarjontaActor = new TarjontaActorRef(system.actorOf(Props(new Actor {
         override def receive: Actor.Receive = {
           case q: GetKomoQuery => sender ! KomoResponse(q.oid, None)
         }
-      })),
+      }))),
       config = new MockConfig,
       hakuActor = system.actorOf(Props(new Actor {
         override def receive: Receive = {

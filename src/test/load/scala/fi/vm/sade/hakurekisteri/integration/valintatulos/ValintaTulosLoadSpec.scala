@@ -27,7 +27,7 @@ class ValintaTulosLoadSpec extends FlatSpec with Matchers {
   implicit val ec: ExecutionContext = system.dispatcher
 
   val valintaTulosConfig = ServiceConfig(serviceUrl = "https://localhost:33000/valinta-tulos-service")
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(ec, system), Config.mockConfig)), "valintaTulos")
+  val valintaTulos = new ValintaTulosActorRef(system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(ec, system), Config.mockConfig)), "valintaTulos"))
 
   ignore should "handle loading the status of 5000 applications" in {
     val jsonString = scala.io.Source.fromFile("src/test/resources/test-applications.json").mkString
@@ -38,7 +38,7 @@ class ValintaTulosLoadSpec extends FlatSpec with Matchers {
     val batchStart = Platform.currentTime
     hakemusOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[ValintaTulos] = (valintaTulos ? ValintaTulosQuery("1.2.246.562.29.173465377510", Some(h.oid))).mapTo[ValintaTulos]
+      val res: Future[ValintaTulos] = (valintaTulos.actor ? ValintaTulosQuery("1.2.246.562.29.173465377510", Some(h.oid))).mapTo[ValintaTulos]
       res.onComplete(t => {
         val end = Platform.currentTime
         println(s"${count.getAndIncrement} (${(end - batchStart) / 1000} seconds): took ${end - start} ms")

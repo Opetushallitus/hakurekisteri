@@ -5,10 +5,10 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos}
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration, HakuList}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos, ValintaTulosActorRef}
+import fi.vm.sade.hakurekisteri.integration.ytl.{HakuList, YtlIntegration}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
 
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
+class HakuActor(tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var storedHakus: Seq[Haku] = Seq()
@@ -44,7 +44,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
   override def receive: Actor.Receive = {
     case Update =>
       log.info(s"updating all hakus for $self from ${sender()}")
-      tarjonta ! GetHautQuery
+      tarjonta.actor ! GetHautQuery
 
     case HakuRequest => sender ! storedHakus
 
@@ -97,13 +97,13 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
 
     import scala.concurrent.duration._
     implicit val to: Timeout = 2.minutes
-    (parametrit ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover {
+    (parametrit.actor ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover {
       case _ => InFuture
     }
   }
 
   def refreshKeepAlives() {
-    valintaTulos.!(BatchUpdateValintatulos(storedHakus.filter(_.isActive).map(h => UpdateValintatulos(h.oid)).toSet))
+    valintaTulos.actor.!(BatchUpdateValintatulos(storedHakus.filter(_.isActive).map(h => UpdateValintatulos(h.oid)).toSet))
   }
 
   override def postStop(): Unit = {

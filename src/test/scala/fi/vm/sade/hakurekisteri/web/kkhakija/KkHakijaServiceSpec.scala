@@ -14,8 +14,9 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
@@ -38,18 +39,18 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val asyncProvider = new CapturingProvider(endPoint)
   private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  private val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
-  private val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
+  private val tarjontaMock = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
+  private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
   private val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   private val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
-  private val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
-  private val valintaRekisteri = system.actorOf(Props(new MockedValintarekisteriActor()))
+  private val valintaTulosMock = new ValintaTulosActorRef(system.actorOf(Props(new MockedValintaTulosActor())))
+  private val valintaRekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new MockedValintarekisteriActor())))
   private val personOidWithLukuvuosimaksu = "1.2.246.562.20.96296215716"
   private val paymentRequiredHakukohdeWithMaksettu = "1.2.246.562.20.49219384432"
   private val paymentRquiredHakukohdeWithoutPayment = "1.2.246.562.20.95810447722"
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
-  private val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
+  private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
 
   private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
 

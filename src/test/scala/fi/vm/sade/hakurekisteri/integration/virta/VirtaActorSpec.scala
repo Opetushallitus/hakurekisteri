@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
@@ -105,7 +105,7 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
   object AllResources
 
-  val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
+  val organisaatioActor = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
 
   val json782603 = """{
     |"result":[

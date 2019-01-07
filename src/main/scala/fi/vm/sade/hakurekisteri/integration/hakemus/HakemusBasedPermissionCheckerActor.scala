@@ -5,8 +5,9 @@ import akka.pattern.ask
 import akka.pattern.pipe
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.rest.support.User
+import support.TypedActorRef
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -19,7 +20,7 @@ case class PermissionResponse(accessAllowed: Option[Boolean] = None, errorMessag
 
 class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
                                          ataruClient: VirkailijaRestClient,
-                                         organisaatioActor: ActorRef) extends Actor with ActorLogging {
+                                         organisaatioActor: OrganisaatioActorRef) extends Actor with ActorLogging {
   private val acceptedResponseCode: Int = 200
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 30.seconds
@@ -56,7 +57,7 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
 
   private def hasPermissionFor(forPerson: String, orgs: Set[String]): Future[Boolean] = {
     log.debug("hasPermissionFor method called")
-    Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
+    Future.sequence(orgs.map(oid => (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]))
       .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
       .flatMap(orgs => {
         checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
@@ -77,3 +78,5 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
       hasPermissionFor(forPerson, orgs) pipeTo sender
   }
 }
+
+case class HakemusBasedPermissionCheckerActorRef(actor: ActorRef) extends TypedActorRef
