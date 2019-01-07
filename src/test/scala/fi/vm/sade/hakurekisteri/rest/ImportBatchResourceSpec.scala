@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.MockOrganisaatioActor
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{MockOrganisaatioActor, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -77,8 +77,8 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   }
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val parameterActor = system.actorOf(Props(new MockParameterActor()(system)))
-  val orgsActor = system.actorOf(Props(new MockOrganisaatioActor(new MockConfig())))
+  val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor()(system))))
+  val orgsActor: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockOrganisaatioActor(new MockConfig()))))
 
   object TestSchema extends SchemaDefinition {
     override val schemaLocation: String = "test.xsd"

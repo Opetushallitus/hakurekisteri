@@ -5,7 +5,7 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonMappingException
-import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermissionFromOrgs
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermissionFromOrgs}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -24,7 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class PermissionResource(suoritusActor: ActorRef,
                          opiskelijaActor: ActorRef,
-                         hakemusBasedPermissionCheckerActor: ActorRef,
+                         hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef,
                          timeout: Option[Timeout] = Some(2.minutes)
                         )
                         (implicit system: ActorSystem, sw: Swagger)
@@ -70,7 +70,7 @@ class PermissionResource(suoritusActor: ActorRef,
 
   def hakemusGrantsPermission(personOidsForSamePerson: Set[String], organisationOids: Set[String]): Future[Boolean] = {
     val hakemusPermissionsForPersonOids: Set[Future[Boolean]] = personOidsForSamePerson.map(o =>
-      (hakemusBasedPermissionCheckerActor ? HasPermissionFromOrgs(organisationOids, o)).mapTo[Boolean]
+      (hakemusBasedPermissionCheckerActor.actor ? HasPermissionFromOrgs(organisationOids, o)).mapTo[Boolean]
     )
     Future.sequence(hakemusPermissionsForPersonOids).map(_.contains(true))
   }

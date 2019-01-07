@@ -7,7 +7,8 @@ import akka.actor._
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio}
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
@@ -25,12 +26,12 @@ object ProcessReadyBatches
 
 class ImportBatchProcessingActor(importBatchOrgActor: ActorRef,
                                  importBatchActor: ActorRef,
-                                 henkiloActor: ActorRef,
+                                 henkiloActor: HenkiloActorRef,
                                  suoritusrekisteri: ActorRef,
                                  opiskelijarekisteri: ActorRef,
-                                 organisaatioActor: ActorRef,
+                                 organisaatioActor: OrganisaatioActorRef,
                                  arvosanarekisteri: ActorRef,
-                                 koodistoActor: ActorRef,
+                                 koodistoActor: KoodistoActorRef,
                                  config: Config) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = context.dispatcher
@@ -83,11 +84,11 @@ object ProcessingJammedException extends Exception("processing jammed")
 
 class ArvosanatProcessingActor(importBatchOrgActor: ActorRef,
                                importBatchActor: ActorRef,
-                               henkiloActor: ActorRef,
+                               henkiloActor: HenkiloActorRef,
                                suoritusrekisteri: ActorRef,
                                arvosanarekisteri: ActorRef,
-                               organisaatioActor: ActorRef,
-                               koodistoActor: ActorRef)(b: ImportBatch with Identified[UUID])
+                               organisaatioActor: OrganisaatioActorRef,
+                               koodistoActor: KoodistoActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
@@ -130,10 +131,10 @@ class ArvosanatProcessingActor(importBatchOrgActor: ActorRef,
 
 class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
                                  importBatchActor: ActorRef,
-                                 henkiloActor: ActorRef,
+                                 henkiloActor: HenkiloActorRef,
                                  suoritusrekisteri: ActorRef,
                                  opiskelijarekisteri: ActorRef,
-                                 organisaatioActor: ActorRef)(b: ImportBatch with Identified[UUID])
+                                 organisaatioActor: OrganisaatioActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   private val startTime = Platform.currentTime
@@ -158,11 +159,11 @@ class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
       organisaatiot = organisaatiot + (h.lahtokoulu -> None)
       h.suoritukset.foreach(s => organisaatiot = organisaatiot + (s.myontaja -> None))
     })
-    organisaatiot.foreach(t => organisaatioActor ! Oppilaitos(t._1))
+    organisaatiot.foreach(t => organisaatioActor.actor ! Oppilaitos(t._1))
   }
 
   private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) =
-    henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), h.tunniste.tunniste)
+    henkiloActor.actor ! SaveHenkilo(h.toHenkilo(resolveOid), h.tunniste.tunniste)
 
   import ImportHenkilo.opiskelijaAlkuPaiva
   import ImportHenkilo.opiskelijaLoppuPaiva

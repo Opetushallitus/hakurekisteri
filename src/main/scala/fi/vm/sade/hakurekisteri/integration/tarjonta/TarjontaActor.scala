@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
-import akka.actor.{Actor, ActorLogging, ActorSystem}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
+import support.TypedActorRef
 
 case class SearchKomoQuery(koulutus: String)
 
@@ -188,3 +189,4 @@ class MockTarjontaActor(config: Config)(implicit val system:ActorSystem) extends
   }
 }
 
+case class TarjontaActorRef(actor: ActorRef) extends TypedActorRef

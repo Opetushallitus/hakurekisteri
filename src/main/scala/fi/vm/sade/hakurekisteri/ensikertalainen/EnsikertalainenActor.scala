@@ -9,8 +9,8 @@ import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakemusAnswers, HakijaHakemus, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActorRef, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VirallinenSuoritus}
 import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
@@ -58,8 +58,8 @@ case class Ensikertalainen(henkiloOid: String, menettamisenPeruste: Option[Menet
 
 class EnsikertalainenActor(suoritusActor: ActorRef,
                            opiskeluoikeusActor: ActorRef,
-                           valintarekisterActor: ActorRef,
-                           tarjontaActor: ActorRef,
+                           valintarekisterActor: ValintarekisteriActorRef,
+                           tarjontaActor: TarjontaActorRef,
                            hakuActor: ActorRef,
                            hakemusService: IHakemusService,
                            oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
@@ -197,7 +197,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     if (personOidsWithAliases.isEmpty) {
       Future.successful(Map())
     } else {
-      (valintarekisterActor ? ValintarekisteriQuery(personOidsWithAliases, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
+      (valintarekisterActor.actor ? ValintarekisteriQuery(personOidsWithAliases, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
         .map(_.collect {
           case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
         }.toMap)
@@ -241,7 +241,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     case s: VirallinenSuoritus => s.komo match {
       case KkKoulutusUri() => Future.successful(Some(suoritus))
       case Oid(komo) =>
-        (tarjontaActor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
+        (tarjontaActor.actor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
           case Some(k) if k.isKorkeakoulututkinto => Future.successful(Some(suoritus))
           case Some(_) => Future.successful(None)
           case None => Future.failed(new Exception(s"komo $komo not found"))

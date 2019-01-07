@@ -7,7 +7,7 @@ import akka.event.Logging
 import dispatch.Defaults._
 import dispatch._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
@@ -19,7 +19,7 @@ class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filtered
                                                                         organizationFinder: Seq[A] => Seq[AuthorizationSubject[A]],
                                                                         config: Config,
                                                                         organisaatioClient: VirkailijaRestClient,
-                                                                        hakemusBasedPermissionCheckerActor: ActorRef)
+                                                                        hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef)
   extends FutureOrganizationHierarchy[A, I](filteredActor, new AuthorizationSubjectFinder[A] {
     override def apply(v1: Seq[A]): Future[Seq[AuthorizationSubject[A]]] = Future.successful(organizationFinder(v1))
   }, config, organisaatioClient = organisaatioClient, hakemusBasedPermissionCheckerActor = hakemusBasedPermissionCheckerActor)
@@ -29,7 +29,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
  authorizationSubjectFinder: AuthorizationSubjectFinder[A],
  config: Config,
  organisaatioClient: VirkailijaRestClient,
- hakemusBasedPermissionCheckerActor: ActorRef) extends Actor {
+ hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef) extends Actor {
   val logger = Logging(context.system, this)
   implicit val timeout: akka.util.Timeout = 450.seconds
   private var organizationAuthorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
@@ -99,7 +99,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 
   private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]): Future[Set[String]] = {
     logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
-    Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor ? HasPermission(user, o))
+    Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor.actor ? HasPermission(user, o))
       .mapTo[Boolean]
       .zip(Future.successful(o))))
       .map(x => x.filter(_._1).map(_._2))

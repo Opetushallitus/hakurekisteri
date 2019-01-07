@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.joda.time.DateTime
+import support.TypedActorRef
 
 import scala.compat.Platform
 import scala.concurrent.Future
@@ -125,3 +126,5 @@ case class IsRestrictionActive(restriction: String)
 case class SendingPeriod(dateStart: Long, dateEnd: Long)
 case class TiedonsiirtoSendingPeriods(arvosanat: SendingPeriod, perustiedot: SendingPeriod)
 case class RestrictionPeriods(opoUpdateGraduation: List[SendingPeriod])
+
+case class ParametritActorRef(actor: ActorRef) extends TypedActorRef

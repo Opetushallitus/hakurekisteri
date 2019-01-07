@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -47,7 +47,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
                       hakemusService: IHakemusService,
                       koosteService: IKoosteService,
                       hakuActor: ActorRef,
-                      koodisto: ActorRef)(implicit val ec: ExecutionContext)
+                      koodisto: KoodistoActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
 
   private implicit val defaultTimeout: Timeout = 120.seconds
@@ -85,7 +85,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
       .distinct
       .map({
         case "246" => Future.successful("246" -> "FIN")
-        case koodi => (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot2", koodi, "maatjavaltiot1")).mapTo[String].map(koodi -> _)
+        case koodi => (koodisto.actor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot2", koodi, "maatjavaltiot1")).mapTo[String].map(koodi -> _)
       })
     ).map(_.toMap)
   }

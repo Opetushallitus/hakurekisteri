@@ -13,8 +13,8 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, MockPersonAliasesProvider}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
+import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
@@ -154,12 +154,12 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       override val suoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(suoritukset)))
       override val ytlSuoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlSuoritukset)))
     }
-    val tarjontaActor = system.actorOf(Props(new Actor {
+    val tarjontaActor = new TarjontaActorRef(system.actorOf(Props(new Actor {
       override def receive: Receive = {
         case GetKomoQuery(oid) => sender ! KomoResponse(oid, Some(Komo(oid, Koulutuskoodi("123456"), "TUTKINTO_OHJELMA", "LUKIOKOULUTUS")))
         case a => sender ! a
       }
-    }))
+    })))
     val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
     val endpoint = mock[Endpoint]
     when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
@@ -169,7 +169,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(
       rekisterit.suoritusRekisteri,
       rekisterit.opiskeluoikeusRekisteri,
-      valintarekisteri,
+      new ValintarekisteriActorRef(valintarekisteri),
       tarjontaActor,
       system.actorOf(Props(new Actor {
         override def receive: Receive = {

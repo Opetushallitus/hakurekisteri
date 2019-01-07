@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import support.TypedActorRef
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
@@ -229,3 +230,5 @@ case class OppilaitosResponse(koodi: String, oppilaitos: Organisaatio)
 case class OppilaitosNotFoundException(koodi: String) extends Exception(s"Oppilaitosta ei löytynyt oppilaitoskoodilla $koodi.")
 
 case class OrganisaatioFetchFailedException(t: Throwable) extends Exception(t)
+
+case class OrganisaatioActorRef(actor: ActorRef) extends TypedActorRef

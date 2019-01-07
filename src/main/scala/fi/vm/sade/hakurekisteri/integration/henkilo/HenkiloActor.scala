@@ -7,10 +7,13 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
+
 import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
+import support.TypedActorRef
+
 import scala.util.parsing.json.JSON
 
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
@@ -135,3 +138,6 @@ case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 case class SavedHenkilo(henkiloOid: String, tunniste: String)
 
 case class HenkiloSaveFailed(tunniste: String, t: Throwable) extends Exception(s"henkilo save failed for tunniste $tunniste", t)
+
+
+case class HenkiloActorRef(actor: ActorRef) extends TypedActorRef

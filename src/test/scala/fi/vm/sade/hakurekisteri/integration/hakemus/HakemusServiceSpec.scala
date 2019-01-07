@@ -5,6 +5,8 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
@@ -18,8 +20,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val asyncProvider = new CapturingProvider(endPoint)
   val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
-  val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
+  val tarjontaMock: TarjontaActorRef = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
+  val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri, pageSize = 10)
 
   it should "return applications by person oid" in {

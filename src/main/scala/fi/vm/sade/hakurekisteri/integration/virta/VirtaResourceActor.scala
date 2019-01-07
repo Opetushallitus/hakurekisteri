@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import org.joda.time.LocalDate
+import support.TypedActorRef
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -52,3 +53,5 @@ class MockVirtaResourceActor extends Actor {
       sender ! VirtaResult(q.oppijanumero)
   }
 }
+
+case class VirtaResourceActorRef(actor: ActorRef) extends TypedActorRef
