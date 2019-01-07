@@ -223,8 +223,10 @@ class BaseIntegrations(rekisterit: Registers,
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))
 
   quartzScheduler.scheduleJob(lambdaJob(koskiService.updateLukioArvosanatForAktiivisetHaut()),
-    //newTrigger().startNow().withSchedule(cronSchedule("0 * * * * ?")).build())
-    newTrigger().startNow().withSchedule(cronSchedule(OphUrlProperties.getProperty("suoritusrekisteri.koski.lukio-update.cronJob"))).build())
+    //TODO: This if for dev purposes. Schedule real trigger cron when done.
+    newTrigger().startNow().withSchedule(cronSchedule("0 55 * * * ?")).build())
+
+    //newTrigger().startNow().withSchedule(cronSchedule(OphUrlProperties.getProperty("suoritusrekisteri.koski.lukio-update.cronJob"))).build())
 
   override val hakemusBasedPermissionChecker: ActorRef = system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot)))
 

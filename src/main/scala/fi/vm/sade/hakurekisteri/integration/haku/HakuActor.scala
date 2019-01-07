@@ -58,15 +58,13 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
       storedHakus = sq.collect{ case h: Haku => h}
       val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
       val ytlHakus = activeHakus.filter(_.kkHaku)
-      //TODO: varmista tää vielä.
-      val active2AsteHakus = activeHakus.filterNot(_.kkHaku)
+      val active2AsteHakus = activeHakus.filter(_.toisenAsteenHaku)
       val ytlHakuOidsWithNames = ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
       val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
       val active2AsteHakuOids: Set[String] = active2AsteHakus.map(_.oid).toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
       ytl ! HakuList(ytlHakuOids)
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
-      log.info(s"Asetetaan aktiiviset 2. asteen haut: ${active2AsteHakuOids.toString()} ")
       koskiService.setAktiiviset2AsteHaut(active2AsteHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
@@ -142,6 +140,7 @@ case class Haku(
                  koulutuksenAlkamiskausi: Option[String],
                  koulutuksenAlkamisvuosi: Option[Int],
                  kkHaku: Boolean,
+                 toisenAsteenHaku: Boolean,
                  viimeinenHakuaikaPaattyy: Option[DateTime],
                  kohdejoukkoUri: Option[String]) {
   val isActive: Boolean = aika.isCurrently
@@ -158,6 +157,7 @@ object Haku {
       haku.koulutuksenAlkamiskausiUri,
       haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
+      toisenAsteenHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")),
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
       kohdejoukkoUri = haku.kohdejoukkoUri
     )

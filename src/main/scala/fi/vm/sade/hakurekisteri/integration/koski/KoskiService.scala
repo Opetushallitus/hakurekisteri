@@ -15,7 +15,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.math.BigDecimal
 import scala.util.{Failure, Success, Try}
@@ -147,18 +147,15 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     })
   }
 
-  //OK-227 : Lukiosuoritusten haun automatisointi. Hakee joka yö klo 2 aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta.
+  //OK-227 : Lukiosuoritusten haun automatisointi. Hakee joka yö aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta.
   override def updateLukioArvosanatForAktiivisetHaut(): () => Unit = { () =>
-    System.out.println("----------------START CRONJOB----------------")
-    var haut1 = active2AsteHakuOids.get()
-    System.out.println("Saatiin aktiivisia hakuja" + haut1.size +" " + haut1)
-    var haut: Set[String] = Set("1.2.246.562.29.676633696010","1.2.246.562.29.69908067932")
-
-    haut.foreach(f => {
-      logger.info(s"Käynnistetään Koskesta lukioarvosanojen ajastettu päivitys haulle ${f}")
-      updateHenkilotForHaku(f, true, false, false)
+    var haut: Set[String] = active2AsteHakuOids.get()
+    logger.info(("Saatiin hakemuspalvelusta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukioarvosanojen päivitys."))
+    haut.foreach(haku => {
+      logger.info(s"Käynnistetään Koskesta lukioarvosanojen ajastettu päivitys haulle ${haku}")
+      Await.result(updateHenkilotForHaku(haku, true, false, false), 5.hours)
     })
-    System.out.println("----------------END CRONJOB----------------")
+    logger.info(("Lukioarvosanojen päivitys valmis."))
   }
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
@@ -176,8 +173,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     synchronized {
       if(oneJobAtATime.isCompleted) {
         logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}")
-        oneJobAtATime = hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate)
         startTimestamp = System.currentTimeMillis()
+        //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
+        oneJobAtATime = Await.ready(hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate), 5.hours)
         Future.successful({})
       } else {
         val err = s"${TimeUnit.MINUTES.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} minuuttia vanha Koskesta päivittäminen on vielä käynnissä!"
