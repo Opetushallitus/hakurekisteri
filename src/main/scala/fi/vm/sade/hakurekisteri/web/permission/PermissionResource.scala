@@ -20,7 +20,7 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 class PermissionResource(suoritusActor: ActorRef,
                          opiskelijaActor: ActorRef,
@@ -49,13 +49,14 @@ class PermissionResource(suoritusActor: ActorRef,
       val permissionFuture = for {
         suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Suoritus]]
         opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Opiskelija]]
+        hakemusGrantsPermission: Boolean <- hakemusGrantsPermission(r.personOidsForSamePerson, r.organisationOids)
       } yield {
         val organisationGrantsPermission = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids)
-        logger.info(s"Finished querying for permissions. organisationGrantsPermission: ${organisationGrantsPermission}")
-        val result: Boolean = organisationGrantsPermission /*|| {
-          logger.info("Checking if permission can be granted based on hakemus")
-          Await.result(hakemusGrantsPermission(r.personOidsForSamePerson, r.organisationOids), 10.seconds)
-        }*/
+        logger.info(s"Finished querying for permissions. organisationGrantsPermission: ${organisationGrantsPermission}, hakemusGrantsPermission: ${hakemusGrantsPermission}.")
+        val result = organisationGrantsPermission || hakemusGrantsPermission
+        if (hakemusGrantsPermission && !organisationGrantsPermission) {
+          logger.info("Permission granted based on hakemus")
+        }
         PermissionCheckResponse(
           accessAllowed = Some(result)
         )
@@ -69,7 +70,6 @@ class PermissionResource(suoritusActor: ActorRef,
   }
 
   def hakemusGrantsPermission(personOidsForSamePerson: Set[String], organisationOids: Set[String]): Future[Boolean] = {
-    logger.info("hakemusGrantsPermission method called")
     val hakemusPermissionsForPersonOids: Set[Future[Boolean]] = personOidsForSamePerson.map(o =>
       (hakemusBasedPermissionCheckerActor ? HasPermissionForOrgs(organisationOids, o)).mapTo[Boolean]
     )
@@ -91,11 +91,10 @@ class PermissionResource(suoritusActor: ActorRef,
     case t: IllegalArgumentException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
-    case MappingException(_, e: Throwable) if e.getCause != null => e.getCause match {
-      case t: Throwable =>
-        logger.warning(s"cannot parse request object: $t")
-        BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
-    }
+    case MappingException(_, e: Throwable) if e.getCause != null =>
+      val cause: Throwable = e.getCause
+      logger.warning(s"cannot parse request object: $cause")
+      BadRequest(PermissionCheckResponse(errorMessage = Some(cause.getMessage)))
     case t: JsonMappingException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))
