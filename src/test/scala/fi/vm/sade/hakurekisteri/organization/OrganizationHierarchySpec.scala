@@ -12,8 +12,8 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class OrganizationHierarchySpec extends ScalatraFunSuite {
   implicit val system = ActorSystem("organization-hierarchy-test-system")
@@ -111,13 +111,11 @@ class OrganizationHierarchySpec extends ScalatraFunSuite {
   }
 
   // Ei vielä toteutettu organisaation pohjalta tarkistusta isAuthorizediin, eikä olla vielä varmoja tarvitaanko
-  /*
-  test("is authorized to read from other org using auth for person") {
+  ignore("is authorized to read from other org using auth for person") {
     val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithWrongOrgButCorrectPerson))
     val f: Future[Boolean] = ra.isAuthorized(koulunVirkailijaUser, "READ", opiskeluoikeus)(organizationAuthorizer)
     awaitResult(f) shouldBe true
   }
-  */
 
   test("is not authorized to write or delete to other org using auth for person") {
     val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithWrongOrgButCorrectPerson))
