@@ -67,13 +67,13 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
   }
 
   override def receive: Receive = {
-    case HasPermission(user, forPerson) =>
-      log.info("received HasPermission")
+    case message@HasPermission(user, forPerson) =>
+      log.info(s"received ${message.copy(hetu = "<censored>")}")
       val orgs: Set[String] = user.orgsFor("READ", "Virta")
       hasPermissionFor(forPerson, orgs) pipeTo sender
 
-    case HasPermissionFromOrgs(orgs, forPerson) =>
-      log.info("received HasPermissionForOrgs")
+    case message@HasPermissionFromOrgs(orgs, forPerson) =>
+      log.info(s"received ${message.copy(hetu = "<censored>")}")
       hasPermissionFor(forPerson, orgs) pipeTo sender
   }
 }
