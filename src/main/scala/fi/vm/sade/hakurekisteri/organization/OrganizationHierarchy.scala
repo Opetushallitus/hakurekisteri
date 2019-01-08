@@ -102,7 +102,11 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor ? HasPermission(user, o))
       .mapTo[Boolean]
       .zip(Future.successful(o))))
-      .map(x => x.filter(_._1).map(_._2))
+      .map { xs =>
+        val filtered = xs.filter(_._1).map(_._2)
+        logger.info(s"Filtered ${oppijaOids.size} oppijaOids down to ${filtered.size} based on permissions.")
+        filtered
+      }
   }
 }
 

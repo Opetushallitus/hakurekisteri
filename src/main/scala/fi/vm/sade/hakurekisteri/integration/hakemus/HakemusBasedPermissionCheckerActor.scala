@@ -55,7 +55,7 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
   }
 
   private def hasPermissionFor(forPerson: String, orgs: Set[String]): Future[Boolean] = {
-    log.info("hasPermissionFor method called")
+    log.debug("hasPermissionFor method called")
     Future.sequence(orgs.map(oid => (organisaatioActor ? oid).mapTo[Option[Organisaatio]]))
       .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
       .flatMap(orgs => {
@@ -68,12 +68,12 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
 
   override def receive: Receive = {
     case message@HasPermission(user, forPerson) =>
-      log.info(s"received ${message.copy(hetu = "<censored>")}")
+      log.debug(s"received ${message.copy(hetu = "<censored>")}")
       val orgs: Set[String] = user.orgsFor("READ", "Virta")
       hasPermissionFor(forPerson, orgs) pipeTo sender
 
     case message@HasPermissionFromOrgs(orgs, forPerson) =>
-      log.info(s"received ${message.copy(hetu = "<censored>")}")
+      log.debug(s"received ${message.copy(hetu = "<censored>")}")
       hasPermissionFor(forPerson, orgs) pipeTo sender
   }
 }
