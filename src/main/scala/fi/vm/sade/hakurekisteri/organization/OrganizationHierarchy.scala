@@ -64,7 +64,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     case AuthorizedQuery(q, user) =>
       (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(resourceAuthorizer.authorizedResources(_, user, "READ")(organizationAuthorizer)) pipeTo sender
 
-    case AuthorizedReadWithOrgsChecked(id, user) =>
+    case AuthorizedReadWithOrgsChecked(id, _) =>
       (filteredActor ? id).mapTo[Option[A with Identified[UUID]]] pipeTo sender
 
     case AuthorizedRead(id, user) =>
@@ -73,11 +73,11 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     case AuthorizedDelete(id, user)  =>
       val checkedRights = for (resourceToDelete <- filteredActor ? id;
                                rights <- checkRights(user, "DELETE")(resourceToDelete.asInstanceOf[Option[A]]);
-                               result: Boolean <- if (rights.isDefined) (filteredActor ? DeleteResource(id, user.username)).map(r => true) else Future.successful(false)
+                               result: Boolean <- if (rights.isDefined) (filteredActor ? DeleteResource(id, user.username)).map(_ => true) else Future.successful(false)
       ) yield result
       checkedRights pipeTo sender
 
-    case AuthorizedCreate(resource:A, user) =>
+    case AuthorizedCreate(resource:A, _) =>
       filteredActor forward resource
 
     case AuthorizedUpdate(resource: A, user) =>
