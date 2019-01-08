@@ -5,7 +5,6 @@ import java.util.UUID
 import akka.actor.{Actor, ActorRef, Cancellable, Status}
 import akka.event.Logging
 import dispatch.Defaults._
-import dispatch._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
@@ -13,6 +12,7 @@ import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef,
@@ -106,38 +106,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
   }
 }
 
-class ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess: (User, Set[String]) => Future[Set[String]],
-                            authorizationSubjectFinder: AuthorizationSubjectFinder[A])(implicit m: Manifest[A]) {
-  def authorizedResources(resources: Seq[A], user: User, action: String)(organizationAuthorizer: OrganizationAuthorizer): Future[Seq[A]] = {
-    subjectFinder(resources).map {
-      _.map {
-        case (item, subject) => (item, subject, organizationAuthorizer.checkAccess(user, action, subject))
-      }
-    }.flatMap { xs =>
-      val entriesNotAuthorizedByOrganization = xs.filter(_._3 == false)
-      val oppijaOidsForHakemusBasedAccess: Future[Set[String]] = if (entriesNotAuthorizedByOrganization.nonEmpty && action == "READ") {
-        val uniqueOppijaOids: Set[String] = entriesNotAuthorizedByOrganization.flatMap(_._2.oppijaOid).toSet
-        filterOppijaOidsForHakemusBasedReadAccess(user, uniqueOppijaOids)
-      } else {
-        Future.successful(Set())
-      }
-      Future.successful(xs).zip(oppijaOidsForHakemusBasedAccess)
-    }.map {
-      case (xs, oppijasAllowedByHakemus) => xs.collect {
-        case (x, subject, allowedByOrgs) if allowedByOrgs || subject.oppijaOid.exists(oppijasAllowedByHakemus) => x
-      }
-    }
-  }
 
-  def isAuthorized(user:User, action: String, item: A)(organizationAuthorizer: OrganizationAuthorizer): concurrent.Future[Boolean] =
-    subjectFinder(Seq(item)).map {
-      case (_, subject) :: _ => organizationAuthorizer.checkAccess(user, action, subject)
-    }
-
-  private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] = {
-    authorizationSubjectFinder(resources).map(_.map(o => (o.item, Subject(m.runtimeClass.getSimpleName, o.orgs, oppijaOid = o.personOid, komo = o.komo))))
-  }
-}
 
 object FutureOrganizationHierarchy {
   private def parentOids(org: OrganisaatioPerustieto): (String, Set[String]) =
