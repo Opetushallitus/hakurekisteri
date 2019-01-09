@@ -34,7 +34,7 @@ before_script:
   - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
 
 script:
-  - mvn clean install -B -DpostgresRunningOnPort=5432 -DargLine="-Dlog4j.configuration=src/test/resources/silent-log4j.properties"
+  - mvn clean install -B -DpostgresRunningOnPort=5432 -DargLine="-Dlog4j.configuration=src/test/resources/log4j.properties"
 
   - mv target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/

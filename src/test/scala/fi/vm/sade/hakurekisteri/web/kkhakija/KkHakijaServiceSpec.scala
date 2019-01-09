@@ -25,6 +25,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
+import fi.vm.sade.utils.slf4j.Logging
 import org.joda.time.{DateTime, LocalDate}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.AsyncAssertions
@@ -34,7 +35,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions with LocalhostProperties {
+class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions with LocalhostProperties with Logging {
   private val endPoint = mock[Endpoint]
   private val asyncProvider = new CapturingProvider(endPoint)
   private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
@@ -330,7 +331,11 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
       .thenReturn((200, List(), "[]"))
 
-    val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
+    val hakijat: Seq[Hakija] = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
+    val lukuvuosimaksuString = hakijat.map(_.hakemukset.map(hakemus => s"hakukohde ${hakemus.hakukohde}: ${hakemus.lukuvuosimaksu}")).mkString(",")
+    logger.debug(s"When testing lukuvuosimaksus, got hakijat response: $hakijat")
+    logger.debug(s"When testing lukuvuosimaksus, got lukuvuosimaksus: $lukuvuosimaksuString")
+
     hakijat should have size 1
     val hakijaWithMaksu = hakijat.head
     val hakemuksetByHakukohdeOid = hakijaWithMaksu.hakemukset.groupBy(_.hakukohde)
@@ -386,10 +391,12 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     )
 
     override def receive: Actor.Receive = {
-      case LukuvuosimaksuQuery(hakukohdeOids, _) if hakukohdeOids.contains(paymentRequiredHakukohdeWithMaksettu) ||
+      case message@LukuvuosimaksuQuery(hakukohdeOids, _) if hakukohdeOids.contains(paymentRequiredHakukohdeWithMaksettu) ||
         hakukohdeOids.contains(noPaymentRequiredHakukohdeButMaksettu) =>
+        logger.debug(s"MockedValintarekisteriActor got message '$message' that matched $paymentRequiredHakukohdeWithMaksettu : returning $mockedMaksus")
         sender ! mockedMaksus
-      case _ =>
+      case unknown =>
+        logger.debug(s"MockedValintarekisteriActor got unknown message '$unknown' , returning empty result")
         sender ! Nil
     }
   }

@@ -180,6 +180,8 @@ class KkHakijaService(hakemusService: IHakemusService,
       case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
     }).toSet
 
+    logger.debug(s"Got maksuvelvollisuudet: '$maksuvelvollisuudet'")
+
     getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos =>
         val maksusByHakijaAndHakukohde = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
