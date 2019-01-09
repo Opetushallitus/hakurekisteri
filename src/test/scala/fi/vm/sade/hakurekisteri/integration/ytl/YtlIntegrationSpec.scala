@@ -90,8 +90,8 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   def createTestStudent(ssn: String) = Student(ssn = ssn, lastname = "Test", firstnames = "Test",
     graduationPeriod = Some(Kevat(2003)),
     graduationDate = Some(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate("2003-05-31")),
-    graduationSchoolOphOid = Some("1.2.246.562.10.63670951381"),
-    graduationSchoolYtlNumber = Some("1254"),
+    certificateSchoolOphOid = Some("1.2.246.562.10.63670951381"),
+    certificateSchoolYtlNumber = Some("1254"),
     hasCompletedMandatoryExams = Some(true),
     language = "FI",
     exams = Seq.empty)
