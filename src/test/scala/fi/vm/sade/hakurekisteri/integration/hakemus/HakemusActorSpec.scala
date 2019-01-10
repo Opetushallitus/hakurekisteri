@@ -134,7 +134,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     )
     a should contain theSameElementsAs Seq(
       (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"),Seq.empty),
-      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map())))
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq.empty)
     )
   }
 
@@ -212,8 +212,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .putArvosana("PK_AI","7")
         .build
     ) should contain theSameElementsAs Seq(
-      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"),
-        Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map()))),
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq.empty),
       (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"),
         Seq(Arvosana(suoritus = null, arvio = Arvio410("7"), "AI", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map()))
         ))
@@ -238,11 +237,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .putArvosana("LK_SA_SDF_ASDF_ASDF_ASDF_ASDF", "ROSKAA")
         .build
     ) should contain theSameElementsAs Seq(
-      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"),
-        Seq(
-          Arvosana(suoritus = null, arvio = Arvio410("7"), "B1", lisatieto = Some("SV"), valinnainen = false, myonnetty = None, source = "person1", Map()),
-          Arvosana(suoritus = null, arvio = Arvio410("8"), "AI", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "person1", Map())
-        )))
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq.empty))
   }
 
   it should "create empty lukiosuoritus for current year" in {
