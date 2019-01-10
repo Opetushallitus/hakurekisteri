@@ -285,7 +285,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     def shouldContain(key: String): Unit = containsShouldBe(this.cache, key, expected = true)
     def shouldNotContain(key: String): Unit = containsShouldBe(this.cache, key, expected = false)
 
-    def containsShouldBe[T](cache: MonadCache[Future, String, T], key: String, expected: Boolean): Unit = {
+    def containsShouldBe(cache: MonadCache[Future, String, T], key: String, expected: Boolean): Unit = {
       Await.result(cache.contains(key), 1.second) should be(expected)
     }
   }
