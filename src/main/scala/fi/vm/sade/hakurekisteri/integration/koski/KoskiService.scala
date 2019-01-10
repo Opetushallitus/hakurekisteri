@@ -33,6 +33,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   val active2AsteHakuOids = new AtomicReference[Set[String]](Set.empty)
   def setAktiiviset2AsteHaut(hakuOids: Set[String]): Unit = active2AsteHakuOids.set(hakuOids)
 
+  val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
+  def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
+
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
     val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
@@ -147,15 +150,28 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     })
   }
 
-  //OK-227 : Lukiosuoritusten haun automatisointi. Hakee joka yö aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta.
-  override def updateLukioArvosanatForAktiivisetHaut(): () => Unit = { () =>
+  /*
+    *OK-227 : haun automatisointi.
+    * Hakee joka yö:
+    * - Aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta
+    * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
+    */
+  override def updateAktiivisetHaut(): () => Unit = { () =>
     var haut: Set[String] = active2AsteHakuOids.get()
-    logger.info(("Saatiin hakemuspalvelusta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukioarvosanojen päivitys."))
+    logger.info(("Saatiin hakemuspalvelusta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
-      logger.info(s"Käynnistetään Koskesta lukioarvosanojen ajastettu päivitys haulle ${haku}")
+      logger.info(s"Käynnistetään Koskesta lukiosuoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, true, false, false), 5.hours)
     })
     logger.info(("Lukioarvosanojen päivitys valmis."))
+
+    haut = activeKKHakuOids.get()
+    logger.info(("Saatiin hakemuspalvelusta aktiivisia korkeakouluen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
+    haut.foreach(haku => {
+      logger.info(s"Käynnistetään Koskesta ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
+      Await.result(updateHenkilotForHaku(haku, false, false, false), 5.hours)
+    })
+    logger.info(("Korkeakouluhakujen ammatillisten suoritusten päivitys valmis."))
   }
 
   //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.

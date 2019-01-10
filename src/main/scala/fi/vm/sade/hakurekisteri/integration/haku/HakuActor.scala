@@ -66,9 +66,10 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
       ytl ! HakuList(ytlHakuOids)
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       koskiService.setAktiiviset2AsteHaut(active2AsteHakuOids)
+      koskiService.setAktiivisetKKHaut(ytlHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
-      log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
+      log.info(s"active korkeakoulu & ytl application systems: [${ytlHakuOids.size}]")
       log.info(s"active 2. aste application systems: [${active2AsteHakuOids.size}]")
       if (starting) {
         starting = false

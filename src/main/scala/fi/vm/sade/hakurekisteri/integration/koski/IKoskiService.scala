@@ -10,7 +10,8 @@ import scala.concurrent.duration._
 
 trait IKoskiService {
   def setAktiiviset2AsteHaut(hakuOids: Set[String]): Unit
-  def updateLukioArvosanatForAktiivisetHaut(): () => Unit
+  def setAktiivisetKKHaut(hakuOids: Set[String]): Unit
+  def updateAktiivisetHaut(): () => Unit
   def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulkOperation: Boolean = false): Future[Unit]
   def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
 
@@ -26,7 +27,8 @@ trait IKoskiService {
 
 class KoskiServiceMock extends IKoskiService {
   override def setAktiiviset2AsteHaut(hakuOids: Set[String]): Unit = None
-  override def updateLukioArvosanatForAktiivisetHaut(): () => Unit = () => ()
+  override def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = None
+  override def updateAktiivisetHaut(): () => Unit = () => ()
   override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit] = Future.successful(())
 
   override def traverseKoskiDataInChunks(searchWindowStartTime: Date, timeToWaitUntilNextBatch:
