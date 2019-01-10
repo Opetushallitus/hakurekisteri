@@ -51,9 +51,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix1")
 
-        cache + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cache + (cacheKey, cacheEntry), 500.milliseconds)
 
         cache.shouldContain(cacheKey)
 
@@ -67,9 +65,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String, String](3.minutes.toMillis, this.getClass, classOf[String], "prefix2")
 
-        cache + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cache + (cacheKey, cacheEntry), 500.milliseconds)
 
         cache.shouldContain(cacheKey)
 
@@ -87,9 +83,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix3")
 
-        cache + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cache + (cacheKey, cacheEntry), 500.milliseconds)
       }
     )
     withSystem(
@@ -106,9 +100,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix4")
 
-        cache + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cache + (cacheKey, cacheEntry), 500.milliseconds)
       }
     )
     withSystem(
@@ -158,9 +150,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix6")
 
-        cache + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cache + (cacheKey, cacheEntry), 500.milliseconds)
 
         cache.shouldContain("version")
         Await.result(cache.getVersion, 1.second) should be(Some(javaStringSerialVersionUID))
@@ -173,9 +163,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix7")
 
-        cacheOfStrings + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cacheOfStrings + (cacheKey, cacheEntry), 500.milliseconds)
 
         cacheOfStrings.shouldContain("version")
 
@@ -196,9 +184,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cacheOfStrings = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix8")
 
-        cacheOfStrings + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cacheOfStrings + (cacheKey, cacheEntry), 500.milliseconds)
 
         cacheOfStrings.shouldContain(cacheKey)
 
@@ -217,9 +203,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
       implicit system => {
         val cache1 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix9")
 
-        cache1 + (cacheKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cache1 + (cacheKey, cacheEntry), 500.milliseconds)
 
         cache1.shouldContain(cacheKey)
 
@@ -240,11 +224,9 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
         val cacheOfStrings1  = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix10")
         val cacheOfStrings2 = redisCacheFactory.getInstance[String,String](3.minutes.toMillis, this.getClass, classOf[String], "prefix11")
 
-        cacheOfStrings1 + (cacheKey, cacheEntry)
+        Await.result(cacheOfStrings1 + (cacheKey, cacheEntry), 500.milliseconds)
         val anotherKey = "anotherkey"
-        cacheOfStrings2 + (anotherKey, cacheEntry)
-
-        Thread.sleep(500)
+        Await.result(cacheOfStrings2 + (anotherKey, cacheEntry), 500.milliseconds)
 
         cacheOfStrings1.shouldContain(cacheKey)
         cacheOfStrings2.shouldContain(anotherKey)
