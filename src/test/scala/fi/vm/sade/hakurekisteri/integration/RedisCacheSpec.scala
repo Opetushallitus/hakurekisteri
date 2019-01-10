@@ -19,10 +19,10 @@ import scala.concurrent.{Await, Future}
 
 class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with BeforeAndAfterAll with DispatchSupport with MockitoSugar {
 
-  val port = PortChecker.findFreeLocalPort
+  val port: Int = PortChecker.findFreeLocalPort
   val redisServer = new RedisServer(port)
 
-  def redisCacheFactory(implicit system:ActorSystem) = CacheFactory.apply(new OphProperties()
+  def redisCacheFactory(implicit system:ActorSystem): CacheFactory = CacheFactory.apply(new OphProperties()
     .addDefault("suoritusrekisteri.cache.redis.enabled", "true")
     .addDefault("suoritusrekisteri.cache.redis.host", "localhost")
     .addDefault("suoritusrekisteri.cache.redis.numberOfWaitersToLog", "5")
@@ -30,13 +30,13 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     .addDefault("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis", "0")
     .addDefault("suoritusrekisteri.cache.redis.port", s"${port}"))(system)
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     redisServer.start
   }
 
   val cacheKey = "foo"
   val cacheEntry = "bar"
-  val cacheEntryF = Future.successful(cacheEntry)
+  val cacheEntryF: Future[String] = Future.successful(cacheEntry)
 
   val concurrencyTestLoopCount: Int = 5
   val concurrencyTestParallelRequestCount: Int = 10
@@ -290,7 +290,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     }
   }
 
-  override def afterAll() = {
+  override def afterAll(): Unit = {
     redisServer.stop
   }
 }
