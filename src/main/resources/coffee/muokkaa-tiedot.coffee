@@ -318,7 +318,7 @@ app.factory "MuokkaaTiedot", [
               $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1
           $scope.showKoskiLink = () ->
             $scope.myRoles.indexOf("APP_KAYTTOOIKEUS_REKISTERINPITAJA") > -1 and
-              $scope.myRoles.indexOf("APP_KOSKI_OPHPAAKAYTTAJA") > -1
+              $scope.myRoles.indexOf("APP_KOSKI_OPHKATSELIJA") > -1
       ).error ->
         $log.error "cannot connect to CAS"
 
