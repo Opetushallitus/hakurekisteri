@@ -7,6 +7,11 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActorRef
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaService}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.mockito.Mockito._
@@ -26,14 +31,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   private val asyncProvider = new CapturingProvider(endPoint)
   private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  private val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
-  private val tarjontaMock = mock[ActorRef]
+  private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
+  private val tarjontaMock = new TarjontaActorRef(mock[ActorRef])
   private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
   private val hakuMock = mock[ActorRef]
   private val suoritusMock = mock[ActorRef]
-  private val valintaTulosMock = mock[ActorRef]
-  private val valintaRekisteri = mock[ActorRef]
-  private val koodistoMock = mock[ActorRef]
+  private val valintaTulosMock = new ValintaTulosActorRef(mock[ActorRef])
+  private val valintaRekisteri = new ValintarekisteriActorRef(mock[ActorRef])
+  private val koodistoMock = new KoodistoActorRef(mock[ActorRef])
 
   val service = new KkHakijaService(hakemusService, mock[Hakupalvelu], tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
   val resource = new KkHakijaResource(service)

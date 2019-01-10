@@ -13,12 +13,11 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HetuPersonO
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.scalaproperties.OphProperties
-import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, LocalDateTime}
 import org.json4s.Formats
@@ -30,7 +29,7 @@ import org.mockito.stubbing.Answer
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
+
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -157,7 +156,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll()
 
-    val mustBeReadyUntil = new LocalDateTime().plusSeconds(10)
+    val mustBeReadyUntil = new LocalDateTime().plusMinutes(1)
     while (new LocalDateTime().isBefore(mustBeReadyUntil) &&
           (findAllSuoritusFromDatabase.size < 10 || findAllArvosanasFromDatabase.size < 89)) {
       Thread.sleep(50)

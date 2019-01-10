@@ -1,18 +1,11 @@
 package fi.vm.sade.hakurekisteri.organization
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.duration._
-
 class OrganizationHierarchySpec extends ScalatraFunSuite {
-  implicit val system = ActorSystem("organization-hierarchy-test-system")
-
   implicit val formats = DefaultFormats
-  implicit val timeout: Timeout = 15.seconds
 
   val x = scala.io.Source.fromFile("src/test/resources/test-aktiiviset-organisaatiot.json").mkString
   val hakutulos: OrganisaatioHakutulos = parse(x).extract[OrganisaatioHakutulos]

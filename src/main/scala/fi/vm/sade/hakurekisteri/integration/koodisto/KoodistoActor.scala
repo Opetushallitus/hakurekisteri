@@ -2,11 +2,12 @@ package fi.vm.sade.hakurekisteri.integration.koodisto
 
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, PreconditionFailedException, VirkailijaRestClient}
+import support.TypedActorRef
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -91,3 +92,6 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     }
   }
 }
+
+
+case class KoodistoActorRef(actor: ActorRef) extends TypedActorRef

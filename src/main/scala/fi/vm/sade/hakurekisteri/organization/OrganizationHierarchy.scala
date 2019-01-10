@@ -5,26 +5,36 @@ import java.util.UUID
 import akka.actor.{Actor, ActorRef, Cancellable, Status}
 import akka.event.Logging
 import dispatch.Defaults._
-import dispatch._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (Seq[A]) => Seq[(A, Set[String], Option[String])], config: Config, organisaatioClient: VirkailijaRestClient)
-  extends FutureOrganizationHierarchy[A, I](filteredActor, (items: Seq[A]) => Future.successful(organizationFinder(items)), config, organisaatioClient = organisaatioClient)
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef,
+                                                                        organizationFinder: Seq[A] => Seq[AuthorizationSubject[A]],
+                                                                        config: Config,
+                                                                        organisaatioClient: VirkailijaRestClient,
+                                                                        hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef)
+  extends FutureOrganizationHierarchy[A, I](filteredActor, new AuthorizationSubjectFinder[A] {
+    override def apply(v1: Seq[A]): Future[Seq[AuthorizationSubject[A]]] = Future.successful(organizationFinder(v1))
+  }, config, organisaatioClient = organisaatioClient, hakemusBasedPermissionCheckerActor = hakemusBasedPermissionCheckerActor)
 
 class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 (filteredActor: ActorRef,
- organizationFinder: (Seq[A]) => concurrent.Future[Seq[(A, Set[String], Option[String])]],
- config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
+ authorizationSubjectFinder: AuthorizationSubjectFinder[A],
+ config: Config,
+ organisaatioClient: VirkailijaRestClient,
+ hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef) extends Actor {
   val logger = Logging(context.system, this)
   implicit val timeout: akka.util.Timeout = 450.seconds
-  private var authorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
+  private var organizationAuthorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
   private var organizationCacheUpdater: Cancellable = _
+  private val resourceAuthorizer: ResourceAuthorizer[A] = new ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess, authorizationSubjectFinder)
 
   case object Update
 
@@ -46,15 +56,15 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 
     case a: OrganizationAuthorizer =>
       logger.info("organization paths loaded")
-      authorizer = a
+      organizationAuthorizer = a
 
     case Status.Failure(t) =>
       logger.error(t, "failed to load organization paths")
 
     case AuthorizedQuery(q, user) =>
-      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(authorizedResources(_, user, "READ")) pipeTo sender
+      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(resourceAuthorizer.authorizedResources(_, user, "READ")(organizationAuthorizer)) pipeTo sender
 
-    case AuthorizedReadWithOrgsChecked(id, user) =>
+    case AuthorizedReadWithOrgsChecked(id, _) =>
       (filteredActor ? id).mapTo[Option[A with Identified[UUID]]] pipeTo sender
 
     case AuthorizedRead(id, user) =>
@@ -63,11 +73,11 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     case AuthorizedDelete(id, user)  =>
       val checkedRights = for (resourceToDelete <- filteredActor ? id;
                                rights <- checkRights(user, "DELETE")(resourceToDelete.asInstanceOf[Option[A]]);
-                               result: Boolean <- if (rights.isDefined) (filteredActor ? DeleteResource(id, user.username)).map(r => true) else Future.successful(false)
+                               result: Boolean <- if (rights.isDefined) (filteredActor ? DeleteResource(id, user.username)).map(_ => true) else Future.successful(false)
       ) yield result
       checkedRights pipeTo sender
 
-    case AuthorizedCreate(resource:A, user) =>
+    case AuthorizedCreate(resource:A, _) =>
       filteredActor forward resource
 
     case AuthorizedUpdate(resource: A, user) =>
@@ -82,25 +92,25 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
       filteredActor forward message
   }
 
-  def checkRights(user: User, action:String)(item:Option[A]) = item match {
+  def checkRights(user: User, action:String)(item:Option[A]): Future[Option[A]] = item match {
     case None => Future.successful(None)
-    case Some(resource) => isAuthorized(user, action, resource).map(authorized => if (authorized) Some(resource) else None)
+    case Some(resource) => resourceAuthorizer.isAuthorized(user, action, resource)(organizationAuthorizer).map(authorized => if (authorized) Some(resource) else None)
   }
 
-  private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] =
-    organizationFinder(resources).map(_.map(o => (o._1, Subject(m.runtimeClass.getSimpleName, o._2, o._3))))
-
-  private def isAuthorized(user:User, action: String, item: A): concurrent.Future[Boolean] =
-    subjectFinder(Seq(item)).map {
-      case (_, subject) :: _ => authorizer.checkAccess(user, action, subject)
-    }
-
-  private def authorizedResources(resources: Seq[A], user: User, action: String): Future[Seq[A]] = {
-    subjectFinder(resources).map(_.collect {
-      case (item, subject) if authorizer.checkAccess(user, action, subject) => item
-    })
+  private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]): Future[Set[String]] = {
+    logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
+    Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor.actor ? HasPermission(user, o))
+      .mapTo[Boolean]
+      .zip(Future.successful(o))))
+      .map { xs =>
+        val filtered = xs.filter(_._1).map(_._2)
+        logger.info(s"Filtered ${oppijaOids.size} oppijaOids down to ${filtered.size} based on permissions.")
+        filtered
+      }
   }
 }
+
+
 
 object FutureOrganizationHierarchy {
   private def parentOids(org: OrganisaatioPerustieto): (String, Set[String]) =
@@ -122,7 +132,7 @@ case class AuthorizedDelete[I](id: I, user: User)
 case class AuthorizedCreate[A <: Resource[I, A], I](q: A,  user: User)
 case class AuthorizedUpdate[A <: Resource[I, A] :Manifest, I : Manifest](q: A with Identified[I], user: User)
 
-case class Subject(resource: String, orgs: Set[String], komo: Option[String])
+case class Subject(resource: String, orgs: Set[String], oppijaOid: Option[String], komo: Option[String])
 case class OrganisaatioPerustieto(oid: String, alkuPvm: String, lakkautusPvm: Option[Long], parentOid: String, parentOidPath: String,
                                   ytunnus: Option[String], oppilaitosKoodi: Option[String], oppilaitostyyppi: Option[String], toimipistekoodi: Option[String],
                                   `match`: Boolean, kieletUris: List[String], kotipaikkaUri: String,
@@ -134,12 +144,12 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
   def checkAccess(user: User, action: String, target: Subject): Boolean = {
     val allowedOrgs = user.orgsFor(action, target.resource)
     val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
-    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
-  }
-
-  private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
-    komo.exists(user.allowByKomo(_, action))
+    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) }
   }
 }
 
 case class Org(oid: String, parent: Option[String], lopetusPvm: Option[DateTime] )
+
+case class AuthorizationSubject[A](item: A, orgs: Set[String], personOid: Option[String], komo: Option[String])
+
+trait AuthorizationSubjectFinder[A] extends Function1[Seq[A], Future[Seq[AuthorizationSubject[A]]]]

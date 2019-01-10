@@ -7,8 +7,8 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, Ensikertalaine
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActorRef, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusHenkilotQuery
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusHenkilotQuery
@@ -46,18 +46,18 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
           sender ! Seq()
       }
     })),
-    valintarekisterActor = system.actorOf(Props(new Actor {
+    valintarekisterActor = new ValintarekisteriActorRef(system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
         case q: ValintarekisteriQuery =>
           val map: Seq[EnsimmainenVastaanotto] = q.personOidsWithAliases.henkiloOids.toSeq.map(o => EnsimmainenVastaanotto(o, Some(vastaanottohetki)))
           sender ! map
       }
-    })),
-    tarjontaActor = system.actorOf(Props(new Actor {
+    }))),
+    tarjontaActor = new TarjontaActorRef(system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
         case q: GetKomoQuery => sender ! KomoResponse(q.oid, None)
       }
-    })),
+    }))),
     config = new MockConfig,
     hakuActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {

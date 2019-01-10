@@ -8,8 +8,8 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
@@ -21,7 +21,7 @@ import scala.xml.Node
 
 case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
 
-class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
+class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: OrganisaatioActorRef, henkiloActor: HenkiloActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: KoodistoActorRef)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = 1.hour
 
@@ -75,7 +75,7 @@ class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: Acto
   }.toMap
 
   private def fetchOppiaineetKoodisto(): Future[Seq[String]] =
-    (koodistoActor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).
+    (koodistoActor.actor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).
       mapTo[KoodistoKoodiArvot].
       map(arvot => arvot.arvot)
 
@@ -206,9 +206,9 @@ class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: Acto
 
   private def enrich(henkilot: Map[String, ImportArvosanaHenkilo])(lahde: String): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
     val enriched = for ((tunniste, arvosanahenkilo) <- henkilot) yield
-      for (henkilo <- (henkiloActor ? saveHenkilo(arvosanahenkilo)(lahde)(tunniste)).mapTo[SavedHenkilo]) yield {
+      for (henkilo <- (henkiloActor.actor ? saveHenkilo(arvosanahenkilo)(lahde)(tunniste)).mapTo[SavedHenkilo]) yield {
         val todistukset = for (todistus: ImportTodistus <- arvosanahenkilo.todistukset) yield
-          for (oppilaitos <- (organisaatioActor ? Oppilaitos(todistus.myontaja)).mapTo[OppilaitosResponse]) yield (todistus, oppilaitos.oppilaitos.oid)
+          for (oppilaitos <- (organisaatioActor.actor ? Oppilaitos(todistus.myontaja)).mapTo[OppilaitosResponse]) yield (todistus, oppilaitos.oppilaitos.oid)
 
         (tunniste, henkilo.henkiloOid, todistukset)
       }

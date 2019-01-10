@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, _}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
@@ -681,7 +681,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
     }
   }
 
-  val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
+  val organisaatioActor: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
 
   val kausiKoodiK = TarjontaKoodi(Some("K"))
   val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
@@ -710,7 +710,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
     }
   }
 
-  val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+  val koodistoActor = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
 
   val valintatulokset: Future[Seq[ValintaTulos]] = Future.successful(
     Seq(
@@ -779,7 +779,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   val cacheFactory = MockCacheFactory.get
 
-  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, new MockConfig, cacheFactory, initOnStartup = true)))
+  val sijoittelu = new ValintaTulosActorRef(system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, new MockConfig, cacheFactory, initOnStartup = true))))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger

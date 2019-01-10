@@ -7,8 +7,8 @@ import fi.vm.sade.hakurekisteri.hakija.ForkedSeq._
 import fi.vm.sade.hakurekisteri.hakija.TupledFuture._
 import fi.vm.sade.hakurekisteri.hakija.representation._
 import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
@@ -177,7 +177,7 @@ case class Osaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_
                      yleinen_kielitutkinto_en: Option[String], valtionhallinnon_kielitutkinto_en: Option[String],
                      yleinen_kielitutkinto_se: Option[String], valtionhallinnon_kielitutkinto_se: Option[String])
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef, valintaTulosTimeout: Timeout) extends Actor with ActorLogging {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActorRef, koodistoActor: KoodistoActorRef, valintaTulosActor: ValintaTulosActorRef, valintaTulosTimeout: Timeout) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   implicit val defaultTimeout: Timeout = 120.seconds
   val tuntematonOppilaitos = "00000"
@@ -204,7 +204,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def getOrg(oid: String): Future[Option[Organisaatio]] = {
-      (organisaatioActor ? oid).mapTo[Option[Organisaatio]]
+      (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]
         .recover { case t =>
           log.error(t, s"Fetching organisaatio for oid $oid failed")
           None
@@ -261,7 +261,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
     case arvo =>
-      val maaFuture = (koodistoActor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
+      val maaFuture = (koodistoActor.actor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
       maaFuture.onFailure {
         case t: Throwable => log.error(t, s"failed to fetch country $koodiArvo")
       }
@@ -270,7 +270,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def getPostitoimipaikka(maa: String, postitoimipaikka: String, postinumero: String): Future[String] = maa match {
     case "246" =>
-      val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
+      val postitoimipaikkaFuture = (koodistoActor.actor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
       postitoimipaikkaFuture.onFailure {
         case t: Throwable => log.error(t, s"failed to fetch postoffice for code $postinumero")
       }
@@ -343,7 +343,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => valintaTulosActor.?(ValintaTulosQuery(hakuOid, None))(timeout = valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(ValintaTulosQuery(hakuOid, None))(timeout = valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 

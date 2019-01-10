@@ -1,11 +1,15 @@
 import java.util.concurrent.TimeUnit
-import javax.servlet.ServletContext
 
+import javax.servlet.ServletContext
 import _root_.akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActorRef
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
@@ -30,12 +34,12 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
         override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
         override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
       },
-      tarjonta = anyActorRef,
+      tarjonta = new TarjontaActorRef(anyActorRef),
       haut = anyActorRef,
-      koodisto = anyActorRef,
+      koodisto = new KoodistoActorRef(anyActorRef),
       suoritukset = anyActorRef,
-      valintaTulos = anyActorRef,
-      valintaRekisteri = anyActorRef,
+      valintaTulos = new ValintaTulosActorRef(anyActorRef),
+      valintaRekisteri = new ValintarekisteriActorRef(anyActorRef),
       Timeout(1, TimeUnit.MINUTES))
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")

@@ -11,12 +11,12 @@ import fi.vm.sade.hakurekisteri.hakija.Hakuehto._
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, Koulutustausta, PreferenceEligibility, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, SijoitteluTulos, ValintaTulosQuery, Valintatila}
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
@@ -113,12 +113,12 @@ object KkHakijaParamMissingException extends Exception
 
 class KkHakijaService(hakemusService: IHakemusService,
                       hakupalvelu: Hakupalvelu,
-                      tarjonta: ActorRef,
+                      tarjonta: TarjontaActorRef,
                       haut: ActorRef,
-                      koodisto: ActorRef,
+                      koodisto: KoodistoActorRef,
                       suoritukset: ActorRef,
-                      valintaTulos: ActorRef,
-                      valintaRekisteri: ActorRef,
+                      valintaTulos: ValintaTulosActorRef,
+                      valintaRekisteri: ValintarekisteriActorRef,
                       valintaTulosTimeout: Timeout)(implicit system: ActorSystem) {
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
@@ -180,6 +180,8 @@ class KkHakijaService(hakemusService: IHakemusService,
       case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
     }).toSet
 
+    logger.debug(s"Got maksuvelvollisuudet: '$maksuvelvollisuudet'")
+
     getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap(lukuvuosimaksut => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos =>
         val maksusByHakijaAndHakukohde = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
@@ -240,11 +242,11 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private val Pattern = "preference(\\d+)-Koulutus-id".r
 
-  private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = valintaTulos.?(q)(valintaTulosTimeout)
+  private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = valintaTulos.actor.?(q)(valintaTulosTimeout)
     .mapTo[SijoitteluTulos]
 
   private def getLukuvuosimaksut(hakukohdeOids: Set[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
-    (valintaRekisteri ? LukuvuosimaksuQuery(hakukohdeOids, auditSession)).mapTo[Seq[Lukuvuosimaksu]]
+    (valintaRekisteri.actor ? LukuvuosimaksuQuery(hakukohdeOids, auditSession)).mapTo[Seq[Lukuvuosimaksu]]
   }
 
   private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,
@@ -299,7 +301,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       val preferenceEligibilities = hakemus.preferenceEligibilities
       val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
       for {
-        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
+        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
         lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
       } yield {
@@ -335,7 +337,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     case hakemus: AtaruHakemus =>
       for {
         hakukohdeOid <- toive.koulutusId.fold[Future[String]](Future.failed(new RuntimeException("No hakukohde OID")))(Future.successful)
-        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
+        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemus.oid, koodisto)
         lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemus.oid, hakukohteenkoulutukset.koulutukset)
       } yield {
@@ -652,22 +654,22 @@ object KkHakijaUtil {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def getMaakoodi(koodiArvo: String, koodisto: ActorRef)(implicit timeout: Timeout, ec: ExecutionContext): Future[String] = koodiArvo.toLowerCase match {
+  def getMaakoodi(koodiArvo: String, koodisto: KoodistoActorRef)(implicit timeout: Timeout, ec: ExecutionContext): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
     case "" => Future.successful("999")
 
     case arvo =>
-      val maaFuture = (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
+      val maaFuture = (koodisto.actor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
       maaFuture.onFailure {
         case e => logger.error(s"failed to fetch country $koodiArvo")
       }
       maaFuture
   }
 
-  def getToimipaikka(maa: String, postinumero: Option[String], kaupunkiUlkomaa: Option[String], koodisto: ActorRef)
+  def getToimipaikka(maa: String, postinumero: Option[String], kaupunkiUlkomaa: Option[String], koodisto: KoodistoActorRef)
                     (implicit timeout: Timeout, ec: ExecutionContext): Future[String] = {
     if (maa == "246") {
-      (koodisto ? GetKoodi("posti", s"posti_${postinumero.getOrElse("00000")}")).
+      (koodisto.actor ? GetKoodi("posti", s"posti_${postinumero.getOrElse("00000")}")).
         mapTo[Option[Koodi]].map(getPostitoimipaikka)
     } else if (kaupunkiUlkomaa.isDefined) {
       Future.successful(kaupunkiUlkomaa.get)
@@ -676,13 +678,13 @@ object KkHakijaUtil {
     }
   }
 
-  def getKausi(kausiKoodi: String, hakemusOid: String, koodisto: ActorRef)
+  def getKausi(kausiKoodi: String, hakemusOid: String, koodisto: KoodistoActorRef)
               (implicit timeout: Timeout, ec: ExecutionContext): Future[String] =
     kausiKoodi.split('#').headOption match {
       case None =>
         throw new InvalidKausiException(s"invalid kausi koodi $kausiKoodi on hakemus $hakemusOid")
 
-      case Some(k) => (koodisto ? GetKoodi("kausi", k)).mapTo[Option[Koodi]].map {
+      case Some(k) => (koodisto.actor ? GetKoodi("kausi", k)).mapTo[Option[Koodi]].map {
         case None =>
           throw new InvalidKausiException(s"kausi not found with koodi $kausiKoodi on hakemus $hakemusOid")
 

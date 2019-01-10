@@ -32,7 +32,7 @@ object VirtaHealth
 object CancelSchedule
 
 
-class VirtaQueue(virtaActor: ActorRef, hakemusService: IHakemusService, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, hakuActor: ActorRef) extends Actor with ActorLogging {
+class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, hakuActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val virtaQueue: mutable.Set[VirtaQuery] = mutable.LinkedHashSet()
@@ -57,13 +57,13 @@ class VirtaQueue(virtaActor: ActorRef, hakemusService: IHakemusService, oppijaNu
       log.info("started to process virta queries")
       if (virtaQueue.nonEmpty) {
         processing = true
-        virtaActor ! virtaQueue.head
+        virtaActor.actor ! virtaQueue.head
       } else log.info("no queries to process")
 
     case QueryProsessed(q) =>
       virtaQueue.remove(q)
       if (virtaQueue.nonEmpty) {
-        virtaActor ! virtaQueue.head
+        virtaActor.actor ! virtaQueue.head
       } else {
         log.info(s"all virta queries processed, queue length ${virtaQueue.size}")
         lastProcessDone = Some(new DateTime())

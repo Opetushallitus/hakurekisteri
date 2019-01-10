@@ -416,7 +416,10 @@
             } else {
                 var endsWithBool = endsWith(url, "/");
                 var startsWithBool = startsWith(url, "/");
-                if(endsWithBool && startsWithBool) {
+                if (url === '/') {
+                    url = url + arg
+                }
+                else if (endsWithBool && startsWithBool) {
                     url = url + arg.substring(1)
                 } else if(endsWithBool || startsWithBool) {
                     url = url + arg

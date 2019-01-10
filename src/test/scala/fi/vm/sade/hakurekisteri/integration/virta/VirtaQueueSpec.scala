@@ -31,7 +31,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
           Some("kausi_k#1"), Some(2015), true, None, None)
     }
 
-    val virtaActor = TestActorRef[MockActor](Props(new MockActor(virtaHandler)))
+    val virtaActor = new VirtaActorRef(TestActorRef[MockActor](Props(new MockActor(virtaHandler))))
     val hakemusActor = TestActorRef[MockActor](Props(new MockActor()))
     val hakuActor = TestActorRef[MockActor](Props(new MockActor(hakuHandler)))
     val hakemusService = new HakemusServiceMock

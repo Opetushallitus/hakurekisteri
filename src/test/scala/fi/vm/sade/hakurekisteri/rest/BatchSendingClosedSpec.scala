@@ -8,8 +8,8 @@ import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.HttpOrganisaatioActor
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, ParametritActorRef, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
@@ -71,8 +71,8 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   }
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val parameterActor = system.actorOf(Props(new HttpParameterActor(client)))
-  val orgsActor = system.actorOf(Props(new HttpOrganisaatioActor(client, new MockConfig, cacheFactory)))
+  val parameterActor = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(client))))
+  val orgsActor: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new HttpOrganisaatioActor(client, new MockConfig, cacheFactory))))
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)

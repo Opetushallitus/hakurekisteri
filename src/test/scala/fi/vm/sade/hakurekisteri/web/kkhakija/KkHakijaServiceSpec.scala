@@ -1,56 +1,66 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import java.util.Date
-
-import akka.actor.{Actor, Props}
-import akka.pattern.pipe
+import akka.actor.Props
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
+import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import fi.vm.sade.utils.slf4j.Logging
 import org.joda.time.{DateTime, LocalDate}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
-class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions with LocalhostProperties {
+class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions with LocalhostProperties with Logging {
   private val endPoint = mock[Endpoint]
   private val asyncProvider = new CapturingProvider(endPoint)
   private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  private val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
-  private val organisaatioMock = system.actorOf(Props(new MockedOrganisaatioActor()))
+  private val tarjontaMock = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
+  private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
-  private val hakuMock = system.actorOf(Props(new MockedHakuActor()))
-  private val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
-  private val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
-  private val valintaRekisteri = system.actorOf(Props(new MockedValintarekisteriActor()))
+
+  private val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
+  private val kausiKoodiS = TarjontaKoodi(Some("S"))
+  private val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
+  private val suoritus1 = VirallinenSuoritus(YoTutkinto.yotutkinto, YoTutkinto.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
+
+  private val hakuMock = system.actorOf(Props(new MockedHakuActor(haku1)))
+  private val suoritusMock = system.actorOf(Props(new MockedSuoritusActor(suoritus1)))
   private val personOidWithLukuvuosimaksu = "1.2.246.562.20.96296215716"
   private val paymentRequiredHakukohdeWithMaksettu = "1.2.246.562.20.49219384432"
   private val paymentRquiredHakukohdeWithoutPayment = "1.2.246.562.20.95810447722"
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
-  private val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
+  private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
 
+  private val hakuOids: Set[String] = Set("1.2.246.562.29.64944541586", "1.2.246.562.29.31587915971", FullHakemus1.applicationSystemId)
+
+  private val valintaTulosMock = new ValintaTulosActorRef(system.actorOf(Props(new MockedValintaTulosActor(hakuOids))))
+  private val valintaRekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new MockedValintarekisteriActor(personOidWithLukuvuosimaksu = personOidWithLukuvuosimaksu,
+    paymentRequiredHakukohdeWithMaksettu = paymentRequiredHakukohdeWithMaksettu,
+    noPaymentRequiredHakukohdeButMaksettu = noPaymentRequiredHakukohdeButMaksettu))))
   private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
 
   override def beforeEach() {
@@ -329,7 +339,11 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
       .thenReturn((200, List(), "[]"))
 
-    val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
+    val hakijat: Seq[Hakija] = Await.result(service.getKkHakijat(KkHakijaQuery(Some(personOidWithLukuvuosimaksu), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 2), 15.seconds)
+    val lukuvuosimaksuString = hakijat.map(_.hakemukset.map(hakemus => s"hakukohde ${hakemus.hakukohde}: ${hakemus.lukuvuosimaksu}")).mkString(",")
+    logger.debug(s"When testing lukuvuosimaksus, got hakijat response: $hakijat")
+    logger.debug(s"When testing lukuvuosimaksus, got lukuvuosimaksus: $lukuvuosimaksuString")
+
     hakijat should have size 1
     val hakijaWithMaksu = hakijat.head
     val hakemuksetByHakukohdeOid = hakijaWithMaksu.hakemukset.groupBy(_.hakukohde)
@@ -350,82 +364,12 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
   }
 
-  import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-
-  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
-  val kausiKoodiS = TarjontaKoodi(Some("S"))
-  val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
-  val suoritus1 = VirallinenSuoritus(YoTutkinto.yotutkinto, YoTutkinto.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
-
   def seq2journal(s: Seq[FullHakemus]) = {
     val journal = new InMemJournal[FullHakemus, String]
     s.foreach((h: FullHakemus) => {
       journal.addModification(Updated[FullHakemus, String](h.identify(h.oid)))
     })
     journal
-  }
-
-  class MockedHakuActor extends Actor {
-    override def receive: Actor.Receive = {
-      case q: GetHaku if q.oid == "1.3.10" => Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
-      case q: GetHaku =>  sender ! Haku(haku1)(InFuture)
-    }
-  }
-
-  class MockedSuoritusActor extends Actor {
-    override def receive: Actor.Receive = {
-      case q: SuoritysTyyppiQuery => sender ! Seq(suoritus1)
-    }
-  }
-
-  class MockedValintarekisteriActor extends Actor {
-    private val mockedMaksus: Seq[Lukuvuosimaksu] = List(
-      Lukuvuosimaksu(personOidWithLukuvuosimaksu, paymentRequiredHakukohdeWithMaksettu, Maksuntila.maksettu, "muokkaaja", new Date()),
-      Lukuvuosimaksu(personOidWithLukuvuosimaksu, noPaymentRequiredHakukohdeButMaksettu, Maksuntila.maksettu, "muokkaaja2", new LocalDate().minusDays(1).toDate)
-    )
-
-    override def receive: Actor.Receive = {
-      case LukuvuosimaksuQuery(hakukohdeOids, _) if hakukohdeOids.contains(paymentRequiredHakukohdeWithMaksettu) ||
-        hakukohdeOids.contains(noPaymentRequiredHakukohdeButMaksettu) =>
-        sender ! mockedMaksus
-      case _ =>
-        sender ! Nil
-    }
-  }
-
-  val hakuOids = Set("1.2.246.562.29.64944541586", "1.2.246.562.29.31587915971", FullHakemus1.applicationSystemId)
-
-  class MockedValintaTulosActor extends Actor {
-    override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if hakuOids.contains(q.hakuOid) =>
-        sender ! new SijoitteluTulos {
-          override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
-          override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
-          override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.HYVAKSYTTY)
-          override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
-        }
-      case q: ValintaTulosQuery =>
-        sender ! new SijoitteluTulos {
-          override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = None
-          override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = None
-          override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = None
-          override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = None
-        }
-    }
-  }
-
-  class MockedKoodistoActor extends Actor {
-    override def receive: Actor.Receive = {
-      case q: GetRinnasteinenKoodiArvoQuery => sender ! "246"
-      case q: GetKoodi =>
-        sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))))
-      case q: GetKoodistoKoodiArvot => q.koodistoUri match {
-        case "oppiaineetyleissivistava" => sender ! KoodistoKoodiArvot(
-          koodistoUri = "oppiaineetyleissivistava",
-          arvot = Seq("AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "BI", "FI","FY", "GE", "HI", "KE", "KO", "KS", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
-        )
-      }
-    }
   }
 
   override def stop(): Unit = {

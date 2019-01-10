@@ -5,9 +5,9 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
-import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResult}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResourceActorRef, VirtaResult}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport, UserNotAuthorized}
@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.matching.Regex
 
-class VirtaSuoritusResource(virtaActor: ActorRef, hakemusBasedPermissionChecker: ActorRef, oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
+class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef, oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with VirtaSuoritusSwaggerApi with JacksonJsonSupport
     with SecuritySupport with FutureSupport {
@@ -33,7 +33,7 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakemusBasedPermissionChecker:
     if (user.isAdmin) {
       Future.successful(true)
     } else {
-      (hakemusBasedPermissionChecker ? HasPermission(user, personOid)).mapTo[Boolean]
+      (hakemusBasedPermissionChecker.actor ? HasPermission(user, personOid)).mapTo[Boolean]
     }
 
   before() {
@@ -59,7 +59,7 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakemusBasedPermissionChecker:
           hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
               auditlogQuery(user.username, henkilo.oidHenkilo)
-              virtaActor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetu))
+              virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetu))
             } else {
               Future.successful(VirtaResult(hetu))
             }

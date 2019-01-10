@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.valintarekisteri
 
 import java.util.Date
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
@@ -10,6 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.Maksuntila.Maksuntila
 import fi.vm.sade.hakurekisteri.rest.support.AuditSessionRequest
 import org.joda.time.DateTime
+import support.TypedActorRef
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -52,3 +53,5 @@ case class LukuvuosimaksuQuery(hakukohdeOids: Set[String], auditSession: AuditSe
 case class ValintarekisteriQuery(personOidsWithAliases: PersonOidsWithAliases, koulutuksenAlkamiskausi: String)
 
 case class EnsimmainenVastaanotto(personOid: String, paattyi: Option[DateTime])
+
+case class ValintarekisteriActorRef(actor: ActorRef) extends TypedActorRef
