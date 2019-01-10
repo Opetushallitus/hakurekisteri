@@ -31,7 +31,7 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
     .addDefault("suoritusrekisteri.cache.redis.port", s"${port}"))(system)
 
   override def beforeAll(): Unit = {
-    redisServer.start
+    redisServer.start()
   }
 
   val cacheKey = "foo"
@@ -291,6 +291,6 @@ class RedisCacheSpec extends FlatSpec with Matchers with ActorSystemSupport with
   }
 
   override def afterAll(): Unit = {
-    redisServer.stop
+    redisServer.stop()
   }
 }
