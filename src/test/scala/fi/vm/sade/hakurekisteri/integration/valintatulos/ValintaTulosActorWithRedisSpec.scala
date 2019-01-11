@@ -160,27 +160,6 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
     )
   }
 
-  test("ValintaTulosActor should block queries if initial loading is still on-going") {
-    withSystem(
-      implicit system => {
-        implicit val ec = system.dispatcher
-        val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
-          config = config,
-          cacheFactory = cacheFactory,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
-          refetchTime = Some(500),
-          cacheTime = Some(1000),
-          retryTime = Some(100)
-        )))
-
-        valintaTulosActor ! BatchUpdateValintatulos((1 to 10).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
-
-        expectFailure[InitialLoadingNotDone]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None)).mapTo[SijoitteluTulos])
-      }
-    )
-  }
-
   test("ValintaTulosActor should skip initial loading if data is already in redis") {
     withSystem(
       implicit system => {
