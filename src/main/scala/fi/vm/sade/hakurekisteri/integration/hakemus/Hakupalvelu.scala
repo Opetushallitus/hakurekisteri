@@ -374,6 +374,12 @@ object AkkaHakupalvelu {
 
       def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
 
+      def parseKansalaisuusList(a: (HakemusHenkilotiedot) => Option[String], b: (HakemusHenkilotiedot) => Option[String] ): Option[List[String]] = {
+        val primary = getHenkiloTietoOrElse(a, "")
+        val secondary = getHenkiloTietoOrElse(b, "")
+        if (secondary.isEmpty) Some(List(primary)) else Some(List(primary,secondary))
+      }
+
       Hakija(
         Henkilo(
           lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
@@ -389,8 +395,9 @@ object AkkaHakupalvelu {
           kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
           turvakielto = getHenkiloTietoOrBlank(_.Turvakielto),
           oppijanumero = hakemus.personOid.getOrElse(""),
-          kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
-          kaksoiskansalaisuus = getHenkiloTietoOrBlank(_.kaksoiskansalaisuus),
+          kansalaisuus = Some(getHenkiloTietoOrElse(_.kansalaisuus, "FIN")),
+          kaksoiskansalaisuus = Some(getHenkiloTietoOrBlank(_.kaksoiskansalaisuus)),
+          kansalaisuudet = parseKansalaisuusList(_.kansalaisuus, _.kaksoiskansalaisuus),
           asiointiKieli = kieli,
           opetuskieli = opetuskieli.getOrElse(""),
           eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
@@ -445,10 +452,11 @@ object AkkaHakupalvelu {
           kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
           turvakielto = hakemus.henkilo.turvakielto.toString,
           oppijanumero = hakemus.henkilo.oidHenkilo,
-          kansalaisuus = hakemus.henkilo.kansalaisuus.headOption
+          kansalaisuus = Some(hakemus.henkilo.kansalaisuus.headOption
             .flatMap(k => maakoodit.get(k.kansalaisuusKoodi))
-            .getOrElse("FIN"),
-          kaksoiskansalaisuus = "",
+            .getOrElse("FIN")),
+          kaksoiskansalaisuus = None,
+          kansalaisuudet = Some(hakemus.henkilo.kansalaisuus.flatMap(k => maakoodit.get(k.kansalaisuusKoodi))),
           asiointiKieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi.toUpperCase).getOrElse("FI"),
           opetuskieli = "",
           eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,

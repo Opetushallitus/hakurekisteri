@@ -101,9 +101,6 @@ trait HakijatExcelWriter[T] {
 
   val zero = BigDecimal.valueOf(0)
 
-
-
-
   def getHeaders(hakijat: T): Set[Row]
 
   def getRows(hakijat: T): Set[Row]
