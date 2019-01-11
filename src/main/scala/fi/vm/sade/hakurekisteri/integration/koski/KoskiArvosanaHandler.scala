@@ -671,7 +671,8 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
           if(isVahvistettu) {
             val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
-            val d = parseLocalDate("2018-06-04")
+            //TODO: allaoleva vaihtuu vuosittain. Toistaiseksi mennään kovakoodauksella, mutta siirretään ylläpidettäväksi uuteen tarjontaan syssymmällä
+            val d = parseLocalDate("2019-06-03")
             if (vahvistusDate.isAfter(d)) {
               (Seq(), yks)
             } else {
