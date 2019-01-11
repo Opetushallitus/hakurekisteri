@@ -328,7 +328,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
-    result(3).arvosanat should have length 0
+    result(3).arvosanat should have length 18
   }
 
   it should "not parse arvosanat from lukio_päättötodistus.json" in {
