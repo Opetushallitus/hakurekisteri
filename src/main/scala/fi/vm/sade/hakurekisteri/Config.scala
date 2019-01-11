@@ -76,7 +76,7 @@ object Oids {
   val cscOrganisaatioOid = OrganisaatioOids.csc
   val tuntematonOrganisaatioOid = OrganisaatioOids.tuntematon
 
-  val perusopetusLuokkaKomoMOid = KomoOids.pohjakoulutus.luokka
+  val perusopetusLuokkaKomoOid = KomoOids.pohjakoulutus.luokka
   val yotutkintoKomoOid = KomoOids.pohjakoulutus.yoTutkinto
   val perusopetusKomoOid = KomoOids.pohjakoulutus.perusopetus
   val ulkomainenkorvaavaKomoOid = KomoOids.pohjakoulutus.ulkomainen

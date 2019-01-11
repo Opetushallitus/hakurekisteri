@@ -212,7 +212,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
             //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
             //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
-            if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoMOid) &&
+            if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
               (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
               saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso)
 
@@ -364,7 +364,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case "perusopetuksenoppiaineenoppimaara" => (Oids.perusopetusKomoOid, None)
         case "aikuistenperusopetuksenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
         case "aikuistenperusopetuksenoppimaaranalkuvaihe" => (DUMMYOID, None) //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
-        case "perusopetuksenvuosiluokka" => (Oids.perusopetusLuokkaKomoMOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
+        case "perusopetuksenvuosiluokka" => (Oids.perusopetusLuokkaKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
         case "valma" => (Oids.valmaKomoOid, None)
         case "telma" => (Oids.telmaKomoOid, None)
         case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
@@ -682,7 +682,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           } else {
             (Seq(), yks)
           }
-        case Oids.perusopetusLuokkaKomoMOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+        case Oids.perusopetusLuokkaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.perusopetuksenOppiaineenOppimaaraOid =>
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
@@ -743,7 +743,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
             "KESKEYTYNYT"
           } else suoritusTila
 
-        case s if s.startsWith(Oids.perusopetusLuokkaKomoMOid) =>
+        case s if s.startsWith(Oids.perusopetusLuokkaKomoOid) =>
           if(suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu))  {
             "KESKEYTYNYT"
           } else suoritusTila
@@ -780,7 +780,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
         case (Oids.valmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
         case (Oids.telmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-        case (Oids.perusopetusLuokkaKomoMOid, true, "KESKEN") => parseNextFourthOfJune()
+        case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => parseNextFourthOfJune()
         case (_,_,_) => valmistumisPaiva
       }
       if (komoOid != DUMMYOID && vuosi > 1970) {
@@ -875,7 +875,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
               a.henkilo.equals(useSuoritus.henkilo) &&
                 a.myontaja.equals(useSuoritus.myontaja) &&
                 //  a.tila != "KESKEYTYNYT" &&
-                a.komo.equals(Oids.perusopetusLuokkaKomoMOid)
+                a.komo.equals(Oids.perusopetusLuokkaKomoOid)
             case _ => false
           })
           .filter(_.luokkataso.contains("9"))
@@ -899,7 +899,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
             case a: VirallinenSuoritus =>
               a.henkilo.equals(useSuoritus.henkilo) &&
                 a.myontaja.equals(useSuoritus.myontaja) &&
-                a.komo.equals(Oids.perusopetusLuokkaKomoMOid)
+                a.komo.equals(Oids.perusopetusLuokkaKomoOid)
             case _ => false
           })
           .filter(_.luokkataso.contains("9"))
