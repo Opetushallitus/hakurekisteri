@@ -1005,6 +1005,16 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
     result._2 should equal (yksilollistaminen.Kokonaan)
   }
 
+  it should "testaa siirto if no overlapping opiskeluoikeus found" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "viimeisin_opiskeluoikeus.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false)
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }

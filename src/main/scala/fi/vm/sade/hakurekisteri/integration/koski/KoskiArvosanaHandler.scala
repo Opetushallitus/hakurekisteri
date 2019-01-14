@@ -69,18 +69,20 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     implicit val timeout: Timeout = 2.minutes
 
     // OK-227 : Get latest läsnäoleva oppilaitos
-    lazy val viimeisinOpiskeluoikeus: KoskiOpiskeluoikeus = resolveViimeisinOpiskeluOikeus(koskihenkilöcontainer)
-    logger.info("Latest läsnäoleva opiskeluoikeusOid is: " + viimeisinOpiskeluoikeus.oppilaitos.get.oid.getOrElse("Not found"))
+    lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinOpiskeluOikeus(koskihenkilöcontainer)
+    viimeisinOpiskeluoikeus match {
+      case Some(v) => logger.info("Latest läsnäoleva opiskeluoikeusOid is: " + v.oppilaitos.get.oid)
+      case None => logger.info("No overlapping läsnäoleva opiskeluoikeus found.")}
 
     /**
       * OK-227 : Jos opiskelija on vaihtanut koulua kesken kauden, säilytetään vain se suoritus jolla on on uusin läsnäolotieto.
       * Aiempi suoritus samalta kaudelta poistetaan suoritusrekisteristä.
       */
-    def resolveViimeisinOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): KoskiOpiskeluoikeus = {
+    def resolveViimeisinOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
       logger.info("Resolving latest läsnäoleva opiskeluoikeus from Koskidata.")
       koskihenkilöcontainer.opiskeluoikeudet.
         filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna"))).
-        sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.head
+        sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
     }
 
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] = {
@@ -195,11 +197,11 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       suoritusSave
     }
 
-    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat], viimeisinOpiskeluoikeus: KoskiOpiskeluoikeus): Future[Unit] = {
+    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat], viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
 
         //OY-227 : Clean up perusopetus duplicates if there is some
-        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluoikeus.oppilaitos.get.oid match {
+        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluoikeus.get.oppilaitos.get.oid.getOrElse(None) match {
           case Some(x) => henkilonSuoritukset.filterNot(s => (!s.suoritus.asInstanceOf[VirallinenSuoritus].myontaja.equals(x)
             && s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid)))
           case None => henkilonSuoritukset
