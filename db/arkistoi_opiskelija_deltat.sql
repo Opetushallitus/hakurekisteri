@@ -32,7 +32,7 @@ BEGIN
                                loppu_paiva,
                                inserted,
                                deleted,
-                               sources FROM opiskelija WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
+                               source FROM opiskelija WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     DELETE FROM opiskelija WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     _count := _count + 1;
     RAISE NOTICE '%: archived delta: %, %', _count, delta.resource_id, delta.inserted;
