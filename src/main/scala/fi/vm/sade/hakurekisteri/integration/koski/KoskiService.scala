@@ -255,8 +255,13 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     if(filteredHenkilot.nonEmpty) {
       Future.sequence(filteredHenkilot.map(henkilo =>
         koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), createLukio)
-      )).flatMap(_ => Future.successful({}))
+      )).flatMap(_ => Future.successful({})).recoverWith{
+        case e: Exception =>
+          logger.error("Koskisuoritusten tallennus henkilölle epäonnistui: {} " , e)
+          Future.failed(e)
+      }
     } else {
+      logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä.")
       Future.successful({})
     }
   }
