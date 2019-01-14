@@ -109,6 +109,7 @@
     <beans:bean id="casFilter" class="fi.vm.sade.security.CustomCasAuthenticationFilter">
         <beans:property name="authenticationManager" ref="authenticationManager"/>
         <beans:property name="serviceProperties" ref="casServiceProperties"/>
+        <beans:property name="filterProcessesUrl" value="/j_spring_cas_security_check"/>
     </beans:bean>
 
     <!-- This filter handles a Single Logout Request from the CAS Server -->
