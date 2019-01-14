@@ -220,7 +220,7 @@ class BaseIntegrations(rekisterit: Registers,
 
   val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
   quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
-    newTrigger().startNow().withSchedule(cronSchedule("0 58 * * * ?")).build())
+    newTrigger().startNow().withSchedule(cronSchedule("0 0 0 * * ?")).build())
   //TODO: This if for dev purposes. Schedule real trigger cron when done.
     //newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))

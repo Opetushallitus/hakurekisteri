@@ -166,7 +166,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Lukioarvosanojen päivitys valmis."))
 
     haut = activeKKHakuOids.get()
-    logger.info(("Saatiin hakemuspalvelusta aktiivisia korkeakouluen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
+    logger.info(("Saatiin hakemuspalvelusta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, false, false, false), 5.hours)
