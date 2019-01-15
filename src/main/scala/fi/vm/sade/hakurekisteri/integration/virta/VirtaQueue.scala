@@ -63,7 +63,7 @@ class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, opp
         virtaQueue.add(q)
       } else {
         log.info("Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ", r.oppijaOid)
-        virtaActor ! q
+        virtaActor.actor ! q
       }
 
     case StartVirtaProcessing if !processing =>
