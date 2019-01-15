@@ -201,10 +201,15 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
 
         //OY-227 : Clean up perusopetus duplicates if there is some
-        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluoikeus.get.oppilaitos.get.oid.getOrElse(None) match {
-          case Some(x) => henkilonSuoritukset.filterNot(s => (!s.suoritus.asInstanceOf[VirallinenSuoritus].myontaja.equals(x)
+        val viimeisinOpiskeluOikeusOid: String = viimeisinOpiskeluoikeus match {
+          case Some(o) => o.oppilaitos.get.oid.toString
+          case None => ""
+        }
+
+        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluOikeusOid match {
+          case "" => henkilonSuoritukset
+          case _ => henkilonSuoritukset.filterNot(s => (!s.suoritus.asInstanceOf[VirallinenSuoritus].myontaja.equals(viimeisinOpiskeluOikeusOid)
             && s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid)))
-          case None => henkilonSuoritukset
         }
 
         //OY-227 : Check if there is suoritus which is not included on new suoritukset.
