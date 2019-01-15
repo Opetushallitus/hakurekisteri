@@ -227,5 +227,6 @@ object Testihaku extends Haku(
   kkHaku = true,
   toisenAsteenHaku = false,
   viimeinenHakuaikaPaattyy = Some(new DateTime().plusDays(1)),
-  None
+  None,
+  "hakutapa_01#1"
 )

@@ -30,11 +30,11 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
   private val logger = Logging.getLogger(system, this)
 
-  val active2AsteHakuOids = new AtomicReference[Set[String]](Set.empty)
-  def setAktiiviset2AsteHaut(hakuOids: Set[String]): Unit = active2AsteHakuOids.set(hakuOids)
+  val aktiiviset2AsteYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
+  def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = aktiiviset2AsteYhteisHakuOidit.set(hakuOids)
 
-  val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
-  def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
+  val aktiivisetKKYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
+  def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = aktiivisetKKYhteisHakuOidit.set(hakuOids)
 
   val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
@@ -157,7 +157,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
     */
   override def updateAktiivisetHaut(): () => Unit = { () =>
-    var haut: Set[String] = active2AsteHakuOids.get()
+    var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
     logger.info(("Saatiin hakemuspalvelusta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta lukiosuoritusten ajastettu päivitys haulle ${haku}")
@@ -165,7 +165,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     })
     logger.info(("Lukioarvosanojen päivitys valmis."))
 
-    haut = activeKKHakuOids.get()
+    haut = aktiivisetKKYhteisHakuOidit.get()
     logger.info(("Saatiin hakemuspalvelusta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta ammatillisten suoritusten ajastettu päivitys haulle ${haku}")

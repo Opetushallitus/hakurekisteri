@@ -42,7 +42,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
 
-  private val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
+  private val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", "hakutapa_01#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
   private val kausiKoodiS = TarjontaKoodi(Some("S"))
   private val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
   private val suoritus1 = VirallinenSuoritus(YoTutkinto.yotutkinto, YoTutkinto.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
@@ -135,7 +135,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       kkHaku = true,
       toisenAsteenHaku = false,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None
+      None,
+      "hakutapa_01#1"
     )
 
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus1))
@@ -163,7 +164,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       kkHaku = true,
       toisenAsteenHaku = false,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None
+      None,
+      "hakutapa_01#1"
     )
 
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus2))
@@ -191,7 +193,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       kkHaku = true,
       toisenAsteenHaku = false,
       viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None
+      None,
+      "hakutapa_01#1"
     )
 
     val koulutusSyksy = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)

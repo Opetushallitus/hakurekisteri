@@ -21,6 +21,7 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     hakuaikas = List(RestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
     nimi = Map("kieli_fi" -> "haku 1", "kieli_sv" -> "haku 1", "kieli_en" -> "haku 1"),
     hakukausiUri = "kausi_k#1",
+    hakutapaUri = "hakutapa_01#1",
     hakukausiVuosi = new LocalDate().getYear,
     koulutuksenAlkamiskausiUri = Some("kausi_s#1"),
     koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),

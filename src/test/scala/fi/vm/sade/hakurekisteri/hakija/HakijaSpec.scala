@@ -130,7 +130,8 @@ class HakijaSpec extends FlatSpec with Matchers {
     false,
     false,
     None,
-    None
+    None,
+    "hakutapa_01#1"
   )
 
   val tq1 = ThemeQuestion(`type` = "ThemeRadioButtonQuestion", messageText = "Millä kielellä haluat saada valintakokeen?", options = Some(Map(
