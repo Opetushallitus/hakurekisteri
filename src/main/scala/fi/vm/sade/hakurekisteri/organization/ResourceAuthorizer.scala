@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.organization
 
-import dispatch.Defaults.executor
+import dispatch.Defaults.executor // TODO: make our own execution context
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.utils.slf4j.Logging
 
