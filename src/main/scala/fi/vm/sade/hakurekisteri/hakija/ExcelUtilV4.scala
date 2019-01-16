@@ -86,7 +86,7 @@ object ExcelUtilV4 extends HakijatExcelWriterV3[JSONHakijatV4] {
         ht.koulutus,
         ht.hakukohdeOid,
         ht.harkinnanvaraisuusperuste.getOrElse(""),
-        if(ht.urheilijanammatillinenkoulutus.getOrElse(false)) "Kyllä" else "",
+        if (ht.urheilijanammatillinenkoulutus.getOrElse(false)) "Kyllä" else "",
         ht.yhteispisteet.getOrElse(zero).toString(),
         ht.valinta.getOrElse(""),
         ht.vastaanotto.getOrElse(""),
