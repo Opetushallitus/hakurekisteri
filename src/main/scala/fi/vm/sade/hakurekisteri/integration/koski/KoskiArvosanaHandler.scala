@@ -199,17 +199,17 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat], viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
-
         //OY-227 : Clean up perusopetus duplicates if there is some
         val viimeisinOpiskeluOikeusOid: String = viimeisinOpiskeluoikeus match {
-          case Some(o) => o.oppilaitos.get.oid.toString
+          case Some(o) => o.oppilaitos.get.oid.get
           case None => ""
         }
 
         val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluOikeusOid match {
           case "" => henkilonSuoritukset
           case _ => henkilonSuoritukset.filterNot(s => (!s.suoritus.asInstanceOf[VirallinenSuoritus].myontaja.equals(viimeisinOpiskeluOikeusOid)
-            && s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid)))
+            && s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid)
+            ))
         }
 
         //OY-227 : Check if there is suoritus which is not included on new suoritukset.
