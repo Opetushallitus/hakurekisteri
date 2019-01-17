@@ -15,7 +15,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
     "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus",
     "Todistusvuosi", /*"Minkä muun koulutuksen/opintoja olet suorittanut?",*/ "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", "HakukohdeOid",
-    "Harkinnanvaraisuuden peruste", /*"Urheilijan ammatillinen koulutus",*/ "Yhteispisteet", "Valinta", "Vastaanotto",
+    "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"/*, "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"*/
   )
 
@@ -89,7 +89,7 @@ object ExcelUtilV3 extends HakijatExcelWriterV3[JSONHakijat] {
         ht.koulutus,
         ht.hakukohdeOid,
         ht.harkinnanvaraisuusperuste.getOrElse(""),
-        //ht.urheilijanammatillinenkoulutus.getOrElse(false).toString,
+        if (ht.urheilijanammatillinenkoulutus.getOrElse(false)) "Kyllä" else "",
         ht.yhteispisteet.getOrElse(zero).toString(),
         ht.valinta.getOrElse(""),
         ht.vastaanotto.getOrElse(""),

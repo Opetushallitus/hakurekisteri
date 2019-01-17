@@ -95,7 +95,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
       val hakuF = (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
       for {
         haku <- hakuF
-        lisakysymykset <-  getLisakysymyksetForHaku(hakuOid, haku.kohdejoukkoUri)
+        lisakysymykset <- getLisakysymyksetForHaku(hakuOid, haku.kohdejoukkoUri)
       } yield (haku, lisakysymykset)
     }
 
@@ -152,12 +152,12 @@ object AkkaHakupalvelu {
       applicationOptionOids = Nil,
       options = None),
 
-/*    "lupaSahkoisesti" -> ThemeQuestion(
+    "lupaTulosEmail" -> ThemeQuestion(
       isHaunLisakysymys = true,
       `type` = "ThemeRadioButtonQuestion",
-      messageText = "Opiskelijavalinnan tulokset saa lähettää minulle myös sähköisesti",
+      messageText = "Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini",
       applicationOptionOids = Nil,
-      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),*/
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
 
     "lupaSms" -> ThemeQuestion(
       isHaunLisakysymys = true,
@@ -717,7 +717,7 @@ case class FullHakemus(oid: String,
           preference.get(s"preference${index}_kaksoistutkinnon_lisakysymys"),
           preference.get(s"preference${index}_sora_oikeudenMenetys"),
           preference.get(s"preference${index}_sora_terveys"),
-          preference.get(s"preference${index}_urheilijan_ammatillisenLisakysymys"),
+          preference.get(s"preference${index}_urheilijan_ammatillisen_koulutuksen_lisakysymys"),
           preference.get(s"preference${index}-discretionary-follow-up")
         )
     }.toList)
