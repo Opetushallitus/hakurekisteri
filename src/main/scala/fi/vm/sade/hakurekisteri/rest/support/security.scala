@@ -59,6 +59,7 @@ object Roles {
 
 trait User {
   val username: String
+  def isKkVirkailija: Boolean = false
   def orgsFor(action: String, resource: String): Set[String]
 
   def canWrite(resource: String) = !orgsFor("WRITE", resource).isEmpty
@@ -68,6 +69,8 @@ trait User {
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
 
   def isAdmin: Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
+
+  def allowByKomo(komo: String, action: String): Boolean = isKkVirkailija && (komo.startsWith("koulutus_") || komo.equals(PohjakoulutusOids.ammatillinen)) && "READ".equals(action)
 
   def auditSession(): AuditSessionRequest
 }
@@ -89,6 +92,7 @@ case class OPHUser(username: String, authorities: Set[String], userAgent: String
   override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }
+  override def isKkVirkailija: Boolean = authorities.exists(_.startsWith("ROLE_APP_KKHAKUVIRKAILIJA"))
 }
 
 //case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser

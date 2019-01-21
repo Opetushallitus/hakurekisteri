@@ -144,7 +144,11 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
   def checkAccess(user: User, action: String, target: Subject): Boolean = {
     val allowedOrgs = user.orgsFor(action, target.resource)
     val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
-    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) }
+    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
+  }
+
+  private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
+    komo.exists(user.allowByKomo(_, action))
   }
 }
 

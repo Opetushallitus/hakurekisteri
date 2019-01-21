@@ -45,6 +45,22 @@ class SecuritySupportSpec extends FlatSpec with Matchers with MockitoSugar {
   it should "not allow delete for READ user" in
     securitySession.withLoginBy(user having "READ".rights)
     {currentUser.canDelete("Suoritus") should be (false)}
+
+  it should "allow READ for kk-virkailija when komo has koulutus_ prefix" in
+    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
+    {currentUser.allowByKomo("koulutus_", "READ") should be (true)}
+
+  it should "not allow READ for non-kk-virkailija when komo has koulutus_ prefix" in
+    securitySession.withLoginBy(user having "READ".rights)
+    {currentUser.allowByKomo("koulutus_", "READ") should be (false)}
+
+  it should "not allow READ for kk-virkailija when komo doesn't have koulutus_ prefix" in
+    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
+    {currentUser.allowByKomo("goulutus_", "READ") should be (false)}
+
+  it should "not allow WRITE for kk-virkailija when komo doesn't have koulutus_ prefix" in
+    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
+    {currentUser.allowByKomo("koulutus_", "WRITE") should be (false)}
 }
 
 
