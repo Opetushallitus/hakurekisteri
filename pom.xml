@@ -580,21 +580,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>fi.vm.sade.generic</groupId>
-            <artifactId>generic-common</artifactId>
-            <version>9.4-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>fi.vm.sade.java-utils</groupId>
-                    <artifactId>java-cas</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.sf.ehcache</groupId>
-                    <artifactId>ehcache-jgroupsreplication</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
             <artifactId>java-cas</artifactId>
             <version>0.3.1-SNAPSHOT</version>
@@ -608,6 +593,11 @@
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>opintopolku-cas-servlet-filter</artifactId>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
