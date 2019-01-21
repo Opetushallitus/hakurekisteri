@@ -58,11 +58,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = createResource(currentUser)
+      val au = auditUser
       val user = currentUser.get.username
       res.is.onSuccess {
         case ActionResult(_, r, headers) =>
           val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
-          audit.log(auditUser,
+          audit.log(au,
             ResourceCreate,
             new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
             new Changes.Builder().build())
