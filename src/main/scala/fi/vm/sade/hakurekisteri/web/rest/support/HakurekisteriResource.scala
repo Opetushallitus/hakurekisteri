@@ -41,11 +41,11 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   delete("/:id", operation(delete)) {
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else {
-      val res = deleteResource()
       audit.log(auditUser,
         ResourceDelete,
         new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
         new Changes.Builder().build())
+      val res = deleteResource()
       res
     }
   }
@@ -59,13 +59,15 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val res = createResource(currentUser)
       val au = auditUser
-      val user = currentUser.get.username
       res.is.onSuccess {
         case ActionResult(_, r, headers) =>
-          val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
+          logger.info("Action success")
+          val id = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
           audit.log(au,
             ResourceCreate,
-            new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
+            new Target.Builder()
+              .setField("resource", resourceName)
+              .setField("id", id).build(),
             new Changes.Builder().build())
       }
       res
@@ -75,12 +77,11 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   post("/:id", operation(update)) {
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else {
-      val updated = updateResource()
+      val updated: Object = updateResource()
       audit.log(auditUser,
         ResourceUpdate,
         new Target.Builder().setField("resource",resourceName).setField("id", params("id")).build(),
-        new Changes.Builder().build())
-
+        new Changes.Builder().added("result", updated.toString).build())
       updated
     }
   }
@@ -108,9 +109,9 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       audit.log(auditUser,
-        ResourceRead,
+        ResourceReadByQuery,
         new Target.Builder().setField("resource", resourceName).setField("summary", query.result.summary)
-          .setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+          .setField("query params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
         new Changes.Builder().build())
       val t0 = Platform.currentTime
       queryResource(currentUser, t0)

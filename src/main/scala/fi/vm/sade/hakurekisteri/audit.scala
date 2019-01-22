@@ -56,6 +56,10 @@ case object ResourceRead extends Operation {
   def name: String = "RESOURCE_READ"
 }
 
+case object ResourceReadByQuery extends Operation {
+  def name: String = "RESOURCE_READ_BY_QUERY"
+}
+
 case object KaikkiHaunEnsikertalaiset extends Operation {
   def name: String = "KAIKKI_HAUN_ENSIKERTALAISET_READ"
 }
@@ -126,6 +130,7 @@ object UserParser {
     new User(new Oid(userOid), ip, session, userAgent)
   catch {
     case e: GSSException =>
+      logger.warn(s"GSSExcepption: $e")
       new User(ip, session, userAgent)
   }
 
