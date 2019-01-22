@@ -1,40 +1,74 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import akka.actor.{Actor, ActorSystem, Props}
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.{CallingThreadDispatcher, TestActorRef, TestActors}
-import fi.vm.sade.hakurekisteri.Oids
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockPersonAliasesProvider, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.mockito
+import org.mockito.Mockito
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
+import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.compat.Platform
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
-class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar with AsyncAssertions {
+class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with AsyncAssertions {
 
   implicit val formats = org.json4s.DefaultFormats
 
   private val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
-  implicit val system = ActorSystem(s"test-system-${Platform.currentTime.toString}")
-  implicit def executor: ExecutionContext = system.dispatcher
-  val testRef = TestActorRef(new Actor {
-    var counter = 0
-    override def receive: Actor.Receive = {
-      case q =>
-        counter = counter + 1
+  private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
+  private implicit val system = ActorSystem("test-jdbc")
+  private implicit val ec: ExecutionContext = system.dispatcher
+  private implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+  private val config: MockConfig = new MockConfig
+  private val journals: DbJournals = new DbJournals(config)
+
+  private val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = mock[IOppijaNumeroRekisteri]
+  private val personAliasesProvider: PersonAliasesProvider = new PersonAliasesProvider {
+    override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+      if (henkiloOids.isEmpty) {
+        Future.successful(PersonOidsWithAliases(Set(), Map()))
+      } else {
+        oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
+      }
     }
-  })
-  val KoskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+  }
+  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider)
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+
+  val KoskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(suoritusrekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)
+
+  override protected def beforeEach(): Unit = {
+    ItPostgres.reset()
+  }
+
+  override protected def afterAll(): Unit = {
+    Await.result(system.terminate(), 15.seconds)
+    database.close()
+  }
 
   it should "parse a koski henkilo" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "testikiira.json").mkString
@@ -1005,14 +1039,24 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
     result._2 should equal (yksilollistaminen.Kokonaan)
   }
 
-  it should "testaa siirto if no overlapping opiskeluoikeus found" in {
+  it should "store suoritus & arvosana if no overlapping opiskeluoikeus found" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "viimeisin_opiskeluoikeus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
 
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false),5.seconds)
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    opiskelijat.head should equal("1.2.246.562.24.32656706483")
+    val opiskelija = opiskelijat.head
+    val suoritukset = run(database.run(sql"select resource_id from suoritus where henkilo_oid = $opiskelija".as[String]))
+    suoritukset should have length 1
+    val suoritus = suoritukset.head
+    val arvosanat = run(database.run(sql"select * from arvosana where suoritus = $suoritus".as[String]))
+    arvosanat should have length 6
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
@@ -1053,4 +1097,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
         Future.successful(Seq()) pipeTo sender
     }
   }
+
+  private def run[T](f: Future[T]): T = Await.result(f, atMost = timeout.duration)
+
 }

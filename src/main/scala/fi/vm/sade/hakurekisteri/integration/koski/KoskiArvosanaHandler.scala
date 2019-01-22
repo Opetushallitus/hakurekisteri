@@ -79,7 +79,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       * Aiempi suoritus samalta kaudelta poistetaan suoritusrekisteristä.
       */
     def resolveViimeisinOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
-      logger.info("Resolving latest läsnäoleva opiskeluoikeus from Koskidata.")
+      logger.info("Resolving latest läsnäoleva perusopetuksen opiskeluoikeus from Koskidata.")
       koskihenkilöcontainer.opiskeluoikeudet.
         filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna"))).
         sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
