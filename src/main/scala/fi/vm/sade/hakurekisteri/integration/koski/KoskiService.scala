@@ -44,6 +44,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
   case class SearchParamsWithPagination (muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00", pageSize: Int, pageNumber: Int)
+  case class SearchParamsWithCursor(timestamp: Option[String], cursor: Option[String], pageSize: Int = 5000)
 
   def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
@@ -54,12 +55,49 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
   }
 
+  def fetchChangedOppijas(params: SearchParamsWithCursor): Future[MuuttuneetOppijatResponse] = {
+    logger.info(s"Haetaan muuttuneet henkilöoidit Koskesta, timestamp: " + params.timestamp.toString + ", cursor: " + params.cursor.toString)
+    virkailijaRestClient.readObjectWithBasicAuth[MuuttuneetOppijatResponse]("koski.sure.muuttuneet-oppijat", params)(acceptedResponseCode = 200, maxRetries = 2)
+  }
+
   def clampTimeToEnd(date: Date): Date = {
     val dt = new DateTime(date)
     if (dt.isBefore(endDateSuomiTime)) {
       date
     } else {
       endDateSuomiTime.toDate
+    }
+  }
+
+  def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit = {
+    val endDateSuomiTime = DateTime.parse("2019-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+    if(endDateSuomiTime.isBeforeNow) {
+      logger.info("refreshChangedOppijasFromKoski : Cutoff date of {} reached, stopping.", endDateSuomiTime.toString)
+    } else {
+      scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
+        //val timestamp: Option[String] = if (!cursor.isDefined) Some(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
+        //  .format(new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(180))))
+        //else None
+        val timestamp: Option[String] = if (!cursor.isDefined) Some("2018-06-01T00:00:00+02:00") else None
+        val params = SearchParamsWithCursor(timestamp, cursor)
+        logger.info("refreshChangedOppijasFromKoski active, making call with params: {}", params)
+        fetchChangedOppijas(params).onComplete {
+          case Success(response: MuuttuneetOppijatResponse) =>
+            handleHenkiloUpdate(response.result, createLukio = false).onComplete {
+              case Success(s) =>
+                logger.info("refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}", response.result.size)
+                if (response.mayHaveMore)
+                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 1.minutes) //Haetaan nopeammin jos kaikkia tietoja samalla cursorilla ei vielä saatu
+                else
+                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 5.minutes)
+              case Failure(e) =>
+                logger.error("refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden tietojen haussa: {}", e)
+                refreshChangedOppijasFromKoski(cursor, 5.minutes)
+            }
+          case Failure(e) => logger.error("refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden selvittämisessä : {}", e)
+            refreshChangedOppijasFromKoski(cursor, 5.minutes)
+        }
+      })
     }
   }
 
@@ -202,6 +240,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   }
 
   def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
+    logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
     val batchSize: Int = 1000
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
@@ -266,6 +305,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 }
+
+case class MuuttuneetOppijatResponse(result: Seq[String], mayHaveMore: Boolean, nextCursor: String)
 
 case class Tila(alku: String, tila: KoskiKoodi, loppu: Option[String])
 
