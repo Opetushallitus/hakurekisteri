@@ -8,7 +8,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
@@ -71,7 +71,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     // OK-227 : Get latest läsnäoleva oppilaitos
     lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinOpiskeluOikeus(koskihenkilöcontainer)
     viimeisinOpiskeluoikeus match {
-      case Some(v) => logger.info("Latest läsnäoleva opiskeluoikeusOid is: " + v.oppilaitos.get.oid)
+      case Some(v) => logger.info("Latest läsnäoleva perusopetuksen opiskeluoikeusOid is: " + v.oppilaitos.get.oid)
       case None => logger.info("No overlapping läsnäoleva opiskeluoikeus found.")}
 
     /**
@@ -109,9 +109,33 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
-    def deleteSuoritusAndArvosana(s: VirallinenSuoritus with Identified[UUID]): Future[Any] = {
-      val arvosanat = fetchArvosanat(s).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
-      deleteSuoritus(s)
+    def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Unit = {
+      val arvosanat = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
+
+      deleteSuoritus(suoritus)
+      fetchExistingSuoritukset(henkilöOid).filter(s => s.asInstanceOf[VirallinenSuoritus].myontaja.equals(suoritus.myontaja)) match {
+        case s: Seq[Any]  => logger.info("Skipping opiskelija deletion since there are some suoritukses")
+        case _ => {
+          var opiskelija = fetchOpiskelija(henkilöOid, suoritus.myontaja)
+           opiskelija.map(op => op.size match {
+            case 1 => deleteOpiskelija(op.head)
+            case _ => logger.info("Multiple opiskelijas found, not deleting.")
+          })
+        }
+      }
+    }
+
+  def fetchOpiskelija(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
+   (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some("koski"))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+      case t: AskTimeoutException =>
+        logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
+        fetchOpiskelija(henkilöOid, oppilaitosOid)
+    }
+  }
+
+    def deleteOpiskelija(o: Opiskelija with Identified[UUID]): Future[Any] = {
+      logger.debug("Poistetaan opiskelija " + o + "UUID:lla" + o.id)
+      opiskelijaRekisteri ? DeleteResource(o.id, "koski-opiskelijat")
     }
 
     def deleteSuoritus(s: Suoritus with Identified[UUID]): Future[Any] = {
@@ -138,7 +162,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       case _ => false
     }
 
-    def checkIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat]): Unit = {
+    def checkIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Unit = {
       // Only virallinen suoritus
       val koskiVirallisetSuoritukset: Seq[VirallinenSuoritus] = henkilonSuoritukset.map(h => h.suoritus).flatMap {
         case s: VirallinenSuoritus => Some(s)
@@ -150,9 +174,9 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case _ => None
       }
 
-      val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
-      toBeDeletedSuoritukset.foreach(d => {
-          deleteSuoritusAndArvosana(d)
+      val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo) && s1.valmistuminen.equals(s2.valmistuminen)))
+      toBeDeletedSuoritukset.foreach(suoritus => {
+        deleteArvosanatAndSuorituksetAndOpiskelija(suoritus, henkilöOid)
       })
     }
 
@@ -213,7 +237,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         }
 
         //OY-227 : Check if there is suoritus which is not included on new suoritukset.
-        checkIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset)
+        checkIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid)
         //NOTE, processes the Future that encloses the list, does not actually iterate through the list
         Future.sequence(viimeisimmatSuoritukset.map {
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
@@ -321,6 +345,8 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     case s if s.suoritus.komo == Oids.telmaKomoOid => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid)
     case s if s.suoritus.komo == Oids.lisaopetusKomoOid => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid)
     case s if s.suoritus.komo == Oids.perusopetusKomoOid && (s.luokkataso.getOrElse("").equals("9") || s.luokkataso.getOrElse("").equals("AIK")) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid)
+    // TODO: Luokkataso?
+    case s if s.suoritus.komo == Oids.ammatillinentutkintoKomoOid => getOppilaitosAndLuokka("", s, Oids.ammatillinentutkintoKomoOid)
     case _ => ("", "", "")
   }
 

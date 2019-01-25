@@ -1047,7 +1047,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false),5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     opiskelijat.head should equal("1.2.246.562.24.32656706483")
@@ -1057,6 +1057,79 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     val suoritus = suoritukset.head
     val arvosanat = run(database.run(sql"select * from arvosana where suoritus = $suoritus".as[String]))
     arvosanat should have length 6
+  }
+
+  it should "resolve latest perusopetuksen lasnaoleva opiskeluoikeus" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_1pk_1amm.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false), 5.seconds)
+    var suoritukset = run(database.run(sql"select myontaja from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]))
+    suoritukset.size should equal(1)
+    var myontaja = suoritukset.head
+    myontaja should equal("1.2.246.562.10.33327422946")
+    suoritukset = run(database.run(sql"select resource_id from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]))
+    var suoritus = suoritukset.head.toString
+    var arvosanat = run(database.run(sql"select * from arvosana where suoritus = $suoritus".as[String]))
+    arvosanat should have length 18
+  }
+
+  it should "delete opiskelija, suoritus and arvosanat not existing in koski anymore" in {
+    var json: String = scala.io.Source.fromFile(jsonDir + "koskidata_1pk_1amm.json").mkString
+    var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.get.toString
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false), 500.seconds)
+    var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat1.size should equal(2)
+    var opiskelija1 = opiskelijat1.head
+    var suoritukset1 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = true and henkilo_oid = $opiskelija1".as[String]))
+    suoritukset1.size should equal(2)
+    var suoritus1 = suoritukset1.head
+    var arvosanat1 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus1".as[String]))
+    arvosanat1 should have length 18
+
+    json = scala.io.Source.fromFile(jsonDir + "koskidata_1amm.json").mkString
+    henkilo = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, false), 500.seconds)
+
+    var opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat2.size should equal(1)
+    var opiskelija2 = opiskelijat2.head
+    var suoritukset2 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and komo = 'ammatillinentutkinto komo oid' and henkilo_oid = $opiskelija2".as[String]))
+    suoritukset2.size should equal(1)
+    var suoritus2 = suoritukset2.head
+    var arvosanat2 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus2".as[String]))
+    arvosanat2 should have length 0
+
+
+    json = scala.io.Source.fromFile(jsonDir + "koskidata_lukio.json").mkString
+    henkilo = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false, true), 500.seconds)
+    var opiskelijat3 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat3.size should equal(1)
+    var opiskelija3 = opiskelijat3.head
+    var suoritukset3 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and komo = 'TODO lukio komo oid' and henkilo_oid = $opiskelija3".as[String]))
+    suoritukset3.size should equal(1)
+    var suoritus3 = suoritukset3.head
+    var arvosanat3 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus3".as[String]))
+    arvosanat3 should have length 4
+
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {

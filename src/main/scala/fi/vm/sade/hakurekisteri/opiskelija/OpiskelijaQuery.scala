@@ -13,7 +13,8 @@ case class OpiskelijaQuery(henkilo: Option[String] = None,
                            vuosi: Option[String] = None,
                            paiva: Option[DateTime] = None,
                            oppilaitosOid: Option[String] = None,
-                           luokka: Option[String] = None) extends Query[Opiskelija]
+                           luokka: Option[String] = None,
+                           source: Option[String] = None) extends Query[Opiskelija]
 
 object OpiskelijaQuery{
   def apply(params: Map[String,String]): OpiskelijaQuery = {
@@ -21,7 +22,7 @@ object OpiskelijaQuery{
       recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.basicDateTimeNoMillis()))}.
       recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.basicDateTime()))}.
       recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.dateTime()))}.get
-    OpiskelijaQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("paiva").map(extractDate), params.get("oppilaitosOid"), params.get("luokka"))
+    OpiskelijaQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("paiva").map(extractDate), params.get("oppilaitosOid"), params.get("luokka"), params.get("source"))
   }
 }
 
