@@ -70,16 +70,12 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     // OK-227 : Get latest läsnäoleva oppilaitos
     lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinOpiskeluOikeus(koskihenkilöcontainer)
-    viimeisinOpiskeluoikeus match {
-      case Some(v) => logger.info("Latest läsnäoleva perusopetuksen opiskeluoikeusOid is: " + v.oppilaitos.get.oid)
-      case None => logger.info("No overlapping läsnäoleva opiskeluoikeus found.")}
 
     /**
       * OK-227 : Jos opiskelija on vaihtanut koulua kesken kauden, säilytetään vain se suoritus jolla on on uusin läsnäolotieto.
       * Aiempi suoritus samalta kaudelta poistetaan suoritusrekisteristä.
       */
     def resolveViimeisinOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
-      logger.info("Resolving latest läsnäoleva perusopetuksen opiskeluoikeus from Koskidata.")
       koskihenkilöcontainer.opiskeluoikeudet.
         filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna"))).
         sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
@@ -134,7 +130,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   }
 
     def deleteOpiskelija(o: Opiskelija with Identified[UUID]): Future[Any] = {
-      logger.debug("Poistetaan opiskelija " + o + "UUID:lla" + o.id)
+      logger.debug("Poistetaan opiskelija " + o + "UUID:lla " + o.id)
       opiskelijaRekisteri ? DeleteResource(o.id, "koski-opiskelijat")
     }
 
@@ -251,8 +247,9 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
               Future.successful({})
             }
           case _ => Future.successful({})
-        }).flatMap(_ => Future.successful({}))
+        }).flatMap(_ => Future.successful({logger.info("Koski-suoritusten tallennus henkilölle " + henkilöOid + " valmis.")}))
       })
+
     }
 
     koskihenkilöcontainer.henkilö.oid match {
@@ -264,7 +261,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           case Nil => Future.successful({})
           case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset, viimeisinOpiskeluoikeus)
         }
-
       }
       case None => Future.successful({})
     }
