@@ -110,12 +110,12 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
       deleteSuoritus(suoritus)
       fetchExistingSuoritukset(henkilöOid).filter(s => s.asInstanceOf[VirallinenSuoritus].myontaja.equals(suoritus.myontaja)) match {
-        case s: Seq[Any]  => logger.info("Skipping opiskelija deletion since there are some suoritukses")
+        case s: Seq[Any]  => logger.debug("Skipping opiskelija " + henkilöOid + " deletion since there are some suoritukses")
         case _ => {
           var opiskelija = fetchOpiskelija(henkilöOid, suoritus.myontaja)
            opiskelija.map(op => op.size match {
             case 1 => deleteOpiskelija(op.head)
-            case _ => logger.info("Multiple opiskelijas found, not deleting.")
+            case _ => logger.debug("Multiple opiskelijas found for henkilöoid: " + henkilöOid + ", skip deletion.")
           })
         }
       }
@@ -249,7 +249,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           case _ => Future.successful({})
         }).flatMap(_ => Future.successful({logger.info("Koski-suoritusten tallennus henkilölle " + henkilöOid + " valmis.")}))
       })
-
     }
 
     koskihenkilöcontainer.henkilö.oid match {
@@ -535,7 +534,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       })
     }
     var yksilöllistetty = yksilollistaminen.Ei
-
     //Yli puolet osasuorituksista yksilöllistettyjä -> kokonaan yksilöllistetty. Osittain yksilöllistetty, jos yli 1 mutta alle tai tasan puolet yksilöllistettyjä.
     if (yksilöllistetyt.count(_.equals(true)) > yksilöllistetyt.count(_.equals(false))) {
       yksilöllistetty = yksilollistaminen.Kokonaan
