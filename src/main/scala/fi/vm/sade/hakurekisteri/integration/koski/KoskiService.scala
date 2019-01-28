@@ -83,6 +83,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         logger.info("refreshChangedOppijasFromKoski active, making call with params: {}", params)
         fetchChangedOppijas(params).onComplete {
           case Success(response: MuuttuneetOppijatResponse) =>
+            logger.info("refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.", response.result.size)
             handleHenkiloUpdate(response.result, createLukio = false).onComplete {
               case Success(s) =>
                 logger.info("refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}", response.result.size)
@@ -275,7 +276,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
     oppijat.flatMap(fetchPersonAliases).flatMap(res => {
       val (henkilot, personOidsWithAliases) = res
-      logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä!")
+      logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä, aliakset haettu!")
       saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, createLukio)
     })
   }
