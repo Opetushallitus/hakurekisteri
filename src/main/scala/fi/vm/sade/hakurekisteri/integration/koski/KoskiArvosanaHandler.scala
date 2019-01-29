@@ -64,7 +64,6 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
                                           personOidsWithAliases: PersonOidsWithAliases,
-                                          logBypassed: Boolean = false,
                                           createLukio: Boolean = false): Future[Any] = {
     implicit val timeout: Timeout = 2.minutes
 
