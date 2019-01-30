@@ -121,7 +121,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     }
 
   def fetchOpiskelija(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
-   (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some("koski"))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+   (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
       case t: AskTimeoutException =>
         logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
         fetchOpiskelija(henkilöOid, oppilaitosOid)
@@ -164,7 +164,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case _ => None
       }
 
-      val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals("koski")).flatMap {
+      val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(root_org_id)).flatMap {
         case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
         case _ => None
       }
@@ -190,7 +190,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           }
             .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
           logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-          val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)("koski"))
+          val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(root_org_id))
 
           def saveArvosana(a: Arvosana): Future[Any] = {
             arvosanaRekisteri ? a
@@ -199,7 +199,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           updateSuoritus(suoritus, useSuoritus)
             .flatMap(_ => fetchArvosanat(suoritus))
             .flatMap(existingArvosanat => Future.sequence(existingArvosanat
-              .filter(_.source.contentEquals("koski"))
+              .filter(_.source.contentEquals(root_org_id))
               .map(arvosana => deleteArvosana(arvosana))))
             .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
             .flatMap(_ => saveOpiskelija(opiskelija))
@@ -304,7 +304,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       henkiloOid = henkiloOid,
       alkuPaiva = alku,
       loppuPaiva = Some(loppu),
-      source = "koski"
+      source = root_org_id
     )
     logger.debug("createOpiskelija={}", op)
     op
@@ -356,7 +356,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       aine, lisatieto,
       valinnainen,
       myonnetty = koskiArviointiPäiväJosSuorituksenValmistumisenJälkeen,
-      source = "koski",
+      source = root_org_id,
       Map(),
       jarjestys = jarjestys)
   }
