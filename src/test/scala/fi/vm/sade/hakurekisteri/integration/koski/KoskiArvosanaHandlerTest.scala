@@ -1102,7 +1102,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 500.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
 
     var opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat2.size should equal(1)
