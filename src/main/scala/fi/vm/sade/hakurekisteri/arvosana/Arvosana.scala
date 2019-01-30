@@ -24,17 +24,15 @@ case class Arvosana(suoritus: UUID,
 
   override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 
-
-
-  private[Arvosana] case class ArvosanaCore(suoritus: UUID,
-                                            aine: String,
-                                            lisatieto: Option[String],
-                                            valinnainen: Boolean,
-                                            myonnetty: Option[LocalDate],
-                                            jarjestys: Option[Int])
-
   override val core = ArvosanaCore(suoritus, aine, lisatieto, valinnainen, myonnetty, jarjestys)
 }
+
+case class ArvosanaCore(suoritus: UUID,
+                        aine: String,
+                        lisatieto: Option[String],
+                        valinnainen: Boolean,
+                        myonnetty: Option[LocalDate],
+                        jarjestys: Option[Int])
 
 class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source, a.lahdeArvot, a.jarjestys) with Identified[UUID]
 
