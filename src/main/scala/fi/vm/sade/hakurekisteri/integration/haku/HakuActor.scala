@@ -115,7 +115,7 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
   }
 
   def refreshKeepAlives() {
-   // valintaTulos.actor.!(BatchUpdateValintatulos(storedHakus.filter(_.isActive).map(h => UpdateValintatulos(h.oid)).toSet))
+    valintaTulos.actor.!(BatchUpdateValintatulos(storedHakus.filter(_.isActive).map(h => UpdateValintatulos(h.oid)).toSet))
   }
 
   override def postStop(): Unit = {

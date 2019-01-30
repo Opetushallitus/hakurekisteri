@@ -110,10 +110,10 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   }
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-   // if (!initialLoadingDone) {
-   //   //Future.failed(InitialLoadingNotDone())
-   //   log.warning("Initial loading not yet done. Query params - HakuOid: " + q.hakuOid + ", hakemusOid: " + q.hakemusOid.getOrElse(""))
-   // }
+    if (!initialLoadingDone) {
+      //Future.failed(InitialLoadingNotDone())
+      log.warning("Initial loading not yet done. Query params - HakuOid: " + q.hakuOid + ", hakemusOid: " + q.hakemusOid.getOrElse(""))
+    }
     if (q.hakemusOid.isEmpty) {
       cache.get(q.hakuOid, (_: String) => queueForResult(q.hakuOid).map(Some(_))).map(_.get)
     } else {
