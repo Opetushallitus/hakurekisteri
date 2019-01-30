@@ -1132,6 +1132,22 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
 
   }
 
+  it should "store suoritus & set valmistumispäivä to fourth of june if suoritus kesken" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valmistumispäivä.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), true), 5.seconds)
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val opiskelija = opiskelijat.head
+    val valmistuminen = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = $opiskelija".as[String]))
+    valmistuminen should have length 1
+    valmistuminen.head should equal(KoskiArvosanaTrigger.parseNextFourthOfJune().toString())
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }

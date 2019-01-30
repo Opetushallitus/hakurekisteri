@@ -564,6 +564,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     (vahvistus, opOikeus.päättymispäivä) match {
       case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid.getOrElse(DUMMYOID))
       case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid.getOrElse(DUMMYOID))
+      case (None, None) => (parseYear(parseNextFourthOfJune().toString()), parseLocalDate(parseNextFourthOfJune().toString()), oppilaitos.oid.getOrElse(DUMMYOID))
       case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid.getOrElse(DUMMYOID))
     }
   }
