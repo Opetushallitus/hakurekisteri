@@ -106,25 +106,28 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Unit = {
       val arvosanat = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
-
-      deleteSuoritus(suoritus)
-      fetchExistingSuoritukset(henkilöOid).filter(s => s.asInstanceOf[VirallinenSuoritus].myontaja.equals(suoritus.myontaja)) match {
-        case s: Seq[Any]  => logger.debug("Skipping opiskelija " + henkilöOid + " deletion since there are some suoritukses")
-        case _ => {
-          var opiskelija = fetchOpiskelija(henkilöOid, suoritus.myontaja)
-           opiskelija.map(op => op.size match {
-            case 1 => deleteOpiskelija(op.head)
-            case _ => logger.debug("Multiple opiskelijas found for henkilöoid: " + henkilöOid + ", skip deletion.")
-          })
-        }
+      deleteSuoritus(suoritus).onComplete {
+        case Success(_) =>
+          fetchOpiskelijat(henkilöOid, suoritus.myontaja).onComplete {
+            case Success(opiskelija) => {
+              opiskelija.size match {
+                case 1 => deleteOpiskelija(opiskelija.head)
+                case _ => logger.debug("Multiple opiskelijas found for henkilöoid: " + henkilöOid + ", skip deletion.")
+              }
+            }
+            case Failure(t) =>
+              logger.error("Virhe opiskelijan " + henkilöOid + " poistossa.", t)
+          }
+        case Failure(t) =>
+          logger.error("Virhe henkilön " + henkilöOid + " suorituksen poistossa.", t)
       }
     }
 
-  def fetchOpiskelija(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
+  def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
    (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
       case t: AskTimeoutException =>
         logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
-        fetchOpiskelija(henkilöOid, oppilaitosOid)
+        fetchOpiskelijat(henkilöOid, oppilaitosOid)
     }
   }
 
