@@ -67,14 +67,14 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
                                           createLukio: Boolean = false): Future[Any] = {
     implicit val timeout: Timeout = 2.minutes
 
-    // OK-227 : Get latest läsnäoleva oppilaitos
-    lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinOpiskeluOikeus(koskihenkilöcontainer)
+    // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
+    lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinPerusopetuksenOpiskeluOikeus(koskihenkilöcontainer)
 
     /**
       * OK-227 : Jos opiskelija on vaihtanut koulua kesken kauden, säilytetään vain se suoritus jolla on on uusin läsnäolotieto.
       * Aiempi suoritus samalta kaudelta poistetaan suoritusrekisteristä.
       */
-    def resolveViimeisinOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
+    def resolveViimeisinPerusopetuksenOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
       koskihenkilöcontainer.opiskeluoikeudet.
         filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna"))).
         sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
@@ -172,8 +172,9 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case _ => None
       }
 
-      val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo) && s1.valmistuminen.equals(s2.valmistuminen)))
+      val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
       toBeDeletedSuoritukset.foreach(suoritus => {
+        logger.debug("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + suoritus.id + ". Deleting it")
         deleteArvosanatAndSuorituksetAndOpiskelija(suoritus, henkilöOid)
       })
     }
