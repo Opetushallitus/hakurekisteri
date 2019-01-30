@@ -12,8 +12,7 @@ trait IKoskiService {
   def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit
   def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit
   def updateAktiivisetHaut(): () => Unit
-  def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulkOperation: Boolean = false): Future[Unit]
-
+  def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false): Future[Unit]
   def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false, overrideTimeCheck: Boolean = false): Future[Unit]
 
   def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit
@@ -27,5 +26,5 @@ class KoskiServiceMock extends IKoskiService {
 
   override def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit = {}
 
-  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean, overrideTimeCheck: Boolean = false, useBulkOperation: Boolean = false): Future[Unit] = {Future.successful(Unit)}
+  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean): Future[Unit] = {Future.successful(Unit)}
 }

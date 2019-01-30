@@ -203,7 +203,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Saatiin hakemuspalvelusta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta lukiosuoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, true, false, false), 5.hours)
+      Await.result(updateHenkilotForHaku(haku, true), 5.hours)
     })
     logger.info(("Lukioarvosanojen päivitys valmis."))
 
@@ -211,7 +211,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Saatiin hakemuspalvelusta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, false, false, false), 5.hours)
+      Await.result(updateHenkilotForHaku(haku, false), 5.hours)
     })
     logger.info(("Korkeakouluhakujen ammatillisten suoritusten päivitys valmis."))
   }
@@ -221,7 +221,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private var startTimestamp: Long = 0L
   val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
   private var oneJobAtATime = Future.successful({})
-  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false, overrideTimeCheck: Boolean = false, useBulk: Boolean = false): Future[Unit] = {
+  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false): Future[Unit] = {
     def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
       val personOids: Seq[String] = personOidsSet.toSeq
       logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
