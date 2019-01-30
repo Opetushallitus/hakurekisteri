@@ -7,17 +7,17 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.{ReadableInstant, LocalDate}
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 
+case class OpiskeluoikeusCore(aika: Ajanjakso,
+                              henkiloOid: String,
+                              komo: String,
+                              myontaja: String)
+
 case class Opiskeluoikeus(aika: Ajanjakso,
                           henkiloOid: String,
                           komo: String,
                           myontaja: String,
                           source : String) extends UUIDResource[Opiskeluoikeus] {
   override def identify(identity: UUID): Opiskeluoikeus with Identified[UUID] = new IdentifiedOpiskeluOikeus(this, identity)
-
-  private[Opiskeluoikeus] case class OpiskeluoikeusCore(aika: Ajanjakso,
-                                               henkiloOid: String,
-                                               komo: String,
-                                               myontaja: String)
 
   override val core = OpiskeluoikeusCore(aika: Ajanjakso,
     henkiloOid: String,
