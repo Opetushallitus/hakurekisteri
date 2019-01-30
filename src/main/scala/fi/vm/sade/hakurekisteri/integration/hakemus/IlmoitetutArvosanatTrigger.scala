@@ -151,7 +151,7 @@ object IlmoitetutArvosanatTrigger {
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.lukion_kieli.getOrElse("FI")
           )
-          Seq((tutkinto, Seq.empty))
+          Seq((tutkinto, arvosanat))
         } else Seq.empty
       }).getOrElse(Seq.empty)
   }
