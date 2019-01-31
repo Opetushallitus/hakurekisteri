@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
@@ -13,12 +12,12 @@ import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import redis.embedded.RedisServer
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties with BeforeAndAfterAll {
 
@@ -56,7 +55,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
       implicit system => {
         implicit val ec = system.dispatcher
         val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(config = config, cacheFactory = cacheFactory, client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(config = config, cacheFactory = cacheFactory, client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))))))
 
         valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
 
@@ -88,7 +87,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
           cacheFactory = cacheFactory,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
           refetchTime = Some(1000),
           cacheTime = Some(2000)
         )))
@@ -110,7 +109,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
           cacheFactory = cacheFactory,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
           refetchTime = Some(500),
           cacheTime = Some(1000)
         )))
@@ -145,7 +144,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
           cacheFactory = cacheFactory,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
           refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)
@@ -168,7 +167,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
           cacheFactory = cacheFactory,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
           refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)
@@ -195,7 +194,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
           config = config,
           cacheFactory = cacheFactory,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
           refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)

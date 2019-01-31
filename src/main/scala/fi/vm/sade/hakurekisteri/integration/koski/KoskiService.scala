@@ -86,7 +86,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         ).flatMap(fetchPersonAliases).onComplete {
           case Success((henkilot, personOidsWithAliases)) =>
             logger.info(s"HistoryCrawler - Aikaikkuna: " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime + ", Sivu: " + pageNbr +" , Henkilöitä: " + henkilot.size + " kpl.")
-            saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
+            saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).failed.foreach {
               case e => logger.error(e, "HistoryCrawler - Exception in trigger!")
             }
             if(henkilot.isEmpty) {
@@ -132,7 +132,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       ).flatMap(fetchPersonAliases).onComplete {
         case Success((henkilot, personOidsWithAliases)) =>
           logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
-          saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
+          saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).failed.foreach {
             case e => logger.error(e, "processModifiedKoski - Exception in trigger!")
           }
           processModifiedKoski(searchWindowEndTime, refreshFrequency)

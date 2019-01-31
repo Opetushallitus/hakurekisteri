@@ -39,8 +39,8 @@ trait HakijaResourceSupport extends ApiFormats with QueryLogging { this: HakuJaV
     new AsyncResult() {
       override implicit def timeout: Duration = requestTimeout
       val is = process
-      process.recoverWith { case hnfe: HakuNotFoundException => Future.successful(BadRequest(reason = hnfe.getMessage)) }
-      process.onFailure { case e: Throwable => logger.error(e, "Exception thrown from async processing") }
+      process.recoverWith { case hnfe: HakuNotFoundException => Future.successful(BadRequest(body = Map("reason" -> hnfe.getMessage))) }
+      process.failed.foreach { e: Throwable => logger.error(e, "Exception thrown from async processing") }
     }
   }
 }

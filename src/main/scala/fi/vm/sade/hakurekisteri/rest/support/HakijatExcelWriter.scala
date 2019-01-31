@@ -77,12 +77,12 @@ object Workbook {
       index <- 0 until original.getNumberOfSheets
     ) yield {
       val os = original.getSheetAt(index)
-      import scala.collection.JavaConversions._
+      import scala.collection.JavaConverters._
       val readRow: (poi.Row) => Row = (row) => {
-        Row(row.getRowNum, row.map((cell) => Cell(cell.getColumnIndex, cell)).toSet)
+        Row(row.getRowNum, row.asScala.map((cell) => Cell(cell.getColumnIndex, cell)).toSet)
       }
       try {
-        Sheet(os.getSheetName, os.map(readRow).toSet)
+        Sheet(os.getSheetName, os.asScala.map(readRow).toSet)
       } catch {
         case e: Throwable => e.printStackTrace()
           throw e
