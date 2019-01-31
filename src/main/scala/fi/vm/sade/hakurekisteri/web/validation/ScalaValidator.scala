@@ -1,12 +1,10 @@
 package fi.vm.sade.hakurekisteri.web.validation
 
-import scalaz._
-import collection.JavaConversions._
-import scala.util
-import scala.util.Try
-import scalaz.Success
-import scalaz.Failure
+import scala.collection.JavaConverters._
 import scalaz.Validation.FlatMap._
+import scalaz.{Failure, Success, _}
+
+import scala.util.Try
 
 
 trait Validatable[T]  {
@@ -31,7 +29,7 @@ trait ScalaValidator { this: validator.api.Validator =>
   def validateData[V <: AnyRef :Validatable](data:V):ValidationNel[String, V] = {
     for (
       resource <- implicitly[Validatable[V]].validatableResource(data);
-      res <- convert(validate(resource).toList)
+      res <- convert(validate(resource).asScala.toList)
     ) yield data
   }
 

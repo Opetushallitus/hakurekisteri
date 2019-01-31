@@ -121,7 +121,7 @@ object CacheFactory {
             clearCache()
             setVersion(newVersion)
         }
-        f.onFailure{case t =>
+        f.failed.foreach{case t =>
           throw new RedisCacheInitializationException(s"Failed to initialize cache with prefix $cacheKeyPrefix", t)
         }
         Await.result(f, 2.minute)
@@ -214,8 +214,8 @@ object CacheFactory {
             logger.warn(s"Deserialization failed, removing $prefixKey from Redis cache", e)
             r.del(prefixKey).map(_ => None)
         }
-        f.onSuccess {
-          case Some(_) =>
+        f.foreach {
+          _ =>
             val duration = System.currentTimeMillis - startTime
             if (duration > slowRedisRequestThresholdMillis) {
               logger.info(s"Retrieving object with $prefixKey from Redis took $duration ms")

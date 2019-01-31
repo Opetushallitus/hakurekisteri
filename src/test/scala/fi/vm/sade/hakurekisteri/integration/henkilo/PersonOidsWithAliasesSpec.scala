@@ -2,10 +2,10 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.scalatest.concurrent.AsyncAssertions
+import org.scalatest.concurrent.Waiters
 import org.scalatest.{FlatSpec, Matchers}
 
-class PersonOidsWithAliasesSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions {
+class PersonOidsWithAliasesSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with Waiters {
 
   private val henkiloOids = Set("1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4")
   private val aliases = Map(

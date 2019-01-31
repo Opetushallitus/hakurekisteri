@@ -24,17 +24,16 @@ import org.mockito
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.{AsyncAssertions, Waiters}
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with AsyncAssertions {
+class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with Waiters {
 
   implicit val formats = org.json4s.DefaultFormats
 
@@ -883,6 +882,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
           val ismatch = luokka.contentEquals("9A") || luokka.contentEquals("9D")
           ismatch shouldBe true
         }
+
+      case _ => ???
     }
 
     //päättötodistus.luokka shouldBe empty

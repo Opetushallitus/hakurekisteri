@@ -99,7 +99,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
           s <- newSuoritukset
           _ <- Future.sequence(o.map(opiskeluoikeusActor ? _))
           _ <- Future.sequence(s.map(suoritusActor ? _))
-        } yield ()).onFailure {case t => log.error("HenkilöOid {} Virtatietojen tallennuksessa tapahtui virhe {}", r.oppijanumero, t) }
+        } yield ()).failed.foreach { case t => log.error("HenkilöOid {} Virtatietojen tallennuksessa tapahtui virhe {}", r.oppijanumero, t) }
     }
   }
 

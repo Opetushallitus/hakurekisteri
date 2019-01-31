@@ -1,14 +1,14 @@
 package siirto
 
 import fi.vm.sade.hakurekisteri.suoritus.DayFinder
-
-import scalaz._
-import scala.xml.Elem
-import org.scalatest.{FlatSpec, Matchers}
-import org.scalatest.matchers.{MatchResult, Matcher}
 import generators.{DataGen, DataGeneratorSupport}
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
+import org.scalatest.matchers.{MatchResult, Matcher}
+import org.scalatest.{FlatSpec, Matchers}
+import scalaz._
+
+import scala.xml.Elem
 
 class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
 
@@ -215,15 +215,6 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     ) should not (abideSchemas)
   }
 
-
-  val succeed =
-    Matcher { (left: Validation[Any,Any]) =>
-      MatchResult(
-        left.isSuccess,
-        left + " failed",
-        left + " succeeded"
-      )
-    }
 
   def abide(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) = Matcher { (left: Elem) =>
     val validator = new ValidXml(schemaDoc, imports:_*)

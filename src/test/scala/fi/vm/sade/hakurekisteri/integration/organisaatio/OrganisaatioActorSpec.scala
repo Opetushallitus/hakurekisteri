@@ -5,22 +5,21 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest.Matchers
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.Waiters
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
+class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with Waiters with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
 
   implicit val timeout: Timeout = 60.seconds
   private var delayMillisForOrganization99999 = 0
@@ -204,7 +203,7 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
   def initOrganisaatioActor(ttl: Option[FiniteDuration] = None)(implicit system: ActorSystem, ec: ExecutionContext): (Endpoint, ActorRef) = {
     val endPoint = createEndPoint
     val organisaatioActor = system.actorOf(Props(
-      new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), new MockConfig,
+      new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))), new MockConfig,
         MockCacheFactory.get, initDuringStartup = false, ttl)))
 
     Await.result((organisaatioActor ? RefreshOrganisaatioCache).mapTo[Boolean], Duration(10, TimeUnit.SECONDS))

@@ -15,7 +15,7 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 
-class KoskiImporterResource(koskiService: IKoskiService, config: Config)
+class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack
     with KoskiImporterSwaggerApi
@@ -63,7 +63,7 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     val personOids = parse(request.body).extract[Set[String]]
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
-    val maxOppijatPostSize: Int = config.integrations.koskiMaxOppijatPostSize
+    val maxOppijatPostSize: Int = ophConfig.integrations.koskiMaxOppijatPostSize
 
     if (personOids.size > maxOppijatPostSize) {
       val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${maxOppijatPostSize}"

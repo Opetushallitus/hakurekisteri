@@ -157,14 +157,14 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
   override def validate(xml: Elem):ValidationNel[(String, SAXParseException), Elem] = validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
 
   def validate(source: Source): ValidationNel[(String, SAXParseException), Elem] = {
-    val exceptions = new mutable.Stack[(String, SAXParseException)]
+    val exceptions: mutable.MutableList[(String, SAXParseException)] = new mutable.MutableList[(String, SAXParseException)]
 
     val handler = new ErrorHandler{
-      override def fatalError(e: SAXParseException): Unit = {exceptions.push("fatal" -> e)}
+      override def fatalError(e: SAXParseException): Unit = {exceptions.+=("fatal" -> e)}
 
-      override def error(e: SAXParseException): Unit = {exceptions.push("error" -> e)}
+      override def error(e: SAXParseException): Unit = {exceptions.+=("error" -> e)}
 
-      override def warning(e: SAXParseException): Unit = {exceptions.push("warn" -> e)}
+      override def warning(e: SAXParseException): Unit = {exceptions.+=("warn" -> e)}
     }
     val validator  = schema.newValidator()
     validator.setErrorHandler(handler)
@@ -204,7 +204,7 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
   override def adapter: FactoryAdapter with ErrorCollector = new NoBindingFactoryAdapter() with ErrorCollector {
 
-    val exceptions = new mutable.Stack[(String, SAXParseException)]
+    val exceptions = new mutable.MutableList[(String, SAXParseException)]
 
     import scalaz._
     import Scalaz._
@@ -214,11 +214,11 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
       exceptions.toList.toNel.map(_.failure).getOrElse(f(this).successNel)
     }
 
-    override def fatalError(e: SAXParseException): Unit = {exceptions.push("fatal" -> e)}
+    override def fatalError(e: SAXParseException): Unit = {exceptions.+=("fatal" -> e)}
 
-    override def error(e: SAXParseException): Unit = {exceptions.push("error" -> e)}
+    override def error(e: SAXParseException): Unit = {exceptions.+=("error" -> e)}
 
-    override def warning(e: SAXParseException): Unit = {exceptions.push("warn" -> e)}
+    override def warning(e: SAXParseException): Unit = {exceptions.+=("warn" -> e)}
 
 
   }

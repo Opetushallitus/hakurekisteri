@@ -31,9 +31,9 @@ import org.joda.time.{DateTime, LocalDate}
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.read
-import org.mockito.Matchers.{any, anyString}
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 

@@ -34,8 +34,8 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
   private val shortIds = new ConcurrentHashMap[String, QueryAndFormat]()
 
   private def eradicateAllShortUrlsToQuery(q: QueryAndFormat): Unit = {
-    import scala.collection.JavaConversions._
-    shortIds.entrySet().filter(_.getValue.equals(q)).map(_.getKey)
+    import scala.collection.JavaConverters._
+    shortIds.entrySet().asScala.filter(_.getValue.equals(q)).map(_.getKey)
       .foreach(shortIds.remove)
   }
 
@@ -184,8 +184,8 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     })
   }
   def queryToShortId(q: QueryAndFormat): String = {
-    import scala.collection.JavaConversions._
-    shortIds.entrySet().find(_.getValue.equals(q)) match {
+    import scala.collection.JavaConverters._
+    shortIds.entrySet().asScala.find(_.getValue.equals(q)) match {
       case Some(entry) =>
         entry.getKey
       case None =>

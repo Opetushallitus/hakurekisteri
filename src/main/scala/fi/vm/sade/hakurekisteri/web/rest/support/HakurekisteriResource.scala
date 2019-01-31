@@ -59,7 +59,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       val res = createResource(currentUser)
       val au = auditUser
-      res.is.onSuccess {
+      res.is.foreach {
         case ActionResult(_, r, headers) =>
           logger.info("Action success")
           val id = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)

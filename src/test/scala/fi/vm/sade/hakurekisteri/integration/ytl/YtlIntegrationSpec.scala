@@ -27,14 +27,14 @@ import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 
-class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with ShouldMatchers {
+class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar {
   private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
   private implicit val system = ActorSystem("test-jdbc")
   private implicit val ec: ExecutionContext = system.dispatcher
@@ -71,9 +71,9 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
   override protected def beforeEach(): Unit = {
     Mockito.reset(hakemusService, oppijaNumeroRekisteri)
-    Mockito.when(oppijaNumeroRekisteri.enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))).thenAnswer(new Answer[Future[PersonOidsWithAliases]] {
+    Mockito.when(oppijaNumeroRekisteri.enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))).thenAnswer(new Answer[Future[PersonOidsWithAliases]] {
       override def answer(invocation: InvocationOnMock): Future[PersonOidsWithAliases] = {
-        val henkiloOids = invocation.getArgumentAt(0, classOf[Set[String]])
+        val henkiloOids = invocation.getArgument[Set[String]](0)
         Future.successful(PersonOidsWithAliases(henkiloOids, henkiloOids.map(h => (h, Set(h))).toMap, henkiloOids))
       }
     })
@@ -149,7 +149,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     val zipResults: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = Seq(Right((mock[ZipInputStream],
       studentsFromYtlTestData.iterator))).iterator
 
-    Mockito.when(ytlHttpClient.fetch(mockito.Matchers.any(classOf[String]), mockito.Matchers.any())).thenReturn(zipResults)
+    Mockito.when(ytlHttpClient.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any())).thenReturn(zipResults)
 
     findAllSuoritusFromDatabase should be(Nil)
     findAllArvosanasFromDatabase should be(Nil)
@@ -193,7 +193,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     allArvosanasFromDatabase.head should be(arvosanaToExpect)
 
     val expectedNumberOfOnrCalls = 1
-    Mockito.verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls)).enrichWithAliases(mockito.Matchers.any(classOf[Set[String]]))
+    Mockito.verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls)).enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
     Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
   }
 

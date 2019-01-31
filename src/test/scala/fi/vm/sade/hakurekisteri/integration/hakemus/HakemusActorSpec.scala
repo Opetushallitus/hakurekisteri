@@ -15,9 +15,9 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.{Oids, SpecsLikeMockito}
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s._
-import org.scalatest.concurrent.AsyncAssertions
+import org.scalatest.concurrent.Waiters
 import org.scalatest.matchers._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.Seq
@@ -25,7 +25,7 @@ import scala.concurrent.duration._
 import scala.language.{implicitConversions, reflectiveCalls}
 
 
-class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions
+class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with Waiters
   with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
 
   implicit val formats = DefaultFormats
@@ -289,7 +289,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
   }
 
   it should "create suoritus and arvosanat only once" in {
-    val waiterTimeout = timeout(5.seconds)
+    val waiterTimeout = timeout(5.minutes)
     val suoritusWaiter = new Waiter()
     val suoritusQueryWaiter = new Waiter()
     val bypassWaiter = new Waiter()
