@@ -105,93 +105,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 
-  //Tällä voi käydä läpi määritellyn aikaikkunan verran dataa Koskesta, jos joskus tulee tarve käsitellä aiempaa koskidataa uudelleen.
-  //Oletusparametreilla hakee muutoset päivän taaksepäin, jotta Sure selviää alle 24 tunnin downtimeistä ilman Koskidatan puuttumista.
-  override def traverseKoskiDataInChunks(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(1)),
-                                timeToWaitUntilNextBatch: FiniteDuration = 2.minutes,
-                                searchWindowSize: Long = TimeUnit.DAYS.toMillis(10),
-                                repairTargetTime: Date = new Date(Platform.currentTime),
-                                pageNbr: Int = 0,
-                                pageSizePerFetch: Int = 3000)(implicit scheduler: Scheduler): Unit = {
-    if(searchWindowStartTime.getTime >= endDateSuomiTime.getMillis) {
-      logger.info(s"HistoryCrawler - Törmättiin Koski-integraation sulkevaan aikaleimaan. " +
-        s"Lopetetaan läpikäynti. Kaikki ennen aikaleimaa {} muuttunut data on käyty läpi.", endDateSuomiTime.toString)
-      return
-    }
-
-    if(searchWindowStartTime.getTime < repairTargetTime.getTime) {
-      scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
-        var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
-        if (searchWindowEndTime.getTime > repairTargetTime.getTime) {
-          searchWindowEndTime = new Date(repairTargetTime.getTime)
-        }
-        val clampedSearchWindowStartTime = clampTimeToEnd(searchWindowStartTime)
-        searchWindowEndTime = clampTimeToEnd(searchWindowEndTime)
-        fetchChangedWithPagination(
-          params = SearchParamsWithPagination(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
-            muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime),
-            pageSize = pageSizePerFetch,
-            pageNumber = pageNbr)
-        ).flatMap(fetchPersonAliases).onComplete {
-          case Success((henkilot, personOidsWithAliases)) =>
-            logger.info(s"HistoryCrawler - Aikaikkuna: " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime + ", Sivu: " + pageNbr +" , Henkilöitä: " + henkilot.size + " kpl.")
-            saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
-              case e => logger.error(e, "HistoryCrawler - Exception in trigger!")
-            }
-            if(henkilot.isEmpty) {
-              logger.info(s"HistoryCrawler - Siirrytään seuraavaan aikaikkunaan!")
-              traverseKoskiDataInChunks(searchWindowEndTime, timeToWaitUntilNextBatch = 5.seconds, searchWindowSize, repairTargetTime, pageNbr = 0, pageSizePerFetch) //Koko aikaikkuna käsitelty, siirrytään seuraavaan
-            } else {
-              logger.info(s"HistoryCrawler - Haetaan saman aikaikkunan seuraava sivu!")
-              traverseKoskiDataInChunks(clampedSearchWindowStartTime , timeToWaitUntilNextBatch = 2.minutes, searchWindowSize, repairTargetTime, pageNbr + 1, pageSizePerFetch) //Seuraava sivu samaa aikaikkunaa
-            }
-          case Failure(t) =>
-            logger.error(t, "HistoryCrawler - fetch data failed, retrying")
-            traverseKoskiDataInChunks(clampedSearchWindowStartTime , timeToWaitUntilNextBatch = 2.minutes, searchWindowSize, repairTargetTime, pageNbr, pageSizePerFetch) //Sama sivu samasta aikaikkunasta
-        }
-      })} else {
-      logger.info(s"HistoryCrawler - koko haluttu aikaikkuna käyty läpi, lopetetaan läpikäynti.")
-    }
-  }
-
-  //Päivitetään minuutin välein minuutin aikaikkunallinen muuttunutta dataa Koskesta.
-  //HUOM: viive tietojen päivittymiselle koski -> sure runsaat 5 minuuttia oletusparametreilla.
-  //On tärkeää laahata hieman menneisyydessä, koska hyvin lähellä nykyhetkeä saattaa jäädä tietoa siirtymättä Sureen
-  //jos Kosken päässä data ei ole ehtinyt kantaan asti ennen kuin sen perään kysellään.
-  var maximumCatchup: Long = TimeUnit.SECONDS.toMillis(30)
-  def processModifiedKoski(searchWindowStartTime: Date = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)),
-                           refreshFrequency: FiniteDuration = 1.minute,
-                           searchWindowSize: Long = TimeUnit.MINUTES.toMillis(1))(implicit scheduler: Scheduler): Unit = {
-    if(endDateSuomiTime.isBeforeNow) {
-      logger.info("processModifiedKoski - Cutoff date of {} reached, stopping", endDateSuomiTime.toString)
-      return
-    }
-    scheduler.scheduleOnce(refreshFrequency)({
-      var catchup = false //Estetään prosessoijaa jättäytymästä vähitellen yhä enemmän jälkeen vaihtelevien käsittelyaikojen takia
-      var searchWindowEndTime: Date = new Date(searchWindowStartTime.getTime + searchWindowSize)
-      if (searchWindowStartTime.getTime < (Platform.currentTime - TimeUnit.MINUTES.toMillis(5))) {
-        searchWindowEndTime = new Date(searchWindowStartTime.getTime + searchWindowSize + maximumCatchup)
-        catchup = true
-      }
-      val clampedSearchWindowStartTime = clampTimeToEnd(searchWindowStartTime)
-      searchWindowEndTime = clampTimeToEnd(searchWindowEndTime)
-      fetchChanged(
-        params = SearchParams(muuttunutJälkeen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(clampedSearchWindowStartTime ),
-          muuttunutEnnen = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(searchWindowEndTime ))
-      ).flatMap(fetchPersonAliases).onComplete {
-        case Success((henkilot, personOidsWithAliases)) =>
-          logger.info(s"processModifiedKoski - muuttuneita opiskeluoikeuksia aikavälillä " + clampedSearchWindowStartTime  + " - " + searchWindowEndTime  + ": " + henkilot.size + " kpl. Catchup " + catchup.toString)
-          saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases).onFailure {
-            case e => logger.error(e, "processModifiedKoski - Exception in trigger!")
-          }
-          processModifiedKoski(searchWindowEndTime, refreshFrequency)
-        case Failure(t) =>
-          logger.error(t, "processModifiedKoski - fetching modified henkilot failed, retrying")
-          processModifiedKoski(clampedSearchWindowStartTime , refreshFrequency)
-      }
-    })
-  }
-
   /*
     *OK-227 : haun automatisointi.
     * Hakee joka yö:
@@ -216,8 +129,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Korkeakouluhakujen ammatillisten suoritusten päivitys valmis."))
   }
 
-  //Pitää kirjaa, koska päivitys on viimeksi käynnistetty. Tämän kevyen toteutuksen on tarkoitus suojata siltä, että operaatio käynnistetään tahattoman monta kertaa.
-  //Käynnistetään päivitys vain, jos edellisestä käynnistyksestä on yli minimiaika.
   private var startTimestamp: Long = 0L
   val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
   private var oneJobAtATime = Future.successful({})
