@@ -436,20 +436,21 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val savedArvosanat: Seq[Arvosana] =
           Await.result((arvosanaActor ? ArvosanaQuery(s.id))(akka.util.Timeout(1, TimeUnit.MINUTES)).mapTo[Seq[Arvosana]], awaitTimeout)
 
-        savedArvosanat should (
-          contain (
-            Arvosana(
-              suoritus = s.id,
-              arvio = Arvio410("6"),
-              aine = "A1",
-              lisatieto = Some("EN"),
-              valinnainen = true,
-              myonnetty = None,
-              source = lahde,
-              lahdeArvot = Map(),
-              jarjestys = Some(0)
-            )
-          ) and contain (
+        savedArvosanat should contain (
+          Arvosana(
+            suoritus = s.id,
+            arvio = Arvio410("6"),
+            aine = "A1",
+            lisatieto = Some("EN"),
+            valinnainen = true,
+            myonnetty = None,
+            source = lahde,
+            lahdeArvot = Map(),
+            jarjestys = Some(0)
+          )
+        )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("8"),
@@ -461,7 +462,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               lahdeArvot = Map(),
               jarjestys = Some(1)
             )
-          ) and contain (
+          )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("10"),
@@ -473,7 +476,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               lahdeArvot = Map(),
               jarjestys = Some(2)
             )
-          ) and contain (
+          )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("6"),
@@ -485,7 +490,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               lahdeArvot = Map(),
               jarjestys = Some(0)
             )
-          ) and contain (
+          )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("8"),
@@ -498,7 +505,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               jarjestys = Some(1)
             )
           )
-        )
+
         database.close()
       }
     )
