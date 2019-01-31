@@ -1,11 +1,12 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
+import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import com.ning.http.client._
-import dispatch.Http
+import org.asynchttpclient._
+import dispatch.{Http, HttpExecutor}
 import fi.vm.sade.hakurekisteri.tools.SafeXML
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
@@ -30,15 +31,19 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                   aClient: Option[AsyncHttpClient] = None,
                   var apiVersion: String = VirtaClient.version105)(implicit val ec: ExecutionContext, system: ActorSystem) {
 
-  private val defaultClient = Http.configure(_
-    .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
-    .setRequestTimeoutInMs(120000)
-    .setIdleConnectionTimeoutInMs(120000)
-    .setFollowRedirects(true)
+  private val defaultClient = Http.withConfiguration(_
+    .setConnectTimeout(config.httpClientConnectionTimeout)
+    .setRequestTimeout(120000)
+    .setPooledConnectionIdleTimeout(120000)
+    .setFollowRedirect(true)
     .setMaxRequestRetry(2)
   )
 
-  val client: Http = aClient.map(Http(_)).getOrElse(defaultClient)
+  val client: HttpExecutor = aClient.map { asyncHttpClient =>
+    new HttpExecutor {
+      override def client: AsyncHttpClient = asyncHttpClient
+    }
+  }.getOrElse(defaultClient)
 
   val logger = Logging.getLogger(system, this)
   val maxRetries = config.httpClientMaxRetries
@@ -128,7 +133,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       case Failure(e) => s"failure: $e"
     }
 
-    val res = client((url(requestUrl) << requestEnvelope).setContentType("text/xml", "UTF-8") > VirtaHandler)
+    val res = client((url(requestUrl) << requestEnvelope).setContentType("text/xml", Charset.forName("UTF-8")) > VirtaHandler)
     res.onComplete(t => logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - t0} ms, result ${result(t)}"))
     res
   }

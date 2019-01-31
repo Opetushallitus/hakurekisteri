@@ -11,7 +11,7 @@ import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
 import com.amazonaws.regions.Regions
 
@@ -62,6 +62,7 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
       case Failure(f) => throw f;
       case Success(s) => try {
         closeInCaseOfFailure(s
+          .asScala
           .filter(!_.toFile.isDirectory)
           .filter(_.toString.contains(uuid))
           .map(f => Try(new FileInputStream(f.toFile))).toList).iterator

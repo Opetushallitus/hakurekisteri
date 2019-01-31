@@ -113,7 +113,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     val hakuOid: Option[String] = params.get("haku")
 
     if (ensikertalaisuudet && hakuOid.getOrElse("").isEmpty) {
-      BadRequest(null,null,"Haku has to be defined if ensikertalaisuudet is true")
+      BadRequest(body = Map("reason" -> "Haku has to be defined if ensikertalaisuudet is true"))
     } else {
       audit.log(auditUser,
         ResourceRead,

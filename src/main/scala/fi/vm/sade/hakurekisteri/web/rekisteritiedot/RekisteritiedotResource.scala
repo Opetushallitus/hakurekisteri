@@ -26,7 +26,7 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Parameter, Swagger, SwaggerEngine}
 import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -110,7 +110,7 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     vuosi = params.get("vuosi").flatMap(_.blankOption)
   )
 
-  implicit val v: Validatable[Todistus] = SimpleValidatable((t) => ValidatedTodistus(t.suoritus, t.arvosanat))
+  implicit val v: Validatable[Todistus] = SimpleValidatable(t => ValidatedTodistus(t.suoritus, t.arvosanat.asJava))
 
   get("/:oid", operation(read)) {
     val t0 = Platform.currentTime
@@ -273,4 +273,4 @@ case class RekisteriQuery(oppilaitosOid: Option[String], vuosi: Option[String])
 
 case class LightWeightTiedot(henkilo: String, luokka: Option[String], arvosanat: Boolean)
 
-case class ValidatedTodistus(suoritus: Suoritus, arvosanas: java.util.List[Arvosana], suppressed: java.util.List[String] = Nil)
+case class ValidatedTodistus(suoritus: Suoritus, arvosanas: java.util.List[Arvosana], suppressed: java.util.List[String] = Nil.asJava)

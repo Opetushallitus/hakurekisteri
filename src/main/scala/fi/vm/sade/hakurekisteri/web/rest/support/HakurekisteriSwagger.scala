@@ -26,7 +26,16 @@ class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(
   licenseUrl = "http://www.osor.eu/eupl/")
 )
 
-case class ModelResponseMessage(code: Int, message: String, responseModel: String = "IncidentReport") extends ResponseMessage[String]
+class ModelResponseMessage(override val code: Int,
+                           override val message: String,
+                           override val responseModel: Option[String])
+  extends ResponseMessage(code, message, responseModel)
+
+object ModelResponseMessage {
+  def apply(code: Int, message: String, responseModel: Option[String] = Some("IncidentReport")): ModelResponseMessage = {
+    new ModelResponseMessage(code, message, responseModel)
+  }
+}
 
 trait IncidentReportSwaggerModel extends OldSwaggerSyntax {
 

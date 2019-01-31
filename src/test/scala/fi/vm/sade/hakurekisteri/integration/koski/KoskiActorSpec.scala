@@ -11,8 +11,8 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.{Oids, OrganisaatioOids, SpecsLikeMockito}
 import org.joda.time.DateTime
 import org.json4s._
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.Waiters
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.Seq
@@ -26,7 +26,7 @@ import scala.language.{implicitConversions, reflectiveCalls}
   *
   * More tests at {@link fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTriggerTest}
   */
-class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions
+class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with Waiters
   with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
 
   implicit val formats = DefaultFormats

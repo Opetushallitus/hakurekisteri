@@ -342,14 +342,14 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
 object EmptyFile extends FileItem(EmptyPart)
 
 object EmptyPart extends Part {
-  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
   private val data: Array[Byte] = new Array[Byte](0)
   override def getInputStream: InputStream = new ByteArrayInputStream(data)
   override def getSubmittedFileName: String = ""
-  override def getHeaderNames: util.Collection[String] = List()
+  override def getHeaderNames: util.Collection[String] = List().asJava
   override def getName: String = ""
   override def getSize: Long = data.length
-  override def getHeaders(name: String): util.Collection[String] = List()
+  override def getHeaders(name: String): util.Collection[String] = List().asJava
   override def delete(): Unit = {}
   override def write(fileName: String): Unit = {}
   override def getContentType: String = "text/plain"

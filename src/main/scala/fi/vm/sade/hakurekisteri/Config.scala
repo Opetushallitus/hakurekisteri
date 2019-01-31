@@ -5,7 +5,6 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.Properties
 
 import akka.actor.ActorSystem
-import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
@@ -176,8 +175,8 @@ abstract class Config {
   val tiedonsiirtoStorageDir = properties.getOrElse("suoritusrekisteri.tiedonsiirto.storage.dir", System.getProperty("java.io.tmpdir"))
 
   def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
-    import scala.collection.JavaConversions._
-    val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
+    import scala.collection.JavaConverters._
+    val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.asScala.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
 
     resolve(rawMap)
   }

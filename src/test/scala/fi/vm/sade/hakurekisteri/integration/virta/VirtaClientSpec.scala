@@ -4,13 +4,12 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, CapturingProvider, DispatchSupport, Endpoint}
+import fi.vm.sade.hakurekisteri.integration.{CapturingAsyncHttpClient, DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.LocalDate
 import org.mockito.Mockito
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.Waiters
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
@@ -34,7 +33,7 @@ object VirtaResults {
 
 
 
-class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with FutureWaiting with BeforeAndAfterAll {
+class VirtaClientSpec extends FlatSpec with Matchers with Waiters with MockitoSugar with DispatchSupport with FutureWaiting with BeforeAndAfterAll {
   implicit val system = ActorSystem("test-virta-system")
   implicit val clientEc = ExecutorUtil.createExecutor(1, "virta-test-pool")
   import Mockito._
@@ -55,7 +54,7 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("111111-1975"))).thenReturn((200, List(), VirtaResults.testResponse))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.106"))).thenReturn((200, List(), VirtaResults.testResponse106))
 
-  val virtaClient = new VirtaClient(aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
+  val virtaClient = new VirtaClient(aClient = Some(new CapturingAsyncHttpClient(endPoint)))
 
   behavior of "VirtaClient"
 

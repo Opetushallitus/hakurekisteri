@@ -73,11 +73,11 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     ExcelUtilV1.write(out, hakijat)
 
     val wb: Workbook = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray))
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     val result: IndexedSeq[((Int, Int), String)] = for (
       index <- 0 until wb.getNumberOfSheets;
-      row <- wb.getSheetAt(index).toList;
-      cell <- row.cellIterator().toList
+      row <- wb.getSheetAt(index).asScala.toList;
+      cell <- row.cellIterator().asScala.toList
     ) yield (row.getRowNum, cell.getColumnIndex) -> cell.getStringCellValue
 
     val resultMap = result.toMap

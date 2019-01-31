@@ -1,35 +1,25 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.text.DateFormat
-import java.time.format.DateTimeFormatter
-import java.util.{Date, TimeZone}
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorSystem}
 import akka.testkit.TestActorRef
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, MockConfig}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito._
 import org.scalatest._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Success, Try}
+import scala.concurrent.{Await, ExecutionContext}
 
 class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with LocalhostProperties {
 
   implicit val system = ActorSystem(s"test-system-${Platform.currentTime.toString}")
   implicit def executor: ExecutionContext = system.dispatcher
   val endPoint = mock[Endpoint]
-  val asyncProvider = new CapturingProvider(endPoint)
-  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/koski"), aClient = Some(new AsyncHttpClient(asyncProvider)))
+  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/koski"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
   val testRef = TestActorRef(new Actor {
     override def receive: Actor.Receive = {
       case q =>

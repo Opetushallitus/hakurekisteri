@@ -12,8 +12,12 @@
         <name>suoritusrekisteri</name>
     </organization>
     <properties>
+        <scala.version>2.12.8</scala.version>
         <spring.version>4.3.21.RELEASE</spring.version>
         <spring-security.version>4.2.10.RELEASE</spring-security.version>
+        <scalatra.version>2.5.4</scalatra.version>
+        <slick.version>3.2.3</slick.version>
+        <json4s.version>3.4.2</json4s.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -117,6 +121,82 @@
                 <artifactId>gson</artifactId>
                 <version>2.8.5</version>
             </dependency>
+            <dependency>
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-parser-combinators_2.12</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.9.7</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.9.7</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>4.1.31.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>4.1.31.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>4.1.31.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport</artifactId>
+                <version>4.1.31.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>4.1.31.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-resolver</artifactId>
+                <version>4.1.31.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.typesafe.akka</groupId>
+                <artifactId>akka-actor_2.12</artifactId>
+                <version>2.5.19</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.scala-lang</groupId>
+                        <artifactId>scala-library</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.joda</groupId>
+                <artifactId>joda-convert</artifactId>
+                <version>2.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.reactivestreams</groupId>
+                <artifactId>reactive-streams</artifactId>
+                <version>1.0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-xml_2.12</artifactId>
+                <version>1.1.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -127,8 +207,8 @@
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.0</version>
+            <artifactId>annotations</artifactId>
+            <version>3.0.1</version>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
@@ -147,13 +227,13 @@
         </dependency>
         <dependency>
             <groupId>org.spire-math</groupId>
-            <artifactId>jawn-parser_2.11</artifactId>
-            <version>0.9.0</version>
+            <artifactId>jawn-parser_2.12</artifactId>
+            <version>0.13.0</version>
         </dependency>
         <dependency>
             <groupId>org.spire-math</groupId>
-            <artifactId>jawn-ast_2.11</artifactId>
-            <version>0.9.0</version>
+            <artifactId>jawn-ast_2.12</artifactId>
+            <version>0.13.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -180,12 +260,11 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.11.7</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -197,48 +276,30 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatra.rl</groupId>
-                    <artifactId>rl_2.11</artifactId>
+                    <artifactId>rl_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.11</artifactId>
+                    <artifactId>scala-parser-combinators_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.clapper</groupId>
-                    <artifactId>grizzled-slf4j_2.11</artifactId>
+                    <artifactId>grizzled-slf4j_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-parser-combinators_2.11</artifactId>
-            <version>1.0.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatra.rl</groupId>
-            <artifactId>rl_2.11</artifactId>
-            <version>0.4.10</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>scala-parser-combinators_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalate_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra-scalate_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-core_2.11</artifactId>
+                    <artifactId>scalate-core_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -248,8 +309,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra.scalate</groupId>
-            <artifactId>scalate-core_2.11</artifactId>
-            <version>1.7.1</version>
+            <artifactId>scalate-core_2.12</artifactId>
+            <version>1.9.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -257,30 +318,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-util_2.11</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatra.scalate</groupId>
-            <artifactId>scalate-util_2.11</artifactId>
-            <version>1.7.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.11</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.11</artifactId>
+                    <artifactId>scalate-util_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -290,30 +328,30 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-json_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra-json_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.json4s</groupId>
-                    <artifactId>json4s-core_2.11</artifactId>
+                    <artifactId>json4s-core_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-swagger_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra-swagger_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.json4s</groupId>
-                    <artifactId>json4s-ext_2.11</artifactId>
+                    <artifactId>json4s-ext_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-commands_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra-commands_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-validator</groupId>
@@ -325,22 +363,11 @@
                 </exclusion>
                 <exclusion>
                     <groupId>io.backchat.inflector</groupId>
-                    <artifactId>scala-inflector_2.11</artifactId>
+                    <artifactId>scala-inflector_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-core_2.11</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.backchat.inflector</groupId>
-            <artifactId>scala-inflector_2.11</artifactId>
-            <version>1.3.5</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
+                    <artifactId>scalaz-core_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -509,6 +536,10 @@
                 <exclusion>
                     <groupId>joda-time</groupId>
                     <artifactId>joda-time</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.jcip</groupId>
+                    <artifactId>jcip-annotations</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -724,8 +755,8 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-testkit_2.11</artifactId>
-            <version>2.5.2</version>
+            <artifactId>akka-testkit_2.12</artifactId>
+            <version>2.5.19</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -736,8 +767,8 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-slf4j_2.11</artifactId>
-            <version>2.5.2</version>
+            <artifactId>akka-slf4j_2.12</artifactId>
+            <version>2.5.19</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -751,8 +782,12 @@
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-xml_2.11</artifactId>
-            <version>1.0.5</version>
+            <artifactId>scala-xml_2.12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.scalaz</groupId>
+            <artifactId>scalaz-core_2.12</artifactId>
+            <version>7.2.27</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -762,8 +797,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-core_2.11</artifactId>
-            <version>7.2.3</version>
+            <artifactId>scalaz-concurrent_2.12</artifactId>
+            <version>7.2.27</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -773,38 +808,27 @@
         </dependency>
         <dependency>
             <groupId>org.scalaz.stream</groupId>
-            <artifactId>scalaz-stream_2.11</artifactId>
-            <version>0.7.3</version>
+            <artifactId>scalaz-stream_2.12</artifactId>
+            <version>0.8.6</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scodec</groupId>
-                    <artifactId>scodec-bits_2.11</artifactId>
+                    <artifactId>scodec-bits_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-core_2.11</artifactId>
+                    <artifactId>scalaz-core_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-concurrent_2.11</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-concurrent_2.11</artifactId>
-            <version>7.2.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
+                    <artifactId>scalaz-concurrent_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scodec</groupId>
-            <artifactId>scodec-bits_2.11</artifactId>
-            <version>1.0.9</version>
+            <artifactId>scodec-bits_2.12</artifactId>
+            <version>1.1.9</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -824,8 +848,8 @@
         </dependency>
         <dependency>
             <groupId>org.clapper</groupId>
-            <artifactId>grizzled-slf4j_2.11</artifactId>
-            <version>1.1.0</version>
+            <artifactId>grizzled-slf4j_2.12</artifactId>
+            <version>1.3.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -839,8 +863,8 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-ast_2.11</artifactId>
-            <version>3.4.0</version>
+            <artifactId>json4s-ast_2.12</artifactId>
+            <version>${json4s.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -850,8 +874,8 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-core_2.11</artifactId>
-            <version>3.4.0</version>
+            <artifactId>json4s-core_2.12</artifactId>
+            <version>${json4s.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -861,8 +885,8 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-ext_2.11</artifactId>
-            <version>3.4.0</version>
+            <artifactId>json4s-ext_2.12</artifactId>
+            <version>${json4s.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -876,8 +900,8 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_2.11</artifactId>
-            <version>3.4.0</version>
+            <artifactId>json4s-jackson_2.12</artifactId>
+            <version>${json4s.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -891,8 +915,8 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-scalap_2.11</artifactId>
-            <version>3.4.0</version>
+            <artifactId>json4s-scalap_2.12</artifactId>
+            <version>${json4s.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -902,8 +926,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.nscala-time</groupId>
-            <artifactId>nscala-time_2.11</artifactId>
-            <version>1.4.0</version>
+            <artifactId>nscala-time_2.12</artifactId>
+            <version>2.20.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -920,14 +944,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>2.9.4</version>
-        </dependency>
-        <dependency>
             <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick_2.11</artifactId>
-            <version>3.2.1</version>
+            <artifactId>slick_2.12</artifactId>
+            <version>${slick.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -945,8 +964,8 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick-hikaricp_2.11</artifactId>
-            <version>3.2.1</version>
+            <artifactId>slick-hikaricp_2.12</artifactId>
+            <version>${slick.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -960,8 +979,8 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick-testkit_2.11</artifactId>
-            <version>3.2.1</version>
+            <artifactId>slick-testkit_2.12</artifactId>
+            <version>${slick.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -973,14 +992,14 @@
                 </exclusion>
                 <exclusion>
                     <groupId>com.typesafe.slick</groupId>
-                    <artifactId>slick-codegen_2.11</artifactId>
+                    <artifactId>slick-codegen_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick-codegen_2.11</artifactId>
-            <version>3.2.1</version>
+            <artifactId>slick-codegen_2.12</artifactId>
+            <version>${slick.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -991,18 +1010,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.4-1201-jdbc41</version>
-        </dependency>
-        <dependency>
-            <groupId>ru.yandex.qatools.embed</groupId>
-            <artifactId>postgresql-embedded</artifactId>
-            <version>1.15</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>de.flapdoodle.embed</groupId>
-                    <artifactId>de.flapdoodle.embed.process</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>42.2.5</version>
         </dependency>
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
@@ -1037,9 +1045,9 @@
             <version>4.1.0</version>
         </dependency>
         <dependency>
-            <groupId>net.databinder.dispatch</groupId>
-            <artifactId>dispatch-core_2.11</artifactId>
-            <version>0.11.2</version>
+            <groupId>org.dispatchhttp</groupId>
+            <artifactId>dispatch-core_2.12</artifactId>
+            <version>1.0.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1047,7 +1055,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.11</artifactId>
+                    <artifactId>scala-xml_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.ning</groupId>
@@ -1056,13 +1064,17 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.ning</groupId>
+            <groupId>org.asynchttpclient</groupId>
             <artifactId>async-http-client</artifactId>
-            <version>1.8.10</version>
+            <version>2.5.4</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.activation</groupId>
+                    <artifactId>javax.activation</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -1080,18 +1092,11 @@
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
-            <version>1.3.1</version>
+            <version>1.3.3</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.11</artifactId>
-            <version>2.5.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>akka-actor_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
@@ -1134,12 +1139,12 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-reflect</artifactId>
-            <version>2.11.7</version>
+            <version>${scala.version}</version>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-utils_2.11</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <artifactId>scala-utils_2.12</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1147,7 +1152,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaj</groupId>
-                    <artifactId>scalaj-http_2.11</artifactId>
+                    <artifactId>scalaj-http_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -1155,7 +1160,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.json4s</groupId>
-                    <artifactId>json4s-jackson_2.11</artifactId>
+                    <artifactId>json4s-jackson_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -1163,15 +1168,15 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.json4s</groupId>
-                    <artifactId>json4s-ext_2.11</artifactId>
+                    <artifactId>json4s-ext_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-core_2.11</artifactId>
+                    <artifactId>scalate-core_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.github.cb372</groupId>
-                    <artifactId>scalacache-guava_2.11</artifactId>
+                    <artifactId>scalacache-guava_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>de.flapdoodle.embed</groupId>
@@ -1185,8 +1190,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalaj</groupId>
-            <artifactId>scalaj-http_2.11</artifactId>
-            <version>1.1.0</version>
+            <artifactId>scalaj-http_2.12</artifactId>
+            <version>2.4.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1196,7 +1201,7 @@
         </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.11</artifactId>
+            <artifactId>scala-properties_2.12</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
@@ -1207,8 +1212,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
-            <version>2.2.5</version>
+            <artifactId>scalatest_2.12</artifactId>
+            <version>3.0.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1220,28 +1225,28 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.11</artifactId>
+                    <artifactId>scala-xml_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.10.19</version>
+            <version>2.7.22</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra-scalatest_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest_2.11</artifactId>
+                    <artifactId>scalatest_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatra</groupId>
-                    <artifactId>scalatra-test_2.11</artifactId>
+                    <artifactId>scalatra-test_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -1249,7 +1254,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.clapper</groupId>
-                    <artifactId>grizzled-slf4j_2.11</artifactId>
+                    <artifactId>grizzled-slf4j_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>eu.medsea.mimeutil</groupId>
@@ -1259,8 +1264,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-test_2.11</artifactId>
-            <version>2.4.1</version>
+            <artifactId>scalatra-test_2.12</artifactId>
+            <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.eclipse.jetty</groupId>
@@ -1268,7 +1273,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.clapper</groupId>
-                    <artifactId>grizzled-slf4j_2.11</artifactId>
+                    <artifactId>grizzled-slf4j_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -1301,8 +1306,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalamock</groupId>
-            <artifactId>scalamock-scalatest-support_2.11</artifactId>
-            <version>3.2.2</version>
+            <artifactId>scalamock-scalatest-support_2.12</artifactId>
+            <version>3.6.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -1311,18 +1316,18 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest_2.11</artifactId>
+                    <artifactId>scalatest_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalamock</groupId>
-                    <artifactId>scalamock-core_2.11</artifactId>
+                    <artifactId>scalamock-core_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scalamock</groupId>
-            <artifactId>scalamock-core_2.11</artifactId>
-            <version>3.2.2</version>
+            <artifactId>scalamock-core_2.12</artifactId>
+            <version>3.6.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1341,7 +1346,7 @@
         </dependency>
         <dependency>
             <groupId>io.findify</groupId>
-            <artifactId>s3mock_2.11</artifactId>
+            <artifactId>s3mock_2.12</artifactId>
             <version>0.2.3</version>
             <scope>test</scope>
             <exclusions>
@@ -1363,7 +1368,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>com.typesafe.akka</groupId>
-                    <artifactId>akka-stream_2.11</artifactId>
+                    <artifactId>akka-stream_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1371,7 +1376,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.11</artifactId>
+                    <artifactId>scala-xml_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -1381,13 +1386,13 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-http_2.11</artifactId>
+            <artifactId>akka-http_2.12</artifactId>
             <version>10.0.7</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>com.typesafe.akka</groupId>
-                    <artifactId>akka-stream_2.11</artifactId>
+                    <artifactId>akka-stream_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1399,14 +1404,14 @@
                 </exclusion>
                 <exclusion>
                     <groupId>com.typesafe.akka</groupId>
-                    <artifactId>akka-actor_2.11</artifactId>
+                    <artifactId>akka-actor_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream_2.11</artifactId>
-            <version>2.5.2</version>
+            <artifactId>akka-stream_2.12</artifactId>
+            <version>2.5.19</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1435,7 +1440,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.etaty</groupId>
-            <artifactId>rediscala_2.11</artifactId>
+            <artifactId>rediscala_2.12</artifactId>
             <version>1.8.0</version>
             <exclusions>
                 <exclusion>
@@ -1444,7 +1449,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>com.typesafe.akka</groupId>
-                    <artifactId>akka-actor_2.11</artifactId>
+                    <artifactId>akka-actor_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -1655,6 +1660,12 @@
             <name>oph-snapshots</name>
             <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local/</url>
             <layout>default</layout>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
         <repository>
             <id>ophreleases</id>

@@ -16,8 +16,8 @@ import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
-import org.mockito.{Matchers, Mockito}
-import org.scalatest.mock.MockitoSugar
+import org.mockito.{ArgumentMatchers, Matchers, Mockito}
+import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -97,7 +97,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   test("returns ensikertalaisuus for all hakijas in haku") {
-    Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(Matchers.anyString, Matchers.any[Option[String]]))
+    Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(ArgumentMatchers.anyString, ArgumentMatchers.any[Option[String]]))
       .thenReturn(Future.successful(Seq[FullHakemus](
         FullHakemus("1", Some("1"), "1.2.3", None, None, Seq(), Seq()),
         FullHakemus("2", Some("2"), "1.2.3", None, None, Seq(), Seq()),
@@ -110,7 +110,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   test("returns 404 if haku not found") {
-    Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(Matchers.anyString, Matchers.any[Option[String]]))
+    Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(ArgumentMatchers.anyString, ArgumentMatchers.any[Option[String]]))
       .thenReturn(Future.successful(Seq[FullHakemus]()))
     get("/ensikertalainen/haku/notfound") {
       response.status should be(404)
@@ -118,7 +118,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   protected override def beforeAll() = {
-    Mockito.when(hakemusServiceMock.hakemuksetForPersonsInHaku(Matchers.any[Set[String]], Matchers.anyString()))
+    Mockito.when(hakemusServiceMock.hakemuksetForPersonsInHaku(ArgumentMatchers.any[Set[String]], ArgumentMatchers.anyString()))
       .thenReturn(Future.successful(Seq[FullHakemus]()))
     super.beforeAll()
   }

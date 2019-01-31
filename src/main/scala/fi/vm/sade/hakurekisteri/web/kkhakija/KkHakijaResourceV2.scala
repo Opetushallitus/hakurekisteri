@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
-class KkHakijaResourceV2(kkHakijaService: KkHakijaService, config: Config)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
+class KkHakijaResourceV2(kkHakijaService: KkHakijaService, ophConfig: Config)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
     with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging with HakijaResourceSupport {
 
@@ -46,7 +46,7 @@ class KkHakijaResourceV2(kkHakijaService: KkHakijaService, config: Config)(impli
         Future.successful(result)
       case result => Future.successful(result)
     }
-    prepareAsyncResult(tyyppi, kkhakijatFuture, requestTimeout = config.valintaTulosTimeout)
+    prepareAsyncResult(tyyppi, kkhakijatFuture, requestTimeout = ophConfig.valintaTulosTimeout)
   }
 
   incident {

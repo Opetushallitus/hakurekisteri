@@ -2,22 +2,14 @@ package fi.vm.sade.hakurekisteri.batchimport
 
 import java.util.UUID
 
-import akka.actor.Actor.Receive
-import akka.actor.{ActorRef, ActorLogging, Actor}
-import fi.vm.sade.hakurekisteri.rest.support.JDBCUtil
-import fi.vm.sade.hakurekisteri.storage.ResourceService
-import fi.vm.sade.hakurekisteri.storage.repository.Repository
+import akka.actor.{Actor, ActorLogging}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import slick.dbio.Effect.Write
-import slick.jdbc.meta.MTable
+import fi.vm.sade.hakurekisteri.rest.support.JDBCUtil
+
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import slick.dbio
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success, Try}
-import akka.pattern.{ask, pipe}
 
 case class QueryImportBatchReferences(organisations: Set[String])
 case class ReferenceResult(references: Seq[UUID])
@@ -25,7 +17,11 @@ case class ReferenceResult(references: Seq[UUID])
 class ImportBatchOrgActor(db: Database) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val table = TableQuery[ImportBatchOrgTable]
-  JDBCUtil.createSchemaForTable(table, db)
+  if (db == null) {
+    log.warning("Got null db object! This should not happen in production.")
+  } else {
+    JDBCUtil.createSchemaForTable(table, db)
+  }
 
   def insertIfNotExists(resourceId: UUID, oid: String, created: Long) = table.map(u => (u.resourceId, u.oid, u.inserted)).forceInsertQuery {
 
