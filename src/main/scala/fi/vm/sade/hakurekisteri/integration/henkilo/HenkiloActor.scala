@@ -5,16 +5,13 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
-import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
-
-import scala.concurrent.duration._
-import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
+import org.json4s._
+import org.json4s.jackson.JsonMethods
 import support.TypedActorRef
 
-import scala.util.parsing.json.JSON
+import scala.collection.mutable
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
@@ -27,16 +24,14 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   private var savingHenkilo = false
   private var lastUnhandledSaveNext = 0L
   private val saveQueue: mutable.Map[SaveHenkilo, ActorRef] = new mutable.LinkedHashMap[SaveHenkilo, ActorRef]()
+  private implicit val formats: Formats = DefaultFormats.lossless
 
   private object SaveNext
 
   def parseOid(h: String): String = {
-    val j = JSON.parseFull(h).get.asInstanceOf[Map[String, String]]
-    val oid = j.get("oidHenkilo") match {
-      case Some(s) => s
-      case None => ""
-    }
-    oid
+    (JsonMethods.parse(h) \ "oidHenkilo").
+      extractOpt[String].
+      getOrElse("")
   }
 
   override def receive: Receive = {
