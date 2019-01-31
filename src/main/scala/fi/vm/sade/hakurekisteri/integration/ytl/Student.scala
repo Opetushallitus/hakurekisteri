@@ -99,8 +99,8 @@ case object StatusDeserializer extends CustomSerializer[Status](format => ({
 case class Student(ssn: String, lastname: String, firstnames: String,
                    graduationPeriod: Option[Kausi] = None,
                    graduationDate: Option[LocalDate] = None,
-                   graduationSchoolOphOid: Option[String] = None,
-                   graduationSchoolYtlNumber: Option[String] = None,
+                   certificateSchoolOphOid: Option[String] = None,
+                   certificateSchoolYtlNumber: Option[String] = None,
                    hasCompletedMandatoryExams: Option[Boolean] = None,
                    language: String,
                    exams: Seq[Exam])
