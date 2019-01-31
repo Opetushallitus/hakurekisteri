@@ -81,7 +81,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       audit.log(auditUser,
         ResourceUpdate,
         new Target.Builder().setField("resource",resourceName).setField("id", params("id")).build(),
-        new Changes.Builder().added("result", updated.toString).build())
+        new Changes.Builder().build())
       updated
     }
   }
