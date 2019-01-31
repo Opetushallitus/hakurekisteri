@@ -1129,7 +1129,58 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     var suoritus3 = suoritukset3.head
     var arvosanat3 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus3".as[String]))
     arvosanat3 should have length 4
+  }
 
+  it should "Not delete opiskelija, suoritus and arvosanat if source is not koski" in {
+    var json: String = scala.io.Source.fromFile(jsonDir + "koskidata_1pk_1amm.json").mkString
+    var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.get.toString
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+    var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat1.size should equal(2)
+    var opiskelija1 = opiskelijat1.head
+    var suoritukset1 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = true and henkilo_oid = $opiskelija1".as[String]))
+    suoritukset1.size should equal(2)
+    var suoritus1 = suoritukset1.head
+    var arvosanat1 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus1".as[String]))
+    arvosanat1 should have length 18
+
+
+    //Päivitetään peruskoulusuoritus ei koskesta tulleeksi:
+    run(database.run(sql"update opiskelija set source = '1.2.246.562.24.35939175712' where oppilaitos_oid = '1.2.246.562.10.33327422946'".as[String]))
+    run(database.run(sql"update suoritus set source = '1.2.246.562.24.35939175712' where myontaja = '1.2.246.562.10.33327422946'".as[String]))
+    run(database.run(sql"update arvosana set source = '1.2.246.562.24.35939175712' where source = 'koski'".as[String]))
+
+    opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and source = '1.2.246.562.24.35939175712' and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat1.size should equal(1)
+    opiskelija1 = opiskelijat1.head
+    suoritukset1 = run(database.run(sql"select resource_id from suoritus where deleted = false and source = '1.2.246.562.24.35939175712' and current = true and henkilo_oid = $opiskelija1".as[String]))
+    suoritukset1.size should equal(1)
+    suoritus1 = suoritukset1.head
+    arvosanat1 = run(database.run(sql"select * from arvosana where deleted = false and suoritus = $suoritus1 and current = true".as[String]))
+    arvosanat1 should have length 18
+
+    json = scala.io.Source.fromFile(jsonDir + "koskidata_lukio.json").mkString
+    henkilo = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+
+    var opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat2.size should equal(2)
+    var opiskelija2 = opiskelijat2.head
+    var suoritukset2 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and henkilo_oid = $opiskelija2".as[String]))
+    suoritukset2.size should equal(2)
+    suoritukset2 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and source = '1.2.246.562.24.35939175712' and henkilo_oid = $opiskelija2".as[String]))
+    var suoritus2 = suoritukset2.head
+    var arvosanat2 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus2".as[String]))
+    arvosanat2 should have length 18
   }
 
   it should "store suoritus & set valmistumispäivä to fourth of june if suoritus kesken" in {
