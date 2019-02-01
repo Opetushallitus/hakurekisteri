@@ -113,7 +113,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     */
   override def updateAktiivisetHaut(): () => Unit = { () =>
     var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
-    logger.info(("Saatiin hakemuspalvelusta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
+    logger.info(("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta lukiosuoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, true), 5.hours)
@@ -121,7 +121,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Lukioarvosanojen päivitys valmis."))
 
     haut = aktiivisetKKYhteisHakuOidit.get()
-    logger.info(("Saatiin hakemuspalvelusta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
+    logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, false), 5.hours)
