@@ -115,18 +115,18 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
-      logger.info(s"Käynnistetään Koskesta lukiosuoritusten ajastettu päivitys haulle ${haku}")
+      logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, true), 5.hours)
     })
-    logger.info(("Lukioarvosanojen päivitys valmis."))
+    logger.info(("Aktiivisten toisen asteen yhteishakujen lukioasuoritusten päivitys valmis."))
 
     haut = aktiivisetKKYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
-      logger.info(s"Käynnistetään Koskesta ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
+      logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, false), 5.hours)
     })
-    logger.info(("Korkeakouluhakujen ammatillisten suoritusten päivitys valmis."))
+    logger.info(("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis."))
   }
 
   private var startTimestamp: Long = 0L

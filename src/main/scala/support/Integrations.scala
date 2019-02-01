@@ -219,7 +219,7 @@ class BaseIntegrations(rekisterit: Registers,
     newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
     // This if for dev purposes.
     // every day at midnight: newTrigger().startNow().withSchedule(cronSchedule("0 0 0 * * ?")).build())
-    // every hour newTrigger().startNow().withSchedule(cronSchedule("0 0 * * * ?")).build())
+    // every hour: newTrigger().startNow().withSchedule(cronSchedule("0 0 * * * ?")).build())
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))
 
 }
