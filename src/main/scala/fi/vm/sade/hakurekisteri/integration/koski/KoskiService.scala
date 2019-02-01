@@ -87,7 +87,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         fetchChangedOppijas(params).onComplete {
           case Success(response: MuuttuneetOppijatResponse) =>
             logger.info("refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.", response.result.size)
-            handleHenkiloUpdate(response.result, createLukio = false).onComplete {
+            val koskiParams = KoskiSuoritusHakuParams(false, false)
+            handleHenkiloUpdate(response.result, koskiParams).onComplete {
               case Success(s) =>
                 logger.info("refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}", response.result.size)
                 if (response.mayHaveMore)
@@ -116,7 +117,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, true), 5.hours)
+      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(true, false)), 5.hours)
     })
     logger.info(("Aktiivisten toisen asteen yhteishakujen lukioasuoritusten päivitys valmis."))
 
@@ -124,7 +125,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, false), 5.hours)
+      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(false, true)), 5.hours)
     })
     logger.info(("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis."))
   }
@@ -132,11 +133,11 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private var startTimestamp: Long = 0L
   val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
   private var oneJobAtATime = Future.successful({})
-  override def updateHenkilotForHaku(hakuOid: String, createLukio: Boolean = false): Future[Unit] = {
+  override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = {
     def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
       val personOids: Seq[String] = personOidsSet.toSeq
       logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-      handleHenkiloUpdate(personOids, createLukio)
+      handleHenkiloUpdate(personOids, params)
     }
     val now = System.currentTimeMillis()
     synchronized {
@@ -154,7 +155,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 
-  def handleHenkiloUpdate(personOids: Seq[String], createLukio: Boolean): Future[Unit] = {
+  def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
     logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
     val batchSize: Int = 1000
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
@@ -167,7 +168,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       } else {
         val (subSeq, index) = batches.head
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(subSeq.toSet, createLukio).flatMap(s => handleBatch(batches.tail))
+        updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
       }
     }
 
@@ -179,7 +180,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     f
   }
 
-  override def updateHenkilot(oppijaOids: Set[String], createLukio: Boolean = false): Future[Unit] = {
+  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
       .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
@@ -191,7 +192,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     oppijat.flatMap(fetchPersonAliases).flatMap(res => {
       val (henkilot, personOidsWithAliases) = res
       logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä, aliakset haettu!")
-      saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, createLukio)
+      saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, params)
     })
   }
 
@@ -204,11 +205,11 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     })
   }
 
-  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, createLukio: Boolean = false): Future[Unit] = {
+  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Unit] = {
     val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
     if(filteredHenkilot.nonEmpty) {
       Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), createLukio)
+        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params)
       )).flatMap(_ => Future.successful({})).recoverWith{
         case e: Exception =>
           logger.error("Koskisuoritusten tallennus henkilölle epäonnistui: {} " , e)
@@ -390,3 +391,5 @@ case class KoskiLisatiedot(
                             vuosiluokkiinSitoutumatonOpetus: Option[Boolean])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
+
+case class KoskiSuoritusHakuParams(saveLukio: Boolean = false, saveAmmatillinen: Boolean = false)

@@ -377,8 +377,10 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    result should have length 0
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(true, true)), 5.seconds)
+    val result = run(database.run(sql"select count(*) from arvosana".as[String]))
+    result.head.toInt should equal(0)
   }
 
   it should "parse arvosanat from lukio_päättötodistus.json when switch to enable lukio import is enabled" in {
@@ -393,7 +395,8 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    //val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
     result should have length 1
 
     val suoritusArvosanat = result.head
@@ -418,7 +421,8 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    //val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
     result should have length 1
 
     val suoritusArvosanat = result.head
@@ -955,7 +959,8 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true)
+    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    //val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true)
     val res: Seq[SuoritusArvosanat] = resgroup.head
 
     val arvosanat: Seq[Arvosana] = res.head.arvosanat
@@ -1047,7 +1052,8 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+    val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(false, true)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), params), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     opiskelijat.head should equal("1.2.246.562.24.32656706483")
@@ -1067,7 +1073,8 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, true)), 5.seconds)
     var suoritukset = run(database.run(sql"select myontaja from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]))
     suoritukset.size should equal(1)
     var myontaja = suoritukset.head
@@ -1086,7 +1093,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, true)), 5.seconds)
     var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat1.size should equal(2)
     var opiskelija1 = opiskelijat1.head
@@ -1102,7 +1109,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, true)), 5.seconds)
 
     var opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat2.size should equal(1)
@@ -1120,7 +1127,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), true), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(true, true)), 5.seconds)
     var opiskelijat3 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat3.size should equal(1)
     var opiskelija3 = opiskelijat3.head
@@ -1139,7 +1146,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, true)), 5.seconds)
     var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat1.size should equal(2)
     var opiskelija1 = opiskelijat1.head
@@ -1170,7 +1177,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), false), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, true)), 5.seconds)
 
     var opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat2.size should equal(2)
@@ -1190,7 +1197,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), true), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.muodostaKoskiSuorituksetJaArvosanat(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(true, true)), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     val opiskelija = opiskelijat.head

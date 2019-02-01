@@ -64,7 +64,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
                                           personOidsWithAliases: PersonOidsWithAliases,
-                                          createLukio: Boolean = false): Future[Any] = {
+                                          params: KoskiSuoritusHakuParams): Future[Any] = {
     implicit val timeout: Timeout = 2.minutes
 
     // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
@@ -237,6 +237,15 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
         //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
         checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid)
+        if (!params.saveLukio) {
+          viimeisimmatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.lukioKomoOid))
+        }
+        if (!params.saveAmmatillinen) {
+          viimeisimmatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.erikoisammattitutkintoKomoOid)
+            || s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinentutkintoKomoOid)
+            || s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinenKomoOid))
+        }
+
         //NOTE, processes the Future that encloses the list, does not actually iterate through the list
         Future.sequence(viimeisimmatSuoritukset.map {
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
@@ -256,7 +265,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     koskihenkilöcontainer.henkilö.oid match {
       case Some(henkilöOid) => {
-        val henkilonSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer, createLukio).flatten
+        val henkilonSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
           .filter(s => henkilöOid.equals(s.suoritus.henkiloOid))
 
         henkilonSuoritukset match {
@@ -366,15 +375,15 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   }
 
 
-  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer, createLukioArvosanat: Boolean = false): Seq[Seq[SuoritusArvosanat]] = {
-    getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet, createLukioArvosanat)
+  def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[Seq[SuoritusArvosanat]] = {
+    getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
   }
 
-  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus], createLukioArvosanat: Boolean): Seq[Seq[SuoritusArvosanat]] = {
+  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
     val result: Seq[Seq[SuoritusArvosanat]] = for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {
-      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset, opiskeluoikeus.tila.opiskeluoikeusjaksot, opiskeluoikeus, createLukioArvosanat)
+      createSuoritusArvosanat(personOid, opiskeluoikeus.suoritukset, opiskeluoikeus.tila.opiskeluoikeusjaksot, opiskeluoikeus)
     }
     result
   }
@@ -386,7 +395,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     d.getYear
   }
 
-  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus, createLukioArvosanat: Boolean = false): (String, Option[String]) = {
+  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
     if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus") && koulutusmoduuliTunnisteKoodiarvo == "perusopetuksenoppiaineenoppimaara") {
         (Oids.perusopetuksenOppiaineenOppimaaraOid, Some(AIKUISTENPERUS_LUOKKAASTE))
     } else {
@@ -400,17 +409,15 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
         case "telma" => (Oids.telmaKomoOid, None)
         case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
         case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
+
         case "ammatillinentutkinto" =>
-          suoritus.koulutusmoduuli.koulutustyyppi match {
-            case Some(KoskiKoodi("12",_)) => (Oids.erikoisammattitutkintoKomoOid, None)
-            case Some(KoskiKoodi("11",_)) => (Oids.ammatillinentutkintoKomoOid, None)
-            case _ => (Oids.ammatillinenKomoOid, None)
-          }
-        case "lukionoppimaara" => //Käsitellään lukion oppimäärät vain, jos niiden tallentamista on erikseen kutsussa pyydetty.
-          if(createLukioArvosanat)
+              suoritus.koulutusmoduuli.koulutustyyppi match {
+                case Some(KoskiKoodi("12", _)) => (Oids.erikoisammattitutkintoKomoOid, None)
+                case Some(KoskiKoodi("11", _)) => (Oids.ammatillinentutkintoKomoOid, None)
+                case _ => (Oids.ammatillinenKomoOid, None)
+              }
+        case "lukionoppimaara" => //Käsitellään lukion oppimäärät vain jos se on parametreissä määritelty
             (Oids.lukioKomoOid, None)
-          else
-            (DUMMYOID, None)
         case _ => (DUMMYOID, None)
       }
     }
@@ -622,7 +629,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     failed && !succeeded
   }
 
-  private def shouldProcessData(suoritus: KoskiSuoritus, tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus, createLukioArvosanat: Boolean): Boolean = {
+  private def shouldProcessData(suoritus: KoskiSuoritus, tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
     val suoritusTila = tilat match {
       case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
       case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
@@ -635,7 +642,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     }
     val (komoOid, luokkataso) = suoritus.tyyppi match {
       case Some(k) =>
-        matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus, createLukioArvosanat)
+        matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
       case _ => (DUMMYOID, None)
     }
 
@@ -652,13 +659,13 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     }
   }
 
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus, createLukioArvosanat: Boolean): Seq[SuoritusArvosanat] = {
+  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
 
     for {
-      suoritus <- suoritukset if shouldProcessData(suoritus, tilat, opiskeluoikeus, createLukioArvosanat)
+      suoritus <- suoritukset if shouldProcessData(suoritus, tilat, opiskeluoikeus)
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
@@ -683,7 +690,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
       val (komoOid, luokkataso) = suoritus.tyyppi match {
         case Some(k) =>
-          matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus, createLukioArvosanat)
+          matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
         case _ => (DUMMYOID, None)
       }
 

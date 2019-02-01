@@ -41,7 +41,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     }
   })
   val koskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
-
+  val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(true, false)
 
   it should "empty KoskiHenkilo should return list" in {
     koskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(

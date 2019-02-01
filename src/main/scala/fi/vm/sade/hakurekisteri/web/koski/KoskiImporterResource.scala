@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.web.koski
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
@@ -49,7 +49,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), haeLukio)
+      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), KoskiSuoritusHakuParams(haeLukio, true))
     }
   }
 
@@ -63,7 +63,7 @@ class KoskiImporterResource(koskiService: IKoskiService)
       .setResourceId(hakuOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, createLukio = haeLukio)
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, KoskiSuoritusHakuParams(haeLukio, true))
     }
   }
 
