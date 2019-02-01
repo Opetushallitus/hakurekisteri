@@ -1196,7 +1196,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     val opiskelija = opiskelijat.head
     val valmistuminen = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = $opiskelija".as[String]))
     valmistuminen should have length 1
-    valmistuminen.head should equal(KoskiArvosanaTrigger.parseNextFourthOfJune().toString())
+    valmistuminen.head should equal(KoskiArvosanaTrigger.parseNextThirdOfJune().toString())
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {

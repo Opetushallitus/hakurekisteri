@@ -292,7 +292,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false")
-      loppu = parseNextFourthOfJune().toDateTimeAtStartOfDay
+      loppu = parseNextThirdOfJune().toDateTimeAtStartOfDay
       if (!loppu.isAfter(alku)) {
         alku = new DateTime(0L) //Sanity
       }
@@ -564,20 +564,21 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     (vahvistus, opOikeus.päättymispäivä) match {
       case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid.getOrElse(DUMMYOID))
       case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid.getOrElse(DUMMYOID))
-      case (None, None) => (parseYear(parseNextFourthOfJune().toString()), parseLocalDate(parseNextFourthOfJune().toString()), oppilaitos.oid.getOrElse(DUMMYOID))
+      case (None, None) => (parseYear(parseNextThirdOfJune().toString()), parseLocalDate(parseNextThirdOfJune().toString()), oppilaitos.oid.getOrElse(DUMMYOID))
       case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid.getOrElse(DUMMYOID))
     }
   }
 
-  def parseNextFourthOfJune(): LocalDate = {
+  //TODO: Vaihtuu vuosittain
+  def parseNextThirdOfJune(): LocalDate = {
     var cal = java.util.Calendar.getInstance()
-    cal.set(cal.get(Calendar.YEAR), 5, 4)
+    cal.set(cal.get(Calendar.YEAR), 5, 3)
     var now = LocalDate.now()
-    var fourthOfJune = LocalDate.fromCalendarFields(cal)
-    if(now.isAfter(fourthOfJune)){
-      fourthOfJune.plusYears(1)
+    var thirdOfJune = LocalDate.fromCalendarFields(cal)
+    if(now.isAfter(thirdOfJune)){
+      thirdOfJune.plusYears(1)
     }
-    fourthOfJune
+    thirdOfJune
   }
 
   def getNumberOfAcceptedLuvaCourses(osasuoritukset: Seq[KoskiOsasuoritus]): Int = {
@@ -797,7 +798,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       }
 
       val useValmistumisPaiva: LocalDate = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
-        case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => parseNextFourthOfJune()
+        case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => parseNextThirdOfJune()
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
         case (Oids.perusopetusKomoOid, _, "KESKEYTYNYT") if suoritus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetuksenoppimaara") =>
           val savetime: LocalDateTime = if(opiskeluoikeus.aikaleima.isDefined) {
@@ -808,11 +809,11 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           getEndDateFromLastNinthGrade(suoritukset).getOrElse(savetime.toLocalDate)
         case (Oids.perusopetusKomoOid, _, "VALMIS") =>
           if (suoritus.vahvistus.isDefined) parseLocalDate(suoritus.vahvistus.get.päivä)
-          else parseNextFourthOfJune()
-        case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-        case (Oids.valmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-        case (Oids.telmaKomoOid, _, "KESKEN") => parseNextFourthOfJune()
-        case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => parseNextFourthOfJune()
+          else parseNextThirdOfJune()
+        case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextThirdOfJune()
+        case (Oids.valmaKomoOid, _, "KESKEN") => parseNextThirdOfJune()
+        case (Oids.telmaKomoOid, _, "KESKEN") => parseNextThirdOfJune()
+        case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => parseNextThirdOfJune()
         case (_,_,_) => valmistumisPaiva
       }
       if (komoOid != DUMMYOID && vuosi > 1970) {
