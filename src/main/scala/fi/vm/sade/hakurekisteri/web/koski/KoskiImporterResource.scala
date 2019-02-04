@@ -43,13 +43,14 @@ class KoskiImporterResource(koskiService: IKoskiService)
     implicit val user: User = getAdmin
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
+    val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), KoskiSuoritusHakuParams(haeLukio, true))
+      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
   }
 
@@ -57,13 +58,14 @@ class KoskiImporterResource(koskiService: IKoskiService)
     implicit val user: User = getAdmin
     val hakuOid = params("hakuOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
+    val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
       .setResourceId(hakuOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, KoskiSuoritusHakuParams(haeLukio, true))
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
   }
 
