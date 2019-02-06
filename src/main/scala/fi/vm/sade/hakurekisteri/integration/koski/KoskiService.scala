@@ -158,7 +158,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
     logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
-    val batchSize: Int = 1000
+    val batchSize: Int = 500
     val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
