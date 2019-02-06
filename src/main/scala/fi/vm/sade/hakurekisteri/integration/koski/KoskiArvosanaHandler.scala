@@ -62,6 +62,33 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
   private val root_org_id = "koski"
 
+  def opiskeluoikeusSisaltaaYsisuorituksen(oo: KoskiOpiskeluoikeus): Boolean = {
+    oo.suoritukset.exists(s => s.koulutusmoduuli.tunniste.isDefined && s.koulutusmoduuli.tunniste.get.koodiarvo.equals("9"))
+  }
+
+  def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
+    var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
+
+    //tyypit eli perusopetus, perusopetuksen lisäopetus, lukiokoulutus, ammatillinen jne.
+    var tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
+    logger.info("oikeudet: " + oikeudet)
+    val oikeudetFiltered = oikeudet.filter(oo => !oo.tyyppi.get.koodiarvo.equals("perusopetus") || opiskeluoikeusSisaltaaYsisuorituksen(oo))
+
+    tyypit.distinct.foreach(tyyppi => {
+      val tataTyyppia = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
+      //logger.info("Filtteröidään. Tyyppi {}, vaihtoehdot {}. {} ", tyyppi, tataTyyppia.map(oo => oo.oppilaitos.get.oid + ", alku " + oo.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku), "foo")
+      val viimeisinTataTyyppia = tataTyyppia.filter(oo => oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna")) && !oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("eronnut"))).
+        sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
+      if (viimeisinTataTyyppia.isDefined) {
+        viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisinTataTyyppia.get
+      }
+    })
+
+    //logger.info("Returning oikeudes with oppilaitokses: " + viimeisimmatOpiskeluoikeudet.map(o => o.oppilaitos.get.oid))
+    //logger.info("rets " + viimeisimmatOpiskeluoikeudet)
+    viimeisimmatOpiskeluoikeudet
+  }
+
   def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
                                           personOidsWithAliases: PersonOidsWithAliases,
                                           params: KoskiSuoritusHakuParams): Future[Any] = {
@@ -70,11 +97,17 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
     lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinPerusopetuksenOpiskeluOikeus(koskihenkilöcontainer)
 
+    lazy val viimeisimmatOikeudet: Seq[KoskiOpiskeluoikeus] = ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(koskihenkilöcontainer.opiskeluoikeudet)
+
     /**
       * OK-227 : Jos opiskelija on vaihtanut koulua kesken kauden, säilytetään vain se suoritus jolla on on uusin läsnäolotieto.
       * Aiempi suoritus samalta kaudelta poistetaan suoritusrekisteristä.
+      * Vaaditaan lisäksi, että valittavalla opiskeluoikeudella on oikeasti olemassa joku ysiluokan suoritus (tilalla ei väliä, ehkä?)
       */
     def resolveViimeisinPerusopetuksenOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
+      //koskiHenkilöContainer.opiskeluoikeudet.
+      //  filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.suoritukset.exists(_.))
+
       koskihenkilöcontainer.opiskeluoikeudet.
         filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna"))).
         sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
@@ -220,20 +253,24 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
       suoritusSave
     }
 
-    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, henkilonSuoritukset: Seq[SuoritusArvosanat], viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus]): Future[Unit] = {
+    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus], viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
         //OY-227 : Clean up perusopetus duplicates if there is some
-        val viimeisinOpiskeluOikeusOid: String = viimeisinOpiskeluoikeus match {
+        /*val viimeisinOpiskeluOikeusOid: String = viimeisinOpiskeluoikeus match {
           case Some(o) => o.oppilaitos.get.oid.get
           case None => ""
         }
+        val viimeisimmatOppilaitokset: Seq[String] = viimeisimmatOpiskeluoikeudet.map(oo => if (oo.oppilaitos.isDefined) oo.oppilaitos.get.oid.getOrElse("") else "")
+        logger.info("Viimeisimmat oppilaitokset: " + viimeisimmatOppilaitokset)
+        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = henkilonSuoritukset.filter(sa => viimeisimmatOppilaitokset contains sa.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
 
         val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluOikeusOid match {
           case "" => henkilonSuoritukset
           case _ => henkilonSuoritukset.filterNot(s => (!s.suoritus.asInstanceOf[VirallinenSuoritus].myontaja.equals(viimeisinOpiskeluOikeusOid)
             && s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid)
             ))
-        }
+        }*/
+        //val viimeisimmatSuoritukset = henkilonSuoritukset
 
         //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
         checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid)
@@ -251,8 +288,9 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
             //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
             //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
+            //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
             if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
-              (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+              (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
               saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso)
 
             } else {
@@ -270,7 +308,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
         henkilonSuoritukset match {
           case Nil => Future.successful({})
-          case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset, viimeisinOpiskeluoikeus)
+          case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset, viimeisinOpiskeluoikeus, viimeisimmatOikeudet)
         }
       }
       case None => Future.successful({})
@@ -376,7 +414,11 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
 
   def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[Seq[SuoritusArvosanat]] = {
-    getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), henkilo.opiskeluoikeudet)
+    val viimeisimmat = ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet)
+    if (henkilo.opiskeluoikeudet.size > viimeisimmat.size) {
+      logger.info("Filtteröitiin henkilöltä " + henkilo.henkilö.oid + " pois yksi tai useampia opiskeluoikeuksia. Ennen filtteröintiä: " + henkilo.opiskeluoikeudet.size + ", jälkeen: " + viimeisimmat.size)
+    }
+    getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), viimeisimmat)
   }
 
   def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
