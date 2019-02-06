@@ -60,7 +60,8 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
   val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
 
   val KoskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(suoritusrekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)
-
+  val suoritusParser = new KoskiSuoritusArvosanaParser
+  
   override protected def beforeEach(): Unit = {
     ItPostgres.reset()
   }
@@ -132,7 +133,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val numcourses: Int = KoskiArvosanaTrigger.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -150,7 +151,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val numcourses: Int = KoskiArvosanaTrigger.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -168,7 +169,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val numcourses: Int = KoskiArvosanaTrigger.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 25
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -877,7 +878,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
       jääLuokalle = None)
 
     val suoritukset: Seq[KoskiSuoritus] = Seq(ks1,ks2,ks3)
-    val maybedate: Option[LocalDate] = KoskiArvosanaTrigger.getEndDateFromLastNinthGrade(suoritukset)
+    val maybedate: Option[LocalDate] = suoritusParser.getEndDateFromLastNinthGrade(suoritukset)
 
     maybedate.get shouldEqual parseLocalDate("2000-05-03")
 
@@ -1033,7 +1034,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     3: pakollinen ei, yksilöllistetty kyllä
     4: pakollinen ei, yksilöllistetty kyllä
     */
-    var result = KoskiArvosanaTrigger.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    var result = suoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
     result._2 should equal (yksilollistaminen.Ei)
 
     json  = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen1.json").mkString
@@ -1047,7 +1048,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     3: pakollinen kyllä, yksilöllistetty kyllä
     4: pakollinen ei, yksilöllistetty kyllä
     */
-    result = KoskiArvosanaTrigger.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result = suoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
     result._2 should equal (yksilollistaminen.Osittain)
 
     json  = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen2.json").mkString
@@ -1061,7 +1062,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     3: pakollinen kyllä, yksilöllistetty kyllä
     4: pakollinen ei, yksilöllistetty ei
     */
-    result = KoskiArvosanaTrigger.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result = suoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
     result._2 should equal (yksilollistaminen.Kokonaan)
   }
 
@@ -1224,7 +1225,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with BeforeAndAfterEach with Bef
     val opiskelija = opiskelijat.head
     val valmistuminen = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = $opiskelija".as[String]))
     valmistuminen should have length 1
-    valmistuminen.head should equal(KoskiArvosanaTrigger.parseNextThirdOfJune().toString())
+    valmistuminen.head should equal(suoritusParser.parseNextThirdOfJune().toString())
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
