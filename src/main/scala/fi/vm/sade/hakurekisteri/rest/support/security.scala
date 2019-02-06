@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.{Oids, PohjakoulutusOids}
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
+import org.springframework.security.cas.authentication.CasAuthenticationToken
 
 sealed trait Role
 
@@ -73,6 +74,8 @@ trait User {
   def allowByKomo(komo: String, action: String): Boolean = isKkVirkailija && (komo.startsWith("koulutus_") || komo.equals(PohjakoulutusOids.ammatillinen)) && "READ".equals(action)
 
   def auditSession(): AuditSessionRequest
+
+  def casAuthenticationToken: CasAuthenticationToken
 }
 
 trait Roles {
@@ -87,7 +90,11 @@ trait RoleUser extends User with Roles {
 
 case class AuditSessionRequest(personOid: String, roles: Set[String], userAgent: String, inetAddress: String)
 
-case class OPHUser(username: String, authorities: Set[String], userAgent: String, inetAddress: String) extends RoleUser {
+case class OPHUser(username: String,
+                   authorities: Set[String],
+                   userAgent: String,
+                   inetAddress: String,
+                   casAuthenticationToken: CasAuthenticationToken) extends RoleUser {
   override val auditSession = AuditSessionRequest(username, authorities, userAgent, inetAddress)
   override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d

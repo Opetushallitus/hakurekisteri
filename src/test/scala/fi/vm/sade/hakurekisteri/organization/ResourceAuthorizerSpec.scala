@@ -7,10 +7,9 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.web.rest.support.TestUser
 import org.apache.commons.lang3.builder.ToStringBuilder
-import org.joda._
 import org.joda.time.DateTime
-import org.json4s._
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.springframework.security.cas.authentication.CasAuthenticationToken
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -29,6 +28,7 @@ class ResourceAuthorizerSpec extends ScalatraFunSuite {
     override val username: String = "KoulunVirkailija"
     override def auditSession(): AuditSessionRequest = ???
     override def toString: String = ToStringBuilder.reflectionToString(this)
+    override def casAuthenticationToken: CasAuthenticationToken = TestUser.casAuthenticationToken
   }
   val testuserOrg = rekisterinpitajaUser.orgsFor("","").head
   private val opiskeluoikeus: Opiskeluoikeus = {
