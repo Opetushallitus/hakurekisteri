@@ -210,10 +210,13 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
     if(filteredHenkilot.nonEmpty) {
       Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params)
-      )).flatMap(_ => Future.successful({})).recoverWith{
+        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).recoverWith {
+          case e: Exception =>
+            logger.error("Koskisuoritusten tallennus henkilölle {} epäonnistui: {} ",henkilo.henkilö.oid , e)
+            Future.failed(e)
+        })).flatMap(_ => Future.successful({})).recoverWith{
         case e: Exception =>
-          logger.error("Koskisuoritusten tallennus henkilölle epäonnistui: {} " , e)
+          logger.error("Kaikkien henkilöiden koskisuorituksia ei saatu tallennettua. {} " , e)
           Future.failed(e)
       }
     } else {

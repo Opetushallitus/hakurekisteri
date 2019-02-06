@@ -71,7 +71,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
 
     //tyypit eli perusopetus, perusopetuksen lisäopetus, lukiokoulutus, ammatillinen jne.
     var tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
-    logger.info("oikeudet: " + oikeudet)
+    //logger.info("oikeudet: " + oikeudet)
     val oikeudetFiltered = oikeudet.filter(oo => !oo.tyyppi.get.koodiarvo.equals("perusopetus") || opiskeluoikeusSisaltaaYsisuorituksen(oo))
 
     tyypit.distinct.foreach(tyyppi => {
