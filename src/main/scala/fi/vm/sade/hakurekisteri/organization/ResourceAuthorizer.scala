@@ -2,15 +2,11 @@ package fi.vm.sade.hakurekisteri.organization
 
 import dispatch.Defaults.executor // TODO: make our own execution context
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.utils.slf4j.Logging
 
 import scala.concurrent.Future
 
 class ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess: (User, Set[String]) => Future[Set[String]],
-                            authorizationSubjectFinder: AuthorizationSubjectFinder[A],
-                            useHakemusBasecCheck: Boolean = false)(implicit m: Manifest[A]) extends Logging {
-  logger.info(s"useHakemusBasecCheck == $useHakemusBasecCheck")
-
+                            authorizationSubjectFinder: AuthorizationSubjectFinder[A])(implicit m: Manifest[A]) {
   def authorizedResources(resources: Seq[A], user: User, action: String)(organizationAuthorizer: OrganizationAuthorizer): Future[Seq[A]] = {
     subjectFinder(resources).map {
       _.map {
@@ -18,7 +14,7 @@ class ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess: (User, Se
       }
     }.flatMap { xs =>
       val entriesNotAuthorizedByOrganization = xs.filter(_._3 == false)
-      val oppijaOidsForHakemusBasedAccess: Future[Set[String]] = if (useHakemusBasecCheck && entriesNotAuthorizedByOrganization.nonEmpty && action == "READ") {
+      val oppijaOidsForHakemusBasedAccess: Future[Set[String]] = if (entriesNotAuthorizedByOrganization.nonEmpty && action == "READ") {
         val uniqueOppijaOids: Set[String] = entriesNotAuthorizedByOrganization.flatMap(_._2.oppijaOid).toSet
         filterOppijaOidsForHakemusBasedReadAccess(user, uniqueOppijaOids)
       } else {
