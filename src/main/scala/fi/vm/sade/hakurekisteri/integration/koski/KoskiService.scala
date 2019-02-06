@@ -175,8 +175,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
     val f = handleBatch(groupedOids.zipWithIndex)
     f.onComplete {
-      case Success(_) => logger.info("Koskipäivitys valmistui!")
-      case Failure(e) => logger.error(s"Koskipäivitys epäonnistui: ${e.getMessage}")
+      case Success(_) => logger.info("HandleHenkiloUpdate: Koskipäivitys valmistui!")
+      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui: ${e.getMessage}")
     }
     f
   }
