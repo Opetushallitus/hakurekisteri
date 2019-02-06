@@ -4,7 +4,7 @@ import java.util.{Calendar, UUID}
 
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, ArvioHyvaksytty, Arvosana}
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaHandler.parseLocalDate
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
@@ -45,7 +45,7 @@ class KoskiSuoritusArvosanaParser {
   //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
   private val root_org_id = "koski"
 
-  def getSuoritusArvosanatFromOpiskeluoikeus(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
+  def getSuoritusArvosanatFromOpiskeluoikeudes(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
     val result: Seq[Seq[SuoritusArvosanat]] = for (
       opiskeluoikeus <- opiskeluoikeudet
     ) yield {

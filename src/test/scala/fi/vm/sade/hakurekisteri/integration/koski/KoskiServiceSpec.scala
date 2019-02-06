@@ -35,11 +35,11 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
         sender ! Seq()
     }
   })
-  val arvosanaHandler: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+  val arvosanaHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val koskiService = new KoskiService(virkailijaRestClient = client,
     oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10,
     hakemusService = new HakemusServiceMock(),
-    koskiArvosanaHandler = arvosanaHandler)
+    koskiDataHandler = arvosanaHandler)
 
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
 

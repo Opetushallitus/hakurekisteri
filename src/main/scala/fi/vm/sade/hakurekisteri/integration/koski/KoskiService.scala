@@ -23,7 +23,7 @@ import scala.util.{Failure, Success, Try}
 class KoskiService(virkailijaRestClient: VirkailijaRestClient,
                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
                    hakemusService: IHakemusService,
-                   koskiArvosanaHandler: KoskiArvosanaHandler,
+                   koskiDataHandler: KoskiDataHandler,
                    pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
@@ -210,7 +210,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
     if(filteredHenkilot.nonEmpty) {
       Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiArvosanaHandler.muodostaKoskiSuorituksetJaArvosanat(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).recoverWith {
+        koskiDataHandler.processHenkilonKoskiSuoritukset(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).recoverWith {
           case e: Exception =>
             logger.error("Koskisuoritusten tallennus henkilölle {} epäonnistui: {} ",henkilo.henkilö.oid , e)
             Future.failed(e)

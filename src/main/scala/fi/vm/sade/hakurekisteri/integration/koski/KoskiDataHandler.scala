@@ -11,16 +11,13 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.math.BigDecimal
 import scala.util.{Failure, Success}
 
 case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String]) {
@@ -38,7 +35,7 @@ case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokk
 }
 case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
-object KoskiArvosanaHandler {
+object KoskiDataHandler {
 
   def parseLocalDate(s: String): LocalDate =
     if (s.length() > 10) {
@@ -49,7 +46,7 @@ object KoskiArvosanaHandler {
 
 }
 
-class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {
+class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   import scala.language.implicitConversions
@@ -57,7 +54,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
-  private val root_org_id = "koski"
+  val root_org_id = "koski"
 
   private val suoritusArvosanaParser = new KoskiSuoritusArvosanaParser
 
@@ -88,9 +85,9 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     viimeisimmatOpiskeluoikeudet
   }
 
-  def muodostaKoskiSuorituksetJaArvosanat(koskihenkilöcontainer: KoskiHenkiloContainer,
-                                          personOidsWithAliases: PersonOidsWithAliases,
-                                          params: KoskiSuoritusHakuParams): Future[Any] = {
+  def processHenkilonKoskiSuoritukset(koskihenkilöcontainer: KoskiHenkiloContainer,
+                                      personOidsWithAliases: PersonOidsWithAliases,
+                                      params: KoskiSuoritusHakuParams): Future[Any] = {
     implicit val timeout: Timeout = 2.minutes
 
     // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
@@ -403,7 +400,7 @@ class KoskiArvosanaHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: Actor
     if (henkilo.opiskeluoikeudet.size > viimeisimmat.size) {
       logger.info("Filtteröitiin henkilöltä " + henkilo.henkilö.oid + " pois yksi tai useampia opiskeluoikeuksia. Ennen filtteröintiä: " + henkilo.opiskeluoikeudet.size + ", jälkeen: " + viimeisimmat.size)
     }
-    suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeus(henkilo.henkilö.oid.getOrElse(""), viimeisimmat)
+    suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.getOrElse(""), viimeisimmat)
   }
 
 

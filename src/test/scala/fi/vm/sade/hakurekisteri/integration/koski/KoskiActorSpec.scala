@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem}
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaHandler._
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -40,33 +40,33 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         sender ! Seq()
     }
   })
-  val koskiArvosanaTrigger: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+  val koskiDataHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(true, false)
 
   //todo make sure disabling this is ok. We are now assuming that some optionals are actually always present.
   //Could add checks to not crash, but is the data valid anyways? So maybe crash is ok.
   /*it should "empty KoskiHenkilo should return list" in {
-    koskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(
+    koskiDataHandler.createSuorituksetJaArvosanatFromKoski(
       HenkiloContainer().build
     ).flatten should contain theSameElementsAs Seq()
   }*/
 
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
-    koskiArvosanaTrigger.detectOppilaitos(
+    koskiDataHandler.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10")
   }
 
   it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
-    koskiArvosanaTrigger.detectOppilaitos(
+    koskiDataHandler.detectOppilaitos(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
     ) should equal ("10", "orgId", "10C")
   }
 
   it should "createOpiskelija should create opiskelija" in {
-    koskiArvosanaTrigger.createOpiskelija("henkilo_oid",
+    koskiDataHandler.createOpiskelija("henkilo_oid",
       SuoritusLuokka(VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
       ) should equal (
