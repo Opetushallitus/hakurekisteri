@@ -28,6 +28,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.springframework.security.cas.authentication.CasAuthenticationToken
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -366,6 +367,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     override val username: String = user
     override val auditSession = AuditSessionRequest(user, Set(organisaatioOid), "", "")
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
+    override def casAuthenticationToken: CasAuthenticationToken = fi.vm.sade.hakurekisteri.web.rest.support.TestUser.casAuthenticationToken
   }
 
   def seq2journal(s: Seq[FullHakemus]) = {
