@@ -136,13 +136,13 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
     }
 
-  def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
-   (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
-      case t: AskTimeoutException =>
-        logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
-        fetchOpiskelijat(henkilöOid, oppilaitosOid)
+    def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
+     (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+        case t: AskTimeoutException =>
+          logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
+          fetchOpiskelijat(henkilöOid, oppilaitosOid)
+      }
     }
-  }
 
     def deleteOpiskelija(o: Opiskelija with Identified[UUID]): Future[Any] = {
       logger.debug("Poistetaan opiskelija " + o + "UUID:lla " + o.id)
@@ -239,22 +239,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
-        //OY-227 : Clean up perusopetus duplicates if there is some
-        /*val viimeisinOpiskeluOikeusOid: String = viimeisinOpiskeluoikeus match {
-          case Some(o) => o.oppilaitos.get.oid.get
-          case None => ""
-        }
-        val viimeisimmatOppilaitokset: Seq[String] = viimeisimmatOpiskeluoikeudet.map(oo => if (oo.oppilaitos.isDefined) oo.oppilaitos.get.oid.getOrElse("") else "")
-        logger.info("Viimeisimmat oppilaitokset: " + viimeisimmatOppilaitokset)
-        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = henkilonSuoritukset.filter(sa => viimeisimmatOppilaitokset contains sa.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
-
-        val viimeisimmatSuoritukset: Seq[SuoritusArvosanat] = viimeisinOpiskeluOikeusOid match {
-          case "" => henkilonSuoritukset
-          case _ => henkilonSuoritukset.filterNot(s => (!s.suoritus.asInstanceOf[VirallinenSuoritus].myontaja.equals(viimeisinOpiskeluOikeusOid)
-            && s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.perusopetusKomoOid)
-            ))
-        }*/
-        //val viimeisimmatSuoritukset = henkilonSuoritukset
 
         //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
         checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid)
