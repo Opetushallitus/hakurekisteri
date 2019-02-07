@@ -65,10 +65,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     val viimeisinLasnaJaEiEronnut =
       oikeudet.filter(oo => oo.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("lasna"))
         && !oo.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("eronnut")))
-      .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
+        .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
     val viimeisinLasna =
       oikeudet.filter(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("lasna")))
-      .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
+        .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
     if (viimeisinLasnaJaEiEronnut.isDefined) {
       viimeisinLasnaJaEiEronnut
     } else {
@@ -251,17 +251,18 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
         //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
         checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid)
+        var tallennettavatSuoritukset = viimeisimmatSuoritukset
         if (!params.saveLukio) {
-          viimeisimmatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.lukioKomoOid))
+          tallennettavatSuoritukset = viimeisimmatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.lukioKomoOid))
         }
         if (!params.saveAmmatillinen) {
-          viimeisimmatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.erikoisammattitutkintoKomoOid)
-            || s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinentutkintoKomoOid)
-            || s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinenKomoOid))
+          tallennettavatSuoritukset = viimeisimmatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.erikoisammattitutkintoKomoOid))
+            .filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinentutkintoKomoOid))
+            .filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinenKomoOid))
         }
 
         //NOTE, processes the Future that encloses the list, does not actually iterate through the list
-        Future.sequence(viimeisimmatSuoritukset.map {
+        Future.sequence(tallennettavatSuoritukset.map {
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
             //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
             //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
