@@ -33,7 +33,6 @@ case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokk
   }
 
 }
-case class VirallinenSuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String])
 
 object KoskiDataHandler {
 
@@ -314,18 +313,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       case None => Future.successful({})
     }
   }
-
-  //does some stuff
-  def preProcessVirallinenSuoritus(virallinenSuoritusArvosanat: VirallinenSuoritusArvosanat): VirallinenSuoritusArvosanat = {
-    val useSuoritus: VirallinenSuoritus = virallinenSuoritusArvosanat.suoritus
-    val arvosanat: Seq[Arvosana] = virallinenSuoritusArvosanat.arvosanat
-    val luokka: String = virallinenSuoritusArvosanat.luokka
-    val lasnaDate: LocalDate = virallinenSuoritusArvosanat.lasnadate
-    val luokkaAste: Option[String] = virallinenSuoritusArvosanat.luokkataso
-
-    VirallinenSuoritusArvosanat(useSuoritus, arvosanat, luokka, lasnaDate, luokkaAste)
-  }
-
 
   def maxDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s1 else s2
   def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
