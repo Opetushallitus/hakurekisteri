@@ -54,13 +54,26 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
   implicit val formats: DefaultFormats.type = DefaultFormats
 
-  //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
-
   private val suoritusArvosanaParser = new KoskiSuoritusArvosanaParser
   private val opiskelijaParser = new KoskiOpiskelijaParser
 
   def opiskeluoikeusSisaltaaYsisuorituksen(oo: KoskiOpiskeluoikeus): Boolean = {
     oo.suoritukset.exists(s => s.koulutusmoduuli.tunniste.isDefined && s.koulutusmoduuli.tunniste.get.koodiarvo.equals("9"))
+  }
+
+  def getViimeisinOpiskeluoikeusjakso(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[KoskiOpiskeluoikeus] = {
+    val viimeisinLasnaJaEiEronnut =
+      oikeudet.filter(oo => oo.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("lasna"))
+        && !oo.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("eronnut")))
+      .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
+    val viimeisinLasna =
+      oikeudet.filter(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("lasna")))
+      .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
+    if (viimeisinLasnaJaEiEronnut.isDefined) {
+      viimeisinLasnaJaEiEronnut
+    } else {
+      viimeisinLasna
+    }
   }
 
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
@@ -74,10 +87,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     tyypit.distinct.foreach(tyyppi => {
       val tataTyyppia = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
-      val viimeisinTataTyyppia = tataTyyppia.filter(oo => oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna")) && !oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("eronnut"))).
-        sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
-      if (viimeisinTataTyyppia.isDefined) {
-        viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisinTataTyyppia.get
+      val viimeisin = getViimeisinOpiskeluoikeusjakso(tataTyyppia)
+      if (viimeisin.isDefined) {
+        viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
       }
     })
 
@@ -85,7 +97,8 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
-    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
+    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen,
+      suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
