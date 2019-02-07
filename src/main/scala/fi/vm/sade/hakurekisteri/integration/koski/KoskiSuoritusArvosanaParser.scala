@@ -233,21 +233,9 @@ class KoskiSuoritusArvosanaParser {
     (vahvistus, opOikeus.päättymispäivä) match {
       case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), k.myöntäjäOrganisaatio.oid.getOrElse(DUMMYOID))
       case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid.getOrElse(DUMMYOID))
-      case (None, None) => (parseYear(parseNextThirdOfJune().toString()), parseLocalDate(parseNextThirdOfJune().toString()), oppilaitos.oid.getOrElse(DUMMYOID))
+      case (None, None) => (parseYear(KoskiUtil.parseNextThirdOfJune().toString()), parseLocalDate(KoskiUtil.parseNextThirdOfJune().toString()), oppilaitos.oid.getOrElse(DUMMYOID))
       case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid.getOrElse(DUMMYOID))
     }
-  }
-
-  //TODO: Vaihtuu vuosittain
-  def parseNextThirdOfJune(): LocalDate = {
-    var cal = java.util.Calendar.getInstance()
-    cal.set(cal.get(Calendar.YEAR), 5, 3)
-    var now = LocalDate.now()
-    var thirdOfJune = LocalDate.fromCalendarFields(cal)
-    if(now.isAfter(thirdOfJune)){
-      thirdOfJune.plusYears(1)
-    }
-    thirdOfJune
   }
 
   def getNumberOfAcceptedLuvaCourses(osasuoritukset: Seq[KoskiOsasuoritus]): Int = {
@@ -467,7 +455,7 @@ class KoskiSuoritusArvosanaParser {
       }
 
       val useValmistumisPaiva: LocalDate = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
-        case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => parseNextThirdOfJune()
+        case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => KoskiUtil.parseNextThirdOfJune()
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
         case (Oids.perusopetusKomoOid, _, "KESKEYTYNYT") if suoritus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetuksenoppimaara") =>
           val savetime: LocalDateTime = if(opiskeluoikeus.aikaleima.isDefined) {
@@ -478,11 +466,11 @@ class KoskiSuoritusArvosanaParser {
           getEndDateFromLastNinthGrade(suoritukset).getOrElse(savetime.toLocalDate)
         case (Oids.perusopetusKomoOid, _, "VALMIS") =>
           if (suoritus.vahvistus.isDefined) parseLocalDate(suoritus.vahvistus.get.päivä)
-          else parseNextThirdOfJune()
-        case (Oids.lisaopetusKomoOid, _, "KESKEN") => parseNextThirdOfJune()
-        case (Oids.valmaKomoOid, _, "KESKEN") => parseNextThirdOfJune()
-        case (Oids.telmaKomoOid, _, "KESKEN") => parseNextThirdOfJune()
-        case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => parseNextThirdOfJune()
+          else KoskiUtil.parseNextThirdOfJune()
+        case (Oids.lisaopetusKomoOid, _, "KESKEN") => KoskiUtil.parseNextThirdOfJune()
+        case (Oids.valmaKomoOid, _, "KESKEN") => KoskiUtil.parseNextThirdOfJune()
+        case (Oids.telmaKomoOid, _, "KESKEN") => KoskiUtil.parseNextThirdOfJune()
+        case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => KoskiUtil.parseNextThirdOfJune()
         case (_,_,_) => valmistumisPaiva
       }
       if (komoOid != DUMMYOID && vuosi > 1970) {

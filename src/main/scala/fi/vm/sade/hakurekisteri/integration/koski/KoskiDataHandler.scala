@@ -90,23 +90,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     implicit val timeout: Timeout = 2.minutes
 
     // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
-    lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinPerusopetuksenOpiskeluOikeus(koskihenkilöcontainer)
-
-    lazy val viimeisimmatOikeudet: Seq[KoskiOpiskeluoikeus] = ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(koskihenkilöcontainer.opiskeluoikeudet)
-
-    /**
-      * OK-227 : Jos opiskelija on vaihtanut koulua kesken kauden, säilytetään vain se suoritus jolla on on uusin läsnäolotieto.
-      * Aiempi suoritus samalta kaudelta poistetaan suoritusrekisteristä.
-      * Vaaditaan lisäksi, että valittavalla opiskeluoikeudella on oikeasti olemassa joku ysiluokan suoritus (tilalla ei väliä, ehkä?)
-      */
-    def resolveViimeisinPerusopetuksenOpiskeluOikeus(koskiHenkilöContainer: KoskiHenkiloContainer): Option[KoskiOpiskeluoikeus] = {
-      //koskiHenkilöContainer.opiskeluoikeudet.
-      //  filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.suoritukset.exists(_.))
-
-      koskihenkilöcontainer.opiskeluoikeudet.
-        filter(oo => oo.tyyppi.exists(_.koodiarvo == "perusopetus") && oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna"))).
-        sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
-    }
+    //lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinPerusopetuksenOpiskeluOikeus(koskihenkilöcontainer)
 
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] = {
       logger.debug("saveSuoritus={}", suor)
@@ -252,7 +236,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       suoritusSave
     }
 
-    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus], viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Future[Unit] = {
+    def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat]): Future[Unit] = {
       fetchExistingSuoritukset(henkilöOid).flatMap(fetchedSuoritukset => {
         //OY-227 : Clean up perusopetus duplicates if there is some
         /*val viimeisinOpiskeluOikeusOid: String = viimeisinOpiskeluoikeus match {
@@ -307,7 +291,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
         henkilonSuoritukset match {
           case Nil => Future.successful({})
-          case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset, viimeisinOpiskeluoikeus, viimeisimmatOikeudet)
+          case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset)
         }
       }
       case None => Future.successful({})
@@ -326,7 +310,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false")
-      loppu = suoritusArvosanaParser.parseNextThirdOfJune().toDateTimeAtStartOfDay
+      loppu = KoskiUtil.parseNextThirdOfJune().toDateTimeAtStartOfDay
       if (!loppu.isAfter(alku)) {
         alku = new DateTime(0L) //Sanity
       }
