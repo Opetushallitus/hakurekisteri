@@ -133,7 +133,7 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
     def resourcePath: String = "/rest/v1/opiskelijat"
 
     def koululle(oid: String): OpiskelijaQuery = {
-      OpiskelijaQuery(arvot + ("koulu" -> oid))
+      OpiskelijaQuery(arvot + ("oppilaitosOid" -> oid))
     }
   }
 
@@ -143,7 +143,7 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
     }
 
     def koululle(oid: String): SuoritusQuery = {
-      new SuoritusQuery(arvot + ("koulu" -> oid))
+      new SuoritusQuery(arvot + ("myontaja" -> oid))
     }
 
     def getKausiCode(kausi:Kausi):String = kausi match {
