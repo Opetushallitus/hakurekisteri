@@ -5,6 +5,9 @@ import java.util.Calendar
 import org.joda.time.LocalDate
 
 object KoskiUtil {
+
+  val root_org_id = "koski"
+
   //TODO: Vaihtuu vuosittain
   def parseNextThirdOfJune(): LocalDate = {
     var cal = java.util.Calendar.getInstance()

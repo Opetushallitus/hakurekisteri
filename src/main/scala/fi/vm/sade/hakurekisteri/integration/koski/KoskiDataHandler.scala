@@ -53,9 +53,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
-  val root_org_id = "koski"
 
   private val suoritusArvosanaParser = new KoskiSuoritusArvosanaParser
+  private val opiskelijaParser = new KoskiOpiskelijaParser
 
   def opiskeluoikeusSisaltaaYsisuorituksen(oo: KoskiOpiskeluoikeus): Boolean = {
     oo.suoritukset.exists(s => s.koulutusmoduuli.tunniste.isDefined && s.koulutusmoduuli.tunniste.get.koodiarvo.equals("9"))
@@ -84,9 +84,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     viimeisimmatOpiskeluoikeudet
   }
 
-  def processHenkilonKoskiSuoritukset(koskihenkilöcontainer: KoskiHenkiloContainer,
-                                      personOidsWithAliases: PersonOidsWithAliases,
-                                      params: KoskiSuoritusHakuParams): Future[Any] = {
+  def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
+                                    personOidsWithAliases: PersonOidsWithAliases,
+                                    params: KoskiSuoritusHakuParams): Future[Any] = {
     implicit val timeout: Timeout = 2.minutes
 
     // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
@@ -136,7 +136,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
 
   def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
-   (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+   (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
       case t: AskTimeoutException =>
         logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
         fetchOpiskelijat(henkilöOid, oppilaitosOid)
@@ -179,7 +179,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         case _ => None
       }
 
-      val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(root_org_id)).flatMap {
+      val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.root_org_id)).flatMap {
         case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
         case _ => None
       }
@@ -199,7 +199,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
     def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]): Future[Any] = {
-      val opiskelija = createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
+      val opiskelija = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
 
       val suoritusSave: Future[Any] =
         if (suoritusExists(useSuoritus, existingSuoritukset)) {
@@ -210,7 +210,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           }
             .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
           logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-          val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(root_org_id))
+          val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.root_org_id))
 
           def saveArvosana(a: Arvosana): Future[Any] = {
             arvosanaRekisteri ? a
@@ -219,7 +219,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           updateSuoritus(suoritus, useSuoritus)
             .flatMap(_ => fetchArvosanat(suoritus))
             .flatMap(existingArvosanat => Future.sequence(existingArvosanat
-              .filter(_.source.contentEquals(root_org_id))
+              .filter(_.source.contentEquals(KoskiUtil.root_org_id))
               .map(arvosana => deleteArvosana(arvosana))))
             .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
             .flatMap(_ => saveOpiskelija(opiskelija))
@@ -296,74 +296,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
       case None => Future.successful({})
     }
-  }
-
-  def maxDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s1 else s2
-  def minDate(s1: LocalDate, s2: LocalDate): LocalDate = if (s1.isAfter(s2)) s2 else s1
-
-  def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
-
-    logger.debug(s"suoritusLuokka=$suoritusLuokka")
-    var alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
-    var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
-    var (luokkataso, oppilaitosOid, luokka) = detectOppilaitos(suoritusLuokka)
-
-    if (!loppu.isAfter(alku)) {
-      logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false")
-      loppu = KoskiUtil.parseNextThirdOfJune().toDateTimeAtStartOfDay
-      if (!loppu.isAfter(alku)) {
-        alku = new DateTime(0L) //Sanity
-      }
-    }
-
-    logger.debug(s"alku=$alku")
-
-    //luokkatieto käytännössä
-    val op = Opiskelija(
-      oppilaitosOid = oppilaitosOid,
-      luokkataso = luokkataso,
-      luokka = luokka,
-      henkiloOid = henkiloOid,
-      alkuPaiva = alku,
-      loppuPaiva = Some(loppu),
-      source = root_org_id
-    )
-    logger.debug("createOpiskelija={}", op)
-    op
-  }
-
-  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritus: SuoritusLuokka, komoOid: String): (String, String, String) = {
-    komoOid match {
-      // hae luokka 9C tai vast
-      case Oids.perusopetusKomoOid => {
-        (luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
-      }
-      case Oids.lisaopetusKomoOid => {
-        var luokka = luokkaSuoritus.luokka
-        if(luokkaSuoritus.luokka.isEmpty){
-          luokka = "10"
-        }
-        (luokkataso, luokkaSuoritus.suoritus.myontaja, luokka)
-      }
-      case _ => (luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
-    }
-  }
-
-  //noinspection ScalaStyle
-  def detectOppilaitos(suoritus: SuoritusLuokka): (String, String, String) = suoritus match {
-    case s if s.suoritus.komo == Oids.lukioKomoOid => getOppilaitosAndLuokka("L", s, Oids.lukioKomoOid)
-    case s if s.suoritus.komo == Oids.lukioonvalmistavaKomoOid => getOppilaitosAndLuokka("ML", s, Oids.lukioonvalmistavaKomoOid)
-    case s if s.suoritus.komo == Oids.ammatillinenKomoOid => getOppilaitosAndLuokka("AK", s, Oids.ammatillinenKomoOid)
-    case s if s.suoritus.komo == Oids.ammatilliseenvalmistavaKomoOid => getOppilaitosAndLuokka("M", s, Oids.ammatilliseenvalmistavaKomoOid)
-    case s if s.suoritus.komo == Oids.ammattistarttiKomoOid => getOppilaitosAndLuokka("A", s, Oids.ammattistarttiKomoOid)
-    case s if s.suoritus.komo == Oids.valmentavaKomoOid => getOppilaitosAndLuokka("V", s, Oids.valmentavaKomoOid)
-    case s if s.suoritus.komo == Oids.valmaKomoOid => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid)
-    case s if s.suoritus.komo == Oids.telmaKomoOid => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid)
-    case s if s.suoritus.komo == Oids.lisaopetusKomoOid => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid)
-    case s if s.suoritus.komo == Oids.perusopetusKomoOid && (s.luokkataso.getOrElse("").equals("9") || s.luokkataso.getOrElse("").equals("AIK")) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid)
-    // TODO: Luokkataso?
-    case s if s.suoritus.komo == Oids.ammatillinentutkintoKomoOid => getOppilaitosAndLuokka("", s, Oids.ammatillinentutkintoKomoOid)
-    case _ => ("", "", "")
   }
 
   def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[Seq[SuoritusArvosanat]] = {
