@@ -48,6 +48,8 @@ object KoskiDataHandler {
 class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
 
+  implicit val timeout: Timeout = 2.minutes
+
   import scala.language.implicitConversions
 
   implicit val formats: DefaultFormats.type = DefaultFormats
@@ -64,7 +66,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
     var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
 
-    //tyypit eli perusopetus, perusopetuksen lisäopetus, lukiokoulutus, ammatillinen jne.
+    //Opiskeluoikeuden tyypit eli perusopetus, perusopetuksen lisäopetus (10), lukiokoulutus, ammatillinen jne.
     var tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
 
     //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
@@ -72,7 +74,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     tyypit.distinct.foreach(tyyppi => {
       val tataTyyppia = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
-      //logger.info("Filtteröidään. Tyyppi {}, vaihtoehdot {}. {} ", tyyppi, tataTyyppia.map(oo => oo.oppilaitos.get.oid + ", alku " + oo.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku), "foo")
       val viimeisinTataTyyppia = tataTyyppia.filter(oo => oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("lasna")) && !oo.tila.opiskeluoikeusjaksot.exists(j => j.tila.koodiarvo.equals("eronnut"))).
         sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
       if (viimeisinTataTyyppia.isDefined) {
@@ -80,18 +81,100 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
     })
 
-    //logger.info("Returning oikeudes with oppilaitokses: " + viimeisimmatOpiskeluoikeudet.map(o => o.oppilaitos.get.oid))
-    //logger.info("rets " + viimeisimmatOpiskeluoikeudet)
     viimeisimmatOpiskeluoikeudet
   }
+
+  def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
+      case t: AskTimeoutException => updateSuoritus(suoritus, suor)
+    }
+
+  def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Unit = {
+    val arvosanat = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
+    deleteSuoritus(suoritus).onComplete {
+      case Success(_) =>
+        fetchOpiskelijat(henkilöOid, suoritus.myontaja).onComplete {
+          case Success(opiskelija) => {
+            opiskelija.size match {
+              case 1 => deleteOpiskelija(opiskelija.head)
+              case _ => logger.debug("Multiple opiskelijas found for henkilöoid: " + henkilöOid + ", skip deletion.")
+            }
+          }
+          case Failure(t) =>
+            logger.error("Virhe opiskelijan " + henkilöOid + " poistossa.", t)
+        }
+      case Failure(t) =>
+        logger.error("Virhe henkilön " + henkilöOid + " suorituksen poistossa.", t)
+    }
+  }
+
+  def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
+    (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+      case t: AskTimeoutException =>
+        logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
+        fetchOpiskelijat(henkilöOid, oppilaitosOid)
+    }
+  }
+
+  def deleteOpiskelija(o: Opiskelija with Identified[UUID]): Future[Any] = {
+    logger.debug("Poistetaan opiskelija " + o + "UUID:lla " + o.id)
+    opiskelijaRekisteri ? DeleteResource(o.id, "koski-opiskelijat")
+  }
+
+  def deleteSuoritus(s: Suoritus with Identified[UUID]): Future[Any] = {
+    logger.debug("Poistetaan suoritus " + s + "UUID:lla" + s.id)
+    suoritusRekisteri ? DeleteResource(s.id, "koski-suoritukset")
+  }
+
+  def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
+    logger.debug("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
+    (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
+  }
+
+  def deleteArvosana(s: Arvosana with Identified[UUID]): Future[Any] = {
+    logger.debug("Poistetaan arvosana " + s + "UUID:lla" + s.id)
+    arvosanaRekisteri ? DeleteResource(s.id, "koski-arvosanat")
+  }
+
+  def saveOpiskelija(opiskelija: Opiskelija): Future[Any] = {
+    opiskelijaRekisteri ? opiskelija
+  }
+
+  def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
+    case s: VirallinenSuoritus => s.core == suor.core
+    case _ => false
+  }
+
+  def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Unit = {
+    // Only virallinen suoritus
+    val koskiVirallisetSuoritukset: Seq[VirallinenSuoritus] = henkilonSuoritukset.map(h => h.suoritus).flatMap {
+      case s: VirallinenSuoritus => Some(s)
+      case _ => None
+    }
+
+    val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.root_org_id)).flatMap {
+      case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
+      case _ => None
+    }
+
+    val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
+    toBeDeletedSuoritukset.foreach(suoritus => {
+      logger.info("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + suoritus.id + ". Deleting it")
+      deleteArvosanatAndSuorituksetAndOpiskelija(suoritus, henkilöOid)
+    })
+  }
+
+  def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = {
+    arvosana.copy(suoritus = s.id)
+  }
+
+  def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
+    Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
+
 
   def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
                                     personOidsWithAliases: PersonOidsWithAliases,
                                     params: KoskiSuoritusHakuParams): Future[Any] = {
-    implicit val timeout: Timeout = 2.minutes
-
-    // OK-227 : Get latest perusopetuksen läsnäoleva oppilaitos
-    //lazy val viimeisinOpiskeluoikeus: Option[KoskiOpiskeluoikeus] = resolveViimeisinPerusopetuksenOpiskeluOikeus(koskihenkilöcontainer)
 
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] = {
       logger.debug("saveSuoritus={}", suor)
@@ -111,93 +194,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           fetchExistingSuoritukset(henkiloOid)
       }
     }
-
-    def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
-    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen, suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
-      case t: AskTimeoutException => updateSuoritus(suoritus, suor)
-    }
-
-    def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Unit = {
-      val arvosanat = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
-      deleteSuoritus(suoritus).onComplete {
-        case Success(_) =>
-          fetchOpiskelijat(henkilöOid, suoritus.myontaja).onComplete {
-            case Success(opiskelija) => {
-              opiskelija.size match {
-                case 1 => deleteOpiskelija(opiskelija.head)
-                case _ => logger.debug("Multiple opiskelijas found for henkilöoid: " + henkilöOid + ", skip deletion.")
-              }
-            }
-            case Failure(t) =>
-              logger.error("Virhe opiskelijan " + henkilöOid + " poistossa.", t)
-          }
-        case Failure(t) =>
-          logger.error("Virhe henkilön " + henkilöOid + " suorituksen poistossa.", t)
-      }
-    }
-
-    def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
-     (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
-        case t: AskTimeoutException =>
-          logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
-          fetchOpiskelijat(henkilöOid, oppilaitosOid)
-      }
-    }
-
-    def deleteOpiskelija(o: Opiskelija with Identified[UUID]): Future[Any] = {
-      logger.debug("Poistetaan opiskelija " + o + "UUID:lla " + o.id)
-      opiskelijaRekisteri ? DeleteResource(o.id, "koski-opiskelijat")
-    }
-
-    def deleteSuoritus(s: Suoritus with Identified[UUID]): Future[Any] = {
-      logger.debug("Poistetaan suoritus " + s + "UUID:lla" + s.id)
-      suoritusRekisteri ? DeleteResource(s.id, "koski-suoritukset")
-    }
-
-    def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
-      logger.debug("Haetaan arvosanat suoritukselle: " + s + ", id: " + s.id)
-      (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
-    }
-
-    def deleteArvosana(s: Arvosana with Identified[UUID]): Future[Any] = {
-      logger.debug("Poistetaan arvosana " + s + "UUID:lla" + s.id)
-      arvosanaRekisteri ? DeleteResource(s.id, "koski-arvosanat")
-    }
-
-    def saveOpiskelija(opiskelija: Opiskelija): Future[Any] = {
-      opiskelijaRekisteri ? opiskelija
-    }
-
-    def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
-      case s: VirallinenSuoritus => s.core == suor.core
-      case _ => false
-    }
-
-    def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Unit = {
-      // Only virallinen suoritus
-      val koskiVirallisetSuoritukset: Seq[VirallinenSuoritus] = henkilonSuoritukset.map(h => h.suoritus).flatMap {
-        case s: VirallinenSuoritus => Some(s)
-        case _ => None
-      }
-
-      val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.root_org_id)).flatMap {
-        case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
-        case _ => None
-      }
-
-      val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
-      toBeDeletedSuoritukset.foreach(suoritus => {
-        logger.debug("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + suoritus.id + ". Deleting it")
-        deleteArvosanatAndSuorituksetAndOpiskelija(suoritus, henkilöOid)
-      })
-    }
-
-    def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = {
-      arvosana.copy(suoritus = s.id)
-    }
-
-    def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
-      Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
     def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]): Future[Any] = {
       val opiskelija = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
