@@ -10,8 +10,6 @@ case class TestResource(name:String, value: Option[String] = None) extends fi.vm
   val source = "Test"
   override def identify(id: UUID): TestResource with Identified[UUID] = TestResource.identify(this, id)
 
-  private[TestResource] case class TestCore(name: String)
-
   override val core: AnyRef = TestCore(name)
 }
 
@@ -45,4 +43,6 @@ case class TestJournal[T <: Resource[UUID, T]](state: Seq[T with Identified[UUID
 
 case class TestRepo(journal: Journal[TestResource, UUID]) extends JournaledRepository[TestResource, UUID]{
 }
+
+case class TestCore(name: String)
 

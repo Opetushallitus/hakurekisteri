@@ -2,8 +2,8 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.net.SocketException
 import java.util.UUID
-import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 
+import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
@@ -13,12 +13,12 @@ import org.eclipse.jetty.security.{ConstraintMapping, ConstraintSecurityHandler,
 import org.eclipse.jetty.server.{RequestLog, Server}
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.security.{Constraint, Credential}
-import org.scalatest.{Outcome, Suite, SuiteMixin}
+import org.scalatest.{Outcome, TestSuite, TestSuiteMixin, fixture}
 
 import scala.collection.mutable
 
-trait YtlMockFixture extends SuiteMixin {
-  this: Suite =>
+trait YtlMockFixture extends TestSuiteMixin {
+  this: TestSuite =>
   private val ytlMockServer = new YtlMockServer
 
   def statusUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/status/$1"
@@ -36,7 +36,7 @@ trait YtlMockFixture extends SuiteMixin {
     .addDefault("ytl.http.password", password)
   ytlMockServer.start()
 
-  abstract override def withFixture(test: NoArgTest) = {
+  abstract override def withFixture(test: NoArgTest): Outcome = {
     var outcome: Outcome = null
     val statementBody = () => outcome = super.withFixture(test)
     statementBody()

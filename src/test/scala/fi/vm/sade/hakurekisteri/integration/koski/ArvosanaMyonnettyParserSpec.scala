@@ -5,9 +5,9 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
 import org.joda.time.LocalDate
 import org.json4s.jackson.JsonMethods
-import org.scalatest.{FlatSpec, ShouldMatchers}
+import org.scalatest.{FlatSpec, Matchers}
 
-class ArvosanaMyonnettyParserSpec extends FlatSpec with ShouldMatchers with HakurekisteriJsonSupport with JsonMethods {
+class ArvosanaMyonnettyParserSpec extends FlatSpec with Matchers with HakurekisteriJsonSupport with JsonMethods {
   it should "parse dates for arvosanas" in {
     val osaSuoritukset: Seq[KoskiOsasuoritus] = readOsasuoritukset("henkilo_from_koski.json")
 

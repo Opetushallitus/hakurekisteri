@@ -265,7 +265,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
     case "" => Future.successful("")
     case arvo =>
       val maaFuture = (koodistoActor.actor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
-      maaFuture.onFailure {
+      maaFuture.failed.foreach {
         case t: Throwable => log.error(t, s"failed to fetch country $koodiArvo")
       }
       maaFuture
@@ -274,7 +274,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
   def getPostitoimipaikka(maa: String, postitoimipaikka: String, postinumero: String): Future[String] = maa match {
     case "246" =>
       val postitoimipaikkaFuture = (koodistoActor.actor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
-      postitoimipaikkaFuture.onFailure {
+      postitoimipaikkaFuture.failed.foreach {
         case t: Throwable => log.error(t, s"failed to fetch postoffice for code $postinumero")
       }
       postitoimipaikkaFuture.map(koodi => {
@@ -355,7 +355,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
           yield Hakutoive(ht, valinta(hakemusnumero, ht.hakukohde.oid), vastaanotto(hakemusnumero, ht.hakukohde.oid), ilmoittautumistila(hakemusnumero, ht.hakukohde.oid))))
   }
 
-  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
+  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(
     hakijat.groupBy(_.hakemus.hakuOid).
       map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(ValintaTulosQuery(hakuOid, None))(timeout = valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)

@@ -73,8 +73,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
         Future.successful(None)
     }
 
-    tulos.onSuccess {
-      case Some(oids) => self ! CacheChildOids(parentOid, oids)
+    tulos.foreach {
+      oids => self ! CacheChildOids(parentOid, oids.get)
     }
 
     tulos
@@ -96,8 +96,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
           Future.successful(None)
       }
 
-      tulos.onSuccess {
-        case Some(o) => self ! CacheOrganisaatiot(Seq(o))
+      tulos.foreach {
+        o => self ! CacheOrganisaatiot(Seq(o.get))
       }
 
       tulos

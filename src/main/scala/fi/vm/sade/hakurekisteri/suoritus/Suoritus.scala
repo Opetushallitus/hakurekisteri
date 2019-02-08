@@ -44,9 +44,9 @@ sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean,
 
 }
 
-case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {
+case class VapaaSisalto(henkilo: String, tyyppi: String, index: Int)
 
-  private[VapaamuotoinenSuoritus] case class VapaaSisalto(henkilo: String, tyyppi: String, index: Int)
+case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {
 
   val kkTutkinto: Boolean = tyyppi == "kkTutkinto"
 
@@ -142,6 +142,8 @@ object ItseilmoitettuLukioTutkinto {
 
 }
 
+case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean, tyyppi: String)
+
 case class VirallinenSuoritus(komo: String,
                               myontaja: String,
                               tila: String,
@@ -155,8 +157,6 @@ case class VirallinenSuoritus(komo: String,
                               suoritustyyppi: Option[String] = None,
                               lahdeArvot: Map[String,String] = Map.empty
                               ) extends Suoritus(henkilo, vahv, lahde)  {
-
-  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean, tyyppi: String)
 
   private val useTyyppi: Option[String] = if (Oids.valmaKomoOid.equals(komo) || Oids.lukioonvalmistavaKomoOid.equals(komo)) {
     Some("perusopetuksen oppiaineen suoritus")

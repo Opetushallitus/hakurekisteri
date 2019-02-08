@@ -2,15 +2,14 @@ package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.TestActorRef
-import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaClient, VirtaResourceActor, VirtaResourceActorRef, VirtaResults}
-import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, DispatchSupport, Endpoint, ExecutorUtil}
+import fi.vm.sade.hakurekisteri.integration.{CapturingAsyncHttpClient, DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.mockito.Mockito
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -35,7 +34,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("111111-1975"))).thenReturn((200, List(), VirtaResults.testResponse))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.106"))).thenReturn((200, List(), VirtaResults.testResponse106))
 
-  val virtaClient = new VirtaClient(aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
+  val virtaClient = new VirtaClient(aClient = Some(new CapturingAsyncHttpClient(endPoint)))
   val virtaSuoritusActor = new VirtaResourceActorRef(system.actorOf(Props(new VirtaResourceActor(virtaClient))))
 
   val permissionChecker = new HakemusBasedPermissionCheckerActorRef(TestActorRef(new Actor {

@@ -770,7 +770,7 @@ object KkHakijaUtil {
 
     case arvo =>
       val maaFuture = (koodisto.actor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", arvo, "maatjavaltiot2")).mapTo[String]
-      maaFuture.onFailure {
+      maaFuture.failed.foreach {
         case e => logger.error(s"failed to fetch country $koodiArvo")
       }
       maaFuture

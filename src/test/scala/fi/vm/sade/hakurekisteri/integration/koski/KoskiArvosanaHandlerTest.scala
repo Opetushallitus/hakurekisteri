@@ -1,25 +1,24 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
 import akka.actor.{Actor, ActorSystem, Props}
-import akka.testkit.{CallingThreadDispatcher, TestActorRef, TestActors}
+import akka.testkit.{CallingThreadDispatcher, TestActorRef}
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{LocalDate, LocalDateTime}
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.Waiters
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar with AsyncAssertions {
+class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar with Waiters {
 
   implicit val formats = org.json4s.DefaultFormats
 
@@ -740,6 +739,7 @@ class KoskiArvosanaHandlerTest extends FlatSpec with Matchers with MockitoSugar 
           val ismatch = luokka.contentEquals("9A") || luokka.contentEquals("9D")
           ismatch shouldBe true
         }
+      case unknown => throw new IllegalArgumentException(s"Ei odotettu syötettä '$unknown'")
     }
 
     //päättötodistus.luokka shouldBe empty

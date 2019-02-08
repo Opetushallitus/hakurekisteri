@@ -18,6 +18,8 @@ case class ImportStatus(sentTime: DateTime = new DateTime(),
                         totalRows: Option[Int] = None,
                         savedReferences: Option[Map[String, Map[String, String]]] = None)
 
+case class ImportUnique(source: String, batchType: String, externalId: Option[String])
+
 case class ImportBatch(data: Elem,
                        externalId: Option[String] = None,
                        batchType: String,
@@ -26,8 +28,6 @@ case class ImportBatch(data: Elem,
                        status: ImportStatus) extends UUIDResource[ImportBatch] {
 
   override def identify(identifier: UUID): ImportBatch with Identified[UUID] = new IdentifiedImportBatch(this, identifier)
-
-  private[ImportBatch] case class ImportUnique(source: String, batchType: String, externalId: Option[String])
 
   override val core: AnyRef = ImportUnique(source, batchType, externalId)
 }

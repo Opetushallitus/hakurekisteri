@@ -7,10 +7,9 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
 import fi.vm.sade.hakurekisteri.web.rest.support.TestUser
 import org.apache.commons.lang3.builder.ToStringBuilder
-import org.joda._
 import org.joda.time.DateTime
-import org.json4s._
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.springframework.security.cas.authentication.CasAuthenticationToken
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -29,6 +28,7 @@ class ResourceAuthorizerSpec extends ScalatraFunSuite {
     override val username: String = "KoulunVirkailija"
     override def auditSession(): AuditSessionRequest = ???
     override def toString: String = ToStringBuilder.reflectionToString(this)
+    override def casAuthenticationToken: CasAuthenticationToken = TestUser.casAuthenticationToken
   }
   val testuserOrg = rekisterinpitajaUser.orgsFor("","").head
   private val opiskeluoikeus: Opiskeluoikeus = {
@@ -94,7 +94,7 @@ class ResourceAuthorizerSpec extends ScalatraFunSuite {
   }
 
   test("is authorized to read, write and delete in same org") {
-    val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithOrgButNoPerson), useHakemusBasecCheck = true)
+    val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithOrgButNoPerson))
     Seq("READ", "WRITE", "DELETE").foreach{ action =>
       val isAuthorizedF: Future[Boolean] = ra.isAuthorized(koulunVirkailijaUser, action, opiskeluoikeus)(organizationAuthorizer)
       awaitResult(isAuthorizedF) shouldBe true
@@ -103,13 +103,13 @@ class ResourceAuthorizerSpec extends ScalatraFunSuite {
 
   // Ei vielä toteutettu organisaation pohjalta tarkistusta isAuthorizediin, eikä olla vielä varmoja tarvitaanko
   ignore("is authorized to read from other org using auth for person") {
-    val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithWrongOrgButCorrectPerson), useHakemusBasecCheck = true)
+    val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithWrongOrgButCorrectPerson))
     val f: Future[Boolean] = ra.isAuthorized(koulunVirkailijaUser, "READ", opiskeluoikeus)(organizationAuthorizer)
     awaitResult(f) shouldBe true
   }
 
   test("is not authorized to write or delete to other org using auth for person") {
-    val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithWrongOrgButCorrectPerson), useHakemusBasecCheck = true)
+    val ra = new ResourceAuthorizer[Opiskeluoikeus](filterWithoutPerson, mockAuthorizationSubjectFinder(authSubjectWithWrongOrgButCorrectPerson))
     Seq("WRITE", "DELETE").foreach{ action =>
       val isAuthorizedF: Future[Boolean] = ra.isAuthorized(koulunVirkailijaUser, "WRITE", opiskeluoikeus)(organizationAuthorizer)
       awaitResult(isAuthorizedF) shouldBe false
@@ -155,7 +155,7 @@ class ResourceAuthorizerSpec extends ScalatraFunSuite {
 
   private def authorizedResources(filter: (User, Set[String]) => Future[Set[String]], authorizationSubjects: Seq[AuthorizationSubject[Opiskeluoikeus]], virkailijaUser: User, action: String): Seq[Opiskeluoikeus] = {
     val authFinder = mockAuthorizationSubjectFinder(authorizationSubjects)
-    val ra = new ResourceAuthorizer[Opiskeluoikeus](filter, authFinder, useHakemusBasecCheck = true)
+    val ra = new ResourceAuthorizer[Opiskeluoikeus](filter, authFinder)
     awaitResult(ra.authorizedResources(resources, virkailijaUser, action)(organizationAuthorizer))
   }
 

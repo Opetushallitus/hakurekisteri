@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.scalatest.{Matchers, FlatSpec}
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import scala.util.DynamicVariable
 import scala.language.implicitConversions
 
@@ -45,22 +45,6 @@ class SecuritySupportSpec extends FlatSpec with Matchers with MockitoSugar {
   it should "not allow delete for READ user" in
     securitySession.withLoginBy(user having "READ".rights)
     {currentUser.canDelete("Suoritus") should be (false)}
-
-  it should "allow READ for kk-virkailija when komo has koulutus_ prefix" in
-    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
-    {currentUser.allowByKomo("koulutus_", "READ") should be (true)}
-
-  it should "not allow READ for non-kk-virkailija when komo has koulutus_ prefix" in
-    securitySession.withLoginBy(user having "READ".rights)
-    {currentUser.allowByKomo("koulutus_", "READ") should be (false)}
-
-  it should "not allow READ for kk-virkailija when komo doesn't have koulutus_ prefix" in
-    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
-    {currentUser.allowByKomo("goulutus_", "READ") should be (false)}
-
-  it should "not allow WRITE for kk-virkailija when komo doesn't have koulutus_ prefix" in
-    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
-    {currentUser.allowByKomo("koulutus_", "WRITE") should be (false)}
 }
 
 
@@ -68,7 +52,7 @@ object SecurityUser {
   object  user {
 
     def having(rights:Set[DefinedRole]) = OPHUser(username = "test",
-      authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"}, userAgent = "", inetAddress = "")
+      authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"}, userAgent = "", inetAddress = "", casAuthenticationToken = null)
   }
 
   object securitySession {

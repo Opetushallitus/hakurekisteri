@@ -26,7 +26,7 @@ object YtlHetuConvert {
         case None => acc
       }
 
-    val hetus = new mutable.Stack ++ loop()
+    val hetus: mutable.MutableList[String] = new mutable.MutableList[String] ++ loop()
 
     val reader2 = new XMLEventReader(Source.fromFile(orig, "ISO-8859-1"))
 
@@ -55,7 +55,9 @@ object YtlHetuConvert {
         writeloop(path.tail)
 
       case EvText(hetu) if path.head == "HENKILOTUNNUS"  =>
-        p.print(hetus.pop())
+        val topHetu = hetus.head
+        hetus.drop(1)
+        p.print(topHetu)
         writeloop(path)
       case EvText(text) =>
         p.print(text)

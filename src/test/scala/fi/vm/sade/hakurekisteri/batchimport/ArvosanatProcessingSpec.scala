@@ -5,8 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.arvosana._
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloActorRef, HttpHenkiloActor}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
@@ -17,20 +16,19 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FailingResourceActor, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory, MockConfig, Oids}
-import fi.vm.sade.utils.tcp.ChooseFreePort
+import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig, Oids}
 import generators.DataGen
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
-import org.scalatest.concurrent.{AsyncAssertions, PatienceConfiguration}
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.{PatienceConfiguration, Waiters}
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.SpanSugar._
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{Await, ExecutionContext}
 
-class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions
+class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with Waiters
   with HakurekisteriJsonSupport with ActorSystemSupport with LocalhostProperties {
 
   behavior of "ArvosanaProcessing"
@@ -436,20 +434,21 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val savedArvosanat: Seq[Arvosana] =
           Await.result((arvosanaActor ? ArvosanaQuery(s.id))(akka.util.Timeout(1, TimeUnit.MINUTES)).mapTo[Seq[Arvosana]], awaitTimeout)
 
-        savedArvosanat should (
-          contain (
-            Arvosana(
-              suoritus = s.id,
-              arvio = Arvio410("6"),
-              aine = "A1",
-              lisatieto = Some("EN"),
-              valinnainen = true,
-              myonnetty = None,
-              source = lahde,
-              lahdeArvot = Map(),
-              jarjestys = Some(0)
-            )
-          ) and contain (
+        savedArvosanat should contain (
+          Arvosana(
+            suoritus = s.id,
+            arvio = Arvio410("6"),
+            aine = "A1",
+            lisatieto = Some("EN"),
+            valinnainen = true,
+            myonnetty = None,
+            source = lahde,
+            lahdeArvot = Map(),
+            jarjestys = Some(0)
+          )
+        )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("8"),
@@ -461,7 +460,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               lahdeArvot = Map(),
               jarjestys = Some(1)
             )
-          ) and contain (
+          )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("10"),
@@ -473,7 +474,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               lahdeArvot = Map(),
               jarjestys = Some(2)
             )
-          ) and contain (
+          )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("6"),
@@ -485,7 +488,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               lahdeArvot = Map(),
               jarjestys = Some(0)
             )
-          ) and contain (
+          )
+
+        savedArvosanat should contain (
             Arvosana(
               suoritus = s.id,
               arvio = Arvio410("8"),
@@ -498,7 +503,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               jarjestys = Some(1)
             )
           )
-        )
+
         database.close()
       }
     )
@@ -531,13 +536,13 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): OrganisaatioActorRef =
     new OrganisaatioActorRef(system.actorOf(Props(new HttpOrganisaatioActor(
-      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))),
+      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(asyncClient)),
       new MockConfig, MockCacheFactory.get
     ))))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): HenkiloActorRef =
     new HenkiloActorRef(system.actorOf(Props(new HttpHenkiloActor(
-      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(new AsyncHttpClient(asyncProvider))),
+      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(asyncClient)),
       new MockConfig
     ))))
 
@@ -933,7 +938,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       result
     }
     private val endpoint = createEndpoint
-    val asyncProvider = new CapturingProvider(endpoint)
+    val asyncClient = new CapturingAsyncHttpClient(endpoint)
   }
 }
 

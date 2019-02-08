@@ -29,8 +29,8 @@ trait PermissionSwaggerApi extends OldSwaggerSyntax with SwaggerSupport {
     .notes("Tarkistaa onko henkilöllä käyttöoikeus johonkin listatuista organisaatioista. " +
       "Virkailijat annetuista organisaatioista saavat katsella vain ko. organisaatioihin liittettyjen henkilöiden tietoja.")
     .parameter(bodyParam(permissionRequestModel))
-    .responseMessage(ModelResponseMessage(400, "virhe kutsussa", "PermissionErrorResponse"))
-    .responseMessage(ModelResponseMessage(504, "käyttöoikeustarkistusta ei ehditty tehdä määrätyssä ajassa", "PermissionErrorResponse"))
-    .responseMessage(ModelResponseMessage(500, "virhe käyttöoikeustarkistuksessa", "PermissionErrorResponse"))
+    .responseMessage(ModelResponseMessage(400, "virhe kutsussa", Some("PermissionErrorResponse")))
+    .responseMessage(ModelResponseMessage(504, "käyttöoikeustarkistusta ei ehditty tehdä määrätyssä ajassa", Some("PermissionErrorResponse")))
+    .responseMessage(ModelResponseMessage(500, "virhe käyttöoikeustarkistuksessa", Some("PermissionErrorResponse")))
 
 }

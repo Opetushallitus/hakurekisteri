@@ -95,7 +95,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
       }
     })
 
-  private def fetch(groupUuid: String)(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
+  private def internalFetch(groupUuid: String)(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
@@ -107,7 +107,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   }
 
   def fetch(groupUuid: String, hetus: Seq[String]): Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
-    hetus.grouped(chunkSize).map(fetch(groupUuid))
+    hetus.grouped(chunkSize).map(internalFetch(groupUuid))
 
   @tailrec
   private def fetchStatus(uuid: String): Either[Throwable,Status] = {
