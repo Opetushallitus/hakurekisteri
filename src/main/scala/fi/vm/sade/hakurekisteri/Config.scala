@@ -173,6 +173,9 @@ abstract class Config {
   OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
 
   val tiedonsiirtoStorageDir = properties.getOrElse("suoritusrekisteri.tiedonsiirto.storage.dir", System.getProperty("java.io.tmpdir"))
+  val maxPersonOidCountForHakemusBasedPermissionCheck: Int =
+    java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.hakemuspermissioncheck.max.personoids",
+      "configuration key missing: suoritusrekisteri.hakemuspermissioncheck.max.personoids"))
 
   def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
     import scala.collection.JavaConverters._
