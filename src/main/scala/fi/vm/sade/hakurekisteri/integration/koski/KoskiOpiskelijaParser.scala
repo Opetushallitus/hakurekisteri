@@ -18,7 +18,7 @@ class KoskiOpiskelijaParser {
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false")
-      loppu = KoskiUtil.parseNextThirdOfJune().toDateTimeAtStartOfDay
+      loppu = KoskiUtil.deadlineDate.toDateTimeAtStartOfDay
       if (!loppu.isAfter(alku)) {
         alku = new DateTime(0L) //Sanity
       }
