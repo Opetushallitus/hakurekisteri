@@ -71,7 +71,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     database.close()
   }
 
-  //todo tämä on vähän raakile vielä, mutta mittaa kuitenkin jotain. parannuksia?
   it should "resolve latest opiskeluoikeudes" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_a_lot_of_stuff.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]

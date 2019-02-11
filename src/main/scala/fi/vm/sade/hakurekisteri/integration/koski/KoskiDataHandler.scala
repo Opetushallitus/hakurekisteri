@@ -95,27 +95,22 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     viimeisimmatOpiskeluoikeudet
   }
 
-  private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Future[Unit] = {
-    Future(fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a))).andThen {
-      case Success(_) =>
-        deleteSuoritus(suoritus).andThen {
-          case Success(_) =>
-            fetchOpiskelijat(henkilöOid, suoritus.myontaja).andThen {
-              case Success(opiskelija) => {
-                opiskelija.size match {
-                  case 1 => deleteOpiskelija(opiskelija.head)
-                  case _ => logger.debug("Multiple opiskelijas found for henkilöoid: " + henkilöOid + ", skip deletion.")
-                }
-              }
-              case Failure(t) =>
-                logger.error("Virhe opiskelijan " + henkilöOid + " poistossa.", t)
-            }
-          case Failure(t) =>
-            logger.error("Virhe henkilön " + henkilöOid + " suorituksen poistossa.", t)
-        }
-      case Failure(t) =>
-        logger.error("Virhe henkilön " + henkilöOid + " arvosanojen poistossa.", t)
-    })
+  private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String) = {
+    val arvosanojenPoisto = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
+    val suorituksenPoisto = deleteSuoritus(suoritus)
+    val opiskelijanPoisto = fetchOpiskelijat(henkilöOid, suoritus.myontaja)
+      .flatMap(opiskelijatiedot => opiskelijatiedot.size match {
+        case 1 => logger.debug("Found one matching opiskelijatieto for suoritus, deleting it.")
+          deleteOpiskelija(opiskelijatiedot.head)
+        case _ => logger.warn("Multiple opiskelijas ({}) found for henkilöoid: ({}) while removing suoritus ({}), not deleting anything.", opiskelijatiedot.size.toString, henkilöOid, suoritus.id.toString)
+          Future.successful("Ok with warnings")
+      })
+    Future.sequence(Seq(arvosanojenPoisto, suorituksenPoisto, opiskelijanPoisto)).onComplete {
+      case Success(_) => logger.debug("Oppijan + " + suoritus.henkiloOid +" arvosanat, suoritukset ja opiskelijatieto onnistuneesti poistettu!", suoritus.henkiloOid)
+        Future.successful({})
+      case Failure(e) => logger.warn("Oppijan + " + suoritus.henkiloOid +" arvosanojen, suoritusten tai opiskelijatiedon poistossa oli ongelmia: " + e)
+        Future.failed(e)
+    }
   }
 
   private def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
@@ -125,6 +120,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         fetchOpiskelijat(henkilöOid, oppilaitosOid)
     }
   }
+
+  def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen,
+      suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
+      case t: AskTimeoutException => updateSuoritus(suoritus, suor)
+    }
 
   private def deleteOpiskelija(o: Opiskelija with Identified[UUID]): Future[Any] = {
     logger.debug("Poistetaan opiskelija " + o + "UUID:lla " + o.id)
@@ -154,12 +155,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     case s: VirallinenSuoritus => s.core == suor.core
     case _ => false
   }
-
-  private def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
-    (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen,
-      suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
-      case t: AskTimeoutException => updateSuoritus(suoritus, suor)
-    }
 
   private def fetchExistingSuoritukset(henkiloOid: String, personOidsWithAliases: PersonOidsWithAliases): Future[Seq[Suoritus]] = {
     val q = SuoritusQuery(henkilo = Some(henkiloOid))
