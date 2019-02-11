@@ -429,7 +429,7 @@ class KoskiSuoritusArvosanaParser {
           } else "KESKEN"
 
         case Oids.perusopetusKomoOid =>
-          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
+          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || LocalDate.now.isAfter(KoskiUtil.deadlineDate) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
             "KESKEYTYNYT"
           } else suoritusTila
 

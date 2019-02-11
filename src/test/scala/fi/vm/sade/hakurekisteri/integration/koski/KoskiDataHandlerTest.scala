@@ -1288,7 +1288,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.size should equal(0)
   }
 
-  it should "store peruskoulu kesken with arvosanat if deadline date is yesterday" in {
+  it should "store peruskoulu keskeytynyt with arvosanat if deadline date is yesterday" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     val henkiloOid: String = henkilo.henkilö.oid.toString
@@ -1300,14 +1300,14 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
-    val suoritus = run(database.run(sql"select resource_id from suoritus".as[String]))
-    suoritus.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEYTYNYT")
 
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
     arvosanat should have length 17
   }
 
-  it should "not store peruskoulu kesken with arvosanat if deadline date is tomorrow" in {
+  it should "store peruskoulu kesken without arvosanat if deadline date is tomorrow" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     val henkiloOid: String = henkilo.henkilö.oid.toString
@@ -1319,8 +1319,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
-    val suoritus = run(database.run(sql"select resource_id from suoritus".as[String]))
-    suoritus.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEN")
 
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
     arvosanat should have length 0
