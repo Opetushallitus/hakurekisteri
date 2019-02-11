@@ -16,7 +16,7 @@
         <spring.version>4.3.21.RELEASE</spring.version>
         <spring-security.version>4.2.10.RELEASE</spring-security.version>
         <scalatra.version>2.5.4</scalatra.version>
-        <slick.version>3.2.3</slick.version>
+        <slick.version>3.3.0</slick.version>
         <json4s.version>3.4.2</json4s.version>
     </properties>
     <dependencyManagement>
@@ -196,6 +196,11 @@
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-xml_2.12</artifactId>
                 <version>1.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>3.3.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
