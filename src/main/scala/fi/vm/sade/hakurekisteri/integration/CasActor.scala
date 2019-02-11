@@ -100,7 +100,10 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
     tryServiceTicket(0)
   }
 
-  private object NoSessionFound extends Exception("No JSession Found")
+  private case class NoSessionFound(response: Response) extends Exception(s"No JSession Found : " +
+    s"got response with status ${response.getStatusCode} ${response.getStatusText} " +
+    s", headers ${response.getHeaders} "  +
+    s"and content '${response.getResponseBody}'")
 
   private def getJSession: Future[JSessionId] = {
     val request: Req = dispatch.url(serviceUrl)
@@ -113,7 +116,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
             log.debug(s"call to $serviceUrl was successful")
             log.debug(s"got jsession $id")
             id
-          case (200 | 302 | 404, None) => throw NoSessionFound
+          case (200 | 302 | 404, None) => throw NoSessionFound(r)
           case (code, _) => throw PreconditionFailedException(s"precondition failed for url: $serviceUrl, response code: $code, text: ${r.getStatusText}", code)
         }
       }
