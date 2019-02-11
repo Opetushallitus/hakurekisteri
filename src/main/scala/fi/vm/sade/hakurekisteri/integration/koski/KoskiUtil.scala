@@ -2,22 +2,11 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.util.Calendar
 
+import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import org.joda.time.LocalDate
 
 object KoskiUtil {
 
   val root_org_id = "koski"
-
-  //TODO: Vaihtuu vuosittain
-  def parseNextThirdOfJune(): LocalDate = {
-    var cal = java.util.Calendar.getInstance()
-    cal.set(cal.get(Calendar.YEAR), 5, 3)
-    var now = LocalDate.now()
-    var thirdOfJune = LocalDate.fromCalendarFields(cal)
-    if(now.isAfter(thirdOfJune)){
-      thirdOfJune.plusYears(1)
-    }
-    thirdOfJune
-  }
-
+  var deadlineDate: LocalDate = new LocalDate(OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date"))
 }

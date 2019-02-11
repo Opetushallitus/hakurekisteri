@@ -1172,7 +1172,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val opiskelija = opiskelijat.head
     val valmistuminen = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = $opiskelija".as[String]))
     valmistuminen should have length 1
-    valmistuminen.head should equal(KoskiUtil.parseNextThirdOfJune().toString())
+    valmistuminen.head should equal(KoskiUtil.deadlineDate.toString())
   }
 
   it should "Not delete opiskelija, suoritus and arvosanat if source is not koski" in {
@@ -1286,6 +1286,44 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelijat.size should equal(0)
     val suoritus = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]))
     suoritus.size should equal(0)
+  }
+
+  it should "store peruskoulu kesken with arvosanat if deadline date is yesterday" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, false)), 5.seconds)
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select resource_id from suoritus".as[String]))
+    suoritus.size should equal(1)
+
+    var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
+    arvosanat should have length 17
+  }
+
+  it should "not store peruskoulu kesken with arvosanat if deadline date is tomorrow" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(false, false)), 5.seconds)
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select resource_id from suoritus".as[String]))
+    suoritus.size should equal(1)
+
+    var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
+    arvosanat should have length 0
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
