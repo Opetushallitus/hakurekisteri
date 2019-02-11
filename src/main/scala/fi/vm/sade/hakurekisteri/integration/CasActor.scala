@@ -5,9 +5,9 @@ import java.util.concurrent.{ExecutionException, TimeUnit, TimeoutException}
 
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
-import org.asynchttpclient.{AsyncHttpClient, Response}
 import dispatch.{Http, HttpExecutor, Req}
 import fi.vm.sade.hakurekisteri.integration.cas._
+import org.asynchttpclient.{AsyncHttpClient, Response}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
@@ -59,6 +59,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       jSessionId = Some(f)
     case ClearJSession =>
       jSessionId = None
+      internalClient.client.getConfig.getCookieStore.remove(_.name().toLowerCase == jSessionName.toLowerCase)
   }
 
   private def getTgtUrl = {
