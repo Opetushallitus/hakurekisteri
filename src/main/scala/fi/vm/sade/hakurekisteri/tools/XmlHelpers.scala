@@ -3,9 +3,11 @@ package fi.vm.sade.hakurekisteri.tools
 
 import java.io.{InputStream, Reader}
 import java.net.URL
-import javax.xml.parsers.SAXParserFactory
 
-import com.sun.org.apache.xml.internal.serialize.{OutputFormat, XMLSerializer}
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
+import javax.xml.transform.{OutputKeys, TransformerFactory}
 
 import scala.language.implicitConversions
 import scala.xml._
@@ -100,11 +102,11 @@ object XmlHelpers {
       case t: org.w3c.dom.Text => Text(t.getWholeText)
     }
 
-    def printDom(doc: org.w3c.dom.Document) = {
-      val format = new OutputFormat(doc)
-      format.setIndenting(true)
-      val serializer = new XMLSerializer(System.out, format)
-      serializer.serialize(doc)
+    def printDom(doc: org.w3c.dom.Document): Unit = {
+      val tform = TransformerFactory.newInstance.newTransformer
+      tform.setOutputProperty(OutputKeys.INDENT, "yes")
+      tform.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
+      tform.transform(new DOMSource(doc), new StreamResult(System.out))
     }
 
     def convertElement(e: org.w3c.dom.Element): Elem = {
