@@ -71,6 +71,7 @@ case class ValintaTulosHakutoive(hakukohdeOid: String,
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
+@SerialVersionUID(1)
 trait SijoitteluTulos extends Serializable {
   def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
   def valintatila(hakemus: String, kohde: String): Option[Valintatila]
