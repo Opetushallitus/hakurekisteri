@@ -15,12 +15,12 @@ import scala.concurrent.{ExecutionContext, Future}
 case class GetRinnasteinenKoodiArvoQuery(koodisto: String, arvo: String, rinnasteinenKoodistoUri: String)
 case class Koodisto(koodistoUri: String)
 case class KoodiMetadata(nimi: String, kieli: String)
-case class Koodi(koodiArvo: String, koodiUri: String, koodisto: Koodisto, metadata: Seq[KoodiMetadata])
+@SerialVersionUID(1) case class Koodi(koodiArvo: String, koodiUri: String, koodisto: Koodisto, metadata: Seq[KoodiMetadata])
 case class RinnasteinenKoodiNotFoundException(message: String) extends Exception(message)
 
 case class GetKoodi(koodistoUri: String, koodiUri: String)
 
-case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
+@SerialVersionUID(1) case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
 case class GetKoodistoKoodiArvot(koodistoUri: String)
 
 class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
