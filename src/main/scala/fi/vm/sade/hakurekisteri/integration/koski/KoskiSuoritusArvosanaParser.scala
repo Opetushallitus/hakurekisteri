@@ -345,7 +345,7 @@ class KoskiSuoritusArvosanaParser {
       }
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
-        case Oids.perusopetusKomoOid =>
+        case Oids.perusopetusKomoOid  =>
           val opiskeluoikeustyyppi = opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("",""))
           var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot,
             None, suorituksenValmistumispäivä = valmistumisPaiva, opiskeluoikeustyyppi = opiskeluoikeustyyppi)
