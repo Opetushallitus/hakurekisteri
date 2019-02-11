@@ -370,15 +370,6 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
 
 }
 
-
-
-class TestActor(handler: PartialFunction[Any, Unit]) extends Actor {
-
-  override def receive: Receive = handler
-}
-
-object Triggered
-
 object Hakemus {
   def apply(): HakemusBuilder = HakemusBuilder(Map.empty, "", None, None, None, None, None, None, None, "")
 }
