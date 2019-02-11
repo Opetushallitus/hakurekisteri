@@ -297,9 +297,8 @@ class KoskiSuoritusArvosanaParser {
     }
 
     komoOid match {
-      //TODO OK-227 : tallennetaan perusopetuksen ja kymppiluokan keskeneräiset suoritukset.
-      //case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if suoritusTila.equals("KESKEN") => true
-      case Oids.perusopetusKomoOid if suoritusTila.equals("KESKEN") => true
+      // OK-227 : tallennetaan perusopetuksen ja kymppiluokan keskeneräiset suoritukset.
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if suoritusTila.equals("KESKEN") => true
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
         //check oppiaine failures
         lazy val hasFailures = suoritus.osasuoritukset
@@ -359,10 +358,9 @@ class KoskiSuoritusArvosanaParser {
             case _ => false
           })
 
-          if(isVahvistettu) {
+          if (isVahvistettu) {
             val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
-            val d = KoskiUtil.deadlineDate
-            if (vahvistusDate.isAfter(d)) {
+            if (vahvistusDate.isAfter(KoskiUtil.deadlineDate)) {
               (Seq(), yks)
             } else {
               (as, yks)
@@ -383,7 +381,7 @@ class KoskiSuoritusArvosanaParser {
 
         case Oids.telmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
-        case Oids.lisaopetusKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+        case Oids.lisaopetusKomoOid if (isVahvistettu || LocalDate.now.isAfter(KoskiUtil.deadlineDate)) => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.lukioKomoOid =>
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
             logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
@@ -413,10 +411,13 @@ class KoskiSuoritusArvosanaParser {
           suoritusTila
           if (isVahvistettu) {
             "VALMIS"
+            // OK-227 : Kymppiluokka tilaan keskeytynyt, jos on deadline on mennyt.
+          } else if(LocalDate.now.isAfter(KoskiUtil.deadlineDate)) {
+            "KESKEYTYNYT"
           } else suoritusTila
 
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
-          if(suoritus.valmaOsaamispisteetAlleKolmekymmentä){
+          if (suoritus.valmaOsaamispisteetAlleKolmekymmentä){
             "KESKEYTYNYT"
           } else {
             "VALMIS"
@@ -424,17 +425,17 @@ class KoskiSuoritusArvosanaParser {
 
         case Oids.lukioonvalmistavaKomoOid =>
           val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
-          if(nSuoritukset >= 25 || isVahvistettu) {
+          if (nSuoritukset >= 25 || isVahvistettu) {
             "VALMIS"
           } else "KESKEN"
 
         case Oids.perusopetusKomoOid =>
-          if(failedNinthGrade || suoritus.jääLuokalle.contains(true) || LocalDate.now.isAfter(KoskiUtil.deadlineDate) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
+          if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || LocalDate.now.isAfter(KoskiUtil.deadlineDate) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
             "KESKEYTYNYT"
           } else suoritusTila
 
         case s if s.startsWith(Oids.perusopetusLuokkaKomoOid) =>
-          if(suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu))  {
+          if (suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu))  {
             "KESKEYTYNYT"
           } else suoritusTila
 
