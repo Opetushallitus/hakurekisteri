@@ -312,6 +312,7 @@ class KoskiSuoritusArvosanaParser {
   def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
+    var lahdeArvot: Map[String, String] = Map[String, String]()
     //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
 
     for {
@@ -406,9 +407,13 @@ class KoskiSuoritusArvosanaParser {
       //TODO process here or before the upper parts reference suoritustila??
       //see https://confluence.oph.ware.fi/confluence/display/AJTS/Koski-Sure+arvosanasiirrot
       val vuosiluokkiinSitoutumatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
-        case Some(x) => x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
+        case Some(x) => {
+          lahdeArvot += ("vuosiluokkiin sitomaton opetus" -> x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false).toString)
+          x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
+        }
         case None => false
       }
+
 
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
@@ -489,7 +494,8 @@ class KoskiSuoritusArvosanaParser {
           suoritusKieli = suorituskieli.koodiarvo,
           opiskeluoikeus = None,
           vahv = true,
-          lahde = root_org_id), arvosanat, luokka, lasnaDate, luokkataso)
+          lahde = root_org_id,
+          lahdeArvot = lahdeArvot), arvosanat, luokka, lasnaDate, luokkataso)
         result = result :+ suoritus
       }
     }
@@ -617,7 +623,8 @@ class KoskiSuoritusArvosanaParser {
         suoritusKieli = useSuoritus.suoritusKieli,
         opiskeluoikeus = None,
         vahv = true,
-        lahde = root_org_id), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
+        lahde = root_org_id,
+        lahdeArvot = useSuoritus.lahdeArvot), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
     })
   }
 }
