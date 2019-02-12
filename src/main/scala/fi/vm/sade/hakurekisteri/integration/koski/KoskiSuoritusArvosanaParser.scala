@@ -377,7 +377,6 @@ class KoskiSuoritusArvosanaParser {
             (Seq(), yks)
           }
         case Oids.perusopetusLuokkaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
-        case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.perusopetuksenOppiaineenOppimaaraOid =>
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
           if(suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) {
@@ -385,6 +384,7 @@ class KoskiSuoritusArvosanaParser {
           }
           osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
 
+        case Oids.valmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.telmaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.lukioKomoOid =>
@@ -426,7 +426,10 @@ class KoskiSuoritusArvosanaParser {
           } else suoritusTila
 
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
-          if (suoritus.valmaOsaamispisteetAlleKolmekymmentä){
+          if (LocalDate.now.isBefore(KoskiUtil.deadlineDate)) {
+            suoritusTila
+          }
+          else if (suoritus.valmaOsaamispisteetAlleKolmekymmentä || LocalDate.now.isAfter(KoskiUtil.deadlineDate)){
             "KESKEYTYNYT"
           } else {
             "VALMIS"
