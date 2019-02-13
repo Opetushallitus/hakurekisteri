@@ -14,7 +14,9 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 
-
+object OppijatPostSize {
+  def maxOppijatPostSize: Int = 5000
+}
 
 class KoskiImporterResource(koskiService: IKoskiService)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
@@ -56,11 +58,15 @@ class KoskiImporterResource(koskiService: IKoskiService)
     }
   }
 
-  post("/oppijat/", operation(updateHenkilot)) {
+  post("/oppijat", operation(updateHenkilot)) {
     implicit val user: User = getAdmin
     val personOids = parse(request.body).extract[Set[String]]
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
+    if (personOids.size > OppijatPostSize.maxOppijatPostSize) {
+      val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
+      throw new IllegalArgumentException(msg)
+    }
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)

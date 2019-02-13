@@ -15,11 +15,11 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
     .responseMessage(ModelResponseMessage(404, "oppija not found"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
 
-  val updateHenkilot = apiOperation[Boolean]("paivitaOpiskelijatKoskestaHenkiloOideille")
+  val updateHenkilot = apiOperation[Boolean]("paivitaOpiskelijaListaKoskesta")
     .summary("Päivittää annetun oppijalistan tiedot koskesta")
     .notes("Palauttaa true jos päivitys onnistui, muutoin false")
     .parameter(bodyParam[String]("oppijaoids")
-      .description("Lista oppijanumeroita").required)
+      .description(s"""lista oppijanumeroista (max ${OppijatPostSize.maxOppijatPostSize} kpl), esim ["1.2.246.562.24.00000000001", "1.2.246.562.24.00000000002"]""").required)
     .parameter(queryParam[Option[Boolean]]("haelukio").description("Haetaanko koskesta myös lukio-opiskelijoiden arvosanat").optional.defaultValue(Some(false)))
     .parameter(queryParam[Option[Boolean]]("haeammatilliset").description("Haetaanko koskesta myös ammatillisten opiskelijoiden arvosanat").optional.defaultValue(Some(false)))
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
