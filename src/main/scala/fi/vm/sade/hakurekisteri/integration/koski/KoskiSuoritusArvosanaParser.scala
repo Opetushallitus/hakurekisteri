@@ -442,12 +442,12 @@ class KoskiSuoritusArvosanaParser {
           } else "KESKEN"
 
         case Oids.perusopetusKomoOid =>
-          if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || LocalDate.now.isAfter(KoskiUtil.deadlineDate) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu)) {
+          if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || LocalDate.now.isAfter(KoskiUtil.deadlineDate) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu && LocalDate.now.isAfter(KoskiUtil.deadlineDate))) {
             "KESKEYTYNYT"
           } else suoritusTila
 
         case s if s.startsWith(Oids.perusopetusLuokkaKomoOid) =>
-          if (suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu))  {
+          if (suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu && LocalDate.now().isAfter(KoskiUtil.deadlineDate)))  {
             "KESKEYTYNYT"
           } else suoritusTila
 
