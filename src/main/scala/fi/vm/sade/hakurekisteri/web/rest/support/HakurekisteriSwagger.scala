@@ -2,14 +2,19 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 
 import org.json4s.Formats
 import org.scalatra.swagger._
-
-import org.scalatra.ScalatraServlet
+import org.scalatra.{ScalatraBase, ScalatraServlet}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import javax.servlet.ServletConfig
 
 
-class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with HakurekisteriJsonSupport with JacksonSwaggerBase {
+class ResourcesApp(forceHttps: Boolean)(implicit val swagger: Swagger) extends ScalatraServlet with HakurekisteriJsonSupport with JacksonSwaggerBase {
   val hakurekisteriFormats = super[HakurekisteriJsonSupport].jsonFormats
   override implicit val jsonFormats: Formats = super[JacksonSwaggerBase].jsonFormats ++ hakurekisteriFormats.customSerializers
+
+  override def init(config: ServletConfig): Unit = {
+    super.init(config)
+    servletContext.setInitParameter(ScalatraBase.ForceHttpsKey, forceHttps.toString)
+  }
 }
 
 class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(

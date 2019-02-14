@@ -45,6 +45,7 @@ suoritusrekisteri.db.slowquery.millis=200
 suoritusrekisteri.db.reallyslowquery.millis=10000
 suoritusrekisteri.db.max.log.line.length=600
 suoritusrekisteri.db.connectionTimeout={{ host_postgresql_suoritusrekisteri_hikari_connection_timeout_millis | default("1000") }}
+suoritusrekisteri.swagger.https={{ suoritusrekisteri_swagger_https | default("true") }}
 
 # Oletusarvoja
 activemq.queue.name.log=Sade.Log
