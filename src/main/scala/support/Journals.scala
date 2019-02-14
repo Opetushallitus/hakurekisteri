@@ -28,9 +28,8 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
 
   log.info(s"Opening database connections to ${config.databaseUrl} with user ${config.postgresUser}")
   val configForDb = {
-    import collection.JavaConverters._
     val javaProperties = new Properties()
-    javaProperties.putAll(config.properties.asJava)
+    config.properties.foreach(kv => javaProperties.put(kv._1, kv._2))
     javaProperties.put("suoritusrekisteri.db.url", config.databaseUrl)
     if(config.postgresUser != null) javaProperties.put("suoritusrekisteri.db.user", config.postgresUser)
     if(config.postgresPassword != null) javaProperties.put("suoritusrekisteri.db.password", config.postgresPassword)
