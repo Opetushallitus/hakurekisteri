@@ -113,11 +113,14 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
   }
 
-  it should "parse 7 course LUVA data" in {
+  it should "parse 7 course LUVA data as kesken before deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(KoskiKoodi("luva", "opiskeluoikeudentyyppi"))
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus = result.head
@@ -127,11 +130,32 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
-  it should "parse 23 course LUVA data" in {
+
+  it should "parse 7 course LUVA data as keskeytynyt after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "LUVA.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(KoskiKoodi("luva", "opiskeluoikeudentyyppi"))
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+    val suoritus = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinen.tila should equal("KESKEYTYNYT")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+  }
+
+  it should "parse 23 course LUVA data as kesken before deadlinedate" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_23_kurssia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
     val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
@@ -145,11 +169,34 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
 
-  it should "parse vahvistettu 23 course LUVA data" in {
+  it should "parse 23 course LUVA data as keskeytynyt after deadlinedate" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_23_kurssia.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    numcourses shouldBe 23
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+    val suoritus = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinen.tila should equal("KESKEYTYNYT")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+  }
+
+
+  it should "parse vahvistettu 23 course LUVA data as kesken before deadline" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_23_kurssia_vahvistettu.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
     val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
@@ -158,10 +205,31 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus: SuoritusArvosanat = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-    virallinen.tila should equal("VALMIS")
+    virallinen.tila should equal("KESKEN")
 
     virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
   }
+
+  it should "parse vahvistettu 23 course LUVA data as keskeytynyt after deadline" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_23_kurssia_vahvistettu.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    numcourses shouldBe 23
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+    val suoritus: SuoritusArvosanat = result.head
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinen.tila should equal("KESKEYTYNYT")
+
+    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+  }
+
 
   it should "parse 25 course LUVA data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "LUVA_25_kurssia.json").mkString
@@ -265,21 +333,21 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.arvosanat should have length 13
   }
 
-  it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data" in {
+  it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt after deadline" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_jää_luokalle.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     henkilo.opiskeluoikeudet.head.suoritukset(2).jääLuokalle shouldEqual Some(true)
 
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
 
     val suoritus = result(2)
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
-    virallinen.tila should equal("KESKEYTYNYT")
     suoritus.arvosanat should have length 0
 
     val paattotodistus = result(3)
@@ -288,9 +356,39 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinenpaattotodistus.komo shouldNot be("luokka")
     paattotodistus.arvosanat should have length 0
+    virallinenpaattotodistus.tila should equal("KESKEYTYNYT")
 
     peruskouluB2KieletShouldNotBeValinnainen(result)
   }
+
+  it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt if set jää luokalle in koski before deadline" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_jää_luokalle.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    henkilo.opiskeluoikeudet.head.suoritukset(2).jääLuokalle shouldEqual Some(true)
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 4
+
+    val suoritus = result(2)
+    suoritus.suoritus shouldBe a [VirallinenSuoritus]
+
+    suoritus.arvosanat should have length 0
+
+    val paattotodistus = result(3)
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
+
+    val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
+    virallinenpaattotodistus.komo shouldNot be("luokka")
+    paattotodistus.arvosanat should have length 0
+    virallinenpaattotodistus.tila should equal("KESKEYTYNYT")
+
+    peruskouluB2KieletShouldNotBeValinnainen(result)
+  }
+
 
   it should "parse peruskoulu_9_luokka_päättötodistus_ei_vahvistusta.json data" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_ei_vahvistusta.json").mkString
@@ -819,7 +917,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val pt = getPerusopetusPäättötodistus(resgroup.head).get
     val ysiluokat = getYsiluokat(resgroup.head)
     ysiluokat should have length 1
-    ysiluokat.head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
+    ysiluokat.head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual KoskiUtil.deadlineDate.toString("dd.MM.YYYY")
     pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
 
   }
@@ -921,31 +1019,14 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     valinnaisetAineet should contain("AI")
   }
 
-  it should "parse telma_testi_valmis.json" in {
+  it should "parse vahvistamaton telma_testi_valmis.json as keskeytynyt after deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_valmis.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
 
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
-    resultgrp should have length 1
-    val result = resultgrp.head
-    result should have length 1
-
-    val arvosanat = result.head.arvosanat
-    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    arvosanat should have length 0
-    virallinensuoritus.tila shouldEqual "VALMIS"
-  }
-
-  it should "parse telma_testi_kesken.json" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_kesken.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
     val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgrp should have length 1
@@ -957,6 +1038,74 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     arvosanat should have length 0
     virallinensuoritus.tila shouldEqual "KESKEYTYNYT"
+  }
+
+  it should "parse vahvistamaton telma_testi_valmis.json as kesken before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_valmis.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgrp should have length 1
+    val result = resultgrp.head
+    result should have length 1
+
+    val arvosanat = result.head.arvosanat
+    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    arvosanat should have length 0
+    virallinensuoritus.tila shouldEqual "KESKEN"
+  }
+
+
+
+
+
+  it should "parse telma_testi_kesken.json as keskeytynyt after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgrp should have length 1
+    val result = resultgrp.head
+    result should have length 1
+
+    val arvosanat = result.head.arvosanat
+    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    arvosanat should have length 0
+    virallinensuoritus.tila shouldEqual "KESKEYTYNYT"
+  }
+
+
+  it should "parse telma_testi_kesken.json as kesken before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "telma_testi_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgrp should have length 1
+    val result = resultgrp.head
+    result should have length 1
+
+    val arvosanat = result.head.arvosanat
+    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
+
+    arvosanat should have length 0
+    virallinensuoritus.tila shouldEqual "KESKEN"
   }
 
   it should "parse kielivalinnaisuustest.json" in {

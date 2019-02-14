@@ -418,10 +418,7 @@ class KoskiSuoritusArvosanaParser {
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
           suoritusTila
-          if (isVahvistettu) {
-            "VALMIS"
-            // OK-227 : Kymppiluokka tilaan keskeytynyt, jos on deadline on mennyt.
-          } else if(LocalDate.now.isAfter(KoskiUtil.deadlineDate)) {
+          if(LocalDate.now.isAfter(KoskiUtil.deadlineDate) && !isVahvistettu) {
             "KESKEYTYNYT"
           } else suoritusTila
 
@@ -429,7 +426,7 @@ class KoskiSuoritusArvosanaParser {
           if (LocalDate.now.isBefore(KoskiUtil.deadlineDate)) {
             suoritusTila
           }
-          else if (suoritus.valmaOsaamispisteetAlleKolmekymmentä || LocalDate.now.isAfter(KoskiUtil.deadlineDate)){
+          else if (suoritus.valmaOsaamispisteetAlleKolmekymmentä || (LocalDate.now.isAfter(KoskiUtil.deadlineDate) && !isVahvistettu)){
             "KESKEYTYNYT"
           } else {
             "VALMIS"
@@ -437,17 +434,16 @@ class KoskiSuoritusArvosanaParser {
 
         case Oids.lukioonvalmistavaKomoOid =>
           val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
-          if (nSuoritukset >= 25 || isVahvistettu) {
+          if (nSuoritukset >= 25) {
             "VALMIS"
-          } else "KESKEN"
+          } else {
+            if (LocalDate.now()isAfter(KoskiUtil.deadlineDate)) {
+              "KESKEYTYNYT"
+            } else "KESKEN"
+          }
 
         case Oids.perusopetusKomoOid =>
-          if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || LocalDate.now.isAfter(KoskiUtil.deadlineDate) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu && LocalDate.now.isAfter(KoskiUtil.deadlineDate))) {
-            "KESKEYTYNYT"
-          } else suoritusTila
-
-        case s if s.startsWith(Oids.perusopetusLuokkaKomoOid) =>
-          if (suoritus.jääLuokalle.contains(true) || (vuosiluokkiinSitoutumatonOpetus && !isVahvistettu && LocalDate.now().isAfter(KoskiUtil.deadlineDate)))  {
+          if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || (LocalDate.now.isAfter(KoskiUtil.deadlineDate) && !isVahvistettu)) {
             "KESKEYTYNYT"
           } else suoritusTila
 
