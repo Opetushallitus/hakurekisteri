@@ -1,6 +1,5 @@
 import java.nio.file.Path
 
-import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
@@ -31,6 +30,7 @@ import fi.vm.sade.hakurekisteri.web.restrictions.RestrictionsResource
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
 import fi.vm.sade.hakurekisteri.{Config, ProductionServerConfig}
 import gui.GuiServlet
+import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
@@ -101,7 +101,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
     ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
     ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
-    ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
+    ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp(java.lang.Boolean.valueOf(config.properties.getOrElse("suoritusrekisteri.swagger.https", "false"))),
     ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.suoritusRekisteri),
     ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
     ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut, integrations.hakemusService),
