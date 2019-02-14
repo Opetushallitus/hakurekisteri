@@ -261,7 +261,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
 
-    result.head.arvosanat should have length 1
+    //VALMA arvosanas should not be saved
+    suoritus.arvosanat should have length 0
 
     virallinen.tila should equal("VALMIS")
 
