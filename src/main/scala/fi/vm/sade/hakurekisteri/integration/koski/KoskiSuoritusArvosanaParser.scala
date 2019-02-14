@@ -119,7 +119,7 @@ class KoskiSuoritusArvosanaParser {
                             oikeus: Option[KoskiOpiskeluoikeus],
                             isLukio: Boolean = false,
                             suorituksenValmistumispäivä: LocalDate,
-                            opiskeluoikeustyyppi: KoskiKoodi = KoskiKoodi("","")): (Seq[Arvosana], Yksilollistetty) = {
+                            isAikuistenPerusopetus: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
 
@@ -136,7 +136,7 @@ class KoskiSuoritusArvosanaParser {
       }
 
     })
-    val isAikuistenPerusopetus: Boolean = opiskeluoikeustyyppi.koodiarvo.contentEquals("aikuistenperusopetus")
+    //val isAikuistenPerusopetus: Boolean = opiskeluoikeustyyppi.koodiarvo.contentEquals("aikuistenperusopetus")
     var res:Seq[Arvosana] = Seq()
     for {
       suoritus <- modsuoritukset
@@ -347,13 +347,9 @@ class KoskiSuoritusArvosanaParser {
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
         case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
-          var opiskeluoikeustyyppi = KoskiKoodi("","")
-          if (komoOid.equals(Oids.perusopetusKomoOid)) {
-             opiskeluoikeustyyppi = opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("", ""))
-          }
-
+          val isAikuistenPerusopetus: Boolean = opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
           var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot,
-            None, suorituksenValmistumispäivä = valmistumisPaiva, opiskeluoikeustyyppi = opiskeluoikeustyyppi)
+            None, suorituksenValmistumispäivä = valmistumisPaiva, isAikuistenPerusopetus = isAikuistenPerusopetus)
 
           if (failedNinthGrade) {
             as = Seq.empty
