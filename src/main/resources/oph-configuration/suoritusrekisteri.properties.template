@@ -106,7 +106,7 @@ suoritusrekisteri.valinta-tulos-service.max-connection-queue-ms={{ suoritusrekis
 suoritusrekisteri.koski.max-connections={{ suoritusrekisteri_koski_max_connections | default('50')}}
 suoritusrekisteri.koski.max-connection-queue-ms={{ suoritusrekisteri_koski_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.koski.update.cronJob={{ suoritusrekisteri_koski_update_cronjob | default('0 0 0 * * ?') }}
-suoritusrekisteri.koski.deadline.date=={{ suoritusrekisteri_koski_deadline_date | default('2019-06-03') }}
+suoritusrekisteri.koski.deadline.date={{ suoritusrekisteri_koski_deadline_date | default('2019-06-03') }}
 suoritusrekisteri.oppijanumerorekisteri-service.max-connections={{ suoritusrekisteri_oppijanumerorekisteriservice_max_connections | default('50')}}
 suoritusrekisteri.oppijanumerorekisteri-service.max-connection-queue-ms={{ suoritusrekisteri_oppijanumerorekisteriservice_max_connection_queue_ms | default('60000')}}
 user.home.conf=${user.home}/oph-configuration
