@@ -1,13 +1,16 @@
 package fi.vm.sade.hakurekisteri.organization
 
-import dispatch.Defaults.executor // TODO: make our own execution context
+import java.util.concurrent.Executors
+
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.utils.slf4j.Logging
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ResourceAuthorizer[A](filterOppijaOidsForHakemusBasedReadAccess: (User, Set[String]) => Future[Set[String]],
                             authorizationSubjectFinder: AuthorizationSubjectFinder[A])(implicit m: Manifest[A]) extends Logging {
+  private implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
+
   def authorizedResources(resources: Seq[A], user: User, action: String)(organizationAuthorizer: OrganizationAuthorizer): Future[Seq[A]] = {
     subjectFinder(resources).map {
       _.map {
