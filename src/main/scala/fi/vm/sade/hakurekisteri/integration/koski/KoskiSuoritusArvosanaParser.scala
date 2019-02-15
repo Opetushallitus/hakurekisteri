@@ -345,8 +345,17 @@ class KoskiSuoritusArvosanaParser {
         case _ => (DUMMYOID, None)
       }
 
+      val vuosiluokkiinSitomatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
+        case Some(x) => {
+          lahdeArvot += ("vuosiluokkiin sitomaton opetus" -> x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false).toString)
+          x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
+        }
+        case None => false
+      }
+
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
         case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+          val isValmis = suoritusTila.equals("VALMIS")
           val isAikuistenPerusopetus: Boolean = opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
           var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot,
             None, suorituksenValmistumispäivä = valmistumisPaiva, isAikuistenPerusopetus = isAikuistenPerusopetus)
@@ -360,14 +369,17 @@ class KoskiSuoritusArvosanaParser {
             case _ => false
           })
 
-          if (isVahvistettu) {
+          //Tuodaan arvosanat kaikille valmiille suorituksille, jotka on vahvistettu ennen deadlinea.
+          //Jos deadlineen on alle kaksi viikkoa, tuodaan myös keskeytyneiden suoritusten arvosanat jos mukana on nelosia.
+          //Vuosiluokkiin sitomattoman opetuksen arvosanat tallennetaan suorituksen tilasta riippumatta, jos deadline on ohitettu.
+          if (isVahvistettu && isValmis) {
             val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
-            if (vahvistusDate.isAfter(KoskiUtil.deadlineDate)) {
-              (Seq(), yks)
-            } else {
+            if (vahvistusDate.isBefore(KoskiUtil.deadlineDate)) {
               (as, yks)
+            } else {
+              (Seq(), yks)
             }
-          } else if (containsOneFailure || LocalDate.now.isAfter(KoskiUtil.deadlineDate)) {
+          } else if ((containsOneFailure && LocalDate.now.isAfter(KoskiUtil.arvosanatWithNelosiaDate)) || (vuosiluokkiinSitomatonOpetus && LocalDate.now.isAfter(KoskiUtil.deadlineDate))) {
             (as, yks)
           } else {
             (Seq(), yks)
@@ -401,17 +413,6 @@ class KoskiSuoritusArvosanaParser {
       if(komoOid == Oids.valmaKomoOid && suoritusTila == "VALMIS" && suoritus.opintopisteidenMaaraAlleKolmekymmentä) {
         suoritusTila = "KESKEN"
       }
-
-      //TODO process here or before the upper parts reference suoritustila??
-      //see https://confluence.oph.ware.fi/confluence/display/AJTS/Koski-Sure+arvosanasiirrot
-      val vuosiluokkiinSitoutumatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
-        case Some(x) => {
-          lahdeArvot += ("vuosiluokkiin sitomaton opetus" -> x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false).toString)
-          x.vuosiluokkiinSitoutumatonOpetus.getOrElse(false)
-        }
-        case None => false
-      }
-
 
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>

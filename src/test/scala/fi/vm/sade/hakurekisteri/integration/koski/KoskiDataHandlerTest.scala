@@ -753,6 +753,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     kässät.count(_.valinnainen == false) shouldBe 1
   }
 
+  //TODO Tässä testitapauksessa lähdesuorituksen pitäisi varmaan olla valmis&vahvistettu
   it should "parse testi3_satu_valinnaisuus.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "testi3_satu_valinnaisuus.json").mkString
     var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -1454,7 +1455,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.head should equal("KESKEYTYNYT")
 
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 17
+    arvosanat should have length 0
   }
 
   it should "store peruskoulu as kesken without arvosanat if deadline date is tomorrow" in {
@@ -1475,7 +1476,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat should have length 0
   }
 
-  it should "store kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday" in {
+  it should "store kymppiluokka as keskeytynyt without arvosanat if deadline date is yesterday" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_kymppiluokka.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     val henkiloOid: String = henkilo.henkilö.oid.toString
@@ -1492,7 +1493,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus = run(database.run(sql"select tila from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("KESKEYTYNYT")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 23
+    arvosanat should have length 0
   }
 
   it should "store kymppiluokka as kesken without arvosanat if deadline date is tomorrow" in {
@@ -1512,11 +1513,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus = run(database.run(sql"select tila from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("KESKEN")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 17
+    arvosanat should have length 0
   }
 
   it should "store kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday if there are some hylättys" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_kymppiluokka.json").mkString
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_kymppiluokka_hylattys.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     val henkiloOid: String = henkilo.henkilö.oid.toString
     henkilo should not be null
@@ -1532,7 +1533,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus = run(database.run(sql"select tila from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("KESKEYTYNYT")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 23
+    arvosanat should have length 6
   }
 
   it should "store kymppiluokka as kesken with arvosanat if deadline date is tomorrow if there are some hylättys" in {
@@ -1552,7 +1553,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus = run(database.run(sql"select tila from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("KESKEN")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 23
+    arvosanat should have length 6
   }
 
   it should "store perusopetukseen sitomaton kymppiluokka as kesken without arvosanat if deadline date is tomorrow" in {
@@ -1574,7 +1575,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus = run(database.run(sql"select lahde_arvot from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 17
+    arvosanat should have length 0
   }
 
   it should "store perusopetukseen sitomaton kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday" in {
@@ -1596,7 +1597,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus = run(database.run(sql"select lahde_arvot from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 23
+    arvosanat should have length 6
   }
 
   it should "store valma as kesken without arvosanat if deadline date is tomorrow" in {
@@ -1616,7 +1617,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     var suoritus = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritus.head should equal("KESKEN")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 17
+    arvosanat should have length 0
   }
 
   it should "store valma as keskeytynyt without arvosanat if deadline date is yesterday" in {
@@ -1636,7 +1637,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     var suoritus = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritus.head should equal("KESKEYTYNYT")
     var arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 17
+    arvosanat should have length 0
   }
 
   it should "store telma as kesken without arvosanat if deadline date is tomorrow" in {
