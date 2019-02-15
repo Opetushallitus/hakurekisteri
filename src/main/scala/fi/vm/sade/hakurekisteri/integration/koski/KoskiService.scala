@@ -80,8 +80,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         val timestamp: Option[String] =
           if (!cursor.isDefined)
             //Some(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(360))))
-            //Some("2018-06-01T00:00:00+02:00")
-            Some("2018-01-01T00:00:00+02:00")
+            Some("2018-06-01T00:00:00+02:00") //Hyvä arvo tuotantoon
+            //Some("2018-01-01T00:00:00+02:00") Hyvä arvo QA:lla
           else None
         val params = SearchParamsWithCursor(timestamp, cursor)
         logger.info("refreshChangedOppijasFromKoski active, making call with params: {}", params)
