@@ -42,7 +42,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   })
   val koskiDataHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val opiskelijaParser = new KoskiOpiskelijaParser
-  val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(true, false)
+  val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
 
   //todo make sure disabling this is ok. We are now assuming that some optionals are actually always present.
   //Could add checks to not crash, but is the data valid anyways? So maybe crash is ok.

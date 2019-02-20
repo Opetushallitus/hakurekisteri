@@ -88,7 +88,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         fetchChangedOppijas(params).onComplete {
           case Success(response: MuuttuneetOppijatResponse) =>
             logger.info("refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.", response.result.size)
-            val koskiParams = KoskiSuoritusHakuParams(false, false)
+            val koskiParams = KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
             handleHenkiloUpdate(response.result, koskiParams).onComplete {
               case Success(s) =>
                 logger.info("refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}", response.result.size)
@@ -114,19 +114,21 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
     */
   override def updateAktiivisetHaut(): () => Unit = { () =>
+    // TODO Temporarily disabled
+    /*
     var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(true, false)), 5.hours)
+      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.hours)
     })
     logger.info(("Aktiivisten toisen asteen yhteishakujen lukioasuoritusten päivitys valmis."))
-
-    haut = aktiivisetKKYhteisHakuOidit.get()
+*/
+    var haut: Set[String] = aktiivisetKKYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(false, true)), 5.hours)
+      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.hours)
     })
     logger.info(("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis."))
   }
