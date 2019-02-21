@@ -305,6 +305,8 @@ class KoskiSuoritusArvosanaParser {
           .filter(_.arviointi.nonEmpty)
           .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
         suoritus.vahvistus.isDefined || hasFailures
+      // OK-227 : tallennetaan lukiosuoritukset ainoastaan tilassa VALMIS
+      case Oids.lukioKomoOid if suoritusTila.eq("KESKEN") => false
       case _ => true
     }
   }
