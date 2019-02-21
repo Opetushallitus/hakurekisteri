@@ -127,7 +127,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     var haut: Set[String] = aktiivisetKKYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
-      logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
+      logger.info(s"Käynnistetään Koskesta aktiivisten korkeakouluhakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.hours)
     })
     logger.info(("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis."))
