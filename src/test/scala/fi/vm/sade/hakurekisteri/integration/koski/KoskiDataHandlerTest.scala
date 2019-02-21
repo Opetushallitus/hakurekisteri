@@ -79,11 +79,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    henkilo.opiskeluoikeudet.size should equal (6) //Sisältää kuusi eri opiskeluoikeutta, joista yksi ammatillinen, kaksi lukiota ja kolme perusopetusta.
+    henkilo.opiskeluoikeudet.size should equal (7) //Sisältää 7 eri opiskeluoikeutta, joista kaksi ammatillista, kaksi lukiota ja kolme perusopetusta.
 
-    val filteredOikeudes = KoskiArvosanaTrigger.ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet)
+    val filteredOikeudes = KoskiArvosanaTrigger.ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet, henkilo.henkilö.oid)
 
-    filteredOikeudes.size should equal (3)
+    filteredOikeudes.size should equal (4)
 
     //Syöte-jsonissa on kolme eri peruskoulun opiskeluoikeutta, joista yhdessä on vain kasiluokan suoritus. Sillä on kuitenkin myöhäisin alkupäivä.
     //Tarkistetaan, ettei sitä ole valittu viimeisimmäksi.
