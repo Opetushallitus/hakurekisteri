@@ -73,7 +73,7 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
       log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
-      log.info(s"active 2.aste-yhteishakushakus: [${active2AsteYhteisHakuOids.size}]")
+      log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
       log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
       if (starting) {
         starting = false

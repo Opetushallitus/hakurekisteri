@@ -114,17 +114,14 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
     */
   override def updateAktiivisetHaut(): () => Unit = { () =>
-    // TODO Temporarily disabled
-    /*
     var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.hours)
     })
-    logger.info(("Aktiivisten toisen asteen yhteishakujen lukioasuoritusten päivitys valmis."))
-*/
-    var haut: Set[String] = aktiivisetKKYhteisHakuOidit.get()
+    logger.info(("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis."))
+    haut = aktiivisetKKYhteisHakuOidit.get()
     logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten korkeakouluhakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
