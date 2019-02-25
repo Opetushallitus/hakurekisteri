@@ -144,7 +144,7 @@ object IlmoitetutArvosanatTrigger {
         }
         val currentYear = new LocalDate().getYear.toString
         val lahtokoulu = koulutustausta.lahtokoulu.flatMap(_.blankOption)
-        if (arvosanat.nonEmpty || (valmistumisvuosi == currentYear && lahtokoulu.isDefined) || valmistumisvuosi != currentYear) {
+        if (arvosanat.nonEmpty || valmistumisvuosi != currentYear) {
           val tutkinto = ItseilmoitettuLukioTutkinto(
             myontaja = lahtokoulu.getOrElse(hakemus.oid),
             hakijaOid = personOid,

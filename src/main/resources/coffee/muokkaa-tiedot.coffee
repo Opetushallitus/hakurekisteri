@@ -309,12 +309,17 @@ app.factory "MuokkaaTiedot", [
         return
 
       $scope.isOPH = () -> false
+      $scope.showKoskiLink = () -> false
       $http.get(window.url("cas.myroles"), {cache: true}).success((data) ->
         $scope.myRoles = angular.fromJson(data)
         if Array.isArray($scope.myRoles)
           $scope.isOPH = () ->
             $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or
               $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1
+          $scope.showKoskiLink = () ->
+            $scope.myRoles.indexOf("APP_KAYTTOOIKEUS_REKISTERINPITAJA") > -1 and
+              $scope.myRoles.indexOf("APP_KOSKI_READ") > -1 or
+              $scope.myRoles.indexOf("APP_KOSKI_OPHPAAKAYTTAJA") > -1
       ).error ->
         $log.error "cannot connect to CAS"
 

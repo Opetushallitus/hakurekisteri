@@ -1,8 +1,5 @@
 package support
 
-import java.util.Date
-import java.text.DateFormat
-import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
@@ -165,7 +162,7 @@ class BaseIntegrations(rekisterit: Registers,
   val henkilo = new HenkiloActorRef(system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo"))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system)
   val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
-  val koskiArvosanaHandler = new KoskiArvosanaHandler(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
+  val koskiArvosanaHandler = new KoskiDataHandler(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
   val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiArvosanaHandler)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = new KoodistoActorRef(system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto"))
@@ -205,13 +202,9 @@ class BaseIntegrations(rekisterit: Registers,
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
 
-
-  /*val traverseStart: Long  = 1514764800000L//System.currentTimeMillis() - TimeUnit.DAYS.toMillis(16)
   if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
-    val delay: FiniteDuration = 1.minute
-    koskiService.processModifiedKoski(refreshFrequency = delay)
-    koskiService.traverseKoskiDataInChunks(timeToWaitUntilNextBatch = delay, searchWindowStartTime = new Date(traverseStart))
-  }*/
+    koskiService.refreshChangedOppijasFromKoski()
+  }
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()
@@ -220,6 +213,13 @@ class BaseIntegrations(rekisterit: Registers,
   val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
+
+  val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
+  quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
+    newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+    // This if for dev purposes.
+    // every day at midnight: newTrigger().startNow().withSchedule(cronSchedule("0 0 0 * * ?")).build())
+    // every hour: newTrigger().startNow().withSchedule(cronSchedule("0 0 * * * ?")).build())
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))
 
 }

@@ -1,55 +1,69 @@
 {
   "henkilö": {
-    "oid": "1.2.246.562.24.10696281841",
-    "hetu": "140598-998J",
-    "syntymäaika": "1998-05-14",
-    "etunimet": "Satu",
-    "kutsumanimi": "Satu",
-    "sukunimi": "Testi3",
+    "oid": "1.2.246.562.24.11086778646",
+    "syntymäaika": "1991-02-16",
+    "etunimet": "Raimo",
+    "kutsumanimi": "Raimo",
+    "sukunimi": "Rasputin",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
     "turvakielto": false
   },
   "opiskeluoikeudet": [
     {
-      "oid": "1.2.246.562.15.30552511989",
-      "versionumero": 4,
-      "aikaleima": "2018-05-14T14:28:37.090676",
+      "oid": "1.2.246.562.15.90301482882",
+      "versionumero": 7,
+      "aikaleima": "2019-02-14T12:17:58.892312",
       "oppilaitos": {
-        "oid": "1.2.246.562.10.28783482087",
+        "oid": "1.2.246.562.10.80774549747",
         "oppilaitosnumero": {
-          "koodiarvo": "07243",
+          "koodiarvo": "03402",
           "nimi": {
-            "fi": "Rantasalon peruskoulu"
+            "fi": "Munkkiniemen yhteiskoulu"
           },
           "lyhytNimi": {
-            "fi": "Rantasalmen yläaste"
+            "fi": "Munkkiniemen yhteiskoulu"
           },
           "koodistoUri": "oppilaitosnumero",
           "koodistoVersio": 1
         },
         "nimi": {
-          "fi": "Rantasalon peruskoulu"
+          "fi": "Munkkiniemen yhteiskoulu"
         },
         "kotipaikka": {
-          "koodiarvo": "681",
+          "koodiarvo": "091",
           "nimi": {
-            "fi": "Rantasalmi",
-            "sv": "Rantasalmi"
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
           },
           "koodistoUri": "kunta",
           "koodistoVersio": 2
         }
       },
       "koulutustoimija": {
-        "oid": "1.2.246.562.10.31723701897",
+        "oid": "1.2.246.562.10.29297917766",
         "nimi": {
-          "fi": "Rantasalmen kunta"
+          "fi": "Munkkiniemen koulutussäätiö sr"
         },
-        "yTunnus": "0166507-1",
+        "yTunnus": "2728271-4",
         "kotipaikka": {
-          "koodiarvo": "681",
+          "koodiarvo": "091",
           "nimi": {
-            "fi": "Rantasalmi",
-            "sv": "Rantasalmi"
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
           },
           "koodistoUri": "kunta",
           "koodistoVersio": 2
@@ -58,29 +72,24 @@
       "tila": {
         "opiskeluoikeusjaksot": [
           {
-            "alku": "2018-05-14",
+            "alku": "2018-08-13",
             "tila": {
               "koodiarvo": "lasna",
               "nimi": {
                 "fi": "Läsnä",
-                "sv": "Närvarande"
-              },
-              "koodistoUri": "koskiopiskeluoikeudentila",
-              "koodistoVersio": 1
-            }
-          },
-          {
-            "alku": "2016-06-04",
-            "tila": {
-              "koodiarvo": "valmistunut",
-              "nimi": {
-                "fi": "Valmistunut"
+                "sv": "Närvarande",
+                "en": "Present"
               },
               "koodistoUri": "koskiopiskeluoikeudentila",
               "koodistoVersio": 1
             }
           }
         ]
+      },
+      "lisätiedot": {
+        "perusopetuksenAloittamistaLykätty": false,
+        "aloittanutEnnenOppivelvollisuutta": false,
+        "vuosiluokkiinSitoutumatonOpetus": true
       },
       "suoritukset": [
         {
@@ -94,7 +103,7 @@
                 "en": "Basic education"
               },
               "koodistoUri": "koulutus",
-              "koodistoVersio": 9
+              "koodistoVersio": 11
             },
             "koulutustyyppi": {
               "koodiarvo": "16",
@@ -110,26 +119,26 @@
             }
           },
           "toimipiste": {
-            "oid": "1.2.246.562.10.28783482087",
+            "oid": "1.2.246.562.10.80774549747",
             "oppilaitosnumero": {
-              "koodiarvo": "07243",
+              "koodiarvo": "03402",
               "nimi": {
-                "fi": "Rantasalon peruskoulu"
+                "fi": "Munkkiniemen yhteiskoulu"
               },
               "lyhytNimi": {
-                "fi": "Rantasalmen yläaste"
+                "fi": "Munkkiniemen yhteiskoulu"
               },
               "koodistoUri": "oppilaitosnumero",
               "koodistoVersio": 1
             },
             "nimi": {
-              "fi": "Rantasalon peruskoulu"
+              "fi": "Munkkiniemen yhteiskoulu"
             },
             "kotipaikka": {
-              "koodiarvo": "681",
+              "koodiarvo": "091",
               "nimi": {
-                "fi": "Rantasalmi",
-                "sv": "Rantasalmi"
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
               },
               "koodistoUri": "kunta",
               "koodistoVersio": 2
@@ -159,44 +168,6 @@
             "koodistoUri": "kieli",
             "koodistoVersio": 1
           },
-          "vahvistus": {
-            "päivä": "2016-06-04",
-            "paikkakunta": {
-              "koodiarvo": "179",
-              "nimi": {
-                "fi": "Jyväskylä"
-              },
-              "koodistoUri": "kunta"
-            },
-            "myöntäjäOrganisaatio": {
-              "oid": "1.2.246.562.10.14613773812",
-              "oppilaitosnumero": {
-                "koodiarvo": "00204",
-                "koodistoUri": "oppilaitosnumero"
-              },
-              "nimi": {
-                "fi": "Jyväskylän normaalikoulu"
-              }
-            },
-            "myöntäjäHenkilöt": [
-              {
-                "nimi": "Reijo Reksi",
-                "titteli": {
-                  "fi": "rehtori"
-                },
-                "organisaatio": {
-                  "oid": "1.2.246.562.10.14613773812",
-                  "oppilaitosnumero": {
-                    "koodiarvo": "00204",
-                    "koodistoUri": "oppilaitosnumero"
-                  },
-                  "nimi": {
-                    "fi": "Jyväskylän normaalikoulu"
-                  }
-                }
-              }
-            ]
-          },
           "osasuoritukset": [
             {
               "koulutusmoduuli": {
@@ -216,7 +187,8 @@
                 "kieli": {
                   "koodiarvo": "AI1",
                   "nimi": {
-                    "fi": "Suomen kieli ja kirjallisuus"
+                    "fi": "Suomen kieli ja kirjallisuus",
+                    "sv": "Finska och litteratur"
                   },
                   "koodistoUri": "oppiaineaidinkielijakirjallisuus",
                   "koodistoVersio": 1
@@ -230,7 +202,8 @@
                   "arvosana": {
                     "koodiarvo": "6",
                     "nimi": {
-                      "fi": "kohtalainen"
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
                     },
                     "lyhytNimi": {
                       "fi": "6"
@@ -245,7 +218,8 @@
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -288,12 +262,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "8",
+                    "koodiarvo": "7",
                     "nimi": {
-                      "fi": "hyvä"
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
                     },
                     "lyhytNimi": {
-                      "fi": "8"
+                      "fi": "7"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -305,7 +280,8 @@
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -348,12 +324,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "erinomainen"
+                      "fi": "hyvä",
+                      "sv": "god"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -365,7 +342,8 @@
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -390,27 +368,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -435,27 +398,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "8",
-                    "nimi": {
-                      "fi": "hyvä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "8"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -480,27 +428,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "8",
-                    "nimi": {
-                      "fi": "hyvä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "8"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -525,27 +458,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -570,27 +488,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -615,27 +518,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -650,8 +538,8 @@
                     "sv": "Religion/Livsåskådningskunskap"
                   },
                   "lyhytNimi": {
-                    "fi": "Uskonto/Elämänkatsomustieto",
-                    "sv": "Religion/Livsåskådningskunskap"
+                    "fi": "Uskonto",
+                    "sv": "Religion"
                   },
                   "koodistoUri": "koskioppiaineetyleissivistava",
                   "koodistoVersio": 1
@@ -660,27 +548,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "7",
-                    "nimi": {
-                      "fi": "tyydyttävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "7"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -705,27 +578,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -750,27 +608,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "8",
-                    "nimi": {
-                      "fi": "hyvä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "8"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -795,27 +638,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -840,27 +668,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "8",
-                    "nimi": {
-                      "fi": "hyvä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "8"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -885,27 +698,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -930,27 +728,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "8",
-                    "nimi": {
-                      "fi": "hyvä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "8"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -975,27 +758,12 @@
               },
               "yksilöllistettyOppimäärä": false,
               "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
               "tyyppi": {
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -1023,70 +791,8 @@
                 "koodiarvo": "perusopetuksenoppiaine",
                 "nimi": {
                   "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
-                },
-                "koodistoUri": "suorituksentyyppi",
-                "koodistoVersio": 1
-              }
-            },
-            {
-              "koulutusmoduuli": {
-                "tunniste": {
-                  "koodiarvo": "LI",
-                  "nimi": {
-                    "fi": "Liikunta",
-                    "sv": "Gymnastik"
-                  },
-                  "lyhytNimi": {
-                    "fi": "Liikunta",
-                    "sv": "Gymnastik"
-                  },
-                  "koodistoUri": "koskioppiaineetyleissivistava",
-                  "koodistoVersio": 1
-                },
-                "pakollinen": false,
-                "laajuus": {
-                  "arvo": 2,
-                  "yksikkö": {
-                    "koodiarvo": "3",
-                    "nimi": {
-                      "fi": "vuosiviikkotuntia",
-                      "sv": "årsveckotimmar",
-                      "en": "weekly lessons per year"
-                    },
-                    "lyhytNimi": {
-                      "fi": "vuosiviikkotuntia",
-                      "sv": "årsveckotimmar",
-                      "en": "weekly lessons per year"
-                    },
-                    "koodistoUri": "opintojenlaajuusyksikko",
-                    "koodistoVersio": 1
-                  }
-                }
-              },
-              "yksilöllistettyOppimäärä": false,
-              "painotettuOpetus": false,
-              "arviointi": [
-                {
-                  "arvosana": {
-                    "koodiarvo": "9",
-                    "nimi": {
-                      "fi": "kiitettävä"
-                    },
-                    "lyhytNimi": {
-                      "fi": "9"
-                    },
-                    "koodistoUri": "arviointiasteikkoyleissivistava",
-                    "koodistoVersio": 1
-                  },
-                  "hyväksytty": true
-                }
-              ],
-              "tyyppi": {
-                "koodiarvo": "perusopetuksenoppiaine",
-                "nimi": {
-                  "fi": "Perusopetuksen oppiaine",
-                  "sv": "Läroämne i grundläggande utbildning"
+                  "sv": "Läroämne i grundläggande utbildning",
+                  "en": "Basic education subject"
                 },
                 "koodistoUri": "suorituksentyyppi",
                 "koodistoVersio": 1
@@ -1097,7 +803,8 @@
             "koodiarvo": "perusopetuksenoppimaara",
             "nimi": {
               "fi": "Perusopetuksen oppimäärä",
-              "sv": "Grundläggande utbildningens lärokurs"
+              "sv": "Grundläggande utbildningens lärokurs",
+              "en": "Basic education syllabus"
             },
             "koodistoUri": "suorituksentyyppi",
             "koodistoVersio": 1
@@ -1116,34 +823,23 @@
             },
             "perusteenDiaarinumero": "104/011/2014"
           },
-          "luokka": "9A",
+          "luokka": "9",
           "toimipiste": {
-            "oid": "1.2.246.562.10.28783482087",
-            "oppilaitosnumero": {
-              "koodiarvo": "07243",
-              "nimi": {
-                "fi": "Rantasalon peruskoulu"
-              },
-              "lyhytNimi": {
-                "fi": "Rantasalmen yläaste"
-              },
-              "koodistoUri": "oppilaitosnumero",
-              "koodistoVersio": 1
-            },
+            "oid": "1.2.246.562.10.2013091512465173450375",
             "nimi": {
-              "fi": "Rantasalon peruskoulu"
+              "fi": "Munkkiniemen yhteiskoulu"
             },
             "kotipaikka": {
-              "koodiarvo": "681",
+              "koodiarvo": "091",
               "nimi": {
-                "fi": "Rantasalmi",
-                "sv": "Rantasalmi"
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
               },
               "koodistoUri": "kunta",
               "koodistoVersio": 2
             }
           },
-          "alkamispäivä": "2017-08-01",
+          "alkamispäivä": "2018-08-13",
           "suorituskieli": {
             "koodiarvo": "FI",
             "nimi": {
@@ -1164,7 +860,8 @@
             "koodiarvo": "perusopetuksenvuosiluokka",
             "nimi": {
               "fi": "Perusopetuksen vuosiluokka",
-              "sv": "Årskurs i grundläggande utbildning"
+              "sv": "Årskurs i grundläggande utbildning",
+              "en": "Basic education grade"
             },
             "koodistoUri": "suorituksentyyppi",
             "koodistoVersio": 1
@@ -1183,7 +880,7 @@
         "koodistoUri": "opiskeluoikeudentyyppi",
         "koodistoVersio": 1
       },
-      "alkamispäivä": "2018-05-14"
+      "alkamispäivä": "2018-08-13"
     }
   ]
 }

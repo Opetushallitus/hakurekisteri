@@ -35,18 +35,19 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
         sender ! Seq()
     }
   })
-  val arvosanaHandler: KoskiArvosanaHandler = new KoskiArvosanaHandler(testRef, testRef, testRef)
+  val arvosanaHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val koskiService = new KoskiService(virkailijaRestClient = client,
     oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10,
     hakemusService = new HakemusServiceMock(),
-    koskiArvosanaHandler = arvosanaHandler)
+    koskiDataHandler = arvosanaHandler)
 
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
 
   it should "return successful future for handleHenkiloUpdate" in {
     when(endPoint.request(forUrl("http://localhost/koski/api/sure/oids")))
       .thenReturn((200, List(), "[]"))
-    val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), createLukio = true)
+    val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true))
+    //val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), createLukio = true)
     Await.result(future, 10.seconds)
   }
 

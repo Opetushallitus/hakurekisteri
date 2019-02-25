@@ -31,6 +31,22 @@
             </div>
         </section>
     </div>
+    <div class="col-sm-12">
+        <section class="panel panel-default" ng-show="showKoskiLink()">
+            <header class="panel-heading">
+                <h2 oph-msg="suoritusrekisteri.link.koskitiedot" class="panel-title">Tiedot Koski-järjestelmässä</h2>
+            </header>
+            <div class="panel-body">
+                <aside>
+                    <a href="/koski/oppija/{{henkilo.oidHenkilo}}"
+                       target="_blank" class="btn btn-default btn-xs">
+                        <span oph-msg="suoritusrekisteri.avaa.naytakoskitiedot">Avaa tiedot Koski-järjestelmässä</span>
+                        <span class="glyphicon glyphicon-new-window"></span>
+                    </a>
+                </aside>
+            </div>
+        </section>
+    </div>
 </div>
 <form ng-submit="saveTiedot()">
     <div class="row">

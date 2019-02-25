@@ -6,6 +6,8 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.ytl.{HakuList, YtlIntegration}
@@ -17,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
+class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var storedHakus: Seq[Haku] = Seq()
@@ -56,13 +58,23 @@ class HakuActor(tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, vali
       storedHakus = sq.collect{ case h: Haku => h}
       val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
       val ytlHakus = activeHakus.filter(_.kkHaku)
+      val activeYhteisHakus: Seq[Haku] = activeHakus.filter(_.hakutapaUri.startsWith("hakutapa_01"))
+      val activeKKYhteisHakus = activeYhteisHakus.filter(_.kkHaku)
+      val active2AsteYhteisHakus = activeYhteisHakus.filter(_.toisenAsteenHaku)
       val ytlHakuOidsWithNames = ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
       val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
+      val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
+      val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
       ytl ! HakuList(ytlHakuOids)
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
+      koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
+      koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
+      log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
+      log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
+      log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
       if (starting) {
         starting = false
         vtsUpdate.foreach(_.cancel())
@@ -133,8 +145,10 @@ case class Haku(
                  koulutuksenAlkamiskausi: Option[String],
                  koulutuksenAlkamisvuosi: Option[Int],
                  kkHaku: Boolean,
+                 toisenAsteenHaku: Boolean,
                  viimeinenHakuaikaPaattyy: Option[DateTime],
-                 kohdejoukkoUri: Option[String]) {
+                 kohdejoukkoUri: Option[String],
+                 hakutapaUri: String) {
   val isActive: Boolean = aika.isCurrently
 }
 
@@ -149,8 +163,10 @@ object Haku {
       haku.koulutuksenAlkamiskausiUri,
       haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
+      toisenAsteenHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")),
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
-      kohdejoukkoUri = haku.kohdejoukkoUri
+      kohdejoukkoUri = haku.kohdejoukkoUri,
+      hakutapaUri = haku.hakutapaUri
     )
   }
 

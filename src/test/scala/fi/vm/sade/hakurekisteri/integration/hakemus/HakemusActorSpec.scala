@@ -149,7 +149,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     ) should equal(Seq.empty)
   }
 
-  it should "create lukio if valmistuminen in current year and lahtokoulu is given" in {
+  it should "not create lukio if valmistuminen in current year and lahtokoulu is given" in {
     val currentYear = new DateTime().year().get()
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
@@ -158,7 +158,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(currentYear)
         .build
-    ) should equal(Seq((ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", currentYear, "FI"), Seq())))
+    ) should equal(Seq.empty)
   }
 
   it should "not create lukio if valmistuminen in current year and lahtokoulu not given" in {
@@ -245,7 +245,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         )))
   }
 
-  it should "create empty lukiosuoritus for current year" in {
+  it should "not create not empty lukiosuoritus for current year" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
@@ -253,7 +253,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(new LocalDate().getYear)
         .build
-    ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", new LocalDate().getYear, "FI"), Seq()) )
+    ) should contain theSameElementsAs Seq.empty
   }
 
   it should "create kymppisuoritus with the year entered in the application" in {

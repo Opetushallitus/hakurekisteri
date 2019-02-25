@@ -27,12 +27,13 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
   override val dbQuery: PartialFunction[support.Query[Opiskelija], Either[Throwable, DBIOAction[Seq[Delta[Opiskelija, UUID]], Streaming[Delta[Opiskelija, UUID]], All]]] = {
-    case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
+    case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka, source) =>
       Right(all.filter(t => matchHenkilo(henkilo)(t) &&
         matchOppilaitosOid(oppilaitosOid)(t) &&
         matchPaiva(paiva)(t) &&
         matchVuosiAndKausi(vuosi, kausi)(t) &&
-        matchLuokka(luokka)(t)).result)
+        matchLuokka(luokka)(t) &&
+        matchSource(source)(t)).result)
     case OpiskelijaHenkilotQuery(henkilot: PersonOidsWithAliases) =>
       Right(findWithHenkilot(henkilot, "henkilo_oid", all))
   }
@@ -54,6 +55,11 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
 
   private def matchPaiva(paiva: Option[DateTime])(t: OpiskelijaTable): Rep[Boolean] = paiva match {
     case Some(date) => t.alkuPaiva < date && (t.loppuPaiva.isEmpty || (t.loppuPaiva > date).asColumnOf[Boolean])
+    case None => true
+  }
+
+  private def matchSource(source: Option[String])(t: OpiskelijaTable): Rep[Boolean] = source match {
+    case Some(s) => t.source === s
     case None => true
   }
 

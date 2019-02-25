@@ -1,0 +1,621 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.32656706483",
+    "hetu": "270147-9854",
+    "syntymäaika": "1947-01-27",
+    "etunimet": "Aapeli Testi",
+    "kutsumanimi": "Aapeli",
+    "sukunimi": "Aalto-Testi",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.76490187440",
+      "versionumero": 5,
+      "aikaleima": "2019-01-14T07:56:05.982389",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.32727448402",
+        "oppilaitosnumero": {
+          "koodiarvo": "07522",
+          "nimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Hatsalan klassillinen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.59286753021",
+        "nimi": {
+          "fi": "Kuopion kaupunki"
+        },
+        "yTunnus": "0171450-7",
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "päättymispäivä": "2018-06-03",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2018-06-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2018-06-03",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "MA",
+              "nimi": {
+                "fi": "Matematiikka",
+                "sv": "Matematik"
+              },
+              "lyhytNimi": {
+                "fi": "Matematiikka",
+                "sv": "Matematik"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017"
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.32727448402",
+            "oppilaitosnumero": {
+              "koodiarvo": "07522",
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Hatsalan klassillinen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "10",
+                "nimi": {
+                  "fi": "erinomainen",
+                  "sv": "utmärkt"
+                },
+                "lyhytNimi": {
+                  "fi": "10"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2018-06-03",
+            "paikkakunta": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.32727448402",
+              "oppilaitosnumero": {
+                "koodiarvo": "07522",
+                "nimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "lyhytNimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "kotipaikka": {
+                "koodiarvo": "297",
+                "nimi": {
+                  "fi": "Kuopio",
+                  "sv": "Kuopio"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.32727448402",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "07522",
+                    "nimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Hatsalan klassillinen koulu"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "297",
+                    "nimi": {
+                      "fi": "Kuopio",
+                      "sv": "Kuopio"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA8",
+                  "nimi": {
+                    "fi": "Geometria ja trigonometria",
+                    "sv": "Geometri och trigonometri"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA7",
+                  "nimi": {
+                    "fi": "Funktiot ja tilastot",
+                    "sv": "Funktioner och statistik"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA6",
+                  "nimi": {
+                    "fi": "Prosentit",
+                    "sv": "Procent"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning",
+              "en": "Basic education Subject syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "BI",
+              "nimi": {
+                "fi": "Biologia",
+                "sv": "Biologi"
+              },
+              "lyhytNimi": {
+                "fi": "Biologia",
+                "sv": "Biologi"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017"
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.32727448402",
+            "oppilaitosnumero": {
+              "koodiarvo": "07522",
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Hatsalan klassillinen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "10",
+                "nimi": {
+                  "fi": "erinomainen",
+                  "sv": "utmärkt"
+                },
+                "lyhytNimi": {
+                  "fi": "10"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2018-06-03",
+            "paikkakunta": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.32727448402",
+              "oppilaitosnumero": {
+                "koodiarvo": "07522",
+                "nimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "lyhytNimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "kotipaikka": {
+                "koodiarvo": "297",
+                "nimi": {
+                  "fi": "Kuopio",
+                  "sv": "Kuopio"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.32727448402",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "07522",
+                    "nimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Hatsalan klassillinen koulu"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "297",
+                    "nimi": {
+                      "fi": "Kuopio",
+                      "sv": "Kuopio"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "BI1",
+                  "nimi": {
+                    "fi": "Mitä elämä on?",
+                    "sv": "Vad är liv?"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning",
+              "en": "Basic education Subject syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2018-06-01"
+    }
+  ]
+}

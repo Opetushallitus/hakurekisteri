@@ -3,17 +3,20 @@ package fi.vm.sade.hakurekisteri.web.koski
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
+import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.{AsyncResult, FutureSupport}
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 
-
+object OppijatPostSize {
+  def maxOppijatPostSize: Int = 5000
+}
 
 class KoskiImporterResource(koskiService: IKoskiService)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
@@ -21,7 +24,8 @@ class KoskiImporterResource(koskiService: IKoskiService)
     with KoskiImporterSwaggerApi
     with HakurekisteriJsonSupport
     with FutureSupport
-    with SecuritySupport  {
+    with SecuritySupport
+    with JacksonJsonSupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -43,13 +47,33 @@ class KoskiImporterResource(koskiService: IKoskiService)
     implicit val user: User = getAdmin
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
+    val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
       .setResourceId(personOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), haeLukio)
+      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
+    }
+  }
+
+  post("/oppijat", operation(updateHenkilot)) {
+    implicit val user: User = getAdmin
+    val personOids = parse(request.body).extract[Set[String]]
+    val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
+    val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
+    if (personOids.size > OppijatPostSize.maxOppijatPostSize) {
+      val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
+      throw new IllegalArgumentException(msg)
+    }
+    audit.log(LogMessage.builder()
+      .id(user.username)
+      .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
+      .setResourceId(personOids.toString())
+      .build())
+    new AsyncResult {
+      override val is: Future[_] = koskiService.updateHenkilot(personOids, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
   }
 
@@ -57,14 +81,14 @@ class KoskiImporterResource(koskiService: IKoskiService)
     implicit val user: User = getAdmin
     val hakuOid = params("hakuOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
-    val useBulk: Boolean = params.getAsOrElse("bulk", false)
+    val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
     audit.log(LogMessage.builder()
       .id(user.username)
       .setOperaatio(HakuRekisteriOperation.RESOURCE_UPDATE)
       .setResourceId(hakuOid)
       .build())
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, createLukio = haeLukio, useBulkOperation = useBulk)
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
   }
 
