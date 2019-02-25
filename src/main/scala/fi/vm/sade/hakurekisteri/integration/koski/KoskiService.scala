@@ -142,7 +142,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val now = System.currentTimeMillis()
     synchronized {
       if(oneJobAtATime.isCompleted) {
-        logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}")
+        logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}. Params: ${params}")
         startTimestamp = System.currentTimeMillis()
         //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
         oneJobAtATime = Await.ready(hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate), 5.hours)
