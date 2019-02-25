@@ -146,6 +146,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         startTimestamp = System.currentTimeMillis()
         //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
         oneJobAtATime = Await.ready(hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate), 5.hours)
+        logger.info(s"Päivitys Koskesta haulle ${hakuOid} valmistui.")
         Future.successful({})
       } else {
         val err = s"${TimeUnit.MINUTES.convert(now - startTimestamp,TimeUnit.MILLISECONDS)} minuuttia vanha Koskesta päivittäminen on vielä käynnissä!"
