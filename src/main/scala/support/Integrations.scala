@@ -202,10 +202,6 @@ class BaseIntegrations(rekisterit: Registers,
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
 
-  if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
-    koskiService.refreshChangedOppijasFromKoski()
-  }
-
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   quartzScheduler.start()
 
@@ -214,12 +210,13 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
 
-  val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
-  quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
-    newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
-    // This if for dev purposes.
-    // every day at midnight: newTrigger().startNow().withSchedule(cronSchedule("0 0 0 * * ?")).build())
-    // every hour: newTrigger().startNow().withSchedule(cronSchedule("0 0 * * * ?")).build())
+  if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
+    koskiService.refreshChangedOppijasFromKoski()
+    val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
+    quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
+      newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+  }
+
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))
 
 }
