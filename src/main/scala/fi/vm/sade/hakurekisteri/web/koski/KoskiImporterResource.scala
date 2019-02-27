@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.web.koski
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -14,11 +15,7 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 
-object OppijatPostSize {
-  def maxOppijatPostSize: Int = 5000
-}
-
-class KoskiImporterResource(koskiService: IKoskiService)
+class KoskiImporterResource(koskiService: IKoskiService, config: Config)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack
     with KoskiImporterSwaggerApi
@@ -34,7 +31,6 @@ class KoskiImporterResource(koskiService: IKoskiService)
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
   override protected def applicationDescription: String = "Koski integraation rest-api"
-
 
   def getAdmin: User = {
     currentUser match {
@@ -63,8 +59,10 @@ class KoskiImporterResource(koskiService: IKoskiService)
     val personOids = parse(request.body).extract[Set[String]]
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
-    if (personOids.size > OppijatPostSize.maxOppijatPostSize) {
-      val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
+    val maxOppijatPostSize: Int = config.integrations.koskiMaxOppijatPostSize
+
+    if (personOids.size > maxOppijatPostSize) {
+      val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${maxOppijatPostSize}"
       throw new IllegalArgumentException(msg)
     }
     audit.log(LogMessage.builder()

@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorSystem}
 import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
@@ -35,11 +36,12 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
         sender ! Seq()
     }
   })
-  val arvosanaHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
+  val koskiDataHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val koskiService = new KoskiService(virkailijaRestClient = client,
     oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10,
     hakemusService = new HakemusServiceMock(),
-    koskiDataHandler = arvosanaHandler)
+    koskiDataHandler = koskiDataHandler,
+    config = new MockConfig)
 
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
 
@@ -47,7 +49,6 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
     when(endPoint.request(forUrl("http://localhost/koski/api/sure/oids")))
       .thenReturn((200, List(), "[]"))
     val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true))
-    //val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), createLukio = true)
     Await.result(future, 10.seconds)
   }
 

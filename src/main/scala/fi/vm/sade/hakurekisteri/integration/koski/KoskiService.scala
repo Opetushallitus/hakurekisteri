@@ -7,6 +7,7 @@ import java.util.{Calendar, Date, TimeZone}
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
@@ -25,6 +26,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
                    hakemusService: IHakemusService,
                    koskiDataHandler: KoskiDataHandler,
+                   config: Config,
                    pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
@@ -159,17 +161,17 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
     logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
-    val batchSize: Int = 500
-    val groupedOids: Seq[Seq[String]] = personOids.grouped(batchSize).toSeq
+    val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
+    val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
     val totalGroups: Int = groupedOids.length
-    logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $batchSize kokoisia ryhmiä.")
+    logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
     def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
       if(batches.isEmpty) {
         Future.successful({})
       } else {
         val (subSeq, index) = batches.head
-        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $batchSize henkilöä sureen. Erä $index / $totalGroups")
+        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
         updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
       }
     }
@@ -177,7 +179,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val f = handleBatch(groupedOids.zipWithIndex)
     f.onComplete {
       case Success(_) => logger.info("HandleHenkiloUpdate: Koskipäivitys valmistui!")
-      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui: ${e.getMessage}")
+      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
     f
   }

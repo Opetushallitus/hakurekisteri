@@ -11,20 +11,23 @@ class KoskiOpiskelijaParser {
 
   def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
 
-    logger.debug(s"suoritusLuokka=$suoritusLuokka")
+    logger.debug(s"suoritusLuokka=$suoritusLuokka, henkiloOid=$henkiloOid")
     var alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
     var (luokkataso, oppilaitosOid, luokka) = detectOppilaitos(suoritusLuokka)
 
     if (!loppu.isAfter(alku)) {
-      logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false")
+      logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false, henkiloOid=$henkiloOid")
       loppu = KoskiUtil.deadlineDate.toDateTimeAtStartOfDay
       if (!loppu.isAfter(alku)) {
+        //throw new RuntimeException(s"Valmistuminen ei voi olla ennen läsnäolon alkamispäivää henkilöOid: $henkiloOid, suoritusLuokk: $suoritusLuokka")
         alku = new DateTime(0L) //Sanity
       }
     }
 
-    logger.debug(s"alku=$alku")
+
+    //throw new RuntimeException(s"Valmistuminen ei voi olla ennen läsnäolon alkamispäivää henkilöOid: $henkiloOid, suoritusLuokk: $suoritusLuokka")
+    logger.debug(s"alku=$alku, henkiloOid=$henkiloOid")
 
     //luokkatieto käytännössä
     val op = Opiskelija(
@@ -48,7 +51,7 @@ class KoskiOpiskelijaParser {
       }
       case Oids.lisaopetusKomoOid => {
         var luokka = luokkaSuoritus.luokka
-        if(luokkaSuoritus.luokka.isEmpty){
+        if(luokka.isEmpty){
           luokka = "10"
         }
         (luokkataso, luokkaSuoritus.suoritus.myontaja, luokka)

@@ -239,6 +239,10 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val serviceUser = properties.get("suoritusrekisteri.app.username")
   val servicePassword = properties.get("suoritusrekisteri.app.password")
 
+  val koskiCronJob = findMandatoryPropertyValue("suoritusrekisteri.koski.update.cronJob").toString
+  val koskiMaxOppijatPostSize = findMandatoryPropertyValue("suoritusrekisteri.koski.max.oppijat.post.size").toInt
+  val koskiMaxOppijatBatchSize = findMandatoryPropertyValue("suoritusrekisteri.koski.max.oppijat.batch.size").toInt
+
   val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl,
     properties = properties,

@@ -131,15 +131,12 @@ class KoskiSuoritusArvosanaParser {
       } else {
         s
       }
-
     })
-    //val isAikuistenPerusopetus: Boolean = opiskeluoikeustyyppi.koodiarvo.contentEquals("aikuistenperusopetus")
     var res:Seq[Arvosana] = Seq()
     for {
       suoritus <- modsuoritukset
       if suoritus.isPK || (isLukio && suoritus.isLukioSuoritus)
     } yield {
-      //OK-227: Otetaan yksilöllistämisessä huomioon vain pakolliset aineet.
       if (isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)) {
         yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
       }
@@ -268,7 +265,6 @@ class KoskiSuoritusArvosanaParser {
     }
   }
 
-
   private def isFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]) : Boolean = {
     val ysiluokat = suoritukset.filter(_.luokka.getOrElse("").startsWith("9"))
     val failed = ysiluokat.exists(_.jääLuokalle.getOrElse(false))
@@ -276,8 +272,16 @@ class KoskiSuoritusArvosanaParser {
     failed && !succeeded
   }
 
-  private def shouldProcessData(suoritus: KoskiSuoritus, tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val suoritusTila = tilat match {
+  private def getKomoOidAndLuokkataso(suoritusTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
+    suoritus.tyyppi match {
+      case Some(k) =>
+        matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
+      case _ => (DUMMYOID, None)
+    }
+  }
+
+  private def determineSuoritusTila(tilat: Seq[KoskiTila]): String = {
+    tilat match {
       case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
       case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
       case t if t.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
@@ -287,14 +291,13 @@ class KoskiSuoritusArvosanaParser {
       // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
       case _ => "KESKEN"
     }
-    val (komoOid, luokkataso) = suoritus.tyyppi match {
-      case Some(k) =>
-        matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
-      case _ => (DUMMYOID, None)
-    }
+  }
+
+  private def shouldSaveSuoritus(suoritus: KoskiSuoritus, tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    val suoritusTila: String = determineSuoritusTila(tilat)
+    val komoOid: String = getKomoOidAndLuokkataso(suoritusTila, suoritus, opiskeluoikeus)._1
 
     komoOid match {
-      // OK-227 : tallennetaan perusopetuksen ja kymppiluokan keskeneräiset suoritukset.
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if suoritusTila.equals("KESKEN") => true
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
         //check oppiaine failures
@@ -302,7 +305,6 @@ class KoskiSuoritusArvosanaParser {
           .filter(_.arviointi.nonEmpty)
           .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
         suoritus.vahvistus.isDefined || hasFailures
-      // OK-227 : tallennetaan ainoastaan vahvistetut lukiosuoritukset tilassa VALMIS
       case Oids.lukioKomoOid if !(suoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
       case _ => true
     }
@@ -312,37 +314,20 @@ class KoskiSuoritusArvosanaParser {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     var lahdeArvot: Map[String, String] = Map[String, String]()
-    //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
-
     for {
-      suoritus <- suoritukset if shouldProcessData(suoritus, tilat, opiskeluoikeus)
+      suoritus <- suoritukset if shouldSaveSuoritus(suoritus, tilat, opiskeluoikeus)
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
       var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
-
-      var suoritusTila = tilat match {
-        case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
-        case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
-        // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
-        case _ => "KESKEN"
-      }
+      var suoritusTila: String = determineSuoritusTila(tilat)
 
       val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna")) match {
         case (Some(a), _) => parseLocalDate(a)
         case (None, Some(kt)) => parseLocalDate(kt.alku)
         case (_,_) => valmistumisPaiva
       }
-
-      val (komoOid, luokkataso) = suoritus.tyyppi match {
-        case Some(k) =>
-          matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
-        case _ => (DUMMYOID, None)
-      }
+      val (komoOid: String, luokkataso: Option[String]) = getKomoOidAndLuokkataso(suoritusTila, suoritus, opiskeluoikeus)
 
       val vuosiluokkiinSitomatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
         case Some(x) => {
@@ -455,8 +440,6 @@ class KoskiSuoritusArvosanaParser {
       }
       if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
         luokka = "9"
-        /*if (suoritusTila == "KESKEYTYNYT")
-          failedNinthGrade = true*/
       }
 
       val useValmistumisPaiva: LocalDate = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
@@ -570,7 +553,6 @@ class KoskiSuoritusArvosanaParser {
             case a: VirallinenSuoritus =>
               a.henkilo.equals(useSuoritus.henkilo) &&
                 a.myontaja.equals(useSuoritus.myontaja) &&
-                //  a.tila != "KESKEYTYNYT" &&
                 a.komo.equals(Oids.perusopetusLuokkaKomoOid)
             case _ => false
           })
