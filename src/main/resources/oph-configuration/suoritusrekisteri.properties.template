@@ -98,6 +98,7 @@ suoritusrekisteri.koodisto-service.max-connections={{ suoritusrekisteri_koodisto
 suoritusrekisteri.koodisto-service.max-connection-queue-ms={{ suoritusrekisteri_koodistoservice_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.haku-app.max-connections={{ suoritusrekisteri_hakuapp_max_connections | default('50')}}
 suoritusrekisteri.haku-app.max-connection-queue-ms={{ suoritusrekisteri_hakuapp_max_connection_queue_ms | default('60000')}}
+suoritusrekisteri.haku-app.pagesize={{ suoritusrekisteri_hakuapp_pagesize | default('200')}}
 suoritusrekisteri.ataru.max-connections={{ suoritusrekisteri_ataru_max_connections | default('50')}}
 suoritusrekisteri.ataru.max-connection-queue-ms={{ suoritusrekisteri_ataru_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.valintalaskentakoostepalvelu.max-connections={{ suoritusrekisteri_valintalaskentakoostepalvelu_max_connections | default('50')}}

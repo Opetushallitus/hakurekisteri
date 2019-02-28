@@ -224,3 +224,4 @@ class BaseIntegrations(rekisterit: Registers,
 trait TypedActorRef {
   val actor: ActorRef
 }
+
