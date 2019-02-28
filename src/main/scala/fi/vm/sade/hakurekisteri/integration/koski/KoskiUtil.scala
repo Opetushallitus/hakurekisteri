@@ -9,5 +9,7 @@ object KoskiUtil {
 
   val root_org_id = "koski"
   var deadlineDate: LocalDate = new LocalDate(OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date"))
-  var arvosanatWithNelosiaDate: LocalDate = deadlineDate.minusDays(14)
+  def arvosanatWithNelosiaDate(): LocalDate = {
+    deadlineDate.minusDays(14)
+  }
 }
