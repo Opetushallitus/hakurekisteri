@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, Per
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiConstants.{KOLMEKYMMENTÄ, ZERO}
 import org.joda.time.{DateTime, DateTimeZone}
 
+import scala.collection.immutable.Range
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -305,13 +306,13 @@ case class KoskiSuoritus(
                   tutkintonimike: Seq[KoskiKoodi] = Nil,
                   tila: Option[KoskiKoodi] = None) {
 
-  def valmaOsaamispisteetAlleKolmekymmentä: Boolean = {
+  def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
     val sum = osasuoritukset
       .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
       .flatMap(_.koulutusmoduuli.laajuus)
       .map(_.arvo.getOrElse(BigDecimal(0)))
       .sum
-    sum.<(KOLMEKYMMENTÄ)
+    sum >= min
   }
 
   def opintopisteidenMaaraAlleKolmekymmentä: Boolean = {
@@ -319,7 +320,6 @@ case class KoskiSuoritus(
 
     pisteet.sum.<(KOLMEKYMMENTÄ)
   }
-
 }
 
 case class KoskiOsasuoritus(
