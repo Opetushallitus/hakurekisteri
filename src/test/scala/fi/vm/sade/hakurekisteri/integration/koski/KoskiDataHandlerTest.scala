@@ -692,28 +692,19 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val result = resultGroup.head
     val resultByOrg = result.groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
 
-    resultByOrg.keys.toSeq.sorted shouldEqual Seq("myöntäjäOrg", "myöntäjäOrg2")
+    resultByOrg.keys.toSeq.sorted shouldEqual Seq("1.2.246.562.10.11111111")
 
-    resultByOrg("myöntäjäOrg").filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
-    resultByOrg("myöntäjäOrg2").filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
+    resultByOrg("1.2.246.562.10.11111111").filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
 
-    resultByOrg("myöntäjäOrg").head.arvosanat.map(a => a.aine.concat(a.arvio match {
+    resultByOrg("1.2.246.562.10.11111111").head.arvosanat.map(a => a.aine.concat(a.arvio match {
       case Arvio410(arvosana) => arvosana
       case ArvioYo(arvosana, pisteet) => arvosana
       case ArvioOsakoe(arvosana) => arvosana
       case ArvioHyvaksytty(arvosana) => if (arvosana.contentEquals("hylatty")) "H" else arvosana
     })).sorted shouldEqual myöntäjäOrgAineet.sorted
 
-
-    resultByOrg("myöntäjäOrg2").head.arvosanat.map(a => a.aine.concat(a.arvio match {
-      case Arvio410(arvosana) => arvosana
-      case ArvioYo(arvosana, pisteet) => arvosana
-      case ArvioOsakoe(arvosana) => arvosana
-      case ArvioHyvaksytty(arvosana) => if (arvosana.contentEquals("hylatty")) "H" else arvosana
-    })).sorted shouldEqual myöntäjäOrg2Aineet.sorted
-
-    resultByOrg("myöntäjäOrg").head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2018-02-19")
-    resultByOrg("myöntäjäOrg").head.suoritus.asInstanceOf[VirallinenSuoritus].myontaja shouldEqual "myöntäjäOrg"
+    resultByOrg("1.2.246.562.10.11111111").head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2018-02-19")
+    resultByOrg("1.2.246.562.10.11111111").head.suoritus.asInstanceOf[VirallinenSuoritus].myontaja shouldEqual "1.2.246.562.10.11111111"
   }
 
   it should "parse testi_satu_valinnaiset.json" in {
