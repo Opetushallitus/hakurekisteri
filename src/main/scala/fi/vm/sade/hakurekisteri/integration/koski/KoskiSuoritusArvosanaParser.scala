@@ -1,11 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.{Calendar, UUID}
-
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, ArvioHyvaksytty, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
-import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
@@ -412,10 +409,6 @@ class KoskiSuoritusArvosanaParser {
         case _ => (Seq(), yksilollistaminen.Ei)
       }
 
-      if(komoOid == Oids.valmaKomoOid && suoritusTila == "VALMIS" && suoritus.opintopisteidenMaaraAlleKolmekymmentä) {
-        suoritusTila = "KESKEN"
-      }
-
       suoritusTila = komoOid match {
         case Oids.lisaopetusKomoOid =>
           suoritusTila
@@ -424,15 +417,17 @@ class KoskiSuoritusArvosanaParser {
           } else suoritusTila
 
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
-          if (LocalDate.now.isBefore(KoskiUtil.deadlineDate)) {
-            suoritusTila
-          }
-          else if (suoritus.valmaOsaamispisteetAlleKolmekymmentä || (LocalDate.now.isAfter(KoskiUtil.deadlineDate) && !isVahvistettu)){
-            "KESKEYTYNYT"
-          } else {
+          val tarpeeksiOpintopisteita = ((komoOid == Oids.valmaKomoOid && suoritus.opintopisteitaVahintaan(30))
+            || (komoOid == Oids.telmaKomoOid && suoritus.opintopisteitaVahintaan(25)))
+          if (tarpeeksiOpintopisteita && isVahvistettu) {
             "VALMIS"
+          } else {
+            if (LocalDate.now.isBefore(KoskiUtil.deadlineDate)) {
+              "KESKEN"
+            } else {
+              "KESKEYTYNYT"
+            }
           }
-
         case Oids.lukioonvalmistavaKomoOid =>
           val nSuoritukset = getNumberOfAcceptedLuvaCourses(suoritus.osasuoritukset)
           if (nSuoritukset >= 25) {
