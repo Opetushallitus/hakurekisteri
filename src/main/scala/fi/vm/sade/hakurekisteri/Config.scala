@@ -238,6 +238,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
 
+  val hakuappPageSize: Int = properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
+
   val serviceUser = properties.get("suoritusrekisteri.app.username")
   val servicePassword = properties.get("suoritusrekisteri.app.password")
 
