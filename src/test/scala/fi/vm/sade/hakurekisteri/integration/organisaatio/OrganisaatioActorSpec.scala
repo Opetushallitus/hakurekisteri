@@ -101,18 +101,26 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with Waiters 
     )
   }
 
-  test("OrganisaatioActor should find organisaatio from organisaatio-service if not found in cache") {
+  test("OrganisaatioActor should find organisaatio and its children from organisaatio-service if not found in cache") {
     withSystem(
       implicit system => {
         implicit val ec = system.dispatcher
         val (endPoint, organisaatioActor) = initOrganisaatioActor()
 
+        when(endPoint.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.00000000002/childoids"))).thenReturn((200, List(), """{ "oids": ["1.2.246.562.10.16546622305"] }"""))
+        when(endPoint.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305/childoids"))).thenReturn((200, List(), """{ "oids": [] }"""))
+
         waitFuture((organisaatioActor ? Oppilaitos("99999")).mapTo[OppilaitosResponse])(o => {
           o.oppilaitos.oppilaitosKoodi.get should be ("99999")
+          o.oppilaitos.children should have size 1
+          o.oppilaitos.children.head.oid should be("1.2.246.562.10.16546622305")
         })
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
         verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/99999"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.00000000002/childoids"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.16546622305/childoids"))
       }
     )
   }
@@ -133,6 +141,8 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with Waiters 
 
         delayMillisForOrganization99999 = 0
 
+        when(endPoint.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.00000000002/childoids"))).thenReturn((200, List(), """{ "oids": [] }"""))
+
         waitFuture((organisaatioActor ? Oppilaitos("99999")).mapTo[OppilaitosResponse])(o => {
           o.oppilaitos.oppilaitosKoodi.get should be ("99999")
         })
@@ -150,6 +160,9 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with Waiters 
         val (endPoint, organisaatioActor) = initOrganisaatioActor()
 
         delayMillisForOrganization8888 = 150
+
+        when(endPoint.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/1.2.246.562.10.165466228888/childoids"))).thenReturn((200, List(), """{ "oids": [] }"""))
+
 
         organisaatioActor ! "1.2.246.562.10.165466228888"
 

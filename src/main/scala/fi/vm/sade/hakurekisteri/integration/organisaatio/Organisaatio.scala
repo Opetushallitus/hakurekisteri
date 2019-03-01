@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.organisaatio
 
-@SerialVersionUID(1)
+@SerialVersionUID(2)
 case class
 Organisaatio(oid: String,
              nimi: Map[String, String],
