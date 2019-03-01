@@ -75,3 +75,5 @@ log4j.logger.fi.vm.sade.hakurekisteri.integration.cache=DEBUG
 log4j.logger.fi.vm.sade.hakurekisteri.integration.koski=DEBUG
 
 log4j.logger.com.zaxxer.hikari.HikariConfig=DEBUG
+
+log4j.logger.fi.vm.sade.hakurekisteri.integration.hakemus.HakemusBasedPermissionCheckerActor=DEBUG
