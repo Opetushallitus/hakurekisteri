@@ -6,7 +6,7 @@ log4j.logger.java={{env_loglevel}}
 log4j.logger.javax={{env_loglevel}}
 log4j.logger.scala={{env_loglevel}}
 
-log4j.appender.FILE.Threshold=INFO
+log4j.appender.FILE.Threshold=DEBUG
 log4j.appender.FILE.File=${user.home}/logs/oph-suoritusrekisteri.log
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
