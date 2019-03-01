@@ -1,16 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.pattern.ask
-import akka.pattern.pipe
+import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
+import org.json4s.jackson.Serialization
 import support.TypedActorRef
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 case class HasPermission(user: User, hetu: String)
@@ -34,25 +34,35 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
   }
 
   private def checkHakuApp(forPerson: String, orgs: Set[String]): Future[Boolean] = {
+    val permissionRequest = PermissionRequest(
+      personOidsForSamePerson = Seq(forPerson),
+      organisationOids = orgs.toSeq,
+      loggedInUserRoles = Seq()
+    )
+    log.debug(s"Querying permissions from haku-app with ${Serialization.write(permissionRequest)(HakurekisteriJsonSupport.format)}")
     hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
       acceptedResponseCode,
-      PermissionRequest(
-        personOidsForSamePerson = Seq(forPerson),
-        organisationOids = orgs.toSeq,
-        loggedInUserRoles = Seq()
-      )
-    ).map(_.accessAllowed.getOrElse(false))
+      permissionRequest
+    ).map { permissionResponse =>
+      log.debug(s"Got permission response for data of $forPerson from haku-app: $permissionResponse")
+      permissionResponse.accessAllowed.getOrElse(false)
+    }
   }
 
   private def checkAtaru(forPerson: String, orgs: Set[String]): Future[Boolean] = {
+    val permissionRequest = PermissionRequest(
+      personOidsForSamePerson = Seq(forPerson),
+      organisationOids = orgs.toSeq,
+      loggedInUserRoles = Seq()
+    )
+    log.debug(s"Querying permissions from ataru with ${Serialization.write(permissionRequest)(HakurekisteriJsonSupport.format)}")
     ataruClient.postObject[PermissionRequest, PermissionResponse]("ataru.permissioncheck")(
       acceptedResponseCode,
-      PermissionRequest(
-        personOidsForSamePerson = Seq(forPerson),
-        organisationOids = orgs.toSeq,
-        loggedInUserRoles = Seq()
-      )
-    ).map(_.accessAllowed.getOrElse(false))
+      permissionRequest
+    ).map { permissionResponse =>
+      log.debug(s"Got permission response for data of $forPerson from ataru: $permissionResponse")
+      permissionResponse.accessAllowed.getOrElse(false)
+    }
   }
 
   private def hasPermissionFor(forPerson: String, orgs: Set[String]): Future[Boolean] = {
