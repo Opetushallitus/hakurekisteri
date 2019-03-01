@@ -54,7 +54,12 @@ class PermissionResource(suoritusActor: ActorRef,
         val organisationGrantsPermission = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids)
         val result = organisationGrantsPermission || hakemusGrantsPermission
         if (hakemusGrantsPermission && !organisationGrantsPermission) {
-          logger.info("Permission granted based on hakemus")
+          val targetToLog: String = if (r.personOidsForSamePerson.size > 10) {
+            r.personOidsForSamePerson.size + " applicants."
+          } else {
+            " personoids " + r.personOidsForSamePerson
+          }
+          logger.info("Permission granted based on hakemus for data of " + targetToLog)
         }
         PermissionCheckResponse(
           accessAllowed = Some(result)
