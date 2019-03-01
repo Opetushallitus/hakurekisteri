@@ -66,7 +66,7 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
   }
 
   private def hasPermissionFor(forPerson: String, orgs: Set[String]): Future[Boolean] = {
-    log.debug("hasPermissionFor method called")
+    log.debug(s"hasPermissionFor method called with arguments forPerson == $forPerson , orgs == $orgs")
     Future.sequence(orgs.map(oid => (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]))
       .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
       .flatMap(orgs => {
