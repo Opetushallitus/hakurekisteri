@@ -37,7 +37,7 @@ class KoskiOpiskelijaParser {
       henkiloOid = henkiloOid,
       alkuPaiva = alku,
       loppuPaiva = Some(loppu),
-      source = KoskiUtil.root_org_id
+      source = KoskiUtil.koski_integration_source
     )
     logger.debug("createOpiskelija={}", op)
     op

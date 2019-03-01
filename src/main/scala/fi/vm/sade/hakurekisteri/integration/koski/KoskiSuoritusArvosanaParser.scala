@@ -26,7 +26,7 @@ class KoskiSuoritusArvosanaParser {
       aine, lisatieto,
       valinnainen,
       myonnetty = koskiArviointiPäiväJosSuorituksenValmistumisenJälkeen,
-      source = root_org_id,
+      source = KoskiUtil.koski_integration_source,
       Map(),
       jarjestys = jarjestys)
   }
@@ -39,8 +39,6 @@ class KoskiSuoritusArvosanaParser {
 
   private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
   private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
-  //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
-  private val root_org_id = "koski"
 
   def getSuoritusArvosanatFromOpiskeluoikeudes(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
     val result: Seq[Seq[SuoritusArvosanat]] = for (
@@ -472,7 +470,7 @@ class KoskiSuoritusArvosanaParser {
           suoritusKieli = suorituskieli.koodiarvo,
           opiskeluoikeus = None,
           vahv = true,
-          lahde = root_org_id,
+          lahde = KoskiUtil.koski_integration_source,
           lahdeArvot = lahdeArvot), arvosanat, luokka, lasnaDate, luokkataso)
         result = result :+ suoritus
       }
@@ -600,7 +598,7 @@ class KoskiSuoritusArvosanaParser {
         suoritusKieli = useSuoritus.suoritusKieli,
         opiskeluoikeus = None,
         vahv = true,
-        lahde = root_org_id,
+        lahde = KoskiUtil.koski_integration_source,
         lahdeArvot = useSuoritus.lahdeArvot), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
     })
   }

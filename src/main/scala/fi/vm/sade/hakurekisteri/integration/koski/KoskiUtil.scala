@@ -7,7 +7,7 @@ import org.joda.time.LocalDate
 
 object KoskiUtil {
 
-  val root_org_id = "koski"
+  val koski_integration_source = "koski"
   var deadlineDate: LocalDate = new LocalDate(OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date"))
   def arvosanatWithNelosiaDate(): LocalDate = {
     deadlineDate.minusDays(14)

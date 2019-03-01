@@ -121,7 +121,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
-    (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+    (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.koski_integration_source))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
       case t: AskTimeoutException =>
         logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
         fetchOpiskelijat(henkilöOid, oppilaitosOid)
@@ -196,12 +196,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
         .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
       logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-      val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.root_org_id))
+      val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
 
       updateSuoritus(suoritus, useSuoritus)
         .flatMap(_ => fetchArvosanat(suoritus))
         .flatMap(existingArvosanat => Future.sequence(existingArvosanat
-          .filter(_.source.contentEquals(KoskiUtil.root_org_id))
+          .filter(_.source.contentEquals(KoskiUtil.koski_integration_source))
           .map(arvosana => deleteArvosana(arvosana))))
         .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
         .flatMap(_ => saveOpiskelija(opiskelija))
@@ -232,7 +232,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       case _ => None
     }
 
-    val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.root_org_id)).flatMap {
+    val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.koski_integration_source)).flatMap {
       case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
       case _ => None
     }
