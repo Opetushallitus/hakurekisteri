@@ -44,15 +44,15 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   val opiskelijaParser = new KoskiOpiskelijaParser
   val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
 
-  //todo make sure disabling this is ok. We are now assuming that some optionals are actually always present.
-  //Could add checks to not crash, but is the data valid anyways? So maybe crash is ok.
-  /*
-  it should "empty KoskiHenkilo should return list" in {
-    koskiDataHandler.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer().build
-    ).flatten should contain theSameElementsAs Seq(None)
+  it should "empty KoskiHenkilo should throw NoSuchElementException" in {
+    try {
+      koskiDataHandler.createSuorituksetJaArvosanatFromKoski(
+        HenkiloContainer().build
+      ).flatten
+    } catch {
+      case ex: NoSuchElementException => //Expected
+    }
   }
-  */
 
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
     opiskelijaParser.detectOppilaitos(
