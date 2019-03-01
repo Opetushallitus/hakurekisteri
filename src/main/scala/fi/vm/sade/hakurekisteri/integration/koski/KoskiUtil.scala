@@ -9,7 +9,9 @@ object KoskiUtil {
 
   val koski_integration_source = "koski"
   var deadlineDate: LocalDate = new LocalDate(OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date"))
-  def arvosanatWithNelosiaDate(): LocalDate = {
+
+  def arvosanatWithNelosiaDeadlineDate(): LocalDate = {
+    // Neloset halutaan tallentaa suoritusrekisteriin kaksi viikkoa ennen deadline-päivämäärää
     deadlineDate.minusDays(14)
   }
 }
