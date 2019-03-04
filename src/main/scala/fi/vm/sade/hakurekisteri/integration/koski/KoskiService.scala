@@ -29,6 +29,10 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
   private val logger = Logging.getLogger(system, this)
 
+  private var startTimestamp: Long = 0L
+  val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
+  private var oneJobAtATime = Future.successful({})
+
   val aktiiviset2AsteYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
   def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = aktiiviset2AsteYhteisHakuOidit.set(hakuOids)
 
@@ -44,22 +48,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
   case class SearchParamsWithCursor(timestamp: Option[String], cursor: Option[String], pageSize: Int = 5000)
 
-  def fetchChanged(page: Int = 0, params: SearchParams): Future[Seq[KoskiHenkiloContainer]] = {
-    virkailijaRestClient.readObjectWithBasicAuth[List[KoskiHenkiloContainer]]("koski.oppija", params)(acceptedResponseCode = 200, maxRetries = 2)
-  }
-
-  def fetchChangedOppijas(params: SearchParamsWithCursor): Future[MuuttuneetOppijatResponse] = {
+  private def fetchChangedOppijas(params: SearchParamsWithCursor): Future[MuuttuneetOppijatResponse] = {
     logger.info(s"Haetaan muuttuneet henkilöoidit Koskesta, timestamp: " + params.timestamp.toString + ", cursor: " + params.cursor.toString)
     virkailijaRestClient.readObjectWithBasicAuth[MuuttuneetOppijatResponse]("koski.sure.muuttuneet-oppijat", params)(acceptedResponseCode = 200, maxRetries = 2)
-  }
-
-  def clampTimeToEnd(date: Date): Date = {
-    val dt = new DateTime(date)
-    if (dt.isBefore(endDateSuomiTime)) {
-      date
-    } else {
-      endDateSuomiTime.toDate
-    }
   }
 
   def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit = {
@@ -123,9 +114,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     logger.info(("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis."))
   }
 
-  private var startTimestamp: Long = 0L
-  val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
-  private var oneJobAtATime = Future.successful({})
   override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = {
     def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
       val personOids: Seq[String] = personOidsSet.toSeq
