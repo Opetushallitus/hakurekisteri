@@ -144,7 +144,7 @@ class KoskiSuoritusArvosanaParser {
           val tunniste: KoskiKoodi = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
           val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
             case (a: String, b: Option[KoskiKieli]) if tunniste.kielet => Option(b.get.koodiarvo)
-            case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(KoskiConstants.aidinkieli(b.get.koodiarvo))
+            case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(KoskiUtil.aidinkieli(b.get.koodiarvo))
             case _ => None
           }
 
