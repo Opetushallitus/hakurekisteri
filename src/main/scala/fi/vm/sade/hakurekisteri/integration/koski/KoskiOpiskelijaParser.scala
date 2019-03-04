@@ -14,7 +14,7 @@ class KoskiOpiskelijaParser {
     logger.debug(s"suoritusLuokka=$suoritusLuokka, henkiloOid=$henkiloOid")
     var alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
-    var (luokkataso, oppilaitosOid, luokka) = detectOppilaitos(suoritusLuokka)
+    var oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitos(suoritusLuokka)
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false, henkiloOid=$henkiloOid")
@@ -25,15 +25,13 @@ class KoskiOpiskelijaParser {
       }
     }
 
-
-    //throw new RuntimeException(s"Valmistuminen ei voi olla ennen läsnäolon alkamispäivää henkilöOid: $henkiloOid, suoritusLuokk: $suoritusLuokka")
     logger.debug(s"alku=$alku, henkiloOid=$henkiloOid")
 
     //luokkatieto käytännössä
     val op = Opiskelija(
-      oppilaitosOid = oppilaitosOid,
-      luokkataso = luokkataso,
-      luokka = luokka,
+      oppilaitosOid = oppilaitosAndLuokka.oppilaitosOid,
+      luokkataso = oppilaitosAndLuokka.luokkataso,
+      luokka = oppilaitosAndLuokka.luokka,
       henkiloOid = henkiloOid,
       alkuPaiva = alku,
       loppuPaiva = Some(loppu),
@@ -43,25 +41,25 @@ class KoskiOpiskelijaParser {
     op
   }
 
-  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritus: SuoritusLuokka, komoOid: String): (String, String, String) = {
+  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritus: SuoritusLuokka, komoOid: String): OppilaitosAndLuokka = {
     komoOid match {
       // hae luokka 9C tai vast
       case Oids.perusopetusKomoOid => {
-        (luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
+        OppilaitosAndLuokka(luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
       }
       case Oids.lisaopetusKomoOid => {
         var luokka = luokkaSuoritus.luokka
         if(luokka.isEmpty){
           luokka = "10"
         }
-        (luokkataso, luokkaSuoritus.suoritus.myontaja, luokka)
+        OppilaitosAndLuokka(luokkataso, luokkaSuoritus.suoritus.myontaja, luokka)
       }
-      case _ => (luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
+      case _ => OppilaitosAndLuokka(luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
     }
   }
 
   //noinspection ScalaStyle
-  def detectOppilaitos(suoritus: SuoritusLuokka): (String, String, String) = suoritus match {
+  def detectOppilaitos(suoritus: SuoritusLuokka): OppilaitosAndLuokka = suoritus match {
     case s if s.suoritus.komo == Oids.lukioKomoOid => getOppilaitosAndLuokka("L", s, Oids.lukioKomoOid)
     case s if s.suoritus.komo == Oids.lukioonvalmistavaKomoOid => getOppilaitosAndLuokka("ML", s, Oids.lukioonvalmistavaKomoOid)
     case s if s.suoritus.komo == Oids.ammatillinenKomoOid => getOppilaitosAndLuokka("AK", s, Oids.ammatillinenKomoOid)
@@ -71,9 +69,12 @@ class KoskiOpiskelijaParser {
     case s if s.suoritus.komo == Oids.valmaKomoOid => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid)
     case s if s.suoritus.komo == Oids.telmaKomoOid => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid)
     case s if s.suoritus.komo == Oids.lisaopetusKomoOid => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid)
-    case s if s.suoritus.komo == Oids.perusopetusKomoOid && (s.luokkataso.getOrElse("").equals("9") || s.luokkataso.getOrElse("").equals("AIK")) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid)
-    // TODO: Luokkataso?
     case s if s.suoritus.komo == Oids.ammatillinentutkintoKomoOid => getOppilaitosAndLuokka("", s, Oids.ammatillinentutkintoKomoOid)
-    case _ => ("", "", "")
+    case s if s.suoritus.komo == Oids.perusopetusKomoOid && (s.luokkataso.getOrElse("").equals("9") || s.luokkataso.getOrElse("").equals("AIK")) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid)
+
+    case _ => OppilaitosAndLuokka("", "", "")
   }
+
 }
+
+case class OppilaitosAndLuokka(luokkataso: String, oppilaitosOid: String, luokka: String)
