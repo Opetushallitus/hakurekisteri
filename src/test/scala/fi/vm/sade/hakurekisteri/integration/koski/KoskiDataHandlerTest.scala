@@ -969,7 +969,95 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val maybedate: Option[LocalDate] = suoritusParser.getEndDateFromLastNinthGrade(suoritukset)
 
     maybedate.get shouldEqual parseLocalDate("2000-05-03")
+  }
 
+  it should "get correct end date from last ysiluokka with empty vahvistus date or vahvistus is none" in {
+    val koskikomo = KoskiKoulutusmoduuli(None, None, None, None, None)
+
+    val vahvistus = KoskiVahvistus("2000-04-01", KoskiOrganisaatio(Some("")))
+    val vahvistus2 = KoskiVahvistus("2000-05-03", KoskiOrganisaatio(Some("")))
+    val vahvistus3 = KoskiVahvistus("2000-05-02", KoskiOrganisaatio(Some("")))
+    val vahvistus4 = KoskiVahvistus("", KoskiOrganisaatio(Some("")))
+
+    val ks1 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = Some(vahvistus),
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val ks2 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = Some(vahvistus2),
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val ks3 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = Some(vahvistus3),
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val ks4 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = Some(vahvistus4),
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val ks5 = KoskiSuoritus(luokka = Some("9"),
+      koulutusmoduuli = koskikomo,
+      tyyppi = None,
+      kieli = None,
+      pakollinen = None,
+      toimipiste = None,
+      vahvistus = None,
+      suorituskieli = None,
+      arviointi = None,
+      yksilöllistettyOppimäärä = None,
+      osasuoritukset = Seq(),
+      ryhmä = None,
+      alkamispäivä = None,
+      jääLuokalle = None)
+
+    val suoritukset: Seq[KoskiSuoritus] = Seq(ks1,ks2,ks3,ks4,ks5)
+    val maybedate: Option[LocalDate] = suoritusParser.getEndDateFromLastNinthGrade(suoritukset)
+
+    maybedate.get shouldEqual parseLocalDate("2000-05-03")
   }
 
   it should "parse 1.2.246.562.24.14978931242.json" in {
@@ -1858,19 +1946,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal ("0")
   }
 
-/*
-  it should "not store vahvistettu keskeytynyt lukiosuoritus at all after deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_REMOVE.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    //KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
-
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
-    System.out.println("jes")
-
-  }
-*/
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }

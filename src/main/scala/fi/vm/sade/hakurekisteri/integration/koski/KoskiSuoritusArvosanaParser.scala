@@ -247,9 +247,11 @@ class KoskiSuoritusArvosanaParser {
 
   def getEndDateFromLastNinthGrade(suoritukset: Seq[KoskiSuoritus]): Option[LocalDate] = {
     val mostrecent = suoritukset.filter(s => s.luokka.getOrElse("").startsWith("9"))
+      .filterNot(s1 => s1.vahvistus.isEmpty)
+      .filterNot(s2 => s2.vahvistus.get.päivä.isEmpty)
       .sortWith((a,b) => {
-        val aDate = parseLocalDate(a.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(Some("")))).päivä)
-        val bDate = parseLocalDate(b.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(Some("")))).päivä)
+        val aDate = parseLocalDate(a.vahvistus.get.päivä)
+        val bDate = parseLocalDate(b.vahvistus.get.päivä)
         aDate.compareTo(bDate) > 0})
 
     if(mostrecent.nonEmpty) {
