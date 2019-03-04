@@ -20,8 +20,7 @@ class KoskiOpiskelijaParser {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false, henkiloOid=$henkiloOid")
       loppu = KoskiUtil.deadlineDate.toDateTimeAtStartOfDay
       if (!loppu.isAfter(alku)) {
-        //throw new RuntimeException(s"Valmistuminen ei voi olla ennen läsnäolon alkamispäivää henkilöOid: $henkiloOid, suoritusLuokk: $suoritusLuokka")
-        alku = new DateTime(0L) //Sanity
+        throw new RuntimeException(s"Valmistuminen ei voi olla ennen läsnäolon alkamispäivää henkilöOid: $henkiloOid, suoritusLuokka: $suoritusLuokka")
       }
     }
 
