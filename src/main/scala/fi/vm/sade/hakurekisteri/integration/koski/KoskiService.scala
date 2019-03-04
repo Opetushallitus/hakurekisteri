@@ -15,7 +15,6 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{FiniteDuration, _}
-import scala.math.BigDecimal
 import scala.util.{Failure, Success, Try}
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient,
@@ -26,11 +25,9 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
                    pageSize: Int = 200)(implicit val system: ActorSystem)  extends IKoskiService {
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
-  private val endDateSuomiTime = DateTime.parse("2018-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
   private val logger = Logging.getLogger(system, this)
 
   private var startTimestamp: Long = 0L
-  val timeoutAfter: Long = TimeUnit.HOURS.toMillis(5)
   private var oneJobAtATime = Future.successful({})
 
   val aktiiviset2AsteYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
@@ -39,13 +36,12 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   val aktiivisetKKYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
   def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = aktiivisetKKYhteisHakuOidit.set(hakuOids)
 
-  val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
+  private val fetchPersonAliases: (Seq[KoskiHenkiloContainer]) => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
     logger.debug(s"Haetaan aliakset henkilöille=$hs")
     val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
 
-  case class SearchParams(muuttunutJälkeen: String, muuttunutEnnen: String = "2100-01-01T12:00")
   case class SearchParamsWithCursor(timestamp: Option[String], cursor: Option[String], pageSize: Int = 5000)
 
   private def fetchChangedOppijas(params: SearchParamsWithCursor): Future[MuuttuneetOppijatResponse] = {
@@ -206,143 +202,3 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 }
-
-case class MuuttuneetOppijatResponse(result: Seq[String], mayHaveMore: Boolean, nextCursor: String)
-
-case class KoskiHenkiloContainer(
-                                  henkilö: KoskiHenkilo,
-                                  opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
-                        )
-
-case class KoskiHenkilo(
-                         oid: Option[String],
-                         hetu: Option[String],
-                         syntymäaika: Option[String],
-                         etunimet: Option[String],
-                         kutsumanimi: Option[String],
-                         sukunimi: Option[String]) {
-}
-case class KoskiOpiskeluoikeus(
-                 oid: Option[String], //LUVA data does not have an OID
-                 oppilaitos: Option[KoskiOrganisaatio],
-                 tila: KoskiOpiskeluoikeusjakso,
-                 päättymispäivä: Option[String],
-                 lisätiedot: Option[KoskiLisatiedot],
-                 suoritukset: Seq[KoskiSuoritus],
-                 tyyppi: Option[KoskiKoodi],
-                 aikaleima: Option[String]) {
-
-  def isStateContainingOpiskeluoikeus =
-    oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
-}
-
-case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
-
-case class KoskiTila(alku: String, tila:KoskiKoodi)
-
-case class KoskiOrganisaatio(oid: Option[String])
-
-case class KoskiSuoritus(
-                  luokka: Option[String],
-                  koulutusmoduuli: KoskiKoulutusmoduuli,
-                  tyyppi: Option[KoskiKoodi],
-                  kieli: Option[KoskiKieli],
-                  pakollinen: Option[Boolean],
-                  toimipiste: Option[KoskiOrganisaatio],
-                  vahvistus: Option[KoskiVahvistus],
-                  suorituskieli: Option[KoskiKieli],
-                  arviointi: Option[Seq[KoskiArviointi]],
-                  yksilöllistettyOppimäärä: Option[Boolean],
-                  osasuoritukset: Seq[KoskiOsasuoritus],
-                  ryhmä: Option[String],
-                  alkamispäivä: Option[String],
-                  //jääLuokalle is only used for peruskoulu
-                  jääLuokalle: Option[Boolean],
-                  tutkintonimike: Seq[KoskiKoodi] = Nil,
-                  tila: Option[KoskiKoodi] = None) {
-
-  def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
-    val sum = osasuoritukset
-      .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
-      .flatMap(_.koulutusmoduuli.laajuus)
-      .map(_.arvo.getOrElse(BigDecimal(0)))
-      .sum
-    sum >= min
-  }
-}
-
-case class KoskiOsasuoritus(
-                 koulutusmoduuli: KoskiKoulutusmoduuli,
-                 tyyppi: KoskiKoodi,
-                 arviointi: Seq[KoskiArviointi],
-                 pakollinen: Option[Boolean],
-                 yksilöllistettyOppimäärä: Option[Boolean],
-                 osasuoritukset: Option[Seq[KoskiOsasuoritus]]
-             ) {
-
-  def opintopisteidenMaara: BigDecimal = {
-    val laajuus: Option[KoskiValmaLaajuus] = koulutusmoduuli.laajuus.filter(_.yksikkö.koodiarvo == "2")
-    val arvo: Option[BigDecimal] = laajuus.flatMap(_.arvo)
-    arvo.getOrElse(KoskiUtil.ZERO)
-  }
-
-  def isLukioSuoritus: Boolean = {
-
-    koulutusmoduuli.tunniste.map(_.koodiarvo) match {
-      case Some(koodi) =>
-        KoskiUtil.lukioaineetRegex.flatMap(_.findFirstIn(koodi)).nonEmpty
-      case _ => false
-    }
-  }
-
-  def isPK: Boolean = {
-    koulutusmoduuli.tunniste.map(_.koodiarvo) match {
-      case Some(koodi) =>
-        KoskiUtil.peruskouluaineetRegex.flatMap(_.findFirstIn(koodi)).nonEmpty
-      case _ => false
-    }
-  }
-
-}
-
-case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String]) {
-  def isPKValue: Boolean = {
-    KoskiUtil.peruskoulunArvosanat.contains(arvosana.koodiarvo) || arvosana.koodiarvo == "H"
-  }
-}
-
-case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi],
-                                kieli: Option[KoskiKieli],
-                                koulutustyyppi:
-                                Option[KoskiKoodi],
-                                laajuus: Option[KoskiValmaLaajuus],
-                                pakollinen: Option[Boolean])
-
-case class KoskiValmaLaajuus(arvo: Option[BigDecimal], yksikkö: KoskiKoodi)
-
-case class KoskiKoodi(koodiarvo: String, koodistoUri: String) {
-  def valinnainen: Boolean = {
-    KoskiUtil.valinnaiset.contains(koodiarvo)
-  }
-  def eivalinnainen: Boolean = {
-    KoskiUtil.eivalinnaiset.contains(koodiarvo)
-  }
-  def a2b2Kielet: Boolean = {
-    KoskiUtil.a2b2Kielet.contains(koodiarvo)
-  }
-  def kielet: Boolean = {
-    KoskiUtil.kielet.contains(koodiarvo)
-  }
-}
-
-case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganisaatio)
-
-case class KoskiKieli(koodiarvo: String, koodistoUri: String)
-
-case class KoskiLisatiedot(
-                            erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos],
-                            vuosiluokkiinSitoutumatonOpetus: Option[Boolean])
-
-case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
-
-case class KoskiSuoritusHakuParams(saveLukio: Boolean = false, saveAmmatillinen: Boolean = false)
