@@ -90,15 +90,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(hakuOid)
     personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(tutkintovuodetHakemuksilta.keySet)
     valmistumishetket <- valmistumiset(personOidsWithAliases, Seq())
-    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-      personOidsWithAliases.diff(valmistumishetket.keySet),
-      Seq()
-    )
-    vastaanottohetket <- vastaanotot(
-      personOidsWithAliases
-        .diff(valmistumishetket.keySet)
-        .diff(opiskeluoikeuksienAlkamiset.keySet)
-    )
+    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(personOidsWithAliases, Seq())
+    vastaanottohetket <- vastaanotot(personOidsWithAliases)
   } yield {
     tutkintovuodetHakemuksilta.map {
       case (henkiloOid, tutkintovuosi) =>
