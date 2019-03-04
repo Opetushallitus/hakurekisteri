@@ -69,7 +69,7 @@ log4j.logger.org.apache.activemq.spring={{env_loglevel}}
 log4j.logger.org.jasig.cas.client.session=INFO
 log4j.logger.fi.vm.sade.hakurekisteri.integration.ytl=DEBUG
 # redis cache
-log4j.logger.fi.vm.sade.hakurekisteri.integration.cache=DEBUG
+log4j.logger.fi.vm.sade.hakurekisteri.integration.cache=INFO
 
 # Koski integration
 log4j.logger.fi.vm.sade.hakurekisteri.integration.koski=DEBUG
