@@ -41,40 +41,32 @@ class KoskiOpiskelijaParser {
     op
   }
 
-  def getOppilaitosAndLuokka(luokkataso: String, luokkaSuoritus: SuoritusLuokka, komoOid: String): OppilaitosAndLuokka = {
-    komoOid match {
-      // hae luokka 9C tai vast
-      case Oids.perusopetusKomoOid => {
-        OppilaitosAndLuokka(luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
+  def detectOppilaitos(suoritus: SuoritusLuokka): OppilaitosAndLuokka = {
+    val oppilaitoksesAndLuokkas: Map[String, OppilaitosAndLuokka] = Map(
+      Oids.lukioKomoOid                   -> OppilaitosAndLuokka("L", suoritus.suoritus.myontaja, Oids.lukioKomoOid),
+      Oids.lukioonvalmistavaKomoOid       -> OppilaitosAndLuokka("ML" , suoritus.suoritus.myontaja, Oids.lukioonvalmistavaKomoOid),
+      Oids.ammatillinenKomoOid            -> OppilaitosAndLuokka("AK" , suoritus.suoritus.myontaja, Oids.ammatillinenKomoOid),
+      Oids.ammatilliseenvalmistavaKomoOid -> OppilaitosAndLuokka("M" , suoritus.suoritus.myontaja, Oids.ammatilliseenvalmistavaKomoOid),
+      Oids.ammattistarttiKomoOid          -> OppilaitosAndLuokka("A" , suoritus.suoritus.myontaja, Oids.ammattistarttiKomoOid),
+      Oids.valmentavaKomoOid              -> OppilaitosAndLuokka("V" , suoritus.suoritus.myontaja, Oids.valmentavaKomoOid),
+      Oids.valmaKomoOid                   -> OppilaitosAndLuokka("VALMA" , suoritus.suoritus.myontaja, Oids.valmaKomoOid),
+      Oids.telmaKomoOid                   -> OppilaitosAndLuokka("TELMA" , suoritus.suoritus.myontaja, Oids.telmaKomoOid),
+      Oids.ammatillinentutkintoKomoOid    -> OppilaitosAndLuokka("" , suoritus.suoritus.myontaja, Oids.ammatillinentutkintoKomoOid)
+    )
+
+    if (suoritus.suoritus.komo == Oids.perusopetusKomoOid
+      && (suoritus.luokkataso.getOrElse("").equals("9") || suoritus.luokkataso.getOrElse("").equals("AIK"))) {
+      OppilaitosAndLuokka("9", suoritus.suoritus.myontaja, suoritus.luokka)
+    } else if (suoritus.suoritus.komo == Oids.lisaopetusKomoOid) {
+      if(suoritus.luokka.isEmpty){
+        OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, "10")
+      } else {
+        OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, suoritus.luokka)
       }
-      case Oids.lisaopetusKomoOid => {
-        var luokka = luokkaSuoritus.luokka
-        if(luokka.isEmpty){
-          luokka = "10"
-        }
-        OppilaitosAndLuokka(luokkataso, luokkaSuoritus.suoritus.myontaja, luokka)
-      }
-      case _ => OppilaitosAndLuokka(luokkataso, luokkaSuoritus.suoritus.myontaja, luokkaSuoritus.luokka)
+    } else {
+      oppilaitoksesAndLuokkas.get(suoritus.suoritus.komo).getOrElse(OppilaitosAndLuokka("", "", ""))
     }
   }
-
-  //noinspection ScalaStyle
-  def detectOppilaitos(suoritus: SuoritusLuokka): OppilaitosAndLuokka = suoritus match {
-    case s if s.suoritus.komo == Oids.lukioKomoOid => getOppilaitosAndLuokka("L", s, Oids.lukioKomoOid)
-    case s if s.suoritus.komo == Oids.lukioonvalmistavaKomoOid => getOppilaitosAndLuokka("ML", s, Oids.lukioonvalmistavaKomoOid)
-    case s if s.suoritus.komo == Oids.ammatillinenKomoOid => getOppilaitosAndLuokka("AK", s, Oids.ammatillinenKomoOid)
-    case s if s.suoritus.komo == Oids.ammatilliseenvalmistavaKomoOid => getOppilaitosAndLuokka("M", s, Oids.ammatilliseenvalmistavaKomoOid)
-    case s if s.suoritus.komo == Oids.ammattistarttiKomoOid => getOppilaitosAndLuokka("A", s, Oids.ammattistarttiKomoOid)
-    case s if s.suoritus.komo == Oids.valmentavaKomoOid => getOppilaitosAndLuokka("V", s, Oids.valmentavaKomoOid)
-    case s if s.suoritus.komo == Oids.valmaKomoOid => getOppilaitosAndLuokka("VALMA", s, Oids.valmaKomoOid)
-    case s if s.suoritus.komo == Oids.telmaKomoOid => getOppilaitosAndLuokka("TELMA", s, Oids.telmaKomoOid)
-    case s if s.suoritus.komo == Oids.lisaopetusKomoOid => getOppilaitosAndLuokka("10", s, Oids.lisaopetusKomoOid)
-    case s if s.suoritus.komo == Oids.ammatillinentutkintoKomoOid => getOppilaitosAndLuokka("", s, Oids.ammatillinentutkintoKomoOid)
-    case s if s.suoritus.komo == Oids.perusopetusKomoOid && (s.luokkataso.getOrElse("").equals("9") || s.luokkataso.getOrElse("").equals("AIK")) => getOppilaitosAndLuokka("9", s, Oids.perusopetusKomoOid)
-
-    case _ => OppilaitosAndLuokka("", "", "")
-  }
-
 }
 
 case class OppilaitosAndLuokka(luokkataso: String, oppilaitosOid: String, luokka: String)
