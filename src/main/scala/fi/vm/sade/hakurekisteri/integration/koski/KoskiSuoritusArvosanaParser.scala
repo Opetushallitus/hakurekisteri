@@ -108,7 +108,7 @@ class KoskiSuoritusArvosanaParser {
                             isLukio: Boolean = false,
                             suorituksenValmistumispäivä: LocalDate,
                             isAikuistenPerusopetus: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
-    val ordering = scala.collection.mutable.Map[String, Int]()
+    var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
 
     //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
@@ -162,7 +162,6 @@ class KoskiSuoritusArvosanaParser {
           }
 
           val laajuus = suoritus.koulutusmoduuli.laajuus.getOrElse(KoskiValmaLaajuus(None, KoskiKoodi("","")))
-
 
           lazy val isKurssiLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("4")
           lazy val isVVTLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("3")
