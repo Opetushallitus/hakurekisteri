@@ -92,13 +92,6 @@ class KoskiSuoritusArvosanaParser {
     else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
       isSuoritusPakollinen = suoritus.koulutusmoduuli.pakollinen.get
     }
-    else {
-      var isPakollinen = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).eivalinnainen
-
-      if(!suoritus.koulutusmoduuli.pakollinen.getOrElse(true) && suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).valinnainen) {
-        isPakollinen = false
-      }
-    }
 
     if( (komoOid.contentEquals(Oids.perusopetusKomoOid) || komoOid.contentEquals(Oids.lisaopetusKomoOid)) &&
       (suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("B2") || suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("A2"))) {
