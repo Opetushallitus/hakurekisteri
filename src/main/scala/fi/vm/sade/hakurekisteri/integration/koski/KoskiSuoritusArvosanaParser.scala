@@ -49,14 +49,14 @@ class KoskiSuoritusArvosanaParser {
     result
   }
 
-  def parseYear(dateStr: String): Int = {
+  private def parseYear(dateStr: String): Int = {
     val dateFormat = "yyyy-MM-dd"
     val dtf = java.time.format.DateTimeFormatter.ofPattern(dateFormat)
     val d = java.time.LocalDate.parse(dateStr, dtf)
     d.getYear
   }
 
-  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
+  private def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
     if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus") && koulutusmoduuliTunnisteKoodiarvo == "perusopetuksenoppiaineenoppimaara") {
       (Oids.perusopetuksenOppiaineenOppimaaraOid, Some(AIKUISTENPERUS_LUOKKAASTE))
     } else {
@@ -84,7 +84,7 @@ class KoskiSuoritusArvosanaParser {
     }
   }
 
-  def isKoskiOsaSuoritusPakollinen(suoritus: KoskiOsasuoritus, isLukio: Boolean, komoOid: String): Boolean = {
+  private def isKoskiOsaSuoritusPakollinen(suoritus: KoskiOsasuoritus, isLukio: Boolean, komoOid: String): Boolean = {
     var isSuoritusPakollinen: Boolean = false
     if(isLukio) {
       isSuoritusPakollinen = true
@@ -217,7 +217,7 @@ class KoskiSuoritusArvosanaParser {
     (res, yksilöllistetty)
   }
 
-  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
+  private def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
     if(!(opOikeus.oppilaitos.isDefined && opOikeus.oppilaitos.get.oid.isDefined)) {
       throw new RuntimeException("Opiskeluoikeudella on oltava oppilaitos!")
     }
@@ -310,7 +310,7 @@ class KoskiSuoritusArvosanaParser {
     }
   }
 
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
+  private def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     var lahdeArvot: Map[String, String] = Map[String, String]()
