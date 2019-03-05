@@ -12,9 +12,9 @@ class KoskiOpiskelijaParser {
   def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
 
     logger.debug(s"suoritusLuokka=$suoritusLuokka, henkiloOid=$henkiloOid")
-    var alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
+    val alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
-    var oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitos(suoritusLuokka)
+    val oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitos(suoritusLuokka)
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false, henkiloOid=$henkiloOid")

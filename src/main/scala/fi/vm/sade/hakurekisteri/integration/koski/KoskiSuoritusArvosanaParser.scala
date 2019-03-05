@@ -108,7 +108,7 @@ class KoskiSuoritusArvosanaParser {
                             isLukio: Boolean = false,
                             suorituksenValmistumispäivä: LocalDate,
                             isAikuistenPerusopetus: Boolean = false): (Seq[Arvosana], Yksilollistetty) = {
-    var ordering = scala.collection.mutable.Map[String, Int]()
+    val ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
 
     //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
@@ -141,7 +141,7 @@ class KoskiSuoritusArvosanaParser {
             case _ => None
           }
 
-          var isPakollinen = isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)
+          val isPakollinen = isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)
           var ord: Option[Int] = None
 
           if (!isPakollinen) {
@@ -312,7 +312,7 @@ class KoskiSuoritusArvosanaParser {
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
-      var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
+      val suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
       var suoritusTila: String = determineSuoritusTila(tilat)
 
       val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna")) match {
@@ -538,7 +538,7 @@ class KoskiSuoritusArvosanaParser {
     */
   private def postprocessPeruskouluData(result: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
     result.filter(_.suoritus.isInstanceOf[VirallinenSuoritus]).map(suoritusArvosanat => {
-      var useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
+      val useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
       val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && suoritusArvosanat.arvosanat.isEmpty){
         logger.debug("if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty) == true")
         result
