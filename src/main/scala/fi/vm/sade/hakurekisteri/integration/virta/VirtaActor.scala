@@ -1,16 +1,23 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+
+import akka.pattern.ask
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery}
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 import support.TypedActorRef
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
@@ -77,15 +84,43 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorR
   }
 
   def save(r: VirtaResult): Unit = {
-    val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(r.oppijanumero)))
-    val suoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(r.oppijanumero)))
-    for {
-      o <- opiskeluoikeudet
-      s <- suoritukset
-    } yield {
-      o.foreach(opiskeluoikeusActor ! _)
-      s.foreach(suoritusActor ! _)
+
+    implicit val timeout: Timeout = Timeout(1.minute)
+
+    val newOpiskeluOikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(r.oppijanumero)))
+    val newSuoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(r.oppijanumero)))
+
+    removeExisting(r).onComplete {
+      case scala.util.Failure(e) =>
+        log.error(e, "HenkilöOid {} Vanhojen virtatietojen poistossa tapahtui virhe {}", r.oppijanumero, e)
+      case scala.util.Success(_) =>
+        (for {
+          o <- newOpiskeluOikeudet
+          s <- newSuoritukset
+          _ <- Future.sequence(o.map(opiskeluoikeusActor ? _))
+          _ <- Future.sequence(s.map(suoritusActor ? _))
+        } yield ()).onFailure {case t => log.error("HenkilöOid {} Virtatietojen tallennuksessa tapahtui virhe {}", r.oppijanumero, t) }
     }
+  }
+
+  def removeExisting(r: VirtaResult): Future[Unit] = {
+
+    implicit val timeout: Timeout = Timeout(1.minute)
+
+    val virtaOpiskeluOikeudetF: Future[Seq[Opiskeluoikeus with Identified[UUID]]] = (opiskeluoikeusActor ? OpiskeluoikeusQuery(Some(r.oppijanumero)))
+      .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
+      .map(_.filter(p => Oids.cscOrganisaatioOid.matches(p.source)))
+
+    val virtaSuorituksetF: Future[Seq[Suoritus with Identified[UUID]]] = (suoritusActor ? SuoritusQuery(Some(r.oppijanumero)))
+      .mapTo[Seq[Suoritus with Identified[UUID]]]
+      .map(_.filter(p => Oids.cscOrganisaatioOid.matches(p.source)))
+
+    for {
+      virtaOpiskeluOikeudet <- virtaOpiskeluOikeudetF
+      virtaSuoritukset <- virtaSuorituksetF
+      _ <- Future.sequence(virtaOpiskeluOikeudet.map(o => opiskeluoikeusActor ? DeleteResource(o.id, "virta-actor")))
+      _ <- Future.sequence(virtaSuoritukset.map(s => suoritusActor ? DeleteResource(s.id, "virta-actor")))
+    } yield ()
   }
 
   import akka.pattern.ask

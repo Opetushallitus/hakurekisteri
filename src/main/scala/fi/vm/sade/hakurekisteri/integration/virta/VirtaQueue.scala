@@ -24,6 +24,7 @@ case class VirtaStatus(lastProcessDone: Option[DateTime] = None,
                        queueLength: Long,
                        status: Status)
 case class QueryProsessed(q: VirtaQuery)
+case class RefreshOppijaFromVirta(oppijaOid: String)
 
 object RescheduleVirtaProcessing
 object StartVirtaProcessing
@@ -50,8 +51,20 @@ class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, opp
   }
 
   def receive: Receive = {
+
+    //this is hit only when preStart (see below) sends a VirtaQuery
     case q: VirtaQuery if !virtaQueue.contains(q) =>
       virtaQueue.add(q)
+
+    case r: RefreshOppijaFromVirta =>
+      val q = VirtaQuery(r.oppijaOid, None)
+      if (processing) {
+        log.info("Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue", r.oppijaOid)
+        virtaQueue.add(q)
+      } else {
+        log.info("Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ", r.oppijaOid)
+        virtaActor.actor ! q
+      }
 
     case StartVirtaProcessing if !processing =>
       log.info("started to process virta queries")
@@ -86,7 +99,7 @@ class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, opp
 
   override def preStart(): Unit = {
     val trigger: Trigger = Trigger((oid, hetu, hakuOid, personOidsWithAliases) =>
-      if (!isYsiHetu(hetu))
+      if (!isTilapainenHetu(hetu))
         (hakuActor ? GetHaku(hakuOid))(1.hour).mapTo[Haku].map(haku => haku.kkHaku).recoverWith {
           case t: HakuNotFoundException => Future.successful(true)
         }.map(isKkHaku => if (isKkHaku) self ! VirtaQuery(oid, Some(hetu)))
@@ -95,6 +108,6 @@ class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, opp
     super.preStart()
   }
 
-  val ysiHetu = "\\d{6}[+-AB]9\\d{2}[0123456789ABCDEFHJKLMNPRSTUVWXY]"
-  def isYsiHetu(hetu: String): Boolean = hetu.matches(ysiHetu)
+  val tilapainenHetu = "\\d{6}[+-AB]9\\d{2}[0123456789ABCDEFHJKLMNPRSTUVWXY]"
+  def isTilapainenHetu(hetu: String): Boolean = hetu.matches(tilapainenHetu)
 }
