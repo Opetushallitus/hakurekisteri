@@ -31,7 +31,20 @@ case class KoskiOpiskeluoikeus(
     oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
 }
 
-case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila])
+case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
+  def determineSuoritusTila: String = {
+    opiskeluoikeusjaksot match {
+      case o if o.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
+      case o if o.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
+      case o if o.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
+      case o if o.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
+      case o if o.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
+      case o if o.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
+      // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
+      case _ => "KESKEN"
+    }
+  }
+}
 
 case class KoskiTila(alku: String, tila:KoskiKoodi)
 

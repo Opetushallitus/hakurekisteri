@@ -76,7 +76,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-  private def removeCurrentTypeOpiskeluoikeusByKoulutusAndTilaAndTyyppi(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, tila: String, suoritusTyyppi: String): Boolean = {
+  private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, tila: String, suoritusTyyppi: String): Boolean = {
     var isRemovable: Boolean = false
     if (opiskeluoikeus.tyyppi.get.koodiarvo.equals(koulutusTyyppi)) {
       var isTila: Boolean = false
@@ -121,7 +121,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     })
     // Poistetaan VALMA-suorituksista kaikki, joissa tila on "katsotaaneronneeksi".
     logger.info("Tarkistetaan, löytyykö opiskelijalta {} VALMA-suorituksia tilassa: katsotaaneronneeksi.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
-    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeCurrentTypeOpiskeluoikeusByKoulutusAndTilaAndTyyppi(henkiloOid, oo, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma"))
+    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedOpiskeluoikeus(henkiloOid, oo, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma"))
     viimeisimmatOpiskeluoikeudet
   }
 
