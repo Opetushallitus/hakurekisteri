@@ -76,25 +76,23 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-  private def removeCurrentTypeOpiskeluoikeusByKoulutusAndTilaAndTyyppi(henkiloOid: Option[String], tataTyyppia: Seq[KoskiOpiskeluoikeus], koulutusTyyppi: String, tila: String, suoritusTyyppi: String): Seq[KoskiOpiskeluoikeus] = {
-    var tataTyyppiaPoistettavat: Seq[KoskiOpiskeluoikeus] = Seq()
-    tataTyyppia.foreach { tt =>
-      if (tt.tyyppi.get.koodiarvo.equals(koulutusTyyppi)) {
-        var isTila: Boolean = false
-        var isSuoritusTyyppi: Boolean = false
-        tt.tila.opiskeluoikeusjaksot.map(ooj => {
-          if (ooj.tila.koodiarvo.equals(tila)) isTila = true
-        })
-        tt.suoritukset.map(s => {
-          if (s.tyyppi.get.koodiarvo.equals(suoritusTyyppi)) isSuoritusTyyppi = true
-        })
-        if (isTila && isSuoritusTyyppi) {
-          logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, tila)
-          tataTyyppiaPoistettavat = tataTyyppiaPoistettavat :+ tt
-        }
-      }
+  private def removeCurrentTypeOpiskeluoikeusByKoulutusAndTilaAndTyyppi(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, tila: String, suoritusTyyppi: String): Boolean = {
+    var isRemovable: Boolean = false
+    if (opiskeluoikeus.tyyppi.get.koodiarvo.equals(koulutusTyyppi)) {
+      var isTila: Boolean = false
+      var isSuoritusTyyppi: Boolean = false
+      opiskeluoikeus.tila.opiskeluoikeusjaksot.map(ooj => {
+        if (ooj.tila.koodiarvo.equals(tila)) isTila = true
+      })
+      opiskeluoikeus.suoritukset.map(s => {
+        if (s.tyyppi.isDefined && s.tyyppi.get.koodiarvo.equals(suoritusTyyppi)) isSuoritusTyyppi = true
+      })
+      if (isTila && isSuoritusTyyppi) {
+        logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, tila)
+        isRemovable = true
+      } else isRemovable = false
     }
-    tataTyyppiaPoistettavat
+    isRemovable
   }
 
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
@@ -119,10 +117,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
         }
       }
-      // Poistetaan VALMA-suorituksista kaikki, joissa tila on "katsotaaneronneeksi".
-      logger.info("Tarkistetaan, löytyykö opiskelijalta {} VALMA-suorituksia tilassa: katsotaaneronneeksi.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
-      viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.diff(removeCurrentTypeOpiskeluoikeusByKoulutusAndTilaAndTyyppi(henkiloOid, tataTyyppia, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma"))
+
     })
+    // Poistetaan VALMA-suorituksista kaikki, joissa tila on "katsotaaneronneeksi".
+    logger.info("Tarkistetaan, löytyykö opiskelijalta {} VALMA-suorituksia tilassa: katsotaaneronneeksi.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
+    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeCurrentTypeOpiskeluoikeusByKoulutusAndTilaAndTyyppi(henkiloOid, oo, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma"))
     viimeisimmatOpiskeluoikeudet
   }
 
