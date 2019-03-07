@@ -1946,6 +1946,36 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal ("0")
   }
 
+  it should "store only keskenoleva VALMA-koulutus as kesken and skip katsotaaneronneeksi-kouluts before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_keskeytynyt_vuonna_2018.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
+    System.out.println(suoritukset)
+    suoritukset.size should equal (1)
+    suoritukset.head should equal ("KESKEN")
+  }
+
+  it should "store only keskenoleva VALMA-koulutus as keskeytynyt and skip katsotaaneronneeksi-kouluts after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_keskeytynyt_vuonna_2018.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
+    System.out.println(suoritukset)
+    suoritukset.size should equal (1)
+    suoritukset.head should equal ("KESKEYTYNYT")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
