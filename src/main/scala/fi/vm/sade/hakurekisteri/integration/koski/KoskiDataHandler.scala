@@ -90,7 +90,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       if (isTila && isSuoritusTyyppi) {
         logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, tila)
         isRemovable = true
-      } else isRemovable = false
+      }
     }
     isRemovable
   }
