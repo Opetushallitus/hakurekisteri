@@ -69,7 +69,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
   val koulutuksenAlkaminenSyksy2014 = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
-  val sizeLimitForFetchingByPersons = 100
+  val sizeLimitForFetchingByPersons = 1
   val resourceQuerySize = 5000
 
   implicit val defaultTimeout: Timeout = 15.minutes
@@ -90,15 +90,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(hakuOid)
     personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(tutkintovuodetHakemuksilta.keySet)
     valmistumishetket <- valmistumiset(personOidsWithAliases, Seq())
-    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-      personOidsWithAliases.diff(valmistumishetket.keySet),
-      Seq()
-    )
-    vastaanottohetket <- vastaanotot(
-      personOidsWithAliases
-        .diff(valmistumishetket.keySet)
-        .diff(opiskeluoikeuksienAlkamiset.keySet)
-    )
+    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(personOidsWithAliases, Seq())
+    vastaanottohetket <- vastaanotot(personOidsWithAliases)
   } yield {
     tutkintovuodetHakemuksilta.map {
       case (henkiloOid, tutkintovuosi) =>
@@ -160,7 +153,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                                     hakuOid: String,
                                     hakukohdeOid: Option[String]): Future[Map[String, Int]] = {
     val hakemukset = {
-      if (henkiloOids.size <= sizeLimitForFetchingByPersons) {
+      if (henkiloOids.size <= sizeLimitForFetchingByPersons || hakukohdeOid.isEmpty) {
         hakemusService.hakemuksetForPersonsInHaku(henkiloOids, hakuOid)
       } else {
         hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, hakukohdeOid)
