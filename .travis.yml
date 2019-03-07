@@ -21,7 +21,7 @@ env:
 
 install:
   - export TZ=Europe/Helsinki
-  - git clone --single-branch --branch jdk11 https://github.com/Opetushallitus/ci-tools.git
+  - git clone https://github.com/Opetushallitus/ci-tools.git
   - source ci-tools/common/setup-tools.sh
   - export ARTIFACT_NAME="suoritusrekisteri"
   - nvm use node 6
