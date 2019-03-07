@@ -101,6 +101,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case None => request
       }
 
+      internalClient.client.getConfig.getCookieStore.remove(_.name().toLowerCase == jSessionName.toLowerCase)
       (user, password, basicAuth) match{
         case (Some(un), Some(pw), false) =>
           for (

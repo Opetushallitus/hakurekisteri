@@ -283,7 +283,7 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
 
   override def flushChannelPoolPartitions(predicate: Predicate[AnyRef]): Unit = ???
 
-  override def getConfig: AsyncHttpClientConfig = ???
+  override def getConfig: AsyncHttpClientConfig = new DefaultAsyncHttpClientConfig.Builder().build()
 }
 
 case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture[T]{
