@@ -190,12 +190,12 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
 
   private def ataruhakemukset(params: AtaruSearchParams): Future[List[HakijaHakemus]] = {
     val p = params.hakuOid.fold[Map[String, String]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
-      params.hakukohdeOids.fold[Map[String, String]](Map.empty)(oids => Map("hakukohdeOids" -> oids.mkString(","))) ++
-      params.hakijaOids.fold[Map[String, String]](Map.empty)(oids => Map("hakijaOids" -> oids.mkString(","))) ++
       params.modifiedAfter.fold[Map[String, String]](Map.empty)(date => Map("modifiedAfter" -> date))
+
+    val args = List(p) ++ params.hakukohdeOids.map(oid => Map("hakukohdeOids" -> oid)) ++ params.hakijaOids.map(oid => Map("hakijaOids" -> oid))
     for {
       ataruHakemusDtos <- ataruHakemusClient
-        .readObject[List[AtaruHakemusDto]]("ataru.applications", p)(acceptedResponseCode = 200, maxRetries = 2)
+        .readObject[List[AtaruHakemusDto]]("ataru.applications", args:_*)(acceptedResponseCode = 200, maxRetries = 2)
       ataruHenkilot <- oppijaNumeroRekisteri.getByOids(ataruHakemusDtos.map(_.personOid).toSet)
       ataruHakemukset <- enrichAtaruHakemukset(ataruHakemusDtos, ataruHenkilot)
     } yield params.organizationOid.fold(ataruHakemukset)(oid => ataruHakemukset.filter(hasAppliedToOrganization(_, oid)))
