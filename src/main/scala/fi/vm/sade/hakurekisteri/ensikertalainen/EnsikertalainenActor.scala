@@ -69,7 +69,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
   val koulutuksenAlkaminenSyksy2014 = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
-  val sizeLimitForFetchingByPersons = 1
+  val sizeLimitForFetchingByPersons = 100
   val resourceQuerySize = 5000
 
   implicit val defaultTimeout: Timeout = 15.minutes
