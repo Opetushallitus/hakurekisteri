@@ -76,18 +76,22 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-  private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, tila: String, suoritusTyyppi: String): Boolean = {
+  private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, tila: String, suoritusTyyppi: String, minOpintopisteet: Int = 0): Boolean = {
     var isRemovable: Boolean = false
     if (opiskeluoikeus.tyyppi.get.koodiarvo.equals(koulutusTyyppi)) {
       var isTila: Boolean = false
       var isSuoritusTyyppi: Boolean = false
+      var isEnoughOpintopisteita: Boolean = true
       opiskeluoikeus.tila.opiskeluoikeusjaksot.map(ooj => {
         if (ooj.tila.koodiarvo.equals(tila)) isTila = true
       })
       opiskeluoikeus.suoritukset.map(s => {
-        if (s.tyyppi.isDefined && s.tyyppi.get.koodiarvo.equals(suoritusTyyppi)) isSuoritusTyyppi = true
+        if (s.tyyppi.isDefined && s.tyyppi.get.koodiarvo.equals(suoritusTyyppi)) {
+          isSuoritusTyyppi = true
+          isEnoughOpintopisteita = s.opintopisteitaVahintaan(minOpintopisteet)
+        }
       })
-      if (isTila && isSuoritusTyyppi) {
+      if (isTila && isSuoritusTyyppi && !isEnoughOpintopisteita) {
         logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, tila)
         isRemovable = true
       }
@@ -119,9 +123,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
 
     })
-    // Poistetaan VALMA-suorituksista kaikki, joissa tila on "katsotaaneronneeksi".
-    logger.info("Tarkistetaan, löytyykö opiskelijalta {} VALMA-suorituksia tilassa: katsotaaneronneeksi.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
-    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedOpiskeluoikeus(henkiloOid, oo, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma"))
+    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on "katsotaaneronneeksi".
+    logger.info("Tarkistetaan, löytyykö opiskelijalta alle 30 suorituspisteen {} VALMA-suorituksia tilassa: katsotaaneronneeksi.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
+    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedOpiskeluoikeus(henkiloOid, oo, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma", 30))
     viimeisimmatOpiskeluoikeudet
   }
 

@@ -1946,7 +1946,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal ("0")
   }
 
-  it should "store only kesken oleva VALMA-suoritus as kesken and skip katsotaaneronneeksi-kouluts before deadline date" in {
+  it should "store only kesken oleva VALMA-suoritus as kesken and skip katsotaaneronneeksi-koulutus before deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_keskeytynyt_vuonna_2018.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -1958,10 +1958,9 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
     suoritukset.size should equal (1)
     suoritukset.head should equal ("KESKEN")
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
   }
 
-  it should "store only kesken oleva VALMA-suoritus as keskeytynyt and skip katsotaaneronneeksi-kouluts after deadline date" in {
+  it should "store only kesken oleva VALMA-suoritus as keskeytynyt and skip katsotaaneronneeksi-koulutus after deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_keskeytynyt_vuonna_2018.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -1971,6 +1970,68 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
+    suoritukset.size should equal (1)
+    suoritukset.head should equal ("KESKEYTYNYT")
+  }
+
+  it should "store katsotaaneronneeksi VALMA-suoritus with 30 opintopistettä as kesken before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_30_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
+    suoritukset.size should equal (2)
+    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.29176843356'".as[String]))
+    suoritukset.head should equal ("KESKEN")
+    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
+    suoritukset.head should equal ("KESKEN")
+  }
+
+  it should "store katsotaaneronneeksi VALMA-suoritus with 30 opintopistettä as keskeytynyt after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_30_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
+    suoritukset.size should equal (2)
+    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.29176843356'".as[String]))
+    suoritukset.head should equal ("KESKEYTYNYT")
+    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
+    suoritukset.head should equal ("KESKEYTYNYT")
+  }
+
+  it should "not store katsotaaneronneeksi VALMA-suoritus with 29 opintopistettä before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_29_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
+    suoritukset.size should equal (1)
+    suoritukset.head should equal ("KESKEN")
+  }
+
+  it should "not store katsotaaneronneeksi VALMA-suoritus with 29 opintopistettä after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_29_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (1)
     suoritukset.head should equal ("KESKEYTYNYT")
   }
