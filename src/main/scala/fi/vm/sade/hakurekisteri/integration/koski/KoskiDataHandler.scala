@@ -76,14 +76,15 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-  private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, tila: String, suoritusTyyppi: String, minOpintopisteet: Int = 0): Boolean = {
+  private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, suoritusTyyppi: String, minOpintopisteet: Int): Boolean = {
+    val keskeytyneetTilat: Seq[String] = Seq("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu")
     var isRemovable: Boolean = false
     if (opiskeluoikeus.tyyppi.get.koodiarvo.equals(koulutusTyyppi)) {
-      var isTila: Boolean = false
+      var isKeskeytynytTila: Boolean = false
       var isSuoritusTyyppi: Boolean = false
       var isEnoughOpintopisteita: Boolean = true
       opiskeluoikeus.tila.opiskeluoikeusjaksot.map(ooj => {
-        if (ooj.tila.koodiarvo.equals(tila)) isTila = true
+        if (keskeytyneetTilat.contains(ooj.tila.koodiarvo)) isKeskeytynytTila = true
       })
       opiskeluoikeus.suoritukset.map(s => {
         if (s.tyyppi.isDefined && s.tyyppi.get.koodiarvo.equals(suoritusTyyppi)) {
@@ -91,8 +92,8 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           isEnoughOpintopisteita = s.opintopisteitaVahintaan(minOpintopisteet)
         }
       })
-      if (isTila && isSuoritusTyyppi && !isEnoughOpintopisteita) {
-        logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, tila)
+      if (isKeskeytynytTila && isSuoritusTyyppi && !isEnoughOpintopisteita) {
+        logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} keskeytynyt-tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, keskeytyneetTilat)
         isRemovable = true
       }
     }
@@ -123,9 +124,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
 
     })
-    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on "katsotaaneronneeksi".
-    logger.info("Tarkistetaan, löytyykö opiskelijalta alle 30 suorituspisteen {} VALMA-suorituksia tilassa: katsotaaneronneeksi.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
-    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedOpiskeluoikeus(henkiloOid, oo, "ammatillinenkoulutus", "katsotaaneronneeksi", "valma", 30))
+    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu".
+    logger.info("Tarkistetaan, löytyykö opiskelijalta alle 30 suorituspisteen {} VALMA-suorituksia keskeytynyt-tilassa.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
+    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedOpiskeluoikeus(henkiloOid, oo, "ammatillinenkoulutus", "valma", 30))
     viimeisimmatOpiskeluoikeudet
   }
 
