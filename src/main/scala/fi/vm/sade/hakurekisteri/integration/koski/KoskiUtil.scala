@@ -35,4 +35,6 @@ object KoskiUtil {
 
   val ZERO = BigDecimal("0")
   val KOLMEKYMMENTÄ = BigDecimal("30")
+
+  val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 }

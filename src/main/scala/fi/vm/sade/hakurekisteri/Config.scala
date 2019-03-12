@@ -95,7 +95,7 @@ object Oids {
   val kansanopistoKomoOid = KomoOids.lisapistekoulutus.kansanopisto
   val valmaKomoOid = KomoOids.lisapistekoulutus.valma
   val telmaKomoOid = KomoOids.lisapistekoulutus.telma
-
+  val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
 }
 
 class DefaultConfig extends Config {

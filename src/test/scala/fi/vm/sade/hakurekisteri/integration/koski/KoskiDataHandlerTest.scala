@@ -665,10 +665,9 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     virallinensuoritus.komo shouldEqual Oids.perusopetuksenOppiaineenOppimaaraOid
 
     val luokkaAste = Some(9)
-    val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 
     val foo = virallinensuoritus.komo.equals(Oids.perusopetusKomoOid)
-    val bar = suoritusarvosanat.exists(_.luokkataso.getOrElse("").startsWith("9")) || luokkaAste.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE)
+    val bar = suoritusarvosanat.exists(_.luokkataso.getOrElse("").startsWith("9")) || luokkaAste.getOrElse("").equals(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE)
     val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = foo && bar
 
     if (virallinensuoritus.komo.equals("luokka") || !(peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !virallinensuoritus.komo.equals(Oids.perusopetusKomoOid))) {
@@ -876,12 +875,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val päättötodistus = res.filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid)).head
 
-    val AIKUISTENPERUS_LUOKKAASTE = "AIK"
     res.foreach {
       case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
 
         val peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus = useSuoritus.komo.equals(Oids.perusopetusKomoOid) && (res.exists(_.luokkataso.getOrElse("").startsWith("9"))
-          || luokkaTaso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
+          || luokkaTaso.getOrElse("").equals(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE))
         if (!useSuoritus.komo.equals("luokka") && (peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
           peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus shouldBe true
           useSuoritus.tila shouldEqual "KESKEN"
