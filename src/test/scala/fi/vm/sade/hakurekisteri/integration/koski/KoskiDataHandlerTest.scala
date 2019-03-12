@@ -2098,6 +2098,44 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.head should equal ("KESKEYTYNYT")
   }
 
+  it should "store suoritus without arvosanat as keskeytynyt if marked as jää luokalle in Koski 30 days before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_ysiluokka_jaa_luokalle.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    val arvosanat1 = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat1.head should equal ("0")
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val suoritukset = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritukset.size should equal (1)
+    suoritukset.head should equal ("KESKEYTYNYT")
+    val arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal ("0")
+  }
+
+  it should "store suoritus without arvosanat as keskeytynyt if marked as jää luokalle in Koski 10 days before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_ysiluokka_jaa_luokalle.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(10)
+
+    val arvosanat1 = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat1.head should equal ("0")
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val suoritukset = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritukset.size should equal (1)
+    suoritukset.head should equal ("KESKEYTYNYT")
+    val arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal ("0")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
