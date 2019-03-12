@@ -74,6 +74,21 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
+  private def shouldSaveSuoritus(suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+    komoOid match {
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+        //check oppiaine failures
+        lazy val hasFailures = suoritus.osasuoritukset
+          .filter(_.arviointi.nonEmpty)
+          .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
+        suoritus.vahvistus.isDefined || hasFailures
+      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
+      case _ => true
+    }
+  }
+
   private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, suoritusTyyppi: String, minOpintopisteet: Int): Boolean = {
     val keskeytyneetTilat: Seq[String] = Seq("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu")
     var isRemovable: Boolean = false
@@ -125,7 +140,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu".
     logger.info("Tarkistetaan, löytyykö opiskelijalta alle 30 suorituspisteen {} VALMA-suorituksia keskeytynyt-tilassa.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedOpiskeluoikeus(henkiloOid, oo, "ammatillinenkoulutus", "valma", 30))
-    viimeisimmatOpiskeluoikeudet
+    // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
+    viimeisimmatOpiskeluoikeudet.map { oo =>
+      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(s, oo)))
+    }
   }
 
   private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String) = {

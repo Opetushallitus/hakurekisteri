@@ -235,27 +235,12 @@ class KoskiSuoritusArvosanaParser {
     failed && !succeeded
   }
 
-  private def shouldSaveSuoritus(suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus) //getKomoOid(suoritus, opiskeluoikeus)
-    komoOid match {
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
-        //check oppiaine failures
-        lazy val hasFailures = suoritus.osasuoritukset
-          .filter(_.arviointi.nonEmpty)
-          .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
-        suoritus.vahvistus.isDefined || hasFailures
-      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
-      case _ => true
-    }
-  }
-
   private def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     var lahdeArvot: Map[String, String] = Map[String, String]()
     for {
-      suoritus <- suoritukset if shouldSaveSuoritus(suoritus, opiskeluoikeus)
+      suoritus <- suoritukset
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
       val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
