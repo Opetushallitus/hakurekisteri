@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
+import fi.vm.sade.hakurekisteri.Oids
+
 import scala.math.BigDecimal
 
 case class MuuttuneetOppijatResponse(result: Seq[String], mayHaveMore: Boolean, nextCursor: String)
@@ -27,8 +29,11 @@ case class KoskiOpiskeluoikeus(
                                 tyyppi: Option[KoskiKoodi],
                                 aikaleima: Option[String]) {
 
-  def isStateContainingOpiskeluoikeus =
+  def isStateContainingOpiskeluoikeus: Boolean =
     oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
+
+  def isAikuistenPerusopetus: Boolean =
+    tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")
 }
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
@@ -76,6 +81,51 @@ case class KoskiSuoritus(
       .map(_.arvo.getOrElse(BigDecimal(0)))
       .sum
     sum >= min
+  }
+
+  //def getKomoOid(opiskeluoikeus: KoskiOpiskeluoikeus): String = {
+  def getKomoOid(isAikuistenPerusOpetus: Boolean): String = {
+    tyyppi match {
+      case Some(k) =>
+        if(isAikuistenPerusOpetus && k.koodiarvo == "perusopetuksenoppiaineenoppimaara") {
+          Oids.perusopetuksenOppiaineenOppimaaraOid
+        } else {
+          k.koodiarvo match {
+            case "perusopetuksenoppimaara" | "perusopetuksenoppiaineenoppimaara" | "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
+            case "perusopetuksenvuosiluokka" => Oids.perusopetusLuokkaKomoOid
+            case "valma" => Oids.valmaKomoOid
+            case "telma" => Oids.telmaKomoOid
+            case "luva" => Oids.lukioonvalmistavaKomoOid
+            case "perusopetuksenlisaopetus" => Oids.lisaopetusKomoOid
+            case "ammatillinentutkinto" =>
+              koulutusmoduuli.koulutustyyppi match {
+                case Some(KoskiKoodi("12", _)) => Oids.erikoisammattitutkintoKomoOid
+                case Some(KoskiKoodi("11", _)) => Oids.ammatillinentutkintoKomoOid
+                case _ => Oids.ammatillinenKomoOid
+              }
+            case "lukionoppimaara" => Oids.lukioKomoOid
+            case _ => Oids.DUMMYOID
+          }
+        }
+      case _ => Oids.DUMMYOID
+    }
+  }
+
+  //def getLuokkataso(opiskeluoikeus: KoskiOpiskeluoikeus): Option[String] = {
+  def getLuokkataso(isAikuistenPerusOpetus: Boolean): Option[String] = {
+    tyyppi match {
+      case Some(k) =>
+        if((isAikuistenPerusOpetus && k.koodiarvo == "perusopetuksenoppiaineenoppimaara")
+          || k.koodiarvo == "aikuistenperusopetuksenoppimaara") {
+          Some(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE)
+        } else {
+          k.koodiarvo match {
+            case "perusopetuksenoppimaara" | "perusopetuksenvuosiluokka" => koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo))
+            case _ => None
+          }
+        }
+      case _ => None
+    }
   }
 }
 
