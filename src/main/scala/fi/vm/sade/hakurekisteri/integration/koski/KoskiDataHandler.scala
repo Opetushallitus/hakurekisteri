@@ -90,14 +90,13 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def removeUnwantedOpiskeluoikeus(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus, koulutusTyyppi: String, suoritusTyyppi: String, minOpintopisteet: Int): Boolean = {
-    val keskeytyneetTilat: Seq[String] = Seq("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu")
     var isRemovable: Boolean = false
     if (opiskeluoikeus.tyyppi.get.koodiarvo.equals(koulutusTyyppi)) {
       var isKeskeytynytTila: Boolean = false
       var isSuoritusTyyppi: Boolean = false
       var isEnoughOpintopisteita: Boolean = true
       opiskeluoikeus.tila.opiskeluoikeusjaksot.map(ooj => {
-        if (keskeytyneetTilat.contains(ooj.tila.koodiarvo)) isKeskeytynytTila = true
+        if (KoskiUtil.keskeytyneetTilat.contains(ooj.tila.koodiarvo)) isKeskeytynytTila = true
       })
       opiskeluoikeus.suoritukset.map(s => {
         if (s.tyyppi.isDefined && s.tyyppi.get.koodiarvo.equals(suoritusTyyppi)) {

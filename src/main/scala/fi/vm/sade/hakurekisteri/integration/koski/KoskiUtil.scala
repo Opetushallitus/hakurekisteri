@@ -37,4 +37,6 @@ object KoskiUtil {
   val KOLMEKYMMENTÄ = BigDecimal("30")
 
   val AIKUISTENPERUS_LUOKKAASTE = "AIK"
+
+  val keskeytyneetTilat: Seq[String] = Seq("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu")
 }
