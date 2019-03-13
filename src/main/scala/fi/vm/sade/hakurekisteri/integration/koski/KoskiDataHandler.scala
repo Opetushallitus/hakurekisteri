@@ -103,7 +103,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         }
       })
       if (isKeskeytynyt && isValmaAlle30Pistetta) {
-        logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-opiskeluoikeus keskeytynyt-tilassa. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
+        logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt-tilassa. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
         isRemovable = true
       }
     }

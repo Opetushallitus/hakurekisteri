@@ -2134,6 +2134,30 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal ("0")
   }
 
+  it should "not store anything if only one katsotaaneronneeksi VALMA-suoritus with 29 opintopistettä before or after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_vain_katsotaaneronneeksi.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+    var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset.head should equal("0")
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+    suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset.head should equal("0")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
