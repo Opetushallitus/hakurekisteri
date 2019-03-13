@@ -105,7 +105,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         }
       })
       if (isKeskeytynytTila && isSuoritusTyyppi && !isEnoughOpintopisteita) {
-        logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} keskeytynyt-tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, keskeytyneetTilat)
+        logger.info("Oppijalla {} löytyi {}, suoritustyyppi {} keskeytynyt-tilassa {}. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"), koulutusTyyppi, suoritusTyyppi, KoskiUtil.keskeytyneetTilat)
         isRemovable = true
       }
     }
@@ -134,7 +134,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
         }
       }
-
     })
     // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu".
     logger.info("Tarkistetaan, löytyykö opiskelijalta alle 30 suorituspisteen {} VALMA-suorituksia keskeytynyt-tilassa.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))

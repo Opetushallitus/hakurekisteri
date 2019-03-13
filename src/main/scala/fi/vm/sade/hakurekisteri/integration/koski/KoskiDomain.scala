@@ -83,7 +83,6 @@ case class KoskiSuoritus(
     sum >= min
   }
 
-  //def getKomoOid(opiskeluoikeus: KoskiOpiskeluoikeus): String = {
   def getKomoOid(isAikuistenPerusOpetus: Boolean): String = {
     tyyppi match {
       case Some(k) =>
@@ -111,7 +110,6 @@ case class KoskiSuoritus(
     }
   }
 
-  //def getLuokkataso(opiskeluoikeus: KoskiOpiskeluoikeus): Option[String] = {
   def getLuokkataso(isAikuistenPerusOpetus: Boolean): Option[String] = {
     tyyppi match {
       case Some(k) =>
@@ -145,7 +143,6 @@ case class KoskiOsasuoritus(
   }
 
   def isLukioSuoritus: Boolean = {
-
     koulutusmoduuli.tunniste.map(_.koodiarvo) match {
       case Some(koodi) =>
         KoskiUtil.lukioaineetRegex.flatMap(_.findFirstIn(koodi)).nonEmpty
@@ -160,7 +157,6 @@ case class KoskiOsasuoritus(
       case _ => false
     }
   }
-
 }
 
 case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String]) {
