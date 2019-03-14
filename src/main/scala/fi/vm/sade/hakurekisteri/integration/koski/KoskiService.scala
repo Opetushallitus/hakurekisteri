@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import java.util.{Date, TimeZone}
+import java.util.{TimeZone}
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
@@ -15,7 +15,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{FiniteDuration, _}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class KoskiService(virkailijaRestClient: VirkailijaRestClient,
                    oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
@@ -95,26 +95,28 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     */
   override def updateAktiivisetHaut(): () => Unit = { () =>
     var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
-    logger.info(("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys."))
+    logger.info("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys.")
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.hours)
     })
-    logger.info(("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis."))
+    logger.info("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis.")
     haut = aktiivisetKKYhteisHakuOidit.get()
-    logger.info(("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys."))
+    logger.info("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys.")
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten korkeakouluhakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.hours)
     })
-    logger.info(("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis."))
+    logger.info("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis.")
   }
 
   override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = {
     def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
-      val personOids: Seq[String] = personOidsSet.toSeq
-      logger.info(s"Saatiin hakemuspalvelusta ${personOids.length} oppijanumeroa haulle $hakuOid")
-      handleHenkiloUpdate(personOids, params)
+      val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(personOidsSet),
+        Duration(1, TimeUnit.MINUTES))
+      val aliasCount: Int = personOidsWithAliases.henkiloOidsWithLinkedOids.size - personOidsSet.size
+      logger.info(s"Saatiin hakemuspalvelusta ${personOidsSet.size} oppijanumeroa ja ${aliasCount} aliasta haulle $hakuOid")
+      handleHenkiloUpdate(personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq, params)
     }
     val now = System.currentTimeMillis()
     synchronized {
