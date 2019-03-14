@@ -14,7 +14,7 @@ class KoskiOpiskelijaParser {
     logger.debug(s"suoritusLuokka=$suoritusLuokka, henkiloOid=$henkiloOid")
     val alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
-    val oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitos(suoritusLuokka)
+    val oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitosAndLuokka(suoritusLuokka)
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false, henkiloOid=$henkiloOid")
@@ -40,7 +40,7 @@ class KoskiOpiskelijaParser {
     op
   }
 
-  def detectOppilaitos(suoritus: SuoritusLuokka): OppilaitosAndLuokka = {
+  def detectOppilaitosAndLuokka(suoritus: SuoritusLuokka): OppilaitosAndLuokka = {
     val oppilaitoksesAndLuokkas: Map[String, OppilaitosAndLuokka] = Map(
       Oids.lukioKomoOid                   -> OppilaitosAndLuokka("L", suoritus.suoritus.myontaja, Oids.lukioKomoOid),
       Oids.lukioonvalmistavaKomoOid       -> OppilaitosAndLuokka("ML" , suoritus.suoritus.myontaja, Oids.lukioonvalmistavaKomoOid),

@@ -55,14 +55,14 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   }
 
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
-    opiskelijaParser.detectOppilaitos(
+    opiskelijaParser.detectOppilaitosAndLuokka(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
     ) should equal (OppilaitosAndLuokka("10", "orgId", "10"))
   }
 
   it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
-    opiskelijaParser.detectOppilaitos(
+    opiskelijaParser.detectOppilaitosAndLuokka(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
     ) should equal (OppilaitosAndLuokka("10", "orgId", "10C"))
