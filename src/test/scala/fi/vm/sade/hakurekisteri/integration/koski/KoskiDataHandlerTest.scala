@@ -919,27 +919,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val vahvistus3 = KoskiVahvistus("2000-05-02", KoskiOrganisaatio(Some("")))
 
     val ks1 = KoskiSuoritus(luokka = Some("9"),
-                           koulutusmoduuli = koskikomo,
-                            tyyppi = None,
-                            kieli = None,
-                            pakollinen = None,
-                            toimipiste = None,
-                            vahvistus = Some(vahvistus),
-                            suorituskieli = None,
-                            arviointi = None,
-                            yksilöllistettyOppimäärä = None,
-                            osasuoritukset = Seq(),
-                            ryhmä = None,
-                            alkamispäivä = None,
-                            jääLuokalle = None)
-
-    val ks2 = KoskiSuoritus(luokka = Some("9"),
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
       pakollinen = None,
       toimipiste = None,
-      vahvistus = Some(vahvistus2),
+      vahvistus = Some(vahvistus),
       suorituskieli = None,
       arviointi = None,
       yksilöllistettyOppimäärä = None,
@@ -948,20 +933,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       alkamispäivä = None,
       jääLuokalle = None)
 
-    val ks3 = KoskiSuoritus(luokka = Some("9"),
-      koulutusmoduuli = koskikomo,
-      tyyppi = None,
-      kieli = None,
-      pakollinen = None,
-      toimipiste = None,
-      vahvistus = Some(vahvistus3),
-      suorituskieli = None,
-      arviointi = None,
-      yksilöllistettyOppimäärä = None,
-      osasuoritukset = Seq(),
-      ryhmä = None,
-      alkamispäivä = None,
-      jääLuokalle = None)
+    val ks2 = ks1.copy(vahvistus = Some(vahvistus2))
+    val ks3 = ks1.copy(vahvistus = Some(vahvistus3))
 
     val suoritukset: Seq[KoskiSuoritus] = Seq(ks1,ks2,ks3)
     val maybedate: Option[LocalDate] = suoritusParser.getEndDateFromLastNinthGrade(suoritukset)

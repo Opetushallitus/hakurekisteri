@@ -34,7 +34,6 @@ object KoskiUtil {
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SV_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 
   val ZERO = BigDecimal("0")
-  val KOLMEKYMMENTÄ = BigDecimal("30")
 
   val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 
