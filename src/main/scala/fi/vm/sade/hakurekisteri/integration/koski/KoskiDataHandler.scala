@@ -92,22 +92,20 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    var isRemovable: Boolean = false
-    if (opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus")) {
-      var isKeskeytynyt: Boolean = false
-      var isValmaAlle30Pistetta: Boolean = false
-      opiskeluoikeus.tila.opiskeluoikeusjaksot.foreach(ooj => {
-        if (KoskiUtil.keskeytyneetTilat.contains(ooj.tila.koodiarvo)) isKeskeytynyt = true
-      })
-      opiskeluoikeus.suoritukset.foreach(s => {
-        if (s.tyyppi.isDefined && s.tyyppi.get.koodiarvo.equals("valma") && !s.opintopisteitaVahintaan(30)) {
-          isValmaAlle30Pistetta= true
-        }
-      })
-      if (isKeskeytynyt && isValmaAlle30Pistetta) {
-        logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt-tilassa. Filtteröidään suoritus.", henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
-        isRemovable = true
-      }
+    val keskeytynyt: KoskiTila => Boolean = koskiTila =>
+      KoskiUtil.keskeytyneetTilat.contains(koskiTila.tila.koodiarvo)
+
+    val alle30PisteenValma: KoskiSuoritus => Boolean = koskiSuoritus =>
+      koskiSuoritus.tyyppi.exists(_.koodiarvo == "valma") &&
+        !koskiSuoritus.opintopisteitaVahintaan(30)
+
+    val isRemovable = opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
+      opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(keskeytynyt) &&
+      opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
+
+    if (isRemovable) {
+      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt-tilassa. Filtteröidään suoritus.",
+        henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
   }
