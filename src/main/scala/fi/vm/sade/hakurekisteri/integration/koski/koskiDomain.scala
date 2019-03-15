@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.Oids
 
+import scala.collection.immutable.ListMap
 import scala.math.BigDecimal
 
 case class MuuttuneetOppijatResponse(result: Seq[String], mayHaveMore: Boolean, nextCursor: String)
@@ -38,17 +39,27 @@ case class KoskiOpiskeluoikeus(
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
   def determineSuoritusTila: String = {
-    opiskeluoikeusjaksot match {
-      case o if o.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
-      case o if o.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
-      case o if o.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
-      case o if o.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
-      case o if o.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
-      case o if o.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
-      // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
-      case _ => "KESKEN"
-    }
+    KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila.find { koski2Sure =>
+      opiskeluoikeusjaksot.exists(_.tila.koodiarvo == koski2Sure._1)
+    }.getOrElse {
+      throw new IllegalArgumentException(s"Ei löytynyt mäppäystä Koski-tilasta Suren suorituksen tilaan:" +
+        s"$opiskeluoikeusjaksot (mäppäykset: ${KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila})")
+    }._2
   }
+}
+
+object KoskiOpiskeluoikeusjakso {
+  val koskiTilaToSureSuoritusTila: ListMap[String, String] = ListMap(
+    "valmistunut" -> "VALMIS",
+    "eronnut" -> "KESKEYTYNYT",
+    "erotettu" -> "KESKEYTYNYT",
+    "katsotaaneronneeksi" -> "KESKEYTYNYT",
+    "mitatoity" -> "KESKEYTYNYT",
+    "peruutettu" -> "KESKEYTYNYT",
+    "loma" -> "KESKEN",
+    "valiaikaisestikeskeytynyt" -> "KESKEN",
+    "lasna" -> "KESKEN"
+  )
 }
 
 case class KoskiTila(alku: String, tila:KoskiKoodi)

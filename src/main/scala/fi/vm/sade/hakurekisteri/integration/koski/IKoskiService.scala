@@ -22,7 +22,7 @@ class KoskiServiceMock extends IKoskiService {
   override def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = None
   override def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = None
   override def updateAktiivisetHaut(): () => Unit = () => ()
-  override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = {Future.successful(Unit)}
+  override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = Future.successful(())
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = Future.successful(())
 
   override def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit = {}
