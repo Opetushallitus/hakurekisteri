@@ -74,16 +74,18 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
+  private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
+    suoritus.osasuoritukset
+      .filter(_.arviointi.nonEmpty)
+      .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
+  }
+
   private def shouldSaveSuoritus(suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
     val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
-        //check oppiaine failures
-        lazy val hasFailures = suoritus.osasuoritukset
-          .filter(_.arviointi.nonEmpty)
-          .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
-        suoritus.vahvistus.isDefined || hasFailures
+        suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
       case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
       case _ => true
     }
