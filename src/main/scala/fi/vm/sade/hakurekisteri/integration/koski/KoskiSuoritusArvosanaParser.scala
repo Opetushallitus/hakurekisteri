@@ -5,7 +5,6 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, ArvioHyvaksytty, Arvo
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
-import org.joda.time
 import org.joda.time.{LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory

@@ -1,10 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.koski
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 import akka.actor.Scheduler
 
-import scala.compat.Platform
 import scala.concurrent.Future
 import scala.concurrent.duration._
 

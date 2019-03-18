@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.{Calendar, UUID}
+import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.pattern.{AskTimeoutException, ask}
@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, LocalDate, LocalDateTime}
+import org.joda.time.LocalDate
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
@@ -40,7 +40,6 @@ object KoskiDataHandler {
     } else {
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
-
 }
 
 class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {

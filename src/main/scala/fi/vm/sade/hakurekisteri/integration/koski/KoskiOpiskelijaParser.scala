@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 
 class KoskiOpiskelijaParser {
@@ -63,7 +62,7 @@ class KoskiOpiskelijaParser {
         OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, suoritus.luokka)
       }
     } else {
-      oppilaitoksesAndLuokkas.get(suoritus.suoritus.komo).getOrElse(OppilaitosAndLuokka("", "", ""))
+      oppilaitoksesAndLuokkas.getOrElse(suoritus.suoritus.komo, OppilaitosAndLuokka("", "", ""))
     }
   }
 }
