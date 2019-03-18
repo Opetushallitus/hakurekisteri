@@ -99,7 +99,7 @@ class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBo
 
   override def isRedirected: Boolean = (status.get.getStatusCode >= 300) && (status.get.getStatusCode <= 399)
 
-  override def getHeaders: HttpHeaders = headers.getOrElse(EmptyHttpHeaders.INSTANCE) //
+  override def getHeaders: HttpHeaders = headers.getOrElse(EmptyHttpHeaders.INSTANCE)
 
   override def getHeaders(name: CharSequence): util.List[String] =
     headers.map(_.get(name)).map(List(_)).getOrElse(List[String]()).asJava
