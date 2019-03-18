@@ -44,26 +44,28 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   val opiskelijaParser = new KoskiOpiskelijaParser
   val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
 
-  //todo make sure disabling this is ok. We are now assuming that some optionals are actually always present.
-  //Could add checks to not crash, but is the data valid anyways? So maybe crash is ok.
-  /*it should "empty KoskiHenkilo should return list" in {
-    koskiDataHandler.createSuorituksetJaArvosanatFromKoski(
-      HenkiloContainer().build
-    ).flatten should contain theSameElementsAs Seq()
-  }*/
+  it should "empty KoskiHenkilo should throw NoSuchElementException" in {
+    try {
+      koskiDataHandler.createSuorituksetJaArvosanatFromKoski(
+        HenkiloContainer().build
+      ).flatten
+    } catch {
+      case ex: NoSuchElementException => //Expected
+    }
+  }
 
   it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
-    opiskelijaParser.detectOppilaitos(
+    opiskelijaParser.detectOppilaitosAndLuokka(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
-    ) should equal ("10", "orgId", "10")
+    ) should equal (OppilaitosAndLuokka("10", "orgId", "10"))
   }
 
   it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
-    opiskelijaParser.detectOppilaitos(
+    opiskelijaParser.detectOppilaitosAndLuokka(
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
-    ) should equal ("10", "orgId", "10C")
+    ) should equal (OppilaitosAndLuokka("10", "orgId", "10C"))
   }
 
   it should "createOpiskelija should create opiskelija" in {

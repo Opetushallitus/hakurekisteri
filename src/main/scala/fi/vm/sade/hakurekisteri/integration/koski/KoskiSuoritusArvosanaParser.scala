@@ -26,7 +26,7 @@ class KoskiSuoritusArvosanaParser {
       aine, lisatieto,
       valinnainen,
       myonnetty = koskiArviointiPäiväJosSuorituksenValmistumisenJälkeen,
-      source = root_org_id,
+      source = KoskiUtil.koski_integration_source,
       Map(),
       jarjestys = jarjestys)
   }
@@ -37,10 +37,6 @@ class KoskiSuoritusArvosanaParser {
 
   implicit val formats: DefaultFormats.type = DefaultFormats
 
-  private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
-  private val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
-  //OK-227 : Changed root_org_id to koski to mark incoming suoritus to come from Koski.
-  private val root_org_id = "koski"
 
   def getSuoritusArvosanatFromOpiskeluoikeudes(personOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[Seq[SuoritusArvosanat]] = {
     val result: Seq[Seq[SuoritusArvosanat]] = for (
@@ -51,55 +47,20 @@ class KoskiSuoritusArvosanaParser {
     result
   }
 
-  def parseYear(dateStr: String): Int = {
+  private def parseYear(dateStr: String): Int = {
     val dateFormat = "yyyy-MM-dd"
     val dtf = java.time.format.DateTimeFormatter.ofPattern(dateFormat)
     val d = java.time.LocalDate.parse(dateStr, dtf)
     d.getYear
   }
 
-  def matchOpetusOidAndLuokkataso(koulutusmoduuliTunnisteKoodiarvo: String, viimeisinTila: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): (String, Option[String]) = {
-    if(opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus") && koulutusmoduuliTunnisteKoodiarvo == "perusopetuksenoppiaineenoppimaara") {
-      (Oids.perusopetuksenOppiaineenOppimaaraOid, Some(AIKUISTENPERUS_LUOKKAASTE))
-    } else {
-      koulutusmoduuliTunnisteKoodiarvo match {
-        case "perusopetuksenoppimaara" => (Oids.perusopetusKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
-        case "perusopetuksenoppiaineenoppimaara" => (Oids.perusopetusKomoOid, None)
-        case "aikuistenperusopetuksenoppimaara" => (Oids.perusopetusKomoOid, Some(AIKUISTENPERUS_LUOKKAASTE))
-        case "aikuistenperusopetuksenoppimaaranalkuvaihe" => (DUMMYOID, None) //aikuisten perusopetuksen alkuvaihe ei kiinnostava suren kannalta
-        case "perusopetuksenvuosiluokka" => (Oids.perusopetusLuokkaKomoOid, suoritus.koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo)))
-        case "valma" => (Oids.valmaKomoOid, None)
-        case "telma" => (Oids.telmaKomoOid, None)
-        case "luva" => (Oids.lukioonvalmistavaKomoOid, None)
-        case "perusopetuksenlisaopetus" => (Oids.lisaopetusKomoOid, None)
-
-        case "ammatillinentutkinto" =>
-          suoritus.koulutusmoduuli.koulutustyyppi match {
-            case Some(KoskiKoodi("12", _)) => (Oids.erikoisammattitutkintoKomoOid, None)
-            case Some(KoskiKoodi("11", _)) => (Oids.ammatillinentutkintoKomoOid, None)
-            case _ => (Oids.ammatillinenKomoOid, None)
-          }
-        case "lukionoppimaara" => //Käsitellään lukion oppimäärät vain jos se on parametreissä määritelty
-          (Oids.lukioKomoOid, None)
-        case _ => (DUMMYOID, None)
-      }
-    }
-  }
-
-  def isKoskiOsaSuoritusPakollinen(suoritus: KoskiOsasuoritus, isLukio: Boolean, komoOid: String): Boolean = {
+  private def isKoskiOsaSuoritusPakollinen(suoritus: KoskiOsasuoritus, isLukio: Boolean, komoOid: String): Boolean = {
     var isSuoritusPakollinen: Boolean = false
     if(isLukio) {
       isSuoritusPakollinen = true
     }
     else if(suoritus.koulutusmoduuli.pakollinen.isDefined) {
       isSuoritusPakollinen = suoritus.koulutusmoduuli.pakollinen.get
-    }
-    else {
-      var isPakollinen = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).eivalinnainen
-
-      if(!suoritus.koulutusmoduuli.pakollinen.getOrElse(true) && suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).valinnainen) {
-        isPakollinen = false
-      }
     }
 
     if( (komoOid.contentEquals(Oids.perusopetusKomoOid) || komoOid.contentEquals(Oids.lisaopetusKomoOid)) &&
@@ -131,15 +92,12 @@ class KoskiSuoritusArvosanaParser {
       } else {
         s
       }
-
     })
-    //val isAikuistenPerusopetus: Boolean = opiskeluoikeustyyppi.koodiarvo.contentEquals("aikuistenperusopetus")
     var res:Seq[Arvosana] = Seq()
     for {
       suoritus <- modsuoritukset
       if suoritus.isPK || (isLukio && suoritus.isLukioSuoritus)
     } yield {
-      //OK-227: Otetaan yksilöllistämisessä huomioon vain pakolliset aineet.
       if (isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)) {
         yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
       }
@@ -149,11 +107,11 @@ class KoskiSuoritusArvosanaParser {
           val tunniste: KoskiKoodi = suoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", ""))
           val lisatieto: Option[String] = (tunniste.koodiarvo, suoritus.koulutusmoduuli.kieli) match {
             case (a: String, b: Option[KoskiKieli]) if tunniste.kielet => Option(b.get.koodiarvo)
-            case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(KoskiConstants.aidinkieli(b.get.koodiarvo))
+            case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(KoskiUtil.aidinkieli(b.get.koodiarvo))
             case _ => None
           }
 
-          var isPakollinen = isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)
+          val isPakollinen = isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)
           var ord: Option[Int] = None
 
           if (!isPakollinen) {
@@ -174,7 +132,6 @@ class KoskiSuoritusArvosanaParser {
           }
 
           val laajuus = suoritus.koulutusmoduuli.laajuus.getOrElse(KoskiValmaLaajuus(None, KoskiKoodi("","")))
-
 
           lazy val isKurssiLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("4")
           lazy val isVVTLaajuus = laajuus.yksikkö.koodiarvo.contentEquals("3")
@@ -222,16 +179,17 @@ class KoskiSuoritusArvosanaParser {
     (res, yksilöllistetty)
   }
 
-  def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): (Int, LocalDate, String) = {
+  private def getValmistuminen(vahvistus: Option[KoskiVahvistus], alkuPvm: String, opOikeus: KoskiOpiskeluoikeus): Valmistuminen = {
+
     if(!(opOikeus.oppilaitos.isDefined && opOikeus.oppilaitos.get.oid.isDefined)) {
       throw new RuntimeException("Opiskeluoikeudella on oltava oppilaitos!")
     }
     val oppilaitos = opOikeus.oppilaitos.get
     (vahvistus, opOikeus.päättymispäivä) match {
-      case (Some(k: KoskiVahvistus),_) => (parseYear(k.päivä), parseLocalDate(k.päivä), oppilaitos.oid.getOrElse(DUMMYOID))
-      case (None, Some(dateStr)) => (parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid.getOrElse(DUMMYOID))
-      case (None, None) => (parseYear(KoskiUtil.deadlineDate.toString()), parseLocalDate(KoskiUtil.deadlineDate.toString()), oppilaitos.oid.getOrElse(DUMMYOID))
-      case _ => (parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid.getOrElse(DUMMYOID))
+      case (Some(k: KoskiVahvistus),_) => Valmistuminen(parseYear(k.päivä), parseLocalDate(k.päivä), oppilaitos.oid.getOrElse(Oids.DUMMYOID))
+      case (None, Some(dateStr)) => Valmistuminen(parseYear(dateStr), parseLocalDate(dateStr), oppilaitos.oid.getOrElse(Oids.DUMMYOID))
+      case (None, None) => Valmistuminen(parseYear(KoskiUtil.deadlineDate.toString()), parseLocalDate(KoskiUtil.deadlineDate.toString()), oppilaitos.oid.getOrElse(Oids.DUMMYOID))
+      case _ => Valmistuminen(parseYear(alkuPvm), parseLocalDate(alkuPvm), oppilaitos.oid.getOrElse(Oids.DUMMYOID))
     }
   }
 
@@ -252,9 +210,11 @@ class KoskiSuoritusArvosanaParser {
 
   def getEndDateFromLastNinthGrade(suoritukset: Seq[KoskiSuoritus]): Option[LocalDate] = {
     val mostrecent = suoritukset.filter(s => s.luokka.getOrElse("").startsWith("9"))
+      .filterNot(s1 => s1.vahvistus.isEmpty)
+      .filterNot(s2 => s2.vahvistus.get.päivä.isEmpty)
       .sortWith((a,b) => {
-        val aDate = parseLocalDate(a.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(Some("")))).päivä)
-        val bDate = parseLocalDate(b.vahvistus.getOrElse(KoskiVahvistus("1970-01-01",KoskiOrganisaatio(Some("")))).päivä)
+        val aDate = parseLocalDate(a.vahvistus.get.päivä)
+        val bDate = parseLocalDate(b.vahvistus.get.päivä)
         aDate.compareTo(bDate) > 0})
 
     if(mostrecent.nonEmpty) {
@@ -268,7 +228,6 @@ class KoskiSuoritusArvosanaParser {
     }
   }
 
-
   private def isFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]) : Boolean = {
     val ysiluokat = suoritukset.filter(_.luokka.getOrElse("").startsWith("9"))
     val failed = ysiluokat.exists(_.jääLuokalle.getOrElse(false))
@@ -276,73 +235,25 @@ class KoskiSuoritusArvosanaParser {
     failed && !succeeded
   }
 
-  private def shouldProcessData(suoritus: KoskiSuoritus, tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val suoritusTila = tilat match {
-      case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
-      case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
-      case t if t.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
-      case t if t.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
-      case t if t.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
-      case t if t.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
-      // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
-      case _ => "KESKEN"
-    }
-    val (komoOid, luokkataso) = suoritus.tyyppi match {
-      case Some(k) =>
-        matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
-      case _ => (DUMMYOID, None)
-    }
-
-    komoOid match {
-      // OK-227 : tallennetaan perusopetuksen ja kymppiluokan keskeneräiset suoritukset.
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if suoritusTila.equals("KESKEN") => true
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
-        //check oppiaine failures
-        lazy val hasFailures = suoritus.osasuoritukset
-          .filter(_.arviointi.nonEmpty)
-          .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
-        suoritus.vahvistus.isDefined || hasFailures
-      // OK-227 : tallennetaan ainoastaan vahvistetut lukiosuoritukset tilassa VALMIS
-      case Oids.lukioKomoOid if !(suoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
-      case _ => true
-    }
-  }
-
-  def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
+  private def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     var lahdeArvot: Map[String, String] = Map[String, String]()
-    //val isperuskoulu = containsOnlyPeruskouluData(suoritukset)
-
     for {
-      suoritus <- suoritukset if shouldProcessData(suoritus, tilat, opiskeluoikeus)
+      suoritus <- suoritukset
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
-      val (vuosi, valmistumisPaiva, organisaatioOid) = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
-      var suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
-
-      var suoritusTila = tilat match {
-        case t if t.exists(_.tila.koodiarvo == "valmistunut") => "VALMIS"
-        case t if t.exists(_.tila.koodiarvo == "eronnut") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "erotettu") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "katsotaaneronneeksi") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "mitatoity") => "KESKEYTYNYT"
-        case t if t.exists(_.tila.koodiarvo == "peruutettu") => "KESKEYTYNYT"
-        // includes these "loma" | "valiaikaisestikeskeytynyt" | "lasna" => "KESKEN"
-        case _ => "KESKEN"
-      }
+      val valmistuminen: Valmistuminen = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
+      val suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
+      var suoritusTila: String = opiskeluoikeus.tila.determineSuoritusTila
 
       val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna")) match {
         case (Some(a), _) => parseLocalDate(a)
         case (None, Some(kt)) => parseLocalDate(kt.alku)
-        case (_,_) => valmistumisPaiva
+        case (_,_) => valmistuminen.valmistumisPaiva
       }
-
-      val (komoOid, luokkataso) = suoritus.tyyppi match {
-        case Some(k) =>
-          matchOpetusOidAndLuokkataso(k.koodiarvo, suoritusTila, suoritus, opiskeluoikeus)
-        case _ => (DUMMYOID, None)
-      }
+      val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+      val luokkataso: Option[String] = suoritus.getLuokkataso(opiskeluoikeus.isAikuistenPerusopetus)
 
       val vuosiluokkiinSitomatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
         case Some(x) => {
@@ -353,11 +264,11 @@ class KoskiSuoritusArvosanaParser {
       }
 
       val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
-        case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+        case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid | Oids.perusopetusLuokkaKomoOid  =>
           val isValmis = suoritusTila.equals("VALMIS")
           val isAikuistenPerusopetus: Boolean = opiskeluoikeus.tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
           var (as, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot,
-            None, suorituksenValmistumispäivä = valmistumisPaiva, isAikuistenPerusopetus = isAikuistenPerusopetus)
+            None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva, isAikuistenPerusopetus = isAikuistenPerusopetus)
 
           if (failedNinthGrade) {
             as = Seq.empty
@@ -378,28 +289,27 @@ class KoskiSuoritusArvosanaParser {
             } else {
               (Seq(), yks)
             }
-          } else if ((containsOneFailure && LocalDate.now.isAfter(KoskiUtil.arvosanatWithNelosiaDate)) || (vuosiluokkiinSitomatonOpetus && LocalDate.now.isAfter(KoskiUtil.deadlineDate))) {
+          } else if ((containsOneFailure && LocalDate.now.isAfter(KoskiUtil.arvosanatWithNelosiaDeadlineDate)) || (vuosiluokkiinSitomatonOpetus && LocalDate.now.isAfter(KoskiUtil.deadlineDate))) {
             (as, yks)
           } else {
             (Seq(), yks)
           }
-        case Oids.perusopetusLuokkaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
         case Oids.perusopetuksenOppiaineenOppimaaraOid =>
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
           if(suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) {
             s = s :+ KoskiOsasuoritus(suoritus.koulutusmoduuli, suoritus.tyyppi.getOrElse(KoskiKoodi("","")), suoritus.arviointi.getOrElse(Seq()), suoritus.pakollinen, None, None)
           }
-          osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+          osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
 
         //Ei tallenneta arvosanoja VALMA, TELMA. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
-          val (arv, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+          val (arv, yks) = osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
           (Seq(), yks)
-        case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistumisPaiva)
+        case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
         case Oids.lukioKomoOid =>
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
             logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
-            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true, suorituksenValmistumispäivä = valmistumisPaiva)
+            osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
           } else {
             (Seq(), yksilollistaminen.Ei)
           }
@@ -455,8 +365,6 @@ class KoskiSuoritusArvosanaParser {
       }
       if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
         luokka = "9"
-        /*if (suoritusTila == "KESKEYTYNYT")
-          failedNinthGrade = true*/
       }
 
       val useValmistumisPaiva: LocalDate = (komoOid, luokkataso.getOrElse("").startsWith("9"), suoritusTila) match {
@@ -476,12 +384,12 @@ class KoskiSuoritusArvosanaParser {
         case (Oids.valmaKomoOid, _, "KESKEN") => KoskiUtil.deadlineDate
         case (Oids.telmaKomoOid, _, "KESKEN") => KoskiUtil.deadlineDate
         case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => KoskiUtil.deadlineDate
-        case (_,_,_) => valmistumisPaiva
+        case (_,_,_) => valmistuminen.valmistumisPaiva
       }
-      if (komoOid != DUMMYOID && vuosi > 1970) {
+      if (komoOid != Oids.DUMMYOID && valmistuminen.vuosi > 1970) {
         val suoritus = SuoritusArvosanat(VirallinenSuoritus(
           komo = komoOid,
-          myontaja = organisaatioOid,
+          myontaja = valmistuminen.organisaatioOid,
           tila = suoritusTila,
           valmistuminen = useValmistumisPaiva,
           henkilo = personOid,
@@ -489,7 +397,7 @@ class KoskiSuoritusArvosanaParser {
           suoritusKieli = suorituskieli.koodiarvo,
           opiskeluoikeus = None,
           vahv = true,
-          lahde = root_org_id,
+          lahde = KoskiUtil.koski_integration_source,
           lahdeArvot = lahdeArvot), arvosanat, luokka, lasnaDate, luokkataso)
         result = result :+ suoritus
       }
@@ -562,7 +470,7 @@ class KoskiSuoritusArvosanaParser {
     */
   private def postprocessPeruskouluData(result: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
     result.filter(_.suoritus.isInstanceOf[VirallinenSuoritus]).map(suoritusArvosanat => {
-      var useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
+      val useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
       val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && suoritusArvosanat.arvosanat.isEmpty){
         logger.debug("if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty) == true")
         result
@@ -570,7 +478,6 @@ class KoskiSuoritusArvosanaParser {
             case a: VirallinenSuoritus =>
               a.henkilo.equals(useSuoritus.henkilo) &&
                 a.myontaja.equals(useSuoritus.myontaja) &&
-                //  a.tila != "KESKEYTYNYT" &&
                 a.komo.equals(Oids.perusopetusLuokkaKomoOid)
             case _ => false
           })
@@ -604,9 +511,9 @@ class KoskiSuoritusArvosanaParser {
       } else {
         useLuokka = suoritusArvosanat.luokka
       }
-      if (suoritusArvosanat.luokkataso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE)) {
+      if (suoritusArvosanat.luokkataso.getOrElse("").equals(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE)) {
         useLuokkaAste = Some("9")
-        useLuokka = AIKUISTENPERUS_LUOKKAASTE+" "+suoritusArvosanat.luokka
+        useLuokka = KoskiUtil.AIKUISTENPERUS_LUOKKAASTE+" "+suoritusArvosanat.luokka
       }
       SuoritusArvosanat(VirallinenSuoritus(
         komo = useSuoritus.komo,
@@ -618,8 +525,10 @@ class KoskiSuoritusArvosanaParser {
         suoritusKieli = useSuoritus.suoritusKieli,
         opiskeluoikeus = None,
         vahv = true,
-        lahde = root_org_id,
+        lahde = KoskiUtil.koski_integration_source,
         lahdeArvot = useSuoritus.lahdeArvot), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
     })
   }
 }
+
+case class Valmistuminen(vuosi: Int, valmistumisPaiva: LocalDate, organisaatioOid: String)

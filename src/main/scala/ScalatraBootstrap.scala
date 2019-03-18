@@ -127,7 +127,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/ytl", "ytl") -> new YtlResource(integrations.ytl, integrations.ytlIntegration),
     ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system),
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
-    ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService)
+    ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
   )
 
   private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =

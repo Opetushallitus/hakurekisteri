@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.{Calendar, UUID}
+import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.pattern.{AskTimeoutException, ask}
@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, LocalDate, LocalDateTime}
+import org.joda.time.LocalDate
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
@@ -21,13 +21,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String]) {
-  private val AIKUISTENPERUS_LUOKKAASTE = "AIK"
-
   def peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset: Seq[SuoritusArvosanat]): Boolean = {
     suoritus match {
       case v: VirallinenSuoritus =>
         v.komo.equals(Oids.perusopetusKomoOid) &&
-          (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9")) || luokkataso.getOrElse("").equals(AIKUISTENPERUS_LUOKKAASTE))
+          (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9")) || luokkataso.getOrElse("").equals(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE))
       case _ => false
     }
   }
@@ -42,7 +40,6 @@ object KoskiDataHandler {
     } else {
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
-
 }
 
 class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {
@@ -76,14 +73,48 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
+  private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
+    suoritus.osasuoritukset
+      .filter(_.arviointi.nonEmpty)
+      .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
+  }
+
+  private def shouldSaveSuoritus(suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+    komoOid match {
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+        suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
+      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
+      case _ => true
+    }
+  }
+
+  private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    val keskeytynyt: KoskiTila => Boolean = koskiTila =>
+      KoskiUtil.keskeytyneetTilat.contains(koskiTila.tila.koodiarvo)
+
+    val alle30PisteenValma: KoskiSuoritus => Boolean = koskiSuoritus =>
+      koskiSuoritus.tyyppi.exists(_.koodiarvo == "valma") &&
+        !koskiSuoritus.opintopisteitaVahintaan(30)
+
+    val isRemovable = opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
+      opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(keskeytynyt) &&
+      opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
+
+    if (isRemovable) {
+      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt-tilassa. Filtteröidään suoritus.",
+        henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
+    }
+    isRemovable
+  }
+
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
     var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
-
     //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
     val oikeudetFiltered = oikeudet.filter(oo => !oo.tyyppi.get.koodiarvo.equals("perusopetus") || opiskeluoikeusSisaltaaYsisuorituksen(oo))
-
     //Opiskeluoikeuden tyypit eli perusopetus, perusopetuksen lisäopetus (10), lukiokoulutus, ammatillinen jne.
-    var tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
+    val tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
     tyypit.distinct.foreach(tyyppi => {
       val tataTyyppia: Seq[KoskiOpiskeluoikeus] = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
       //Aktiivisia ammatillisia opiskeluoikeuksia voi olla useita samaan aikaan, eikä kyseessä ole datavirhe.
@@ -99,7 +130,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         }
       }
     })
-    viimeisimmatOpiskeluoikeudet
+    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu".
+    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
+    // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
+    viimeisimmatOpiskeluoikeudet.map { oo =>
+      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(s, oo)))
+    }
   }
 
   private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String) = {
@@ -121,7 +157,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def fetchOpiskelijat(henkilöOid: String, oppilaitosOid: String): Future[Seq[Opiskelija with Identified[UUID]]] = {
-    (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.root_org_id))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
+    (opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkilöOid), oppilaitosOid = Some(oppilaitosOid), source = Some(KoskiUtil.koski_integration_source))).mapTo[Seq[Opiskelija with Identified[UUID]]].recoverWith {
       case t: AskTimeoutException =>
         logger.error(s"Got timeout exception when fetching opiskelija: $henkilöOid , retrying", t)
         fetchOpiskelijat(henkilöOid, oppilaitosOid)
@@ -196,12 +232,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
         .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
       logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-      val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.root_org_id))
+      val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
 
       updateSuoritus(suoritus, useSuoritus)
         .flatMap(_ => fetchArvosanat(suoritus))
         .flatMap(existingArvosanat => Future.sequence(existingArvosanat
-          .filter(_.source.contentEquals(KoskiUtil.root_org_id))
+          .filter(_.source.contentEquals(KoskiUtil.koski_integration_source))
           .map(arvosana => deleteArvosana(arvosana))))
         .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
         .flatMap(_ => saveOpiskelija(opiskelija))
@@ -232,7 +268,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       case _ => None
     }
 
-    val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.root_org_id)).flatMap {
+    val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.koski_integration_source)).flatMap {
       case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
       case _ => None
     }
