@@ -6,11 +6,9 @@ import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 
 import akka.actor.ActorRef
-import fi.vm.sade.auditlog.{Changes, Target}
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.UserParser.parseUser
 import fi.vm.sade.properties.OphProperties
 import javax.mail.Message.RecipientType
 import javax.mail.Session
@@ -127,11 +125,6 @@ class YtlIntegration(properties: OphProperties,
       throw new RuntimeException(message)
     } else {
       logger.info(s"Starting sync all!")
-      //audit.log(message("Ytl sync started!"))
-      audit.log(parseUser(null, "system"),
-        YTLSync,
-        new Target.Builder().setField("result", "Ytl sync started!").build(),
-        new Changes.Builder().build())
       def fetchInChunks(hakuOids: Set[String]): Future[Set[HetuPersonOid]] = {
         def fetchChunk(chunk: Set[String]): Future[Set[HetuPersonOid]] = {
           Future.sequence(chunk.map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))).map(_.flatten)
@@ -149,11 +142,6 @@ class YtlIntegration(properties: OphProperties,
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-          //audit.log(message(s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}"))
-          audit.log(parseUser(null,"system"),
-            YTLSync,
-            new Target.Builder().setField("result", s"Ytl sync failed to fetch 'henkilotunnukset': ${e.getMessage}").build(),
-            new Changes.Builder().build())
           atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
           throw e
       }
@@ -170,11 +158,6 @@ class YtlIntegration(properties: OphProperties,
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}", e)
-          //audit.log(message(s"Ytl sync failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}"))
-          audit.log(parseUser(null, "system"),
-            YTLSync,
-            new Target.Builder().setField("result", s"Ytl sync failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}").build(),
-            new Changes.Builder().build())
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           try {
@@ -199,22 +182,13 @@ class YtlIntegration(properties: OphProperties,
       case e: Throwable =>
         allSucceeded.set(false)
         logger.error(s"YTL sync all failed!", e)
-        //audit.log(message(s"Ytl sync failed: ${e.getMessage}"))
-        audit.log(parseUser(null, "system"),
-          YTLSync,
-          new Target.Builder().setField("result", s"Ytl sync failed: ${e.getMessage}").build(),
-          new Changes.Builder().build())
     } finally {
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
       val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
       if (!allSucceeded.get()) {
         sendFailureEmail(msg)
       }
-      //audit.log(message(s"Ytl sync ended $msg!"))
-      audit.log(parseUser(null,"system"),
-        YTLSync,
-        new Target.Builder().setField("result", s"Ytl sync ended $msg").build(),
-        new Changes.Builder().build())
+      logger.info(s"Ytl sync ended $msg!")
       atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
     }
   }
@@ -222,7 +196,6 @@ class YtlIntegration(properties: OphProperties,
   private def persistKokelas(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases): Unit = {
     ytlActor ! KokelasWithPersonAliases(kokelas, personOidsWithAliases)
   }
-  //private def message(msg:String) = LogMessage.builder().message(msg).add("operaatio","YTL_SYNC").build()
 
   private def sendFailureEmail(txt: String): Unit = {
 
