@@ -18,7 +18,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
   registerModel(Model("MenettamisenPeruste", "MenettamisenPeruste", perusteFields.map{ t => (t.name, t) }.toMap))
 
   val fields = Seq(
-    ModelField("ensikertalainen", null, DataType.Boolean),
+    ModelField("henkiloOid", null, DataType.String),
     ModelField("menettamisenPeruste", null, DataType("MenettamisenPeruste"), required = false)
   )
 
@@ -28,7 +28,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
 
   val query: OperationBuilder = apiOperation[Ensikertalainen]("haeEnsikertalaisuus")
     .summary("tarkistaa onko hakija ensikertalainen")
-    .notes("Tarkistaa onko hakija ensikertalainen.")
+    .notes("Palauttaa hakijan mahdollisen ensikertalaisuuden menettämisen syyn. Jos menettämisen syytä ei ole, hakija on ensikertalainen.")
     .parameter(queryParam[String]("henkilo").description("hakijan oppijanumero").required)
     .parameter(queryParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "parameter henkilo or haku missing"))
@@ -38,7 +38,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
 
   val hakuQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudetHaulle")
     .summary("tarkistaa ovatko haun hakijat ensikertalaisia")
-    .notes("Tarkistaa ovatko haun hakijat ensikertalaisia.")
+    .notes("Palauttaa haun hakijoiden oidit sekä mahdolliset ensikertalaisuuden menettämisen syyt. Jos menettämisen syytä ei ole, ko. hakija on ensikertalainen.")
     .parameter(pathParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "parameter haku missing"))
     .responseMessage(ModelResponseMessage(404, "haku not found"))
@@ -47,7 +47,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
 
   val postQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudet")
     .summary("tarkistaa ovatko hakijat ensikertalaisia")
-    .notes("Tarkistaa ovatko hakijat ensikertalaisia.")
+    .notes("Palauttaa hakijoiden mahdolliset ensikertalaisuuden menettämisen syyt. Jos menettämisen syytä ei ole, ko. hakija on ensikertalainen.")
     .parameter(bodyParam[Seq[String]]("henkilot").description("hakijoidet oppijanumerot").required)
     .parameter(queryParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "request body does not contain person oids"))
