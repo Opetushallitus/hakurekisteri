@@ -5,7 +5,7 @@ import java.io.OutputStream
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{Config, KKHakijatLuku, UserParser}
+import fi.vm.sade.hakurekisteri.{AuditUtil, Config, KKHakijatLuku}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -38,8 +38,8 @@ class KkHakijaResourceV2(kkHakijaService: KkHakijaService, config: Config)(impli
     val thisResponse= response
     audit.log(auditUser,
       KKHakijatLuku,
-      new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
-      new Changes.Builder().build())
+      AuditUtil.targetFromParams(params).build(),
+      Changes.EMPTY)
     val kkhakijatFuture = kkHakijaService.getKkHakijat(q, 2).flatMap {
       case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
         setContentDisposition(tyyppi, thisResponse, "hakijat")

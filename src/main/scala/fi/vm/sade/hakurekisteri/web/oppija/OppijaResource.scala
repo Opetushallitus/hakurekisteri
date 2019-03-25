@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{ResourceRead}
+import fi.vm.sade.hakurekisteri.{AuditUtil, ResourceRead}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
@@ -60,8 +60,10 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
 
     audit.log(auditUser,
       ResourceRead,
-      new Target.Builder().setField("resource", "OppijaResource").setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
-      new Changes.Builder().build())
+      AuditUtil.targetFromParams(params)
+        .setField("resource", "OppijaResource")
+        .setField("summary", query.result.summary).build(),
+      Changes.EMPTY)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -115,7 +117,9 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     } else {
       audit.log(auditUser,
         ResourceRead,
-        new Target.Builder().setField("resource", "OppijaResource").setField("summary", post.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+        AuditUtil.targetFromParams(params)
+          .setField("resource", "OppijaResource")
+          .setField("summary", post.result.summary).build(),
         new Changes.Builder().build())
 
       new AsyncResult() {

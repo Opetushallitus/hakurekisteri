@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import org.scalatra.json.JacksonJsonSupport
 import fi.vm.sade.auditlog.{Audit, Changes, Target}
-import fi.vm.sade.hakurekisteri.{HaunHakijoidenTietojenPaivitysKoskesta, OppijanTietojenPaivitysKoskesta, OppijoidenTietojenPaivitysKoskesta}
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -52,7 +52,7 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
         .setField("oppijaOid", personOid)
         .setField("haeLukio", haeLukio.toString)
         .setField("haeAmmatilliset", haeAmmatilliset.toString).build(),
-      new Changes.Builder().build())
+      Changes.EMPTY)
     new AsyncResult {
       override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
@@ -71,11 +71,9 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
     }
     audit.log(auditUser,
       OppijoidenTietojenPaivitysKoskesta,
-      new Target.Builder()
-        .setField("oppijaOids", personOids.toString())
-        .setField("haeLukio", haeLukio.toString)
-        .setField("haeAmmatilliset", haeAmmatilliset.toString).build(),
-      new Changes.Builder().build())
+      AuditUtil.targetFromParams(params)
+        .setField("oppijaOids", personOids.toString()).build(),
+      Changes.EMPTY)
     new AsyncResult {
       override val is: Future[_] = koskiService.updateHenkilot(personOids, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
@@ -93,7 +91,7 @@ class KoskiImporterResource(koskiService: IKoskiService, config: Config)
         .setField("hakuOid", hakuOid)
         .setField("haeLukio", haeLukio.toString)
         .setField("haeAmmatilliset", haeAmmatilliset.toString).build(),
-      new Changes.Builder().build())
+      Changes.EMPTY)
     new AsyncResult {
       override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }

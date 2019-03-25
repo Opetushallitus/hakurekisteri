@@ -2,10 +2,11 @@ package fi.vm.sade.hakurekisteri
 
 import java.net.InetAddress
 
-import fi.vm.sade.auditlog.{ApplicationType, Audit, Logger, Operation, User}
+import fi.vm.sade.auditlog._
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
 import javax.servlet.http.HttpServletRequest
 import org.ietf.jgss.{GSSException, Oid}
+import org.scalatra.Params
 import org.slf4j.LoggerFactory
 
 case object OppijanTietojenPaivitysKoskesta extends Operation {
@@ -101,57 +102,28 @@ object LoggerForAudit extends Logger {
   }
 }
 
-class UserParser {
-
+class AuditUtil {
 }
 
-object UserParser {
-  private val logger = LoggerFactory.getLogger(classOf[UserParser])
+object AuditUtil {
+  private val logger = LoggerFactory.getLogger(classOf[Audit])
 
-  private def parseUserWithoutRequest(userOid: String): User = {
-    val userAgent = "-"
-    val session = "-"
-    val ip = InetAddress.getLocalHost
-    createUser(userOid, ip, session, userAgent)
-  }
-
-  def parseUser(request: HttpServletRequest, userOid: String = null): User = {
-    if (request == null) {
-      parseUserWithoutRequest(userOid)
-    } else {
+  def parseUser(request: HttpServletRequest, userOid: String): User = {
+    try {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
-      val session = getSession(request)
-      val ip = getInetAddress(request)
-      createUser(userOid, ip, session, userAgent)
+      val session = request.getSession(false).getId
+      val ip = InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
+      new User(new Oid(userOid), ip, session, userAgent)
+    } catch {
+      case e: Throwable =>
+        logger.error("Error while parsing auditUser: " + e)
+        throw AuditException(e.getMessage)
     }
   }
 
-  private def createUser(userOid: String, ip: InetAddress, session: String, userAgent: String) = try
-    new User(new Oid(userOid), ip, session, userAgent)
-  catch {
-    case e: GSSException =>
-      logger.warn(s"GSSExcepption: $e")
-      new User(ip, session, userAgent)
+  def targetFromParams(params: Params): Target.Builder = {
+    new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString())
   }
-
-  private def getSession(request: HttpServletRequest) = try {
-    val ses = request.getSession(false)
-    if (ses != null)
-      ses.getId
-    else
-      "no session"
-  } catch {
-    case e: Exception =>
-      logger.error(s"Virhe sessiota pääteltäessä: $e")
-      throw new RuntimeException(e)
-  }
-
-  private def getInetAddress(implicit request: HttpServletRequest) = try
-    InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
-  catch {
-    case e: Exception =>
-      logger.error(s"Virhe ip-osoitetta pääteltäessä: $e")
-      throw new RuntimeException(e)
-  }
-
 }
+
+case class AuditException(message: String) extends Exception(message)

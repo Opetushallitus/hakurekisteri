@@ -6,7 +6,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{Oids, RekisteritiedotRead, RekisteritiedotReadLight, ResourceRead}
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
@@ -23,7 +23,7 @@ import fi.vm.sade.hakurekisteri.web.oppija.OppijatPostSize
 import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
 import fi.vm.sade.hakurekisteri.web.validation.{ScalaValidator, SimpleValidatable, Validatable}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{Swagger, SwaggerEngine}
+import org.scalatra.swagger.{Parameter, Swagger, SwaggerEngine}
 import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
 import scala.collection.JavaConversions._
@@ -64,8 +64,9 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
 
       audit.log(auditUser,
         RekisteritiedotRead,
-        new Target.Builder().setField("summary", query.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
-        new Changes.Builder().build())
+        AuditUtil.targetFromParams(params)
+          .setField("summary", query.result.summary).build(),
+        Changes.EMPTY)
 
       private val tiedotFuture = fetchTiedot(q)
 
@@ -86,7 +87,8 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
 
     audit.log(auditUser,
       RekisteritiedotRead,
-      new Target.Builder().setField("summary", queryPost.result.summary).setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+      AuditUtil.targetFromParams(params)
+        .setField("summary", queryPost.result.summary).build(),
       new Changes.Builder().build())
 
     new AsyncResult() {
@@ -146,8 +148,8 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
 
     audit.log(auditUser,
       RekisteritiedotReadLight,
-      new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
-      new Changes.Builder().build())
+      AuditUtil.targetFromParams(params).build(),
+      Changes.EMPTY)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds

@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{EnsikertalainenHaussaQuery, KaikkiHaunEnsikertalaiset}
+import fi.vm.sade.hakurekisteri.{AuditUtil, EnsikertalainenHaussaQuery, KaikkiHaunEnsikertalaiset}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, HaunEnsikertalaisetQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
@@ -63,7 +63,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     val hakuOid = params("haku")
     audit.log(auditUser,
       KaikkiHaunEnsikertalaiset,
-      new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
+      AuditUtil.targetFromParams(params).build(),
       new Changes.Builder().build())
     new AsyncResult() {
       override implicit def timeout: Duration = 15.minutes

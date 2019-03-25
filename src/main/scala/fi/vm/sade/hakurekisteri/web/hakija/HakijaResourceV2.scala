@@ -7,7 +7,7 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.HakijatLuku
+import fi.vm.sade.hakurekisteri.{AuditUtil, HakijatLuku}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijat
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -47,8 +47,8 @@ class HakijaResourceV2(hakijaActor: ActorRef)
     val tyyppi = getFormatFromTypeParam()
     audit.log(auditUser,
       HakijatLuku,
-      new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
-      new Changes.Builder().build())
+      AuditUtil.targetFromParams(params).build(),
+      Changes.EMPTY)
     if(tyyppi == ApiFormat.Xml) {
       prepareAsyncResult(tyyppi, Future.successful(new IllegalArgumentException("tyyppi Xml is not supported")))
     }

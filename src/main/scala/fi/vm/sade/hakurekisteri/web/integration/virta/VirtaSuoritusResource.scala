@@ -6,8 +6,7 @@ import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.auditlog.{Audit, Changes, Target}
-import fi.vm.sade.hakurekisteri.{HenkilonTiedotVirrasta}
-import fi.vm.sade.hakurekisteri.UserParser.parseUser
+import fi.vm.sade.hakurekisteri.HenkilonTiedotVirrasta
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResourceActorRef, VirtaResult}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}

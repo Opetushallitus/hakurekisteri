@@ -44,7 +44,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       audit.log(auditUser,
         ResourceDelete,
         new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
-        new Changes.Builder().build())
+        Changes.EMPTY)
       val res = deleteResource()
       res
     }
@@ -68,7 +68,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
             new Target.Builder()
               .setField("resource", resourceName)
               .setField("id", id).build(),
-            new Changes.Builder().build())
+            Changes.EMPTY)
       }
       res
     }
@@ -81,7 +81,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       audit.log(auditUser,
         ResourceUpdate,
         new Target.Builder().setField("resource",resourceName).setField("id", params("id")).build(),
-        new Changes.Builder().build())
+        Changes.EMPTY)
       updated
     }
   }
@@ -95,8 +95,9 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       audit.log(auditUser,
         ResourceRead,
-        new Target.Builder().setField("resource", resourceName).setField("id", params("id")).build(),
-        new Changes.Builder().build())
+        AuditUtil.targetFromParams(params)
+          .setField("resource", resourceName).build(),
+        Changes.EMPTY)
       getResource
     }
   }
@@ -110,9 +111,10 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     else {
       audit.log(auditUser,
         ResourceReadByQuery,
-        new Target.Builder().setField("resource", resourceName).setField("summary", query.result.summary)
-          .setField("query params", params.keySet.map(k => k + ":" + params(k)).toString()).build(),
-        new Changes.Builder().build())
+        AuditUtil.targetFromParams(params)
+          .setField("resource", resourceName)
+          .setField("summary", query.result.summary).build(),
+        Changes.EMPTY)
       val t0 = Platform.currentTime
       queryResource(currentUser, t0)
     }

@@ -14,8 +14,6 @@ trait DownloadSupport { this: HakuJaValintarekisteriStack =>
     case ApiFormat.Excel => "xls"
   }
 
-  cookies
-
   def setContentDisposition(t: ApiFormat, response: HttpServletResponse, filename: String) {
     response.setHeader("Content-Disposition", s"attachment;filename=$filename.${getFileExtension(t)}")
     response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))

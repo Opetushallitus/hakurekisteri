@@ -4,7 +4,7 @@ import java.net.InetAddress
 import java.security.Principal
 
 import javax.servlet.http.HttpServletRequest
-import fi.vm.sade.hakurekisteri.{Config, UserParser}
+import fi.vm.sade.hakurekisteri.{Config, AuditUtil}
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, User}
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
 import org.apache.commons.lang3.builder.ToStringBuilder
@@ -42,7 +42,7 @@ class SpringSecurity extends Security {
   }
 
   override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = {
-    UserParser.parseUser(request, currentUser.get.username)
+    AuditUtil.parseUser(request, currentUser.get.username)
   }
 
   def username(u: Principal): String = {
@@ -65,7 +65,7 @@ class SpringSecurity extends Security {
 
 class TestSecurity extends Security {
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
-  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "no session", "test")
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getByName("111.222.111.2"), "abc999_test", "mockAgent")
 
 }
 
