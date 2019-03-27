@@ -14,7 +14,6 @@ import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
