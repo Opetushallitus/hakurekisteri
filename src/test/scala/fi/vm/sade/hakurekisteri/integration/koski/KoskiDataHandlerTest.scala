@@ -2136,7 +2136,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(100)
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
 
     //insert old opiskelijadata:
     var insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
@@ -2177,7 +2177,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       values ('89f3c04f-0275-4d80-a3fe-eb03bb29f585', '1.2.246.562.13.62959769647', '1.2.246.562.10.15514292604', 'KESKEN', '2018-06-04', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1518804700011', 'false', '1.2.246.562.10.00000000001', 'true', 'false', '{}')"""
     run(database.run(insertSql.as[String]))
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 500.seconds)
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = '1.2.246.562.24.80710434876' and tila = 'KESKEYTYNYT' and myontaja = '1.2.246.562.10.15514292604' and current = 'true' ".as[String]))
     valmistumispäivä.head should equal("2018-03-22")
