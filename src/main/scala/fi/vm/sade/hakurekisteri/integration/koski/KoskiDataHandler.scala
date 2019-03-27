@@ -298,6 +298,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       //NOTE, processes the Future that encloses the list, does not actually iterate through the list
       Future.sequence(tallennettavatSuoritukset.map {
         case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
+        try {
           //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
           //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
           //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
@@ -308,6 +309,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           } else {
             Future.successful({})
           }
+        } catch {
+          case e: RuntimeException => Future.successful({logger.error(s"Koski-suorituksen ${useSuoritus} tallennus henkilölle " + henkilöOid + " epäonnistui.", e)})
+        }
         case _ => Future.successful({})
       }).flatMap(_ => Future.successful({logger.info("Koski-suoritusten tallennus henkilölle " + henkilöOid + " valmis.")}))
     })
