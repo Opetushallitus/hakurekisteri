@@ -2131,6 +2131,58 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.head should equal("0")
   }
 
+  it should "correct valmistumispäivämäärä in keskeytynyt peruskoulusuoritus with hylätty" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_pk_eronnut_valmistumispaivamaara.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(100)
+
+    //insert old opiskelijadata:
+    var insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+       values ('44976e21-89b5-47b9-9b0e-ad834127691d', '1.2.246.562.10.15514292604', '9', '9A', '1.2.246.562.24.80710434876', '1533675600000', '1553205600000', '1553251575074', 'false', 'koski', 'true')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+      values ('44976e21-89b5-47b9-9b0e-ad834127691d', '1.2.246.562.10.15514292604', '9', '9A', '1.2.246.562.24.80710434876', '1533675600000', '1551218400000', '1551263645506', 'false', 'koski', 'false')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+      values ('44976e21-89b5-47b9-9b0e-ad834127691d', '1.2.246.562.10.15514292604', '9', '9A', '1.2.246.562.24.80710434876', '1502312400000', '1527109200000', '1527170002421', 'false', 'koski', 'false')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+      values ('3ba39685-d0d1-4408-824d-7b210f47747a', '1.2.246.562.10.15673993224', '9', 'AIK 9', '1.2.246.562.24.80710434876', '1546812000000', '1559509200000', '1550876635684', 'false', 'koski', 'true')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+      values ('44976e21-89b5-47b9-9b0e-ad834127691d', '1.2.246.562.10.15514292604', '9', '9A', '1.2.246.562.24.80710434876', '1502312400000', '1528059600000', '1527124364701', 'false', 'koski', 'false')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+      values ('44976e21-89b5-47b9-9b0e-ad834127691d', '1.2.246.562.10.15514292604', '9', '9A', '1.2.246.562.24.80710434876', '1516572000000', '1528059600000', '1520530200047', 'false', 'koski', 'false')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
+      values ('44976e21-89b5-47b9-9b0e-ad834127691d', '1.2.246.562.10.15514292604', '9', '9A', '1.2.246.562.24.80710434876', '1502312400000', '1528059600000', '1518804700014', 'false', 'koski', 'false')"""
+    run(database.run(insertSql.as[String]))
+    //insert old suoritusdata:
+    insertSql = sql"""insert into suoritus (resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, vahvistettu, current, lahde_arvot)
+      values ('89f3c04f-0275-4d80-a3fe-eb03bb29f585', '1.2.246.562.13.62959769647', '1.2.246.562.10.15514292604', 'KESKEYTYNYT', '2019-03-22', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1553251575068', 'false', '1.2.246.562.10.00000000001', 'true', 'true', '{}')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into suoritus (resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, vahvistettu, current, lahde_arvot)
+      values ('89f3c04f-0275-4d80-a3fe-eb03bb29f585', '1.2.246.562.13.62959769647', '1.2.246.562.10.15514292604', 'KESKEYTYNYT', '2019-02-27', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1551263645491', 'false', '1.2.246.562.10.00000000001', 'true', 'false', '{}')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into suoritus (resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, vahvistettu, current, lahde_arvot)
+      values ('89f3c04f-0275-4d80-a3fe-eb03bb29f585', '1.2.246.562.13.62959769647', '1.2.246.562.10.15514292604', 'KESKEYTYNYT', '2018-05-24', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1527170002708', 'false', '1.2.246.562.10.00000000001', 'true', 'false', '{}')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into suoritus (resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, vahvistettu, current, lahde_arvot)
+      values ('47e3121c-8cc3-40b6-995f-c1bee0b70c11', '1.2.246.562.13.62959769647', '1.2.246.562.10.15673993224', 'KESKEN', '2019-06-03', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1550876635674', 'false', 'koski', 'true', 'true', '{}')"""
+    run(database.run(insertSql.as[String]))
+    insertSql = sql"""insert into suoritus (resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, vahvistettu, current, lahde_arvot)
+      values ('89f3c04f-0275-4d80-a3fe-eb03bb29f585', '1.2.246.562.13.62959769647', '1.2.246.562.10.15514292604', 'KESKEN', '2018-06-04', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1518804700011', 'false', '1.2.246.562.10.00000000001', 'true', 'false', '{}')"""
+    run(database.run(insertSql.as[String]))
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 500.seconds)
+
+    val valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = '1.2.246.562.24.80710434876' and tila = 'KESKEYTYNYT' and myontaja = '1.2.246.562.10.15514292604' and current = 'true' ".as[String]))
+    valmistumispäivä.head should equal("2018-03-22")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
