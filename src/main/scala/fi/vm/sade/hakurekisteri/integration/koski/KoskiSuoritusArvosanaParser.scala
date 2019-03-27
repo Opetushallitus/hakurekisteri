@@ -371,7 +371,9 @@ class KoskiSuoritusArvosanaParser {
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => KoskiUtil.deadlineDate
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
         case (Oids.perusopetusKomoOid, _, "KESKEYTYNYT") if suoritus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetuksenoppimaara") =>
-          val savetime: LocalDateTime = if(opiskeluoikeus.aikaleima.isDefined) {
+          val savetime: LocalDateTime = if(opiskeluoikeus.päättymispäivä.isDefined) {
+            LocalDateTime.parse(opiskeluoikeus.päättymispäivä.get)
+          } else if(opiskeluoikeus.aikaleima.isDefined) {
             LocalDateTime.parse(opiskeluoikeus.aikaleima.get)
           } else {
             LocalDateTime.now()
