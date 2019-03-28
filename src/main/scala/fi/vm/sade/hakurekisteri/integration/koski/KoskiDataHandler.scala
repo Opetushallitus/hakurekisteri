@@ -79,13 +79,17 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
   }
 
-  private def shouldSaveSuoritus(suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+  private def shouldSaveSuoritus(henkilöOid: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
     val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid => {
         suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
-      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
+      }
+      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus: ${suoritus}")
+        false
+      }
       case _ => true
     }
   }
@@ -134,7 +138,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
     // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
     viimeisimmatOpiskeluoikeudet.map { oo =>
-      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(s, oo)))
+      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(henkiloOid.getOrElse("Puuttuva henkilöOid"), s, oo)))
     }
   }
 
