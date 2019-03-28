@@ -2177,9 +2177,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       values ('89f3c04f-0275-4d80-a3fe-eb03bb29f585', '1.2.246.562.13.62959769647', '1.2.246.562.10.15514292604', 'KESKEN', '2018-06-04', '1.2.246.562.24.80710434876', 'Ei', 'FI', '1518804700011', 'false', '1.2.246.562.10.00000000001', 'true', 'false', '{}')"""
     run(database.run(insertSql.as[String]))
 
+    var valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where resource_id = '89f3c04f-0275-4d80-a3fe-eb03bb29f585' and current = 'true'".as[String]))
+    valmistumispäivä.head should equal("2019-03-22")
+
     Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
-    val valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = '1.2.246.562.24.80710434876' and tila = 'KESKEYTYNYT' and myontaja = '1.2.246.562.10.15514292604' and current = 'true' ".as[String]))
+    valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where resource_id = '89f3c04f-0275-4d80-a3fe-eb03bb29f585' and current = 'true'".as[String]))
     valmistumispäivä.head should equal("2018-03-22")
   }
 
