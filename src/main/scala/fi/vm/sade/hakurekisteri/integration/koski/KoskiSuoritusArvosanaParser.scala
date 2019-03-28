@@ -371,14 +371,18 @@ class KoskiSuoritusArvosanaParser {
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isEmpty => KoskiUtil.deadlineDate
         case (Oids.perusopetusKomoOid, _, "KESKEN") if suoritus.vahvistus.isDefined => parseLocalDate(suoritus.vahvistus.get.päivä)
         case (Oids.perusopetusKomoOid, _, "KESKEYTYNYT") if suoritus.tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("perusopetuksenoppimaara") =>
-          val savetime: LocalDateTime = if(opiskeluoikeus.päättymispäivä.isDefined) {
+          val keskeytynytDate: LocalDateTime = if (opiskeluoikeus.päättymispäivä.isDefined) {
             LocalDateTime.parse(opiskeluoikeus.päättymispäivä.get)
-          } else if(opiskeluoikeus.aikaleima.isDefined) {
+          } else if (opiskeluoikeus.aikaleima.isDefined) {
+            logger.info("Henkilön {} keskeytyneeltä peruskoulusuoritukselta, oppilaitosOid: {} puuttuu keskeytymipäivämäärä, käytetään opiskeluoikeuden aikaleimaa: {}",
+              personOid, suoritus.toimipiste.get.oid.getOrElse("Puuttuva organisaatioOid"), LocalDateTime.parse(opiskeluoikeus.aikaleima.get))
             LocalDateTime.parse(opiskeluoikeus.aikaleima.get)
           } else {
+            logger.info("Henkilön {} keskeytyneeltä peruskoulusuoritukselta, oppilaitosOid: {} puuttuu keskeytymipäivämäärä ja opiskeluoikeuden aikaleima. Käytetään siirtopäivämäärää: {}",
+              personOid, suoritus.toimipiste.get.oid.getOrElse("Puuttuva organisaatioOid"), LocalDateTime.now())
             LocalDateTime.now()
           }
-          getEndDateFromLastNinthGrade(suoritukset).getOrElse(savetime.toLocalDate)
+          getEndDateFromLastNinthGrade(suoritukset).getOrElse(keskeytynytDate.toLocalDate)
         case (Oids.perusopetusKomoOid, _, "VALMIS") =>
           if (suoritus.vahvistus.isDefined) parseLocalDate(suoritus.vahvistus.get.päivä)
           else KoskiUtil.deadlineDate
