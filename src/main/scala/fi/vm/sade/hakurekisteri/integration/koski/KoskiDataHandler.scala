@@ -310,10 +310,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
             Future.successful({})
           }
         } catch {
-          case e: Exception => Future.successful({logger.error(s"Koski-suorituksen ${useSuoritus} tallennus henkilölle " + henkilöOid + " epäonnistui.", e)})
+          case e: Exception => Future.successful({logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)})
         }
         case _ => Future.successful({})
-      }).flatMap(_ => Future.successful({logger.info("Koski-suoritusten tallennus henkilölle " + henkilöOid + " valmis.")}))
+      }).flatMap(_ => Future.successful({logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")}))
     })
   }
 
