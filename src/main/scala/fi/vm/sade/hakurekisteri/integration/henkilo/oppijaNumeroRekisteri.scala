@@ -85,18 +85,15 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     val totalGroups: Int = groupedOids.length
     logger.info(s"getByOids: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä")
 
-    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Seq[Henkilo]] = {
-      if (batches.nonEmpty) {
-        val (subSeq, index) = batches.head
+    val henkilot: Future[Seq[Henkilo]] = Future.sequence(groupedOids.zipWithIndex.map{case (subSeq, index) =>
+      if (oids.nonEmpty) {
         logger.info(s"getByOids: Haetaan Oppijanumerorekisteristä $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
         client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = subSeq.toSet, acceptedResponseCode = HttpStatus.SC_OK)
-          .flatMap(s => handleBatch(batches.tail))
       } else {
         Future.successful(Seq.empty)
       }
-    }
+    }).map(_.flatten)
 
-    val henkilot: Future[Seq[Henkilo]] = handleBatch(groupedOids.zipWithIndex)
     henkilot.onComplete {
       case Success(_) => logger.info("getByOids: Oppijanumerorekisteri-haku valmistui!")
       case Failure(e) => logger.error(s"getByOids: Oppijanumerorekisteri-haku epäonnistui", e)
