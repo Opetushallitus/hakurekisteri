@@ -269,21 +269,15 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
   }
 
-  it should "parse VALMA_kesken data" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_kesken.json").mkString
+  it should "not store alle 30 opintopisteen valmistunut VALMA data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_22_op_valmis.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    result should have length 1
-
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    virallinen.tila should equal("KESKEYTYNYT")
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).size
+    result should equal(0)
   }
+
 /*
   //TODO is the test data valid???
   it should "parse peruskoulu_lisäopetus_ei_vahvistettu.json data" in {
@@ -2194,13 +2188,37 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = new LocalDate("2019-06-03")
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+    val suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset.head should equal("1")
+  }
+
+  it should "not store alle 30 opintopisteen valma-suoritus before or after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_valmis_alle_30_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("1")
+    opiskelija.head should equal("0")
     var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    suoritukset.head should equal("1")
+    suoritukset.head should equal("0")
 
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+    suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset.head should equal("0")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {

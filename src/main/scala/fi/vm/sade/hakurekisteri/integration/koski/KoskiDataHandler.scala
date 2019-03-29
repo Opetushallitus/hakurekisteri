@@ -91,19 +91,22 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val keskeytynyt: KoskiTila => Boolean = koskiTila =>
-      KoskiUtil.keskeytyneetTilat.contains(koskiTila.tila.koodiarvo)
+    val valmistunut: KoskiTila => Boolean = koskiTila =>
+     koskiTila.tila.koodiarvo.equals("valmistunut")
+
+    val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
+      KoskiUtil.eiHalututAlle30opValmaTilat.contains(koskiTila.tila.koodiarvo)
 
     val alle30PisteenValma: KoskiSuoritus => Boolean = koskiSuoritus =>
       koskiSuoritus.tyyppi.exists(_.koodiarvo == "valma") &&
         !koskiSuoritus.opintopisteitaVahintaan(30)
 
-    val isRemovable = opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
-      opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(keskeytynyt) &&
-      opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
+    val isRemovable = (opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
+      opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(eiHaluttuValmaAlle30op) &&
+      opiskeluoikeus.suoritukset.exists(alle30PisteenValma))
 
     if (isRemovable) {
-      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt-tilassa. Filtteröidään suoritus.",
+      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt tai valmis -tilassa. Filtteröidään suoritus.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
@@ -130,7 +133,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         }
       }
     })
-    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu".
+    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu, valmis".
     viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
     // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
     viimeisimmatOpiskeluoikeudet.map { oo =>
