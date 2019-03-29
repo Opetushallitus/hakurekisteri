@@ -11,7 +11,7 @@ trait DownloadSupport { this: HakuJaValintarekisteriStack =>
   def getFileExtension(t: ApiFormat): String = t match {
     case ApiFormat.Json => "json"
     case ApiFormat.Xml => "xml"
-    case ApiFormat.Excel => "xls"
+    case ApiFormat.Excel => "xlsx"
   }
 
   def setContentDisposition(t: ApiFormat, response: HttpServletResponse, filename: String) {
