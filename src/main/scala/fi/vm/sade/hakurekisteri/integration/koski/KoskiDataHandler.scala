@@ -139,7 +139,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         }
       }
     })
-    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu".
+    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu, valmis".
     viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
     // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
     viimeisimmatOpiskeluoikeudet.map { oo =>
