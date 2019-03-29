@@ -85,10 +85,10 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     val totalGroups: Int = groupedOids.length
     logger.info(s"getByOids: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä")
 
-    val henkilot: Future[Seq[Henkilo]] = Future.sequence(groupedOids.zipWithIndex.map{case (subSeq, index) =>
-      if (oids.nonEmpty) {
+    val henkilot: Future[Seq[Henkilo]] = Future.sequence(groupedOids.zipWithIndex.map{case (oidSeq, index) =>
+      if (oidSeq.nonEmpty) {
         logger.info(s"getByOids: Haetaan Oppijanumerorekisteristä $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = subSeq.toSet, acceptedResponseCode = HttpStatus.SC_OK)
+        client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oidSeq.toSet, acceptedResponseCode = HttpStatus.SC_OK)
       } else {
         Future.successful(Seq.empty)
       }
