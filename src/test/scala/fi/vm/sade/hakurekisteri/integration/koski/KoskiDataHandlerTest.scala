@@ -269,8 +269,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
   }
 
-  it should "not store alle 30 opintopisteen VALMA_kesken data" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_kesken.json").mkString
+  it should "not store alle 30 opintopisteen valmistunut VALMA data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_22_op_valmis.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
