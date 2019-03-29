@@ -142,17 +142,15 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
-    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
-      if(batches.isEmpty) {
-        Future.successful({})
-      } else {
-        val (subSeq, index) = batches.head
+    val futures: Seq[Future[Unit]] = groupedOids.zipWithIndex.map{case (oids, index) =>
+      if (oids.nonEmpty) {
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
+        updateHenkilot(oids.toSet, params)
+      } else {
+        Future.successful({})
       }
     }
-
-    val f = handleBatch(groupedOids.zipWithIndex)
+    val f: Future[Seq[Unit]] = Future.sequence(futures)
     f.onComplete {
       case Success(_) => logger.info("HandleHenkiloUpdate: Koskipäivitys valmistui!")
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
