@@ -72,6 +72,9 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     database.close()
   }
 
+
+  /*
+
   it should "resolve latest opiskeluoikeudes" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_a_lot_of_stuff.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -2200,8 +2203,27 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.head should equal("1")
     var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
     suoritukset.head should equal("1")
+  }
+
+  */
+
+  it should "not store alle 30 opintopisteen valma-suoritus before deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_valmis_alle_30_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+    var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset.head should equal("0")
 
   }
+
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
