@@ -3,6 +3,8 @@ package fi.vm.sade.hakurekisteri.web.haku
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{AuditUtil, ReprocessHaunHakemukset}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.HakuRequest
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -34,6 +36,10 @@ class HakuResource(hakuActor: ActorRef, hakemusService: IHakemusService)(implici
   }
 
   post("/:hakuOid/hakemukset") {
+    audit.log(auditUser,
+      ReprocessHaunHakemukset,
+      AuditUtil.targetFromParams(params).build(),
+      Changes.EMPTY)
     hakemusService.reprocessHaunHakemukset(params("hakuOid"))
   }
 

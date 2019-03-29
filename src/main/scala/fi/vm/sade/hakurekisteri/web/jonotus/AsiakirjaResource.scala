@@ -1,20 +1,17 @@
 package fi.vm.sade.hakurekisteri.web.jonotus
 
-import java.io.OutputStream
 import java.lang.Boolean._
 import java.util.concurrent.{ExecutionException, TimeoutException}
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{AsiakirjaLuku, HakijatLuku}
+import fi.vm.sade.hakurekisteri.{AsiakirjaLuku, AuditUtil}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
-import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.json4s.Formats
@@ -48,7 +45,7 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
             case Left(ctype) => {
               audit.log(auditUser,
                 AsiakirjaLuku,
-                new Target.Builder().setField("id", params.get("id").getOrElse("")).build(),
+                AuditUtil.targetFromParams(params).build(),
                 new Changes.Builder().build())
 
               contentType = ctype

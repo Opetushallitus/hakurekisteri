@@ -2,7 +2,11 @@ package fi.vm.sade.hakurekisteri.web.jonotus
 
 import java.lang.Boolean.parseBoolean
 
+import _root_.akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.auditlog.{Audit, Changes, Target}
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaQuery
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, Query}
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
@@ -18,6 +22,7 @@ import scala.util.Try
 class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security: Security) extends ScalatraServlet
   with JValueResult
   with JacksonJsonSupport with SessionSupport with SecuritySupport {
+  val audit: Audit = SuoritusAuditVirkailija.audit
 
   private val logger = LoggerFactory.getLogger(classOf[SiirtotiedostojonoResource])
 
@@ -26,6 +31,10 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
     toEvent(readJsonFromBody(request.body), currentUser) match {
       case QueryWithExistingAsiakirja(personOid, query) =>
         //val isForceNewDocumentAndErrors = isForceNewDocument && jono.isExistingAsiakirjaWithErrors(query)
+        audit.log(auditUser,
+          SiirtotiedostoQueryWithExistingAsiakirja,
+          AuditUtil.targetFromParams(params).build(),
+          Changes.EMPTY)
         if(isForceNewDocument) {
           logger.debug(s"User $currentUser re-creating existing asiakirja with $query")
           halt(status=200, body=write(Sijoitus(jono.forceAddToJono(query, personOid).get, false)))

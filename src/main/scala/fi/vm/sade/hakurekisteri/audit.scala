@@ -85,6 +85,14 @@ case object ResourceDelete extends Operation {
   def name: String = "RESOURCE_DELETE"
 }
 
+case object ReprocessHaunHakemukset extends Operation {
+  def name: String = "REPROCESS_HAUN_HAKEMUKSET"
+}
+
+case object SiirtotiedostoQueryWithExistingAsiakirja extends Operation {
+  def name: String = "SIIRTOTIEDOSTO_EXISTING_ASIAKIRJA"
+}
+
 object SuoritusAuditVirkailija {
   private val auditLogger: Logger = LoggerForAudit
   val audit = new Audit(auditLogger, "hakurekisteri", ApplicationType.VIRKAILIJA)
