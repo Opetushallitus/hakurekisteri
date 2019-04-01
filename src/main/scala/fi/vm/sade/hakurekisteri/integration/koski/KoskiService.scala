@@ -181,7 +181,17 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private def removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
     data.flatMap(container => {
       val oikeudet = container.opiskeluoikeudet.filter(_.isStateContainingOpiskeluoikeus)
-      if(oikeudet.nonEmpty) Seq(container.copy(opiskeluoikeudet = oikeudet)) else Seq()
+      if(oikeudet.nonEmpty) {
+        if (container.opiskeluoikeudet.size > oikeudet.size) {
+          logger.info(s"Filtteröitiin henkilöltä ${container.henkilö.oid} ${(container.opiskeluoikeudet.size - oikeudet.size)} opiskeluoikeutta, joista puuttui oppilaitos.")
+        }
+        Seq(container.copy(opiskeluoikeudet = oikeudet))
+      } else {
+        if (container.opiskeluoikeudet.size > 0) {
+          logger.info(s"Filtteröitiin henkilöltä ${container.henkilö.oid} ${container.opiskeluoikeudet.size} opiskeluoikeutta, joista puuttui oppilaitos.")
+        }
+        Seq()
+      }
     })
   }
 
