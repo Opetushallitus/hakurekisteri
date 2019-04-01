@@ -96,10 +96,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val valmistunut: KoskiTila => Boolean = koskiTila =>
-     koskiTila.tila.koodiarvo.equals("valmistunut")
-
-    val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
+      val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
       KoskiUtil.eiHalututAlle30opValmaTilat.contains(koskiTila.tila.koodiarvo)
 
     val alle30PisteenValma: KoskiSuoritus => Boolean = koskiSuoritus =>
@@ -111,7 +108,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       opiskeluoikeus.suoritukset.exists(alle30PisteenValma))
 
     if (isRemovable) {
-      logger.info("Filtteröidään henkilöltä {} alle 30 opintopisteen keskeytynyt VALMA-suoritus.",
+      logger.info("Filtteröidään henkilöltä {} alle 30 opintopisteen keskeytynyt tai valmis VALMA-suoritus.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
