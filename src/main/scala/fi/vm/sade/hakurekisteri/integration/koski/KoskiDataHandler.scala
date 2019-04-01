@@ -112,7 +112,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     if (isRemovable) {
       logger.info("Filtteröidään henkilöltä {} alle 30 opintopisteen keskeytynyt VALMA-suoritus.",
-      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt tai valmis -tilassa. Filtteröidään suoritus.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
