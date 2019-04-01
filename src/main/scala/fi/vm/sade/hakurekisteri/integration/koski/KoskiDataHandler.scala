@@ -84,10 +84,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid => {
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} ei vahvistettu tai hylättyjä sisältävä peruskoulu- tai kymppiluokkasuoritus.")
         suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
       }
       case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
-        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus: ${suoritus}")
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus.")
         false
       }
       case _ => true
@@ -107,7 +108,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
 
     if (isRemovable) {
-      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt-tilassa. Filtteröidään suoritus.",
+      logger.info("Filtteröidään henkilöltä {} alle 30 opintopisteen keskeytynyt VALMA-suoritus.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
