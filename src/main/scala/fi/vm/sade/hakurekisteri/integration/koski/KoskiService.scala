@@ -142,20 +142,22 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
-    val futures: Seq[Future[Unit]] = groupedOids.zipWithIndex.map{case (oids, index) =>
-      if (oids.nonEmpty) {
-        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(oids.toSet, params)
-      } else {
+    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
+      if(batches.isEmpty) {
         Future.successful({})
+      } else {
+        val (subSeq, index) = batches.head
+        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
+        updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
       }
     }
-    val f: Future[Seq[Unit]] = Future.sequence(futures)
+
+    val f = handleBatch(groupedOids.zipWithIndex)
     f.onComplete {
       case Success(_) => logger.info("HandleHenkiloUpdate: Koskipäivitys valmistui!")
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
-    f.map(_ => {})
+    f
   }
 
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
@@ -217,6 +219,5 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
       Future.successful(successes, failures)
     }
-
   }
 }
