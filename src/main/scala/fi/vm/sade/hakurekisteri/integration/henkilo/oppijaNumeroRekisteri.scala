@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 
 import akka.actor.ActorSystem
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
@@ -13,6 +14,7 @@ import support.PersonAliasesProvider
 import scala.collection.Iterator
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 trait IOppijaNumeroRekisteri {
   /**
@@ -44,7 +46,7 @@ object IOppijaNumeroRekisteri {
   }
 }
 
-class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSystem) extends IOppijaNumeroRekisteri {
+class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSystem, config: Config) extends IOppijaNumeroRekisteri {
   private val logger = Logging.getLogger(system, this)
 
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
@@ -78,11 +80,25 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   }
 
   override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = {
-    if (oids.nonEmpty) {
-      client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oids, acceptedResponseCode = HttpStatus.SC_OK)
-    } else {
-      Future.successful(Seq.empty)
+    val maxOppijatBatchSize: Int = config.integrations.oppijaNumeroRekisteriMaxOppijatBatchSize
+    val groupedOids: Seq[Seq[String]] = oids.toSeq.grouped(maxOppijatBatchSize).toSeq
+    val totalGroups: Int = groupedOids.length
+    logger.info(s"getByOids: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä")
+
+    val henkilot: Future[Seq[Henkilo]] = Future.sequence(groupedOids.zipWithIndex.map{case (oidSeq, index) =>
+      if (oidSeq.nonEmpty) {
+        logger.info(s"getByOids: Haetaan Oppijanumerorekisteristä $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
+        client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oidSeq.toSet, acceptedResponseCode = HttpStatus.SC_OK)
+      } else {
+        Future.successful(Seq.empty)
+      }
+    }).map(_.flatten)
+
+    henkilot.onComplete {
+      case Success(_) => logger.info("getByOids: Oppijanumerorekisteri-haku valmistui!")
+      case Failure(e) => logger.error(s"getByOids: Oppijanumerorekisteri-haku epäonnistui", e)
     }
+    henkilot
   }
 }
 
