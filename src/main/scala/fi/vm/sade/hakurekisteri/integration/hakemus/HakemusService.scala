@@ -394,7 +394,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     )
 
   private def fetchHakemuksetChunked(params: SearchParams): Future[Seq[FullHakemus]] = {
-    val maxOidsChunkSize = 100
+    val maxOidsChunkSize = 500
     if (params.aoOids == null) {
       fetchHakemukset(params = params)
     } else {
