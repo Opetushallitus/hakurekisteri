@@ -227,7 +227,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
   }
 
-  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[Any] = {
+  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
     val opiskelija: Opiskelija = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
     if (suoritusExists(useSuoritus, existingSuoritukset)) {
       logger.debug("Päivitetään olemassaolevaa suoritusta.")
@@ -246,10 +246,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           .map(arvosana => deleteArvosana(arvosana))))
         .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
         .flatMap(_ => saveOpiskelija(opiskelija))
+        .map(_ => SuoritusArvosanat(useSuoritus, newArvosanat,luokka, lasnaDate, luokkaTaso))
     } else {
       saveSuoritus(useSuoritus, personOidsWithAliases).flatMap(suoritus =>
         Future.sequence(arvosanat.map(a => arvosanaRekisteri ? arvosanaToInsertResource(a, suoritus, personOidsWithAliases)))
       ).flatMap(_ => saveOpiskelija(opiskelija))
+        .map(_ => SuoritusArvosanat(useSuoritus, arvosanat,luokka, lasnaDate, luokkaTaso))
     }
   }
 
@@ -285,7 +287,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     })
   }
 
-  private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Unit] = {
+  private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Throwable, Option[SuoritusArvosanat]]]] = {
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
 
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
@@ -309,16 +311,20 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
           if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
             (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-            saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases)
-
+            saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases).map((x: SuoritusArvosanat) => Right(Some(x)))
           } else {
-            Future.successful({})
+            Future.successful(Right(None))
           }
         } catch {
-          case e: Exception => Future.successful({logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)})
+          case e: Exception =>
+            logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
+            Future.successful(Left(e))
         }
-        case _ => Future.successful({})
-      }).flatMap(_ => Future.successful({logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")}))
+        case _ => Future.successful(Right(None))
+      }).map{x =>
+        logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")
+        x
+      }
     })
   }
 
