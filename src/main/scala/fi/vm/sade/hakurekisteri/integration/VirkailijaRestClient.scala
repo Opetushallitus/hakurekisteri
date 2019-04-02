@@ -17,6 +17,7 @@ import org.asynchttpclient._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties
+import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie}
 import org.asynchttpclient.filter.ThrottleRequestFilter
 
 import scala.compat.Platform
@@ -82,21 +83,17 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
     import org.json4s.jackson.Serialization._
 
-    private def addCookies(request: Req, cookies: Seq[String]): Req = {
-      if(cookies.isEmpty) {
-        request
-      } else {
-        request <:< Map("Cookie" -> cookies.mkString("; ")  )
-      }
+    private def addCookies(request: Req, cookies: Seq[Cookie]): Req = {
+      cookies.foldLeft[Req](request)((req, cookie) => req.addOrReplaceCookie(cookie))
     }
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend", "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend")
-      val cookies = new scala.collection.mutable.ListBuffer[String]()
+      val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
       val requestWithPostHeaders = body match {
         case Some(jsonBody) =>
-          cookies += "CSRF=suoritusrekisteri"
+          cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
           (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> "suoritusrekisteri")
         case None => request
       }
@@ -107,8 +104,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
           for (
             jsession <- jSessionId;
             result <- {
-              cookies += s"${jSessionName}=${jsession.sessionId}"
-              internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
+              cookies += new DefaultCookie(jSessionName, jsession.sessionId)
+              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
+              internalClient(requestWithCookies, handler)
             }
           ) yield result
         case (Some(un), Some(pw), true) =>

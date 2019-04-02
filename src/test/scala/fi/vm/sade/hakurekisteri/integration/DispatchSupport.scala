@@ -10,7 +10,7 @@ import java.util.concurrent.{CompletableFuture, Executor}
 import java.util.function.Predicate
 
 import akka.actor.Scheduler
-import io.netty.handler.codec.http.cookie.{ClientCookieDecoder, Cookie}
+import io.netty.handler.codec.http.cookie.{ClientCookieDecoder, Cookie, DefaultCookie}
 import io.netty.handler.codec.http.{DefaultHttpHeaders, EmptyHttpHeaders, HttpHeaders}
 import org.asynchttpclient._
 import org.asynchttpclient.uri.Uri
@@ -25,10 +25,10 @@ import scala.util.matching.Regex
 
 
 trait DispatchSupport {
-  def forUrl(url: String) = ERMatcher(Some(url), Set())
-  def forPattern(url: String) = ERPatternMatcher(url.r, Set())
+  def forUrl(url: String) = ERMatcher(Some(url), Set(), Set())
+  def forPattern(url: String) = ERPatternMatcher(url.r, Set(), Set())
 
-  def forUrl(url: String, body: String) = ERMatcher(Some(url), Set(body))
+  def forUrl(url: String, body: String) = ERMatcher(Some(url), Set(body), Set())
 
   implicit def matcherToValue[T](m:Matcher[T]):T = MockitoHamcrest.argThat(m)
 }
@@ -143,46 +143,59 @@ class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBo
   override def getLocalAddress: SocketAddress = ???
 }
 
-case class EndpointRequest(url: String, body: Option[String], headers: List[(String, String)])
+case class EndpointRequest(url: String, body: Option[String], headers: List[(String, String)], cookies: Set[Cookie])
 
 abstract class EndpointMatching  extends BaseMatcher[EndpointRequest] {
   val headers:Seq[(String, String)]
   val bodyParts: Set[String]
-
+  val cookies: Set[Cookie]
   val urlString: String
 
   override def describeTo(description: Description): Unit = {
     val matchedHeaders  = headers.headOption.map((_) => "following headers: " + headers.mkString(", ")).getOrElse("any headers")
-    description.appendText(s"request with $urlString and $matchedHeaders")
+    val matchedCookies = if (cookies.isEmpty) "any cookies" else s"following cookies: ${cookies.mkString(", ")}"
+    description.appendText(s"request with $urlString and $matchedHeaders and $matchedCookies")
   }
 
   def matchesUrl(rUrl:String): Boolean
 
   override def matches(item: scala.Any): Boolean = item match {
-    case EndpointRequest(rUrl, body, rHeaders) =>
-      matchesUrl(rUrl) &&
-        headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true) &&
-        !bodyParts.exists(!body.getOrElse("").contains(_))
+    case EndpointRequest(rUrl, body, rHeaders, rCookies) =>
+      val urlMatches = matchesUrl(rUrl)
+      val headersMatch = headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true)
+      val bodyPartsMatch = !bodyParts.exists(!body.getOrElse("").contains(_))
+      val cookiesMatch = cookies.map(expectedCookie =>
+        rCookies.exists(cookieMatches(expectedCookie)))
+        .reduceOption(_ && _).getOrElse(true)
+      urlMatches &&
+        headersMatch &&
+        bodyPartsMatch &&
+        cookiesMatch
 
     case _ => false
   }
 
 
-
+  private def cookieMatches(expectedCookie: Cookie): Cookie => Boolean = { c =>
+    c.name() == expectedCookie.name() &&
+      (c.value() == expectedCookie.value())
+  }
 }
 
-case class ERMatcher(url: Option[String], bodyParts: Set[String], headers: (String, String)*) extends EndpointMatching {
+case class ERMatcher(url: Option[String], bodyParts: Set[String], cookies: Set[Cookie], headers: (String, String)*) extends EndpointMatching {
   val urlString: String = url.map("url: " + _).getOrElse("any url")
   def matchesUrl(rUrl:String) = url.map(_ == rUrl).getOrElse(true)
 
-  def withHeader(header: (String,String))  = ERMatcher(url,bodyParts, (header +: headers):_*)
+  def withHeader(header: (String,String))  = ERMatcher(url,bodyParts, cookies, (header +: headers):_*)
 
-  def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, headers:_*)
+  def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, cookies, headers:_*)
+
+  def withCookie(cookieName: String, cookieValue: String) = ERMatcher(url, bodyParts, cookies + new DefaultCookie(cookieName, cookieValue), headers:_*)
 
 }
 
 
-case class ERPatternMatcher(url: Regex, bodyParts: Set[String], headers: (String, String)*) extends EndpointMatching {
+case class ERPatternMatcher(url: Regex, bodyParts: Set[String], cookies: Set[Cookie], headers: (String, String)*) extends EndpointMatching {
   val urlString: String = s"url: $url"
   def matchesUrl(rUrl:String) = rUrl match {
     case url() => true
@@ -240,7 +253,7 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
 
     val reqBody = Option(request.getStringData).orElse(Option(request.getByteData).map(new String(_)))
 
-    val er = EndpointRequest(request.getUrl, reqBody, foo.toList)
+    val er = EndpointRequest(request.getUrl, reqBody, foo.toList, request.getCookies.asScala.toSet)
 
     Option(endpoint.request(er))
   }
