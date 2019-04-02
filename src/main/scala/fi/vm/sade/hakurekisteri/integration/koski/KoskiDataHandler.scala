@@ -263,12 +263,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           .map(arvosana => deleteArvosana(arvosana))))
         .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
         .flatMap(_ => saveOpiskelija(opiskelija))
-        .map(_ => SuoritusArvosanat(useSuoritus, newArvosanat,luokka, lasnaDate, luokkaTaso))
     } else {
       saveSuoritus(useSuoritus, personOidsWithAliases).flatMap(suoritus =>
         Future.sequence(arvosanat.map(a => arvosanaRekisteri ? arvosanaToInsertResource(a, suoritus, personOidsWithAliases)))
       ).flatMap(_ => saveOpiskelija(opiskelija))
-        .map(_ => SuoritusArvosanat(useSuoritus, arvosanat,luokka, lasnaDate, luokkaTaso))
     }
   }
 
