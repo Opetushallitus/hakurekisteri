@@ -730,6 +730,8 @@ case class FullHakemus(oid: String,
   val markkinointilupa: Boolean = answers.flatMap(_.lisatiedot).flatMap(_.get("lupaMarkkinointi")).getOrElse("false").toBoolean
 }
 
+case class AtaruResponse(applications: List[AtaruHakemusDto], offset: Option[String])
+
 case class AtaruHakemusDto(oid: String,
                            personOid: String,
                            applicationSystemId: String,

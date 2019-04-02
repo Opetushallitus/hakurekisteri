@@ -100,6 +100,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
                                organizationOid: Option[String],
                                modifiedAfter: Option[String])
 
+
   private val logger = Logging.getLogger(system, this)
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
@@ -189,16 +190,28 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   }
 
   private def ataruhakemukset(params: AtaruSearchParams): Future[List[HakijaHakemus]] = {
-    val p = params.hakuOid.fold[Map[String, String]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
-      params.modifiedAfter.fold[Map[String, String]](Map.empty)(date => Map("modifiedAfter" -> date))
-
-    val args = List(p) ++ params.hakukohdeOids.map(oid => Map("hakukohdeOids" -> oid)) ++ params.hakijaOids.map(oid => Map("hakijaOids" -> oid))
-    for {
-      ataruHakemusDtos <- ataruHakemusClient
-        .readObject[List[AtaruHakemusDto]]("ataru.applications", args:_*)(acceptedResponseCode = 200, maxRetries = 2)
-      ataruHenkilot <- oppijaNumeroRekisteri.getByOids(ataruHakemusDtos.map(_.personOid).toSet)
-      ataruHakemukset <- enrichAtaruHakemukset(ataruHakemusDtos, ataruHenkilot)
-    } yield params.organizationOid.fold(ataruHakemukset)(oid => ataruHakemukset.filter(hasAppliedToOrganization(_, oid)))
+    val p = params.hakuOid.fold[Map[String, Any]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
+      params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids => Map("hakukohdeOids" -> hakukohdeOids)) ++
+      params.hakijaOids.fold[Map[String, Any]](Map.empty)(hakijaOids => Map("hakijaOids" -> hakijaOids)) ++
+      params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date => Map("modifiedAfter" -> date))
+    def page(offset: Option[String]): Future[(List[HakijaHakemus], Option[String])] = {
+      for {
+        ataruResponse <- ataruHakemusClient.postObjectWithCodes[Map[String, Any], AtaruResponse](
+          uriKey = "ataru.applications",
+          acceptedResponseCodes = List(200),
+          maxRetries = 2,
+          resource = offset.fold(p)(o => p + ("offset" -> o)),
+          basicAuth = false
+        )
+        ataruHenkilot <- oppijaNumeroRekisteri.getByOids(ataruResponse.applications.map(_.personOid).toSet)
+        ataruHakemukset <- enrichAtaruHakemukset(ataruResponse.applications, ataruHenkilot)
+      } yield (params.organizationOid.fold(ataruHakemukset)(oid => ataruHakemukset.filter(hasAppliedToOrganization(_, oid))), ataruResponse.offset)
+    }
+    def allPages(offset: Option[String], acc: Future[List[HakijaHakemus]]): Future[List[HakijaHakemus]] = page(offset).flatMap {
+      case (applications, None) => acc.map(_ ++ applications)
+      case (applications, newOffset) => allPages(newOffset, acc.map(_ ++ applications))
+    }
+    allPages(None, Future.successful(List.empty))
   }
 
   private def hasAppliedToOrganization(hakemus: HakijaHakemus, organisaatio: String): Boolean =

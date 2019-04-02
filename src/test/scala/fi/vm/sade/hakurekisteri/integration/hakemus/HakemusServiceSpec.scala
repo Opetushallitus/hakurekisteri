@@ -27,8 +27,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
-      .thenReturn((200, List(), "[]"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
 
     Await.result(hakemusService.hakemuksetForPerson("1.2.246.562.24.81468276424"), 10.seconds).size should be (2)
   }
@@ -36,8 +36,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   it should "return applications when searching with both persons and application system" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOidsAndHaku")))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
-      .thenReturn((200, List(), "[]"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
 
     val persons = Set("1.2.246.562.24.62737906266", "1.2.246.562.24.99844104050")
     val applicationSystem = "1.2.246.562.29.90697286251"
@@ -53,8 +53,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   it should "return applications by application option oid" in {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
-      .thenReturn((200, List(), "[]"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
 
     Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (6)
   }
@@ -66,8 +66,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       .thenReturn((200, List(), getJson("listfull-1")))
     when(endPoint.request(forPattern(".*listfull.*start=20.*")))
       .thenReturn((200, List(), "[]"))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
-      .thenReturn((200, List(), "[]"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
 
     Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (20)
   }
@@ -83,7 +83,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       .thenReturn((200, List(), getJson("listfull-1")))
     when(endPoint.request(forPattern(".*listfull.*start=2.*")))
       .thenReturn((200, List(), "[]"))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
       .thenReturn((200, List(), getJson("ataruApplications")))
 
 
@@ -123,8 +123,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   it should "return hetus and personOids" in {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("hetuAndPersonOid")))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/hakurekisteri/applications.*")))
-      .thenReturn((200, List(), "[]"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
 
     val result: Seq[HetuPersonOid] = Await.result(hakemusService.hetuAndPersonOidForHaku("testHaku"), 10.seconds)
     Array(2,6).contains(result.length) should equal (true)
