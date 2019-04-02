@@ -55,7 +55,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
     when(endPoint.request(forUrl("http://localhost/blast/j_spring_cas_security_check?ticket=ST-124"))).thenReturn((200, List("Set-Cookie" -> s"JSESSIONID=abcd"), ""))
     when(endPoint.request(forUrl("http://localhost/cas2/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas2/v1/tickets/TGT-124"), ""))
     when(endPoint.request(forUrl("http://localhost/cas2/v1/tickets/TGT-124"))).thenReturn((200,List(), "ST-124"))
-    when(endPoint.request(forUrl("http://localhost/test/rest").withHeader("Cookie" -> "JSESSIONID=abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
+    when(endPoint.request(forUrl("http://localhost/test/rest").withCookie("JSESSIONID", "abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
 
     val sessionClient = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas2"),
       serviceUrl = "http://localhost/blast",
@@ -74,7 +74,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
     val ehti = requestChain.isCompleted
     if (ehti) {
       verify(endPoint).request(forUrl("http://localhost/cas2/v1/tickets").withBodyPart("user").withBodyPart("pw"))
-      verify(endPoint, times(3)).request(forUrl("http://localhost/test/rest").withHeader("Cookie" -> "JSESSIONID=abcd"))
+      verify(endPoint, times(3)).request(forUrl("http://localhost/test/rest").withCookie("JSESSIONID", "abcd"))
     } else {
       fail("timed out")
     }
