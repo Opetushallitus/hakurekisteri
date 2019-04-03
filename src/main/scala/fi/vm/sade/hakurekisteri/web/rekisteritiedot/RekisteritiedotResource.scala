@@ -88,6 +88,7 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     audit.log(auditUser,
       RekisteritiedotRead,
       AuditUtil.targetFromParams(params)
+        .setField("henkilot", henkilot.toString)
         .setField("summary", queryPost.result.summary).build(),
       new Changes.Builder().build())
 
