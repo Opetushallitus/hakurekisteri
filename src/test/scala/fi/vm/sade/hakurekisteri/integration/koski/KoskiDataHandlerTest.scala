@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
@@ -2219,6 +2220,16 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.head should equal("0")
     suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
     suoritukset.head should equal("0")
+  }
+
+  it should "set LUVA as luokka when detecting oppilaitos and luokka" in {
+    val koskiOpiskelijaParser = new KoskiOpiskelijaParser
+    val suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572429142840", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"LUVA", new LocalDate("2018-08-27"), None)
+    val oppilaitosAndLuokka = koskiOpiskelijaParser.detectOppilaitosAndLuokka(suoritusLuokka)
+
+    oppilaitosAndLuokka.luokkataso should equal("ML")
+    oppilaitosAndLuokka.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    oppilaitosAndLuokka.luokka should equal("LUVA")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
