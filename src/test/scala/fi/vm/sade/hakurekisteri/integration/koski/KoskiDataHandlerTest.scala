@@ -2223,13 +2223,123 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.head should equal("0")
   }
 
-  it should "set correct LUVA luokkatieto when detecting oppilaitos and luokka" in {
-    val suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572429142840", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"LUVA", new LocalDate("2018-08-27"), None)
-    val oppilaitosAndLuokka = koskiOpiskelijaParser.detectOppilaitosAndLuokka(suoritusLuokka)
+  it should "set correct luokkatieto when detecting oppilaitos and luokka" in {
+    //LUVA
+    var suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572429142840", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"LUVA", new LocalDate("2018-08-27"), None)
+    var opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    oppilaitosAndLuokka.luokkataso should equal("ML")
-    oppilaitosAndLuokka.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    oppilaitosAndLuokka.luokka should equal("LUVA")
+    opiskelija.luokkataso should equal("ML")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("LUVA")
+
+    //Lukio
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO lukio komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"11A", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("L")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("11A")
+
+    //Ammatillinen
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO ammatillinen komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"AMM", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("AK")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("AMM")
+
+    //Ammatilliseen valmistava
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572441001730", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"MAVA13", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("M")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("MAVA13")
+
+    //Ammattistartti
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572438136372", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"OHVA", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("A")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("OHVA")
+
+    //Valmentava
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435755085", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"VALO", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("V")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("VALO")
+
+    //VALMA
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("valma", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"VALMA15", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("VALMA")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("VALMA15")
+
+    //TELMA
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("telma", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"TELMA15", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("TELMA")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("TELMA15")
+
+    //Ammatillinen tutkinto
+    //TODO: Selvitä luokkataso
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("ammatillinentutkinto komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("")
+
+    //Peruskoulu luokkataso 9
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"9A", new LocalDate("2018-08-27"), Some("9"))
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("9")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("9A")
+
+    //Peruskoulu luokkataso AIK
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"AIK 9", new LocalDate("2018-08-27"), Some("AIK"))
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("9")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("AIK 9")
+
+    //Peruskoulu luokkataso tyhjä
+    //TODO: Selvitä mitä tälle tehdään?
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"9A", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("")
+    opiskelija.oppilaitosOid should equal("")
+    opiskelija.luokka should equal("")
+
+    //Lisäopetus luokka 10
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"10A", new LocalDate("2018-08-27"), Some("10"))
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("10")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("10A")
+
+    //Lisäopetus luokka tyhjä
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("10")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("10")
+
+    //TODO: Selvitä miten tämän kanssa toimitaan ja tee testi:
+    //perusopetuksenOppiaineenOppimaara = "TODO perusopetuksenOppiaineenOppimäärä"
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {

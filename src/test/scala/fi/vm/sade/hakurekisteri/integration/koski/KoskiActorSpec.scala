@@ -54,18 +54,21 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     }
   }
 
-  it should "detectOppilaitos should return 10 as luokka for peruskoulun lisäopetus" in {
-    opiskelijaParser.detectOppilaitosAndLuokka(
+  it should "createOpiskelija should create opiskelija with 10 as luokka for peruskoulun lisäopetus" in {
+    opiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876",
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
-        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2017-01-01"))
-    ) should equal (OppilaitosAndLuokka("10", "orgId", "10"))
+        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2016-01-01"))
+    ) should equal (
+      Opiskelija("orgId", "10", "10", "1.2.246.562.24.80710434876", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+      )
   }
 
-  it should "detectOppilaitos should return luokka for peruskoulun lisäopetus if not empty" in {
-    opiskelijaParser.detectOppilaitosAndLuokka(
+  it should "createOpiskelija should create opiskelija luokka for peruskoulun lisäopetus if not empty" in {
+    opiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876",
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
-        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2017-01-01"))
-    ) should equal (OppilaitosAndLuokka("10", "orgId", "10C"))
+        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2016-01-01"))
+    ) should equal (Opiskelija("orgId", "10", "10C", "1.2.246.562.24.80710434876", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+    )
   }
 
   it should "createOpiskelija should create opiskelija" in {
