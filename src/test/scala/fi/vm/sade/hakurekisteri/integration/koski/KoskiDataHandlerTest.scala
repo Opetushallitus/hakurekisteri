@@ -2113,7 +2113,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
@@ -2122,7 +2122,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
   }
 
@@ -2193,7 +2193,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("1")
-    val suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("1")
   }
 
@@ -2209,7 +2209,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
@@ -2218,7 +2218,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
   }
 
