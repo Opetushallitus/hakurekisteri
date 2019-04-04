@@ -142,23 +142,32 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val totalGroups: Int = groupedOids.length
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
-    val futures: Seq[Future[Unit]] = groupedOids.zipWithIndex.map{case (oids, index) =>
-      if (oids.nonEmpty) {
-        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(oids.toSet, params)
+    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[(Seq[String], Seq[String])] = {
+      if(batches.isEmpty) {
+        Future.successful((Seq(),Seq()))
       } else {
-        Future.successful({})
+        val (subSeq, index) = batches.head
+        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
+        updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
       }
     }
-    val f: Future[Seq[Unit]] = Future.sequence(futures)
+
+    val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex)
     f.onComplete {
-      case Success(_) => logger.info("HandleHenkiloUpdate: Koskipäivitys valmistui!")
+      case Success(results) => {
+        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${(results._1.size + results._2.size)} henkilöä.")
+        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._1.size}.")
+        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._2.size}.")
+        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._2}.")
+
+      }
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
-    f.map(_ => {})
+    //f
+    Future.successful({})
   }
 
-  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
+  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
       .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
@@ -193,30 +202,33 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     })
   }
 
-  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams) = {
+  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
     val filteredHenkilot: Seq[KoskiHenkiloContainer] = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
-    var successes: Seq[Option[SuoritusArvosanat]] = Seq[Option[SuoritusArvosanat]]()
-    var failures: Seq[Exception] = Seq[Exception]()
+    var successes: Seq[String] = Seq[String]()
+    var failures: Seq[String] = Seq[String]()
+    var result: Future[(Seq[String], Seq[String])] = Future[(Seq[String], Seq[String])](Seq[String](),Seq[String]())
     if(filteredHenkilot.nonEmpty) {
-      val goo: Future[(Seq[Option[SuoritusArvosanat]], Seq[Exception])] = Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).flatMap {
-          s =>
-            val errors = s.filter(result => result.isLeft).size
+      result = Future.sequence(filteredHenkilot.map(henkilo =>
+        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).map {
+          henkiloResult => {
+            if (henkiloResult.collectFirst{ case l: Left[Exception,Option[SuoritusArvosanat]] => true }.get ) {
 
-            s foreach {foo =>
-              if (foo.isLeft) {
-                foo.left.map(failure => logger.error("Virhe tallennuksessa: " + failure))
-                failures += foo.left
-              } else {
-                successes += foo.right
-              }
+              System.out.println("ERROR")
+              failures +: henkilo.henkilö.oid.get
+            } else {
+              System.out.println("SUCCESS")
+              successes +: henkilo.henkilö.oid.get
+
             }
+          }
+            (successes, failures)
         })
-      ).flatMap(_ => Future.successful(successes, failures))
+      ).flatMap(_ => Future.successful((successes, failures)))
     } else {
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
-      Future.successful(successes, failures)
-    }
+     // Future.successful(successes, failures)
 
+    }
+    result
   }
 }
