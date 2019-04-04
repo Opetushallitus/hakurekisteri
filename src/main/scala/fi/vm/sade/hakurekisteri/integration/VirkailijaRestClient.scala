@@ -54,6 +54,8 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   private val serviceUrl: String = config.serviceUrl
   private val user = config.user
   private val password = config.password
+  private val userForProdKoski = OphUrlProperties.getOrElse("suoritusrekisteri.ksk2.username", "FIXME! No username for KSK-2")
+  private val pwForProdKoski = OphUrlProperties.getOrElse("suoritusrekisteri.ksk2.password", "FIXME! No password for KSK-2")
   private val logger = Logging.getLogger(system, this)
   private val serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
 
@@ -82,7 +84,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       }
     }
 
-    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
+    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false, ksk2: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend", "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend")
       val cookies = new scala.collection.mutable.ListBuffer[String]()
 
@@ -93,8 +95,16 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case None => request
       }
 
-      (user, password, basicAuth) match{
-        case (Some(un), Some(pw), false) =>
+      (user, password, basicAuth, ksk2) match{
+        //this is a quick shortcut only to be used on KSK-2 testing, using temporary credentials.
+        case (_, _, true, true) =>
+          logger.info(s"KSK-2 : Making call to $url with special credentials: user $userForProdKoski, password ******")
+          for (
+            result <- {
+              internalClient(addCookies(requestWithPostHeaders, cookies).as_!(userForProdKoski, pwForProdKoski).toRequest, handler)
+            }
+          ) yield result
+        case (Some(un), Some(pw), false, _) =>
           for (
             jsession <- jSessionId;
             result <- {
@@ -102,7 +112,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
               internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
             }
           ) yield result
-        case (Some(un), Some(pw), true) =>
+        case (Some(un), Some(pw), true, _) =>
           for (
             result <- {
               internalClient(addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest, handler)
@@ -132,8 +142,8 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         } else Future.failed(t)
     }
 
-  private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger, resource: A): Future[B] =
-    Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
+  private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false, ksk2_special: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger, resource: A): Future[B] =
+    Client.request[A, B](url, basicAuth, ksk2_special)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
@@ -188,6 +198,15 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     val retryCount = new AtomicInteger(1)
     val url = OphUrlProperties.url(uriKey, args:_*)
     val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+    logLongQuery(result, url)
+    result
+  }
+
+  def postObjectWithCodesForTuotantoKoski[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, resource: A, basicAuth: Boolean, args: AnyRef*): Future[B] = {
+    val retryCount = new AtomicInteger(1)
+    //val url = OphUrlProperties.url(uriKey, args:_*)
+    val url = "https://virkailija.testiopintopolku.fi/koski/api/sure/oids"
+    val result = tryPostClient[A, B](url, basicAuth, ksk2_special = true)(acceptedResponseCodes, maxRetries, retryCount, resource)
     logLongQuery(result, url)
     result
   }
