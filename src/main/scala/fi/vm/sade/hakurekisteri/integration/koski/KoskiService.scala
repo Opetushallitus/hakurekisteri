@@ -193,22 +193,30 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     })
   }
 
-  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
+  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams) = {
     val filteredHenkilot: Seq[KoskiHenkiloContainer] = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
+    var successes: Seq[Option[SuoritusArvosanat]] = Seq[Option[SuoritusArvosanat]]()
+    var failures: Seq[Exception] = Seq[Exception]()
     if(filteredHenkilot.nonEmpty) {
-      Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).recoverWith {
-          case e: Exception =>
-            logger.error("Koskisuoritusten tallennus henkilölle {} epäonnistui: {} ",henkilo.henkilö.oid , e)
-            Future.failed(e)
-        })).flatMap(_ => Future.successful({})).recoverWith{
-        case e: Exception =>
-          logger.error("Kaikkien henkilöiden koskisuorituksia ei saatu tallennettua. {} " , e)
-          Future.failed(e)
-      }
+      val goo: Future[(Seq[Option[SuoritusArvosanat]], Seq[Exception])] = Future.sequence(filteredHenkilot.map(henkilo =>
+        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).flatMap {
+          s =>
+            val errors = s.filter(result => result.isLeft).size
+
+            s foreach {foo =>
+              if (foo.isLeft) {
+                foo.left.map(failure => logger.error("Virhe tallennuksessa: " + failure))
+                failures += foo.left
+              } else {
+                successes += foo.right
+              }
+            }
+        })
+      ).flatMap(_ => Future.successful(successes, failures))
     } else {
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
-      Future.successful({})
+      Future.successful(successes, failures)
     }
+
   }
 }
