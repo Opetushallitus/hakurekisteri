@@ -227,5 +227,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
       Future.successful(failures, successes)
     }
+
   }
 }
