@@ -41,15 +41,16 @@ class KoskiOpiskelijaParser {
 
   private def detectOppilaitosAndLuokka(suoritus: SuoritusLuokka): OppilaitosAndLuokka = {
     val oppilaitoksesAndLuokkas: Map[String, OppilaitosAndLuokka] = Map(
-      Oids.lukioKomoOid                   -> OppilaitosAndLuokka("L", suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.lukioonvalmistavaKomoOid       -> OppilaitosAndLuokka("ML" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.ammatillinenKomoOid            -> OppilaitosAndLuokka("AK" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.ammatilliseenvalmistavaKomoOid -> OppilaitosAndLuokka("M" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.ammattistarttiKomoOid          -> OppilaitosAndLuokka("A" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.valmentavaKomoOid              -> OppilaitosAndLuokka("V" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.valmaKomoOid                   -> OppilaitosAndLuokka("VALMA" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.telmaKomoOid                   -> OppilaitosAndLuokka("TELMA" , suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.ammatillinentutkintoKomoOid    -> OppilaitosAndLuokka("" , suoritus.suoritus.myontaja, suoritus.luokka)
+      Oids.lukioKomoOid                           -> OppilaitosAndLuokka("L", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.lukioonvalmistavaKomoOid               -> OppilaitosAndLuokka("ML", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.ammatillinenKomoOid                    -> OppilaitosAndLuokka("AK", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.ammatilliseenvalmistavaKomoOid         -> OppilaitosAndLuokka("M", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.ammattistarttiKomoOid                  -> OppilaitosAndLuokka("A", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.valmentavaKomoOid                      -> OppilaitosAndLuokka("V", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.valmaKomoOid                           -> OppilaitosAndLuokka("VALMA", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.telmaKomoOid                           -> OppilaitosAndLuokka("TELMA", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.ammatillinentutkintoKomoOid            -> OppilaitosAndLuokka("", suoritus.suoritus.myontaja, suoritus.luokka),
+      Oids.perusopetuksenOppiaineenOppimaaraOid   -> OppilaitosAndLuokka("OPPIAINE", suoritus.suoritus.myontaja, suoritus.luokka)
     )
 
     if (suoritus.suoritus.komo == Oids.perusopetusKomoOid

@@ -2289,7 +2289,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.luokka should equal("TELMA15")
 
     //Ammatillinen tutkinto
-    //TODO: Selvitä luokkataso
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("ammatillinentutkinto komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
@@ -2313,15 +2312,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
     opiskelija.luokka should equal("AIK 9")
 
-    //Peruskoulu luokkataso tyhjä
-    //TODO: Selvitä mitä tälle tehdään?
-    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"9A", new LocalDate("2018-08-27"), None)
-    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
-
-    opiskelija.luokkataso should equal("")
-    opiskelija.oppilaitosOid should equal("")
-    opiskelija.luokka should equal("")
-
     //Lisäopetus luokka 10
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"10A", new LocalDate("2018-08-27"), Some("10"))
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
@@ -2338,8 +2328,13 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
     opiskelija.luokka should equal("10")
 
-    //TODO: Selvitä miten tämän kanssa toimitaan ja tee testi:
-    //perusopetuksenOppiaineenOppimaara = "TODO perusopetuksenOppiaineenOppimäärä"
+    //Perusopetuksen oppiaineen oppimäärä
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO perusopetuksenOppiaineenOppimäärä", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"XX", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("OPPIAINE")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("XX")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
