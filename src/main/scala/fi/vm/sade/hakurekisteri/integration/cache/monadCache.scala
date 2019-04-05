@@ -39,13 +39,9 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
   private var cache: Map[K, Cacheable[Future, T]] = Map()
 
   def +(key: K, v: T): Future[_] = {
-    val value: Cacheable[Future, T] = cacheable(key, Future.successful(v))
+    val value: Cacheable[Future, T] = Cacheable[Future, T](f = Future.successful(v))
     cache = cache + (key -> value)
     value.f
-  }
-
-  private def cacheable(key: K, f: Future[T]): Cacheable[Future, T] = {
-    Cacheable[Future, T](f = f, accessed = getAccessed(key))
   }
 
   def -(key: K): Unit = if (cache.contains(key)) cache = cache - key
@@ -57,8 +53,6 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
     cache = cache + (key -> Cacheable[Future, T](inserted = cached.inserted, f = cached.f))
     cached.f
   }
-
-  private def getAccessed(key: K): Long = cache.get(key).map(_.accessed).getOrElse(Platform.currentTime)
 
   def size: Int = cache.size
 
@@ -118,4 +112,4 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
   override def getVersion: Future[Option[Long]] = Future.successful(Some(0l))
 }
 
-case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, accessed: Long = Platform.currentTime, f: F[T])
+case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, f: F[T])
