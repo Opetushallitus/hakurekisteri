@@ -148,8 +148,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         Future.successful({})
       } else {
         val (subSeq, index) = batches.head
-        logger.info(s"Saving haun hakija hakija information for ${subSeq.size}")
-        val k = Await.result(Future.sequence(subSeq.map(oid => koskiDataHandler.saveHaunHakija(oid, hakuOid.getOrElse("3.4.5")))), 5.minutes)
+        //logger.info(s"Saving haun hakija hakija information for ${subSeq.size}")
+        //val k = Await.result(Future.sequence(subSeq.map(oid => koskiDataHandler.saveHaunHakija(oid, hakuOid.getOrElse("3.4.5")))), 5.minutes)
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
         updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
       }
