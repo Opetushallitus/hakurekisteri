@@ -8,6 +8,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -183,6 +184,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     opiskelijaRekisteri ? opiskelija
   }
 
+  private def saveOpiskelijaHardcoded(henkiloOid: String, hakuOid: String): Future[Any] = {
+    val opiskelija = Opiskelija("1.2.3", "luokkataso", hakuOid, henkiloOid, parseLocalDate("2018-01-01").toDateTimeAtStartOfDay, None, "ksk2")
+    opiskelijaRekisteri ? opiskelija
+  }
+
   private def saveSuoritus(suor: Suoritus, personOidsWithAliases: PersonOidsWithAliases): Future[Suoritus with Identified[UUID]] = {
     logger.debug("saveSuoritus={}", suor)
     (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor, personOidsWithAliases)).mapTo[Suoritus with Identified[UUID]].recoverWith {
@@ -326,6 +332,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       logger.info("Filtteröitiin henkilöltä " + henkilo.henkilö.oid + " pois yksi tai useampia opiskeluoikeuksia. Ennen filtteröintiä: " + henkilo.opiskeluoikeudet.size + ", jälkeen: " + viimeisimmat.size)
     }
     suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.getOrElse(""), viimeisimmat)
+  }
+
+  def saveHaunHakija(henkiloOid: String, hakuOid: String) = {
+    saveOpiskelijaHardcoded(henkiloOid, hakuOid)
   }
 
   def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
