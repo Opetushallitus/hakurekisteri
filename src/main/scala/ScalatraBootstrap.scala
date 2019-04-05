@@ -47,12 +47,11 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, Future}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override def init(context: ServletContext) {
     OPHSecurity.init(context)
@@ -72,7 +71,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val authorizedRegisters = new AuthorizedRegisters(registers, system, config, integrations.hakemusBasedPermissionChecker)
 
-    config.productionServerConfig = new ProductionServerConfig(integrations, system, security, ec)
+    config.productionServerConfig = new ProductionServerConfig(integrations, system, security)
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 

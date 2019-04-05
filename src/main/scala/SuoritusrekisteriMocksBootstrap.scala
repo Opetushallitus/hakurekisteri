@@ -1,6 +1,5 @@
 import java.util.concurrent.TimeUnit
 
-import javax.servlet.ServletContext
 import _root_.akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
@@ -14,18 +13,20 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
+import javax.servlet.ServletContext
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{Extraction, _}
 import org.scalatra._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSupport {
 
   override def init(context: ServletContext) {
     val config = WebAppConfig.getConfig(context)
     implicit val system = config.productionServerConfig.system
-    implicit val ec = config.productionServerConfig.ec
+
+    implicit val ec: ExecutionContextExecutor = system.dispatcher
     implicit val security = config.productionServerConfig.security
 
     val anyActorRef = system.deadLetters

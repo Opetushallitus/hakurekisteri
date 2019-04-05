@@ -15,7 +15,6 @@ import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 import support.{Integrations, SureDbLoggingConfig}
 
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
@@ -128,7 +127,7 @@ class MockDevConfig extends Config {
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
 
-class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
+class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security)
 
 abstract class Config {
   def mockMode: Boolean
