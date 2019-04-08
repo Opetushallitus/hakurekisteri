@@ -1,18 +1,17 @@
 package fi.vm.sade.hakurekisteri.web.jonotus
 
-import java.io.OutputStream
 import java.lang.Boolean._
-import java.util.concurrent.{TimeoutException, ExecutionException}
+import java.util.concurrent.{ExecutionException, TimeoutException}
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{AsiakirjaLuku, AuditUtil}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
-import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.json4s.Formats
@@ -43,11 +42,16 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
           Ok()
         } else {
           getContentType(format) match {
-            case Left(ctype) =>
+            case Left(ctype) => {
+              audit.log(auditUser,
+                AsiakirjaLuku,
+                AuditUtil.targetFromParams(params).build(),
+                new Changes.Builder().build())
+
               contentType = ctype
               setContentDisposition(format, response, "hakijat")
               response.outputStream.write(bytes)
-
+            }
             case Right(ex) =>
               logger.error("Unsupported content type", ex)
               throw ex

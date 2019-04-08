@@ -2,6 +2,8 @@ package fi.vm.sade.hakurekisteri.web.integration.ytl
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{AuditUtil, YTLSyncForAll, YTLSyncForPerson}
 import fi.vm.sade.hakurekisteri.integration.ytl.{Kokelas, Send, YtlIntegration}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -18,7 +20,6 @@ class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val sy
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
-
   before() {
     contentType = formats("json")
   }
@@ -33,6 +34,7 @@ class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val sy
   post("/http_request") {
     shouldBeAdmin
     logger.info("Fetching YTL data for everybody")
+    audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
     ytlIntegration.syncAll()
     Accepted("YTL sync started")
   }
@@ -40,7 +42,7 @@ class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val sy
     shouldBeAdmin
     val personOid = params("personOid")
     logger.info(s"Fetching YTL data for person OID $personOid")
-
+    audit.log(auditUser, YTLSyncForPerson, AuditUtil.targetFromParams(params).build, Changes.EMPTY)
     val done: Seq[Try[Kokelas]] = Await.result(ytlIntegration.sync(personOid), 10.seconds)
     val exists = done.exists {
       case Success(s) => true

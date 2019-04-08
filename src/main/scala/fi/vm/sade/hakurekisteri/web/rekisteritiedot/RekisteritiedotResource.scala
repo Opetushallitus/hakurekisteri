@@ -5,7 +5,8 @@ import java.util.UUID
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
@@ -22,7 +23,7 @@ import fi.vm.sade.hakurekisteri.web.oppija.OppijatPostSize
 import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
 import fi.vm.sade.hakurekisteri.web.validation.{ScalaValidator, SimpleValidatable, Validatable}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{Swagger, SwaggerEngine}
+import org.scalatra.swagger.{Parameter, Swagger, SwaggerEngine}
 import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
 import scala.collection.JavaConversions._
@@ -61,6 +62,12 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
+      audit.log(auditUser,
+        RekisteritiedotRead,
+        AuditUtil.targetFromParams(params)
+          .setField("summary", query.result.summary).build(),
+        Changes.EMPTY)
+
       private val tiedotFuture = fetchTiedot(q)
 
       logQuery(q, t0, tiedotFuture)
@@ -77,6 +84,13 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
 
     val personOidsWithAliases = oppijaNumeroRekisteri.enrichWithAliases(henkilot)
+
+    audit.log(auditUser,
+      RekisteritiedotRead,
+      AuditUtil.targetFromParams(params)
+        .setField("henkilot", henkilot.toString)
+        .setField("summary", queryPost.result.summary).build(),
+      new Changes.Builder().build())
 
     new AsyncResult() {
       override implicit def timeout: Duration = 1000.seconds
@@ -103,6 +117,11 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     implicit val user = getUser
     val q = HenkiloHakijaQuery(params("oid"))
 
+    audit.log(auditUser,
+      RekisteritiedotRead,
+      new Target.Builder().setField("oppijaOid", params("oid")).build(),
+      new Changes.Builder().build())
+
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
@@ -127,6 +146,11 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: IHa
     val t0 = Platform.currentTime
     implicit val user = getUser
     val q = queryForParams(params)
+
+    audit.log(auditUser,
+      RekisteritiedotReadLight,
+      AuditUtil.targetFromParams(params).build(),
+      Changes.EMPTY)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds

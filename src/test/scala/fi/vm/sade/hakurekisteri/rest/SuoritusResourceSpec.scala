@@ -1,11 +1,13 @@
 package fi.vm.sade.hakurekisteri.rest
 
+import java.net.InetAddress
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 
+import javax.servlet.http.HttpServletRequest
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.AuditException
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider}
@@ -36,8 +38,11 @@ class SuoritusResourceTestSecurity extends Security {
     override val username: String = "Test"
     override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.39644336305"), "","")
   }
+  private def testAuditUser = new fi.vm.sade.auditlog.User(InetAddress.getLocalHost, "-", "-")
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = testAuditUser
+
 }
 
 class SuoritusResourceAdminTestSecurity extends Security {
@@ -46,8 +51,10 @@ class SuoritusResourceAdminTestSecurity extends Security {
     override val username: String = "Test"
     override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "","")
   }
+  private def testAuditUser = new fi.vm.sade.auditlog.User(InetAddress.getByName("123.123.123.1"), "abc123_test", "mockAgent")
 
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(AdminTestUser)
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = testAuditUser
 }
 
 class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with AsyncAssertions {

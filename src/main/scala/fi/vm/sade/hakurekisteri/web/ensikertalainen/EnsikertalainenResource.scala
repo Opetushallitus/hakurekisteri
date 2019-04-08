@@ -5,6 +5,8 @@ import java.util.concurrent.ExecutionException
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
+import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.hakurekisteri.{AuditUtil, EnsikertalainenHaussaQuery, KaikkiHaunEnsikertalaiset}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, HaunEnsikertalaisetQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
@@ -41,6 +43,10 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     val henkiloOid = params("henkilo")
     val hakuOid = params("haku")
 
+    audit.log(auditUser,
+      EnsikertalainenHaussaQuery,
+      new Target.Builder().setField("henkilo", henkiloOid).setField("haku", hakuOid).build(),
+      new Changes.Builder().build())
     new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       private val q = (ensikertalainenActor ? EnsikertalainenQuery(
@@ -55,7 +61,10 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
   get("/haku/:haku", operation(hakuQuery)) {
     val t0 = Platform.currentTime
     val hakuOid = params("haku")
-
+    audit.log(auditUser,
+      KaikkiHaunEnsikertalaiset,
+      AuditUtil.targetFromParams(params).build(),
+      new Changes.Builder().build())
     new AsyncResult() {
       override implicit def timeout: Duration = 15.minutes
       override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(15.minutes).mapTo[Seq[Ensikertalainen]]
@@ -68,6 +77,11 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     val personOids = parse(request.body).extract[Set[String]]
     if (personOids.isEmpty) throw ParamMissingException("request body does not contain person oids")
     val hakuOid = params("haku")
+
+    audit.log(auditUser,
+      EnsikertalainenHaussaQuery,
+      new Target.Builder().setField("henkilot", personOids.toString()).setField("haku", hakuOid).build(),
+      new Changes.Builder().build())
 
     new AsyncResult() {
       override implicit def timeout: Duration = 5.minutes

@@ -47,6 +47,9 @@ log4j.appender.P.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%
 
 # Audit logger configuration
 log4j.logger.fi.vm.sade.auditlog.Audit=INFO, audit
+log4j.additivity.fi.vm.sade.auditlog.Audit=false
+log4j.logger.Audit=INFO, audit
+log4j.additivity.audit=false
 log4j.appender.audit=org.apache.log4j.FileAppender
 log4j.appender.audit.immediateFlush=true
 log4j.appender.audit.File=${user.home}/logs/auditlog_hakurekisteri.log

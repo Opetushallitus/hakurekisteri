@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.web.rest.support
 
+import java.net.InetAddress
 import java.security.Principal
-import javax.servlet.http.HttpServletRequest
 
-import fi.vm.sade.hakurekisteri.Config
+import javax.servlet.http.HttpServletRequest
+import fi.vm.sade.hakurekisteri.{Config, AuditUtil}
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, User}
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
 import org.apache.commons.lang3.builder.ToStringBuilder
@@ -12,6 +13,7 @@ import org.springframework.security.core.{Authentication, GrantedAuthority}
 trait SecuritySupport {
   implicit val security: Security
   def currentUser(implicit request: HttpServletRequest): Option[User] = security.currentUser
+  def auditUser(implicit requst: HttpServletRequest): fi.vm.sade.auditlog.User = security.auditUser
 }
 
 object Security {
@@ -24,6 +26,7 @@ object Security {
 
 trait Security {
   def currentUser(implicit request: HttpServletRequest): Option[User]
+  def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User
   def security: Security = this
 }
 
@@ -36,6 +39,10 @@ class SpringSecurity extends Security {
   override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
     case a: Authentication => OPHUser(username(a), authorities(a).toSet,userAgent(request),inetAddress(request))
     case u: Principal => OPHUser(username(u), Set(),userAgent(request),inetAddress(request))
+  }
+
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = {
+    AuditUtil.parseUser(request, currentUser.get.username)
   }
 
   def username(u: Principal): String = {
@@ -58,6 +65,8 @@ class SpringSecurity extends Security {
 
 class TestSecurity extends Security {
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getByName("111.222.111.2"), "abc999_test", "mockAgent")
+
 }
 
 object TestUser extends User {
