@@ -140,30 +140,31 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
     val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
     val totalGroups: Int = groupedOids.length
+    var updateHenkiloResults = (Seq[String](), Seq[String]())
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
-    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[(Seq[String], Seq[String])] = {
+    def handleBatch(batches: Seq[(Seq[String], Int)], acc: (Seq[String], Seq[String])): Future[(Seq[String], Seq[String])] = {
       if(batches.isEmpty) {
-        Future.successful((Seq(),Seq()))
+        Future(acc)
       } else {
         val (subSeq, index) = batches.head
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
+        updateHenkilot(subSeq.toSet, params).flatMap(s => {
+          handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
+        })
       }
     }
 
-    val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex)
+    val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
     f.onComplete {
       case Success(results) => {
         logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${(results._1.size + results._2.size)} henkilöä.")
         logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._1.size}.")
         logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._2.size}.")
         logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._2}.")
-
       }
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
-    //f
     Future.successful({})
   }
 
@@ -194,7 +195,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         }
         Seq(container.copy(opiskeluoikeudet = oikeudet))
       } else {
-        if (container.opiskeluoikeudet.size > 0) {
+        if (container.opiskeluoikeudet.nonEmpty) {
           logger.info(s"Filtteröitiin henkilöltä ${container.henkilö.oid} ${container.opiskeluoikeudet.size} opiskeluoikeutta, joista puuttui oppilaitos tai opiskeluoikeuden tilatieto.")
         }
         Seq()
@@ -206,29 +207,22 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val filteredHenkilot: Seq[KoskiHenkiloContainer] = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
     var successes: Seq[String] = Seq[String]()
     var failures: Seq[String] = Seq[String]()
-    var result: Future[(Seq[String], Seq[String])] = Future[(Seq[String], Seq[String])](Seq[String](),Seq[String]())
     if(filteredHenkilot.nonEmpty) {
-      result = Future.sequence(filteredHenkilot.map(henkilo =>
+       Future.sequence(filteredHenkilot.map(henkilo =>
         koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).map {
           henkiloResult => {
-            if (henkiloResult.collectFirst{ case l: Left[Exception,Option[SuoritusArvosanat]] => true }.get ) {
-
-              System.out.println("ERROR")
-              failures +: henkilo.henkilö.oid.get
+            if (henkiloResult.exists(_.isLeft)) {
+              failures = failures :+ henkilo.henkilö.oid.get
             } else {
-              System.out.println("SUCCESS")
-              successes +: henkilo.henkilö.oid.get
-
+              successes = successes :+ henkilo.henkilö.oid.get
             }
           }
-            (successes, failures)
         })
-      ).flatMap(_ => Future.successful((successes, failures)))
+      ).flatMap {_ =>
+        Future.successful((successes, failures))}
     } else {
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
-     // Future.successful(successes, failures)
-
+      Future.successful(successes, failures)
     }
-    result
   }
 }
