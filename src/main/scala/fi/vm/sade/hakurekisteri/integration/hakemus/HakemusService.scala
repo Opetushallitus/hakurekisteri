@@ -88,7 +88,9 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
                      ataruHakemusClient: VirkailijaRestClient,
                      tarjontaActor: TarjontaActorRef,
                      organisaatioActor: OrganisaatioActorRef,
-                     oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
+                     oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+                     pageSize: Int = 200,
+                     maxOidsChunkSize: Int = 150)
                     (implicit val system: ActorSystem) extends IHakemusService {
 
   case class SearchParams(aoOids: Seq[String] = null, asId: String = null, organizationFilter: String = null,
@@ -394,7 +396,6 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     )
 
   private def fetchHakemuksetChunked(params: SearchParams): Future[Seq[FullHakemus]] = {
-    val maxOidsChunkSize = 150
     if (params.aoOids == null) {
       fetchHakemukset(params = params)
     } else {
