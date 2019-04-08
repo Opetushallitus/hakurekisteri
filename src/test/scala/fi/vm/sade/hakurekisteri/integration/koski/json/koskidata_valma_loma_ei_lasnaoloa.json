@@ -1,0 +1,175 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.80710434876",
+    "hetu": "210299-9456",
+    "syntymäaika": "1999-02-21",
+    "etunimet": "Prinssi Möykkäel",
+    "kutsumanimi": "Prinssi",
+    "sukunimi": "Jaksonen",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.15042020451",
+      "versionumero": 4,
+      "aikaleima": "2019-04-08T10:07:31.327471",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.15056801606",
+        "oppilaitosnumero": {
+          "koodiarvo": "10052",
+          "nimi": {
+            "fi": "Etelä-Kymenlaakson ammattiopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Etelä-Kymenlaakson ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Etelä-Kymenlaakson ammattiopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "285",
+          "nimi": {
+            "fi": "Kotka",
+            "sv": "Kotka"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.344267961810",
+        "nimi": {
+          "fi": "Kotkan-Haminan seudun koulutuskuntayhtymä"
+        },
+        "yTunnus": "1958694-5",
+        "kotipaikka": {
+          "koodiarvo": "285",
+          "nimi": {
+            "fi": "Kotka",
+            "sv": "Kotka"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "ostettu": false,
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2019-08-08",
+            "tila": {
+              "koodiarvo": "loma",
+              "nimi": {
+                "fi": "Loma",
+                "sv": "Semester",
+                "en": "Vacation"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999901",
+              "nimi": {
+                "fi": "Ammatilliseen koulutukseen valmentava koulutus (VALMA)",
+                "sv": "Handledande utbildning för yrkesutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "VALMA",
+                "sv": "Handledande utbildning för yrkesutbildning"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "perusteenDiaarinumero": "OPH-2658-2017",
+            "koulutustyyppi": {
+              "koodiarvo": "18",
+              "nimi": {
+                "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "lyhytNimi": {
+                "fi": "VALMA",
+                "sv": "Handledande utbildning för grundläggande yrkesutbildning"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.15056801606",
+            "oppilaitosnumero": {
+              "koodiarvo": "10052",
+              "nimi": {
+                "fi": "Etelä-Kymenlaakson ammattiopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Etelä-Kymenlaakson ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Etelä-Kymenlaakson ammattiopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "285",
+              "nimi": {
+                "fi": "Kotka",
+                "sv": "Kotka"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "tyyppi": {
+            "koodiarvo": "valma",
+            "nimi": {
+              "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)",
+              "sv": "Handledande utbildning för grundläggande yrkesutbildning",
+              "en": "Preparatory education for vocational training"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2019-08-08"
+    }
+  ]
+}
