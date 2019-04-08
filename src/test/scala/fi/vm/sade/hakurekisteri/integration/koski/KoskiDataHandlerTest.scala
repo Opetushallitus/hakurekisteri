@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
@@ -61,7 +62,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
   val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
 
   val KoskiArvosanaTrigger: KoskiDataHandler = new KoskiDataHandler(suoritusrekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)
-  val suoritusParser = new KoskiSuoritusArvosanaParser
+  val koskiOpiskelijaParser = new KoskiOpiskelijaParser
+  val koskiSuoritusParser = new KoskiSuoritusArvosanaParser
   
   override protected def beforeEach(): Unit = {
     ItPostgres.reset()
@@ -156,7 +158,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -176,7 +178,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -197,7 +199,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -217,7 +219,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -236,7 +238,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val numcourses: Int = suoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
+    val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 25
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
@@ -931,7 +933,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val ks3 = ks1.copy(vahvistus = Some(vahvistus3))
 
     val suoritukset: Seq[KoskiSuoritus] = Seq(ks1,ks2,ks3)
-    val maybedate: Option[LocalDate] = suoritusParser.getEndDateFromLastNinthGrade(suoritukset)
+    val maybedate: Option[LocalDate] = koskiSuoritusParser.getEndDateFromLastNinthGrade(suoritukset)
 
     maybedate.get shouldEqual parseLocalDate("2000-05-03")
   }
@@ -1020,7 +1022,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       jääLuokalle = None)
 
     val suoritukset: Seq[KoskiSuoritus] = Seq(ks1,ks2,ks3,ks4,ks5)
-    val maybedate: Option[LocalDate] = suoritusParser.getEndDateFromLastNinthGrade(suoritukset)
+    val maybedate: Option[LocalDate] = koskiSuoritusParser.getEndDateFromLastNinthGrade(suoritukset)
 
     maybedate.get shouldEqual parseLocalDate("2000-05-03")
   }
@@ -1226,7 +1228,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     3: pakollinen ei, yksilöllistetty kyllä
     4: pakollinen ei, yksilöllistetty kyllä
     */
-    var result = suoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    var result = koskiSuoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
     result._2 should equal (yksilollistaminen.Ei)
 
     json  = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen1.json").mkString
@@ -1240,7 +1242,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     3: pakollinen kyllä, yksilöllistetty kyllä
     4: pakollinen ei, yksilöllistetty kyllä
     */
-    result = suoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result = koskiSuoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
     result._2 should equal (yksilollistaminen.Osittain)
 
     json  = scala.io.Source.fromFile(jsonDir + "yksilöllistäminen2.json").mkString
@@ -1254,7 +1256,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     3: pakollinen kyllä, yksilöllistetty kyllä
     4: pakollinen ei, yksilöllistetty ei
     */
-    result = suoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
+    result = koskiSuoritusParser.osasuoritusToArvosana(henkilo.henkilö.oid.get, "TEST", osasuoritukset, None, None, false, LocalDate.now())
     result._2 should equal (yksilollistaminen.Kokonaan)
   }
 
@@ -2112,7 +2114,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
@@ -2121,7 +2123,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
   }
 
@@ -2192,7 +2194,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("1")
-    val suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("1")
   }
 
@@ -2208,7 +2210,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    var suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
@@ -2217,8 +2219,122 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
+  }
+
+  it should "set correct luokkatieto when detecting oppilaitos and luokka" in {
+    //LUVA
+    var suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572429142840", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"LUVA", new LocalDate("2018-08-27"), None)
+    var opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("ML")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("LUVA")
+
+    //Lukio
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO lukio komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"11A", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("L")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("11A")
+
+    //Ammatillinen
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO ammatillinen komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"AMM", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("AK")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("AMM")
+
+    //Ammatilliseen valmistava
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572441001730", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"MAVA13", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("M")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("MAVA13")
+
+    //Ammattistartti
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572438136372", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"OHVA", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("A")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("OHVA")
+
+    //Valmentava
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435755085", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"VALO", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("V")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("VALO")
+
+    //VALMA
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("valma", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"VALMA15", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("VALMA")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("VALMA15")
+
+    //TELMA
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("telma", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"TELMA15", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("TELMA")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("TELMA15")
+
+    //Ammatillinen tutkinto
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("ammatillinentutkinto komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("")
+
+    //Peruskoulu luokkataso 9
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"9A", new LocalDate("2018-08-27"), Some("9"))
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("9")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("9A")
+
+    //Peruskoulu luokkataso AIK
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"AIK 9", new LocalDate("2018-08-27"), Some("AIK"))
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("9")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("AIK 9")
+
+    //Lisäopetus luokka 10
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"10A", new LocalDate("2018-08-27"), Some("10"))
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("10")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("10A")
+
+    //Lisäopetus luokka tyhjä
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("10")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("10")
+
+    //Perusopetuksen oppiaineen oppimäärä
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO perusopetuksenOppiaineenOppimäärä", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"XX", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.luokkataso should equal("OPPIAINE")
+    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.luokka should equal("XX")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
