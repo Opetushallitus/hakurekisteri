@@ -84,7 +84,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid => {
-        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} ei vahvistettu tai hylättyjä sisältävä peruskoulu- tai kymppiluokkasuoritus.")
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
         suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
       }
       case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
@@ -108,7 +108,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
 
     if (isRemovable) {
-      logger.info(s"sFiltteröidään henkilöltä {$henkiloOid} alle 30 opintopisteen keskeytynyt tai valmis VALMA-suoritus.",
+      logger.info(s"Filtteröidään henkilöltä {$henkiloOid} alle 30 opintopisteen VALMA-suoritus tilassa {${opiskeluoikeus.tila}}.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
@@ -139,7 +139,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
     // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
     viimeisimmatOpiskeluoikeudet.map { oo =>
-      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(henkiloOid.getOrElse("Puuttuva henkilöOid"), s, oo)))
+      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(henkiloOid.getOrElse(throw new RuntimeException("Puuttuva henkilöOid")), s, oo)))
     }
   }
 
@@ -317,7 +317,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           }
         } catch {
           case e: Exception =>
-            logger.warn(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.")
+            logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
             Future.successful(Left(e))
         }
         case _ => Future.successful(Right(None))
