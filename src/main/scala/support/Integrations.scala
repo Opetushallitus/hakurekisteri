@@ -161,7 +161,7 @@ class BaseIntegrations(rekisterit: Registers,
   val organisaatiot = new OrganisaatioActorRef(getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)), "organisaatio"))
   val henkilo = new HenkiloActorRef(system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo"))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system, config)
-  val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri)(system)
+  val hakemusService = new HakemusService(hakemusClient, ataruHakemusClient, tarjonta, organisaatiot, oppijaNumeroRekisteri, maxOidsChunkSize = config.properties.getOrElse("suoritusrekisteri.hakemusservice.max.oids.chunk.size", "150").toInt)(system)
   val koskiDataHandler = new KoskiDataHandler(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
   val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler, config)(system)
   val koosteService = new KoosteService(koosteClient)(system)

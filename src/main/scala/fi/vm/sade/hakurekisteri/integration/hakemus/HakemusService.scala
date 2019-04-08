@@ -88,7 +88,9 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
                      ataruHakemusClient: VirkailijaRestClient,
                      tarjontaActor: TarjontaActorRef,
                      organisaatioActor: OrganisaatioActorRef,
-                     oppijaNumeroRekisteri: IOppijaNumeroRekisteri, pageSize: Int = 200)
+                     oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+                     pageSize: Int = 200,
+                     maxOidsChunkSize: Int = 150)
                     (implicit val system: ActorSystem) extends IHakemusService {
 
   case class SearchParams(aoOids: Seq[String] = null, asId: String = null, organizationFilter: String = null,
@@ -247,7 +249,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
 
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
     for {
-      hakuappHakemukset <- fetchHakemukset(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
+      hakuappHakemukset <- fetchHakemuksetChunked(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
       ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
         hakijaOids = None,
         hakukohdeOids = Some(List(hakukohdeOid)),
@@ -263,7 +265,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       Future.successful(Seq())
     } else {
       for {
-        hakuappHakemukset <- fetchHakemukset(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
+        hakuappHakemukset <- fetchHakemuksetChunked(params = SearchParams(aoOids = hakukohdeOids.toSeq, organizationFilter = organisaatio.orNull))
         ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
           hakijaOids = None,
           hakukohdeOids = Some(hakukohdeOids.toList),
@@ -276,7 +278,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   }
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
     for {
-      hakuappHakemukset <- fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
+      hakuappHakemukset <- fetchHakemuksetChunked(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
       ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
         hakijaOids = None,
         hakukohdeOids = None,
@@ -365,7 +367,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
       val allApplications: Future[List[HakijaHakemus]] = for {
-        hakuappApplications: Seq[FullHakemus] <- fetchHakemukset(
+        hakuappApplications: Seq[FullHakemus] <- fetchHakemuksetChunked(
           params = SearchParams(updatedAfter = formattedDate)
         )
         ataruApplications: List[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(None, None, None, None, Some(formattedDate)))
@@ -392,6 +394,19 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     hakemukset.collect({ case h: HakijaHakemus => h }).foreach(hakemus =>
       triggers.foreach(trigger => trigger.f(hakemus, personOidsWithAliases))
     )
+
+  private def fetchHakemuksetChunked(params: SearchParams): Future[Seq[FullHakemus]] = {
+    if (params.aoOids == null) {
+      fetchHakemukset(params = params)
+    } else {
+      val oidsChunks: Seq[Seq[String]] = params.aoOids.grouped(maxOidsChunkSize).toSeq
+      val futures: Seq[Future[Seq[FullHakemus]]] = oidsChunks.map { oids =>
+        val paramsForChunk = params.copy(aoOids = oids)
+        fetchHakemukset(params = paramsForChunk)
+      }
+      Future.sequence(futures).map(_.flatten)
+    }
+  }
 
   private def fetchHakemukset(page: Int = 0, params: SearchParams): Future[Seq[FullHakemus]] = {
     hakuappRestClient.readObject[List[FullHakemus]]("haku-app.listfull", params.copy(start = page * pageSize))(acceptedResponseCode = 200, maxRetries = 2)

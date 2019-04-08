@@ -2,8 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import java.io.OutputStream
 
-import fi.vm.sade.javautils.poi.OphCellStyles.OphHssfCellStyles
-import org.apache.poi.hssf.usermodel.HSSFWorkbook
+import fi.vm.sade.javautils.poi.OphCellStyles.OphXssfCellStyles
 import org.apache.poi.ss.usermodel.CellType.BLANK
 import org.apache.poi.ss.usermodel.CellType.BOOLEAN
 import org.apache.poi.ss.usermodel.CellType.ERROR
@@ -11,6 +10,7 @@ import org.apache.poi.ss.usermodel.CellType.FORMULA
 import org.apache.poi.ss.usermodel.CellType.NUMERIC
 import org.apache.poi.ss.usermodel.CellType.STRING
 import org.apache.poi.ss.{usermodel => poi}
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
@@ -35,8 +35,8 @@ class Workbook(val sheets: Seq[Sheet]) {
   }
 
   def toExcel: poi.Workbook = {
-    val workbook = new HSSFWorkbook()
-    val ophHssfCellStyles = new OphHssfCellStyles(workbook)
+    val workbook = new XSSFWorkbook()
+    val ophXssfCellStyles = new OphXssfCellStyles(workbook)
 
     for (sheet <- sheets) {
       val eSheet = workbook.createSheet(sheet.name)
@@ -45,7 +45,7 @@ class Workbook(val sheets: Seq[Sheet]) {
         for (cell <- row.cells) {
           val eCell = eRow.createCell(cell.index, STRING)
           eCell.setCellValue(cell.value)
-          ophHssfCellStyles.apply(eCell)
+          ophXssfCellStyles.apply(eCell)
         }
       }
     }

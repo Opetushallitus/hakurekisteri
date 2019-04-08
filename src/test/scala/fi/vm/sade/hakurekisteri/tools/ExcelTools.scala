@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.tools
 
-import fi.vm.sade.javautils.poi.OphCellStyles.OphHssfCellStyles
-import org.apache.poi.hssf.usermodel.{HSSFSheet, HSSFWorkbook}
+import fi.vm.sade.javautils.poi.OphCellStyles.OphXssfCellStyles
 import org.apache.poi.ss.usermodel.CellType.STRING
-import org.apache.poi.ss.usermodel.{Sheet, Workbook}
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook}
 
 import scala.io.Source
 
@@ -12,16 +12,16 @@ trait ExcelTools {
 
   case class WorkbookData(sheets: (String, String)*) {
 
-    case class RichWorkbook(workbook: HSSFWorkbook) {
-      private val ophHssfCellStyles = new OphHssfCellStyles(workbook)
+    case class RichWorkbook(workbook: XSSFWorkbook) {
+      private val ophXssfCellStyles = new OphXssfCellStyles(workbook)
 
       def readData(data: String): Array[Array[String]] =
         Source.fromString(data.trim.stripMargin).getLines().toArray.map(_.split("\\|").map(_.trim))
 
       def addSheet(name: String)(data: String): Workbook = addSheet(name, readData(data))
 
-      def addSheet(name: String, stringTable: Array[Array[String]]): HSSFWorkbook = {
-        val sheet: HSSFSheet = workbook.createSheet(name)
+      def addSheet(name: String, stringTable: Array[Array[String]]): XSSFWorkbook = {
+        val sheet: XSSFSheet = workbook.createSheet(name)
         for (
           (row, index) <- stringTable.zipWithIndex
         ) {
@@ -29,19 +29,19 @@ trait ExcelTools {
           for (
             (c, cellIndex) <- row.zipWithIndex
           ) {
-            val hssfCell = xslRow.createCell(cellIndex, STRING)
-            hssfCell.setCellValue(c)
-            ophHssfCellStyles.apply(hssfCell)
+            val xssfCell = xslRow.createCell(cellIndex, STRING)
+            xssfCell.setCellValue(c)
+            ophXssfCellStyles.apply(xssfCell)
           }
         }
         workbook
       }
     }
 
-    implicit def wb2rwb(workbook: HSSFWorkbook): RichWorkbook = RichWorkbook(workbook)
+    implicit def wb2rwb(workbook: XSSFWorkbook): RichWorkbook = RichWorkbook(workbook)
 
     val toExcel: Workbook = {
-      val result = new HSSFWorkbook()
+      val result = new XSSFWorkbook()
       for (
         (name, data) <- sheets
       ) result.addSheet(name)(data)

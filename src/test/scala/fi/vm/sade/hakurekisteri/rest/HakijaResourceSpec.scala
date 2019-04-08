@@ -68,7 +68,7 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Loca
     get("/?hakuehto=Kaikki&tyyppi=Excel&haku=dummy&organisaatio=dummy") {
       body.length should not be 0
       header("Content-Type") should include ("application/octet-stream")
-      header("Content-Disposition") should be ("attachment;filename=hakijat.xls")
+      header("Content-Disposition") should be ("attachment;filename=hakijat.xlsx")
     }
   }
 
