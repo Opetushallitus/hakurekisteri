@@ -96,19 +96,19 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-      val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
+    val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
       KoskiUtil.eiHalututAlle30opValmaTilat.contains(koskiTila.tila.koodiarvo)
 
     val alle30PisteenValma: KoskiSuoritus => Boolean = koskiSuoritus =>
       koskiSuoritus.tyyppi.exists(_.koodiarvo == "valma") &&
         !koskiSuoritus.opintopisteitaVahintaan(30)
 
-    val isRemovable = (opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
+    val isRemovable = opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
       opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(eiHaluttuValmaAlle30op) &&
-      opiskeluoikeus.suoritukset.exists(alle30PisteenValma))
+      opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
 
     if (isRemovable) {
-      logger.info("Filtteröidään henkilöltä {} alle 30 opintopisteen keskeytynyt tai valmis VALMA-suoritus.",
+      logger.info(s"sFiltteröidään henkilöltä {$henkiloOid} alle 30 opintopisteen keskeytynyt tai valmis VALMA-suoritus.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
@@ -317,7 +317,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           }
         } catch {
           case e: Exception =>
-            logger.warn(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
+            logger.warn(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.")
             Future.successful(Left(e))
         }
         case _ => Future.successful(Right(None))
