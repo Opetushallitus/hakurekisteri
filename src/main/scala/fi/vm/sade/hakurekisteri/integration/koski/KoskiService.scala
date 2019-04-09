@@ -37,7 +37,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = aktiivisetKKYhteisHakuOidit.set(hakuOids)
 
   private val fetchPersonAliases: Seq[KoskiHenkiloContainer] => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
-    logger.debug(s"Haetaan aliakset henkilöille=$hs")
     val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
