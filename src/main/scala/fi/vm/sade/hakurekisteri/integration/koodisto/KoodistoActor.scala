@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, OphUrlProperties, PreconditionFailedException, VirkailijaRestClient}
 import support.TypedActorRef
 
 import scala.concurrent.duration._
@@ -25,7 +25,7 @@ case class GetKoodistoKoodiArvot(koodistoUri: String)
 
 class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
 
-  implicit val ec: ExecutionContext =  context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   private val koodiCache = cacheFactory.getInstance[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[Koodi], "koodi")
   private val relaatioCache = cacheFactory.getInstance[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[String], "relaatio")

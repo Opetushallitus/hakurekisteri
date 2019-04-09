@@ -39,7 +39,7 @@ class AuthorizedRegisters(unauthorized: Registers,
   import akka.pattern.ask
 
   import scala.reflect.runtime.universe._
-  implicit val ec:ExecutionContext = system.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   val orgRestExecutor = ExecutorUtil.createExecutor(5, "authorizer-organization-rest-client-pool")
   val organisaatioClient: VirkailijaRestClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(orgRestExecutor, system)

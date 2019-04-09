@@ -3,13 +3,13 @@ package fi.vm.sade.hakurekisteri.integration.parametrit
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
 import org.joda.time.DateTime
 import support.TypedActorRef
 
 import scala.compat.Platform
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 case class ParamsFailedException(haku: String, from: ActorRef, t: Throwable) extends Exception(s"call to parameter service failed for haku $haku", t)
@@ -20,7 +20,7 @@ object ParameterActor {
 }
 
 abstract class ParameterActor extends Actor with ActorLogging {
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
   private val tiedonsiirtoSendingPeriodCache = new InMemoryFutureCache[String, Boolean](2.minute.toMillis)
   protected val HTTP_OK = 200
 

@@ -5,7 +5,7 @@ import java.util.Date
 import akka.actor.{Actor, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.Maksuntila.Maksuntila
 import fi.vm.sade.hakurekisteri.rest.support.AuditSessionRequest
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) extends Actor {
 
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   private val ok = 200
 

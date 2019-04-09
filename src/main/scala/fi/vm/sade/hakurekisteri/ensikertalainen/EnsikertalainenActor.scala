@@ -6,6 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakemusAnswers, HakijaHakemus, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
@@ -63,7 +64,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                            hakuActor: ActorRef,
                            hakemusService: IHakemusService,
                            oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-                           config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+                           config: Config) extends Actor with ActorLogging {
 
   val syksy2014 = "2014S"
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
@@ -73,6 +74,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val resourceQuerySize = 5000
 
   implicit val defaultTimeout: Timeout = 15.minutes
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   log.info(s"started ensikertalaisuus actor: $self")
 

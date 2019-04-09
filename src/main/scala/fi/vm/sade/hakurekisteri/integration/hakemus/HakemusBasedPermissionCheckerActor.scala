@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import org.json4s.jackson.Serialization
@@ -22,7 +22,7 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
                                          ataruClient: VirkailijaRestClient,
                                          organisaatioActor: OrganisaatioActorRef) extends Actor with ActorLogging {
   private val acceptedResponseCode: Int = 200
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
   implicit val defaultTimeout: Timeout = 30.seconds
 
   private def getOrganisationPath(organisaatio: Organisaatio): Set[String] = {

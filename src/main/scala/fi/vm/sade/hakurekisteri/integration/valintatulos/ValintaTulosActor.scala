@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
 import support.TypedActorRef
 
 import scala.concurrent.duration._
@@ -25,7 +25,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
                         retryTime: Option[Long] = None,
                         initOnStartup: Boolean = false) extends Actor with ActorLogging {
 
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
   private val refetch: FiniteDuration = refetchTime.map(_.milliseconds).getOrElse((config.integrations.valintatulosCacheHours / 2).hours)
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)

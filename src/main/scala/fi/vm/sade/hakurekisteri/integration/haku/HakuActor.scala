@@ -5,6 +5,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
@@ -20,7 +21,7 @@ import scala.language.implicitConversions
 
 
 class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   var storedHakus: Seq[Haku] = Seq()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours

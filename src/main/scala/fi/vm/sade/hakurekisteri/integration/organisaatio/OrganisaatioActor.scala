@@ -8,7 +8,7 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
-import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import support.TypedActorRef
@@ -28,7 +28,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
                             cacheFactory: CacheFactory,
                             initDuringStartup: Boolean = true,
                             ttl: Option[FiniteDuration] = None) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = context.system.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
   val maxRetries: Int = config.integrations.organisaatioConfig.httpClientMaxRetries
   val timeToLive: FiniteDuration = ttl.getOrElse(config.integrations.organisaatioCacheHours.hours)
   val reloadInterval = timeToLive / 2
@@ -217,7 +217,7 @@ case class HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]
 
 class MockOrganisaatioActor(config: Config) extends Actor {
   implicit val formats = DefaultFormats
-  implicit val ec: ExecutionContext = context.system.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   def find(tunniste: String): Future[Option[Organisaatio]] =
     Future.successful(Some(parse(OrganisaatioMock.findByOid(tunniste)).extract[Organisaatio]))

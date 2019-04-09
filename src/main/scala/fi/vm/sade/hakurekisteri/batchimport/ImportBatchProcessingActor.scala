@@ -6,6 +6,7 @@ import akka.actor.Status.Failure
 import akka.actor._
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, OrganisaatioActorRef}
@@ -34,7 +35,8 @@ class ImportBatchProcessingActor(importBatchOrgActor: ActorRef,
                                  koodistoActor: KoodistoActorRef,
                                  config: Config) extends Actor with ActorLogging {
 
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+
   private val processStarter: Cancellable = context.system.scheduler.schedule(config.importBatchProcessingInitialDelay, 15.seconds, self, ProcessReadyBatches)
 
   log.info(s"started $self")
@@ -91,10 +93,10 @@ class ArvosanatProcessingActor(importBatchOrgActor: ActorRef,
                                koodistoActor: KoodistoActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   private val processor =
-    new ArvosanatProcessing(importBatchOrgActor, organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
+    new ArvosanatProcessing(importBatchOrgActor, organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
 
   private val startTime = Platform.currentTime
   log.info(s"started processing batch ${b.id}")
@@ -214,7 +216,7 @@ class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
 
   private case object Start
   private case object Stop
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   private val start = context.system.scheduler.scheduleOnce(1.millisecond, self, Start)
   private val stop = context.system.scheduler.scheduleOnce(1.hour, self, Stop)

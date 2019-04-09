@@ -4,6 +4,7 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging}
 import akka.event.Logging
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.{Query, QueryWithPersonOid, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
@@ -12,7 +13,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
-  implicit val executionContext: ExecutionContext = context.dispatcher
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   private def operationOrFailure(operation: () => Any) = {
     val t = Try(operation())

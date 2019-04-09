@@ -7,7 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
@@ -47,9 +47,10 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
                       hakemusService: IHakemusService,
                       koosteService: IKoosteService,
                       hakuActor: ActorRef,
-                      koodisto: KoodistoActorRef)(implicit val ec: ExecutionContext)
+                      koodisto: KoodistoActorRef)
   extends Hakupalvelu {
 
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
   private implicit val defaultTimeout: Timeout = 120.seconds
   private val acceptedResponseCode: Int = 200
 

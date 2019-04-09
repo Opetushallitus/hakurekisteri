@@ -8,6 +8,7 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery}
@@ -21,7 +22,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
-  implicit val executionContext: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   import akka.pattern.pipe
 

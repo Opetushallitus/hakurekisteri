@@ -7,6 +7,7 @@ import akka.actor.{Actor, ActorRef, Props}
 import akka.dispatch.ExecutionContexts
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchTable.ImportBatchRow
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor}
@@ -84,7 +85,7 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     journal.db.run(all.sortBy(_.status).result.map(_.map(importBatchWithoutData)))
   }
 
-  override implicit val executionContext: ExecutionContext = context.dispatcher
+  override implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   override val dbExecutor = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 

@@ -5,16 +5,18 @@ import java.util.UUID
 import akka.actor._
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, UpsertResource}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen, _}
 import org.joda.time._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   var haut = Set[String]()
 
@@ -441,7 +443,7 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
   var fetch: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    implicit val ec = context.dispatcher
+    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
     val suoritusQuery = SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))
     val queryWithPersonAliases = SuoritusQueryWithPersonAliases(suoritusQuery, personOidsWithAliases)
     fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, suoritusRekisteri, queryWithPersonAliases))
@@ -478,7 +480,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
   var fetch: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    implicit val ec = context.dispatcher
+    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
     fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, arvosanaRekisteri, ArvosanaQuery(suoritus.id)))
   }
 }

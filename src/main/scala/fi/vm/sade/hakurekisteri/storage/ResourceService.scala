@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.storage
 
 import akka.event.LoggingAdapter
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.rest.support.{Query, QueryWithPersonOid, Resource}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,7 +17,7 @@ trait InMemQueryingResourceService[T <: Resource[I, T], I] extends ResourceServi
 
   val matcher: PartialFunction[Query[T], (T with Identified[I]) => Boolean]
 
-  implicit val executionContext: ExecutionContext
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   val logger: LoggingAdapter
 

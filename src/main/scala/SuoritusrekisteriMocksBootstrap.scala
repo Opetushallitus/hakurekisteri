@@ -3,6 +3,7 @@ import java.util.concurrent.TimeUnit
 import _root_.akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
@@ -26,7 +27,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     val config = WebAppConfig.getConfig(context)
     implicit val system = config.productionServerConfig.system
 
-    implicit val ec: ExecutionContextExecutor = system.dispatcher
+    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
     implicit val security = config.productionServerConfig.security
 
     val anyActorRef = system.deadLetters
