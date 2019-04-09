@@ -158,10 +158,10 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
     f.onComplete {
       case Success(results) => {
-        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${(results._1.size + results._2.size)} henkilöä.")
-        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._1.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._2.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._2}.")
+        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä.")
+        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._2.size}.")
+        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
+        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
       }
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
@@ -220,15 +220,13 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
             }
           }
         )
-      ).flatMap {x =>
-         successes = x.filter(_.isRight)
-         failures = x.filter(_.isLeft)
-
-         //x
-        Future.successful((successes, failures))}
+      ).flatMap {results =>
+         successes = results.collect { case Right(r) => r }
+         failures = results.collect { case Left(l) => l }
+         Future.successful((failures, successes))}
     } else {
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
-      Future.successful(successes, failures)
+      Future.successful(failures, successes)
     }
   }
 }
