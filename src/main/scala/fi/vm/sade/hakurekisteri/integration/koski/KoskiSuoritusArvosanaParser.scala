@@ -282,6 +282,7 @@ class KoskiSuoritusArvosanaParser {
           //Tuodaan arvosanat kaikille valmiille suorituksille, jotka on vahvistettu ennen deadlinea.
           //Jos deadlineen on alle kaksi viikkoa, tuodaan myös keskeytyneiden suoritusten arvosanat jos mukana on nelosia.
           //Vuosiluokkiin sitomattoman opetuksen arvosanat tallennetaan suorituksen tilasta riippumatta, jos deadline on ohitettu.
+          //Lisäopetuksen arvosanat tallennetaan aina suorituksen tilasta tai deadline-päivämäärästä riippumatta.
           if (isVahvistettu && isValmis) {
             val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
             if (vahvistusDate.isBefore(KoskiUtil.deadlineDate)) {
@@ -289,7 +290,9 @@ class KoskiSuoritusArvosanaParser {
             } else {
               (Seq(), yks)
             }
-          } else if ((containsOneFailure && LocalDate.now.isAfter(KoskiUtil.arvosanatWithNelosiaDeadlineDate)) || (vuosiluokkiinSitomatonOpetus && LocalDate.now.isAfter(KoskiUtil.deadlineDate))) {
+          } else if ((containsOneFailure && LocalDate.now.isAfter(KoskiUtil.arvosanatWithNelosiaDeadlineDate))
+            || (vuosiluokkiinSitomatonOpetus && LocalDate.now.isAfter(KoskiUtil.deadlineDate))
+            || komoOid.equals(Oids.lisaopetusKomoOid)) {
             (as, yks)
           } else {
             (Seq(), yks)
