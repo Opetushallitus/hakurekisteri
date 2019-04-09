@@ -171,6 +171,23 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
     )
   }
 
+  test("OrganisaatioActor throws exception for values not found") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val (endPoint, organisaatioActor) = initOrganisaatioActor()
+
+        an [PreconditionFailedException] should be thrownBy {
+          waitFuture((organisaatioActor ? "inexistent").mapTo[Option[Organisaatio]])(o => {
+            o.isDefined should be(false)
+          })
+        }
+
+        verify(endPoint, times(1)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/inexistent"))
+      }
+    )
+  }
+
   test("OrganisaatioActor should refresh cache") {
     withSystem(
       implicit system => {
