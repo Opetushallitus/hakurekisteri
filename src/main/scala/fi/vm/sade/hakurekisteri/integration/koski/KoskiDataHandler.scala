@@ -8,6 +8,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -81,6 +82,27 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
   private def shouldSaveSuoritus(henkilöOid: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
     val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+
+    //Filtteröidään suoritukset, joilla ei ole läsnäolopäivää:
+    var lasnaDate = suoritus.alkamispäivä match {
+      case Some(x) => parseLocalDate(x)
+      case None => opiskeluoikeus.tila.opiskeluoikeusjaksot.find(_.tila.koodiarvo.equals("lasna")) match {
+        case Some(y) => parseLocalDate(y.alku)
+        case _ => {
+          logger.info(s"Filtteröitiin henkilöltä LISÄÄ HENKILÖOID TÄHÄN ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
+          return false
+        }
+      }
+    }
+    //Filtteröidään suoritukset, joiden alkamisajankohta on deadlinen jälkeen:
+    if (lasnaDate.isAfter(KoskiUtil.deadlineDate)) {
+      logger.info(s"Filtteröitiin henkilöltä LISÄÄ HENKILÖOID TÄHÄN ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
+      return false
+    }
+
+
+
+
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid => {

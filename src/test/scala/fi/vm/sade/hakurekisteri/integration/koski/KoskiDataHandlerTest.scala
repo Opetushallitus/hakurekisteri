@@ -2338,7 +2338,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.luokka should equal("XX")
   }
 
-  /*
   it should "filter alle 30 opintopisteen valma-suoritus before or after deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_loma_ei_lasnaoloa.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -2347,25 +2346,14 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
-
-    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("0")
-    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
+    var suoritusArvosanat: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
-
-    opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
+    suoritusArvosanat = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
   }
-
-
-   */
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
