@@ -443,7 +443,7 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
   var fetch: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+    implicit val ec: ExecutionContext = context.dispatcher
     val suoritusQuery = SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))
     val queryWithPersonAliases = SuoritusQueryWithPersonAliases(suoritusQuery, personOidsWithAliases)
     fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, suoritusRekisteri, queryWithPersonAliases))
@@ -480,7 +480,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
   var fetch: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+    implicit val ec: ExecutionContext = context.dispatcher
     fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, arvosanaRekisteri, ArvosanaQuery(suoritus.id)))
   }
 }
