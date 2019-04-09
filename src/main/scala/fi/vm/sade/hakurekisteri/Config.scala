@@ -320,6 +320,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val hakemusRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.hakemus", "2").toInt
   val valintatulosRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.valintatulos", "2").toInt
 
+  val asyncOperationThreadPoolSize: Int = properties.getOrElse("suoritusrekisteri.async.pools.size", "9").toInt
+
   import RicherString._
 
   val ytlConfig = for (

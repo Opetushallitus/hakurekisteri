@@ -25,7 +25,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
                         retryTime: Option[Long] = None,
                         initOnStartup: Boolean = false) extends Actor with ActorLogging {
 
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
   private val refetch: FiniteDuration = refetchTime.map(_.milliseconds).getOrElse((config.integrations.valintatulosCacheHours / 2).hours)
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)

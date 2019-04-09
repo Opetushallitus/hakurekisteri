@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
@@ -47,10 +47,11 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
                       hakemusService: IHakemusService,
                       koosteService: IKoosteService,
                       hakuActor: ActorRef,
-                      koodisto: KoodistoActorRef)
+                      koodisto: KoodistoActorRef,
+                      config: Config)
   extends Hakupalvelu {
 
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private implicit val defaultTimeout: Timeout = 120.seconds
   private val acceptedResponseCode: Int = 200
 

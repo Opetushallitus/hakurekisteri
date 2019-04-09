@@ -40,11 +40,11 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
 
   val dbLoggingConfig = SureDbLoggingConfig(config)
 
-  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable, dbLoggingConfig)
-  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable, dbLoggingConfig)
-  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, dbLoggingConfig)
-  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, dbLoggingConfig)
-  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, dbLoggingConfig)
+  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable, dbLoggingConfig, config)
+  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable, dbLoggingConfig, config)
+  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, dbLoggingConfig, config)
+  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, dbLoggingConfig, config)
+  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, dbLoggingConfig, config)
 }
 
 case class SureDbLoggingConfig(slowQueryMillis: Long = 200,

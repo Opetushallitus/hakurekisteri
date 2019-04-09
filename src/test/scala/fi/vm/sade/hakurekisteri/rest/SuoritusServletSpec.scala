@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import java.util.UUID
 
 import akka.actor.{Actor, ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockPersonAliasesProvider
 import fi.vm.sade.hakurekisteri.integration.parametrit.{IsRestrictionActive, ParametritActorRef}
@@ -30,19 +31,20 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   implicit var database: Database = _
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
+  private val mockConfig: MockConfig = new MockConfig
 
   var suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable] = _
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-tuo-suoritus")
     database = Database.forURL(ItPostgres.getEndpointURL)
-    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
     val mockParameterActor = new ParametritActorRef(system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
         case IsRestrictionActive(_) => sender ! true
       }
     })))
-    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider))))))
+    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))))))
     addServlet(new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor), "/*")
     super.beforeAll()
   }

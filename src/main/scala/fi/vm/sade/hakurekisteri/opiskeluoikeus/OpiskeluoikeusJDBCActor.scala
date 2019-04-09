@@ -4,6 +4,7 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService, Query}
 import fi.vm.sade.hakurekisteri.storage.ResourceActor
@@ -13,8 +14,8 @@ import slick.lifted
 
 import scala.concurrent.ExecutionContext
 
-class OpiskeluoikeusJDBCActor(val journal: JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable], poolSize: Int)
-  extends ResourceActor[Opiskeluoikeus, UUID] with JDBCRepository[Opiskeluoikeus, UUID, OpiskeluoikeusTable] with JDBCService[Opiskeluoikeus, UUID, OpiskeluoikeusTable] {
+class OpiskeluoikeusJDBCActor(val journal: JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable], poolSize: Int, config: Config)
+  extends ResourceActor[Opiskeluoikeus, UUID](config) with JDBCRepository[Opiskeluoikeus, UUID, OpiskeluoikeusTable] with JDBCService[Opiskeluoikeus, UUID, OpiskeluoikeusTable] {
 
   override def deduplicationQuery(o: Opiskeluoikeus)(t: OpiskeluoikeusTable): Rep[Boolean] =
     t.henkiloOid === o.henkiloOid && t.komo === o.komo && t.myontaja === o.myontaja

@@ -2,14 +2,15 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import org.joda.time.LocalDate
 import support.TypedActorRef
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class VirtaResourceActor(virtaClient: VirtaClient) extends Actor with ActorLogging {
-  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+class VirtaResourceActor(virtaClient: VirtaClient, config: Config) extends Actor with ActorLogging {
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   import akka.pattern.pipe
 

@@ -7,6 +7,7 @@ import java.util.{Date, UUID}
 import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.github.nscala_time.time.TypeImports.LocalDate
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockPersonAliasesProvider, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
@@ -49,15 +50,17 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
   implicit var system: ActorSystem = _
   implicit var database: Database = _
   var suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable] = _
+  private val mockConfig: MockConfig = new MockConfig
 
 
   override def beforeAll(): Unit = {
     system = ActorSystem()
     database = Database.forURL(ItPostgres.getEndpointURL)
-    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
-    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider))))))
-    val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1))))))
+
+    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = mockConfig)
+    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))))))
+    val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig))))))
 
     val personOidsAliasFetcher: Set[String] => Future[PersonOidsWithAliases]= oids => Future.successful(PersonOidsWithAliases.apply(henkiloOids = oids))
     val suoritusQueryMaker: Map[String, String] => fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus] = p => fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(p)

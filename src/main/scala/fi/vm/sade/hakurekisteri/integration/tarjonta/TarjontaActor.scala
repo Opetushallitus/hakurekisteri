@@ -87,7 +87,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   private val hakukohdeCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[Hakukohde], "hakukohde")
 
   val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender

@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCUtil
@@ -15,8 +16,8 @@ import scala.util.{Failure, Success, Try}
 case class QueryImportBatchReferences(organisations: Set[String])
 case class ReferenceResult(references: Seq[UUID])
 
-class ImportBatchOrgActor(db: Database) extends Actor with ActorLogging {
-  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+class ImportBatchOrgActor(db: Database, config: Config) extends Actor with ActorLogging {
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   val table = TableQuery[ImportBatchOrgTable]
   if (db == null) {
     log.warning("Got null db object! This should not happen in production.")

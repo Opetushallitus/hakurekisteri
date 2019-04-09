@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import akka.actor.ActorSystem
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -33,11 +34,12 @@ object JDBCUtil {
   }
 }
 
-class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T], val dbLoggingConfig: SureDbLoggingConfig = SureDbLoggingConfig())
+class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T],
+                                                                      val dbLoggingConfig: SureDbLoggingConfig = SureDbLoggingConfig(),
+                                                                      config: Config)
                                                                      (implicit val db: Database, val idType: BaseTypedType[I], implicit val system: ActorSystem)
   extends Journal[R, I] {
-
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   val log = Logging.getLogger(system, this)
   lazy val tableName = table.baseTableRow.tableName
   val queryTimeout: Duration = 1.minute

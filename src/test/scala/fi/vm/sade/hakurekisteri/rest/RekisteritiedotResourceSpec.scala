@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchOrgActor}
@@ -56,7 +57,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
   ).identify(UUID.randomUUID())
 
   val rekisterit = new Registers {
-    val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null)))
+    val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null, new MockConfig)))
     val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
     val arvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))
     val ytlArvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))

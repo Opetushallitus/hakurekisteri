@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockPersonAliasesProvider, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
@@ -26,8 +27,10 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     implicit val system = ActorSystem("test-jdbc")
     implicit val ec: ExecutionContext = system.dispatcher
 
-    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-    val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+    val mockConfig: MockConfig = new MockConfig
+
+    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+    val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig)))
 
     implicit val timeout: Timeout = 30.seconds
     val now = new LocalDate()

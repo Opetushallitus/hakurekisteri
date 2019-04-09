@@ -47,9 +47,9 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       }
     }
   }
-  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider)
-  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-  val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider, config)
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = config)
+  val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, config)))
 
   val koskiDatahandler: KoskiDataHandler = new KoskiDataHandler(suoritusrekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)
   val koskiOpiskelijaParser = new KoskiOpiskelijaParser

@@ -122,7 +122,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     implicit val ec: ExecutionContext = system.dispatcher
     val config = new MockConfig
 
-    val importBatchOrgActor = system.actorOf(Props(new ImportBatchOrgActor(null)))
+    val importBatchOrgActor = system.actorOf(Props(new ImportBatchOrgActor(null, config)))
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchHandler, query = { (q) => Seq(batch) })))
     val onrClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(httpClient))
     val henkiloActor = new HenkiloActorRef(system.actorOf(Props(new HttpHenkiloActor(onrClient, config))))

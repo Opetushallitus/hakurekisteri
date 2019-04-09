@@ -74,7 +74,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val resourceQuerySize = 5000
 
   implicit val defaultTimeout: Timeout = 15.minutes
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   log.info(s"started ensikertalaisuus actor: $self")
 

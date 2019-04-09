@@ -21,15 +21,19 @@ import fi.vm.sade.hakurekisteri.{Config, KomoOids, Oids}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-class BareRegisters(system: ActorSystem, journals: Journals, db: Database, integrationsProvider: PersonAliasesProvider) extends Registers {
-  override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider)), "suoritukset")
-  override val ytlSuoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider)), "ytl-suoritukset")
-  override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 5)), "opiskelijat")
-  override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusJDBCActor(journals.opiskeluoikeusJournal, 5)), "opiskeluoikeudet")
-  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "arvosanat")
-  override val ytlArvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "ytl-arvosanat")
-  override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal, 5)), "erat")
-  override val eraOrgRekisteri: ActorRef = system.actorOf(Props(new ImportBatchOrgActor(db)), "era-orgs")
+class BareRegisters(system: ActorSystem,
+                    journals: Journals,
+                    db: Database,
+                    integrationsProvider: PersonAliasesProvider,
+                    config: Config) extends Registers {
+  override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider, config)), "suoritukset")
+  override val ytlSuoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider, config)), "ytl-suoritukset")
+  override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 5, config)), "opiskelijat")
+  override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusJDBCActor(journals.opiskeluoikeusJournal, 5, config)), "opiskeluoikeudet")
+  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5, config)), "arvosanat")
+  override val ytlArvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5, config)), "ytl-arvosanat")
+  override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal, 5, config)), "erat")
+  override val eraOrgRekisteri: ActorRef = system.actorOf(Props(new ImportBatchOrgActor(db, config)), "era-orgs")
 }
 
 class AuthorizedRegisters(unauthorized: Registers,
@@ -39,7 +43,7 @@ class AuthorizedRegisters(unauthorized: Registers,
   import akka.pattern.ask
 
   import scala.reflect.runtime.universe._
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   val orgRestExecutor = ExecutorUtil.createExecutor(5, "authorizer-organization-rest-client-pool")
   val organisaatioClient: VirkailijaRestClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(orgRestExecutor, system)

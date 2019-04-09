@@ -65,7 +65,7 @@ class ScalatraBootstrap extends LifeCycle {
       override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = integrations.oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
     }
 
-    val registers = new BareRegisters(system, journals, journals.database, personAliasesProvider)
+    val registers = new BareRegisters(system, journals, journals.database, personAliasesProvider, config)
 
     integrations = Integrations(registers, system, config)
 
@@ -124,7 +124,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
     ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue), // Continuous Virta queue processing
     ("/ytl", "ytl") -> new YtlResource(integrations.ytl, integrations.ytlIntegration),
-    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system),
+    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system, config),
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
     ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
   )

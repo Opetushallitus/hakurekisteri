@@ -28,7 +28,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
                             cacheFactory: CacheFactory,
                             initDuringStartup: Boolean = true,
                             ttl: Option[FiniteDuration] = None) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   val maxRetries: Int = config.integrations.organisaatioConfig.httpClientMaxRetries
   val timeToLive: FiniteDuration = ttl.getOrElse(config.integrations.organisaatioCacheHours.hours)
   val reloadInterval = timeToLive / 2
@@ -217,7 +217,7 @@ case class HandleKoodiResponse(koodi: String, response: Try[Option[Organisaatio]
 
 class MockOrganisaatioActor(config: Config) extends Actor {
   implicit val formats = DefaultFormats
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   def find(tunniste: String): Future[Option[Organisaatio]] =
     Future.successful(Some(parse(OrganisaatioMock.findByOid(tunniste)).extract[Organisaatio]))

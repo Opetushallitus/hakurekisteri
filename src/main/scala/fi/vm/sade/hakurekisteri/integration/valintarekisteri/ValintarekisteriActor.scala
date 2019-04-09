@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) extends Actor {
 
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   private val ok = 200
 

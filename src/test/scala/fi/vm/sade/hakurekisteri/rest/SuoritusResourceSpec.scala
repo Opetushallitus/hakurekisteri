@@ -3,9 +3,9 @@ package fi.vm.sade.hakurekisteri.rest
 import java.net.InetAddress
 import java.util.UUID
 
-import javax.servlet.http.HttpServletRequest
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockPersonAliasesProvider
@@ -64,6 +64,7 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
   implicit var database: Database = _
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
+  private val mockConfig: MockConfig = new MockConfig
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
 
@@ -86,10 +87,10 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
     system = ActorSystem("test-suoritus-resource")
     database = Database.forURL(ItPostgres.getEndpointURL)
 
-    val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor()(system))))
-    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+    val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor(config = mockConfig)(system))))
+    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
     suoritusJournal.addModification(Updated(suoritus.identify))
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
     val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor)
@@ -128,19 +129,20 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
   implicit var database: Database = _
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new SuoritusResourceTestSecurity
+  private val mockConfig: MockConfig = new MockConfig
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-suoritus-resource")
     database = Database.forURL(ItPostgres.getEndpointURL)
-    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
     suoritusJournal.addModification(Updated(suoritus.identify))
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-    val x = new ParametritActorRef(TestActorRef(new MockParameterActor(true)(system)))
-    val y = new ParametritActorRef(TestActorRef(new MockParameterActor(false)(system)))
+    val x = new ParametritActorRef(TestActorRef(new MockParameterActor(true, mockConfig)(system)))
+    val y = new ParametritActorRef(TestActorRef(new MockParameterActor(false, mockConfig)(system)))
 
     val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x)
     addServlet(servletWithOPORightActive, "/foo", "foo")

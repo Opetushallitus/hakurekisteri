@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.UUID
 
 import akka.actor._
-import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
@@ -15,17 +15,21 @@ import org.joda.time._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class YtlActor(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+class YtlActor(suoritusRekisteri: ActorRef,
+               arvosanaRekisteri: ActorRef,
+               hakemusService: IHakemusService,
+               config: Config) extends Actor with ActorLogging {
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   var haut = Set[String]()
+  val ytlConfig = config.integrations.ytlConfig
 
   def nextSendTime: Option[DateTime] = {
-    val times = config.map(_.sendTimes).filter(_.nonEmpty)
+    val times = ytlConfig.map(_.sendTimes).filter(_.nonEmpty)
     Timer.countNextSend(times)
   }
 
-  if (config.isEmpty) log.warning("Starting ytlActor without config")
+  if (ytlConfig.isEmpty) log.warning("Starting ytlActor without config")
 
   var kokelaat = Map[String, Kokelas]()
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()

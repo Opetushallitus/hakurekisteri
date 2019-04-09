@@ -25,7 +25,7 @@ case class GetKoodistoKoodiArvot(koodistoUri: String)
 
 class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
 
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   private val koodiCache = cacheFactory.getInstance[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[Koodi], "koodi")
   private val relaatioCache = cacheFactory.getInstance[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis, this.getClass, classOf[String], "relaatio")

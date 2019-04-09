@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
@@ -33,12 +34,13 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   var arvosanaJournal: JDBCJournal[Arvosana, UUID, ArvosanaTable] = _
   implicit val security = new TestSecurity
   implicit val swagger = new HakurekisteriSwagger
+  private val mockConfig: MockConfig = new MockConfig
 
   override def beforeAll(): Unit = {
     system = ActorSystem()
     database = Database.forURL(ItPostgres.getEndpointURL)
-    arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
-    val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1))))))
+    arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
+    val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig))))))
     addServlet(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand], "/*")
     super.beforeAll()
   }

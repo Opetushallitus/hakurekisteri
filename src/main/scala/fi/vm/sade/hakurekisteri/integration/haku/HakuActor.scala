@@ -21,7 +21,7 @@ import scala.language.implicitConversions
 
 
 class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   var storedHakus: Seq[Haku] = Seq()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours

@@ -6,6 +6,7 @@ import java.util.concurrent.Executors
 import akka.actor.{Actor, ActorRef, Props}
 import akka.dispatch.ExecutionContexts
 import akka.pattern.{ask, pipe}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchTable.ImportBatchRow
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.rest.support
@@ -43,8 +44,8 @@ case class ImportBatchQuery(externalId: Option[String],
                             batchType: Option[String],
                             maxCount: Option[Int] = None) extends support.Query[ImportBatch]
 
-class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int)
-  extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
+class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int, config: Config)
+  extends ResourceActor[ImportBatch, UUID](config) with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
 
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
 
@@ -85,7 +86,7 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     journal.db.run(all.sortBy(_.status).result.map(_.map(importBatchWithoutData)))
   }
 
-  override implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+  override implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   override val dbExecutor = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 

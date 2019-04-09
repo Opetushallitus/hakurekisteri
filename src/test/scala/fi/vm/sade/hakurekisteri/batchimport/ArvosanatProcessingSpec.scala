@@ -37,6 +37,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
   private val awaitTimeout: FiniteDuration = Duration(1, TimeUnit.MINUTES)
   private val waiterTimeout: PatienceConfiguration.Timeout = timeout(1.minute)
+  private val mockConfig: MockConfig = new MockConfig
 
   it should "resolve data from henkilopalvelu, organisaatiopalvelu and suoritusrekisteri, and then import data into arvosanarekisteri" in {
     withSystem(
@@ -68,7 +69,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
@@ -102,7 +104,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, query = { q => Seq(s) }))),
           system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {a => }, query = {q => Seq()}))),
           createImportBatchActor(system, {b => }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
@@ -139,7 +142,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
@@ -178,7 +182,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
@@ -224,7 +229,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
@@ -256,7 +262,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), awaitTimeout)
@@ -289,7 +296,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), awaitTimeout)
@@ -318,7 +326,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), awaitTimeout)
@@ -364,7 +373,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
@@ -395,7 +405,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, query = {q => Seq()}))),
           system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {a => }, query = {q => Seq()}))),
           createImportBatchActor(system, { r => }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         Await.result(arvosanatProcessing.process(batch), awaitTimeout)
@@ -414,8 +425,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
         var s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
 
-        val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
-        val arvosanaActor = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
+        val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
+        val arvosanaActor = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig)))
 
         val arvosanatProcessing = new ArvosanatProcessing(
           createImportBatchOrgActor(system),
@@ -426,7 +437,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, query = {q => Seq(s)}))),
           arvosanaActor,
           createImportBatchActor(system, {r => }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          mockConfig
         )
 
         Await.result(arvosanatProcessing.process(batch), awaitTimeout)
@@ -532,7 +544,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchSaveHandler, query = {q => Seq(batch)})))
 
   private def createImportBatchOrgActor(system: ActorSystem): ActorRef =
-    system.actorOf(Props(new ImportBatchOrgActor(Database.forURL(ItPostgres.getEndpointURL))))
+    system.actorOf(Props(new ImportBatchOrgActor(Database.forURL(ItPostgres.getEndpointURL), mockConfig)))
 
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): OrganisaatioActorRef =
     new OrganisaatioActorRef(system.actorOf(Props(new HttpOrganisaatioActor(
