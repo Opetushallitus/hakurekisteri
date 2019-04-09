@@ -1,14 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.cache
 
-import java.util.Collections
-import java.util.concurrent.Semaphore
+import java.util.concurrent.{CompletableFuture, Executor}
+import java.util.function.{BiFunction, Function}
+
+import com.github.benmanes.caffeine.cache.{AsyncCache, Caffeine}
+import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.collection.JavaConverters._
-import scala.collection.concurrent.TrieMap
-import scala.collection.mutable
 import scala.compat.Platform
+import scala.compat.java8.FutureConverters
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future, Promise}
 import scala.language.higherKinds
 
 trait MonadCache[F[_], K, T] {
@@ -23,93 +25,66 @@ trait MonadCache[F[_], K, T] {
 
   def getVersion: Future[Option[Long]]
 
-  def toOption(value: F[T]): F[Option[T]]
-
   protected def k(key: K, prefix:String) = s"${prefix}:${key}"
 }
 
 class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T] {
-  private val commonLockHandlingSemaphore = new Semaphore(1)
-  private val loadingLocks: mutable.Map[K, Semaphore] = TrieMap[K, Semaphore]()
-  private val waitingPromises: mutable.Map[K, java.util.List[Promise[Option[T]]]] = TrieMap[K, java.util.List[Promise[Option[T]]]]()
+  routeCaffeineLoggingToSlf4j()
+
+  private val caffeineCache: AsyncCache[K, Cacheable[Future, T]] = Caffeine.newBuilder().buildAsync().asInstanceOf[AsyncCache[K, Cacheable[Future, T]]]
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
-
-  private var cache: Map[K, Cacheable[Future, T]] = Map()
 
   def +(key: K, v: T): Future[_] = {
     val value: Cacheable[Future, T] = Cacheable[Future, T](f = Future.successful(v))
-    cache = cache + (key -> value)
+    caffeineCache.put(key, CompletableFuture.completedFuture(value))
     value.f
   }
 
-  def -(key: K): Unit = if (cache.contains(key)) cache = cache - key
+  def -(key: K): Unit = caffeineCache.put(key, CompletableFuture.completedFuture(null))
 
-  def contains(key: K): Future[Boolean] = Future.successful(cache.contains(key) && (cache(key).inserted + expirationDurationMillis) > Platform.currentTime)
+  def contains(key: K): Future[Boolean] = {
+    val existsAndIsFreshEnough: Cacheable[Future, T] => Boolean =
+      v => v != null &&
+        v.inserted + expirationDurationMillis > Platform.currentTime
 
-  private def get(key: K): Future[T] = {
-    val cached = cache(key)
-    cache = cache + (key -> Cacheable[Future, T](inserted = cached.inserted, f = cached.f))
-    cached.f
+    val valueFromCache: CompletableFuture[Cacheable[Future, T]] = caffeineCache.getIfPresent(key)
+    if (valueFromCache == null) {
+      Future.successful(false)
+    } else {
+      FutureConverters.toScala(valueFromCache).map(existsAndIsFreshEnough)
+    }
   }
 
-  def size: Int = cache.size
+  def size: Int = caffeineCache.synchronous().estimatedSize().toInt
 
-  def getCache: Map[K, Cacheable[Future, T]] = cache
+  def getCache: Map[K, Cacheable[Future, T]] = caffeineCache.synchronous().asMap().asScala.toMap
 
   override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-    if (Await.result(contains(key), 1.second)) {
-      toOption(get(key))
-    } else {
-      commonLockHandlingSemaphore.acquire()
-      try {
-        retrieveNewValueWithLoader(key, loader)
-      } finally {
-        commonLockHandlingSemaphore.release()
-      }
+    val loadingFunction: BiFunction[K, Executor, CompletableFuture[Cacheable[Future, T]]] = new BiFunction[K, Executor, CompletableFuture[Cacheable[Future, T]]] {
+      override def apply(t: K, u: Executor): CompletableFuture[Cacheable[Future, T]] = {
+        FutureConverters.toJava(loader.apply(t).map {
+          case Some(x) => Cacheable(f = Future.successful(x))
+          case None => null
+        })
+      }.toCompletableFuture
     }
-  }
 
-  private def retrieveNewValueWithLoader(key: K, loader: K => Future[Option[T]]) = {
-    val loadingLockOfKey = loadingLocks.getOrElseUpdate(key, { new Semaphore(1) })
-    val promisesOfThisKey = waitingPromises.getOrElseUpdate(key, { createSynchonizedList })
-    val newClientPromise: Promise[Option[T]] = Promise[Option[T]]
-    promisesOfThisKey.add(newClientPromise)
-    if (loadingLockOfKey.availablePermits() > 0) {
-      loadingLockOfKey.acquire()
-      if (Await.result(contains(key), 1.second)) {
-        loadingLockOfKey.release()
-        toOption(get(key))
+    FutureConverters.toScala(caffeineCache.get(key, loadingFunction)).flatMap { value =>
+      if (value == null) {
+        Future.successful(None)
       } else {
-        val loadingFuture: Future[Option[T]] = loader(key)
-        loadingFuture.onComplete { result =>
-          commonLockHandlingSemaphore.acquire()
-          try {
-            if (result.isSuccess) {
-              result.get.foreach(foundItem => this.+(key, foundItem))
-            }
-            waitingPromises.remove(key) match {
-              case Some(promisesWaitingForResult) => promisesWaitingForResult.asScala.foreach(_.complete(result))
-              case None => throw new IllegalStateException(s"Nobody waiting for results of $key , got result $result")
-            }
-          } finally {
-            loadingLockOfKey.release()
-            commonLockHandlingSemaphore.release()
-          }
-        }
-        loadingFuture
+        value.f.map(Some(_))
       }
-    } else {
-      newClientPromise.future
     }
-  }
-
-  private def createSynchonizedList: java.util.List[Promise[Option[T]]] = {
-    Collections.synchronizedList(new java.util.ArrayList[Promise[Option[T]]]())
   }
 
   override def getVersion: Future[Option[Long]] = Future.successful(Some(0l))
+
+  private def routeCaffeineLoggingToSlf4j(): Unit = {
+    SLF4JBridgeHandler.removeHandlersForRootLogger()
+    SLF4JBridgeHandler.install()
+  }
 }
 
 case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, f: F[T])

@@ -232,8 +232,6 @@ object CacheFactory {
           case None => updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
         }
       }
-
-      override def toOption(value: Future[T]): Future[Option[T]] = value.map(Some(_))
     }
 
     class ByteStringFormatterImpl[T] extends ByteStringFormatter[T] {
