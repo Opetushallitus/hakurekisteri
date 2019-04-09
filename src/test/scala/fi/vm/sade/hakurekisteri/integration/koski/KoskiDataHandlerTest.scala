@@ -2338,7 +2338,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     opiskelija.luokka should equal("XX")
   }
 
-  it should "filter alle 30 opintopisteen valma-suoritus before or after deadline date" in {
+  it should "filter suoritus without läsnäolo before or after deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_loma_ei_lasnaoloa.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -2354,6 +2354,24 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritusArvosanat = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
     suoritusArvosanat should be (Seq(Seq.empty))
   }
+
+  it should "filter suoritus with future läsnäolo before or after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_alku_01082019.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = new LocalDate("2019-06-03").plusDays(30)
+
+    var suoritusArvosanat: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
+
+    KoskiUtil.deadlineDate = new LocalDate("2019-06-03").minusDays(30)
+
+    suoritusArvosanat = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
+  }
+
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))

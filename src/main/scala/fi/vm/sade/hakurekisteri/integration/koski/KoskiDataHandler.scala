@@ -89,19 +89,16 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       case None => opiskeluoikeus.tila.opiskeluoikeusjaksot.find(_.tila.koodiarvo.equals("lasna")) match {
         case Some(y) => parseLocalDate(y.alku)
         case _ => {
-          logger.info(s"Filtteröitiin henkilöltä LISÄÄ HENKILÖOID TÄHÄN ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
+          logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, josta ei löydy läsnäolon alkupäivämäärää (komoOid: ${komoOid}).")
           return false
         }
       }
     }
     //Filtteröidään suoritukset, joiden alkamisajankohta on deadlinen jälkeen:
     if (lasnaDate.isAfter(KoskiUtil.deadlineDate)) {
-      logger.info(s"Filtteröitiin henkilöltä LISÄÄ HENKILÖOID TÄHÄN ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
+      logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, jonka läsnäolon alkamispäivämäärä on deadlinen jälkeen (komoOid: ${komoOid}).")
       return false
     }
-
-
-
 
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
