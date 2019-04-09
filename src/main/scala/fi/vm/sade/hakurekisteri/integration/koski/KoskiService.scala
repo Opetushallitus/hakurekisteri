@@ -208,17 +208,23 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     var successes: Seq[String] = Seq[String]()
     var failures: Seq[String] = Seq[String]()
     if(filteredHenkilot.nonEmpty) {
-       Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).map {
-          henkiloResult => {
-            if (henkiloResult.exists(_.isLeft)) {
-              failures = failures :+ henkilo.henkilö.oid.get
-            } else {
-              successes = successes :+ henkilo.henkilö.oid.get
+       Future.sequence(
+         filteredHenkilot.map(henkilo =>
+          koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).map {
+            henkiloResult => {
+              if (henkiloResult.exists(_.isLeft)) {
+                Left(henkilo.henkilö.oid.get)
+              } else {
+                Right(henkilo.henkilö.oid.get)
+              }
             }
           }
-        })
-      ).flatMap {_ =>
+        )
+      ).flatMap {x =>
+         successes = x.filter(_.isRight)
+         failures = x.filter(_.isLeft)
+
+         //x
         Future.successful((successes, failures))}
     } else {
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
