@@ -97,7 +97,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case UpdateFailed(haku, t) =>
-      log.error(s"failed to fetch sijoittelu for haku $haku: ${t.getMessage}")
+      log.error(s"failed to fetch sijoittelu for haku $haku", t)
       calling = false
       self ! UpdateNext
   }
