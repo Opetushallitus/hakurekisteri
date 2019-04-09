@@ -116,12 +116,13 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         Duration(1, TimeUnit.MINUTES))
       val aliasCount: Int = personOidsWithAliases.henkiloOidsWithLinkedOids.size - personOidsSet.size
       logger.info(s"Saatiin hakemuspalvelusta ${personOidsSet.size} oppijanumeroa ja ${aliasCount} aliasta haulle $hakuOid")
-      handleHenkiloUpdate(personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq, params)
+      handleHenkiloUpdate(personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq, params, Some(hakuOid))
     }
     val now = System.currentTimeMillis()
     synchronized {
       if(oneJobAtATime.isCompleted) {
         logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}. Params: ${params}")
+        logger.info(s"Using Koski Deadline date: ${KoskiUtil.deadlineDate}")
         startTimestamp = System.currentTimeMillis()
         //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
         oneJobAtATime = Await.ready(hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate), 5.hours)
@@ -135,7 +136,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 
-  def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
+  def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams, hakuOid: Option[String] = None): Future[Unit] = {
     logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
     val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
     val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
@@ -147,6 +148,8 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         Future.successful({})
       } else {
         val (subSeq, index) = batches.head
+        //logger.info(s"Saving haun hakija hakija information for ${subSeq.size}")
+        //val k = Await.result(Future.sequence(subSeq.map(oid => koskiDataHandler.saveHaunHakija(oid, hakuOid.getOrElse("3.4.5")))), 5.minutes)
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
         updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
       }
@@ -162,7 +165,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
-      .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
+      .postObjectWithCodesForTuotantoKoski[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
         case e: Exception =>
           logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
