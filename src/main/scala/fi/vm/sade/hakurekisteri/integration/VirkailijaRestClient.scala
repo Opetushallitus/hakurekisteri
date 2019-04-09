@@ -205,7 +205,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   def postObjectWithCodesForTuotantoKoski[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, resource: A, basicAuth: Boolean, args: AnyRef*): Future[B] = {
     val retryCount = new AtomicInteger(1)
     //val url = OphUrlProperties.url(uriKey, args:_*)
-    val url = "https://virkailija.testiopintopolku.fi/koski/api/sure/oids"
+    val url = "https://virkailija.opintopolku.fi/koski/api/sure/oids"
     val result = tryPostClient[A, B](url, basicAuth, ksk2_special = true)(acceptedResponseCodes, maxRetries, retryCount, resource)
     logLongQuery(result, url)
     result
