@@ -54,7 +54,9 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "remove an entry from cache" in {
     val cache = newCache()
 
-    cache + (cacheKey, cacheEntryValue)
+    Await.result(cache + (cacheKey, cacheEntryValue), 1.second)
+
+    cache.getCache.size should be (1)
 
     cache - cacheKey
 
