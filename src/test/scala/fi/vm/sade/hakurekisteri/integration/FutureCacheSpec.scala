@@ -65,4 +65,11 @@ class FutureCacheSpec extends FlatSpec with Matchers {
     Await.result(cache.contains(cacheKey), 1.second) should be(false)
   }
 
+  it should "not populate cache with empty value" in {
+    val cache = newCache()
+
+    an [NullPointerException] should be thrownBy {
+      Await.result(cache.get("lol", _ => Future.successful(None)), 1.second) should be(None)
+    }
+  }
 }
