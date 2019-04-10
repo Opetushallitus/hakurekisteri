@@ -162,21 +162,21 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-  private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String) = {
-    val arvosanojenPoisto = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
-    val suorituksenPoisto = deleteSuoritus(suoritus)
-    val opiskelijanPoisto = fetchOpiskelijat(henkilöOid, suoritus.myontaja)
+  private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Future[Unit] = {
+    val arvosanojenPoisto: Future[Unit] = fetchArvosanat(suoritus).mapTo[Seq[Arvosana with Identified[UUID]]].map(_.foreach(a => deleteArvosana(a)))
+    val suorituksenPoisto: Future[Any] = deleteSuoritus(suoritus)
+    val opiskelijanPoisto: Future[Any] = fetchOpiskelijat(henkilöOid, suoritus.myontaja)
       .flatMap(opiskelijatiedot => opiskelijatiedot.size match {
         case 1 => logger.debug("Found one matching opiskelijatieto for suoritus, deleting it.")
           deleteOpiskelija(opiskelijatiedot.head)
         case _ => logger.warn("Multiple opiskelijas ({}) found for henkilöoid: ({}) while removing suoritus ({}), not deleting anything.", opiskelijatiedot.size.toString, henkilöOid, suoritus.id.toString)
           Future.successful("Ok with warnings")
       })
-    Future.sequence(Seq(arvosanojenPoisto, suorituksenPoisto, opiskelijanPoisto)).onComplete {
-      case Success(_) => logger.debug("Oppijan + " + suoritus.henkiloOid +" arvosanat, suoritukset ja opiskelijatieto onnistuneesti poistettu!", suoritus.henkiloOid)
-        Future.successful({})
-      case Failure(e) => logger.warn("Oppijan + " + suoritus.henkiloOid +" arvosanojen, suoritusten tai opiskelijatiedon poistossa oli ongelmia: " + e)
+    Future.sequence(Seq(arvosanojenPoisto, suorituksenPoisto, opiskelijanPoisto)).map {
+      case e: Exception => logger.warn("Oppijan + " + suoritus.henkiloOid +" arvosanojen, suoritusten tai opiskelijatiedon poistossa oli ongelmia: " + e)
         Future.failed(e)
+      case _ => logger.debug("Oppijan + " + suoritus.henkiloOid +" arvosanat, suoritukset ja opiskelijatieto onnistuneesti poistettu!", suoritus.henkiloOid)
+        Future.successful({})
     }
   }
 
@@ -287,7 +287,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   private def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
     Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
-  private def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Unit = {
+  private def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Future[Seq[Unit]] = {
     // Only virallinen suoritus
     val koskiVirallisetSuoritukset: Seq[VirallinenSuoritus] = henkilonSuoritukset.map(h => h.suoritus).flatMap {
       case s: VirallinenSuoritus => Some(s)
@@ -300,17 +300,16 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
 
     val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
-    toBeDeletedSuoritukset.foreach(suoritus => {
+    Future.sequence(toBeDeletedSuoritukset.map(suoritus => {
       logger.info("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + suoritus.id + ". Deleting it")
       deleteArvosanatAndSuorituksetAndOpiskelija(suoritus, henkilöOid)
-    })
+    }))
   }
 
   private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
 
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
-      checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid)
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
       if (!params.saveLukio) {
         tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.lukioKomoOid))
@@ -321,26 +320,33 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           .filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinenKomoOid))
       }
 
-      //NOTE, processes the Future that encloses the list, does not actually iterate through the list
-      Future.sequence(tallennettavatSuoritukset.map {
-        case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
-        try {
-          //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
-          //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
-          //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
-          if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
-            (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-            saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases).map((x: SuoritusArvosanat) => Right(Some(x)))
-          } else {
-            Future.successful(Right(None))
+      checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid).recoverWith{ case e: Exception =>
+        logger.error(s"Koski-opiskelijan poisto henkilölle ${henkilöOid} epäonnistui.", e)
+        Future.successful(Seq(Left(e)))
+      }.flatMap(_ =>
+
+        //NOTE, processes the Future that encloses the list, does not actually iterate through the list
+        Future.sequence(tallennettavatSuoritukset.map {
+          case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
+          try {
+            //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
+            //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
+            //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
+            if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
+              (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
+              saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases).map((x: SuoritusArvosanat) => Right(Some(x)))
+            } else {
+              Future.successful(Right(None))
+            }
+          } catch {
+            case e: Exception =>
+              logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
+              Future.successful(Left(e))
           }
-        } catch {
-          case e: Exception =>
-            logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
-            Future.successful(Left(e))
-        }
-        case _ => Future.successful(Right(None))
-      }).map{x =>
+          case _ => Future.successful(Right(None))
+        })
+
+      ).map{x =>
         logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")
         x
       }
