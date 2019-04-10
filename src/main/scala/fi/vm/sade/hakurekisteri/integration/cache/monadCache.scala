@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.cache
 
 import java.util.concurrent.{CompletableFuture, Executor}
-import java.util.function.{BiFunction, Function}
+import java.util.function.BiFunction
 
 import com.github.benmanes.caffeine.cache.{AsyncCache, Caffeine}
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -41,7 +41,7 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
     value.f
   }
 
-  def -(key: K): Unit = caffeineCache.put(key, CompletableFuture.completedFuture(null))
+  def -(key: K): Unit = caffeineCache.synchronous().invalidate(key)
 
   def contains(key: K): Future[Boolean] = {
     val existsAndIsFreshEnough: Cacheable[Future, T] => Boolean =
