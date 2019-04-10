@@ -79,21 +79,23 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
   }
 
-  private def shouldSaveSuoritus(suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+  private def shouldSaveSuoritus(henkilöOid: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
     val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid =>
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid => {
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
         suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
-      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => false
+      }
+      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus.")
+        false
+      }
       case _ => true
     }
   }
 
   private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val valmistunut: KoskiTila => Boolean = koskiTila =>
-     koskiTila.tila.koodiarvo.equals("valmistunut")
-
     val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
       KoskiUtil.eiHalututAlle30opValmaTilat.contains(koskiTila.tila.koodiarvo)
 
@@ -101,12 +103,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       koskiSuoritus.tyyppi.exists(_.koodiarvo == "valma") &&
         !koskiSuoritus.opintopisteitaVahintaan(30)
 
-    val isRemovable = (opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
+    val isRemovable = opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
       opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(eiHaluttuValmaAlle30op) &&
-      opiskeluoikeus.suoritukset.exists(alle30PisteenValma))
+      opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
 
     if (isRemovable) {
-      logger.info("Oppijalla {} löytyi alle 30 opintopisteen valma-suoritus keskeytynyt tai valmis -tilassa. Filtteröidään suoritus.",
+      logger.info(s"Filtteröidään henkilöltä {$henkiloOid} alle 30 opintopisteen VALMA-suoritus tilassa {${opiskeluoikeus.tila}}.",
         henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
     }
     isRemovable
@@ -137,7 +139,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
     // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
     viimeisimmatOpiskeluoikeudet.map { oo =>
-      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(s, oo)))
+      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(henkiloOid.getOrElse(throw new RuntimeException("Puuttuva henkilöOid")), s, oo)))
     }
   }
 
@@ -225,7 +227,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
   }
 
-  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[Any] = {
+  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
     val opiskelija: Opiskelija = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
     if (suoritusExists(useSuoritus, existingSuoritukset)) {
       logger.debug("Päivitetään olemassaolevaa suoritusta.")
@@ -244,10 +246,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           .map(arvosana => deleteArvosana(arvosana))))
         .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
         .flatMap(_ => saveOpiskelija(opiskelija))
+        .map(_ => SuoritusArvosanat(useSuoritus, newArvosanat,luokka, lasnaDate, luokkaTaso))
     } else {
       saveSuoritus(useSuoritus, personOidsWithAliases).flatMap(suoritus =>
         Future.sequence(arvosanat.map(a => arvosanaRekisteri ? arvosanaToInsertResource(a, suoritus, personOidsWithAliases)))
       ).flatMap(_ => saveOpiskelija(opiskelija))
+        .map(_ => SuoritusArvosanat(useSuoritus, arvosanat,luokka, lasnaDate, luokkaTaso))
     }
   }
 
@@ -283,7 +287,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     })
   }
 
-  private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Unit] = {
+  private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
 
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
@@ -307,16 +311,20 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
           if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
             (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-            saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases)
-
+            saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases).map((x: SuoritusArvosanat) => Right(Some(x)))
           } else {
-            Future.successful({})
+            Future.successful(Right(None))
           }
         } catch {
-          case e: Exception => Future.successful({logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)})
+          case e: Exception =>
+            logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
+            Future.successful(Left(e))
         }
-        case _ => Future.successful({})
-      }).flatMap(_ => Future.successful({logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")}))
+        case _ => Future.successful(Right(None))
+      }).map{x =>
+        logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")
+        x
+      }
     })
   }
 
@@ -330,7 +338,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
   def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
                                     personOidsWithAliases: PersonOidsWithAliases,
-                                    params: KoskiSuoritusHakuParams): Future[Any] = {
+                                    params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
 
     koskihenkilöcontainer.henkilö.oid match {
       case Some(henkilöOid) => {
@@ -338,11 +346,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           .filter(s => henkilöOid.equals(s.suoritus.henkiloOid))
 
         henkilonSuoritukset match {
-          case Nil => Future.successful({})
+          case Nil => Future.successful(Seq(Right(None)))
           case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset, personOidsWithAliases, params)
         }
       }
-      case None => Future.successful({})
+      case None => Future.successful(Seq(Right(None)))
     }
   }
 }

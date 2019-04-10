@@ -37,7 +37,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = aktiivisetKKYhteisHakuOidit.set(hakuOids)
 
   private val fetchPersonAliases: Seq[KoskiHenkiloContainer] => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = { hs: Seq[KoskiHenkiloContainer] =>
-    logger.debug(s"Haetaan aliakset henkilöille=$hs")
     val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
     oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
@@ -140,27 +139,35 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
     val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
     val totalGroups: Int = groupedOids.length
+    var updateHenkiloResults = (Seq[String](), Seq[String]())
     logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
-    def handleBatch(batches: Seq[(Seq[String], Int)]): Future[Unit] = {
+    def handleBatch(batches: Seq[(Seq[String], Int)], acc: (Seq[String], Seq[String])): Future[(Seq[String], Seq[String])] = {
       if(batches.isEmpty) {
-        Future.successful({})
+        Future(acc)
       } else {
         val (subSeq, index) = batches.head
         logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(subSeq.toSet, params).flatMap(s => handleBatch(batches.tail))
+        updateHenkilot(subSeq.toSet, params).flatMap(s => {
+          handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
+        })
       }
     }
 
-    val f = handleBatch(groupedOids.zipWithIndex)
+    val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
     f.onComplete {
-      case Success(_) => logger.info("HandleHenkiloUpdate: Koskipäivitys valmistui!")
+      case Success(results) => {
+        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä.")
+        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._2.size}.")
+        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
+        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
+      }
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
-    f
+    Future.successful({})
   }
 
-  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
+  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
       .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
@@ -181,26 +188,44 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   private def removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(data: Seq[KoskiHenkiloContainer]): Seq[KoskiHenkiloContainer] = {
     data.flatMap(container => {
       val oikeudet = container.opiskeluoikeudet.filter(_.isStateContainingOpiskeluoikeus)
-      if(oikeudet.nonEmpty) Seq(container.copy(opiskeluoikeudet = oikeudet)) else Seq()
+      if(oikeudet.nonEmpty) {
+        if (container.opiskeluoikeudet.size > oikeudet.size) {
+          logger.info(s"Filtteröitiin henkilöltä ${container.henkilö.oid} ${(container.opiskeluoikeudet.size - oikeudet.size)} opiskeluoikeutta, joista puuttui oppilaitos tai opiskeluoikeuden tilatieto.")
+        }
+        Seq(container.copy(opiskeluoikeudet = oikeudet))
+      } else {
+        if (container.opiskeluoikeudet.nonEmpty) {
+          logger.info(s"Filtteröitiin henkilöltä ${container.henkilö.oid} ${container.opiskeluoikeudet.size} opiskeluoikeutta, joista puuttui oppilaitos tai opiskeluoikeuden tilatieto.")
+        }
+        Seq()
+      }
     })
   }
 
-  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Unit] = {
-    val filteredHenkilot = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
+  private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
+    val filteredHenkilot: Seq[KoskiHenkiloContainer] = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
+    var successes: Seq[String] = Seq[String]()
+    var failures: Seq[String] = Seq[String]()
     if(filteredHenkilot.nonEmpty) {
-      Future.sequence(filteredHenkilot.map(henkilo =>
-        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).recoverWith {
-          case e: Exception =>
-            logger.error("Koskisuoritusten tallennus henkilölle {} epäonnistui: {} ",henkilo.henkilö.oid , e)
-            Future.failed(e)
-        })).flatMap(_ => Future.successful({})).recoverWith{
-        case e: Exception =>
-          logger.error("Kaikkien henkilöiden koskisuorituksia ei saatu tallennettua. {} " , e)
-          Future.failed(e)
-      }
+       Future.sequence(
+         filteredHenkilot.map(henkilo =>
+          koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).map {
+            henkiloResult => {
+              if (henkiloResult.exists(_.isLeft)) {
+                Left(henkilo.henkilö.oid.get)
+              } else {
+                Right(henkilo.henkilö.oid.get)
+              }
+            }
+          }
+        )
+      ).flatMap {results =>
+         successes = results.collect { case Right(r) => r }
+         failures = results.collect { case Left(l) => l }
+         Future.successful((failures, successes))}
     } else {
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
-      Future.successful({})
+      Future.successful(failures, successes)
     }
   }
 }

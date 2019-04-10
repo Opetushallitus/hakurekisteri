@@ -14,7 +14,6 @@ import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}
@@ -479,20 +478,22 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     result(3).arvosanat should have length 18
   }
 
-  it should "not parse arvosanat from lukio_päättötodistus.json" in {
+  it should "throw RuntimeException if henkiloOid is missing" in {
     /*
-    Lukion päättötodistuksen (abiturienttien) arvosanat: Suoritusta ei pidä luoda, sillä hakijalla on jo
-    hakemuksen perusteella luotu suoritus suoritusrekisterissä. Haetaan arvosanat hakijoille
-    joiden lukion oppimäärän suoritus on vahvistettu KOSKI -palvelussa.
-    Tässä vaiheessa ei haeta vielä lukion päättötodistukseen tehtyjä korotuksia.
+    Heitetään poikkeus, jos henkiloOid puuttuu.
      */
 
-    val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus.json").mkString
+    val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus_puuttuva_henkilöOid.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    try {
+      Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    } catch {
+      case ex: RuntimeException => // Expected
+    }
+
     val result = run(database.run(sql"select count(*) from arvosana".as[String]))
     result.head.toInt should equal(0)
   }
@@ -510,7 +511,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    //val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true).head
     result should have length 1
 
     val suoritusArvosanat = result.head
