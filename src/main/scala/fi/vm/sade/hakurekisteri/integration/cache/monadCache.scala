@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.cache
 
+import java.time.{Duration => JavaDuration}
 import java.util.concurrent.{CompletableFuture, Executor}
 import java.util.function.BiFunction
 
@@ -7,7 +8,6 @@ import com.github.benmanes.caffeine.cache.{AsyncCache, Caffeine}
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.collection.JavaConverters._
-import scala.compat.Platform
 import scala.compat.java8.FutureConverters
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -31,51 +31,45 @@ trait MonadCache[F[_], K, T] {
 class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T] {
   routeCaffeineLoggingToSlf4j()
 
-  private val caffeineCache: AsyncCache[K, Cacheable[Future, T]] = Caffeine.newBuilder().buildAsync().asInstanceOf[AsyncCache[K, Cacheable[Future, T]]]
+  private val caffeineCache: AsyncCache[K, T] = Caffeine.newBuilder().
+    expireAfterWrite(JavaDuration.ofMillis(expirationDurationMillis)).
+    buildAsync().
+    asInstanceOf[AsyncCache[K, T]]
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def +(key: K, v: T): Future[_] = {
-    val value: Cacheable[Future, T] = Cacheable[Future, T](f = Future.successful(v))
-    caffeineCache.put(key, CompletableFuture.completedFuture(value))
-    value.f
+    caffeineCache.put(key, CompletableFuture.completedFuture(v))
+    Future.successful(v)
   }
 
   def -(key: K): Unit = caffeineCache.synchronous().invalidate(key)
 
   def contains(key: K): Future[Boolean] = {
-    val existsAndIsFreshEnough: Cacheable[Future, T] => Boolean =
-      v => v != null &&
-        v.inserted + expirationDurationMillis > Platform.currentTime
-
-    val valueFromCache: CompletableFuture[Cacheable[Future, T]] = caffeineCache.getIfPresent(key)
+    val valueFromCache: CompletableFuture[T] = caffeineCache.getIfPresent(key)
     if (valueFromCache == null) {
       Future.successful(false)
     } else {
-      FutureConverters.toScala(valueFromCache).map(existsAndIsFreshEnough)
+      FutureConverters.toScala(valueFromCache).map(_ != null)
     }
   }
 
   def size: Int = caffeineCache.synchronous().estimatedSize().toInt
 
-  def getCache: Map[K, Cacheable[Future, T]] = caffeineCache.synchronous().asMap().asScala.toMap
+  def getCache: Map[K, T] = caffeineCache.synchronous().asMap().asScala.toMap
 
   override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-    val loadingFunction: BiFunction[K, Executor, CompletableFuture[Cacheable[Future, T]]] = new BiFunction[K, Executor, CompletableFuture[Cacheable[Future, T]]] {
-      override def apply(t: K, u: Executor): CompletableFuture[Cacheable[Future, T]] = {
-        FutureConverters.toJava(loader.apply(t).map {
-          case Some(x) => Cacheable(f = Future.successful(x))
+    val loadingFunction: BiFunction[K, Executor, CompletableFuture[T]] = new BiFunction[K, Executor, CompletableFuture[T]] {
+      override def apply(t: K, u: Executor): CompletableFuture[T] = {
+        FutureConverters.toJava(loader.apply(t).flatMap {
+          case Some(x) => Future.successful(x)
           case None => null
         })
       }.toCompletableFuture
     }
 
     FutureConverters.toScala(caffeineCache.get(key, loadingFunction)).flatMap { value =>
-      if (value == null) {
-        Future.successful(None)
-      } else {
-        value.f.map(Some(_))
-      }
+      Future.successful(Option(value))
     }
   }
 
@@ -86,5 +80,3 @@ class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.
     SLF4JBridgeHandler.install()
   }
 }
-
-case class Cacheable[F[_], T](inserted: Long = Platform.currentTime, f: F[T])
