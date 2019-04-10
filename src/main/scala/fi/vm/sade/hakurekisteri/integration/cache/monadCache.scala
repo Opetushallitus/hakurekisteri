@@ -5,13 +5,16 @@ import java.util.concurrent.{CompletableFuture, Executor}
 import java.util.function.BiFunction
 
 import com.github.benmanes.caffeine.cache.{AsyncCache, Caffeine}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.higherKinds
+import scala.reflect.runtime.universe.typeOf
+import scala.reflect.runtime.universe.TypeTag
 
 trait MonadCache[F[_], K, T] {
 
@@ -28,15 +31,16 @@ trait MonadCache[F[_], K, T] {
   protected def k(key: K, prefix:String) = s"${prefix}:${key}"
 }
 
-class InMemoryFutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T] {
+class InMemoryFutureCache[K, T: TypeTag](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T] {
   routeCaffeineLoggingToSlf4j()
+
+  private val typeName = typeOf[T].typeSymbol.name.toString
+  private implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(4, s"${getClass.getSimpleName}-for-$typeName")
 
   private val caffeineCache: AsyncCache[K, T] = Caffeine.newBuilder().
     expireAfterWrite(JavaDuration.ofMillis(expirationDurationMillis)).
     buildAsync().
     asInstanceOf[AsyncCache[K, T]]
-
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   def +(key: K, v: T): Future[_] = {
     caffeineCache.put(key, CompletableFuture.completedFuture(v))
