@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InputStreamReader
 import java.net.ConnectException
+import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.security.SecureRandom
 import java.util.UUID
@@ -12,11 +13,12 @@ import akka.actor.{ActorSystem, Props}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import com.ning.http.client._
-import com.ning.http.client.extra.ThrottleRequestFilter
+import org.asynchttpclient._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties
+import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie}
+import org.asynchttpclient.filter.ThrottleRequestFilter
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -57,14 +59,21 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   private val logger = Logging.getLogger(system, this)
   private val serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
 
-  private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
-    .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
-    .setRequestTimeoutInMs(config.httpClientRequestTimeout)
-    .setIdleConnectionTimeoutInMs(config.httpClientRequestTimeout)
-    .setFollowRedirects(true)
-    .setMaxRequestRetry(2)
-    .addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs))
-  ))
+  private val internalClient: HttpExecutor = {
+    aClient match {
+      case Some(asyncHttpClient) => new HttpExecutor {
+        override def client: AsyncHttpClient = asyncHttpClient
+      }
+      case None => Http.withConfiguration(_.
+        setConnectTimeout(config.httpClientConnectionTimeout).
+        setRequestTimeout(config.httpClientRequestTimeout).
+        setPooledConnectionIdleTimeout(config.httpClientRequestTimeout).
+        setFollowRedirect(true).
+        setMaxRequestRetry(2).
+        addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs)))
+    }
+  }
+
   val configToLog = config.copy(password = Some("*****"), properties = Map("properties" -> "censored"))
   logger.info(s"Initialized internal http client of class ${internalClient.getClass} with config $configToLog")
   private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient, jSessionName, serviceUrlSuffix)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
@@ -74,32 +83,30 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
     import org.json4s.jackson.Serialization._
 
-    private def addCookies(request: Req, cookies: Seq[String]): Req = {
-      if(cookies.isEmpty) {
-        request
-      } else {
-        request <:< Map("Cookie" -> cookies.mkString("; ")  )
-      }
+    private def addCookies(request: Req, cookies: Seq[Cookie]): Req = {
+      cookies.foldLeft[Req](request)((req, cookie) => req.addOrReplaceCookie(cookie))
     }
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend", "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend")
-      val cookies = new scala.collection.mutable.ListBuffer[String]()
+      val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
       val requestWithPostHeaders = body match {
         case Some(jsonBody) =>
-          cookies += "CSRF=suoritusrekisteri"
-          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", "UTF-8") <:< Map("CSRF" -> "suoritusrekisteri")
+          cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
+          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> "suoritusrekisteri")
         case None => request
       }
 
+      internalClient.client.getConfig.getCookieStore.remove(_.name().toLowerCase == jSessionName.toLowerCase)
       (user, password, basicAuth) match{
         case (Some(un), Some(pw), false) =>
           for (
             jsession <- jSessionId;
             result <- {
-              cookies += s"${jSessionName}=${jsession.sessionId}"
-              internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
+              cookies += new DefaultCookie(jSessionName, jsession.sessionId)
+              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
+              internalClient(requestWithCookies, handler)
             }
           ) yield result
         case (Some(un), Some(pw), true) =>
@@ -151,9 +158,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       val took = Platform.currentTime - t0
       if (took > config.httpClientSlowRequest) {
         logger.warning(s"slow request: url $url took $took ms to complete, result was ${result(t)}, " +
-          s"parameters: connectionTimeoutInMs=${internalClient.client.getConfig.getConnectionTimeoutInMs}, " +
-          s"requestTimeoutInMs=${internalClient.client.getConfig.getRequestTimeoutInMs}, " +
-          s"idleConnectionTimeoutInMs=${internalClient.client.getConfig.getIdleConnectionTimeoutInMs}")
+          s"parameters: connectTimeout=${internalClient.client.getConfig.getConnectTimeout}, " +
+          s"requestTimeout=${internalClient.client.getConfig.getRequestTimeout}, " +
+          s"pooledConnectionIdleTimeout=${internalClient.client.getConfig.getPooledConnectionIdleTimeout}")
       }
     })
   }
@@ -255,7 +262,7 @@ object JsonExtractor extends HakurekisteriJsonSupport {
         if (codes.contains(response.getStatusCode))
           super.onCompleted(response)
         else {
-          throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody("utf-8")}", response.getStatusCode)
+          throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody(Charset.forName("utf-8"))}", response.getStatusCode)
         }
       }
     }

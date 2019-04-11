@@ -106,9 +106,11 @@
 
     <!--  ===== end of mappings ===== -->
 
-    <beans:bean id="casFilter" class="fi.vm.sade.security.CustomCasAuthenticationFilter">
+    <beans:bean id="casFilter" class="fi.vm.sade.java_utils.security.OpintopolkuCasAuthenticationFilter">
+        <beans:constructor-arg ref="casServiceProperties"/>
         <beans:property name="authenticationManager" ref="authenticationManager"/>
-        <beans:property name="serviceProperties" ref="casServiceProperties"/>
+        <beans:property name="proxyGrantingTicketStorage" ref="pgtStorage"/>
+        <beans:property name="proxyReceptorUrl" value="/j_spring_cas_security_proxyreceptor"/>
         <beans:property name="filterProcessesUrl" value="/j_spring_cas_security_check"/>
     </beans:bean>
 
@@ -125,6 +127,25 @@
     <authentication-manager alias="authenticationManager">
         <authentication-provider ref="casAuthenticationProvider" />
     </authentication-manager>
+
+    <!-- enable proxy authentication (in front proxy) -->
+    <!--
+      NOTE: In a real application you should not use an in memory implementation.
+    -->
+    <beans:bean id="pgtStorage" class="org.jasig.cas.client.proxy.EhcacheBackedProxyGrantingTicketStorageImpl">
+        <beans:constructor-arg name="cache">
+            <beans:bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+                <beans:property name="cacheManager" ref="casTicketCache" />
+                <beans:property name="maxElementsInMemory" value="100000" />
+                <beans:property name="maxElementsOnDisk" value="10000000" />
+                <beans:property name="overflowToDisk" value="true" />
+                <beans:property name="cacheName" value="casProxyGrantingTickets" />
+                <beans:property name="timeToLive" value="28800" />
+                <beans:property name="timeToIdle" value="28800" />
+                <beans:property name="eternal" value="false" />
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
 
     <beans:bean id="casTicketsCacheBean" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
         <beans:property name="cacheManager" ref="casTicketCache" />
@@ -154,7 +175,10 @@
     </beans:bean>
 
     <beans:bean id="casTicketValidator" class="org.jasig.cas.client.validation.Cas20ProxyTicketValidator">
-        <beans:constructor-arg index="0" value="${web.url.cas}" />
+        <beans:constructor-arg index="0" value="${web.url.cas}" /><!-- enable proxy authentication (in front proxy) -->
+        <beans:property name="proxyCallbackUrl" value="${cas_service}/j_spring_cas_security_proxyreceptor"/>
+        <beans:property name="proxyGrantingTicketStorage" ref="pgtStorage"/>
+        <beans:property name="acceptAnyProxy" value="true"/>
     </beans:bean>
 
     <!-- TODO: cacheasetukset ihan arvalla nyt, statelessTicketCache kuitenkin sallii saman proxytiketin kayttamisen, joka vahentaa huomattavasti cas-liikennetta -->

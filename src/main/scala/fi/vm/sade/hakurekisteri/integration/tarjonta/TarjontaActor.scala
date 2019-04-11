@@ -43,6 +43,7 @@ case class RestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
 
 case class TarjontaResultResponse[T](result: T)
 
+@SerialVersionUID(1)
 case class KomoResponse(oid: String,
                         komo: Option[Komo])
 
@@ -58,6 +59,7 @@ case class Koulutus(oid: String,
 
 case class HakukohdeOid(oid: String)
 
+@SerialVersionUID(1)
 case class Hakukohde(oid: String,
                      hakukohdeKoulutusOids: Seq[String],
                      ulkoinenTunniste: Option[String],

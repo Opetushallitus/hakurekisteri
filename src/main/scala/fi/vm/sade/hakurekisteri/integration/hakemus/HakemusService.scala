@@ -104,6 +104,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
 
 
   private val logger = Logging.getLogger(system, this)
+  logger.info(s"Using page size $pageSize when fetching modified applications from haku-app.")
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
 

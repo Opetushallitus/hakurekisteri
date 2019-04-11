@@ -27,5 +27,5 @@ http://www.springframework.org/schema/security/spring-security.xsd">
         </authentication-provider>
     </authentication-manager>
 
-    <beans:bean id="urlRewriteFilter" class="fi.vm.sade.security.UrlRewriteFilter"/>
+    <beans:bean id="urlRewriteFilter" class="fi.vm.sade.java_utils.security.UrlRewriteFilter"/>
 </beans:beans>

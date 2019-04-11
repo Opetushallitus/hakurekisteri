@@ -6,7 +6,7 @@ log4j.logger.java={{env_loglevel}}
 log4j.logger.javax={{env_loglevel}}
 log4j.logger.scala={{env_loglevel}}
 
-log4j.appender.FILE.Threshold=INFO
+log4j.appender.FILE.Threshold=DEBUG
 log4j.appender.FILE.File=${user.home}/logs/oph-suoritusrekisteri.log
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
@@ -69,7 +69,11 @@ log4j.logger.org.apache.activemq.spring={{env_loglevel}}
 log4j.logger.org.jasig.cas.client.session=INFO
 log4j.logger.fi.vm.sade.hakurekisteri.integration.ytl=DEBUG
 # redis cache
-log4j.logger.fi.vm.sade.hakurekisteri.integration.cache=DEBUG
+log4j.logger.fi.vm.sade.hakurekisteri.integration.cache=INFO
 
 # Koski integration
 log4j.logger.fi.vm.sade.hakurekisteri.integration.koski=DEBUG
+
+log4j.logger.com.zaxxer.hikari.HikariConfig=DEBUG
+
+log4j.logger.fi.vm.sade.hakurekisteri.integration.hakemus.HakemusBasedPermissionCheckerActor=DEBUG

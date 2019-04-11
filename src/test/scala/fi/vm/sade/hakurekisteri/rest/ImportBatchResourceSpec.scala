@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.rest
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
-import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.batchimport._
@@ -21,15 +20,15 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
 import scala.compat.Platform
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.xml.Elem
 
 
@@ -75,8 +74,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
 
     result
   }
-  val asyncProvider = new CapturingProvider(createEndpointMock)
-  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
+  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new CapturingAsyncHttpClient(createEndpointMock)))
   val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor()(system))))
   val orgsActor: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockOrganisaatioActor(new MockConfig()))))
 

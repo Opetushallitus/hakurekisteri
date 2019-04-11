@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri
 
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito
 import scala.language.implicitConversions
 

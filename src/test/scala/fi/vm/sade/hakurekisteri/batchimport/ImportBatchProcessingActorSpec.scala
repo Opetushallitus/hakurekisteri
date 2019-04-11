@@ -3,8 +3,6 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, KomoOids, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HenkiloActorRef, HttpHenkiloActor}
@@ -15,16 +13,16 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.test.tools.MockedResourceActor
+import fi.vm.sade.hakurekisteri.{KomoOids, MockCacheFactory, MockConfig}
 import org.mockito.Mockito._
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.concurrent.Waiters
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.collection.mutable
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
-class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport with LocalhostProperties {
+class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with Waiters with HakurekisteriJsonSupport with LocalhostProperties {
   behavior of "ImportBatchProcessingActor"
   val lahde = "testitiedonsiirto"
 
@@ -114,23 +112,23 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     result
   }
-  val asyncProvider = new CapturingProvider(createEndpoint(fail = false))
-  val failingAsyncProvider = new CapturingProvider(createEndpoint(fail = true))
+  val asyncHttpClient = new CapturingAsyncHttpClient(createEndpoint(fail = false))
+  val failingAsyncClient = new CapturingAsyncHttpClient(createEndpoint(fail = true))
 
   def createProcessingActor(suoritusHandler: (Suoritus) => Unit = (s: Suoritus) => {},
                             opiskelijaHandler: (Opiskelija) => Unit = (o: Opiskelija) => {},
                             batchHandler: (ImportBatch) => Unit = (i: ImportBatch) => {},
-                            httpProvider: CapturingProvider = asyncProvider)(implicit system: ActorSystem): ActorRef = {
+                            httpClient: CapturingAsyncHttpClient = asyncHttpClient)(implicit system: ActorSystem): ActorRef = {
     implicit val ec: ExecutionContext = system.dispatcher
     val config = new MockConfig
 
     val importBatchOrgActor = system.actorOf(Props(new ImportBatchOrgActor(null)))
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchHandler, query = { (q) => Seq(batch) })))
-    val onrClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(new AsyncHttpClient(httpProvider)))
+    val onrClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/oppijanumerorekisteri-service"), Some(httpClient))
     val henkiloActor = new HenkiloActorRef(system.actorOf(Props(new HttpHenkiloActor(onrClient, config))))
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = suoritusHandler, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](save = opiskelijaHandler, query = {q => Seq()})))
-    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(httpProvider)))
+    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(httpClient))
     val cacheFactory = MockCacheFactory.get
     val organisaatioActor = new OrganisaatioActorRef(system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory))))
     val koodistoActor = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
@@ -190,7 +188,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
       batchWaiter.dismiss()
     }
 
-    val processingActor = createProcessingActor(batchHandler = batchHandler, httpProvider = failingAsyncProvider)
+    val processingActor = createProcessingActor(batchHandler = batchHandler, httpClient = failingAsyncClient)
 
     processingActor ! ProcessReadyBatches
 

@@ -5,10 +5,18 @@ import java.util.UUID
 
 import com.github.nscala_time.time.Imports._
 import slick.ast.{FieldSymbol, Node}
-import slick.jdbc.{JdbcStatementBuilderComponent, PostgresProfile}
+import slick.jdbc.{JdbcBackend, JdbcStatementBuilderComponent, PostgresProfile}
 
-object HakurekisteriDriver extends PostgresProfile {
+trait HakurekisteriDriver extends PostgresProfile {
+  override val backend: JdbcBackend
+  override val api: API with HakurekisteriColumns = new API with HakurekisteriColumns {
+    override implicit lazy val uuidColumnType: columnTypes.UUIDJdbcType = columnTypes.uuidJdbcType
+  }
+}
 
+class HakurekisteriDriver1 extends HakurekisteriDriver
+
+object HakurekisteriDriver extends HakurekisteriDriver1 {
   override val columnTypes: HakurekisteriDriver.JdbcTypes = new super.JdbcTypes {
     override val uuidJdbcType: UUIDJdbcType = new UUIDJdbcType {
       override def sqlTypeName(sym: Option[FieldSymbol]): String = "VARCHAR"
@@ -18,9 +26,6 @@ object HakurekisteriDriver extends PostgresProfile {
       override def valueToSQLLiteral(value: UUID) = s"'${value.toString}'"
       override def hasLiteralForm = true
     }
-  }
-  override val api: HakurekisteriDriver.API with HakurekisteriColumns = new API with HakurekisteriColumns {
-    override implicit lazy val uuidColumnType: columnTypes.UUIDJdbcType = columnTypes.uuidJdbcType
   }
 
   import api._

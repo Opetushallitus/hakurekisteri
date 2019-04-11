@@ -73,8 +73,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
         Future.successful(None)
     }
 
-    tulos.onSuccess {
-      case Some(oids) => self ! CacheChildOids(parentOid, oids)
+    tulos.foreach {
+      oids => self ! CacheChildOids(parentOid, oids.get)
     }
 
     tulos
@@ -83,24 +83,36 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case PreconditionFailedException(_, 204) => true
     case _ => false
   }
+
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
     if (tunniste.isEmpty) {
       val errorMessage = "findAndCache error: string tunniste must not be empty"
       log.error(errorMessage)
       Future.failed(new IllegalArgumentException(errorMessage))
     } else {
-
-      val tulos: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
+      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
         case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
           log.warning(s"organisaatio not found with tunniste $tunniste")
           Future.successful(None)
       }
 
-      tulos.onSuccess {
-        case Some(o) => self ! CacheOrganisaatiot(Seq(o))
+      val organisationWithChildren: Future[Option[Organisaatio]] = organisationWithoutChildren.flatMap {
+        case Some(organisaatio) =>
+          findAndCacheChildOids(organisaatio.oid).
+            map(_.toSeq.flatMap(_.oids)).
+            flatMap(childOids => Future.sequence(childOids.map(findAndCache))).
+            map(_.flatten).
+            map(childOrganisations => Some(organisaatio.copy(children = childOrganisations)))
+        case None => Future.successful(None)
       }
 
-      tulos
+      organisationWithChildren.foreach {
+        _.foreach { organisaatio =>
+          self ! CacheOrganisaatiot(Seq(organisaatio))
+        }
+      }
+
+      organisationWithChildren
     }
   }
 

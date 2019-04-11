@@ -34,7 +34,7 @@ suoritusrekisteri.db.url=jdbc:postgresql://{{host_postgresql_suoritusrekisteri}}
 suoritusrekisteri.db.user={{ host_postgresql_suoritusrekisteri_user }}
 suoritusrekisteri.db.password={{ host_postgresql_suoritusrekisteri_password }}
 suoritusrekisteri.db.connectionPool=HikariCP
-suoritusrekisteri.db.numThreads=20
+suoritusrekisteri.db.numThreads={{ host_postgresql_suoritusrekisteri_max_threads | default("10") }}
 suoritusrekisteri.db.maxConnections={{ host_postgresql_suoritusrekisteri_max_active }}
 suoritusrekisteri.db.minConnections={{ host_postgresql_suoritusrekisteri_max_active }}
 suoritusrekisteri.db.queueSize={{ host_postgresql_suoritusrekisteri_max_queue_size | default("10000") }}
@@ -46,6 +46,7 @@ suoritusrekisteri.db.reallyslowquery.millis=10000
 suoritusrekisteri.db.max.log.line.length=600
 suoritusrekisteri.db.connectionTimeout={{ host_postgresql_suoritusrekisteri_hikari_connection_timeout_millis | default("1000") }}
 suoritusrekisteri.swagger.https={{ suoritusrekisteri_swagger_https | default("true") }}
+suoritusrekisteri.hakemuspermissioncheck.max.personoids={{ suoritusrekisteri_hakemuspermissioncheck_max_personoids | default("1000") }}
 
 # Oletusarvoja
 activemq.queue.name.log=Sade.Log
@@ -96,6 +97,7 @@ suoritusrekisteri.koodisto-service.max-connections={{ suoritusrekisteri_koodisto
 suoritusrekisteri.koodisto-service.max-connection-queue-ms={{ suoritusrekisteri_koodistoservice_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.haku-app.max-connections={{ suoritusrekisteri_hakuapp_max_connections | default('50')}}
 suoritusrekisteri.haku-app.max-connection-queue-ms={{ suoritusrekisteri_hakuapp_max_connection_queue_ms | default('60000')}}
+suoritusrekisteri.haku-app.pagesize={{ suoritusrekisteri_hakuapp_pagesize | default('200')}}
 suoritusrekisteri.ataru.max-connections={{ suoritusrekisteri_ataru_max_connections | default('50')}}
 suoritusrekisteri.ataru.max-connection-queue-ms={{ suoritusrekisteri_ataru_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.valintalaskentakoostepalvelu.max-connections={{ suoritusrekisteri_valintalaskentakoostepalvelu_max_connections | default('50')}}

@@ -99,6 +99,10 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
 
   private def filterOppijaOidsForHakemusBasedReadAccess(user: User, oppijaOids: Set[String]): Future[Set[String]] = {
     logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
+    if (oppijaOids.size > config.maxPersonOidCountForHakemusBasedPermissionCheck) {
+      throw new IllegalArgumentException(s"Attempted to check hakemus based permissions for ${oppijaOids.size} persons, " +
+        s"which exceeds the maximum of config.maxPersonOidCountForHakemusBasedPermissionCheck.")
+    }
     Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor.actor ? HasPermission(user, o))
       .mapTo[Boolean]
       .zip(Future.successful(o))))
@@ -144,11 +148,7 @@ case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
   def checkAccess(user: User, action: String, target: Subject): Boolean = {
     val allowedOrgs = user.orgsFor(action, target.resource)
     val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
-    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
-  }
-
-  private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
-    komo.exists(user.allowByKomo(_, action))
+    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) }
   }
 }
 

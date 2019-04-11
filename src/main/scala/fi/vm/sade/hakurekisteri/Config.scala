@@ -5,7 +5,6 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.Properties
 
 import akka.actor.ActorSystem
-import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
@@ -174,10 +173,13 @@ abstract class Config {
   OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
 
   val tiedonsiirtoStorageDir = properties.getOrElse("suoritusrekisteri.tiedonsiirto.storage.dir", System.getProperty("java.io.tmpdir"))
+  val maxPersonOidCountForHakemusBasedPermissionCheck: Int =
+    java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.hakemuspermissioncheck.max.personoids",
+      "configuration key missing: suoritusrekisteri.hakemuspermissioncheck.max.personoids"))
 
   def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
-    import scala.collection.JavaConversions._
-    val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
+    import scala.collection.JavaConverters._
+    val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.asScala.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
 
     resolve(rawMap)
   }
@@ -235,6 +237,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
+
+  val hakuappPageSize: Int = properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
 
   val serviceUser = properties.get("suoritusrekisteri.app.username")
   val servicePassword = properties.get("suoritusrekisteri.app.password")

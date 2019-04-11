@@ -1,9 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
-import com.ning.http.client._
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
@@ -21,7 +20,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
     reset(endPoint)
   }
 
-  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"),aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
+  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"),aClient = Some(new CapturingAsyncHttpClient(endPoint)))
 
   behavior of "VirkailijaRestClient"
 
@@ -56,13 +55,13 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
     when(endPoint.request(forUrl("http://localhost/blast/j_spring_cas_security_check?ticket=ST-124"))).thenReturn((200, List("Set-Cookie" -> s"JSESSIONID=abcd"), ""))
     when(endPoint.request(forUrl("http://localhost/cas2/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas2/v1/tickets/TGT-124"), ""))
     when(endPoint.request(forUrl("http://localhost/cas2/v1/tickets/TGT-124"))).thenReturn((200,List(), "ST-124"))
-    when(endPoint.request(forUrl("http://localhost/test/rest").withHeader("Cookie" -> "JSESSIONID=abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
+    when(endPoint.request(forUrl("http://localhost/test/rest").withCookie("JSESSIONID", "abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
 
     val sessionClient = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas2"),
       serviceUrl = "http://localhost/blast",
       user = Some("user"),
       password = Some("pw")),
-      Some(new AsyncHttpClient(new CapturingProvider(endPoint)))
+      Some(new CapturingAsyncHttpClient(endPoint))
     )
 
     val requestChain: Future[TestResponse] = sessionClient.readObject[TestResponse]("test.rest")(200).flatMap {
@@ -73,10 +72,12 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
 
     Await.ready(requestChain, 30.seconds)
     val ehti = requestChain.isCompleted
-    if (ehti)
-      verify(endPoint, times(3)).request(forUrl("http://localhost/test/rest").withHeader("Cookie" -> "JSESSIONID=abcd"))
-    else
+    if (ehti) {
+      verify(endPoint).request(forUrl("http://localhost/cas2/v1/tickets").withBodyPart("user").withBodyPart("pw"))
+      verify(endPoint, times(3)).request(forUrl("http://localhost/test/rest").withCookie("JSESSIONID", "abcd"))
+    } else {
       fail("timed out")
+    }
   }
 
   case class TestResponse(id: String)

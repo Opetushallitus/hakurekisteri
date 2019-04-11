@@ -79,9 +79,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       val (haku, waitingRequests) = nextUpdateRequest
       val result = callBackend(haku, None)
       waitingRequests.foreach(_.tryCompleteWith(result))
-      result.onFailure {
+      result.failed.foreach {
         case t =>
-          log.warning(s"valinta tulos update failed for haku $haku: ${t.getMessage}")
+          log.warning(s"valinta tulos update failed for haku $haku: ${t.getMessage}", t)
           rescheduleHaku(haku, retry)
       }
       result

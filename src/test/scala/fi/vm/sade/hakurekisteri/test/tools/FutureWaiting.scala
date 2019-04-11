@@ -1,10 +1,10 @@
 package fi.vm.sade.hakurekisteri.test.tools
 
-import org.scalatest.concurrent.AsyncAssertions
+import org.scalatest.concurrent.Waiters
 import scala.concurrent.{ExecutionContext, Future}
 import org.scalatest.time.{Millis, Span}
 
-trait FutureWaiting extends AsyncAssertions {
+trait FutureWaiting extends Waiters {
 
   val span = Span(120000, Millis)
   implicit val ec:ExecutionContext = ExecutionContext.Implicits.global

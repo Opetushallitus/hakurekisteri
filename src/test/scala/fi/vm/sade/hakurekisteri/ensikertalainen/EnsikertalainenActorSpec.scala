@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
@@ -15,9 +15,9 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHe
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.{DateTime, LocalDate}
-import org.mockito.Matchers.{any, anyString}
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
@@ -178,18 +178,8 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       }
     })
     (system.actorOf(Props(new EnsikertalainenActor(
-      suoritusActor = system.actorOf(Props(new Actor {
-        override def receive: Receive = {
-          case q: SuoritusHenkilotQuery =>
-            sender ! suoritukset
-        }
-      })),
-      opiskeluoikeusActor = system.actorOf(Props(new Actor {
-        override def receive: Receive = {
-          case q: OpiskeluoikeusHenkilotQuery =>
-            sender ! opiskeluoikeudet
-        }
-      })),
+      suoritusActor = createActorRespondingToSuorituksetHenkilotQuery(suoritukset),
+      opiskeluoikeusActor = createActorRespondingToOpiskeluoikeusHenkilotQuery(opiskeluoikeudet),
       valintarekisterActor = new ValintarekisteriActorRef(valintarekisteri),
       tarjontaActor = new TarjontaActorRef(system.actorOf(Props(new Actor {
         override def receive: Actor.Receive = {
@@ -213,6 +203,19 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
     Await.result(system.terminate(), 15.seconds)
   }
 
+  private def createActorRespondingToSuorituksetHenkilotQuery(suoritukset: Seq[Suoritus]): ActorRef = system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case q: SuoritusHenkilotQuery =>
+        sender ! suoritukset
+    }
+  }))
+
+  private def createActorRespondingToOpiskeluoikeusHenkilotQuery(opiskeluoikeudet: Seq[Opiskeluoikeus]): ActorRef = system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case q: OpiskeluoikeusHenkilotQuery =>
+        sender ! opiskeluoikeudet
+    }
+  }))
 }
 
 object Testihaku extends Haku(
