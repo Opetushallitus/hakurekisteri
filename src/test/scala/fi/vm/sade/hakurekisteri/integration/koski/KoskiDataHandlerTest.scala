@@ -2151,7 +2151,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(100)
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
 
     //insert old opiskelijadata:
     var insertSql = sql"""insert into opiskelija (resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source, current)
