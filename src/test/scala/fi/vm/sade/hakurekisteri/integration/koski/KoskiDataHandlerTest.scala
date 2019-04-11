@@ -2353,7 +2353,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     opiskelija.luokkataso should equal("OPPIAINE")
     opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("XX")
+    opiskelija.luokka should equal("OPPIAINE")
   }
 
   it should "filter suoritus without läsnäolo before or after deadline date" in {

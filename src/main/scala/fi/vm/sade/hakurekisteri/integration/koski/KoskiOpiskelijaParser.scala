@@ -46,7 +46,7 @@ class KoskiOpiskelijaParser {
       Oids.valmaKomoOid                           -> OppilaitosAndLuokka("VALMA", suoritus.suoritus.myontaja, suoritus.luokka),
       Oids.telmaKomoOid                           -> OppilaitosAndLuokka("TELMA", suoritus.suoritus.myontaja, suoritus.luokka),
       Oids.ammatillinentutkintoKomoOid            -> OppilaitosAndLuokka("", suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.perusopetuksenOppiaineenOppimaaraOid   -> OppilaitosAndLuokka("OPPIAINE", suoritus.suoritus.myontaja, suoritus.luokka)
+      Oids.perusopetuksenOppiaineenOppimaaraOid   -> OppilaitosAndLuokka("OPPIAINE", suoritus.suoritus.myontaja, "OPPIAINE")
     )
 
     if (suoritus.suoritus.komo == Oids.perusopetusKomoOid
