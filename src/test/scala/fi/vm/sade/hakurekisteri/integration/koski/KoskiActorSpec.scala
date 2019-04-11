@@ -24,7 +24,7 @@ import scala.language.{implicitConversions, reflectiveCalls}
 /**
   * Doesn't actually seem to test any "actor"?
   *
-  * More tests at {@link fi.vm.sade.hakurekisteri.integration.koski.KoskiArvosanaTriggerTest}
+  * More tests at {@link fi.vm.sade.hakurekisteri.integration.koski.koskiDatahandlerTest}
   */
 class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with Waiters
   with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {

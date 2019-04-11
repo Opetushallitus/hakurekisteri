@@ -84,16 +84,14 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
 
     //Filtteröidään suoritukset, joilla ei ole läsnäolopäivää:
-    var lasnaDate = suoritus.alkamispäivä match {
-      case Some(x) => parseLocalDate(x)
-      case None => opiskeluoikeus.tila.opiskeluoikeusjaksot.find(_.tila.koodiarvo.equals("lasna")) match {
-        case Some(y) => parseLocalDate(y.alku)
-        case _ => {
-          logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, josta ei löydy läsnäolon alkupäivämäärää (komoOid: ${komoOid}).")
-          return false
-        }
+    val lasnaDate = opiskeluoikeus.tila.findEarliestLasnaDate match {
+      case Some(y) => y
+      case _ => {
+        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, josta ei löydy läsnäolon alkupäivämäärää (komoOid: ${komoOid}).")
+        return false
       }
     }
+
     //Filtteröidään suoritukset, joiden alkamisajankohta on deadlinen jälkeen:
     if (lasnaDate.isAfter(KoskiUtil.deadlineDate)) {
       logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, jonka läsnäolon alkamispäivämäärä on deadlinen jälkeen (komoOid: ${komoOid}).")
@@ -324,8 +322,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         logger.error(s"Koski-opiskelijan poisto henkilölle ${henkilöOid} epäonnistui.", e)
         Future.successful(Seq(Left(e)))
       }.flatMap(_ =>
-
-        //NOTE, processes the Future that encloses the list, does not actually iterate through the list
         Future.sequence(tallennettavatSuoritukset.map {
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
           try {

@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
+import org.joda.time.LocalDate
 
 import scala.collection.immutable.ListMap
 import scala.math.BigDecimal
@@ -38,6 +40,15 @@ case class KoskiOpiskeluoikeus(
 }
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
+  def findEarliestLasnaDate: Option[LocalDate] = {
+    implicit val localDateOrdering: Ordering[LocalDate] = Ordering.by(_.toDate)
+    val lasnaTilat: Seq[KoskiTila] = opiskeluoikeusjaksot.filter(_.tila.koodiarvo.equals("lasna"))
+    val lasnaDates: Seq[KoskiTila] = lasnaTilat.filterNot(_.alku.isEmpty) sortBy {
+      case KoskiTila(alku,_) => LocalDate.parse(alku).toDate
+
+    }
+    if (lasnaDates.nonEmpty) Some(parseLocalDate(lasnaDates.head.alku)) else None
+  }
   def determineSuoritusTila: String = {
     KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila.find { koski2Sure =>
       opiskeluoikeusjaksot.exists(_.tila.koodiarvo == koski2Sure._1)

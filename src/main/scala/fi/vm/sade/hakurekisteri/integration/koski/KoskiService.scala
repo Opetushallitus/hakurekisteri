@@ -164,7 +164,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       }
       case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
     }
-    Future.successful({})
+    f.flatMap(_ => Future.successful({}))
   }
 
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
