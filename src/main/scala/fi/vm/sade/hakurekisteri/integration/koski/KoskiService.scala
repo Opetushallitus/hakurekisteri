@@ -162,7 +162,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
         logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
       }
-      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
+      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui: {}", e)
     }
     f.flatMap(_ => Future.successful({}))
   }
