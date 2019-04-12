@@ -162,7 +162,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
         logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
       }
-      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui: {}", e)
+      case Failure(e) => logger.error(e,"HandleHenkiloUpdate: Koskipäivitys epäonnistui")
     }
     f.flatMap(_ => Future.successful({}))
   }
@@ -175,7 +175,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
           logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
           Future.failed(e)
       }
-
     oppijat.flatMap(fetchPersonAliases).flatMap(res => {
       val (henkilot, personOidsWithAliases) = res
       logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä, aliakset haettu!")
