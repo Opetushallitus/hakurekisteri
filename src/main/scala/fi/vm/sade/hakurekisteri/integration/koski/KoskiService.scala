@@ -170,7 +170,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 
-  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
+  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
       .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
       .recoverWith {
