@@ -81,7 +81,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       waitingRequests.foreach(_.tryCompleteWith(result))
       result.failed.foreach {
         case t =>
-          log.warning(s"valinta tulos update failed for haku $haku: ${t.getMessage}", t)
+          log.error(t, s"valinta tulos update failed for haku $haku: ${t.getMessage}")
           rescheduleHaku(haku, retry)
       }
       result
@@ -97,7 +97,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case UpdateFailed(haku, t) =>
-      log.error(s"failed to fetch sijoittelu for haku $haku", t)
+      log.error(t, s"failed to fetch sijoittelu for haku $haku")
       calling = false
       self ! UpdateNext
   }
