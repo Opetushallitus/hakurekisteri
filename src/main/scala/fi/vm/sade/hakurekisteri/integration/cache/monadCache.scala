@@ -63,14 +63,12 @@ class InMemoryFutureCache[K, T: TypeTag](val expirationDurationMillis: Long = 60
   def getCache: Map[K, T] = caffeineCache.synchronous().asMap().asScala.toMap
 
   override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-    val loadingFunction: BiFunction[K, Executor, CompletableFuture[T]] = new BiFunction[K, Executor, CompletableFuture[T]] {
-      override def apply(t: K, u: Executor): CompletableFuture[T] = {
-        FutureConverters.toJava(loader.apply(t).flatMap {
-          case Some(x) => Future.successful(x)
-          case None => null
-        })
-      }.toCompletableFuture
-    }
+    val loadingFunction: BiFunction[K, Executor, CompletableFuture[T]] = (t: K, u: Executor) => {
+      FutureConverters.toJava(loader.apply(t).flatMap {
+        case Some(x) => Future.successful(x)
+        case None => null
+      })
+    }.toCompletableFuture
 
     FutureConverters.toScala(caffeineCache.get(key, loadingFunction)).flatMap { value =>
       Future.successful(Option(value))
