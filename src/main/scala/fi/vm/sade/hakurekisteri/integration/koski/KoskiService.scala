@@ -155,16 +155,18 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
 
     val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
-    f.onComplete {
-      case Success(results) => {
-        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä.")
-        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._2.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
-      }
-      case Failure(e) => logger.error(e,"HandleHenkiloUpdate: Koskipäivitys epäonnistui")
+    f.flatMap(results => {
+      logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä.")
+      logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._2.size}.")
+      logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
+      logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
+      Future.successful({})
     }
-    f.flatMap(_ => Future.successful({}))
+    ).recoverWith {
+      case e: Exception =>
+        logger.error(e,"HandleHenkiloUpdate: Koskipäivitys epäonnistui")
+        Future.successful({})
+    }
   }
 
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
