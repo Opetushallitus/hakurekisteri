@@ -2390,6 +2390,20 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritusArvosanat should be (Seq(Seq.empty))
   }
 
+  it should "get first start date from opiskeluoikeus" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_lasnaolopaattely.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = new LocalDate("2019-06-03")
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select TO_CHAR(TO_TIMESTAMP(alku_paiva / 1000), 'YYYY-MM-DD') from opiskelija".as[String]))
+    opiskelija.head should equal("2018-08-12")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
