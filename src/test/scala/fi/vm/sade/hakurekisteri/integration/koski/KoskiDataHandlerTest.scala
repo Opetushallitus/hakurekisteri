@@ -2390,6 +2390,31 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritusArvosanat should be (Seq(Seq.empty))
   }
 
+  it should "store correct luokka and oppilaitosoid for erikoisammattitutkinto" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_erikoisammattitutkinto.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+
+    opiskelija = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    opiskelija.head should equal("1.2.246.562.10.77925594218")
+
+    opiskelija = run(database.run(sql"select luokka from opiskelija".as[String]))
+    opiskelija.head should equal("testi")
+
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+
+    suoritukset = run(database.run(sql"select komo from suoritus".as[String]))
+    suoritukset.head should equal("erikoisammattitutkinto komo oid")
+  }
   it should "get first start date from opiskeluoikeus" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_lasnaolopaattely.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]

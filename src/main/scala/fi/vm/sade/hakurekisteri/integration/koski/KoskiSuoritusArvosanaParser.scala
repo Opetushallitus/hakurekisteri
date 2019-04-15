@@ -363,6 +363,7 @@ class KoskiSuoritusArvosanaParser {
         case Oids.telmaKomoOid => suoritus.ryhmä.getOrElse("TELMA")
         case Oids.lukioonvalmistavaKomoOid => suoritus.ryhmä.getOrElse("LUVA")
         case Oids.ammatillinenKomoOid => suoritus.ryhmä.getOrElse("AMM")
+        case Oids.erikoisammattitutkintoKomoOid => suoritus.ryhmä.getOrElse("")
         case _ => suoritus.luokka.getOrElse("")
       }
       if (luokka == "" && suoritus.tyyppi.isDefined && suoritus.tyyppi.get.koodiarvo == "aikuistenperusopetuksenoppimaara") {
