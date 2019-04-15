@@ -60,6 +60,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     val journals = new DbJournals(config)
 
+    val archiver = new DbArchiver(config)
+    archiver.start(OphUrlProperties.getProperty("suoritusrekisteri.db.archiveCronJob"))
+
     var integrations: Integrations = null
     val personAliasesProvider = new PersonAliasesProvider {
       override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = integrations.oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)

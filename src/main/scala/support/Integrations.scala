@@ -203,7 +203,9 @@ class BaseIntegrations(rekisterit: Registers,
   hakemusService.processModifiedHakemukset()
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
-  quartzScheduler.start()
+  if (!quartzScheduler.isStarted) {
+    quartzScheduler.start()
+  }
 
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
   val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
