@@ -194,8 +194,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     opiskelijaRekisteri ? DeleteResource(o.id, "koski-opiskelijat")
   }
 
-  private def saveOpiskelija(opiskelija: Opiskelija): Future[Any] = {
-    opiskelijaRekisteri ? opiskelija
+  private def saveOpiskelija(opiskelija: Option[Opiskelija]): Future[Any] = {
+   if (!opiskelija.isEmpty) {
+      opiskelijaRekisteri ? opiskelija.get
+   } else Future.successful({})
   }
 
   private def saveSuoritus(suor: Suoritus, personOidsWithAliases: PersonOidsWithAliases): Future[Suoritus with Identified[UUID]] = {
@@ -239,7 +241,8 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
-    val opiskelija: Opiskelija = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
+    val opiskelija: Option[Opiskelija] = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
+
     if (suoritusExists(useSuoritus, existingSuoritukset)) {
       val suoritus: VirallinenSuoritus with Identified[UUID] = existingSuoritukset.flatMap {
         case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)

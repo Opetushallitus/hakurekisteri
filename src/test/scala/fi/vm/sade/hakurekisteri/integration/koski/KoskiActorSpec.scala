@@ -59,7 +59,7 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "", parseLocalDate("2016-01-01"))
     ) should equal (
-      Opiskelija("orgId", "10", "10", "1.2.246.562.24.80710434876", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+      Some(Opiskelija("orgId", "10", "10", "1.2.246.562.24.80710434876", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski"))
       )
   }
 
@@ -67,7 +67,8 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     opiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876",
       SuoritusLuokka(VirallinenSuoritus(Oids.lisaopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "10C", parseLocalDate("2016-01-01"))
-    ) should equal (Opiskelija("orgId", "10", "10C", "1.2.246.562.24.80710434876", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+    ) should equal (
+      Some(Opiskelija("orgId", "10", "10C", "1.2.246.562.24.80710434876", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski"))
     )
   }
 
@@ -76,10 +77,16 @@ class KoskiActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
       SuoritusLuokka(VirallinenSuoritus(Oids.perusopetusKomoOid, "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
         yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
       ) should equal (
-      Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski")
+      Some(Opiskelija("orgId", "9", "9F", "henkilo_oid", DateTime.parse("2016-01-01"), Some(DateTime.parse("2017-01-01")), "koski"))
     )
   }
 
+  it should "createOpiskelija should not create opiskelija with jibberish komo oid" in {
+    opiskelijaParser.createOpiskelija("henkilo_oid",
+      SuoritusLuokka(VirallinenSuoritus("fakeKomoOid", "orgId", "VALMIS", parseLocalDate("2017-01-01"), "henkilo_oid",
+        yksilollistaminen.Ei, "FI", None, true, OrganisaatioOids.oph, None, Map.empty), "9F", parseLocalDate("2016-01-01"), Some("9"))
+    ) should equal (None)
+  }
   object HenkiloContainer {
     def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(KoskiHenkilo(None, Some(""), None, Some(""), Some(""), Some("")), Seq(), "")
   }
