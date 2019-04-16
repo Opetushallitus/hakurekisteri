@@ -30,7 +30,6 @@ object KoskiUtil {
   val oppiaineetRegex = oppiaineet.map(str => s"$str\\d?".r)
   val peruskouluaineetRegex = kieletRegex ++ oppiaineetRegex ++ Set("AI".r)
 
-  //val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
   val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10")
   val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SV_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
 

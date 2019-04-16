@@ -560,7 +560,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
 
     val expectedAineet: Set[String] = Set("A1", "AI", "B1", "BI", "FY", "GE", "HI", "KE", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
-    //val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI")
     val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
@@ -568,7 +567,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
 
     val arvosanatuple = arvosanat.map(a => (a.aine, a.valinnainen)).toSet
-    //val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "FI", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
     val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
     arvosanatuple shouldEqual expectedAineetTuple
 
@@ -2446,7 +2444,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
   }
 
 
-  it should "should not store opiskelija or suoritus with unknown komo" in {
+  it should "not store opiskelija or suoritus with unknown komo" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_tuntematon_komo.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -2456,11 +2454,38 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
-    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
 
-    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("0")
+
+  }
+
+  it should "only store arvosanat with numbers, not S" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_s_suorituksia.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+
+    var arvosanat = run(database.run(sql"select count(*) from arvosana where arvosana = 'S'".as[String]))
+    arvosanat.head should equal("0")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal("5")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where arvosana = '10'".as[String]))
+    arvosanat.head should equal("5")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
