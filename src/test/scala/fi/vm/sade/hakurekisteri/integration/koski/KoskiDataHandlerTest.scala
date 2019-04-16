@@ -543,7 +543,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     virallinensuoritus.tila shouldEqual "VALMIS"
     arvosanat.forall(_.valinnainen == false) shouldEqual true
-
   }
 
   it should "parse arvosanat from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
@@ -560,7 +559,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val arvosanat = suoritusArvosanat.arvosanat
 
 
-    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI")
+    val expectedAineet: Set[String] = Set("A1", "AI", "B1", "BI", "FY", "GE", "HI", "KE", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
+    //val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI")
     val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
@@ -568,7 +568,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
 
     val arvosanatuple = arvosanat.map(a => (a.aine, a.valinnainen)).toSet
-    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "FI", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
+    //val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "FI", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
+    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
     arvosanatuple shouldEqual expectedAineetTuple
 
   }
