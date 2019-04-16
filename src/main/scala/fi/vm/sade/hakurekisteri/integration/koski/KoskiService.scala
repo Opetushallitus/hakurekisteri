@@ -135,6 +135,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
     if (personOids.isEmpty) {
+      logger.info("HandleHenkiloUpdate : no personOids to process.")
       Future.successful({})
     } else {
       logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
