@@ -311,7 +311,6 @@ class KoskiSuoritusArvosanaParser {
         case Oids.lukioonvalmistavaKomoOid => osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
         case Oids.lukioKomoOid =>
           if (suoritus.vahvistus.isDefined && suoritusTila.equals("VALMIS")) {
-            logger.debug("Luodaan lukiokoulutuksen arvosanat. PersonOid: {}, komoOid: {}, osasuoritukset: {}, lisätiedot: {}", personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot)
             osasuoritusToArvosana(personOid, komoOid, suoritus.osasuoritukset, opiskeluoikeus.lisätiedot, None, isLukio = true, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
           } else {
             (Seq(), yksilollistaminen.Ei)
@@ -481,7 +480,6 @@ class KoskiSuoritusArvosanaParser {
     result.filter(_.suoritus.isInstanceOf[VirallinenSuoritus]).map(suoritusArvosanat => {
       val useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
       val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && suoritusArvosanat.arvosanat.isEmpty){
-        logger.debug("if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && arvosanat.isEmpty) == true")
         result
           .filter(hs => hs.suoritus match {
             case a: VirallinenSuoritus =>

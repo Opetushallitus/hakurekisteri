@@ -10,7 +10,6 @@ class KoskiOpiskelijaParser {
 
   def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
 
-    logger.debug(s"suoritusLuokka=$suoritusLuokka, henkiloOid=$henkiloOid")
     val alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
     val oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitosAndLuokka(suoritusLuokka)
@@ -23,8 +22,6 @@ class KoskiOpiskelijaParser {
       }
     }
 
-    logger.debug(s"alku=$alku, henkiloOid=$henkiloOid")
-
     //luokkatieto käytännössä
     val op = Opiskelija(
       oppilaitosOid = oppilaitosAndLuokka.oppilaitosOid,
@@ -35,7 +32,6 @@ class KoskiOpiskelijaParser {
       loppuPaiva = Some(loppu),
       source = KoskiUtil.koski_integration_source
     )
-    logger.debug("createOpiskelija={}", op)
     op
   }
 

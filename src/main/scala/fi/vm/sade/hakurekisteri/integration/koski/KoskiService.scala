@@ -63,7 +63,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
             //Some("2018-01-01T00:00:00+02:00") Hyvä arvo QA:lla
           else None
         val params = SearchParamsWithCursor(timestamp, cursor)
-        logger.info("refreshChangedOppijasFromKoski active, making call with params: {}", params)
         fetchChangedOppijas(params).onComplete {
           case Success(response: MuuttuneetOppijatResponse) =>
             logger.info("refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.", response.result.size)
