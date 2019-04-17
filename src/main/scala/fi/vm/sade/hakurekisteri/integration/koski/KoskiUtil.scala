@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 
 import scala.math.BigDecimal
 
@@ -14,6 +15,13 @@ object KoskiUtil {
     // Neloset halutaan tallentaa suoritusrekisteriin kaksi viikkoa ennen deadline-päivämäärää
     deadlineDate.minusDays(14)
   }
+
+  def parseLocalDate(s: String): LocalDate =
+    if (s.length() > 10) {
+      DateTimeFormat.forPattern("yyyy-MM-ddZ").parseLocalDate(s)
+    } else {
+      DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
+    }
 
   val valinnaisetkielet = Set("A1", "B1")
   val a2b2Kielet = Set("A2", "B2")

@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem}
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting

@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, ArvioHyvaksytty, Arvosana}
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil.parseLocalDate
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import org.joda.time.{LocalDate, LocalDateTime}

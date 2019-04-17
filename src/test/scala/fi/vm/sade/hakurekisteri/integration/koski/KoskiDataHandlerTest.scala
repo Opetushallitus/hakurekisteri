@@ -3,33 +3,25 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.testkit.{CallingThreadDispatcher, TestActorRef, TestActors}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockPersonAliasesProvider, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import hakurekisteri.perusopetus.Yksilollistetty
-import org.joda.time.{LocalDate, LocalDateTime}
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.mockito
-import org.mockito.Mockito
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.{AsyncAssertions, Waiters}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
-import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 

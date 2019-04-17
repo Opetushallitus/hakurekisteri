@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil.parseLocalDate
 import org.joda.time.LocalDate
 
 import scala.collection.immutable.ListMap

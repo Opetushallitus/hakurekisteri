@@ -8,18 +8,15 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler.parseLocalDate
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.format.DateTimeFormat
 import org.joda.time.LocalDate
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String]) {
   def peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset: Seq[SuoritusArvosanat]): Boolean = {
@@ -31,16 +28,6 @@ case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokk
     }
   }
 
-}
-
-object KoskiDataHandler {
-
-  def parseLocalDate(s: String): LocalDate =
-    if (s.length() > 10) {
-      DateTimeFormat.forPattern("yyyy-MM-ddZ").parseLocalDate(s)
-    } else {
-      DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
-    }
 }
 
 class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit ec: ExecutionContext) {
