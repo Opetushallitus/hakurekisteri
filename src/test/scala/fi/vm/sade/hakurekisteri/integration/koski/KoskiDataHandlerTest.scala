@@ -537,7 +537,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.forall(_.valinnainen == false) shouldEqual true
   }
 
-  it should "parse arvosanat from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
+  it should "parse arvosanat besides S from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
 
     val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus2.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
