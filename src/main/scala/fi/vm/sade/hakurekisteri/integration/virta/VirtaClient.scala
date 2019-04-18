@@ -36,6 +36,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     .setRequestTimeout(120000)
     .setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout)
     .setFollowRedirect(true)
+    .setUseNativeTransport(config.useNativeTransport)
     .setMaxRequestRetry(2)
   )
 

@@ -85,6 +85,7 @@ suoritusrekisteri.http.client.connection.timeout.ms={{ suoritusrekisteri_http_cl
 suoritusrekisteri.http.client.max.retries=1
 suoritusrekisteri.http.client.request.timeout.ms={{ suoritusrekisteri_http_client_request_timeout_ms | default('6000000') }}
 suoritusrekisteri.http.client.connection.idle.timeout.ms={{ suoritusrekisteri_http_client_connection_idle_timeout_ms | default('59000') }}
+suoritusrekisteri.http.client.use.native.transport={{ suoritusrekisteri_http_client_use_native_transport | default('true') }}
 suoritusrekisteri.http.client.slow.request.ms=1000
 suoritusrekisteri.valintatulos.max.minutes={{ suoritusrekisteri_valintatulos_max_minutes | default('5')}}
 suoritusrekisteri.refresh.time.hours.hakemus=2

@@ -35,6 +35,7 @@ class HttpConfig(properties: Map[String, String] = Map.empty) {
   val httpClientPooledConnectionIdleTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.idle.timeout.ms", "59001").toInt
   val httpClientMaxRetries = properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
   val httpClientSlowRequest = properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
+  val useNativeTransport: Boolean = properties.getOrElse("suoritusrekisteri.http.client.use.native.transport", "false").toBoolean
 }
 
 case class ServiceConfig(casUrl: Option[String] = None,
@@ -71,6 +72,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout).
         setFollowRedirect(true).
         setMaxRequestRetry(2).
+        setUseNativeTransport(config.useNativeTransport).
         addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs)))
     }
   }
