@@ -32,6 +32,7 @@ case class PreconditionFailedException(message: String, responseCode: Int) exten
 class HttpConfig(properties: Map[String, String] = Map.empty) {
   val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
   val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "6000000").toInt
+  val httpClientPooledConnectionIdleTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.idle.timeout.ms", "59001").toInt
   val httpClientMaxRetries = properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
   val httpClientSlowRequest = properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
 }
@@ -67,7 +68,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       case None => Http.withConfiguration(_.
         setConnectTimeout(config.httpClientConnectionTimeout).
         setRequestTimeout(config.httpClientRequestTimeout).
-        setPooledConnectionIdleTimeout(config.httpClientRequestTimeout).
+        setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout).
         setFollowRedirect(true).
         setMaxRequestRetry(2).
         addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs)))
