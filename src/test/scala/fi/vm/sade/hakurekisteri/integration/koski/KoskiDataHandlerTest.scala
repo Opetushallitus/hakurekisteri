@@ -2566,10 +2566,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     }
   }
 
-  def allPeruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[Seq[SuoritusArvosanat]]): Unit = {
-    arvosanat.foreach(s => peruskouluB2KieletShouldNotBeValinnainen(s))
-  }
-
   def peruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[SuoritusArvosanat]): Unit = {
     getPerusopetusB2Kielet(arvosanat).foreach(_.valinnainen shouldEqual false)
   }
