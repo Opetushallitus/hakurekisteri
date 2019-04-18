@@ -8,12 +8,10 @@ class KoskiOpiskelijaParser {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Opiskelija = {
-
-    logger.debug(s"suoritusLuokka=$suoritusLuokka, henkiloOid=$henkiloOid")
+  def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Option[Opiskelija] = {
     val alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
-    val oppilaitosAndLuokka: OppilaitosAndLuokka = detectOppilaitosAndLuokka(suoritusLuokka)
+    val oppilaitosAndLuokka: Option[OppilaitosAndLuokka] = detectOppilaitosAndLuokka(suoritusLuokka)
 
     if (!loppu.isAfter(alku)) {
       logger.debug(s"!loppu.isAfter(alku) = $loppu isAfter $alku = false, henkiloOid=$henkiloOid")
@@ -23,23 +21,25 @@ class KoskiOpiskelijaParser {
       }
     }
 
-    logger.debug(s"alku=$alku, henkiloOid=$henkiloOid")
-
-    //luokkatieto käytännössä
-    val op = Opiskelija(
-      oppilaitosOid = oppilaitosAndLuokka.oppilaitosOid,
-      luokkataso = oppilaitosAndLuokka.luokkataso,
-      luokka = oppilaitosAndLuokka.luokka,
-      henkiloOid = henkiloOid,
-      alkuPaiva = alku,
-      loppuPaiva = Some(loppu),
-      source = KoskiUtil.koski_integration_source
-    )
-    logger.debug("createOpiskelija={}", op)
-    op
+    if (oppilaitosAndLuokka.isEmpty) {
+      logger.error(s"Opiskelijan muodostus henkilölle ${henkiloOid} suoritusluokasta ${suoritusLuokka} epäonnistui.")
+      None
+    } else {
+      //luokkatieto käytännössä
+      val opiskelija = Opiskelija(
+        oppilaitosOid = oppilaitosAndLuokka.get.oppilaitosOid,
+        luokkataso = oppilaitosAndLuokka.get.luokkataso,
+        luokka = oppilaitosAndLuokka.get.luokka,
+        henkiloOid = henkiloOid,
+        alkuPaiva = alku,
+        loppuPaiva = Some(loppu),
+        source = KoskiUtil.koski_integration_source
+      )
+      Some(opiskelija)
+    }
   }
 
-  private def detectOppilaitosAndLuokka(suoritus: SuoritusLuokka): OppilaitosAndLuokka = {
+   private def detectOppilaitosAndLuokka(suoritus: SuoritusLuokka): Option[OppilaitosAndLuokka] = {
     val oppilaitoksesAndLuokkas: Map[String, OppilaitosAndLuokka] = Map(
       Oids.lukioKomoOid                           -> OppilaitosAndLuokka("L", suoritus.suoritus.myontaja, suoritus.luokka),
       Oids.lukioonvalmistavaKomoOid               -> OppilaitosAndLuokka("ML", suoritus.suoritus.myontaja, suoritus.luokka),
@@ -50,20 +50,21 @@ class KoskiOpiskelijaParser {
       Oids.valmaKomoOid                           -> OppilaitosAndLuokka("VALMA", suoritus.suoritus.myontaja, suoritus.luokka),
       Oids.telmaKomoOid                           -> OppilaitosAndLuokka("TELMA", suoritus.suoritus.myontaja, suoritus.luokka),
       Oids.ammatillinentutkintoKomoOid            -> OppilaitosAndLuokka("", suoritus.suoritus.myontaja, suoritus.luokka),
-      Oids.perusopetuksenOppiaineenOppimaaraOid   -> OppilaitosAndLuokka("OPPIAINE", suoritus.suoritus.myontaja, suoritus.luokka)
+      Oids.perusopetuksenOppiaineenOppimaaraOid   -> OppilaitosAndLuokka("OPPIAINE", suoritus.suoritus.myontaja, "OPPIAINE"),
+      Oids.erikoisammattitutkintoKomoOid          -> OppilaitosAndLuokka("", suoritus.suoritus.myontaja, suoritus.luokka)
     )
 
     if (suoritus.suoritus.komo == Oids.perusopetusKomoOid
       && (suoritus.luokkataso.getOrElse("").equals("9") || suoritus.luokkataso.getOrElse("").equals("AIK"))) {
-      OppilaitosAndLuokka("9", suoritus.suoritus.myontaja, suoritus.luokka)
+      Some(OppilaitosAndLuokka("9", suoritus.suoritus.myontaja, suoritus.luokka))
     } else if (suoritus.suoritus.komo == Oids.lisaopetusKomoOid) {
       if(suoritus.luokka.isEmpty){
-        OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, "10")
+        Some(OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, "10"))
       } else {
-        OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, suoritus.luokka)
+        Some(OppilaitosAndLuokka("10", suoritus.suoritus.myontaja, suoritus.luokka))
       }
     } else {
-      oppilaitoksesAndLuokkas.getOrElse(suoritus.suoritus.komo, OppilaitosAndLuokka("", "", ""))
+      oppilaitoksesAndLuokkas.get(suoritus.suoritus.komo).orElse(None)
     }
   }
 }

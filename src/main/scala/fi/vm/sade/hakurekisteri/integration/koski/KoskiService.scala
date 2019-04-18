@@ -63,7 +63,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
             //Some("2018-01-01T00:00:00+02:00") Hyvä arvo QA:lla
           else None
         val params = SearchParamsWithCursor(timestamp, cursor)
-        logger.info("refreshChangedOppijasFromKoski active, making call with params: {}", params)
         fetchChangedOppijas(params).onComplete {
           case Success(response: MuuttuneetOppijatResponse) =>
             logger.info("refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.", response.result.size)
@@ -135,36 +134,43 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   }
 
   def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams): Future[Unit] = {
-    logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
-    val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
-    val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
-    val totalGroups: Int = groupedOids.length
-    var updateHenkiloResults = (Seq[String](), Seq[String]())
-    logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
+    if (personOids.isEmpty) {
+      logger.info("HandleHenkiloUpdate : no personOids to process.")
+      Future.successful({})
+    } else {
+      logger.info("HandleHenkiloUpdate: {} oppijanumeros", personOids.size)
+      val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
+      val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
+      val totalGroups: Int = groupedOids.length
+      var updateHenkiloResults = (Seq[String](), Seq[String]())
+      logger.info(s"HandleHenkiloUpdate: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
-    def handleBatch(batches: Seq[(Seq[String], Int)], acc: (Seq[String], Seq[String])): Future[(Seq[String], Seq[String])] = {
-      if(batches.isEmpty) {
-        Future(acc)
-      } else {
-        val (subSeq, index) = batches.head
-        logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        updateHenkilot(subSeq.toSet, params).flatMap(s => {
-          handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
-        })
+      def handleBatch(batches: Seq[(Seq[String], Int)], acc: (Seq[String], Seq[String])): Future[(Seq[String], Seq[String])] = {
+        if (batches.isEmpty) {
+          Future(acc)
+        } else {
+          val (subSeq, index) = batches.head
+          logger.info(s"HandleHenkiloUpdate: Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
+          updateHenkilot(subSeq.toSet, params).flatMap(s => {
+            handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
+          })
+        }
+      }
+
+      val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
+      f.flatMap(results => {
+        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä. " +
+          s"Onnistuneita päivityksiä ${results._2.size}. " +
+          s"Epäonnistuneita päivityksiä ${results._1.size}. " +
+          s"Epäonnistuneet: ${results._1}.")
+        Future.successful({})
+      }
+      ).recoverWith {
+        case e: Exception =>
+          logger.error(e, "HandleHenkiloUpdate: Koskipäivitys epäonnistui")
+          Future.successful({})
       }
     }
-
-    val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
-    f.onComplete {
-      case Success(results) => {
-        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä.")
-        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._2.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
-      }
-      case Failure(e) => logger.error(s"HandleHenkiloUpdate: Koskipäivitys epäonnistui", e)
-    }
-    Future.successful({})
   }
 
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
@@ -175,7 +181,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
           logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
           Future.failed(e)
       }
-
     oppijat.flatMap(fetchPersonAliases).flatMap(res => {
       val (henkilot, personOidsWithAliases) = res
       logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä, aliakset haettu!")
@@ -227,5 +232,6 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
       Future.successful(failures, successes)
     }
+
   }
 }

@@ -96,7 +96,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
 
     henkilot.onComplete {
       case Success(_) => logger.info("getByOids: Oppijanumerorekisteri-haku valmistui!")
-      case Failure(e) => logger.error(s"getByOids: Oppijanumerorekisteri-haku epäonnistui", e)
+      case Failure(e) => logger.error(e, "getByOids: Oppijanumerorekisteri-haku epäonnistui.")
     }
     henkilot
   }

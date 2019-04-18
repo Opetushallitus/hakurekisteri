@@ -1,0 +1,203 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.80710434876",
+    "hetu": "210299-9456",
+    "syntymäaika": "1999-02-21",
+    "etunimet": "Prinssi Möykkäel",
+    "kutsumanimi": "Prinssi",
+    "sukunimi": "Jaksonen",
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.38257598938",
+      "versionumero": 5,
+      "aikaleima": "2019-04-15T15:36:07.904724",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.77925594218",
+        "oppilaitosnumero": {
+          "koodiarvo": "10091",
+          "nimi": {
+            "fi": "Hyria koulutus Oy"
+          },
+          "lyhytNimi": {
+            "fi": "Hyria koulutus Oy"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Hyria koulutus Oy"
+        },
+        "kotipaikka": {
+          "koodiarvo": "106",
+          "nimi": {
+            "fi": "Hyvinkää",
+            "sv": "Hyvinge"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.33076507145",
+        "nimi": {
+          "fi": "Hyria koulutus Oy"
+        },
+        "yTunnus": "2250205-2",
+        "kotipaikka": {
+          "koodiarvo": "106",
+          "nimi": {
+            "fi": "Hyvinkää",
+            "sv": "Hyvinge"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "ostettu": false,
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2019-04-15",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "387103",
+              "nimi": {
+                "fi": "Majoitus- ja ravitsemisalan esimiehen erikoisammattitutkinto",
+                "sv": "Specialyrkesexamen för föreståndare inom inkvarterings- och kosthållsbranschen"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "perusteenDiaarinumero": "23/011/2012",
+            "perusteenNimi": {
+              "fi": "Majoitus- ja ravitsemisalan esimiehen erikoisammattitutkinto",
+              "sv": "Specialyrkesexamen för föreståndare inom inkvarterins- och kosthållsbranschen"
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "9999999",
+              "nimi": {
+                "fi": "Tuntematon",
+                "sv": "xxSpecialyrkesexamen"
+              },
+              "lyhytNimi": {
+                "fi": "Tuntematon",
+                "sv": "xxSpecialyrkesexamen"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "suoritustapa": {
+            "koodiarvo": "naytto",
+            "nimi": {
+              "fi": "Näyttötutkinto",
+              "sv": "Fristående examen",
+              "en": "Näyttö"
+            },
+            "koodistoUri": "ammatillisentutkinnonsuoritustapa",
+            "koodistoVersio": 1
+          },
+          "tutkintonimike": [
+            {
+              "koodiarvo": "30041",
+              "nimi": {
+                "fi": "Dieettikokki",
+                "sv": "Dietkock",
+                "en": "Dietary Cook"
+              },
+              "lyhytNimi": {
+                "fi": "Dieettikokki",
+                "sv": "Dietkock",
+                "en": "Dietary Cook"
+              },
+              "koodistoUri": "tutkintonimikkeet",
+              "koodistoVersio": 2
+            }
+          ],
+          "toimipiste": {
+            "oid": "1.2.246.562.10.77925594218",
+            "oppilaitosnumero": {
+              "koodiarvo": "10091",
+              "nimi": {
+                "fi": "Hyria koulutus Oy"
+              },
+              "lyhytNimi": {
+                "fi": "Hyria koulutus Oy"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Hyria koulutus Oy"
+            },
+            "kotipaikka": {
+              "koodiarvo": "106",
+              "nimi": {
+                "fi": "Hyvinkää",
+                "sv": "Hyvinge"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "tyyppi": {
+            "koodiarvo": "Xammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          },
+          "ryhmä": "testi"
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2019-04-15"
+    }
+  ]
+}

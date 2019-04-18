@@ -3,33 +3,25 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.testkit.{CallingThreadDispatcher, TestActorRef, TestActors}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockPersonAliasesProvider, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiDataHandler._
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import hakurekisteri.perusopetus.Yksilollistetty
-import org.joda.time.{LocalDate, LocalDateTime}
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.mockito
-import org.mockito.Mockito
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.{AsyncAssertions, Waiters}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
-import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -59,7 +51,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
   val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
   val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
 
-  val KoskiArvosanaTrigger: KoskiDataHandler = new KoskiDataHandler(suoritusrekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)
+  val koskiDatahandler: KoskiDataHandler = new KoskiDataHandler(suoritusrekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)
   val koskiOpiskelijaParser = new KoskiOpiskelijaParser
   val koskiSuoritusParser = new KoskiSuoritusArvosanaParser
   
@@ -72,6 +64,24 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     database.close()
   }
 
+  it should "resolve latest lasnaolodate from koskiopiskeluoikeusjakso" in {
+    var koskiTila1 = KoskiTila("2019-01-01", KoskiKoodi("loma", ""))
+    var koskiTila2 = KoskiTila("2019-02-02", KoskiKoodi("lasna", ""))
+    var koskiTila3 = KoskiTila("2019-03-03", KoskiKoodi("loma", ""))
+    var koskiTila4 = KoskiTila("2019-04-04", KoskiKoodi("lasna", ""))
+
+    var koskiOpiskeluoikeusjakso = KoskiOpiskeluoikeusjakso(Seq(koskiTila1, koskiTila2, koskiTila3, koskiTila4))
+    koskiOpiskeluoikeusjakso.findEarliestLasnaDate should equal (Some(new LocalDate("2019-02-02")))
+
+    koskiTila1 = KoskiTila("2019-01-01", KoskiKoodi("loma", ""))
+    koskiTila2 = KoskiTila("2019-02-02", KoskiKoodi("loma", ""))
+    koskiTila3 = KoskiTila("2019-03-03", KoskiKoodi("loma", ""))
+    koskiTila4 = KoskiTila("2019-04-04", KoskiKoodi("loma", ""))
+
+    koskiOpiskeluoikeusjakso = KoskiOpiskeluoikeusjakso(Seq(koskiTila1, koskiTila2, koskiTila3, koskiTila4))
+    koskiOpiskeluoikeusjakso.findEarliestLasnaDate should equal (None)
+  }
+
   it should "resolve latest opiskeluoikeudes" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_a_lot_of_stuff.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -80,7 +90,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     henkilo.opiskeluoikeudet.size should equal (7) //Sisältää 7 eri opiskeluoikeutta, joista kaksi ammatillista, kaksi lukiota ja kolme perusopetusta.
 
-    val filteredOikeudes = KoskiArvosanaTrigger.ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet, henkilo.henkilö.oid)
+    val filteredOikeudes = koskiDatahandler.ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet, henkilo.henkilö.oid)
 
     filteredOikeudes.size should equal (4)
 
@@ -95,7 +105,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
 
     val ysit = getYsiluokat(result)
     val suoritusA = result.head
@@ -120,7 +130,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -138,7 +148,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -158,7 +168,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -178,7 +188,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -199,7 +209,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus: SuoritusArvosanat = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -219,7 +229,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 23
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus: SuoritusArvosanat = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -238,7 +248,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val numcourses: Int = koskiSuoritusParser.getNumberOfAcceptedLuvaCourses(henkilo.opiskeluoikeudet.head.suoritukset.head.osasuoritukset)
     numcourses shouldBe 25
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
     val suoritus = result.head
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
@@ -253,7 +263,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(KoskiKoodi("ammatillinenkoulutus", "opiskeluoikeudentyyppi"))
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritus = result.head
@@ -274,7 +284,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).size
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).size
     result should equal(0)
   }
 
@@ -285,7 +295,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result: Seq[SuoritusArvosanat] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result: Seq[SuoritusArvosanat] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritus = result.head
@@ -300,7 +310,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritus = result.head
@@ -315,7 +325,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritus = result.head
@@ -336,7 +346,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
 
     val suoritus = result(2)
@@ -364,7 +374,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
 
     val suoritus = result(2)
@@ -390,7 +400,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 3
     val pt = getPerusopetusPäättötodistus(result)
     pt shouldBe None
@@ -403,7 +413,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     val pt = getPerusopetusPäättötodistus(result).get
     pt.arvosanat should have length 18
@@ -419,7 +429,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     lisätiedot shouldBe defined
     lisätiedot.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
 
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
 
 
     peruskouluB2KieletShouldNotBeValinnainen(result)
@@ -439,7 +449,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     lisätiedot2 shouldBe defined
     lisätiedot2.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
 
-    val result2 = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result2 = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result2 should have length 4
 
     val suoritus2 = result2(2)
@@ -454,7 +464,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     val pt = getPerusopetusPäättötodistus(result).get
     pt.luokka shouldEqual "9C"
@@ -471,7 +481,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
     result(3).arvosanat should have length 18
@@ -488,7 +498,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     try {
-      Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+      Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
     } catch {
       case ex: RuntimeException => // Expected
     }
@@ -509,7 +519,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritusArvosanat = result.head
@@ -525,16 +535,15 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     virallinensuoritus.tila shouldEqual "VALMIS"
     arvosanat.forall(_.valinnainen == false) shouldEqual true
-
   }
 
-  it should "parse arvosanat from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
+  it should "parse arvosanat besides S from lukio_päättötodistus2.json when switch to enable lukio import is enabled" in {
 
     val json: String = scala.io.Source.fromFile(jsonDir + "lukio_päättötodistus2.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
 
     val suoritusArvosanat = result.head
@@ -542,7 +551,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val arvosanat = suoritusArvosanat.arvosanat
 
 
-    val expectedAineet: Set[String] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "KT", "FI", "PS", "HI", "YH", "MU", "KU", "TE", "LI")
+    val expectedAineet: Set[String] = Set("A1", "AI", "B1", "BI", "FY", "GE", "HI", "KE", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
     val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
@@ -550,7 +559,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
 
     val arvosanatuple = arvosanat.map(a => (a.aine, a.valinnainen)).toSet
-    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "FI", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
+    val expectedAineetTuple: Set[(String, Boolean)] = Set("AI", "A1", "B1", "MA", "FY", "KE", "BI", "GE", "PS", "KT", "HI", "YH", "MU", "KU", "TE", "LI").map(s => (s, false))
     arvosanatuple shouldEqual expectedAineetTuple
 
   }
@@ -561,7 +570,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup.head should have length 2 //kaksi opiskeluoikeutta joissa molemmissa yksi luokkatieto -> neljä suoritusarvosanaa
     //resultGroup(1) should have length 2 //kaksi opiskeluoikeutta joissa molemmissa yksi luokkatieto -> neljä suoritusarvosanaa
 
@@ -578,7 +587,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
 
     val s = resultGroup.head
@@ -612,7 +621,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     henkilo should not be null
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 0
     //resultGroup.head should have length 0
   }
@@ -622,7 +631,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     resultGroup.head should have length 3
     getPerusopetusPäättötodistus(resultGroup.head).get.luokka shouldEqual "9C"
@@ -633,7 +642,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     resultGroup.head should have length 2
 
@@ -649,7 +658,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 2
     resultGroup.last should have length 1
     val suoritusarvosanat = resultGroup.last
@@ -681,7 +690,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val myöntäjäOrgAineet = List("AI7", "AI5", "MA5", "KT5", "HI7", "YH6", "FY5", "KE5", "BI6", "GE5", "TEH")
     val myöntäjäOrg2Aineet = List("TEH")
 
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     val result = resultGroup.head
     val resultByOrg = result.groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
@@ -722,7 +731,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     sourcekässät.exists(_.koulutusmoduuli.pakollinen.contains(true))
     sourcekässät.exists(_.koulutusmoduuli.pakollinen.contains(false))
 
-    val resultGroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     val head = resultGroup.head.head
     val matikat = head.arvosanat.filter(_.aine.contentEquals("MA"))
@@ -750,7 +759,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     sourceliikunnat should have length 2
 
-    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val res = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
 
     res should have length 1
     val suoritusarvosanat: SuoritusArvosanat = res.head.head
@@ -766,7 +775,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val res = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
 
     res should have length 1
     val suoritusarvosanat: SuoritusArvosanat = res.head.head
@@ -805,7 +814,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val res = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val res = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     res should have length 1
     val arvosanat = res.head
     arvosanat should have length 3
@@ -834,7 +843,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
 
-    val seq = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val seq = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     seq should have length 2
 
     val res = seq(1)
@@ -855,7 +864,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resgroup should have length 1
 
     val res = resgroup.head
@@ -898,7 +907,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resgroup should have length 1
     val pt = getPerusopetusPäättötodistus(resgroup.head).get
     val ysiluokat = getYsiluokat(resgroup.head)
@@ -1036,7 +1045,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resultgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgroup should have length 1
     val result: Seq[SuoritusArvosanat] = resultgroup.head
     result should have length 2
@@ -1053,7 +1062,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resultgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgroup should have length 1
     val result: Seq[SuoritusArvosanat] = resultgroup.head
     result should have length 1
@@ -1075,7 +1084,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultgrp = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
@@ -1096,7 +1105,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultgrp = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
@@ -1121,7 +1130,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultgrp = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
@@ -1143,7 +1152,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    val resultgrp = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resultgrp = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
@@ -1162,7 +1171,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     val res = resgroup.head
 
     val arvosanat = getPerusopetusPäättötodistus(res).get.arvosanat
@@ -1176,8 +1185,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
-    //val resgroup = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true)
+    val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    //val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true)
     val res: Seq[SuoritusArvosanat] = resgroup.head
 
     val arvosanat: Seq[Arvosana] = res.head.arvosanat
@@ -1191,7 +1200,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    val resgroup: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val resgroup: Seq[Seq[SuoritusArvosanat]] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     val pt = getPerusopetusPäättötodistus(resgroup.head)
     pt.get.arvosanat.filter(_.aine.contentEquals("B1")) should have length 2
     pt.get.arvosanat.filter(a => a.aine.contentEquals("B1") && a.valinnainen) should have length 1
@@ -1202,7 +1211,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val json: String = scala.io.Source.fromFile(jsonDir + "A2B2ValinnaisetPakollisina_lisäopetus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
 
-    val res: Seq[Seq[SuoritusArvosanat]] = KoskiArvosanaTrigger.createSuorituksetJaArvosanatFromKoski(henkilo)
+    val res: Seq[Seq[SuoritusArvosanat]] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     res should have length 2
 
     val perusopetus = res.head
@@ -1269,7 +1278,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     val params: KoskiSuoritusHakuParams = new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), params), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), params), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     opiskelijat.head should equal("1.2.246.562.24.32656706483")
@@ -1289,7 +1298,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen =  true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen =  true)), 5.seconds)
     var suoritukset = run(database.run(sql"select myontaja from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]))
     suoritukset.size should equal(1)
     val myontaja = suoritukset.head
@@ -1308,7 +1317,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
     val opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat1.size should equal(2)
     val opiskelija1 = opiskelijat1.head
@@ -1324,7 +1333,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
 
     val opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat2.size should equal(1)
@@ -1342,7 +1351,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
     val opiskelijat3 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat3.size should equal(1)
     val opiskelija3 = opiskelijat3.head
@@ -1359,7 +1368,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     val opiskelija = opiskelijat.head
@@ -1376,7 +1385,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
     var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat1.size should equal(2)
     var opiskelija1 = opiskelijat1.head
@@ -1406,7 +1415,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat2.size should equal(2)
@@ -1425,7 +1434,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     val opiskelija = opiskelijat.head
@@ -1440,7 +1449,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
     val opiskelija = opiskelijat.head
@@ -1454,7 +1463,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1470,7 +1479,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1478,20 +1487,37 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.size should equal(0)
   }
 
-  it should "store peruskoulu as keskeytynyt with arvosanat if deadline date is yesterday" in {
+  it should "store peruskoulu as keskeytynyt without arvosanat if deadline date is yesterday" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
     val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
     suoritus.head should equal("KESKEYTYNYT")
 
+    val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
+    arvosanat should have length 0
+  }
+
+  it should "store peruskoulu as kesken without arvosanat if deadline date is today" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now()
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEN")
     val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
     arvosanat should have length 0
   }
@@ -1503,7 +1529,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1513,14 +1539,66 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat should have length 0
   }
 
-  it should "store kymppiluokka as keskeytynyt without arvosanat if deadline date is yesterday" in {
+  it should "store peruskoulu with nelosia as kesken without arvosanat if nelosia deadline date is tomorrow" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken_nelonen.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(15)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEN")
+
+    val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
+    arvosanat should have length 0
+  }
+
+  it should "store peruskoulu with nelosia as kesken without arvosanat if nelosia deadline date is today" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken_nelonen.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(14)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEN")
+    val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
+    arvosanat should have length 0
+  }
+
+  it should "store peruskoulu with nelosia as kesken with arvosanat if nelosia deadline date is yesterday" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken_nelonen.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(13)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEN")
+    val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
+    arvosanat should have length 17
+  }
+
+  it should "store kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_kymppiluokka.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1529,17 +1607,17 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus = run(database.run(sql"select tila from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("KESKEYTYNYT")
     val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 0
+    arvosanat should have length 6
   }
 
-  it should "store kymppiluokka as kesken without arvosanat if deadline date is tomorrow" in {
+  it should "store kymppiluokka as kesken with arvosanat if deadline date is tomorrow" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_kymppiluokka.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1548,7 +1626,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val suoritus = run(database.run(sql"select tila from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("KESKEN")
     val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 0
+    arvosanat should have length 6
   }
 
   it should "store kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday if there are some hylättys" in {
@@ -1558,7 +1636,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1577,7 +1655,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1589,14 +1667,14 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat should have length 6
   }
 
-  it should "store perusopetukseen sitomaton kymppiluokka as kesken without arvosanat if deadline date is tomorrow" in {
+  it should "store perusopetukseen sitomaton kymppiluokka as kesken with arvosanat if deadline date is tomorrow" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_vuosiluokkiin_sitomaton_opetus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1607,7 +1685,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus = run(database.run(sql"select lahde_arvot from suoritus where myontaja = '1.2.246.562.10.771064431110'".as[String]))
     suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
     val arvosanat = run(database.run(sql"select * from arvosana where deleted = false and current = true".as[String]))
-    arvosanat should have length 0
+    arvosanat should have length 6
   }
 
   it should "store perusopetukseen sitomaton kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday" in {
@@ -1617,7 +1695,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1638,7 +1716,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1657,7 +1735,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1676,7 +1754,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(2)
@@ -1695,7 +1773,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1714,7 +1792,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1733,7 +1811,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1754,7 +1832,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1776,7 +1854,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1797,7 +1875,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
@@ -1818,7 +1896,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1835,7 +1913,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1853,7 +1931,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1870,7 +1948,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1887,7 +1965,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1904,7 +1982,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(0)
@@ -1921,7 +1999,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
     suoritukset.size should equal (1)
@@ -1935,7 +2013,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
     suoritukset.size should equal (1)
@@ -1949,7 +2027,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (2)
@@ -1966,7 +2044,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (2)
@@ -1983,7 +2061,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (1)
@@ -1997,7 +2075,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (1)
@@ -2011,7 +2089,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (2)
@@ -2028,7 +2106,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (2)
@@ -2045,7 +2123,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (1)
@@ -2059,7 +2137,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
     suoritukset.size should equal (1)
@@ -2076,7 +2154,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val arvosanat1 = run(database.run(sql"select count(*) from arvosana".as[String]))
     arvosanat1.head should equal ("0")
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus".as[String]))
     suoritukset.size should equal (1)
@@ -2095,7 +2173,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val arvosanat1 = run(database.run(sql"select count(*) from arvosana".as[String]))
     arvosanat1.head should equal ("0")
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     val suoritukset = run(database.run(sql"select tila from suoritus".as[String]))
     suoritukset.size should equal (1)
@@ -2111,7 +2189,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
@@ -2120,7 +2198,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
@@ -2177,7 +2255,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     var valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where resource_id = '89f3c04f-0275-4d80-a3fe-eb03bb29f585' and current = 'true'".as[String]))
     valmistumispäivä.head should equal("2019-03-22")
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
     valmistumispäivä = run(database.run(sql"select valmistuminen from suoritus where resource_id = '89f3c04f-0275-4d80-a3fe-eb03bb29f585' and current = 'true'".as[String]))
     valmistumispäivä.head should equal("2018-03-22")
@@ -2191,7 +2269,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = new LocalDate("2019-06-03")
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("1")
@@ -2207,7 +2285,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
@@ -2216,7 +2294,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
 
-    Await.result(KoskiArvosanaTrigger.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelija.head should equal("0")
@@ -2229,113 +2307,246 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     var suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572429142840", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"LUVA", new LocalDate("2018-08-27"), None)
     var opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("ML")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("LUVA")
+    opiskelija.get.luokkataso should equal("ML")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("LUVA")
 
     //Lukio
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO lukio komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"11A", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("L")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("11A")
+    opiskelija.get.luokkataso should equal("L")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("11A")
 
     //Ammatillinen
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO ammatillinen komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"AMM", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("AK")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("AMM")
+    opiskelija.get.luokkataso should equal("AK")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("AMM")
 
     //Ammatilliseen valmistava
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572441001730", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"MAVA13", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("M")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("MAVA13")
+    opiskelija.get.luokkataso should equal("M")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("MAVA13")
 
     //Ammattistartti
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572438136372", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"OHVA", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("A")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("OHVA")
+    opiskelija.get.luokkataso should equal("A")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("OHVA")
 
     //Valmentava
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435755085", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"VALO", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("V")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("VALO")
+    opiskelija.get.luokkataso should equal("V")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("VALO")
 
     //VALMA
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("valma", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"VALMA15", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("VALMA")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("VALMA15")
+    opiskelija.get.luokkataso should equal("VALMA")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("VALMA15")
 
     //TELMA
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("telma", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"TELMA15", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("TELMA")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("TELMA15")
+    opiskelija.get.luokkataso should equal("TELMA")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("TELMA15")
 
     //Ammatillinen tutkinto
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("ammatillinentutkinto komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("")
+    opiskelija.get.luokkataso should equal("")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("")
 
     //Peruskoulu luokkataso 9
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"9A", new LocalDate("2018-08-27"), Some("9"))
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("9")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("9A")
+    opiskelija.get.luokkataso should equal("9")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("9A")
 
     //Peruskoulu luokkataso AIK
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.13.62959769647", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"AIK 9", new LocalDate("2018-08-27"), Some("AIK"))
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("9")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("AIK 9")
+    opiskelija.get.luokkataso should equal("9")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("AIK 9")
 
     //Lisäopetus luokka 10
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"10A", new LocalDate("2018-08-27"), Some("10"))
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("10")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("10A")
+    opiskelija.get.luokkataso should equal("10")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("10A")
 
     //Lisäopetus luokka tyhjä
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572435044876", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("10")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("10")
+    opiskelija.get.luokkataso should equal("10")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("10")
 
     //Perusopetuksen oppiaineen oppimäärä
     suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("TODO perusopetuksenOppiaineenOppimäärä", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"XX", new LocalDate("2018-08-27"), None)
     opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
 
-    opiskelija.luokkataso should equal("OPPIAINE")
-    opiskelija.oppilaitosOid should equal("1.2.246.562.10.96398657237")
-    opiskelija.luokka should equal("XX")
+    opiskelija.get.luokkataso should equal("OPPIAINE")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("OPPIAINE")
+
+    //Erikoisammattitutkinto
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("erikoisammattitutkinto komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"XX", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija.get.luokkataso should equal("")
+    opiskelija.get.oppilaitosOid should equal("1.2.246.562.10.96398657237")
+    opiskelija.get.luokka should equal("XX")
+
+    //Jokin muu komo
+    suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("tuntematon komo oid", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"XX", new LocalDate("2018-08-27"), None)
+    opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)
+
+    opiskelija should equal(None)
+
+  }
+
+  it should "filter suoritus without läsnäolo before or after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_loma_ei_lasnaoloa.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    var suoritusArvosanat: Seq[Seq[SuoritusArvosanat]] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
+
+    suoritusArvosanat = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
+  }
+
+  it should "filter suoritus with future läsnäolo before or after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_alku_01082019.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = new LocalDate("2019-06-03").plusDays(30)
+
+    var suoritusArvosanat: Seq[Seq[SuoritusArvosanat]] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
+
+    KoskiUtil.deadlineDate = new LocalDate("2019-06-03").minusDays(30)
+
+    suoritusArvosanat = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritusArvosanat should be (Seq(Seq.empty))
+  }
+
+  it should "store correct luokka and oppilaitosoid for erikoisammattitutkinto" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_erikoisammattitutkinto.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+
+    opiskelija = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    opiskelija.head should equal("1.2.246.562.10.77925594218")
+
+    opiskelija = run(database.run(sql"select luokka from opiskelija".as[String]))
+    opiskelija.head should equal("testi")
+
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+
+    suoritukset = run(database.run(sql"select komo from suoritus".as[String]))
+    suoritukset.head should equal("erikoisammattitutkinto komo oid")
+  }
+  it should "get first start date from opiskeluoikeus" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_lasnaolopaattely.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = new LocalDate("2019-06-03")
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select TO_CHAR(TO_TIMESTAMP(alku_paiva / 1000), 'YYYY-MM-DD') from opiskelija".as[String]))
+    opiskelija.head should equal("2018-08-12")
+  }
+
+
+  it should "not store opiskelija or suoritus with unknown komo" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_tuntematon_komo.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("0")
+
+  }
+
+  it should "only store arvosanat with numbers, not S" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_s_suorituksia.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+
+    var arvosanat = run(database.run(sql"select count(*) from arvosana where arvosana = 'S'".as[String]))
+    arvosanat.head should equal("0")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal("5")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where arvosana = '10'".as[String]))
+    arvosanat.head should equal("5")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
@@ -2353,10 +2564,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       case Some(t) => t.arvosanat.filter(_.aine.contentEquals("B2"))
       case None => Seq.empty
     }
-  }
-
-  def allPeruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[Seq[SuoritusArvosanat]]): Unit = {
-    arvosanat.foreach(s => peruskouluB2KieletShouldNotBeValinnainen(s))
   }
 
   def peruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[SuoritusArvosanat]): Unit = {
