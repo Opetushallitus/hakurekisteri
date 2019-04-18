@@ -285,8 +285,7 @@ class KoskiSuoritusArvosanaParser {
           //Vuosiluokkiin sitomattoman opetuksen arvosanat tallennetaan suorituksen tilasta riippumatta, jos deadline on ohitettu.
           //Lisäopetuksen arvosanat tallennetaan aina suorituksen tilasta tai deadline-päivämäärästä riippumatta.
           if (isVahvistettu && isValmis) {
-            val vahvistusDate = parseLocalDate(suoritus.vahvistus.get.päivä)
-            if (vahvistusDate.isBefore(KoskiUtil.deadlineDate) || vahvistusDate.equals(KoskiUtil.deadlineDate)) {
+            if (!KoskiUtil.isAfterDeadlineDate(parseLocalDate(suoritus.vahvistus.get.päivä))) {
               (as, yks)
             } else {
               (Seq(), yks)

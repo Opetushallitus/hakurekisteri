@@ -159,10 +159,10 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
       val f: Future[(Seq[String], Seq[String])] = handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
       f.flatMap(results => {
-        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä.")
-        logger.info(s"HandleHenkiloUpdate: Onnistuneita päivityksiä ${results._2.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneita päivityksiä ${results._1.size}.")
-        logger.info(s"HandleHenkiloUpdate: Epäonnistuneet: ${results._1}.")
+        logger.info(s"HandleHenkiloUpdate: Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä. " +
+          s"Onnistuneita päivityksiä ${results._2.size}. " +
+          s"Epäonnistuneita päivityksiä ${results._1.size}. " +
+          s"Epäonnistuneet: ${results._1}.")
         Future.successful({})
       }
       ).recoverWith {

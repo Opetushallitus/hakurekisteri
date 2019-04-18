@@ -80,7 +80,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
 
     //Filtteröidään suoritukset, joiden alkamisajankohta on deadlinen jälkeen:
-    if (lasnaDate.isAfter(KoskiUtil.deadlineDate)) {
+    if (KoskiUtil.isAfterDeadlineDate(lasnaDate)) {
       logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, jonka läsnäolon alkamispäivämäärä on deadlinen jälkeen (komoOid: ${komoOid}).")
       return false
     }

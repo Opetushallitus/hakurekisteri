@@ -41,7 +41,6 @@ case class KoskiOpiskeluoikeus(
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
   def findEarliestLasnaDate: Option[LocalDate] = {
-    implicit val localDateOrdering: Ordering[LocalDate] = Ordering.by(_.toDate)
     val lasnaTilat: Seq[KoskiTila] = opiskeluoikeusjaksot.filter(_.tila.koodiarvo.equals("lasna"))
     val lasnaDates: Seq[KoskiTila] = lasnaTilat.filterNot(_.alku.isEmpty) sortBy {
       case KoskiTila(alku,_) => LocalDate.parse(alku).toDate

@@ -16,8 +16,8 @@ object KoskiUtil {
     LocalDate.now().isAfter(deadlineDate.minusDays(14))
   }
 
-  def isAfterDeadlineDate(): Boolean = {
-    LocalDate.now().isAfter(deadlineDate)
+  def isAfterDeadlineDate(date: LocalDate = LocalDate.now()): Boolean = {
+    date.isAfter(deadlineDate)
   }
 
   def parseLocalDate(s: String): LocalDate =
