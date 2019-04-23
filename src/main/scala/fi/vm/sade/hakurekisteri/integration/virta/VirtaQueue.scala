@@ -2,6 +2,8 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.ask
+import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{IHakemusService, Trigger}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
@@ -33,8 +35,12 @@ object VirtaHealth
 object CancelSchedule
 
 
-class VirtaQueue(virtaActor: VirtaActorRef, hakemusService: IHakemusService, oppijaNumeroRekisteri: IOppijaNumeroRekisteri, hakuActor: ActorRef) extends Actor with ActorLogging {
-  implicit val executionContext: ExecutionContext = context.dispatcher
+class VirtaQueue(virtaActor: VirtaActorRef,
+                 hakemusService: IHakemusService,
+                 oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+                 hakuActor: ActorRef,
+                 config: Config) extends Actor with ActorLogging {
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   val virtaQueue: mutable.Set[VirtaQuery] = mutable.LinkedHashSet()
   private var lastProcessDone: Option[DateTime] = None

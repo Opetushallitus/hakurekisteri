@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.SpecsLikeMockito
+import fi.vm.sade.hakurekisteri.{MockConfig, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
@@ -75,7 +75,7 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         sWaiter.dismiss()
     })))
     val opiskeluoikeusActor = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus, UUID](opiskeluoikeusHandler)))
-    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor, suoritusActor, opiskeluoikeusActor)))
+    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor, suoritusActor, opiskeluoikeusActor, new MockConfig)))
 
     virtaActor ! VirtaQuery("1.2.3", Some("111111-1975"))
 

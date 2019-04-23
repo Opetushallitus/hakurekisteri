@@ -37,15 +37,16 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   implicit val system = ActorSystem("test-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
+  private val mockConfig: MockConfig = new MockConfig
 
   implicit var database: Database = _
 
 
   override def beforeAll(): Unit = {
     database = Database.forURL(ItPostgres.getEndpointURL)
-    val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
-    val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database)))
-    val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
+    val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable], config = mockConfig)
+    val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database, mockConfig)))
+    val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5, mockConfig)))
     val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
     addServlet(new ImportBatchResource(eraOrgRekisteri, authorized, orgsActor, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
     super.beforeAll()
@@ -75,7 +76,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
     result
   }
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new CapturingAsyncHttpClient(createEndpointMock)))
-  val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor()(system))))
+  val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor(config = mockConfig)(system))))
   val orgsActor: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockOrganisaatioActor(new MockConfig()))))
 
   object TestSchema extends SchemaDefinition {

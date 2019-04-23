@@ -32,15 +32,16 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
   val cacheFactory = MockCacheFactory.get
+  private val mockConfig: MockConfig = new MockConfig
 
   implicit var database: Database = _
 
 
   override def beforeAll(): Unit = {
     database = Database.forURL(ItPostgres.getEndpointURL)
-    val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
-    val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database)))
-    val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
+    val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable], config = mockConfig)
+    val eraOrgRekisteri = system.actorOf(Props(new ImportBatchOrgActor(database, mockConfig)))
+    val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5, mockConfig)))
     val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
     addServlet(new ImportBatchResource(eraOrgRekisteri, authorized, orgsActor, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema), "/batch")
     super.beforeAll()
@@ -71,7 +72,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   val client = new VirkailijaRestClient(
     ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"),
     aClient = Some(new CapturingAsyncHttpClient(createEndpointMock)))
-  val parameterActor = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(client))))
+  val parameterActor = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(client, mockConfig))))
   val orgsActor: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new HttpOrganisaatioActor(client, new MockConfig, cacheFactory))))
 
   override def stop(): Unit = {

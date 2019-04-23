@@ -38,8 +38,9 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       case None => Http.withConfiguration(c => c.
         setConnectTimeout(serviceConfig.httpClientConnectionTimeout).
         setRequestTimeout(serviceConfig.httpClientRequestTimeout).
-        setPooledConnectionIdleTimeout(serviceConfig.httpClientRequestTimeout).
+        setPooledConnectionIdleTimeout(serviceConfig.httpClientPooledConnectionIdleTimeout).
         setFollowRedirect(false).
+        setUseNativeTransport(serviceConfig.useNativeTransport).
         setMaxRequestRetry(2))
     }
   }

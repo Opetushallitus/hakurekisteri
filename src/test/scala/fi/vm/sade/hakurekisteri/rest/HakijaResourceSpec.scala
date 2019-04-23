@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.Props
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.LocalhostProperties
@@ -14,7 +15,7 @@ import scala.concurrent.Await
 class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
-  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, valintaTulosTimeout)))
+  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, new MockConfig)))
   addServlet(new HakijaResource(hakijat), "/")
 
   test("fails with bad request if there is no query parameter") {

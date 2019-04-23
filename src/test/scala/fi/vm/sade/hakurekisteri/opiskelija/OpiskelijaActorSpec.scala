@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, Kausi}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -18,6 +19,7 @@ import scala.concurrent.{Await, Future}
 
 class OpiskelijaActorSpec extends ScalatraFunSuite {
   implicit val timeout: Timeout = 15.seconds
+  private val mockConfig: MockConfig = new MockConfig
 
   val o1 = Opiskelija("oppilaitos1", "9", "9A", "henkilo1", new DateTime(2000, 6, 1, 0, 0), Some(new DateTime(2000, 7, 1, 0, 0)), "test")
   val o2 = Opiskelija("oppilaitos1", "9", "9B", "henkilo2", new DateTime(2000, 6, 1, 0, 0), Some(new DateTime(2000, 7, 1, 0, 0)), "test")
@@ -31,8 +33,8 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
   def withActor(test: ActorRef => Any) {
     implicit val system = ActorSystem("opiskelija-test-system")
     implicit val database = Database.forURL(ItPostgres.getEndpointURL)
-    val journal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
-    val actor = system.actorOf(Props(new OpiskelijaJDBCActor(journal, 5)))
+    val journal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = mockConfig)
+    val actor = system.actorOf(Props(new OpiskelijaJDBCActor(journal, 5, mockConfig)))
     try test(actor)
     finally {
       Await.result(system.terminate(), 15.seconds)

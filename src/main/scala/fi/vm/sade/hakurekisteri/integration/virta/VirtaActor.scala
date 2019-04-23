@@ -7,7 +7,8 @@ import akka.pattern.ask
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.{Config, Oids}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery}
@@ -20,8 +21,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 
-class VirtaActor(virtaClient: VirtaClient, organisaatioActor: OrganisaatioActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
-  implicit val executionContext: ExecutionContext = context.dispatcher
+class VirtaActor(virtaClient: VirtaClient,
+                 organisaatioActor: OrganisaatioActorRef,
+                 suoritusActor: ActorRef,
+                 opiskeluoikeusActor: ActorRef,
+                 config: Config) extends Actor with ActorLogging {
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   import akka.pattern.pipe
 

@@ -1,9 +1,10 @@
 import java.util.concurrent.TimeUnit
 
-import javax.servlet.ServletContext
 import _root_.akka.actor.ActorSystem
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
@@ -14,18 +15,20 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
+import javax.servlet.ServletContext
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{Extraction, _}
 import org.scalatra._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSupport {
 
   override def init(context: ServletContext) {
     val config = WebAppConfig.getConfig(context)
     implicit val system = config.productionServerConfig.system
-    implicit val ec = config.productionServerConfig.ec
+
+    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
     implicit val security = config.productionServerConfig.security
 
     val anyActorRef = system.deadLetters
@@ -44,14 +47,14 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
     context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
-    context.mount(new OrganizationProxyServlet(system), "/organisaatio-service")
-    context.mount(new OppijanumerorekisteriProxyServlet(system), "/oppijanumerorekisteri-service")
-    context.mount(new KoodistoProxyServlet(system), "/koodisto-service")
-    context.mount(new LocalizationMockServlet(system), "/lokalisointi")
-    context.mount(new CasMockServlet(system), "/cas")
+    context.mount(new OrganizationProxyServlet(system, config), "/organisaatio-service")
+    context.mount(new OppijanumerorekisteriProxyServlet(system, config), "/oppijanumerorekisteri-service")
+    context.mount(new KoodistoProxyServlet(system, config), "/koodisto-service")
+    context.mount(new LocalizationMockServlet(system, config), "/lokalisointi")
+    context.mount(new CasMockServlet(system, config), "/cas")
   }
 
-  class OrganizationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) {
+  class OrganizationProxyServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) {
     get("/rest/organisaatio/v2/ryhmat") {
       new AsyncResult() {
         override val is = Future.successful(OrganisaatioMock.ryhmat())
@@ -71,7 +74,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class OppijanumerorekisteriProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
+  class OppijanumerorekisteriProxyServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) with HakurekisteriJsonSupport {
     get("/cas/prequel") {
       contentType = "text/plain"
       "ok"
@@ -101,7 +104,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     def henkiloByQparam(hetu: String) = Future.successful(HenkiloMock.getHenkiloByQParam(hetu))
   }
 
-  class KoodistoProxyServlet(system: ActorSystem)(implicit ec: ExecutionContext) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
+  class KoodistoProxyServlet(system: ActorSystem, config: Config)(implicit ec: ExecutionContext) extends OPHProxyServlet(system, config) with HakurekisteriJsonSupport {
     get("""/rest/json/(.*)""".r) {
       new AsyncResult() {
         val path = multiParams("captures").head
@@ -115,7 +118,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class LocalizationMockServlet(system: ActorSystem) extends OPHProxyServlet(system) {
+  class LocalizationMockServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) {
     get("/cxf/rest/v1/localisation") {
       getClass.getResourceAsStream("/proxy-mockdata/localization.json")
     }
@@ -125,7 +128,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class CasMockServlet(system: ActorSystem) extends OPHProxyServlet(system) {
+  class CasMockServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) {
     get("/myroles") {
       getClass.getResourceAsStream("/proxy-mockdata/cas-myroles.json")
     }

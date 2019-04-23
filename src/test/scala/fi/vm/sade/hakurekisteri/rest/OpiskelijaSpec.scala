@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaQuery, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
@@ -29,11 +30,12 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   implicit var database: Database = _
   implicit val security = new TestSecurity
   implicit val swagger = new HakurekisteriSwagger
+  private val mockConfig: MockConfig = new MockConfig
 
   override def beforeAll(): Unit = {
     database = Database.forURL(ItPostgres.getEndpointURL)
-    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
-    val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1))))))
+    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = mockConfig)
+    val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig))))))
     addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/*")
     super.beforeAll()
   }

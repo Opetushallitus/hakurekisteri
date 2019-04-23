@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
@@ -22,12 +23,13 @@ class ArvosanaEmptyLisatietoSpec extends ScalatraFunSuite {
     implicit val system = ActorSystem()
     implicit val database = Database.forURL(ItPostgres.getEndpointURL)
     implicit val security = new TestSecurity
+    val mockConfig: MockConfig = new MockConfig
 
-    val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+    val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
     (0 until 10).foreach((i) => {
       arvosanaJournal.addModification(Updated(Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", if (i % 2 == 0) None else Some(""), valinnainen = false, None, "Test", Map()).identify(UUID.randomUUID())))
     })
-    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
+    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig)))
     val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
     implicit val swagger = new HakurekisteriSwagger
 

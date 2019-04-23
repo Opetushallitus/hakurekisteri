@@ -57,13 +57,13 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     }
   }
 
-  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider)
+  private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider, config)
 
   private val ytlActor: ActorRef = system.actorOf(Props(new YtlActor(
       rekisterit.ytlSuoritusRekisteri,
       rekisterit.ytlArvosanaRekisteri,
       hakemusService,
-      config.integrations.ytlConfig
+      config
     )), "ytl")
 
   private val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, ytlActor, mock[Config])

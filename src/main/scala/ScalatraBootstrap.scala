@@ -47,12 +47,11 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, Future}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override def init(context: ServletContext) {
     OPHSecurity.init(context)
@@ -66,13 +65,13 @@ class ScalatraBootstrap extends LifeCycle {
       override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = integrations.oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
     }
 
-    val registers = new BareRegisters(system, journals, journals.database, personAliasesProvider)
+    val registers = new BareRegisters(system, journals, journals.database, personAliasesProvider, config)
 
     integrations = Integrations(registers, system, config)
 
     val authorizedRegisters = new AuthorizedRegisters(registers, system, config, integrations.hakemusBasedPermissionChecker)
 
-    config.productionServerConfig = new ProductionServerConfig(integrations, system, security, ec)
+    config.productionServerConfig = new ProductionServerConfig(integrations, system, security)
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
@@ -125,7 +124,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
     ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue), // Continuous Virta queue processing
     ("/ytl", "ytl") -> new YtlResource(integrations.ytl, integrations.ytlIntegration),
-    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system),
+    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system, config),
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
     ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
   )

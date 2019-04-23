@@ -116,11 +116,11 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   var valintarekisteri: TestActorRef[TestingValintarekisteriActor] = _
   var resource: OppijaResource = _
   val hakemusServiceMock = mock[IHakemusService]
+  val config: MockConfig = new MockConfig
 
-  private lazy val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  private lazy val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = config)
 
   override def beforeAll(): Unit = {
-    val config = new MockConfig
     system = ActorSystem("oppija-resource-test-system")
     database = Database.forURL(ItPostgres.getEndpointURL)
     valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
@@ -130,20 +130,20 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     ItPostgres.reset()
     val rekisterit = new Registers {
       insertAFewRandomishSuoritukset(suoritusJournal)
-      private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+      private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = config)
       opiskelijaJournal.addModification(Updated(Opiskelija("1.2.246.562.10.00000000001", "9",
         "9A", "1.2.246.562.24.61781310000", DateTime.now.minusYears(2), Some(DateTime.now.minusWeeks(1)), "source").identify))
 
-      private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
-      private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
+      private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = config)
+      private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable], config = config)
       private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
-      private val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null)))
-      private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
-      private val ytlArvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
-      private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
-      private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
-      private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
-      private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+      private val eraOrgs = system.actorOf(Props(new ImportBatchOrgActor(null, config)))
+      private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, config)))
+      private val ytlArvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, config)))
+      private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1, config)))
+      private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, config)))
+      private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, config)))
+      private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, config)))
 
       override val eraOrgRekisteri: ActorRef = eraOrgs
       override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))

@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumnDate, yearOf}
@@ -21,8 +22,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 import scala.util.Try
 
-class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable], poolSize: Int, personAliasProvider: PersonAliasesProvider)
-  extends ResourceActor[Suoritus, UUID] with JDBCRepository[Suoritus, UUID, SuoritusTable] with JDBCService[Suoritus, UUID, SuoritusTable] {
+class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable], poolSize: Int, personAliasProvider: PersonAliasesProvider, config: Config)
+  extends ResourceActor[Suoritus, UUID](config) with JDBCRepository[Suoritus, UUID, SuoritusTable] with JDBCService[Suoritus, UUID, SuoritusTable] {
 
   override def deduplicationQuery(o: Suoritus)(t: SuoritusTable): Rep[Boolean] = o match {
     case VapaamuotoinenSuoritus(henkilo, _, _, _, tyyppi, index, _) =>

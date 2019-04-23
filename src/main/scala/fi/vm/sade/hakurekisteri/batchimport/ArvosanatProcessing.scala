@@ -5,8 +5,9 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, OrganisaatioActorRef}
@@ -21,8 +22,15 @@ import scala.xml.Node
 
 case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
 
-class ArvosanatProcessing(importBatchOrgActor: ActorRef, organisaatioActor: OrganisaatioActorRef, henkiloActor: HenkiloActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: KoodistoActorRef)(implicit val system: ActorSystem) {
-  implicit val ec: ExecutionContext = system.dispatcher
+class ArvosanatProcessing(importBatchOrgActor: ActorRef,
+                          organisaatioActor: OrganisaatioActorRef,
+                          henkiloActor: HenkiloActorRef,
+                          suoritusrekisteri: ActorRef,
+                          arvosanarekisteri: ActorRef,
+                          importBatchActor: ActorRef,
+                          koodistoActor: KoodistoActorRef,
+                          config: Config) {
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   implicit val timeout: Timeout = 1.hour
 
   def process(batch: ImportBatch): Future[ImportBatch with Identified[UUID]] = {

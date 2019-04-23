@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.tarjonta
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -87,7 +87,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   private val hakukohdeCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[Hakukohde], "hakukohde")
 
   val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender

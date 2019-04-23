@@ -77,7 +77,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val koosteService = new KoosteServiceMock
   override val koodisto: KoodistoActorRef = new KoodistoActorRef(mockActor("koodisto", new DummyActor))
   override val organisaatiot: OrganisaatioActorRef = new OrganisaatioActorRef(mockActor("organisaatiot", new MockOrganisaatioActor(config)))
-  override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor()(system)))
+  override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor(config = config)(system)))
   override val henkilo: HenkiloActorRef = new HenkiloActorRef(mockActor("henkilo", new MockHenkiloActor(config)))
   override val tarjonta: TarjontaActorRef = new TarjontaActorRef(mockActor("tarjonta", new MockTarjontaActor(config)(system)))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
@@ -85,7 +85,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
     hakemusService,
-    config.integrations.ytlConfig
+    config
   )), "ytl")
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
@@ -166,14 +166,14 @@ class BaseIntegrations(rekisterit: Registers,
   val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler, config)(system)
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = new KoodistoActorRef(system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto"))
-  val parametrit = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit"))
+  val parametrit = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit"))
   val valintaTulos = new ValintaTulosActorRef(getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config, cacheFactory)), "valintaTulos"))
   val valintarekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri"))
   val ytl = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
     hakemusService,
-    config.integrations.ytlConfig
+    config
   )), "ytl")
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
@@ -186,8 +186,8 @@ class BaseIntegrations(rekisterit: Registers,
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version106)
   )(virtaResourceEc, system)
-  val virta = new VirtaActorRef(system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta"))
-  val virtaResource = new VirtaResourceActorRef(system.actorOf(Props(new VirtaResourceActor(virtaResourceClient)), "virtaResource"))
+  val virta = new VirtaActorRef(system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri, config)), "virta"))
+  val virtaResource = new VirtaResourceActorRef(system.actorOf(Props(new VirtaResourceActor(virtaResourceClient, config)), "virtaResource"))
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
@@ -217,7 +217,13 @@ class BaseIntegrations(rekisterit: Registers,
       newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
   }
 
-  override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppPermissionCheckerClient, ataruPermissionCheckerClient, organisaatiot))))
+  override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef =
+    new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(
+      new HakemusBasedPermissionCheckerActor(
+        hakuAppPermissionCheckerClient,
+        ataruPermissionCheckerClient,
+        organisaatiot,
+        config))))
 
 }
 

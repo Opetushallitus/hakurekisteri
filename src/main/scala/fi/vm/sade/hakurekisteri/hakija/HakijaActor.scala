@@ -3,9 +3,11 @@ package fi.vm.sade.hakurekisteri.hakija
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.ForkedSeq._
 import fi.vm.sade.hakurekisteri.hakija.TupledFuture._
 import fi.vm.sade.hakurekisteri.hakija.representation._
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
@@ -178,8 +180,12 @@ case class Osaaminen(yleinen_kielitutkinto_fi: Option[String], valtionhallinnon_
                      yleinen_kielitutkinto_en: Option[String], valtionhallinnon_kielitutkinto_en: Option[String],
                      yleinen_kielitutkinto_se: Option[String], valtionhallinnon_kielitutkinto_se: Option[String])
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActorRef, koodistoActor: KoodistoActorRef, valintaTulosActor: ValintaTulosActorRef, valintaTulosTimeout: Timeout) extends Actor with ActorLogging {
-  implicit val executionContext: ExecutionContext = context.dispatcher
+class HakijaActor(hakupalvelu: Hakupalvelu,
+                  organisaatioActor: OrganisaatioActorRef,
+                  koodistoActor: KoodistoActorRef,
+                  valintaTulosActor: ValintaTulosActorRef,
+                  config: Config) extends Actor with ActorLogging {
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   implicit val defaultTimeout: Timeout = 120.seconds
   val tuntematonOppilaitos = "00000"
 
@@ -357,7 +363,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: OrganisaatioActor
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(ValintaTulosQuery(hakuOid, None))(timeout = valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(ValintaTulosQuery(hakuOid, None))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 

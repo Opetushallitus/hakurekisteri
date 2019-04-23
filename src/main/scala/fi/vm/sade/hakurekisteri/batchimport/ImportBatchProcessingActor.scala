@@ -6,6 +6,7 @@ import akka.actor.Status.Failure
 import akka.actor._
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, OrganisaatioActorRef}
@@ -34,7 +35,8 @@ class ImportBatchProcessingActor(importBatchOrgActor: ActorRef,
                                  koodistoActor: KoodistoActorRef,
                                  config: Config) extends Actor with ActorLogging {
 
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
+
   private val processStarter: Cancellable = context.system.scheduler.schedule(config.importBatchProcessingInitialDelay, 15.seconds, self, ProcessReadyBatches)
 
   log.info(s"started $self")
@@ -63,11 +65,11 @@ class ImportBatchProcessingActor(importBatchOrgActor: ActorRef,
       b.batchType match {
         case "perustiedot" =>
           context.actorOf(Props(
-            new PerustiedotProcessingActor(importBatchOrgActor, importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)
+            new PerustiedotProcessingActor(importBatchOrgActor, importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, config)(b)
           ))
         case "arvosanat" =>
           context.actorOf(Props(
-            new ArvosanatProcessingActor(importBatchOrgActor, importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)
+            new ArvosanatProcessingActor(importBatchOrgActor, importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor, config)(b)
           ))
         case t =>
           log.error(s"unknown batchType $t")
@@ -88,13 +90,14 @@ class ArvosanatProcessingActor(importBatchOrgActor: ActorRef,
                                suoritusrekisteri: ActorRef,
                                arvosanarekisteri: ActorRef,
                                organisaatioActor: OrganisaatioActorRef,
-                               koodistoActor: KoodistoActorRef)(b: ImportBatch with Identified[UUID])
+                               koodistoActor: KoodistoActorRef,
+                               config: Config)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   private val processor =
-    new ArvosanatProcessing(importBatchOrgActor, organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
+    new ArvosanatProcessing(importBatchOrgActor, organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor, config)
 
   private val startTime = Platform.currentTime
   log.info(s"started processing batch ${b.id}")
@@ -134,7 +137,8 @@ class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
                                  henkiloActor: HenkiloActorRef,
                                  suoritusrekisteri: ActorRef,
                                  opiskelijarekisteri: ActorRef,
-                                 organisaatioActor: OrganisaatioActorRef)(b: ImportBatch with Identified[UUID])
+                                 organisaatioActor: OrganisaatioActorRef,
+                                 config: Config)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   private val startTime = Platform.currentTime
@@ -214,7 +218,7 @@ class PerustiedotProcessingActor(importBatchOrgActor: ActorRef,
 
   private case object Start
   private case object Stop
-  implicit val ec = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   private val start = context.system.scheduler.scheduleOnce(1.millisecond, self, Start)
   private val stop = context.system.scheduler.scheduleOnce(1.hour, self, Stop)

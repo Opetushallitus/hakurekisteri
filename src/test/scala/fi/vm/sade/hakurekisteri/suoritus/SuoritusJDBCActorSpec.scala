@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration.henkilo.{MockOppijaNumeroRekisteri, MockPersonAliasesProvider, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
@@ -31,8 +32,9 @@ class SuoritusJDBCActorSpec extends FlatSpec with BeforeAndAfterEach with  Befor
   implicit val system = ActorSystem("test-jdbc")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
-  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-  val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider)))
+  private val mockConfig: MockConfig = new MockConfig
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+  val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig)))
 
   override protected def beforeEach(): Unit = {
     ItPostgres.reset()

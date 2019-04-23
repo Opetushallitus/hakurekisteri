@@ -34,8 +34,9 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   private val defaultClient = Http.withConfiguration(_
     .setConnectTimeout(config.httpClientConnectionTimeout)
     .setRequestTimeout(120000)
-    .setPooledConnectionIdleTimeout(120000)
+    .setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout)
     .setFollowRedirect(true)
+    .setUseNativeTransport(config.useNativeTransport)
     .setMaxRequestRetry(2)
   )
 

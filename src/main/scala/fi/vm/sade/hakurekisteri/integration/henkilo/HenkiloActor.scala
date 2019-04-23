@@ -4,7 +4,7 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods
 import support.TypedActorRef
@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = context.dispatcher
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   def receive: Receive
 }
