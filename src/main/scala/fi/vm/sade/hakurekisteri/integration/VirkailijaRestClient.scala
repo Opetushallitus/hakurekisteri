@@ -69,6 +69,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       case None => Http.withConfiguration(_.
         setConnectTimeout(config.httpClientConnectionTimeout).
         setRequestTimeout(config.httpClientRequestTimeout).
+        setReadTimeout(config.httpClientRequestTimeout).
         setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout).
         setFollowRedirect(true).
         setMaxRequestRetry(2).
