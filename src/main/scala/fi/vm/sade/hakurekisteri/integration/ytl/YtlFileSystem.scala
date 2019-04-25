@@ -5,7 +5,6 @@ import java.nio.file.{Files, Path, Paths}
 import java.text.SimpleDateFormat
 
 import com.amazonaws.{AmazonClientException, AmazonServiceException}
-import com.amazonaws.auth.InstanceProfileCredentialsProvider
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
@@ -93,7 +92,6 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends
 
   def this(config: OphProperties) =
     this(config, AmazonS3ClientBuilder.standard
-      .withCredentials(InstanceProfileCredentialsProvider.createAsyncRefreshingProvider(true))
       .withRegion(Option(config.getOrElse("ytl.s3.region", null)).getOrElse(
         throw new RuntimeException(s"S3 region configuration 'ytl.s3.region' is missing!")
       )).build())
