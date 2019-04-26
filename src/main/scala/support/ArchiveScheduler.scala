@@ -1,5 +1,7 @@
 package support
 
+import java.util.Calendar
+
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.Config
@@ -10,7 +12,7 @@ import org.quartz.impl.StdSchedulerFactory
 
 import scala.sys.process.stringToProcess
 
-class DbArchiver(config: Config)(implicit val system: ActorSystem) {
+class ArchiveScheduler(config: Config)(implicit val system: ActorSystem) {
   private val logger = Logging.getLogger(system, this)
 
   def start(dbArchiveCronExpression: String): Unit = {
@@ -28,9 +30,16 @@ class DbArchiver(config: Config)(implicit val system: ActorSystem) {
   }
 
   def archive(): () => Unit = { () => {
-      logger.info("About to invoke archive scripts")
-      runBlocking("pwd")
-      runBlocking(s"psql -h ${config.databaseHost} -p ${config.databasePort} -d suoritusrekisteri -v amount=234 -f db-scripts/arkistoi_kaikki_deltat.sql")
+    def getEpoch(daysInThePast: Int): Long = {
+      val day = Calendar.getInstance
+      day.add(Calendar.DATE, - daysInThePast)
+      day.getTime.getTime
+    }
+
+    logger.info("About to invoke archive scripts")
+      val oldest: Long = getEpoch(config.archiveNonCurrentAfterDays.toInt)
+      val batchSize = config.archiveBatchSize.toInt
+      runBlocking(s"psql -h ${config.databaseHost} -p ${config.databasePort} -d suoritusrekisteri -v amount=${batchSize} -v oldest=${oldest} -f db-scripts/arkistoi_kaikki_deltat.sql")
     }
   }
 

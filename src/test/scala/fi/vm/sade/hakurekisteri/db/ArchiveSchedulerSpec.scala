@@ -12,12 +12,12 @@ import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.sql.SqlAction
-import support.{DbArchiver, DbJournals}
+import support.{ArchiveScheduler, DbJournals}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with Waiters {
+class ArchiveSchedulerSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with Waiters {
 
   private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
   private implicit val system = ActorSystem("test-jdbc")
@@ -56,7 +56,7 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   }
 
   it should "archive the old-enough non-current record" in {
-    val dbArchiver = new DbArchiver(config)
+    val dbArchiver = new ArchiveScheduler(config)
 
     insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt + 1, false)))
 
@@ -70,9 +70,9 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   }
 
   it should "not archive non-current record if not old enough" in {
-    val dbArchiver = new DbArchiver(config)
+    val dbArchiver = new ArchiveScheduler(config)
 
-    insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt - 1, false)))
+    insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt - 10, false)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
@@ -80,6 +80,23 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
     (dbArchiver.archive())()
 
     val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
-    result2.head.toInt should be(2)
+    result2.head.toInt should be(0)
   }
+
+  it should "not archive very old if it is still current" in {
+    val dbArchiver = new ArchiveScheduler(config)
+
+    insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt + 10, true)))
+
+    val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result1.head.toInt should be(2)
+
+    (dbArchiver.archive())()
+
+    val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
+    result2.head.toInt should be(0)
+  }
+
+
+
 }
