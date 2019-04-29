@@ -45,6 +45,8 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, dbLoggingConfig, config)
   override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, dbLoggingConfig, config)
   override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, dbLoggingConfig, config)
+
+  val archiver: Archiver = new DbArchiver(config)
 }
 
 case class SureDbLoggingConfig(slowQueryMillis: Long = 200,

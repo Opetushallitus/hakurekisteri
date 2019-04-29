@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.db
+package fi.vm.sade.hakurekisteri.storage.repository
 
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -12,12 +12,12 @@ import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.sql.SqlAction
-import support.{ArchiveScheduler, DbJournals}
+import support.{ArchiveScheduler, Archiver, DbArchiver, DbJournals}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class ArchiveSchedulerSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with Waiters {
+class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with Waiters {
 
   private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
   private implicit val system = ActorSystem("test-jdbc")
@@ -56,47 +56,47 @@ class ArchiveSchedulerSpec extends FlatSpec with BeforeAndAfterEach with BeforeA
   }
 
   it should "archive the old-enough non-current record" in {
-    val dbArchiver = new ArchiveScheduler(config)
-
     insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt + 1, false)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
 
-    (dbArchiver.archive())()
+    journals.archiver.archive()
 
     val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
     result2.head.toInt should be(1)
   }
 
   it should "not archive non-current record if not old enough" in {
-    val dbArchiver = new ArchiveScheduler(config)
-
     insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt - 10, false)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
 
-    (dbArchiver.archive())()
+    journals.archiver.archive()
 
     val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
     result2.head.toInt should be(0)
   }
 
   it should "not archive very old if it is still current" in {
-    val dbArchiver = new ArchiveScheduler(config)
-
     insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt + 10, true)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
 
-    (dbArchiver.archive())()
+    journals.archiver.archive()
 
     val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
     result2.head.toInt should be(0)
   }
 
-
-
+  it should "acquire lock only once" in {
+    val journalsAnotherSession: DbJournals = new DbJournals(config)
+    journals.archiver.acquireLockForArchiving().head should be(true)
+    journalsAnotherSession.archiver.acquireLockForArchiving().head should be(false)
+    journals.archiver.clearLockForArchiving()
+    journalsAnotherSession.archiver.acquireLockForArchiving().head should be(true)
+    journalsAnotherSession.archiver.clearLockForArchiving()
+  }
 }

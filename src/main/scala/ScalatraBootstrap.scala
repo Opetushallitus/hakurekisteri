@@ -60,8 +60,8 @@ class ScalatraBootstrap extends LifeCycle {
 
     val journals = new DbJournals(config)
 
-    val archiver = new ArchiveScheduler(config)
-    archiver.start(OphUrlProperties.getProperty("suoritusrekisteri.db.archiveCronJob"))
+    val archiveScheduler = new ArchiveScheduler(journals.archiver)
+    archiveScheduler.start(OphUrlProperties.getProperty("suoritusrekisteri.db.archiveCronJob"))
 
     var integrations: Integrations = null
     val personAliasesProvider = new PersonAliasesProvider {
