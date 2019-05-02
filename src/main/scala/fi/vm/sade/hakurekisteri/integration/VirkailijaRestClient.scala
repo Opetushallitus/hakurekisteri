@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InputStreamReader
-import java.lang.reflect.InvocationTargetException
 import java.net.ConnectException
 import java.nio.charset.Charset
 import java.nio.file.Paths
@@ -30,7 +29,6 @@ import scala.util.{Failure, Success, Try}
 
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
-case class CasAuthenticationException(message: String, responseCode: Int) extends Exception(message)
 
 class HttpConfig(properties: Map[String, String] = Map.empty) {
   val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
@@ -163,8 +161,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
               }
             case _=>
               Future.failed {
-                logger.info(s"Fetching jsession for $serviceUrl failed")
-                new Exception(s"Fetching jsession for $serviceUrl failed")
+                new RuntimeException(s"Fetching jsession for $serviceUrl failed")
               }
           })
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
@@ -219,18 +216,12 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, resource: A, basicAuth: Boolean, args: AnyRef*): Future[B] = {
     val retryCount = new AtomicInteger(1)
-    if (uriKey.equals("oppijanumerorekisteri-service.duplicatesByPersonOids")) {
-      val url = "http://localhost:8081/oppijanumerorekisteri-service/s2s/duplicateHenkilos"
-      val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
-      logLongQuery(result, url)
-      result
-    } else {
-      val url = OphUrlProperties.url(uriKey, args:_*)
-      val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
-      logLongQuery(result, url)
-      result
-    }
+    val url = OphUrlProperties.url(uriKey, args:_*)
+    val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+    logLongQuery(result, url)
+    result
   }
+
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
