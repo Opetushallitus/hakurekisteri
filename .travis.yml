@@ -5,6 +5,10 @@ jdk:
 services:
   - docker
   - postgresql
+
+addons:
+  postgresql: "9.5"
+
 cache:
   directories:
   - $HOME/.m2
@@ -38,8 +42,6 @@ script:
 
   - mv target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
-  - ./db-scripts/generate-archive-functions.sh
-  - cp -vr db-scripts $DOCKER_BUILD_DIR/config/db-scripts/
 
   - export BASE_IMAGE="baseimage-fatjar:jdk11"
   - ./ci-tools/common/pull-image.sh

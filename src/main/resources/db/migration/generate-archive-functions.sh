@@ -43,25 +43,19 @@ $BODY$
 
 ALTER FUNCTION arkistoi_%%TABLE_deltat(integer, bigint) OWNER TO oph;
 
--- invoke the function
-select arkistoi_%%TABLE_deltat(:amount, :oldest), :amount, :oldest;
-
 -- END of archive table: %%TABLE
 END-OF-TEMPLATE
 )
 
-rootDir="db-scripts"
-fileName="arkistoi_kaikki_deltat.sql"
-echo "-- Generated on " `date` > $rootDir/$fileName
-cat <<END-OF-HEADER >>$rootDir/$fileName
+fileName="R__recreate_archive_tables_and_functions.sql"
+echo "-- Generated on " `date` > $fileName
+cat <<END-OF-HEADER >>$fileName
 --
--- Use this SQL script to create archive tables and archive functions
--- to move the irrelevant rows from original tables into their corresponding
--- archive tables. The script will also invoke the archive functions.
+-- Flyway will use this SQL script to create archive tables and archive functions
 --
--- This file is generated at image creation time. Do not edit manually.
--- If you want to generate this file manually, run the generating script from its
--- parent directory: db-scripts/generate-archive-function.sh
+-- This file is generated, it contains a lot of duplicate code, and it is not
+-- recommended to edit manually.
+-- To (re)generate this script run: generate-archive-function.sh
 --
 END-OF-HEADER
 
@@ -69,7 +63,7 @@ END-OF-HEADER
 while IFS=':' read table columns
 do
     echo "Generate archiving sql script for: $table ($columns)"
-    echo "$template" | sed "s/%%TABLE/$table/g;s/%%COLUMNS/$columns/g" >> $rootDir/$fileName
-done < $rootDir/tables.data
+    echo "$template" | sed "s/%%TABLE/$table/g;s/%%COLUMNS/$columns/g" >> $fileName
+done < tables.data
 
 

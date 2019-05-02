@@ -25,19 +25,17 @@ class DbArchiver(config: Config)(implicit val db: Database, implicit val system:
 
   private def run[T](f: Future[T]): T = Await.result(f, atMost = timeout.duration)
 
-  private def runCmdLineBlocking(command: String, failOnError: Boolean = true): Int = {
-    val returnValue = command.!
-    if (failOnError && returnValue != 0) {
-      throw new RuntimeException(s"Command '$command' exited with $returnValue")
-    }
-    returnValue
-  }
-
   override def archive(): Unit = {
     logger.info("About to invoke archive scripts")
-    val oldest: Long = getEpoch(config.archiveNonCurrentAfterDays.toInt)
     val batchSize = config.archiveBatchSize.toInt
-    runCmdLineBlocking(s"psql -h ${config.databaseHost} -p ${config.databasePort} -d suoritusrekisteri -v amount=${batchSize} -v oldest=${oldest} -f db-scripts/arkistoi_kaikki_deltat.sql")
+    val oldest: Long = getEpoch(config.archiveNonCurrentAfterDays.toInt)
+    val results = run(db.run(sql"""select
+                     arkistoi_arvosana_deltat(${batchSize}, ${oldest}),
+                     arkistoi_import_batch_deltat(${batchSize}, ${oldest}),
+                     arkistoi_opiskelija_deltat(${batchSize}, ${oldest}),
+                     arkistoi_opiskeluoikeus_deltat(${batchSize}, ${oldest}),
+                     arkistoi_suoritus_deltat(${batchSize}, ${oldest})""".as[(Long, Long, Long, Long, Long)]))
+    logger.info(s"Archived (arvosana, import_batch, opiskelija, opeskeluoikeus, suoritus): $results")
   }
 
   override def acquireLockForArchiving(): Seq[Boolean] = {

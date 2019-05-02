@@ -13,6 +13,8 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.HakurekisteriTables._
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusTable}
+import fi.vm.sade.utils.Timer
+import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 
 trait Journals {
@@ -45,6 +47,15 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](opiskeluoikeusTable, dbLoggingConfig, config)
   override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, dbLoggingConfig, config)
   override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, dbLoggingConfig, config)
+
+  private def createOtherDbObjectsExplicitely() = {
+    log.info(s"Flyway database db")
+    val flyway = new Flyway()
+    flyway.setDataSource(config.databaseUrl, config.postgresUser, config.postgresPassword)
+    Timer.timed("Flyway db") { flyway.baseline(); flyway.migrate() }
+  }
+  
+  createOtherDbObjectsExplicitely()
 
   val archiver: Archiver = new DbArchiver(config)
 }

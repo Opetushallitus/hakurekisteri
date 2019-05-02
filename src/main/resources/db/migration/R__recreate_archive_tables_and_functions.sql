@@ -1,12 +1,10 @@
--- Generated on  Fri Apr 26 16:54:12 EEST 2019
+-- Generated on  Thu May 2 18:10:22 EEST 2019
 --
--- Use this SQL script to create archive tables and archive functions
--- to move the irrelevant rows from original tables into their corresponding
--- archive tables. The script will also invoke the archive functions.
+-- Flyway will use this SQL script to create archive tables and archive functions
 --
--- This file is generated at image creation time. Do not edit manually.
--- If you want to generate this file manually, run the generating script from its
--- parent directory: db-scripts/generate-archive-function.sh
+-- This file is generated, it contains a lot of duplicate code, and it is not
+-- recommended to edit manually.
+-- To (re)generate this script run: generate-archive-function.sh
 --
 --
 -- Archive table: arvosana
@@ -48,9 +46,6 @@ $BODY$
   COST 100;
 
 ALTER FUNCTION arkistoi_arvosana_deltat(integer, bigint) OWNER TO oph;
-
--- invoke the function
-select arkistoi_arvosana_deltat(:amount, :oldest), :amount, :oldest;
 
 -- END of archive table: arvosana
 --
@@ -94,9 +89,6 @@ $BODY$
 
 ALTER FUNCTION arkistoi_import_batch_deltat(integer, bigint) OWNER TO oph;
 
--- invoke the function
-select arkistoi_import_batch_deltat(:amount, :oldest), :amount, :oldest;
-
 -- END of archive table: import_batch
 --
 -- Archive table: opiskelija
@@ -138,9 +130,6 @@ $BODY$
   COST 100;
 
 ALTER FUNCTION arkistoi_opiskelija_deltat(integer, bigint) OWNER TO oph;
-
--- invoke the function
-select arkistoi_opiskelija_deltat(:amount, :oldest), :amount, :oldest;
 
 -- END of archive table: opiskelija
 --
@@ -184,7 +173,46 @@ $BODY$
 
 ALTER FUNCTION arkistoi_opiskeluoikeus_deltat(integer, bigint) OWNER TO oph;
 
--- invoke the function
-select arkistoi_opiskeluoikeus_deltat(:amount, :oldest), :amount, :oldest;
-
 -- END of archive table: opiskeluoikeus
+--
+-- Archive table: suoritus
+--
+
+CREATE TABLE IF NOT EXISTS a_suoritus (LIKE suoritus INCLUDING ALL);
+
+ALTER TABLE a_suoritus OWNER TO oph;
+
+
+CREATE OR REPLACE FUNCTION arkistoi_suoritus_deltat(amount integer, oldest bigint)
+  RETURNS integer AS
+$BODY$
+DECLARE
+  _resource_id varchar(200);
+  _inserted bigint;
+  _count int := 0;
+  delta record;
+BEGIN
+  FOR delta IN
+    SELECT resource_id, inserted
+    FROM suoritus
+    WHERE not current AND inserted < oldest
+    LIMIT amount
+  LOOP
+    INSERT INTO a_suoritus ( resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, kuvaus, vuosi, tyyppi, index, vahvistettu)
+      SELECT  resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen, suoritus_kieli, inserted, deleted, source, kuvaus, vuosi, tyyppi, index, vahvistettu
+        FROM suoritus
+        WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
+    DELETE FROM suoritus WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
+    _count := _count + 1;
+    RAISE NOTICE '%: archived suoritus delta: %, %', _count, delta.resource_id, delta.inserted;
+  END LOOP;
+
+  RETURN _count;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+
+ALTER FUNCTION arkistoi_suoritus_deltat(integer, bigint) OWNER TO oph;
+
+-- END of archive table: suoritus
