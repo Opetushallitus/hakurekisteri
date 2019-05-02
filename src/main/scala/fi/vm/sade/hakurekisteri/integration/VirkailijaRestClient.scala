@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InputStreamReader
+import java.lang.reflect.InvocationTargetException
 import java.net.ConnectException
 import java.nio.charset.Charset
 import java.nio.file.Paths
@@ -29,6 +30,7 @@ import scala.util.{Failure, Success, Try}
 
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
+case class CasAuthenticationException(message: String, responseCode: Int) extends Exception(message)
 
 class HttpConfig(properties: Map[String, String] = Map.empty) {
   val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
@@ -85,6 +87,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   object Client {
     private def jSessionId: Future[JSessionId] = (casActor ? GetJSession).mapTo[JSessionId]
+    def refreshJSessionId: Future[JSessionId] = (casActor ? RefreshJSession).mapTo[JSessionId]
 
     import org.json4s.jackson.Serialization._
 
@@ -146,11 +149,29 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger, resource: A): Future[B] =
     Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
+      case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
+          logger.warning("Expired jsession, fetching new JSessionId")
+          Client.refreshJSessionId.flatMap (_ match {
+            case j: JSessionId =>
+              logger.warning(s"retrying request to $url due to expired JSessionId.")
+              Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
+                case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+                  if (retryCount.getAndIncrement <= maxRetries) {
+                    logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+                    Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
+                  } else Future.failed(t)
+              }
+            case _=>
+              Future.failed {
+                logger.info(s"Fetching jsession for $serviceUrl failed")
+                new Exception(s"Fetching jsession for $serviceUrl failed")
+              }
+          })
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
-        } else Future.failed(t)
+          Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
+        } else {Future.failed(t)}
     }
   private def result(t: Try[_]): String = t match {
     case Success(_) => "success"
@@ -198,12 +219,18 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, resource: A, basicAuth: Boolean, args: AnyRef*): Future[B] = {
     val retryCount = new AtomicInteger(1)
-    val url = OphUrlProperties.url(uriKey, args:_*)
-    val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
-    logLongQuery(result, url)
-    result
+    if (uriKey.equals("oppijanumerorekisteri-service.duplicatesByPersonOids")) {
+      val url = "http://localhost:8081/oppijanumerorekisteri-service/s2s/duplicateHenkilos"
+      val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+      logLongQuery(result, url)
+      result
+    } else {
+      val url = OphUrlProperties.url(uriKey, args:_*)
+      val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+      logLongQuery(result, url)
+      result
+    }
   }
-
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
@@ -264,11 +291,19 @@ object JsonExtractor extends HakurekisteriJsonSupport {
     }
     new FunctionHandler[T](f) {
       override def onCompleted(response: Res): T = {
-        if (codes.contains(response.getStatusCode))
+        if (codes.contains(response.getStatusCode) && !isRedirectToCasLogin(response))
           super.onCompleted(response)
-        else {
+        else if (isRedirectToCasLogin(response)){
+          throw new JSessionIdCookieException("JSESSIONID is expired")
+        } else {
           throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody(Charset.forName("utf-8"))}", response.getStatusCode)
         }
+      }
+
+      private def isRedirectToCasLogin(response: Res): Boolean = {
+        if (response.getUri.getPath.equals("/cas/login")) {
+          true
+        } else false
       }
     }
   }

@@ -16,6 +16,7 @@ import scala.util.{Failure, Success}
 
 case object GetJSession
 case object ClearJSession
+case object RefreshJSession
 case class JSessionId(sessionId: String)
 
 class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], jSessionName: String,
@@ -59,6 +60,17 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       })
       f pipeTo sender
       jSessionId = Some(f)
+    case RefreshJSession =>
+      val f = getJSession.andThen {
+        case Success(_) =>
+          context.system.scheduler.scheduleOnce(jSessionTtl, self, ClearJSession)
+        case Failure(t) =>
+          log.error(t, s"Refreshing jsession for $serviceUrl failed, trying again...")
+          self ! ClearJSession
+          self ! RefreshJSession
+      }
+      f pipeTo sender
+      jSessionId = Some(f)
     case ClearJSession =>
       jSessionId = None
       internalClient.client.getConfig.getCookieStore.remove(_.name().toLowerCase == jSessionName.toLowerCase)
@@ -87,7 +99,9 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
       internalClient(proxyReq).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
-          case (200, st) if TicketValidator.isValidSt(st) => st
+          case (200, st) if TicketValidator.isValidSt(st) =>
+            log.info("REMOVE THIS! ------>session id: " + st)
+            st
           case (200, st) => throw InvalidServiceTicketException(st)
           case (code, _) => throw STWasNotCreatedException(s"got non ok response from cas: $code")
         }
