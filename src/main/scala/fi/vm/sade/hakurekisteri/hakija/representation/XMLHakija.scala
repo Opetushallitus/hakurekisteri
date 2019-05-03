@@ -108,7 +108,12 @@ object XMLHakemus {
 
   def resolveYear(suoritus: VirallinenSuoritus):Option[String] = suoritus match {
     case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _, _, _) => None
-    case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _, _, _)  => Some(date.getYear.toString)
+    case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _, _, _)  =>
+      val year = date.getYear.toString
+      if (!"1970".equals(year))
+        Some(date.getYear.toString)
+      else
+        None
   }
 
   private[hakija] def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive], osaaminen: Option[XMLOsaaminen]): XMLHakemus =
