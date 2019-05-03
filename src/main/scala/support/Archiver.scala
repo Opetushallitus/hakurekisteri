@@ -2,10 +2,10 @@ package support
 
 trait Archiver {
 
-  def archive()
+  def archive(): Unit
 
-  def acquireLockForArchiving(): Seq[Boolean]
+  def acquireLockForArchiving(): Boolean
 
-  def clearLockForArchiving(): Seq[Boolean]
+  def clearLockForArchiving(): Boolean
 
 }

@@ -1,28 +1,23 @@
 package support
 
-import java.util.Calendar
-
-import akka.actor.ActorSystem
-import akka.event.Logging
-import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.tools.LambdaJob.lambdaJob
 import org.quartz.CronScheduleBuilder.cronSchedule
 import org.quartz.TriggerBuilder.newTrigger
 import org.quartz.impl.StdSchedulerFactory
+import org.slf4j.LoggerFactory
 
-import scala.sys.process.stringToProcess
-
-class ArchiveScheduler(archiver: Archiver)(implicit val system: ActorSystem) {
-  private val logger = Logging.getLogger(system, this)
+class ArchiveScheduler(archiver: Archiver) {
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def start(archiveCronExpression: String): Unit = {
     if (archiveCronExpression == null) {
-      logger.warning("Archive cronjob expression not specified, scheduler not created.")
+      logger.warn("Archive cronjob expression not specified, scheduler not created.")
       return
     }
     val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
     if (!quartzScheduler.isStarted) {
       quartzScheduler.start()
+      logger.info(s"ArchiveScheduler started, cron expression=$archiveCronExpression")
     }
 
     quartzScheduler.scheduleJob(lambdaJob(archive()),
@@ -30,16 +25,21 @@ class ArchiveScheduler(archiver: Archiver)(implicit val system: ActorSystem) {
   }
 
   def archive(): () => Unit = { () => {
-      logger.info("About to invoke archive scripts")
-      if (archiver.acquireLockForArchiving().head) {
-        logger.info("Archiving...")
-        archiver.archive()
-        archiver.clearLockForArchiving()
+      if (archiver.acquireLockForArchiving()) {
+        logger.info("Archive lock acquired, archiving...")
+        try {
+          archiver.archive()
+        }
+        finally {
+          archiver.clearLockForArchiving()
+          logger.info("Archive lock released.")
+        }
       }
       else {
-        logger.info("Did not acquire lock, most probably some other instance is right now archiving")
+        logger.info("Did not acquire archive lock, most probably some other instance is right now archiving")
       }
     }
   }
+
 }
 

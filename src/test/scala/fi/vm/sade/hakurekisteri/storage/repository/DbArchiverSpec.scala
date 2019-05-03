@@ -12,7 +12,7 @@ import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.sql.SqlAction
-import support.{ArchiveScheduler, Archiver, DbArchiver, DbJournals}
+import support.{DbJournals}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -22,7 +22,7 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
   private implicit val system = ActorSystem("test-jdbc")
   private implicit val ec: ExecutionContext = system.dispatcher
-  private implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+  private implicit val timeout: Timeout = Timeout(120, TimeUnit.SECONDS)
   private val config: MockConfig = new MockConfig
   private val journals: DbJournals = new DbJournals(config)
 
@@ -93,10 +93,10 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
 
   it should "acquire lock only once" in {
     val journalsAnotherSession: DbJournals = new DbJournals(config)
-    journals.archiver.acquireLockForArchiving().head should be(true)
-    journalsAnotherSession.archiver.acquireLockForArchiving().head should be(false)
+    journals.archiver.acquireLockForArchiving() should be(true)
+    journalsAnotherSession.archiver.acquireLockForArchiving() should be(false)
     journals.archiver.clearLockForArchiving()
-    journalsAnotherSession.archiver.acquireLockForArchiving().head should be(true)
+    journalsAnotherSession.archiver.acquireLockForArchiving() should be(true)
     journalsAnotherSession.archiver.clearLockForArchiving()
   }
 }

@@ -48,14 +48,16 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](arvosanaTable, dbLoggingConfig, config)
   override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](importBatchTable, dbLoggingConfig, config)
 
-  private def createOtherDbObjectsExplicitely() = {
-    log.info(s"Flyway database db")
-    val flyway = new Flyway()
-    flyway.setDataSource(config.databaseUrl, config.postgresUser, config.postgresPassword)
-    Timer.timed("Flyway db") { flyway.baseline(); flyway.migrate() }
+  private def createOtherDbObjectsExplicitly() = {
+    log.info(s"Initialising Flyway")
+    val flyway = Flyway.configure().dataSource(config.databaseUrl, config.postgresUser, config.postgresPassword).load()
+    Timer.timed("Flyway db") {
+      flyway.baseline()
+      flyway.migrate()
+    }
   }
   
-  createOtherDbObjectsExplicitely()
+  createOtherDbObjectsExplicitly()
 
   val archiver: Archiver = new DbArchiver(config)
 }
