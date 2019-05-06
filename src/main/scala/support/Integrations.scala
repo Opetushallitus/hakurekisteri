@@ -210,11 +210,13 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
 
-  if (Try(config.properties.getOrElse("suoritusrekisteri.use.koski.integration", "true").toBoolean).getOrElse(true)) {
+  if (KoskiUtil.koskiIntegrationInUse) {
     koskiService.refreshChangedOppijasFromKoski()
     val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
     quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
       newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+  } else {
+    logger.info("Koski-integration has been disabled by env parameter.")
   }
 
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef =

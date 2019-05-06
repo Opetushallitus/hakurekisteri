@@ -5,7 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import org.scalatra.json.JacksonJsonSupport
 import fi.vm.sade.auditlog.{Audit, Changes, Target}
 import fi.vm.sade.hakurekisteri._
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams, KoskiUtil}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
@@ -32,7 +32,11 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
 
   override protected def applicationDescription: String = "Koski integraation rest-api"
 
-  def getAdmin: User = {
+  def checkAccessAndIntegrationStatus: User = {
+    if (!KoskiUtil.koskiIntegrationInUse) {
+      logger.warning("Koski-integration has been disabled, but KoskiImporterResource was still called by user " + currentUser.get.username)
+      throw new RuntimeException(s"Koski-integration is disabled by an env parameter!")
+    }
     currentUser match {
       case Some(u) if u.isAdmin => u
       case None => throw UserNotAuthorized(s"anonymous access not allowed")
@@ -40,8 +44,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
   }
 
   get("/:oppijaOid", operation(read)) {
-
-    implicit val user: User = getAdmin
+    implicit val user: User = checkAccessAndIntegrationStatus
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
@@ -59,7 +62,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
   }
 
   post("/oppijat", operation(updateHenkilot)) {
-    implicit val user: User = getAdmin
+    implicit val user: User = checkAccessAndIntegrationStatus
     val personOids = parse(request.body).extract[Set[String]]
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
@@ -80,7 +83,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
   }
 
   get("/haku/:hakuOid", operation(updateForHaku)) {
-    implicit val user: User = getAdmin
+    implicit val user: User = checkAccessAndIntegrationStatus
     val hakuOid = params("hakuOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
