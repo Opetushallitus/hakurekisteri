@@ -17,7 +17,7 @@ class MockConfig extends Config {
   override val postgresUser = null //properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = null
   override val archiveNonCurrentAfterDays = "180"
-  override val archiveBatchSize = "20"
+  override val archiveBatchSize = "3"
 
   private val defaultDbLoggingConfig = SureDbLoggingConfig()
   override val slowQuery: Long = defaultDbLoggingConfig.slowQueryMillis

@@ -91,6 +91,20 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
     result2.head.toInt should be(0)
   }
 
+  it should "archive all what needs to be archived, even if multiple batches are needed" in {
+    val numberBiggerThanBatchSize = config.archiveBatchSize.toInt + 5
+    insertTestRecords(
+      List.range(0, numberBiggerThanBatchSize).map(i => TestData(config.archiveNonCurrentAfterDays.toInt + i, false))
+    )
+
+    journals.archiver.archive()
+
+    val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result1.head.toInt should be(0)
+    val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
+    result2.head.toInt should be(numberBiggerThanBatchSize)
+  }
+
   it should "acquire lock only once" in {
     val journalsAnotherSession: DbJournals = new DbJournals(config)
     journals.archiver.acquireLockForArchiving() should be(true)
