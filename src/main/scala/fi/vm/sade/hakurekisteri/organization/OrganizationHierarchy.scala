@@ -101,7 +101,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
     logger.info(s"Checking hakemus based permissions of ${oppijaOids.size} persons for user ${user.username}")
     if (oppijaOids.size > config.maxPersonOidCountForHakemusBasedPermissionCheck) {
       throw new IllegalArgumentException(s"Attempted to check hakemus based permissions for ${oppijaOids.size} persons, " +
-        s"which exceeds the maximum of config.maxPersonOidCountForHakemusBasedPermissionCheck.")
+        s"which exceeds the maximum of ${config.maxPersonOidCountForHakemusBasedPermissionCheck}.")
     }
     Future.sequence(oppijaOids.map(o => (hakemusBasedPermissionCheckerActor.actor ? HasPermission(user, o))
       .mapTo[Boolean]
