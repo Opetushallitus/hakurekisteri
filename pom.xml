@@ -1167,6 +1167,11 @@
         </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-lang_2.12</artifactId>
+            <version>1.0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
             <artifactId>scala-utils_2.12</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <exclusions>
