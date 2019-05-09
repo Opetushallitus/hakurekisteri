@@ -410,6 +410,12 @@ class KoskiSuoritusArvosanaParser {
         case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => KoskiUtil.deadlineDate
         case (_,_,_) => valmistuminen.valmistumisPaiva
       }
+
+      val suoritustyyppi = suoritus.tyyppi.map(_.koodiarvo) match {
+        case Some("perusopetuksenvuosiluokka") => Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo)
+        case _ => None
+      }
+
       if (komoOid != Oids.DUMMYOID && valmistuminen.vuosi > 1970) {
         val suoritus = SuoritusArvosanat(VirallinenSuoritus(
           komo = komoOid,
@@ -422,6 +428,7 @@ class KoskiSuoritusArvosanaParser {
           opiskeluoikeus = None,
           vahv = true,
           lahde = KoskiUtil.koski_integration_source,
+          suoritustyyppi = suoritustyyppi,
           lahdeArvot = lahdeArvot), arvosanat, luokka, lasnaDate, luokkataso)
         result = result :+ suoritus
       }
@@ -549,6 +556,7 @@ class KoskiSuoritusArvosanaParser {
         opiskeluoikeus = None,
         vahv = true,
         lahde = KoskiUtil.koski_integration_source,
+        suoritustyyppi = useSuoritus.suoritustyyppi,
         lahdeArvot = useSuoritus.lahdeArvot), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
     })
   }
