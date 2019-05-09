@@ -160,13 +160,7 @@ case class VirallinenSuoritus(komo: String,
                               lahdeArvot: Map[String,String] = Map.empty
                               ) extends Suoritus(henkilo, vahv, lahde)  {
 
-  private val useTyyppi: Option[String] = if (Oids.valmaKomoOid.equals(komo) || Oids.lukioonvalmistavaKomoOid.equals(komo)) {
-    Some("perusopetuksen oppiaineen suoritus")
-  } else {
-    suoritustyyppi
-  }
-
-  override val core = VirallinenSisalto(henkilo, komo, myontaja, vahv, useTyyppi.orNull)
+  override val core = VirallinenSisalto(henkilo, komo, myontaja, vahv, suoritustyyppi.orNull)
 
   override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source, suoritustyyppi, lahdeArvot) with Identified[UUID] {
     val id: UUID = identity
