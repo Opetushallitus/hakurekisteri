@@ -349,6 +349,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.get, viimeisimmat)
   }
 
+  private def suoritusDuplicates(suoritukset: Seq[SuoritusArvosanat]): Seq[Seq[SuoritusArvosanat]] = {
+    suoritukset.groupBy(_.suoritus.core).collect {
+      case (_, suoritusarvosanat) if suoritusarvosanat.size > 1 => suoritusarvosanat
+    }.toSeq
+  }
+
   def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
                                     personOidsWithAliases: PersonOidsWithAliases,
                                     params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
@@ -357,6 +363,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
     if (muidenSuoritukset.nonEmpty) {
       return Future.successful(Seq(Left(new RuntimeException(s"Henkilön $henkiloOid Koskitiedoista syntyi suorituksia muille henkilöille ${muidenSuoritukset.map(_.suoritus.henkilo).mkString(", ")}"))))
+    }
+    val duplicates = suoritusDuplicates(suoritukset)
+    if (duplicates.nonEmpty) {
+      val msg = duplicates.map(d => s"${d.size} suoritusta ${d.head.suoritus.core}").mkString(", ")
+      return Future.successful(Seq(Left(new RuntimeException(s"Henkilön $henkiloOid Koskitiedoista syntyi useita samoja suorituksia: $msg"))))
     }
     overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkiloOid, suoritukset, personOidsWithAliases, params)
   }
