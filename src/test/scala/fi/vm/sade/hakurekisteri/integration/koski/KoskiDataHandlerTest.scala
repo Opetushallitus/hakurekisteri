@@ -136,8 +136,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEN")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
   it should "parse 7 course LUVA data as keskeytynyt after deadline date" in {
@@ -154,8 +153,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEYTYNYT")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
   it should "parse 23 course LUVA data as kesken before deadlinedate" in {
@@ -174,8 +172,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEN")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
   it should "parse 23 course LUVA data as keskeytynyt after deadlinedate" in {
@@ -194,8 +191,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEYTYNYT")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
 
@@ -215,8 +211,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEN")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
   it should "parse vahvistettu 23 course LUVA data as keskeytynyt after deadline" in {
@@ -235,8 +230,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("KESKEYTYNYT")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
 
@@ -254,8 +248,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.suoritus shouldBe a [VirallinenSuoritus]
     val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
     virallinen.tila should equal("VALMIS")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
+    virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
 
   it should "parse VALMA data" in {
@@ -274,9 +267,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.arvosanat should have length 0
 
     virallinen.tila should equal("VALMIS")
-
-    virallinen.core.tyyppi should be("perusopetuksen oppiaineen suoritus")
-
+    virallinen.komo should equal(Oids.valmaKomoOid)
   }
 
 /*
