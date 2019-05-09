@@ -297,22 +297,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
   private def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Future[Seq[Unit]] = {
-    // Only virallinen suoritus
-    val koskiVirallisetSuoritukset: Seq[VirallinenSuoritus] = henkilonSuoritukset.map(h => h.suoritus).flatMap {
-      case s: VirallinenSuoritus => Some(s)
-      case _ => None
-    }
-
-    val fetchedVirallisetSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedSuoritukset.filter(s => s.source.equals(KoskiUtil.koski_integration_source)).flatMap {
-      case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
-      case _ => None
-    }
-
-    val toBeDeletedSuoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = fetchedVirallisetSuoritukset.filterNot(s1 => koskiVirallisetSuoritukset.exists(s2 => s1.myontaja.equals(s2.myontaja) && s1.komo.equals(s2.komo)))
-    Future.sequence(toBeDeletedSuoritukset.map(suoritus => {
-      logger.info("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + suoritus.id + ". Deleting it")
-      deleteArvosanatAndSuorituksetAndOpiskelija(suoritus, henkilöOid)
-    }))
+    Future.sequence(fetchedSuoritukset
+      .collect {
+        case s: VirallinenSuoritus with Identified[UUID @unchecked] if s.source == KoskiUtil.koski_integration_source && !henkilonSuoritukset.exists(_.suoritus.core == s.core) =>
+          logger.info("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + s.id + ". Deleting it")
+          deleteArvosanatAndSuorituksetAndOpiskelija(s, henkilöOid)
+      })
   }
 
   private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
