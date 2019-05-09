@@ -132,9 +132,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("KESKEN")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -149,9 +147,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("KESKEYTYNYT")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -168,9 +164,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     numcourses shouldBe 23
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("KESKEN")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -187,9 +181,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     numcourses shouldBe 23
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("KESKEYTYNYT")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -207,9 +199,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     numcourses shouldBe 23
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus: SuoritusArvosanat = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("KESKEN")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -226,9 +216,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     numcourses shouldBe 23
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus: SuoritusArvosanat = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("KESKEYTYNYT")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -244,9 +232,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     numcourses shouldBe 25
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
     virallinen.tila should equal("VALMIS")
     virallinen.komo should equal(Oids.lukioonvalmistavaKomoOid)
   }
@@ -258,14 +244,10 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(KoskiKoodi("ammatillinenkoulutus", "opiskeluoikeudentyyppi"))
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = result.head.suoritus
 
     //VALMA arvosanas should not be saved
-    suoritus.arvosanat should have length 0
-
+    result.head.arvosanat should have length 0
     virallinen.tila should equal("VALMIS")
     virallinen.komo should equal(Oids.valmaKomoOid)
   }
@@ -279,12 +261,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result: Seq[SuoritusArvosanat] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    virallinen.tila should equal("KESKEYTYNYT")
+    result.head.suoritus.tila should equal("KESKEYTYNYT")
   }
 */
   it should "parse peruskoulu_lisäopetus.json data" in {
@@ -294,12 +271,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    virallinen.tila should equal("VALMIS")
+    result.head.suoritus.tila should equal("VALMIS")
   }
 
   it should "parse peruskoulu_lisäopetus.json arvosanat" in {
@@ -309,14 +281,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 1
-
-    val suoritus = result.head
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    virallinen.tila should equal("VALMIS")
-
-    suoritus.arvosanat should have length 13
+    result.head.suoritus.tila should equal("VALMIS")
+    result.head.arvosanat should have length 13
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt after deadline" in {
@@ -331,15 +297,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
 
-    val suoritus = result(2)
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-
-    suoritus.arvosanat should have length 0
+    result(2).arvosanat should have length 0
 
     val paattotodistus = result(3)
     getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
 
-    val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinenpaattotodistus = paattotodistus.suoritus
     virallinenpaattotodistus.komo shouldNot be("luokka")
     paattotodistus.arvosanat should have length 0
     virallinenpaattotodistus.tila should equal("KESKEYTYNYT")
@@ -359,15 +322,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
 
-    val suoritus = result(2)
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-
-    suoritus.arvosanat should have length 0
+    result(2).arvosanat should have length 0
 
     val paattotodistus = result(3)
     getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
 
-    val virallinenpaattotodistus = paattotodistus.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinenpaattotodistus = paattotodistus.suoritus
     virallinenpaattotodistus.komo shouldNot be("luokka")
     paattotodistus.arvosanat should have length 0
     virallinenpaattotodistus.tila should equal("KESKEYTYNYT")
@@ -386,7 +346,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     val pt = getPerusopetusPäättötodistus(result)
-    pt.get.suoritus.asInstanceOf[VirallinenSuoritus].tila shouldBe "KESKEYTYNYT"
+    pt.get.suoritus.tila shouldBe "KESKEYTYNYT"
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_ei_vahvistusta_yksi_nelonen.json data" in {
@@ -400,7 +360,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     val pt = getPerusopetusPäättötodistus(result).get
-    pt.suoritus.asInstanceOf[VirallinenSuoritus].tila shouldEqual "VALMIS"
+    pt.suoritus.tila shouldEqual "VALMIS"
     pt.arvosanat should have length 18
   }
 
@@ -421,12 +381,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     result should have length 4
     getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
-    val suoritus = result(2)
-    suoritus.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    virallinen.tila should equal("VALMIS")
-
+    result(2).suoritus.tila should equal("VALMIS")
 
     val henkilo2 = henkiloList(1)
     henkilo2 should not be null
@@ -437,11 +392,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val result2 = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result2 should have length 4
 
-    val suoritus2 = result2(2)
-    suoritus2.suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen2 = suoritus.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    virallinen2.tila should equal("VALMIS")
+    result2(2).suoritus.tila should equal("VALMIS")
   }
 
   it should "parse arvosanat from peruskoulu_9_luokka_päättötodistus.json" in {
@@ -453,12 +404,9 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     result should have length 4
     val pt = getPerusopetusPäättötodistus(result).get
     pt.luokka shouldEqual "9C"
-    pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2016-06-04")
+    pt.suoritus.valmistuminen shouldEqual LocalDate.parse("2016-06-04")
 
     peruskouluB2KieletShouldNotBeValinnainen(result)
-    val ysi = getYsiluokat(result).head
-    val virallinenysi = ysi.suoritus.asInstanceOf[VirallinenSuoritus]
-
   }
 
   it should "not parse arvosanat from peruskoulu_9_luokka_päättötodistus_vahvistus_4_6_2018_jälkeen.json" in {
@@ -508,7 +456,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     result should have length 1
 
     val suoritusArvosanat = result.head
-    val virallinensuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
     val arvosanat = suoritusArvosanat.arvosanat
 /*
     val expectedAineet: Set[String] = Set("AI", "A1", "B1", "B3", "MA", "BI", "GE", "FY", "KE", "KT", "FI", "PS", "HI", "YH", "LI", "MU", "KU", "TE", "ITT", "TO", "OA")
@@ -518,7 +465,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
 
-    virallinensuoritus.tila shouldEqual "VALMIS"
+    suoritusArvosanat.suoritus.tila shouldEqual "VALMIS"
     arvosanat.forall(_.valinnainen == false) shouldEqual true
   }
 
@@ -532,7 +479,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     result should have length 1
 
     val suoritusArvosanat = result.head
-    val virallinensuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
     val arvosanat = suoritusArvosanat.arvosanat
 
 
@@ -540,7 +486,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val aineet: Set[String] = arvosanat.map(a => a.aine).toSet
 
     aineet.toSeq.sorted shouldEqual expectedAineet.toSeq.sorted
-    virallinensuoritus.tila shouldEqual "VALMIS"
+    suoritusArvosanat.suoritus.tila shouldEqual "VALMIS"
 
 
     val arvosanatuple = arvosanat.map(a => (a.aine, a.valinnainen)).toSet
@@ -650,7 +596,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritusarvosanat should have length 1
     val suoritusarvosana = suoritusarvosanat.head
     suoritusarvosana.arvosanat.exists(_.aine == "HI") shouldBe true
-    val virallinensuoritus = suoritusarvosana.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinensuoritus = suoritusarvosana.suoritus
     virallinensuoritus.komo shouldEqual Oids.perusopetuksenOppiaineenOppimaaraOid
 
     val luokkaAste = Some(9)
@@ -678,11 +624,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     resultGroup should have length 1
     val result = resultGroup.head
-    val resultByOrg = result.groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
+    val resultByOrg = result.groupBy(_.suoritus.myontaja)
 
     resultByOrg.keys.toSeq.sorted shouldEqual Seq("1.2.246.562.10.11111111")
 
-    resultByOrg("1.2.246.562.10.11111111").filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
+    resultByOrg("1.2.246.562.10.11111111").filter(_.suoritus.komo.contentEquals(Oids.perusopetuksenOppiaineenOppimaaraOid)) should have length 1
 
     resultByOrg("1.2.246.562.10.11111111").head.arvosanat.map(a => a.aine.concat(a.arvio match {
       case Arvio410(arvosana) => arvosana
@@ -691,8 +637,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
       case ArvioHyvaksytty(arvosana) => if (arvosana.contentEquals("hylatty")) "H" else arvosana
     })).sorted shouldEqual myöntäjäOrgAineet.sorted
 
-    resultByOrg("1.2.246.562.10.11111111").head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual LocalDate.parse("2018-02-19")
-    resultByOrg("1.2.246.562.10.11111111").head.suoritus.asInstanceOf[VirallinenSuoritus].myontaja shouldEqual "1.2.246.562.10.11111111"
+    resultByOrg("1.2.246.562.10.11111111").head.suoritus.valmistuminen shouldEqual LocalDate.parse("2018-02-19")
+    resultByOrg("1.2.246.562.10.11111111").head.suoritus.myontaja shouldEqual "1.2.246.562.10.11111111"
   }
 
   it should "parse testi_satu_valinnaiset.json" in {
@@ -804,14 +750,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val arvosanat = res.head
     arvosanat should have length 3
 
-    val ptodistus = arvosanat.head
-    val suoritus = ptodistus.suoritus
-    suoritus shouldBe a [VirallinenSuoritus]
-    val virallinen = suoritus.asInstanceOf[VirallinenSuoritus]
-
     val expectedDate = LocalDate.parse("2018-05-07", DateTimeFormat.forPattern("yyyy-MM-dd"))
-
-    virallinen.valmistuminen shouldBe expectedDate
+    arvosanat.head.suoritus.valmistuminen shouldBe expectedDate
 
   }
 
@@ -838,7 +778,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val suor: SuoritusArvosanat = res.head
     suor.suoritus should not be null
-    val virallinen = suor.suoritus.asInstanceOf[VirallinenSuoritus]
+    val virallinen = suor.suoritus
     virallinen.komo shouldEqual Oids.lisaopetusKomoOid
     virallinen.tila shouldEqual "KESKEN"
   }
@@ -859,10 +799,9 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     res.exists(_.luokka.contentEquals("9D")) shouldEqual true
 
     val luokkatieto = res.filter(_.luokka.contentEquals("9D")).head
-    val virallinensuoritus = luokkatieto.suoritus.asInstanceOf[VirallinenSuoritus]
-    virallinensuoritus.tila shouldEqual "KESKEN"
+    luokkatieto.suoritus.tila shouldEqual "KESKEN"
 
-    val päättötodistus = res.filter(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid)).head
+    val päättötodistus = res.filter(_.suoritus.komo.contentEquals(Oids.perusopetusKomoOid)).head
 
     res.foreach {
       case SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
@@ -881,7 +820,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     }
 
     //päättötodistus.luokka shouldBe empty
-    //päättötodistus.suoritus.asInstanceOf[VirallinenSuoritus].tila shouldEqual "KESKEN"
+    //päättötodistus.suoritus.tila shouldEqual "KESKEN"
     //päättötodistus.suoritus.vahvistettu shouldBe false
 
   }
@@ -897,8 +836,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val pt = getPerusopetusPäättötodistus(resgroup.head).get
     val ysiluokat = getYsiluokat(resgroup.head)
     ysiluokat should have length 1
-    ysiluokat.head.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual KoskiUtil.deadlineDate.toString("dd.MM.YYYY")
-    pt.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
+    ysiluokat.head.suoritus.valmistuminen.toString("dd.MM.YYYY") shouldEqual KoskiUtil.deadlineDate.toString("dd.MM.YYYY")
+    pt.suoritus.valmistuminen.toString("dd.MM.YYYY") shouldEqual "01.06.2017"
 
   }
 
@@ -1037,7 +976,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val arvosanat = result.head
 
     val expectedDate = LocalDate.parse("2018-05-15")
-    arvosanat.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen shouldEqual expectedDate
+    arvosanat.suoritus.valmistuminen shouldEqual expectedDate
   }
 
   it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset2.json" in {
@@ -1073,12 +1012,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
-
-    val arvosanat = result.head.arvosanat
-    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    arvosanat should have length 0
-    virallinensuoritus.tila shouldEqual "KESKEYTYNYT"
+    result.head.arvosanat should have length 0
+    result.head.suoritus.tila shouldEqual "KESKEYTYNYT"
   }*/
 
   /*it should "parse vahvistamaton telma_testi_valmis.json as kesken before deadline date" in {
@@ -1094,12 +1029,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
-
-    val arvosanat = result.head.arvosanat
-    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    arvosanat should have length 0
-    virallinensuoritus.tila shouldEqual "KESKEN"
+    result.head.arvosanat should have length 0
+    result.head.suoritus.tila shouldEqual "KESKEN"
   }*/
 
 
@@ -1119,12 +1050,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
-
-    val arvosanat = result.head.arvosanat
-    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    arvosanat should have length 0
-    virallinensuoritus.tila shouldEqual "KESKEYTYNYT"
+    result.head.arvosanat should have length 0
+    result.head.suoritus.tila shouldEqual "KESKEYTYNYT"
   }*/
 
 
@@ -1141,12 +1068,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     resultgrp should have length 1
     val result = resultgrp.head
     result should have length 1
-
-    val arvosanat = result.head.arvosanat
-    val virallinensuoritus = result.head.suoritus.asInstanceOf[VirallinenSuoritus]
-
-    arvosanat should have length 0
-    virallinensuoritus.tila shouldEqual "KESKEN"
+    result.head.arvosanat should have length 0
+    result.head.suoritus.tila shouldEqual "KESKEN"
   }*/
 
   it should "parse kielivalinnaisuustest.json" in {
@@ -2661,11 +2584,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
-    arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
+    arvosanat.find(_.suoritus.komo.contentEquals(Oids.perusopetusKomoOid))
   }
 
   def getYsiluokat(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
-    val luokat = arvosanat.filter(a => a.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals("luokka") && a.luokka.startsWith("9"))
+    val luokat = arvosanat.filter(a => a.suoritus.komo.contentEquals("luokka") && a.luokka.startsWith("9"))
     luokat
   }
 

@@ -18,14 +18,11 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SuoritusArvosanat(suoritus: Suoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String]) {
+case class SuoritusArvosanat(suoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnadate: LocalDate, luokkataso: Option[String]) {
   def peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(henkilonSuoritukset: Seq[SuoritusArvosanat]): Boolean = {
-    suoritus match {
-      case v: VirallinenSuoritus =>
-        v.komo.equals(Oids.perusopetusKomoOid) &&
-          (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9")) || luokkataso.getOrElse("").equals(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE))
-      case _ => false
-    }
+    suoritus.komo.equals(Oids.perusopetusKomoOid) &&
+      (henkilonSuoritukset.exists(_.luokkataso.getOrElse("").startsWith("9")) ||
+        luokkataso.getOrElse("").equals(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE))
   }
 
 }
@@ -311,12 +308,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
       if (!params.saveLukio) {
-        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.lukioKomoOid))
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
       }
       if (!params.saveAmmatillinen) {
-        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.erikoisammattitutkintoKomoOid))
-          .filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinentutkintoKomoOid))
-          .filterNot(s => s.suoritus.asInstanceOf[VirallinenSuoritus].komo.equals(Oids.ammatillinenKomoOid))
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.erikoisammattitutkintoKomoOid))
+          .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinentutkintoKomoOid))
+          .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinenKomoOid))
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid).recoverWith{ case e: Exception =>
