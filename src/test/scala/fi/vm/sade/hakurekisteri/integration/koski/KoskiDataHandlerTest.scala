@@ -1226,13 +1226,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
-    val opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
+    val opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat1.size should equal(2)
-    val opiskelija1 = opiskelijat1.head
-    val suoritukset1 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = true and henkilo_oid = $opiskelija1".as[String]))
+    val suoritukset1 = run(database.run(sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
     suoritukset1.size should equal(2)
-    val suoritus1 = suoritukset1.head
-    val arvosanat1 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus1".as[String]))
+    val arvosanat1 = run(database.run(sql"select * from arvosana where not deleted and current and suoritus in (select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid)".as[String]))
     arvosanat1 should have length 18
 
     json = scala.io.Source.fromFile(jsonDir + "koskidata_1amm.json").mkString
@@ -1243,13 +1241,13 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
 
-    val opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
+    val opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where not deleted and current  and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat2.size should equal(1)
     val opiskelija2 = opiskelijat2.head
-    val suoritukset2 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and komo = 'ammatillinentutkinto komo oid' and henkilo_oid = $opiskelija2".as[String]))
+    val suoritukset2 = run(database.run(sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
     suoritukset2.size should equal(1)
     val suoritus2 = suoritukset2.head
-    val arvosanat2 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus2".as[String]))
+    val arvosanat2 = run(database.run(sql"select * from arvosana where not deleted and current and suoritus in (select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid)".as[String]))
     arvosanat2 should have length 0
 
 
@@ -1260,13 +1258,13 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
-    val opiskelijat3 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
+    val opiskelijat3 = run(database.run(sql"select henkilo_oid from opiskelija where not deleted and current  and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat3.size should equal(1)
     val opiskelija3 = opiskelijat3.head
-    val suoritukset3 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and komo = 'TODO lukio komo oid' and henkilo_oid = $opiskelija3".as[String]))
+    val suoritukset3 = run(database.run(sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
     suoritukset3.size should equal(1)
     val suoritus3 = suoritukset3.head
-    val arvosanat3 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus3".as[String]))
+    val arvosanat3 = run(database.run(sql"select * from arvosana where not deleted and current and suoritus in (select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid)".as[String]))
     arvosanat3 should have length 4
   }
 
@@ -1294,13 +1292,11 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
-    var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and henkilo_oid = $henkiloOid".as[String]))
+    var opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
     opiskelijat1.size should equal(2)
-    var opiskelija1 = opiskelijat1.head
-    var suoritukset1 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = true and henkilo_oid = $opiskelija1".as[String]))
+    var suoritukset1 = run(database.run(sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
     suoritukset1.size should equal(2)
-    var suoritus1 = suoritukset1.head
-    var arvosanat1 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus1".as[String]))
+    var arvosanat1 = run(database.run(sql"select * from arvosana where not deleted and current and suoritus in (select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid)".as[String]))
     arvosanat1 should have length 18
 
     //Päivitetään peruskoulusuoritus ei koskesta tulleeksi:
@@ -1308,14 +1304,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     run(database.run(sql"update suoritus set source = '1.2.246.562.24.35939175712' where myontaja = '1.2.246.562.10.33327422946'".as[String]))
     run(database.run(sql"update arvosana set source = '1.2.246.562.24.35939175712' where source = 'koski'".as[String]))
 
-    opiskelijat1 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and source = '1.2.246.562.24.35939175712' and henkilo_oid = $henkiloOid".as[String]))
-    opiskelijat1.size should equal(1)
-    opiskelija1 = opiskelijat1.head
-    suoritukset1 = run(database.run(sql"select resource_id from suoritus where deleted = false and source = '1.2.246.562.24.35939175712' and current = true and henkilo_oid = $opiskelija1".as[String]))
-    suoritukset1.size should equal(1)
-    suoritus1 = suoritukset1.head
-    arvosanat1 = run(database.run(sql"select * from arvosana where deleted = false and suoritus = $suoritus1 and current = true".as[String]))
-    arvosanat1 should have length 18
+    val opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where not deleted and current and source = '1.2.246.562.24.35939175712' and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat2.size should equal(1)
+    val suoritukset2 = run(database.run(sql"select resource_id from suoritus where not deleted and current and source = '1.2.246.562.24.35939175712' and henkilo_oid = $henkiloOid".as[String]))
+    suoritukset2.size should equal(1)
+    val arvosanat2 = run(database.run(sql"select * from arvosana where not deleted and current and suoritus in (select resource_id from suoritus where not deleted and current and source = '1.2.246.562.24.35939175712' and henkilo_oid = $henkiloOid)".as[String]))
+    arvosanat2 should have length 18
 
     json = scala.io.Source.fromFile(jsonDir + "koskidata_lukio.json").mkString
     henkilo = parse(json).extract[KoskiHenkiloContainer]
@@ -1325,15 +1319,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
-    val opiskelijat2 = run(database.run(sql"select henkilo_oid from opiskelija where deleted = false and current = true and henkilo_oid = $henkiloOid".as[String]))
-    opiskelijat2.size should equal(2)
-    val opiskelija2 = opiskelijat2.head
-    var suoritukset2 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and henkilo_oid = $opiskelija2".as[String]))
-    suoritukset2.size should equal(2)
-    suoritukset2 = run(database.run(sql"select resource_id from suoritus where deleted = false and current = 'true' and source = '1.2.246.562.24.35939175712' and henkilo_oid = $opiskelija2".as[String]))
-    var suoritus2 = suoritukset2.head
-    val arvosanat2 = run(database.run(sql"select * from arvosana where deleted = false and current = true and suoritus = $suoritus2".as[String]))
-    arvosanat2 should have length 18
+    val opiskelijat3 = run(database.run(sql"select henkilo_oid from opiskelija where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
+    opiskelijat3.size should equal(2)
+    val suoritukset3 = run(database.run(sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid".as[String]))
+    suoritukset3.size should equal(2)
+    val arvosanat3 = run(database.run(sql"select * from arvosana where not deleted and current and suoritus in (select resource_id from suoritus where not deleted and current and source = '1.2.246.562.24.35939175712' and henkilo_oid = $henkiloOid)".as[String]))
+    arvosanat3 should have length 18
   }
 
   it should "store only peruskoulusuoritus when KoskiSuoritusHakuParams.saveAmmatillinen is false" in {

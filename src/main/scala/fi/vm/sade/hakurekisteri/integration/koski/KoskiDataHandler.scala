@@ -346,25 +346,19 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     if (henkilo.opiskeluoikeudet.size > viimeisimmat.size) {
       logger.info("Filtteröitiin henkilöltä " + henkilo.henkilö.oid + " pois yksi tai useampia opiskeluoikeuksia. Ennen filtteröintiä: " + henkilo.opiskeluoikeudet.size + ", jälkeen: " + viimeisimmat.size)
     }
-    suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.getOrElse(""), viimeisimmat)
+    suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.get, viimeisimmat)
   }
 
   def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
                                     personOidsWithAliases: PersonOidsWithAliases,
                                     params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
-
-    koskihenkilöcontainer.henkilö.oid match {
-      case Some(henkilöOid) => {
-        val henkilonSuoritukset: Seq[SuoritusArvosanat] = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
-          .filter(s => henkilöOid.equals(s.suoritus.henkiloOid))
-
-        henkilonSuoritukset match {
-          case Nil => Future.successful(Seq(Right(None)))
-          case _ => overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid, henkilonSuoritukset, personOidsWithAliases, params)
-        }
-      }
-      case None => Future.successful(Seq(Right(None)))
+    val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
+    val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
+    val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
+    if (muidenSuoritukset.nonEmpty) {
+      return Future.successful(Seq(Left(new RuntimeException(s"Henkilön $henkiloOid Koskitiedoista syntyi suorituksia muille henkilöille ${muidenSuoritukset.map(_.suoritus.henkilo).mkString(", ")}"))))
     }
+    overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkiloOid, suoritukset, personOidsWithAliases, params)
   }
 }
 
