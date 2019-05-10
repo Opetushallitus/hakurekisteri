@@ -317,8 +317,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid).recoverWith{ case e: Exception =>
-        logger.error(s"Koski-opiskelijan poisto henkilölle ${henkilöOid} epäonnistui.", e)
-        Future.successful(Seq(Left(e)))
+        Future.successful(Seq(Left(new RuntimeException(s"Koski-opiskelijan poisto henkilölle $henkilöOid epäonnistui.", e))))
       }.flatMap(_ =>
         Future.sequence(tallennettavatSuoritukset.map {
           case s@SuoritusArvosanat(useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String]) =>
@@ -334,16 +333,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
             }
           } catch {
             case e: Exception =>
-              logger.warn(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
-              Future.successful(Left(e))
+              Future.successful(Left(new RuntimeException(s"Koski-suoritusarvosanojen $s tallennus henkilölle $henkilöOid epäonnistui.", e)))
           }
           case _ => Future.successful(Right(None))
         })
-
-      ).map{x =>
-        logger.info(s"Koski-suoritusten tallennus henkilölle ${henkilöOid} valmis.")
-        x
-      }
+      )
     })
   }
 

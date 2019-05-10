@@ -222,12 +222,21 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     if (loytyyHenkiloOidi.size < filteredHenkilot.size) {
       logger.info(s"saveKoskiHenkilotAsSuorituksetAndArvosanat: Filteröitiin ${filteredHenkilot.size - loytyyHenkiloOidi.size} henkilöä joilla ei oidia.")
     }
-    Future.sequence(loytyyHenkiloOidi.map(henkilo => koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)), params).map(results => {
-      if (results.exists(_.isLeft)) {
-        Left(henkilo.henkilö.oid.get)
-      } else {
-        Right(henkilo.henkilö.oid.get)
-      }
-    }))).map(results => (results.collect { case Left(oid) => oid }, results.collect { case Right(oid) => oid }))
+    Future.sequence(loytyyHenkiloOidi.map(henkilo =>
+      (try {
+        koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)), params)
+      } catch {
+        case e: Exception => Future.successful(Seq(Left(e)))
+      }).map(results => {
+        val es = results.collect { case Left(e) => e }
+        es.foreach(e => logger.error(e, s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} epäonnistui"))
+        if (es.isEmpty) {
+          logger.info(s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} onnistui")
+          Right(henkilo.henkilö.oid.get)
+        } else {
+          Left(henkilo.henkilö.oid.get)
+        }
+      })
+    )).map(results => (results.collect { case Left(oid) => oid }, results.collect { case Right(oid) => oid }))
   }
 }
