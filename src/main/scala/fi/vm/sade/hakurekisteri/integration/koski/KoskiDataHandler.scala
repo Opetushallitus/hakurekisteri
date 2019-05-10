@@ -338,7 +338,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.getOrElse(""), viimeisimmat)
   }
 
-  def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
+  def   processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
                                     personOidsWithAliases: PersonOidsWithAliases,
                                     params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
 
