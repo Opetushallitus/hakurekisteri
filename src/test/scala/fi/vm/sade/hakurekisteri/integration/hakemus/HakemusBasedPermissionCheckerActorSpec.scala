@@ -98,6 +98,21 @@ class HakemusBasedPermissionCheckerActorSpec extends FlatSpec with Matchers with
      }
    }
 
+  it should "return true if Ataru returns true even if Haku-app is too slow" in {
+     withSystem { system =>
+       when(hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(200, permissionRequest)).
+         thenAnswer(new Answer[Future[PermissionResponse]] {
+           override def answer(invocation: InvocationOnMock): Future[PermissionResponse] = Future {
+             Thread.sleep(10 * timeout.duration.toMillis)
+             throw new RuntimeException("This Haku-app response should come so slow that it isn't even seen.")
+           }
+         })
+       when(ataruClient.postObject[PermissionRequest, PermissionResponse]("ataru.permissioncheck")(200, permissionRequest)).
+         thenReturn(Future.successful(PermissionResponse(Some(true))))
+       run(actor(system) ? HasPermission(user, oppijanumero)) should equal(true)
+     }
+   }
+
   private def actor(system: ActorSystem): ActorRef = {
     system.actorOf(Props(new HakemusBasedPermissionCheckerActor(hakuAppClient, ataruClient, organisaatioActor, new MockDevConfig)))
   }
