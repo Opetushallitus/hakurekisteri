@@ -215,29 +215,19 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   private def saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot: Seq[KoskiHenkiloContainer], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
     val filteredHenkilot: Seq[KoskiHenkiloContainer] = removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
-    var successes: Seq[String] = Seq[String]()
-    var failures: Seq[String] = Seq[String]()
-    if(filteredHenkilot.nonEmpty) {
-       Future.sequence(
-         filteredHenkilot.map(henkilo =>
-          koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(henkilo.henkilö.oid.toSet), params).map {
-            henkiloResult => {
-              if (henkiloResult.exists(_.isLeft)) {
-                Left(henkilo.henkilö.oid.get)
-              } else {
-                Right(henkilo.henkilö.oid.get)
-              }
-            }
-          }
-        )
-      ).flatMap {results =>
-         successes = results.collect { case Right(r) => r }
-         failures = results.collect { case Left(l) => l }
-         Future.successful((failures, successes))}
-    } else {
-      logger.info("saveKoskiHenkilotAsSuorituksetAndArvosanat: henkilölistaus tyhjä. Ennen filtteröintiä {}, jälkeen {}.", henkilot.size, filteredHenkilot.size)
-      Future.successful(failures, successes)
+    if (filteredHenkilot.size < henkilot.size) {
+      logger.info(s"saveKoskiHenkilotAsSuorituksetAndArvosanat: Filteröitiin ${henkilot.size - filteredHenkilot.size} henkilöä.")
     }
-
+    val loytyyHenkiloOidi = filteredHenkilot.filter(_.henkilö.oid.isDefined)
+    if (loytyyHenkiloOidi.size < filteredHenkilot.size) {
+      logger.info(s"saveKoskiHenkilotAsSuorituksetAndArvosanat: Filteröitiin ${filteredHenkilot.size - loytyyHenkiloOidi.size} henkilöä joilla ei oidia.")
+    }
+    Future.sequence(loytyyHenkiloOidi.map(henkilo => koskiDataHandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)), params).map(results => {
+      if (results.exists(_.isLeft)) {
+        Left(henkilo.henkilö.oid.get)
+      } else {
+        Right(henkilo.henkilö.oid.get)
+      }
+    }))).map(results => (results.collect { case Left(oid) => oid }, results.collect { case Right(oid) => oid }))
   }
 }
