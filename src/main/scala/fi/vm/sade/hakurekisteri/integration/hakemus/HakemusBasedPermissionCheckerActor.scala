@@ -4,9 +4,10 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
+import fi.vm.sade.scala.future.OphFutures
 import org.json4s.jackson.Serialization
 import support.TypedActorRef
 
@@ -71,12 +72,8 @@ class HakemusBasedPermissionCheckerActor(hakuAppClient: VirkailijaRestClient,
     log.debug(s"hasPermissionFor method called with arguments forPerson == $forPerson , orgs == $orgs")
     Future.sequence(orgs.map(oid => (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]))
       .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
-      .flatMap(orgs => {
-        checkHakuApp(forPerson, orgs).zip(checkAtaru(forPerson, orgs)).map {
-          case (false, false) => false
-          case _ => true
-        }
-      })
+      .flatMap(orgs =>
+        OphFutures.parallelOr(checkHakuApp(forPerson, orgs), checkAtaru(forPerson, orgs)))
   }
 
   override def receive: Receive = {

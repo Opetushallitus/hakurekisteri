@@ -1167,6 +1167,11 @@
         </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-lang_2.12</artifactId>
+            <version>1.0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
             <artifactId>scala-utils_2.12</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <exclusions>
@@ -1706,18 +1711,36 @@
             <name>oph-releases</name>
             <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local/</url>
             <layout>default</layout>
-        </repository>
-        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+          </repository>
+      <repository>
             <id>Sonatype</id>
             <name>Sonatype</name>
             <url>http://oss.sonatype.org/content/repositories/releases/</url>
             <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
             <id>Sonatypesnapshots</id>
             <name>Sonatype snapshots</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
             <layout>default</layout>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
         <repository>
             <id>clojarsorg</id>
