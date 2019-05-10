@@ -40,6 +40,4 @@ class ArchiveScheduler(archiver: Archiver) {
       }
     }
   }
-
 }
-
