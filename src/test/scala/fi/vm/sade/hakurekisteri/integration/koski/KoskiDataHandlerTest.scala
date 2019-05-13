@@ -90,7 +90,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     henkilo.opiskeluoikeudet.size should equal (7) //Sisältää 7 eri opiskeluoikeutta, joista kaksi ammatillista, kaksi lukiota ja kolme perusopetusta.
 
-    val filteredOikeudes = koskiDatahandler.ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet, henkilo.henkilö.oid)
+    val filteredOikeudes = koskiDatahandler.halututOpiskeluoikeudetJaSuoritukset(henkilo.henkilö.oid.get, henkilo.opiskeluoikeudet)
 
     filteredOikeudes.size should equal (4)
 

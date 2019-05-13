@@ -43,13 +43,13 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     oo.suoritukset.exists(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "9"))
   }
 
-  private def getViimeisinOpiskeluoikeusjakso(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[KoskiOpiskeluoikeus] = {
-    val lasna = oikeudet
-      .filter(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "lasna"))
+  private def getViimeisinOpiskeluoikeusjakso(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[(KoskiOpiskeluoikeus, Seq[KoskiOpiskeluoikeus])] = {
+    val (lasna, eiLasna) = oikeudet
       .sortBy(_.tila.opiskeluoikeusjaksot.map(_.alku).max)
-    val lasnaEikaEronnut = lasna
-      .filterNot(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "eronnut"))
-    lasnaEikaEronnut.lastOption.orElse(lasna.lastOption)
+      .partition(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "lasna"))
+    val (eronnut, eiEronnut) = lasna.partition(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "eronnut"))
+    eiEronnut.lastOption.map((_, eiEronnut.init ++ eronnut ++ eiLasna))
+      .orElse(lasna.lastOption.map((_, lasna.init ++ eiLasna)))
   }
 
   private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
@@ -78,16 +78,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     true
   }
 
-  private def containsPerusopetuksenOppiaineenOppimaara(oikeudet: Seq[KoskiOpiskeluoikeus]): Boolean = {
-    oikeudet.exists(oikeus =>
-      oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
-  }
-
-  private def filterOnlyPerusopetuksenOppiaineenOppimaaras(oikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
-    oikeudet.filter(oikeus =>
-      oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
-  }
-
   private def shouldSaveOpiskeluoikeus(henkiloOid: String, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
     if (opiskeluoikeus.suoritukset.isEmpty) {
       logger.info(s"Filtteröitiin henkilöltä $henkiloOid opiskeluoikeus joka ei sisällä suorituksia.")
@@ -102,34 +92,25 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     true
   }
 
-  def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
-    var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
-    //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
-    val oikeudetFiltered = oikeudet.filter(shouldSaveOpiskeluoikeus(henkiloOid.get, _))
-    //Opiskeluoikeuden tyypit eli perusopetus, perusopetuksen lisäopetus (10), lukiokoulutus, ammatillinen jne.
-    val tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
-    tyypit.distinct.foreach(tyyppi => {
-      val tataTyyppia: Seq[KoskiOpiskeluoikeus] = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
-      //Aktiivisia ammatillisia opiskeluoikeuksia voi olla useita samaan aikaan, eikä kyseessä ole datavirhe.
-      if (tyyppi.equals("ammatillinenkoulutus") && tataTyyppia.nonEmpty) {
-        viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppia
-      } else {
-        val viimeisin = getViimeisinOpiskeluoikeusjakso(tataTyyppia)
-        if (viimeisin.isDefined && !containsPerusopetuksenOppiaineenOppimaara(tataTyyppia)) {
-          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
-        } else if (viimeisin.isDefined) {
-          // Jos opiskeluoikeudesta löytyy perusopetuksen oppiaineen oppimäärän suorituksia, lisätään myös ne.
-          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
-          var tataTyyppiaPOO = tataTyyppia.filterNot(oikeus => oikeus.equals(viimeisin.get))
-          tataTyyppiaPOO = filterOnlyPerusopetuksenOppiaineenOppimaaras(tataTyyppiaPOO)
-          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppiaPOO
-        }
+  def halututOpiskeluoikeudetJaSuoritukset(henkiloOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
+    opiskeluoikeudet
+      .map(o => o.copy(suoritukset = o.suoritukset.filter(shouldSaveSuoritus(henkiloOid, _, o))))
+      .filter(shouldSaveOpiskeluoikeus(henkiloOid, _))
+      .groupBy(_.tyyppi.map(_.koodiarvo))
+      .flatMap {
+        case (None, _) =>
+          Seq()
+        case (Some("ammatillinenkoulutus"), os) =>
+          os
+        case (Some(_), os) =>
+          getViimeisinOpiskeluoikeusjakso(os) match {
+            case Some((viimeisin, muut)) =>
+              muut.filter(_.suoritukset.exists(_.tyyppi.exists(_.koodiarvo == "perusopetuksenoppiaineenoppimaara"))) :+ viimeisin
+            case None =>
+              Seq()
+          }
       }
-    })
-    // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
-    viimeisimmatOpiskeluoikeudet.map { oo =>
-      oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(henkiloOid.getOrElse(throw new RuntimeException("Puuttuva henkilöOid")), s, oo)))
-    }
+      .toSeq
   }
 
   private def deleteArvosanatAndSuorituksetAndOpiskelija(suoritus: VirallinenSuoritus with Identified[UUID], henkilöOid: String): Future[Unit] = {
@@ -343,11 +324,8 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   def createSuorituksetJaArvosanatFromKoski(henkilo: KoskiHenkiloContainer): Seq[Seq[SuoritusArvosanat]] = {
-    val viimeisimmat = ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(henkilo.opiskeluoikeudet, henkilo.henkilö.oid)
-    if (henkilo.opiskeluoikeudet.size > viimeisimmat.size) {
-      logger.info("Filtteröitiin henkilöltä " + henkilo.henkilö.oid + " pois yksi tai useampia opiskeluoikeuksia. Ennen filtteröintiä: " + henkilo.opiskeluoikeudet.size + ", jälkeen: " + viimeisimmat.size)
-    }
-    suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkilo.henkilö.oid.get, viimeisimmat)
+    val henkiloOid = henkilo.henkilö.oid.get
+    suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(henkiloOid, halututOpiskeluoikeudetJaSuoritukset(henkiloOid, henkilo.opiskeluoikeudet))
   }
 
   private def suoritusDuplicates(suoritukset: Seq[SuoritusArvosanat]): Seq[Seq[SuoritusArvosanat]] = {
