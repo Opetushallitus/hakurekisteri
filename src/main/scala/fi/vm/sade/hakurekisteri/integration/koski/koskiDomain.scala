@@ -41,12 +41,11 @@ case class KoskiOpiskeluoikeus(
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
   def findEarliestLasnaDate: Option[LocalDate] = {
-    val lasnaTilat: Seq[KoskiTila] = opiskeluoikeusjaksot.filter(_.tila.koodiarvo.equals("lasna"))
-    val lasnaDates: Seq[KoskiTila] = lasnaTilat.filterNot(_.alku.isEmpty) sortBy {
-      case KoskiTila(alku,_) => LocalDate.parse(alku).toDate
-
-    }
-    if (lasnaDates.nonEmpty) Some(parseLocalDate(lasnaDates.head.alku)) else None
+    opiskeluoikeusjaksot
+      .filter(_.tila.koodiarvo == "lasna")
+      .map(o => LocalDate.parse(o.alku))
+      .sortBy(_.toDate)
+      .headOption
   }
   def determineSuoritusTila: String = {
     KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila.find { koski2Sure =>
