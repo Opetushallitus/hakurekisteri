@@ -2437,6 +2437,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("1")
   }
 
+  it should "not create suoritus from vahvistamaton ammatillinen tutkinto suoritus" in {
+    val henkilo = parse(scala.io.Source.fromFile(jsonDir + "koskidata_2amm_vahvistettu_vahvistamaton.json").mkString).extract[KoskiHenkiloContainer]
+    val suoritukset = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    suoritukset.size should equal(1)
+  }
+
   it should "delete no arvosanas when nothing has changed" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_1.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
