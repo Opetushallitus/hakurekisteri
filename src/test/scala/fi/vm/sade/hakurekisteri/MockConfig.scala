@@ -12,8 +12,12 @@ class MockConfig extends Config {
   log.info("Using mock config")
   val dbPort = ItPostgres.port
   override val databaseUrl = s"jdbc:postgresql://localhost:$dbPort/suoritusrekisteri"
+  override val databaseHost = "localhost"
+  override val databasePort = dbPort.toString
   override val postgresUser = null //properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = null
+  override val archiveNonCurrentAfterDays = "180"
+  override val archiveBatchSize = "3"
 
   private val defaultDbLoggingConfig = SureDbLoggingConfig()
   override val slowQuery: Long = defaultDbLoggingConfig.slowQueryMillis

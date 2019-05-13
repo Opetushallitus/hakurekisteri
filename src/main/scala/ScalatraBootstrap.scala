@@ -60,6 +60,10 @@ class ScalatraBootstrap extends LifeCycle {
 
     val journals = new DbJournals(config)
 
+    val archiveScheduler = new ArchiveScheduler(journals.archiver)
+
+    archiveScheduler.start(config.properties.getOrElse("suoritusrekisteri.db.archiveCronJob", "suoritusrekisteri.db.archiveCronJob property missing"))
+
     var integrations: Integrations = null
     val personAliasesProvider = new PersonAliasesProvider {
       override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = integrations.oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)

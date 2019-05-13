@@ -100,8 +100,12 @@ class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
   override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusrekisteri.db.url")
+  override val databaseHost = getPropertyOrCrash("suoritusrekisteri.db.host", "configuration key missing: suoritusrekisteri.db.host")
+  override val databasePort = getPropertyOrCrash("suoritusrekisteri.db.port", "configuration key missing: suoritusrekisteri.db.port")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
+  override val archiveNonCurrentAfterDays = properties.getOrElse("suoritusrekisteri.db.archiveNonCurrentAfterDays", "180")
+  override val archiveBatchSize = properties.getOrElse("suoritusrekister.db.archiveBatchSize" ,"1000")
   override val slowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.slowquery.millis"))
   override val reallySlowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.reallyslowquery.millis"))
   override val maxDbLogLineLength: Int = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.db.max.log.line.length", "configuration key missing: suoritusrekisteri.db.max.log.line.length"))
@@ -114,8 +118,13 @@ class MockDevConfig extends Config {
   def mockMode = true
   log.info("Using mock dev config")
   override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+  override val databaseHost = properties.getOrElse("suoritusrekisteri.db.host", "localhost")
+  override val databasePort = properties.getOrElse("suoritusrekisteri.db.port", "5432")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
+  override val archiveNonCurrentAfterDays = properties.getOrElse("suoritusrekisteri.db.archiveNonCurrentAfterDays", "14")
+  override val archiveBatchSize = properties.getOrElse("suoritusrekisteri.db.archiveBatchSize", "14")
+
 
   private val defaultDbLoggingConfig = SureDbLoggingConfig()
   override val slowQuery: Long = defaultDbLoggingConfig.slowQueryMillis
@@ -133,8 +142,12 @@ abstract class Config {
   def mockMode: Boolean
 
   val databaseUrl: String
+  val databaseHost: String
+  val databasePort: String
   val postgresUser: String
   val postgresPassword: String
+  val archiveNonCurrentAfterDays: String
+  val archiveBatchSize: String
 
   val slowQuery: Long
   val reallySlowQuery: Long
