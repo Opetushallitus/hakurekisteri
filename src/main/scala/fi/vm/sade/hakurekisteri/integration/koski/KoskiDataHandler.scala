@@ -43,15 +43,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     oo.suoritukset.exists(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "9"))
   }
 
-  private def getViimeisinOpiskeluoikeusjakso(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[(KoskiOpiskeluoikeus, Seq[KoskiOpiskeluoikeus])] = {
-    val (lasna, eiLasna) = oikeudet
-      .sortBy(_.tila.opiskeluoikeusjaksot.map(_.alku).max)
-      .partition(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "lasna"))
-    val (eronnut, eiEronnut) = lasna.partition(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "eronnut"))
-    eiEronnut.lastOption.map((_, eiEronnut.init ++ eronnut ++ eiLasna))
-      .orElse(lasna.lastOption.map((_, lasna.init ++ eiLasna)))
-  }
-
   private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
     suoritus.osasuoritukset.exists(_.arviointi.exists(_.hyväksytty.contains(false)))
   }
@@ -92,6 +83,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     true
   }
 
+  private def viimeisinOpiskeluoikeus(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[(KoskiOpiskeluoikeus, Seq[KoskiOpiskeluoikeus])] = {
+    val (eronnut, eiEronnut) = oikeudet.sortBy(_.tila.opiskeluoikeusjaksot.map(_.alku).max)(Ordering[String].reverse)
+      .partition(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "eronnut"))
+    eiEronnut.headOption.map((_, eiEronnut.tail ++ eronnut)).orElse(eronnut.headOption.map((_, eronnut.tail)))
+  }
+
   def halututOpiskeluoikeudetJaSuoritukset(henkiloOid: String, opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
     opiskeluoikeudet
       .map(o => o.copy(suoritukset = o.suoritukset.filter(shouldSaveSuoritus(henkiloOid, _, o))))
@@ -103,7 +100,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         case (Some("ammatillinenkoulutus"), os) =>
           os
         case (Some(_), os) =>
-          getViimeisinOpiskeluoikeusjakso(os) match {
+          viimeisinOpiskeluoikeus(os) match {
             case Some((viimeisin, muut)) =>
               muut.filter(_.suoritukset.exists(_.tyyppi.exists(_.koodiarvo == "perusopetuksenoppiaineenoppimaara"))) :+ viimeisin
             case None =>
