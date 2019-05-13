@@ -59,9 +59,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
-    suoritus.osasuoritukset
-      .filter(_.arviointi.nonEmpty)
-      .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
+    suoritus.osasuoritukset.exists(_.arviointi.exists(_.hyväksytty.contains(false)))
   }
 
   private def shouldSaveSuoritus(henkiloOid: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
