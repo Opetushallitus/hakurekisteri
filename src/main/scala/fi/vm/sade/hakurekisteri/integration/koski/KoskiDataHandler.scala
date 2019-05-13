@@ -64,31 +64,26 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       .exists(_.arviointi.head.hyväksytty.getOrElse(true) == false)
   }
 
-  private def shouldSaveSuoritus(henkilöOid: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+  private def shouldSaveSuoritus(henkiloOid: String, suoritus: KoskiSuoritus, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    val komoOid = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+    val lasnaDate = opiskeluoikeus.tila.findEarliestLasnaDate
 
-    //Filtteröidään suoritukset, joilla ei ole läsnäolopäivää:
-    val lasnaDate = opiskeluoikeus.tila.findEarliestLasnaDate match {
-      case Some(y) => y
-      case _ => {
-        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, josta ei löydy läsnäolon alkupäivämäärää (komoOid: ${komoOid}).")
-        return false
-      }
-    }
-
-    //Filtteröidään suoritukset, joiden alkamisajankohta on deadlinen jälkeen:
-    if (KoskiUtil.isAfterDeadlineDate(lasnaDate)) {
-      logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} suoritus, jonka läsnäolon alkamispäivämäärä on deadlinen jälkeen (komoOid: ${komoOid}).")
+    if (lasnaDate.isEmpty) {
+      logger.info(s"Filtteröitiin henkilöltä $henkiloOid suoritus, josta ei löydy läsnäolon alkupäivämäärää (komoOid: $komoOid).")
       return false
     }
 
-    komoOid match {
-      case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
-        logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus.")
-        false
-      }
-      case _ => true
+    if (lasnaDate.exists(KoskiUtil.isAfterDeadlineDate)) {
+      logger.info(s"Filtteröitiin henkilöltä $henkiloOid suoritus, jonka läsnäolon alkamispäivämäärä on deadlinen jälkeen (komoOid: $komoOid).")
+      return false
     }
+
+    if (Oids.lukioKomoOid == komoOid && !(opiskeluoikeus.tila.determineSuoritusTila == "VALMIS" && suoritus.vahvistus.isDefined)) {
+      logger.info(s"Filtteröitiin henkilöltä $henkiloOid ei (valmis ja vahvistettu) lukiosuoritus.")
+      return false
+    }
+
+    true
   }
 
   private def containsPerusopetuksenOppiaineenOppimaara(oikeudet: Seq[KoskiOpiskeluoikeus]): Boolean = {
