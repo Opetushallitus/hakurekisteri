@@ -2443,6 +2443,16 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.size should equal(1)
   }
 
+  it should "create distinct suoritukset from two ammatillinen perustutkinto from same oppilaitos" in {
+    val henkilo = parse(scala.io.Source.fromFile(jsonDir + "koskidata_2amm_sama_oppilaitos.json").mkString).extract[KoskiHenkiloContainer]
+    val suoritukset = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).flatten
+    suoritukset.size should equal(2)
+    val a = suoritukset.head
+    val b = suoritukset.tail.head
+    (a.suoritus.komo == b.suoritus.komo) should be(true)
+    (a.suoritus.core == b.suoritus.core) should be(false)
+  }
+
   it should "delete no arvosanas when nothing has changed" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_1.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]

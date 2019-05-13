@@ -412,7 +412,7 @@ class KoskiSuoritusArvosanaParser {
       }
 
       val suoritustyyppi = suoritus.tyyppi.map(_.koodiarvo) match {
-        case Some("perusopetuksenvuosiluokka") => Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo)
+        case Some("perusopetuksenvuosiluokka") | Some("ammatillinentutkinto") => Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo)
         case _ => None
       }
 
