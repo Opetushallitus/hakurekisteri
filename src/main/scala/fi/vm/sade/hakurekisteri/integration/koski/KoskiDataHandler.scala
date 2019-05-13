@@ -66,6 +66,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       return false
     }
 
+    if (suoritus.tyyppi.exists(_.koodiarvo == "ammatillinentutkinto") && suoritus.vahvistus.isEmpty) {
+      logger.info(s"Filtteröitiin henkilöltä $henkiloOid vahvistamaton ammatillisen tutkinnon suoritus.")
+      return false
+    }
+
     true
   }
 

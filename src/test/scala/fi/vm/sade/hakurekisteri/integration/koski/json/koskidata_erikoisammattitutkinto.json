@@ -185,6 +185,78 @@
               "koodistoVersio": 2
             }
           },
+          "vahvistus": {
+            "päivä": "2019-01-25",
+            "paikkakunta": {
+              "koodiarvo": "678",
+              "nimi": {
+                "fi": "Raahe",
+                "sv": "Brahestad"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.14206465958",
+              "oppilaitosnumero": {
+                "koodiarvo": "01093",
+                "nimi": {
+                  "fi": "Raahen ammattiopisto"
+                },
+                "lyhytNimi": {
+                  "fi": "Raahen ammattiopisto"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "kotipaikka": {
+                "koodiarvo": "678",
+                "nimi": {
+                  "fi": "Raahe",
+                  "sv": "Brahestad"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "tat",
+                "titteli": {
+                  "fi": "tat"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.14206465958",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "01093",
+                    "nimi": {
+                      "fi": "Raahen ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Raahen ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Raahen ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "678",
+                    "nimi": {
+                      "fi": "Raahe",
+                      "sv": "Brahestad"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
           "suoritustapa": {
             "koodiarvo": "naytto",
             "nimi": {
