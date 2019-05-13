@@ -44,18 +44,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def getViimeisinOpiskeluoikeusjakso(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[KoskiOpiskeluoikeus] = {
-    val viimeisinLasnaJaEiEronnut =
-      oikeudet.filter(oo => oo.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("lasna"))
-        && !oo.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("eronnut")))
-        .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
-    val viimeisinLasna =
-      oikeudet.filter(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo.equals("lasna")))
-        .sortBy(_.tila.opiskeluoikeusjaksot.sortBy(_.alku).reverse.head.alku).reverse.headOption
-    if (viimeisinLasnaJaEiEronnut.isDefined) {
-      viimeisinLasnaJaEiEronnut
-    } else {
-      viimeisinLasna
-    }
+    val lasna = oikeudet
+      .filter(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "lasna"))
+      .sortBy(_.tila.opiskeluoikeusjaksot.map(_.alku).max)
+    val lasnaEikaEronnut = lasna
+      .filterNot(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "eronnut"))
+    lasnaEikaEronnut.lastOption.orElse(lasna.lastOption)
   }
 
   private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
