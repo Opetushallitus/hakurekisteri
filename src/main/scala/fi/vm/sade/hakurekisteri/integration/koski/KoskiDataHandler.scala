@@ -89,6 +89,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def shouldSaveOpiskeluoikeus(henkiloOid: String, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    if (opiskeluoikeus.suoritukset.isEmpty) {
+      logger.info(s"Filtteröitiin henkilöltä $henkiloOid opiskeluoikeus joka ei sisällä suorituksia.")
+      return false
+    }
+
     if (opiskeluoikeus.tyyppi.exists(_.koodiarvo == "perusopetus") && !opiskeluoikeusSisaltaaYsisuorituksen(opiskeluoikeus)) {
       logger.info(s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus joka ei sisällä 9. luokan suoritusta.")
       return false
