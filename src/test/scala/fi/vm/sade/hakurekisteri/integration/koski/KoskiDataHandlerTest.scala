@@ -1287,7 +1287,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset should have length 1
     val suoritus = suoritukset.head
     val arvosanat = run(database.run(sql"select * from arvosana where suoritus = $suoritus".as[String]))
-    arvosanat should have length 6
+    arvosanat should have length 2
   }
 
   it should "resolve latest perusopetuksen lasnaoleva opiskeluoikeus" in {
@@ -2549,8 +2549,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("5")
   }
 
-  /*
-  it should "store 2 opiskeluoikeutta when perusopetuksen oppiaineen oppimäärä" in {
+  it should "store 2 separate opiskeluoikeutta and valmis tilaiset arvosanat when perusopetuksen oppiaineen oppimäärä and tila equals läsnä" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_aik_perusopetus_poo.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -2560,15 +2559,23 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
-    //val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    //opiskelija.head should equal("2")
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("2")
 
     val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("2")
 
+    var arvosanat = run(database.run(sql"select count(*) from arvosana where current = true".as[String]))
+    arvosanat.head should equal("2")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where aine like 'BI%'".as[String]))
+    arvosanat.head should equal("1")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where aine like 'HI%'".as[String]))
+    arvosanat.head should equal("1")
   }
 
-   */
+
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))

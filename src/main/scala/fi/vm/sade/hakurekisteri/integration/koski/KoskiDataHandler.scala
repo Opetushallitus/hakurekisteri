@@ -118,6 +118,15 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     isRemovable
   }
 
+  private def containsPerusopetuksenOppiaineenOppimaara(oikeudet: Seq[KoskiOpiskeluoikeus]): Boolean = {
+    var isPerusopetuksenOppiaineenOppimaara = false
+    oikeudet.foreach(oikeus =>
+      oikeus.suoritukset.foreach(suoritus =>
+        if (suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) isPerusopetuksenOppiaineenOppimaara = true
+      ))
+    isPerusopetuksenOppiaineenOppimaara
+  }
+
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
     var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
     //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
@@ -126,8 +135,8 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     val tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
     tyypit.distinct.foreach(tyyppi => {
       val tataTyyppia: Seq[KoskiOpiskeluoikeus] = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
-      //Aktiivisia ammatillisia opiskeluoikeuksia voi olla useita samaan aikaan, eikä kyseessä ole datavirhe.
-      if (tyyppi.equals("ammatillinenkoulutus") && tataTyyppia.nonEmpty) {
+      //Aktiivisia ammatillisia opiskeluoikeuksia ja perusopetuksen oppiaineen oppimäärän opiskeluoikeuksia voi olla useita samaan aikaan, eikä kyseessä ole datavirhe.
+      if (tyyppi.equals("ammatillinenkoulutus") && tataTyyppia.nonEmpty || containsPerusopetuksenOppiaineenOppimaara(tataTyyppia)) {
         viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppia
       } else {
         val viimeisin = getViimeisinOpiskeluoikeusjakso(tataTyyppia)

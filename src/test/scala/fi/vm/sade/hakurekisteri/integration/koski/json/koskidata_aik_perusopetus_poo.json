@@ -26,8 +26,8 @@
   "opiskeluoikeudet": [
     {
       "oid": "1.2.246.562.15.30526627572",
-      "versionumero": 4,
-      "aikaleima": "2019-05-10T15:53:02.438073",
+      "versionumero": 5,
+      "aikaleima": "2019-05-13T10:18:19.728658",
       "oppilaitos": {
         "oid": "1.2.246.562.10.81017043621",
         "oppilaitosnumero": {
@@ -81,19 +81,6 @@
                 "fi": "Läsnä",
                 "sv": "Närvarande",
                 "en": "Present"
-              },
-              "koodistoUri": "koskiopiskeluoikeudentila",
-              "koodistoVersio": 1
-            }
-          },
-          {
-            "alku": "2019-05-10",
-            "tila": {
-              "koodiarvo": "valmistunut",
-              "nimi": {
-                "fi": "Valmistunut",
-                "sv": "Utexaminerad",
-                "en": "Graduated"
               },
               "koodistoUri": "koskiopiskeluoikeudentila",
               "koodistoVersio": 1
@@ -373,78 +360,6 @@
               "hyväksytty": true
             }
           ],
-          "vahvistus": {
-            "päivä": "2019-05-10",
-            "paikkakunta": {
-              "koodiarvo": "091",
-              "nimi": {
-                "fi": "Helsinki",
-                "sv": "Helsingfors"
-              },
-              "koodistoUri": "kunta",
-              "koodistoVersio": 2
-            },
-            "myöntäjäOrganisaatio": {
-              "oid": "1.2.246.562.10.81017043621",
-              "oppilaitosnumero": {
-                "koodiarvo": "00551",
-                "nimi": {
-                  "fi": "Helsingin aikuislukio"
-                },
-                "lyhytNimi": {
-                  "fi": "Helsingin aikuislukio"
-                },
-                "koodistoUri": "oppilaitosnumero",
-                "koodistoVersio": 1
-              },
-              "nimi": {
-                "fi": "Helsingin aikuislukio"
-              },
-              "kotipaikka": {
-                "koodiarvo": "091",
-                "nimi": {
-                  "fi": "Helsinki",
-                  "sv": "Helsingfors"
-                },
-                "koodistoUri": "kunta",
-                "koodistoVersio": 2
-              }
-            },
-            "myöntäjäHenkilöt": [
-              {
-                "nimi": "katti",
-                "titteli": {
-                  "fi": "matti"
-                },
-                "organisaatio": {
-                  "oid": "1.2.246.562.10.81017043621",
-                  "oppilaitosnumero": {
-                    "koodiarvo": "00551",
-                    "nimi": {
-                      "fi": "Helsingin aikuislukio"
-                    },
-                    "lyhytNimi": {
-                      "fi": "Helsingin aikuislukio"
-                    },
-                    "koodistoUri": "oppilaitosnumero",
-                    "koodistoVersio": 1
-                  },
-                  "nimi": {
-                    "fi": "Helsingin aikuislukio"
-                  },
-                  "kotipaikka": {
-                    "koodiarvo": "091",
-                    "nimi": {
-                      "fi": "Helsinki",
-                      "sv": "Helsingfors"
-                    },
-                    "koodistoUri": "kunta",
-                    "koodistoVersio": 2
-                  }
-                }
-              }
-            ]
-          },
           "suoritustapa": {
             "koodiarvo": "koulutus",
             "nimi": {
@@ -583,78 +498,6 @@
               "hyväksytty": true
             }
           ],
-          "vahvistus": {
-            "päivä": "2019-05-10",
-            "paikkakunta": {
-              "koodiarvo": "091",
-              "nimi": {
-                "fi": "Helsinki",
-                "sv": "Helsingfors"
-              },
-              "koodistoUri": "kunta",
-              "koodistoVersio": 2
-            },
-            "myöntäjäOrganisaatio": {
-              "oid": "1.2.246.562.10.81017043621",
-              "oppilaitosnumero": {
-                "koodiarvo": "00551",
-                "nimi": {
-                  "fi": "Helsingin aikuislukio"
-                },
-                "lyhytNimi": {
-                  "fi": "Helsingin aikuislukio"
-                },
-                "koodistoUri": "oppilaitosnumero",
-                "koodistoVersio": 1
-              },
-              "nimi": {
-                "fi": "Helsingin aikuislukio"
-              },
-              "kotipaikka": {
-                "koodiarvo": "091",
-                "nimi": {
-                  "fi": "Helsinki",
-                  "sv": "Helsingfors"
-                },
-                "koodistoUri": "kunta",
-                "koodistoVersio": 2
-              }
-            },
-            "myöntäjäHenkilöt": [
-              {
-                "nimi": "katti",
-                "titteli": {
-                  "fi": "matti"
-                },
-                "organisaatio": {
-                  "oid": "1.2.246.562.10.81017043621",
-                  "oppilaitosnumero": {
-                    "koodiarvo": "00551",
-                    "nimi": {
-                      "fi": "Helsingin aikuislukio"
-                    },
-                    "lyhytNimi": {
-                      "fi": "Helsingin aikuislukio"
-                    },
-                    "koodistoUri": "oppilaitosnumero",
-                    "koodistoVersio": 1
-                  },
-                  "nimi": {
-                    "fi": "Helsingin aikuislukio"
-                  },
-                  "kotipaikka": {
-                    "koodiarvo": "091",
-                    "nimi": {
-                      "fi": "Helsinki",
-                      "sv": "Helsingfors"
-                    },
-                    "koodistoUri": "kunta",
-                    "koodistoVersio": 2
-                  }
-                }
-              }
-            ]
-          },
           "suoritustapa": {
             "koodiarvo": "koulutus",
             "nimi": {
@@ -745,13 +588,12 @@
         "koodistoUri": "opiskeluoikeudentyyppi",
         "koodistoVersio": 1
       },
-      "alkamispäivä": "2018-10-02",
-      "päättymispäivä": "2019-05-10"
+      "alkamispäivä": "2018-10-02"
     },
     {
       "oid": "1.2.246.562.15.78424640346",
-      "versionumero": 5,
-      "aikaleima": "2019-05-10T15:44:04.092529",
+      "versionumero": 6,
+      "aikaleima": "2019-05-13T10:18:36.185430",
       "oppilaitos": {
         "oid": "1.2.246.562.10.17749422402",
         "oppilaitosnumero": {
@@ -804,19 +646,6 @@
                 "fi": "Läsnä",
                 "sv": "Närvarande",
                 "en": "Present"
-              },
-              "koodistoUri": "koskiopiskeluoikeudentila",
-              "koodistoVersio": 1
-            }
-          },
-          {
-            "alku": "2019-05-10",
-            "tila": {
-              "koodiarvo": "valmistunut",
-              "nimi": {
-                "fi": "Valmistunut",
-                "sv": "Utexaminerad",
-                "en": "Graduated"
               },
               "koodistoUri": "koskiopiskeluoikeudentila",
               "koodistoVersio": 1
@@ -1132,78 +961,6 @@
               "hyväksytty": true
             }
           ],
-          "vahvistus": {
-            "päivä": "2019-05-10",
-            "paikkakunta": {
-              "koodiarvo": "491",
-              "nimi": {
-                "fi": "Mikkeli",
-                "sv": "St Michel"
-              },
-              "koodistoUri": "kunta",
-              "koodistoVersio": 2
-            },
-            "myöntäjäOrganisaatio": {
-              "oid": "1.2.246.562.10.17749422402",
-              "oppilaitosnumero": {
-                "koodiarvo": "01667",
-                "nimi": {
-                  "fi": "Otavan Opisto"
-                },
-                "lyhytNimi": {
-                  "fi": "Otavan Opisto"
-                },
-                "koodistoUri": "oppilaitosnumero",
-                "koodistoVersio": 1
-              },
-              "nimi": {
-                "fi": "Otavan Opisto"
-              },
-              "kotipaikka": {
-                "koodiarvo": "491",
-                "nimi": {
-                  "fi": "Mikkeli",
-                  "sv": "St Michel"
-                },
-                "koodistoUri": "kunta",
-                "koodistoVersio": 2
-              }
-            },
-            "myöntäjäHenkilöt": [
-              {
-                "nimi": "esa",
-                "titteli": {
-                  "fi": "esa"
-                },
-                "organisaatio": {
-                  "oid": "1.2.246.562.10.17749422402",
-                  "oppilaitosnumero": {
-                    "koodiarvo": "01667",
-                    "nimi": {
-                      "fi": "Otavan Opisto"
-                    },
-                    "lyhytNimi": {
-                      "fi": "Otavan Opisto"
-                    },
-                    "koodistoUri": "oppilaitosnumero",
-                    "koodistoVersio": 1
-                  },
-                  "nimi": {
-                    "fi": "Otavan Opisto"
-                  },
-                  "kotipaikka": {
-                    "koodiarvo": "491",
-                    "nimi": {
-                      "fi": "Mikkeli",
-                      "sv": "St Michel"
-                    },
-                    "koodistoUri": "kunta",
-                    "koodistoVersio": 2
-                  }
-                }
-              }
-            ]
-          },
           "suoritustapa": {
             "koodiarvo": "koulutus",
             "nimi": {
@@ -1294,8 +1051,7 @@
         "koodistoUri": "opiskeluoikeudentyyppi",
         "koodistoVersio": 1
       },
-      "alkamispäivä": "2018-09-04",
-      "päättymispäivä": "2019-05-10"
+      "alkamispäivä": "2018-09-04"
     }
   ]
 }
