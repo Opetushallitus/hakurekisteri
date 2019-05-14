@@ -83,7 +83,7 @@ class KoskiSuoritusArvosanaParser {
 
     //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
     //while sure only supports the former. Thus we must convert "ET" codes into "KT"
-    val modsuoritukset = osasuoritukset.map(s => {
+    var modsuoritukset: Seq[KoskiOsasuoritus] = osasuoritukset.map(s => {
       if(s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("ET")) {
         val koulmod = s.koulutusmoduuli
         val uskontoElamankatsomusTieto = KoskiKoulutusmoduuli(Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")),
@@ -301,10 +301,16 @@ class KoskiSuoritusArvosanaParser {
           }
         case Oids.perusopetuksenOppiaineenOppimaaraOid =>
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
-          if(suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) {
+          // Tallennetaan vain vahvistetut perusopetuksen oppiaineen oppimäärän suoritusten arvosanat, ei kurssiarvosanoja.
+          if(suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi")) && suoritus.vahvistus.isDefined) {
             s = s :+ KoskiOsasuoritus(suoritus.koulutusmoduuli, suoritus.tyyppi.getOrElse(KoskiKoodi("","")), suoritus.arviointi.getOrElse(Seq()), suoritus.pakollinen, None, None)
-          }
-          osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
+            // Filtteröidään vain suorituksen oppiaineen arvosanat
+            s = s.filter(osaSuoritus => osaSuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodistoUri.contentEquals("koskioppiaineetyleissivistava"))
+            osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
+          } else {
+        (Seq(), yksilollistaminen.Ei)
+      }
+
 
         //Ei tallenneta arvosanoja VALMA, TELMA. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
