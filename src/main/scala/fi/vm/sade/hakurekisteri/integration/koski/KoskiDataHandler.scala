@@ -88,10 +88,19 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
   }
 
+  private def shouldSaveOpiskeluoikeus(henkiloOid: String, opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    if (opiskeluoikeus.tyyppi.exists(_.koodiarvo == "perusopetus") && !opiskeluoikeusSisaltaaYsisuorituksen(opiskeluoikeus)) {
+      logger.info(s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus joka ei sisällä 9. luokan suoritusta.")
+      return false
+    }
+
+    true
+  }
+
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
     var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
     //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
-    val oikeudetFiltered = oikeudet.filter(oo => !oo.tyyppi.get.koodiarvo.equals("perusopetus") || opiskeluoikeusSisaltaaYsisuorituksen(oo))
+    val oikeudetFiltered = oikeudet.filter(shouldSaveOpiskeluoikeus(henkiloOid.get, _))
     //Opiskeluoikeuden tyypit eli perusopetus, perusopetuksen lisäopetus (10), lukiokoulutus, ammatillinen jne.
     val tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
     tyypit.distinct.foreach(tyyppi => {
