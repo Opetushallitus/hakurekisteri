@@ -2200,14 +2200,10 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
-
-    var suoritusArvosanat: Seq[Seq[SuoritusArvosanat]] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
-    suoritusArvosanat should be (Seq(Seq.empty))
+    koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo) should be (Seq())
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
-
-    suoritusArvosanat = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
-    suoritusArvosanat should be (Seq(Seq.empty))
+    koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo) should be (Seq())
   }
 
   it should "filter suoritus with future läsnäolo before or after deadline date" in {
@@ -2217,14 +2213,10 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     KoskiUtil.deadlineDate = new LocalDate("2019-06-03").plusDays(30)
-
-    var suoritusArvosanat: Seq[Seq[SuoritusArvosanat]] = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
-    suoritusArvosanat should be (Seq(Seq.empty))
+    koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo) should be (Seq())
 
     KoskiUtil.deadlineDate = new LocalDate("2019-06-03").minusDays(30)
-
-    suoritusArvosanat = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
-    suoritusArvosanat should be (Seq(Seq.empty))
+    koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo) should be (Seq())
   }
 
   it should "store correct luokka and oppilaitosoid for erikoisammattitutkinto" in {
