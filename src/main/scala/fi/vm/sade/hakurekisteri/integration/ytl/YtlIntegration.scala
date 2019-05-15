@@ -140,7 +140,7 @@ class YtlIntegration(properties: OphProperties,
           handleHakemukset(currentStatus.uuid, persons)
 
         case Failure(e: Throwable) =>
-          logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+          logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service", e)
           sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
           throw e
