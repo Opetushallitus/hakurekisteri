@@ -88,7 +88,6 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(1000),
           cacheTime = Some(2000)
         )))
 
@@ -110,7 +109,6 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(500),
           cacheTime = Some(1000)
         )))
 
@@ -145,7 +143,6 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)
         )))
@@ -168,7 +165,6 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)
         )))
@@ -195,7 +191,6 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)
         )))

@@ -20,14 +20,12 @@ case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
 class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
                         cacheFactory: CacheFactory,
-                        refetchTime: Option[Long] = None,
                         cacheTime: Option[Long] = None,
                         retryTime: Option[Long] = None,
                         initOnStartup: Boolean = false) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
-  private val refetch: FiniteDuration = refetchTime.map(_.milliseconds).getOrElse((config.integrations.valintatulosCacheHours / 2).hours)
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
   private val cache = cacheFactory.getInstance[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis), this.getClass, classOf[SijoitteluTulos], "sijoittelu-tulos")
   private var calling: Boolean = false

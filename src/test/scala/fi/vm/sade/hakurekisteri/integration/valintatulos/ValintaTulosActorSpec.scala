@@ -67,7 +67,6 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(1000),
           cacheTime = Some(2000)
         )))
 
@@ -89,7 +88,6 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(500),
           cacheTime = Some(1000)
         )))
 
@@ -120,7 +118,6 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           config = config,
           cacheFactory = cacheFactory,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))),
-          refetchTime = Some(500),
           cacheTime = Some(1000),
           retryTime = Some(100)
         )))
