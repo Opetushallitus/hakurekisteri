@@ -4,16 +4,19 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriContainer
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
-import org.joda.time.{DateTime, DateTimeZone, LocalDate}
+import org.joda.time.LocalDate
+import org.junit.runner.RunWith
 import org.scalatest.GivenWhenThen
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
 
   info("Koulun virkailijana tallennan kouluni oppilaiden tutkintosuoritukset jotta niitä voi hyödyntää haussa ja valinnassa")
 
   feature("Suorituksen tallentaminen") {
     scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
-      Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavaakkeet")
+      Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavakkeet")
       koulu lahettaa
         <ROWSET>
           <ROW>
