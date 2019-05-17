@@ -15,6 +15,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import org.asynchttpclient._
 import dispatch._
+import fi.vm.sade.hakurekisteri.OrganisaatioOids
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties
 import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie}
@@ -92,7 +93,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     }
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
-      val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend", "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend")
+      val request = dispatch.url(url) <:< Map("Caller-Id" -> s"${OrganisaatioOids.oph}.suoritusrekisteri.backend")
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
       val requestWithPostHeaders = body match {
