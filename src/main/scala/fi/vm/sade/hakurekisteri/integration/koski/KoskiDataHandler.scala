@@ -326,7 +326,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
             }
           } catch {
             case e: Exception =>
-              logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
+              logger.warn(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
               Future.successful(Left(e))
           }
           case _ => Future.successful(Right(None))
