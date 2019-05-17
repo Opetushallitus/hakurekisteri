@@ -156,7 +156,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
     )
   }
 
-  test("ValintaTulosActor should skip initial loading if data is already in redis") {
+  test("ValintaTulosActor should load even if data is already in redis") {
     withSystem(
       implicit system => {
         implicit val ec = system.dispatcher
@@ -179,8 +179,10 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(false)
         Await.result(cache.contains("1.2.246.562.29.14"), 1.second) should be(false)
 
-        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
-        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
+        verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.13"))
+        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.14"))
       }
     )
     withSystem(
@@ -205,8 +207,8 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         Await.result(cache.contains("1.2.246.562.29.13"), 1.second) should be(true)
         Await.result(cache.contains("1.2.246.562.29.14"), 1.second) should be(true)
 
-        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
-        verify(endPoint, never()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.11"))
+        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.12"))
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.13"))
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.14"))
       }

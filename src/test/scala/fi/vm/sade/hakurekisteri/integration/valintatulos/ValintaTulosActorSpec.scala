@@ -58,7 +58,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
     )
   }
 
-  test("ValintaTulosActor should update cache periodically") {
+  test("ValintaTulosActor should update cache") {
     withSystem(
       implicit system => {
         implicit val ec = system.dispatcher
