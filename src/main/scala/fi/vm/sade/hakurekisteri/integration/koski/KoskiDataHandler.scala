@@ -119,12 +119,8 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def containsPerusopetuksenOppiaineenOppimaara(oikeudet: Seq[KoskiOpiskeluoikeus]): Boolean = {
-    var isPerusopetuksenOppiaineenOppimaara = false
-    oikeudet.foreach(oikeus =>
-      oikeus.suoritukset.foreach(suoritus =>
-        if (suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))) isPerusopetuksenOppiaineenOppimaara = true
-      ))
-    isPerusopetuksenOppiaineenOppimaara
+    oikeudet.exists(oikeus =>
+      oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
   }
 
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
