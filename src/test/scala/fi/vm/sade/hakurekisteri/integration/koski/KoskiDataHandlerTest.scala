@@ -2545,8 +2545,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
     arvosanat.head should equal("3")
   }
-
-  /*
+  
    it should "store valinnaiset äidinkielet with correct ordering" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valinnaisia_aidinkielia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -2575,7 +2574,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat = run(database.run(sql"select count(*) from arvosana where aine = 'AI' and current = true and valinnainen = true and lisatieto = 'FI' and jarjestys = 1".as[String]))
     arvosanat.head should equal("1")
   }
-   */
 
   it should "store 2 separate opiskeluoikeutta and valmis tilaiset arvosanat when perusopetuksen oppiaineen oppimäärä and tila equals läsnä" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_aik_perusopetus_poo.json").mkString
@@ -2600,6 +2598,56 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("1")
 
     arvosanat = run(database.run(sql"select count(*) from arvosana where aine like 'HI%'".as[String]))
+    arvosanat.head should equal("1")
+  }
+
+  it should "store latest aikuisten perusopetus with separate perusopetuksen oppiaineen oppimääräs" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_aik_perusopetus_poo_useita.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("3")
+
+    var opiskelijaTyyppi = run(database.run(sql"select count(*) from opiskelija where luokka = 'AIK 9' and current = true".as[String]))
+    opiskelijaTyyppi.head should equal("1")
+
+    opiskelijaTyyppi = run(database.run(sql"select count(*) from opiskelija where luokka = 'OPPIAINE' and current = true".as[String]))
+    opiskelijaTyyppi.head should equal("2")
+
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("3")
+
+    var suoritusTyyppi = run(database.run(sql"select count(*) from suoritus where komo = '1.2.246.562.13.62959769647' and current = true".as[String]))
+    suoritusTyyppi.head should equal("1")
+
+    suoritusTyyppi = run(database.run(sql"select count(*) from suoritus where komo = 'TODO perusopetuksenOppiaineenOppimäärä' and current = true".as[String]))
+    suoritusTyyppi.head should equal("2")
+
+    var arvosanat = run(database.run(sql"select count(*) from arvosana where current = true".as[String]))
+    arvosanat.head should equal("20")
+
+    suoritukset = run(database.run(sql"select resource_id from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]))
+    var suoritus = suoritukset.head.toString
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where suoritus = $suoritus".as[String]))
+    arvosanat.head should equal("17")
+
+    suoritukset = run(database.run(sql"select resource_id from suoritus where komo = 'TODO perusopetuksenOppiaineenOppimäärä' and myontaja = '1.2.246.562.10.32727448402'".as[String]))
+    suoritus = suoritukset.head.toString
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where suoritus = $suoritus".as[String]))
+    arvosanat.head should equal("2")
+
+    suoritukset = run(database.run(sql"select resource_id from suoritus where komo = 'TODO perusopetuksenOppiaineenOppimäärä' and myontaja = '1.2.246.562.10.81044480515'".as[String]))
+    suoritus = suoritukset.head.toString
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where suoritus = $suoritus".as[String]))
     arvosanat.head should equal("1")
   }
 
