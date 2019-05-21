@@ -123,6 +123,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
   }
 
+  private def filterOnlyPerusopetuksenOppiaineenOppimaaras(oikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
+    oikeudet.filter(oikeus =>
+      oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
+  }
+
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
     var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
     //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
@@ -131,13 +136,19 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     val tyypit: Seq[String] = oikeudet.map(oikeus => {if (oikeus.tyyppi.isDefined) oikeus.tyyppi.get.koodiarvo else ""})
     tyypit.distinct.foreach(tyyppi => {
       val tataTyyppia: Seq[KoskiOpiskeluoikeus] = oikeudetFiltered.filter(oo => oo.tyyppi.isDefined && oo.tyyppi.get.koodiarvo.equals(tyyppi))
-      //Aktiivisia ammatillisia opiskeluoikeuksia ja perusopetuksen oppiaineen oppimäärän opiskeluoikeuksia voi olla useita samaan aikaan, eikä kyseessä ole datavirhe.
-      if (tyyppi.equals("ammatillinenkoulutus") && tataTyyppia.nonEmpty || containsPerusopetuksenOppiaineenOppimaara(tataTyyppia)) {
+      //Aktiivisia ammatillisia opiskeluoikeuksia voi olla useita samaan aikaan, eikä kyseessä ole datavirhe.
+      if (tyyppi.equals("ammatillinenkoulutus") && tataTyyppia.nonEmpty) {
         viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppia
       } else {
         val viimeisin = getViimeisinOpiskeluoikeusjakso(tataTyyppia)
-        if (viimeisin.isDefined) {
+        if (viimeisin.isDefined && !containsPerusopetuksenOppiaineenOppimaara(tataTyyppia)) {
           viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
+        } else if (viimeisin.isDefined) {
+          // Jos opiskeluoikeudesta löytyy perusopetuksen oppiaineen oppimäärän suorituksia, lisätään myös ne.
+          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
+          var tataTyyppiaPOO = tataTyyppia.filterNot(oikeus => oikeus.equals(viimeisin.get))
+          tataTyyppiaPOO = filterOnlyPerusopetuksenOppiaineenOppimaaras(tataTyyppiaPOO)
+          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppiaPOO
         }
       }
     })

@@ -1,0 +1,3046 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.32656706483",
+    "hetu": "240858-9053",
+    "syntymäaika": "1958-08-24",
+    "etunimet": "Henrikki Testi",
+    "kutsumanimi": "Henrikki",
+    "sukunimi": "Lappalainen-Testi",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.76490187440",
+      "versionumero": 8,
+      "aikaleima": "2019-05-21T08:01:45.967044",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.32727448402",
+        "oppilaitosnumero": {
+          "koodiarvo": "07522",
+          "nimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Hatsalan klassillinen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.59286753021",
+        "nimi": {
+          "fi": "Kuopion kaupunki"
+        },
+        "yTunnus": "0171450-7",
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2018-06-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "MA",
+              "nimi": {
+                "fi": "Matematiikka",
+                "sv": "Matematik"
+              },
+              "lyhytNimi": {
+                "fi": "Matematiikka",
+                "sv": "Matematik"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017"
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.32727448402",
+            "oppilaitosnumero": {
+              "koodiarvo": "07522",
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Hatsalan klassillinen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "10",
+                "nimi": {
+                  "fi": "erinomainen",
+                  "sv": "utmärkt"
+                },
+                "lyhytNimi": {
+                  "fi": "10"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2018-06-03",
+            "paikkakunta": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.32727448402",
+              "oppilaitosnumero": {
+                "koodiarvo": "07522",
+                "nimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "lyhytNimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "kotipaikka": {
+                "koodiarvo": "297",
+                "nimi": {
+                  "fi": "Kuopio",
+                  "sv": "Kuopio"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.32727448402",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "07522",
+                    "nimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Hatsalan klassillinen koulu"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "297",
+                    "nimi": {
+                      "fi": "Kuopio",
+                      "sv": "Kuopio"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA8",
+                  "nimi": {
+                    "fi": "Geometria ja trigonometria",
+                    "sv": "Geometri och trigonometri"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA7",
+                  "nimi": {
+                    "fi": "Funktiot ja tilastot",
+                    "sv": "Funktioner och statistik"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA6",
+                  "nimi": {
+                    "fi": "Prosentit",
+                    "sv": "Procent"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning",
+              "en": "Basic education Subject syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "BI",
+              "nimi": {
+                "fi": "Biologia",
+                "sv": "Biologi"
+              },
+              "lyhytNimi": {
+                "fi": "Biologia",
+                "sv": "Biologi"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017"
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.32727448402",
+            "oppilaitosnumero": {
+              "koodiarvo": "07522",
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Hatsalan klassillinen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "7",
+                "nimi": {
+                  "fi": "tyydyttävä",
+                  "sv": "nöjaktig"
+                },
+                "lyhytNimi": {
+                  "fi": "7"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2018-06-03",
+            "paikkakunta": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.32727448402",
+              "oppilaitosnumero": {
+                "koodiarvo": "07522",
+                "nimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "lyhytNimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "kotipaikka": {
+                "koodiarvo": "297",
+                "nimi": {
+                  "fi": "Kuopio",
+                  "sv": "Kuopio"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.32727448402",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "07522",
+                    "nimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Hatsalan klassillinen koulu"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "297",
+                    "nimi": {
+                      "fi": "Kuopio",
+                      "sv": "Kuopio"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "BI1",
+                  "nimi": {
+                    "fi": "Mitä elämä on?",
+                    "sv": "Vad är liv?"
+                  },
+                  "koodistoUri": "aikuistenperusopetuksenpaattovaiheenkurssit2017",
+                  "koodistoVersio": 1
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "10",
+                    "nimi": {
+                      "fi": "erinomainen",
+                      "sv": "utmärkt"
+                    },
+                    "lyhytNimi": {
+                      "fi": "10"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenkurssi",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen kurssi",
+                  "sv": "Kurs inom den grundläggande utbildningen för vuxna",
+                  "en": "Basic education for adults course"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning",
+              "en": "Basic education Subject syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2018-06-01"
+    },
+    {
+      "oid": "1.2.246.562.15.95408187094",
+      "versionumero": 2,
+      "aikaleima": "2019-05-21T08:00:32.143629",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.32727448402",
+        "oppilaitosnumero": {
+          "koodiarvo": "07522",
+          "nimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Hatsalan klassillinen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.59286753021",
+        "nimi": {
+          "fi": "Kuopion kaupunki"
+        },
+        "yTunnus": "0171450-7",
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2016-05-20",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2019-05-21",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "17",
+              "nimi": {
+                "fi": "Aikuisten perusopetus",
+                "sv": "Grundläggande utbildning för vuxna",
+                "en": "Aikuisten perusopetus"
+              },
+              "lyhytNimi": {
+                "fi": "Aikuisten perusopetus",
+                "sv": "Grundläggande utbildning för vuxna",
+                "en": "Aikuisten perusopetus"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.32727448402",
+            "oppilaitosnumero": {
+              "koodiarvo": "07522",
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "lyhytNimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Hatsalan klassillinen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2019-05-21",
+            "paikkakunta": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.32727448402",
+              "oppilaitosnumero": {
+                "koodiarvo": "07522",
+                "nimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "lyhytNimi": {
+                  "fi": "Hatsalan klassillinen koulu"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Hatsalan klassillinen koulu"
+              },
+              "kotipaikka": {
+                "koodiarvo": "297",
+                "nimi": {
+                  "fi": "Kuopio",
+                  "sv": "Kuopio"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Reijo Reksi",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.32727448402",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "07522",
+                    "nimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Hatsalan klassillinen koulu"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Hatsalan klassillinen koulu"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "297",
+                    "nimi": {
+                      "fi": "Kuopio",
+                      "sv": "Kuopio"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "AI",
+                  "nimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "AI1",
+                  "nimi": {
+                    "fi": "Suomen kieli ja kirjallisuus",
+                    "sv": "Finska och litteratur"
+                  },
+                  "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "A1",
+                  "nimi": {
+                    "fi": "A1-kieli",
+                    "sv": "A1-språk"
+                  },
+                  "lyhytNimi": {
+                    "fi": "A1-kieli",
+                    "sv": "A1-språk"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "EN",
+                  "nimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "lyhytNimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "B1",
+                  "nimi": {
+                    "fi": "B1-kieli",
+                    "sv": "B1-språk"
+                  },
+                  "lyhytNimi": {
+                    "fi": "B1-kieli",
+                    "sv": "B1-språk"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "SV",
+                  "nimi": {
+                    "fi": "ruotsi",
+                    "sv": "svenska",
+                    "en": "Swedish"
+                  },
+                  "lyhytNimi": {
+                    "fi": "ruotsi",
+                    "sv": "svenska",
+                    "en": "Swedish"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA",
+                  "nimi": {
+                    "fi": "Matematiikka",
+                    "sv": "Matematik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Matematiikka",
+                    "sv": "Matematik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "BI",
+                  "nimi": {
+                    "fi": "Biologia",
+                    "sv": "Biologi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Biologia",
+                    "sv": "Biologi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "GE",
+                  "nimi": {
+                    "fi": "Maantieto",
+                    "sv": "Geografi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Maantieto",
+                    "sv": "Geografi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "9",
+                    "nimi": {
+                      "fi": "kiitettävä",
+                      "sv": "berömlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "9"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "FY",
+                  "nimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KE",
+                  "nimi": {
+                    "fi": "Kemia",
+                    "sv": "Kemi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kemia",
+                    "sv": "Kemi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "TE",
+                  "nimi": {
+                    "fi": "Terveystieto",
+                    "sv": "Hälsokunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Terveystieto",
+                    "sv": "Hälsokunskap"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KT",
+                  "nimi": {
+                    "fi": "Uskonto/Elämänkatsomustieto",
+                    "sv": "Religion/Livsåskådningskunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Uskonto",
+                    "sv": "Religion"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "HI",
+                  "nimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "YH",
+                  "nimi": {
+                    "fi": "Yhteiskuntaoppi",
+                    "sv": "Samhällslära"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Yhteiskuntaoppi",
+                    "sv": "Samhällslära"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MU",
+                  "nimi": {
+                    "fi": "Musiikki",
+                    "sv": "Musik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Musiikki",
+                    "sv": "Musik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KU",
+                  "nimi": {
+                    "fi": "Kuvataide",
+                    "sv": "Bildkonst"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kuvataide",
+                    "sv": "Bildkonst"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KS",
+                  "nimi": {
+                    "fi": "Käsityö",
+                    "sv": "Slöjd"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Käsityö",
+                    "sv": "Slöjd"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LI",
+                  "nimi": {
+                    "fi": "Liikunta",
+                    "sv": "Gymnastik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Liikunta",
+                    "sv": "Gymnastik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KO",
+                  "nimi": {
+                    "fi": "Kotitalous",
+                    "sv": "Huslig ekonomi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kotitalous",
+                    "sv": "Huslig ekonomi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "OP",
+                  "nimi": {
+                    "fi": "Opinto-ohjaus",
+                    "sv": "Elevhandledning"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Opinto-ohjaus"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "8",
+                    "nimi": {
+                      "fi": "hyvä",
+                      "sv": "god"
+                    },
+                    "lyhytNimi": {
+                      "fi": "8"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "aikuistenperusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Aikuisten perusopetuksen oppimäärä",
+              "sv": "Lärökurs i den grundläggande utbildningen för vuxna",
+              "en": "Basic education for adults syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2016-05-20",
+      "päättymispäivä": "2019-05-21"
+    },
+    {
+      "oid": "1.2.246.562.15.53337193568",
+      "versionumero": 2,
+      "aikaleima": "2019-05-21T08:15:25.706040",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.81044480515",
+        "oppilaitosnumero": {
+          "koodiarvo": "01359",
+          "nimi": {
+            "fi": "Aitoon koulutuskeskus"
+          },
+          "lyhytNimi": {
+            "fi": "Aitoon koulutuskeskus"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Aitoon kotitalousoppilaitos"
+        },
+        "kotipaikka": {
+          "koodiarvo": "635",
+          "nimi": {
+            "fi": "Pälkäne",
+            "sv": "Pälkäne"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.93864526376",
+        "nimi": {
+          "fi": "Aitoon Emäntäkoulu Oy"
+        },
+        "yTunnus": "0150951-1",
+        "kotipaikka": {
+          "koodiarvo": "635",
+          "nimi": {
+            "fi": "Pälkäne",
+            "sv": "Pälkäne"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "1999-05-21",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2000-05-21",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "17",
+              "nimi": {
+                "fi": "Aikuisten perusopetus",
+                "sv": "Grundläggande utbildning för vuxna",
+                "en": "Aikuisten perusopetus"
+              },
+              "lyhytNimi": {
+                "fi": "Aikuisten perusopetus",
+                "sv": "Grundläggande utbildning för vuxna",
+                "en": "Aikuisten perusopetus"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.81044480515",
+            "oppilaitosnumero": {
+              "koodiarvo": "01359",
+              "nimi": {
+                "fi": "Aitoon koulutuskeskus"
+              },
+              "lyhytNimi": {
+                "fi": "Aitoon koulutuskeskus"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Aitoon kotitalousoppilaitos"
+            },
+            "kotipaikka": {
+              "koodiarvo": "635",
+              "nimi": {
+                "fi": "Pälkäne",
+                "sv": "Pälkäne"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2000-05-21",
+            "paikkakunta": {
+              "koodiarvo": "635",
+              "nimi": {
+                "fi": "Pälkäne",
+                "sv": "Pälkäne"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.81044480515",
+              "oppilaitosnumero": {
+                "koodiarvo": "01359",
+                "nimi": {
+                  "fi": "Aitoon koulutuskeskus"
+                },
+                "lyhytNimi": {
+                  "fi": "Aitoon koulutuskeskus"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Aitoon koulutuskeskus"
+              },
+              "kotipaikka": {
+                "koodiarvo": "635",
+                "nimi": {
+                  "fi": "Pälkäne",
+                  "sv": "Pälkäne"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "tatu",
+                "titteli": {
+                  "fi": "kingi"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.81044480515",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "01359",
+                    "nimi": {
+                      "fi": "Aitoon koulutuskeskus"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Aitoon koulutuskeskus"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Aitoon koulutuskeskus"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "635",
+                    "nimi": {
+                      "fi": "Pälkäne",
+                      "sv": "Pälkäne"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "AI",
+                  "nimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Äidinkieli ja kirjallisuus",
+                    "sv": "Modersmålet och litteratur"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "AI1",
+                  "nimi": {
+                    "fi": "Suomen kieli ja kirjallisuus",
+                    "sv": "Finska och litteratur"
+                  },
+                  "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "A1",
+                  "nimi": {
+                    "fi": "A1-kieli",
+                    "sv": "A1-språk"
+                  },
+                  "lyhytNimi": {
+                    "fi": "A1-kieli",
+                    "sv": "A1-språk"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "EN",
+                  "nimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "lyhytNimi": {
+                    "fi": "englanti",
+                    "sv": "engelska",
+                    "en": "English"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "B1",
+                  "nimi": {
+                    "fi": "B1-kieli",
+                    "sv": "B1-språk"
+                  },
+                  "lyhytNimi": {
+                    "fi": "B1-kieli",
+                    "sv": "B1-språk"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "kieli": {
+                  "koodiarvo": "SV",
+                  "nimi": {
+                    "fi": "ruotsi",
+                    "sv": "svenska",
+                    "en": "Swedish"
+                  },
+                  "lyhytNimi": {
+                    "fi": "ruotsi",
+                    "sv": "svenska",
+                    "en": "Swedish"
+                  },
+                  "koodistoUri": "kielivalikoima",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MA",
+                  "nimi": {
+                    "fi": "Matematiikka",
+                    "sv": "Matematik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Matematiikka",
+                    "sv": "Matematik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "BI",
+                  "nimi": {
+                    "fi": "Biologia",
+                    "sv": "Biologi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Biologia",
+                    "sv": "Biologi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "GE",
+                  "nimi": {
+                    "fi": "Maantieto",
+                    "sv": "Geografi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Maantieto",
+                    "sv": "Geografi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "FY",
+                  "nimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KE",
+                  "nimi": {
+                    "fi": "Kemia",
+                    "sv": "Kemi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kemia",
+                    "sv": "Kemi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "7",
+                    "nimi": {
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "7"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "TE",
+                  "nimi": {
+                    "fi": "Terveystieto",
+                    "sv": "Hälsokunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Terveystieto",
+                    "sv": "Hälsokunskap"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "kohtalainen",
+                      "sv": "hjälplig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "6"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KT",
+                  "nimi": {
+                    "fi": "Uskonto/Elämänkatsomustieto",
+                    "sv": "Religion/Livsåskådningskunskap"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Uskonto",
+                    "sv": "Religion"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "HI",
+                  "nimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Historia",
+                    "sv": "Historia"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "YH",
+                  "nimi": {
+                    "fi": "Yhteiskuntaoppi",
+                    "sv": "Samhällslära"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Yhteiskuntaoppi",
+                    "sv": "Samhällslära"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "MU",
+                  "nimi": {
+                    "fi": "Musiikki",
+                    "sv": "Musik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Musiikki",
+                    "sv": "Musik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KU",
+                  "nimi": {
+                    "fi": "Kuvataide",
+                    "sv": "Bildkonst"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kuvataide",
+                    "sv": "Bildkonst"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KS",
+                  "nimi": {
+                    "fi": "Käsityö",
+                    "sv": "Slöjd"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Käsityö",
+                    "sv": "Slöjd"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "LI",
+                  "nimi": {
+                    "fi": "Liikunta",
+                    "sv": "Gymnastik"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Liikunta",
+                    "sv": "Gymnastik"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "KO",
+                  "nimi": {
+                    "fi": "Kotitalous",
+                    "sv": "Huslig ekonomi"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Kotitalous",
+                    "sv": "Huslig ekonomi"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "OP",
+                  "nimi": {
+                    "fi": "Opinto-ohjaus",
+                    "sv": "Elevhandledning"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Opinto-ohjaus"
+                  },
+                  "koodistoUri": "koskioppiaineetyleissivistava",
+                  "koodistoVersio": 1
+                },
+                "pakollinen": true
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoyleissivistava",
+                    "koodistoVersio": 1
+                  },
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "aikuistenperusopetuksenoppiaine",
+                "nimi": {
+                  "fi": "Aikuisten perusopetuksen oppiaine",
+                  "en": "Basic education for adults subject"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "aikuistenperusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Aikuisten perusopetuksen oppimäärä",
+              "sv": "Lärökurs i den grundläggande utbildningen för vuxna",
+              "en": "Basic education for adults syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "1999-05-21",
+      "päättymispäivä": "2000-05-21"
+    },
+    {
+      "oid": "1.2.246.562.15.83397216561",
+      "versionumero": 2,
+      "aikaleima": "2019-05-21T08:43:06.692678",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.81044480515",
+        "oppilaitosnumero": {
+          "koodiarvo": "01359",
+          "nimi": {
+            "fi": "Aitoon koulutuskeskus"
+          },
+          "lyhytNimi": {
+            "fi": "Aitoon koulutuskeskus"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Aitoon koulutuskeskus"
+        },
+        "kotipaikka": {
+          "koodiarvo": "635",
+          "nimi": {
+            "fi": "Pälkäne",
+            "sv": "Pälkäne"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.93864526376",
+        "nimi": {
+          "fi": "Aitoon Emäntäkoulu Oy"
+        },
+        "yTunnus": "0150951-1",
+        "kotipaikka": {
+          "koodiarvo": "635",
+          "nimi": {
+            "fi": "Pälkäne",
+            "sv": "Pälkäne"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2010-05-21",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "FY",
+              "nimi": {
+                "fi": "Fysiikka",
+                "sv": "Fysik"
+              },
+              "lyhytNimi": {
+                "fi": "Fysiikka",
+                "sv": "Fysik"
+              },
+              "koodistoUri": "koskioppiaineetyleissivistava",
+              "koodistoVersio": 1
+            },
+            "pakollinen": true,
+            "perusteenDiaarinumero": "OPH-1280-2017",
+            "laajuus": {
+              "arvo": 1,
+              "yksikkö": {
+                "koodiarvo": "4",
+                "nimi": {
+                  "fi": "kurssia",
+                  "sv": "kurser",
+                  "en": "course units"
+                },
+                "lyhytNimi": {
+                  "fi": "kurssia",
+                  "sv": "kurser",
+                  "en": "courses"
+                },
+                "koodistoUri": "opintojenlaajuusyksikko",
+                "koodistoVersio": 1
+              }
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.81044480515",
+            "oppilaitosnumero": {
+              "koodiarvo": "01359",
+              "nimi": {
+                "fi": "Aitoon koulutuskeskus"
+              },
+              "lyhytNimi": {
+                "fi": "Aitoon koulutuskeskus"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Aitoon koulutuskeskus"
+            },
+            "kotipaikka": {
+              "koodiarvo": "635",
+              "nimi": {
+                "fi": "Pälkäne",
+                "sv": "Pälkäne"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "arviointi": [
+            {
+              "arvosana": {
+                "koodiarvo": "9",
+                "nimi": {
+                  "fi": "kiitettävä",
+                  "sv": "berömlig"
+                },
+                "lyhytNimi": {
+                  "fi": "9"
+                },
+                "koodistoUri": "arviointiasteikkoyleissivistava",
+                "koodistoVersio": 1
+              },
+              "hyväksytty": true
+            }
+          ],
+          "vahvistus": {
+            "päivä": "2019-05-21",
+            "paikkakunta": {
+              "koodiarvo": "635",
+              "nimi": {
+                "fi": "Pälkäne",
+                "sv": "Pälkäne"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.81044480515",
+              "oppilaitosnumero": {
+                "koodiarvo": "01359",
+                "nimi": {
+                  "fi": "Aitoon koulutuskeskus"
+                },
+                "lyhytNimi": {
+                  "fi": "Aitoon koulutuskeskus"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Aitoon koulutuskeskus"
+              },
+              "kotipaikka": {
+                "koodiarvo": "635",
+                "nimi": {
+                  "fi": "Pälkäne",
+                  "sv": "Pälkäne"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "tatu",
+                "titteli": {
+                  "fi": "kingi"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.81044480515",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "01359",
+                    "nimi": {
+                      "fi": "Aitoon koulutuskeskus"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Aitoon koulutuskeskus"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Aitoon koulutuskeskus"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "635",
+                    "nimi": {
+                      "fi": "Pälkäne",
+                      "sv": "Pälkäne"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suoritustapa": {
+            "koodiarvo": "koulutus",
+            "nimi": {
+              "fi": "Koulutus",
+              "sv": "Utbildning"
+            },
+            "koodistoUri": "perusopetuksensuoritustapa",
+            "koodistoVersio": 1
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppiaineenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppiaineen oppimäärä",
+              "sv": "Lärokurs i ett läroämne i grundläggande utbildning",
+              "en": "Basic education Subject syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2010-05-21"
+    }
+  ]
+}
