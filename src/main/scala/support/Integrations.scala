@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef, MockKoodistoActor}
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
 import fi.vm.sade.hakurekisteri.integration.koski._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor, OrganisaatioActorRef}
@@ -75,7 +75,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val hakemusService = new HakemusServiceMock
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
-  override val koodisto: KoodistoActorRef = new KoodistoActorRef(mockActor("koodisto", new DummyActor))
+  override val koodisto: KoodistoActorRef = new KoodistoActorRef(mockActor("koodisto", new MockKoodistoActor()))
   override val organisaatiot: OrganisaatioActorRef = new OrganisaatioActorRef(mockActor("organisaatiot", new MockOrganisaatioActor(config)))
   override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor(config = config)(system)))
   override val henkilo: HenkiloActorRef = new HenkiloActorRef(mockActor("henkilo", new MockHenkiloActor(config)))
