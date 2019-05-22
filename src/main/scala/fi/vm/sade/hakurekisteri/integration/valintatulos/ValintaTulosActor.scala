@@ -20,14 +20,12 @@ case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
 class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
                         cacheFactory: CacheFactory,
-                        refetchTime: Option[Long] = None,
                         cacheTime: Option[Long] = None,
                         retryTime: Option[Long] = None,
                         initOnStartup: Boolean = false) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
-  private val refetch: FiniteDuration = refetchTime.map(_.milliseconds).getOrElse((config.integrations.valintatulosCacheHours / 2).hours)
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
   private val cache = cacheFactory.getInstance[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis), this.getClass, classOf[SijoitteluTulos], "sijoittelu-tulos")
   private var calling: Boolean = false
@@ -47,21 +45,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case BatchUpdateValintatulos(haut) =>
-      Future.sequence(haut.map(h => Future.successful(h).zip(cache.contains(h.haku)))).map { updatesWithContainsFlags: Set[(UpdateValintatulos, Boolean)] =>
-        updatesWithContainsFlags.groupBy(_._2).mapValues(_.map(_._1))
-      }.onComplete { result =>
-        result match {
-          case Success(updatesByContains) =>
-            val hautCachessa = updatesByContains.get(true)
-            log.info(s"Skipping ${hautCachessa.map(_.size).getOrElse(0)} hakus (${hautCachessa.map(_.map(_.haku)).mkString(", ")}) from initial loading.")
-            val hautEiCachessa = updatesByContains.get(false)
-            hautEiCachessa.foreach(_.foreach(haku =>
-              if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq())))
-          case Failure(e) =>
-            log.error(e, s"Problem when checking contains from cache. Cannot process ${BatchUpdateValintatulos.getClass.getSimpleName} with ${haut.size} haut.")
-        }
-        self ! UpdateNext
-      }
+      haut.foreach(haku =>
+        if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
+      self ! UpdateNext
 
     case UpdateValintatulos(haku) =>
       if (!updateRequestQueue.contains(haku)) {
