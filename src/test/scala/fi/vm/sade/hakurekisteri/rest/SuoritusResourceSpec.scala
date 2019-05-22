@@ -7,8 +7,10 @@ import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
+import fi.vm.sade.hakurekisteri.batchimport.MockedKoodistoActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockPersonAliasesProvider
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, HakurekisteriJsonSupport, JDBCJournal, User}
@@ -88,12 +90,13 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
     database = Database.forURL(ItPostgres.getEndpointURL)
 
     val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor(config = mockConfig)(system))))
+    val koodistoActor =  new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
     val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
     suoritusJournal.addModification(Updated(suoritus.identify))
     val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig)))
     val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor)
+    val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor, koodistoActor)
     addServlet(servletWithOPHRight, "/*")
 
     super.beforeAll()
@@ -143,11 +146,12 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
 
     val x = new ParametritActorRef(TestActorRef(new MockParameterActor(true, mockConfig)(system)))
     val y = new ParametritActorRef(TestActorRef(new MockParameterActor(false, mockConfig)(system)))
+    val z = new KoodistoActorRef(TestActorRef(new MockedKoodistoActor()))
 
-    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x)
+    val servletWithOPORightActive = new SuoritusResource(guardedSuoritusRekisteri, x, z)
     addServlet(servletWithOPORightActive, "/foo", "foo")
 
-    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y)
+    val servletWithOPORightPassive = new SuoritusResource(guardedSuoritusRekisteri, y, z)
     addServlet(servletWithOPORightPassive, "/bar", "bar")
 
     super.beforeAll()

@@ -37,6 +37,9 @@ class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar
   when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", koodisto, koodiArvo)(responseCode, maxRetries)).thenReturn(
     Future.successful(Seq(mockKoodi))
   )
+ when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodiUri)(responseCode, maxRetries)).thenReturn(
+    Future.successful(Seq(mockKoodi))
+  )
 
   when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", koodiUri)(responseCode, maxRetries)).thenReturn(
     Future.successful(Seq(mockRinnasteinen))
