@@ -687,7 +687,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
 
     //aine appended by grade
-    val myöntäjäOrgAineet = List("AI7", "AI5", "MA5", "KT5", "HI7", "YH6", "FY5", "KE5", "BI6", "GE5", "TEH")
+    val myöntäjäOrgAineet = List("AI7", "AI5", "MA5", "KT5", "HI7", "YH6", "FY5", "KE5", "BI6", "GE5")
     val myöntäjäOrg2Aineet = List("TEH")
 
     val resultGroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
@@ -2523,8 +2523,8 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
   }
 
-  it should "only store arvosanat with numbers, not S" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_s_suorituksia.json").mkString
+  it should "only store arvosanat with numbers, not any alphabets" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_ei_numeeriset_arvosanat.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
@@ -2543,10 +2543,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("0")
 
     arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
-    arvosanat.head should equal("5")
-
-    arvosanat = run(database.run(sql"select count(*) from arvosana where arvosana = '10'".as[String]))
-    arvosanat.head should equal("5")
+    arvosanat.head should equal("3")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
