@@ -26,8 +26,8 @@
   "opiskeluoikeudet": [
     {
       "oid": "1.2.246.562.15.17600284347",
-      "versionumero": 3,
-      "aikaleima": "2019-05-22T14:00:18.503076",
+      "versionumero": 4,
+      "aikaleima": "2019-05-22T14:52:35.077367",
       "oppilaitos": {
         "oid": "1.2.246.562.10.35278868829",
         "oppilaitosnumero": {
@@ -282,13 +282,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "8",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "hyvä",
+                      "sv": "god"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "8"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -344,13 +344,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "5",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "välttävä",
+                      "sv": "försvarlig"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "5"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -406,13 +406,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "7",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "tyydyttävä",
+                      "sv": "nöjaktig"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "7"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1

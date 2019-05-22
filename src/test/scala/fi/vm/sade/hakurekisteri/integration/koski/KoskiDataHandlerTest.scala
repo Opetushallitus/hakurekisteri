@@ -2543,7 +2543,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("0")
 
     arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
-    arvosanat.head should equal("0")
+    arvosanat.head should equal("3")
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
