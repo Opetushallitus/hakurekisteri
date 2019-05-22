@@ -182,7 +182,7 @@ case class KoskiOsasuoritus(
 
 case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String]) {
   def isPKValue: Boolean = {
-    KoskiUtil.peruskoulunArvosanat.contains(arvosana.koodiarvo) || arvosana.koodiarvo == "H"
+    KoskiUtil.peruskoulunArvosanat.contains(arvosana.koodiarvo)
   }
 }
 

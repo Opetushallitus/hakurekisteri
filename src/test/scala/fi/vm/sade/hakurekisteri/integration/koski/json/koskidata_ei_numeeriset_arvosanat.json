@@ -1,18 +1,33 @@
 {
   "henkilö": {
-    "oid": "1.2.246.562.24.80710434876",
-    "hetu": "210299-9456",
-    "syntymäaika": "1999-02-21",
-    "etunimet": "Prinssi Möykkäel",
-    "kutsumanimi": "Prinssi",
-    "sukunimi": "Jaksonen",
+    "oid": "1.2.246.562.24.12695485455",
+    "hetu": "220599-957M",
+    "syntymäaika": "1999-05-22",
+    "etunimet": "Torolf Testi",
+    "kutsumanimi": "Torolf",
+    "sukunimi": "Lehtonen-Testi",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
     "turvakielto": false
   },
   "opiskeluoikeudet": [
     {
-      "oid": "1.2.246.562.15.10631899951",
-      "versionumero": 4,
-      "aikaleima": "2019-04-16T14:43:10.100111",
+      "oid": "1.2.246.562.15.17600284347",
+      "versionumero": 3,
+      "aikaleima": "2019-05-22T14:00:18.503076",
       "oppilaitos": {
         "oid": "1.2.246.562.10.35278868829",
         "oppilaitosnumero": {
@@ -59,7 +74,7 @@
       "tila": {
         "opiskeluoikeusjaksot": [
           {
-            "alku": "2016-04-16",
+            "alku": "2016-05-22",
             "tila": {
               "koodiarvo": "lasna",
               "nimi": {
@@ -72,7 +87,7 @@
             }
           },
           {
-            "alku": "2019-02-17",
+            "alku": "2019-05-22",
             "tila": {
               "koodiarvo": "valmistunut",
               "nimi": {
@@ -140,7 +155,7 @@
             }
           },
           "vahvistus": {
-            "päivä": "2019-02-16",
+            "päivä": "2019-05-22",
             "paikkakunta": {
               "koodiarvo": "091",
               "nimi": {
@@ -267,13 +282,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "S",
                     "nimi": {
-                      "fi": "erinomainen",
-                      "sv": "utmärkt"
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "S"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -329,13 +344,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "S",
                     "nimi": {
-                      "fi": "erinomainen",
-                      "sv": "utmärkt"
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "S"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -391,13 +406,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "S",
                     "nimi": {
-                      "fi": "erinomainen",
-                      "sv": "utmärkt"
+                      "fi": "hyväksytty",
+                      "sv": "godkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "S"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -438,13 +453,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "erinomainen",
-                      "sv": "utmärkt"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -485,13 +500,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "10",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "erinomainen",
-                      "sv": "utmärkt"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "10"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -532,13 +547,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -626,13 +641,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -673,18 +688,18 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "H",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "hylätty",
+                      "sv": "underkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "H"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
                   },
-                  "hyväksytty": true
+                  "hyväksytty": false
                 }
               ],
               "tyyppi": {
@@ -767,18 +782,18 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "H",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "hylätty",
+                      "sv": "underkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "H"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
                   },
-                  "hyväksytty": true
+                  "hyväksytty": false
                 }
               ],
               "tyyppi": {
@@ -814,18 +829,18 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "H",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "hylätty",
+                      "sv": "underkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "H"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
                   },
-                  "hyväksytty": true
+                  "hyväksytty": false
                 }
               ],
               "tyyppi": {
@@ -908,13 +923,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -955,13 +970,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -1002,13 +1017,13 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "O",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "osallistunut",
+                      "sv": "deltagit"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "O"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
@@ -1049,18 +1064,18 @@
               "arviointi": [
                 {
                   "arvosana": {
-                    "koodiarvo": "S",
+                    "koodiarvo": "H",
                     "nimi": {
-                      "fi": "hyväksytty",
-                      "sv": "godkänd"
+                      "fi": "hylätty",
+                      "sv": "underkänd"
                     },
                     "lyhytNimi": {
-                      "fi": "S"
+                      "fi": "H"
                     },
                     "koodistoUri": "arviointiasteikkoyleissivistava",
                     "koodistoVersio": 1
                   },
-                  "hyväksytty": true
+                  "hyväksytty": false
                 }
               ],
               "tyyppi": {
@@ -1145,7 +1160,7 @@
             },
             "perusteenDiaarinumero": "104/011/2014"
           },
-          "luokka": "9A",
+          "luokka": "9G",
           "toimipiste": {
             "oid": "1.2.246.562.10.35278868829",
             "oppilaitosnumero": {
@@ -1172,9 +1187,8 @@
               "koodistoVersio": 2
             }
           },
-          "alkamispäivä": "2017-08-08",
           "vahvistus": {
-            "päivä": "2019-02-16",
+            "päivä": "2019-05-22",
             "paikkakunta": {
               "koodiarvo": "091",
               "nimi": {
@@ -1285,8 +1299,8 @@
         "koodistoUri": "opiskeluoikeudentyyppi",
         "koodistoVersio": 1
       },
-      "alkamispäivä": "2016-04-16",
-      "päättymispäivä": "2019-02-17"
+      "alkamispäivä": "2016-05-22",
+      "päättymispäivä": "2019-05-22"
     }
   ]
 }
