@@ -130,9 +130,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     }
 
     def matchHakemusToQuery(hakemus: HakijaHakemus): Boolean = {
-      hakemus.personOid.isDefined && hakemus.stateValid &&
-        q.oppijanumero.forall(hakemus.personOid.contains(_)) &&
-        q.haku.forall(_ == hakemus.applicationSystemId)
+      hakemus.personOid.isDefined && hakemus.stateValid && q.haku.forall(_ == hakemus.applicationSystemId)
     }
 
     for (
