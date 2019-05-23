@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.io
-import java.io.InputStream
+import java.io.{ByteArrayInputStream, InputStream}
 import java.text.SimpleDateFormat
 import java.util.zip.ZipInputStream
 
@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.javautils.httpclient._
 import fi.vm.sade.javautils.httpclient.apache.{ApacheHttpClientBuilder, ApacheOphHttpClient}
 import fi.vm.sade.properties.OphProperties
+import org.apache.commons.io.IOUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -131,14 +132,15 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   }
 
   def downloadZip(groupUuid: String)(uuid: String): Either[Throwable, InputStream] = {
-    Try[List[InputStream]](client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
-      fileSystem.write(groupUuid, uuid)(r.asInputStream())
-      fileSystem.read(uuid).toList
-    })) match {
-      case Success(e :: Nil) => Right(e)
-      case Success(l) => Left(new RuntimeException(s"Wrong number of files found with uuid ${uuid}. Expected 1, got ${l.size}"))
-      case Failure(e) => Left(e)
-    }
+    Try[InputStream] {
+      log.info(s"Making request to YTL for uuid $uuid ...")
+      client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r: OphHttpResponse) => {
+        val responseContent: Array[Byte] = IOUtils.toByteArray(r.asInputStream())
+        log.info(s"Read ${responseContent.length} bytes from YTL for uuid $uuid . Storing to ${fileSystem.getClass.getSimpleName} and returning for processing.")
+        fileSystem.write(groupUuid, uuid)(new ByteArrayInputStream(responseContent))
+        new ByteArrayInputStream(responseContent)
+      })
+    }.toEither
   }
 
   def fetchOperation(hetus: Seq[String]): Either[Throwable, Operation] = {
