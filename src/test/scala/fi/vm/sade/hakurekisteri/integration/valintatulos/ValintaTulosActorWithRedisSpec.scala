@@ -1,23 +1,30 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.KESKEN
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
+import org.json4s.{DefaultFormats, Formats}
 import org.mockito.Mockito
 import org.mockito.Mockito._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import redis.embedded.RedisServer
+import org.json4s.jackson.JsonMethods.parse
 
+import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContextExecutorService, Future}
 
 class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties with BeforeAndAfterAll {
 
@@ -66,13 +73,13 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
 
-        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+        waitFuture(querySijoitteluTulos(valintaTulosActor, "1.2.246.562.29.90697286251"))(t => {
+          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
           classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos").get("1.2.246.562.29.90697286251", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
-        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
       }
@@ -121,13 +128,13 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
 
-        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286253", None)).mapTo[SijoitteluTulos])(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+        waitFuture(querySijoitteluTulos(valintaTulosActor, "1.2.246.562.29.90697286253"))(t => {
+          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
           classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos").get("1.2.246.562.29.90697286253", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
-        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
       }
@@ -214,6 +221,38 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
       }
     )
   }
+
+  test("ValintaTulosActor should answer correctly also during cache update") {
+    withSystem(
+      implicit system => {
+        implicit val formats: Formats = HakurekisteriJsonSupport.format
+        implicit val ec: ExecutionContextExecutorService = ExecutorUtil.createExecutor(10, classOf[ValintaTulosActorWithRedisSpec].getSimpleName)
+        val endPoint = createEndPoint
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(config = config, cacheFactory = cacheFactory, client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new CapturingAsyncHttpClient(endPoint))))))
+
+        val hakuOid = "1.2.246.562.29.70576649506"
+        when(endPoint.request(forPattern("http://localhost/valinta-tulos-service/haku/" + hakuOid))).thenAnswer(new Answer[(Int, List[(String, String)], String)] {
+          override def answer(invocation: InvocationOnMock): (Int, List[(String, String)], String) = {
+            //Thread.sleep(100)
+            (200, List(), ValintaTulosResults.haku)
+          }
+        })
+
+        //valintaTulosActor ! UpdateValintatulos(hakuOid)
+        //Thread.sleep(2000)
+
+        val tulokset: Seq[(Int, Future[SijoitteluTulos])] = 1.to(10).map((_, querySijoitteluTulos(valintaTulosActor, hakuOid)))
+
+        tulokset.foreach { case (_, f) =>
+          Await.result(f, 5.seconds).valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029") should be(Some(KESKEN))
+        }
+
+        verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/" + hakuOid))
+      }
+    )
+  }
+
+  private def querySijoitteluTulos(valintaTulosActor: ActorRef, hakuOid: String) = (valintaTulosActor ? ValintaTulosQuery(hakuOid, None)).mapTo[SijoitteluTulos]
 
   override def afterAll() = {
     redisServer.stop
