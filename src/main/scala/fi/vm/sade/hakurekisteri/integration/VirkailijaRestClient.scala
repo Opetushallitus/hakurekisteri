@@ -85,6 +85,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   object Client {
     private def jSessionId: Future[JSessionId] = (casActor ? GetJSession).mapTo[JSessionId]
+    def refreshJSessionId: Future[JSessionId] = (casActor ? RefreshJSession).mapTo[JSessionId]
 
     import org.json4s.jackson.Serialization._
 
@@ -137,19 +138,55 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   private def tryClient[A <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger): Future[A] =
     Client.request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
+      case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
+        logger.warning("Expired jsession, fetching new JSessionId")
+        Client.refreshJSessionId.flatMap (_ match {
+          case j: JSessionId =>
+            logger.warning(s"Retrying request to $url due to expired JSessionId.")
+            Client.request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
+              case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+                if (retryCount.getAndIncrement <= maxRetries) {
+                  logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+                  Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
+                } else Future.failed(t)
+            }
+          case _ =>
+            Future.failed {
+              logger.error(s"Fetching jsession for $serviceUrl failed")
+              new RuntimeException(s"Fetching jsession for $serviceUrl failed")
+            }
+        })
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+          logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
           Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
         } else Future.failed(t)
     }
 
   private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger, resource: A): Future[B] =
     Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
+      case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
+          logger.warning("Expired jsession, fetching new JSessionId")
+          Client.refreshJSessionId.flatMap (_ match {
+            case j: JSessionId =>
+              logger.warning(s"Retrying request to $url due to expired JSessionId.")
+              Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
+                case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+                  if (retryCount.getAndIncrement <= maxRetries) {
+                    logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+                    Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
+                  } else Future.failed(t)
+              }
+            case _ =>
+              Future.failed {
+                logger.error(s"Fetching jsession for $serviceUrl failed")
+                new RuntimeException(s"Fetching jsession for $serviceUrl failed")
+              }
+          })
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
+          logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+          Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
         } else Future.failed(t)
     }
   private def result(t: Try[_]): String = t match {
@@ -203,7 +240,6 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     logLongQuery(result, url)
     result
   }
-
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
@@ -264,12 +300,16 @@ object JsonExtractor extends HakurekisteriJsonSupport {
     }
     new FunctionHandler[T](f) {
       override def onCompleted(response: Res): T = {
-        if (codes.contains(response.getStatusCode))
-          super.onCompleted(response)
-        else {
+        if (isRedirectToCasLogin(response)) {
+          throw new JSessionIdCookieException("JSESSIONID is expired")
+        } else if (codes.contains(response.getStatusCode)) {
+            super.onCompleted(response)
+        } else {
           throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody(Charset.forName("utf-8"))}", response.getStatusCode)
         }
       }
+
+      private def isRedirectToCasLogin(response: Res): Boolean = response.getUri.getPath.equals("/cas/login")
     }
   }
 }

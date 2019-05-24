@@ -16,6 +16,7 @@ import scala.util.{Failure, Success}
 
 case object GetJSession
 case object ClearJSession
+case object RefreshJSession
 case class JSessionId(sessionId: String)
 
 class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], jSessionName: String,
@@ -57,6 +58,16 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
           log.error(t, s"Fetching jsession for $serviceUrl failed")
           self ! ClearJSession
       })
+      f pipeTo sender
+      jSessionId = Some(f)
+    case RefreshJSession =>
+      val f = getJSession.andThen {
+        case Success(_) =>
+          context.system.scheduler.scheduleOnce(jSessionTtl, self, ClearJSession)
+        case Failure(t) =>
+          log.error(t, s"Refreshing jsession for $serviceUrl failed")
+          self ! ClearJSession
+      }
       f pipeTo sender
       jSessionId = Some(f)
     case ClearJSession =>
