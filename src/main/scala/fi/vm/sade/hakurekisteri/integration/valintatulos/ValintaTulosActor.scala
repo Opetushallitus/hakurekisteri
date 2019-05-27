@@ -3,15 +3,14 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 import java.util.concurrent.ExecutionException
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
-import akka.pattern.pipe
+import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
 import support.TypedActorRef
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 case class InitialLoadingNotDone() extends Exception("Initial loading not yet done")
 
@@ -50,9 +49,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       self ! UpdateNext
 
     case UpdateValintatulos(haku) =>
-      if (!updateRequestQueue.contains(haku)) {
-        updateRequestQueue = updateRequestQueue + (haku -> Seq())
-      }
+      val p = Promise[SijoitteluTulos]()
+      updateRequestQueue = updateRequestQueue + (haku -> (updateRequestQueue.getOrElse(haku, Seq()) :+ p))
+      p.future pipeTo sender
       self ! UpdateNext
 
     case UpdateNext if !calling && updateRequestQueue.isEmpty && !initialLoadingDone =>
@@ -101,16 +100,13 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       log.warning("Initial loading not yet done. Query params - HakuOid: " + q.hakuOid + ", hakemusOid: " + q.hakemusOid.getOrElse(""))
     }
     if (q.hakemusOid.isEmpty) {
-      cache.get(q.hakuOid, (_: String) => queueForResult(q.hakuOid).map(Some(_))).map(_.get)
+      cache.get(q.hakuOid, (_: String) => {
+        implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
+        (self ? UpdateValintatulos(q.hakuOid)).mapTo[SijoitteluTulos].map(Some(_))
+      }).map(_.get)
     } else {
       callBackend(q.hakuOid, q.hakemusOid)
     }
-  }
-
-  private def queueForResult(haku: String): Future[SijoitteluTulos] = {
-    val waitingRequest = Promise[SijoitteluTulos]()
-    updateRequestQueue = updateRequestQueue + (haku -> (updateRequestQueue.getOrElse(haku, Seq()) :+ waitingRequest))
-    waitingRequest.future
   }
 
   private def callBackend(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
