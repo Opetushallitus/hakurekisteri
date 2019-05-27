@@ -115,13 +115,15 @@ class KoskiSuoritusArvosanaParser {
           var ord: Option[Int] = None
 
           if (!isPakollinen) {
-            val n = ordering.getOrElse(tunniste.koodiarvo, 0)
-            ord = Some(n)
+            var n = 0
             val id = if(suoritus.koulutusmoduuli.kieli.isDefined) {
+              n = ordering.getOrElse(tunniste.koodiarvo.concat(suoritus.koulutusmoduuli.kieli.get.koodiarvo), 0)
               tunniste.koodiarvo.concat(suoritus.koulutusmoduuli.kieli.get.koodiarvo)
             } else {
+              n = ordering.getOrElse(tunniste.koodiarvo, 0)
               tunniste.koodiarvo
             }
+            ord = Some(n)
             ordering(id) = n + 1
           }
 
