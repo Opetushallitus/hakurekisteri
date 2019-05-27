@@ -2546,6 +2546,36 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("3")
   }
 
+  it should "store valinnaiset äidinkielet with correct ordering" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valinnaisia_aidinkielia.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(7)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+
+    var arvosanat = run(database.run(sql"select count(*) from arvosana where aine = 'AI' and current = true".as[String]))
+    arvosanat.head should equal("8")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where aine = 'AI' and current = true and valinnainen = true and lisatieto = 'FI' and jarjestys is not null".as[String]))
+    arvosanat.head should equal("4")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where aine = 'AI' and current = true and valinnainen = true and lisatieto = 'RI' and jarjestys is not null".as[String]))
+    arvosanat.head should equal("3")
+
+    arvosanat = run(database.run(sql"select count(*) from arvosana where aine = 'AI' and current = true and valinnainen = true and lisatieto = 'FI' and jarjestys = 1".as[String]))
+    arvosanat.head should equal("1")
+  }
+
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
