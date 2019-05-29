@@ -575,7 +575,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       )
     case hakemus: AtaruHakemus =>
       Some(for {
-        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.henkilo.oidHenkilo, Map()), q, kokoHaunTulos, hakukohdeOids)
+        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.personOid.get, Map()), q, kokoHaunTulos, hakukohdeOids)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = hakemus.henkilo.oidHenkilo, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
       } yield {
         val syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s)))
@@ -660,7 +660,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       )
     case hakemus: AtaruHakemus =>
       Some(for {
-        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.henkilo.oidHenkilo, Map()), q, kokoHaunTulos, hakukohdeOids)
+        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.personOid.get, Map()), q, kokoHaunTulos, hakukohdeOids)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = hakemus.henkilo.oidHenkilo, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
       } yield {
         val syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s)))
