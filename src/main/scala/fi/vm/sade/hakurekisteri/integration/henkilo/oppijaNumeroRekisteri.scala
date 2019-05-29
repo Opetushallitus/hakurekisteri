@@ -34,7 +34,7 @@ trait IOppijaNumeroRekisteri {
 
   def getByHetu(hetu: String): Future[Henkilo]
 
-  def getByOids(oids: Set[String]): Future[Seq[Henkilo]]
+  def getByOids(oids: Set[String]): Future[Map[String, Henkilo]]
 }
 
 object IOppijaNumeroRekisteri {
@@ -79,26 +79,14 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     client.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(acceptedResponseCode = HttpStatus.SC_OK)
   }
 
-  override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = {
-    val maxOppijatBatchSize: Int = config.integrations.oppijaNumeroRekisteriMaxOppijatBatchSize
-    val groupedOids: Seq[Seq[String]] = oids.toSeq.grouped(maxOppijatBatchSize).toSeq
-    val totalGroups: Int = groupedOids.length
-    logger.info(s"getByOids: yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä")
-
-    val henkilot: Future[Seq[Henkilo]] = Future.sequence(groupedOids.zipWithIndex.map{case (oidSeq, index) =>
-      if (oidSeq.nonEmpty) {
-        logger.info(s"getByOids: Haetaan Oppijanumerorekisteristä $maxOppijatBatchSize henkilöä sureen. Erä $index / $totalGroups")
-        client.postObject[Set[String], Seq[Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oidSeq.toSet, acceptedResponseCode = HttpStatus.SC_OK)
-      } else {
-        Future.successful(Seq.empty)
-      }
-    }).map(_.flatten)
-
-    henkilot.onComplete {
-      case Success(_) => logger.info("getByOids: Oppijanumerorekisteri-haku valmistui!")
-      case Failure(e) => logger.error(e, "getByOids: Oppijanumerorekisteri-haku epäonnistui.")
+  override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = {
+    if (oids.isEmpty) {
+      Future.successful(Map.empty)
+    } else {
+      Future.sequence(oids.grouped(config.integrations.oppijaNumeroRekisteriMaxOppijatBatchSize).map(oids =>
+        client.postObject[Set[String], Map[String, Henkilo]]("oppijanumerorekisteri-service.henkilotByOids")(resource = oids, acceptedResponseCode = 200)
+      )).map(_.reduce((m, mm) => m ++ mm))
     }
-    henkilot
   }
 }
 
@@ -121,8 +109,8 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
     Future.successful(json.extract[Henkilo])
   }
 
-  def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future.successful(oids.zipWithIndex.map {
-    case (oid:String, i:Int) => Henkilo(
+  def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = Future.successful(oids.zipWithIndex.map {
+    case (oid, i) => oid -> Henkilo(
       oidHenkilo = oid,
       hetu = Some(s"Hetu$i"),
       henkiloTyyppi = "OPPIJA",
@@ -136,7 +124,7 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
       asiointiKieli = Some(Kieli("fi")),
       turvakielto = Some(false)
     )
-  }.toSeq)
+  }.toMap)
 }
 
 object MockPersonAliasesProvider extends PersonAliasesProvider {
