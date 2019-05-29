@@ -108,9 +108,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
 
-  def enrichAtaruHakemukset(ataruHakemusDtos: List[AtaruHakemusDto], henkilot: Seq[Henkilo]): Future[List[AtaruHakemus]] = {
-    val henkilotByOid = henkilot.map(h => h.oidHenkilo -> h).toMap
-
+  def enrichAtaruHakemukset(ataruHakemusDtos: List[AtaruHakemusDto], henkilot: Map[String, Henkilo]): Future[List[AtaruHakemus]] = {
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
       hakukohde <- (tarjontaActor.actor ? HakukohdeQuery(hakukohdeOid)).mapTo[Option[Hakukohde]].flatMap {
         case Some(h) => Future.successful(h)
@@ -174,7 +172,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         personOid = Some(hakemus.personOid),
         applicationSystemId = hakemus.applicationSystemId,
         hakutoiveet = Some(hakutoiveet),
-        henkilo = henkilotByOid(hakemus.personOid),
+        henkilo = henkilot(hakemus.personOid),
         email = hakemus.email,
         matkapuhelin = hakemus.matkapuhelin,
         lahiosoite = hakemus.lahiosoite,
