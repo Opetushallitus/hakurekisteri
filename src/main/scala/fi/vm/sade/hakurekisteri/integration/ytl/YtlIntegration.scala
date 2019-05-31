@@ -110,7 +110,7 @@ class YtlIntegration(properties: OphProperties,
   /**
     * Begins async synchronization. Throws an exception if an error occurs during it.
     */
-  def syncAll(): Unit = {
+  def syncAll(failureEmailSender: FailureEmailSender = new RealFailureEmailSender): Unit = {
     val fetchStatus = newFetchStatus
     val currentStatus = atomicUpdateFetchStatus(currentStatus => {
       Option(currentStatus) match {
@@ -137,18 +137,19 @@ class YtlIntegration(properties: OphProperties,
       fetchInChunks(activeKKHakuOids.get()).onComplete {
         case Success(persons) =>
           logger.info(s"(Group UUID: ${currentStatus.uuid} ) success fetching personOids, total found: ${persons.size}.")
-          handleHakemukset(currentStatus.uuid, persons)
+          handleHakemukset(currentStatus.uuid, persons, failureEmailSender)
 
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service", e)
-          sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+          failureEmailSender.sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
           throw e
       }
     }
   }
 
-  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
+  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid],
+                               failureEmailSender: FailureEmailSender): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
@@ -186,7 +187,7 @@ class YtlIntegration(properties: OphProperties,
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
       val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
       if (!allSucceeded.get()) {
-        sendFailureEmail(msg)
+        failureEmailSender.sendFailureEmail(msg)
       }
       logger.info(s"Ytl sync ended $msg!")
       atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
@@ -197,29 +198,35 @@ class YtlIntegration(properties: OphProperties,
     ytlActor ! KokelasWithPersonAliases(kokelas, personOidsWithAliases)
   }
 
-  private def sendFailureEmail(txt: String): Unit = {
-
-    val session = Session.getInstance(config.email.getAsJavaProperties())
-    var msg = new MimeMessage(session)
-    msg.setText(txt)
-    msg.setSubject("YTL sync all failed")
-    msg.setFrom(new InternetAddress(config.email.smtpSender))
-    var tr = session.getTransport("smtp")
-    try {
-      val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisteri.ytl.error.report.recipients","")
-        .split(",").map(address => {
-        new InternetAddress(address)
-      })
-      msg.setRecipients(RecipientType.TO, recipients)
-      tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
-      msg.saveChanges()
-      tr.sendMessage(msg, msg.getAllRecipients)
-    } catch {
-      case e: Throwable =>
-        logger.error("Could not send email", e)
-    } finally {
-      tr.close()
+  private class RealFailureEmailSender extends FailureEmailSender {
+    override def sendFailureEmail(txt: String): Unit = {
+      val session = Session.getInstance(config.email.getAsJavaProperties())
+      var msg = new MimeMessage(session)
+      msg.setText(txt)
+      msg.setSubject("YTL sync all failed")
+      msg.setFrom(new InternetAddress(config.email.smtpSender))
+      var tr = session.getTransport("smtp")
+      try {
+        val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisteri.ytl.error.report.recipients","")
+          .split(",").map(address => {
+          new InternetAddress(address)
+        })
+        msg.setRecipients(RecipientType.TO, recipients)
+        tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
+        msg.saveChanges()
+        tr.sendMessage(msg, msg.getAllRecipients)
+      } catch {
+        case e: Throwable =>
+          logger.error("Could not send email", e)
+      } finally {
+        tr.close()
+      }
     }
   }
 }
+
+trait FailureEmailSender {
+  def sendFailureEmail(txt: String): Unit
+}
+
 

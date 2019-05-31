@@ -43,6 +43,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   private val ophProperties: OphProperties = OphUrlProperties
   private val ytlHttpClient: YtlHttpFetch = mock[YtlHttpFetch]
   private val hakemusService: HakemusService = mock[HakemusService]
+  private val failureEmailSenderMock: FailureEmailSender = mock[FailureEmailSender]
   private val config: MockConfig = new MockConfig
   private val journals: DbJournals = new DbJournals(config)
 
@@ -70,7 +71,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   private val activeHakuOid = "1.2.246.562.29.26435854158"
 
   override protected def beforeEach(): Unit = {
-    Mockito.reset(hakemusService, oppijaNumeroRekisteri)
+    Mockito.reset(hakemusService, oppijaNumeroRekisteri, failureEmailSenderMock)
     Mockito.when(oppijaNumeroRekisteri.enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))).thenAnswer(new Answer[Future[PersonOidsWithAliases]] {
       override def answer(invocation: InvocationOnMock): Future[PersonOidsWithAliases] = {
         val henkiloOids = invocation.getArgument[Set[String]](0)
@@ -128,7 +129,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     suoritukset.head.lahdeArvot should equal(Map("hasCompletedMandatoryExams" -> "true"))
   }
 
-  it should "insert new suoritus and arvosana records from YTL data" in {
+  it should "successfully insert new suoritus and arvosana records from YTL data, no failure email is sent" in {
     Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
       HetuPersonOid("030288-9552", "1.2.246.562.24.97187447816"),
       HetuPersonOid("060141-9297", "1.2.246.562.24.26258799406"),
@@ -154,7 +155,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     findAllSuoritusFromDatabase should be(Nil)
     findAllArvosanasFromDatabase should be(Nil)
 
-    ytlIntegration.syncAll()
+    ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
     val mustBeReadyUntil = new LocalDateTime().plusMinutes(1)
     while (new LocalDateTime().isBefore(mustBeReadyUntil) &&
@@ -195,7 +196,50 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     val expectedNumberOfOnrCalls = 1
     Mockito.verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls)).enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
     Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
+
+    Mockito.verify(failureEmailSenderMock, Mockito.never()).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
+
+  it should "fail if not all suoritus and arvosana records were successfully inserted to ytl" in {
+    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
+      HetuPersonOid("030288-9552", "1.2.246.562.24.97187447816"),
+      HetuPersonOid("060141-9297", "1.2.246.562.24.26258799406"),
+      HetuPersonOid("081007-982P", "1.2.246.562.24.28012286739"),
+      HetuPersonOid("091001A941F", "1.2.246.562.24.58341904891"),
+      HetuPersonOid("123456-7890", "1.2.246.562.24.INVALID"),
+      HetuPersonOid("111028-9213", "1.2.246.562.24.69534493441"),
+      HetuPersonOid("121096-901M", "1.2.246.562.24.27918240375"),
+      HetuPersonOid("210253-989R", "1.2.246.562.24.48985825650"),
+      HetuPersonOid("210955-920N", "1.2.246.562.24.82063315187"),
+      HetuPersonOid("281000-967A", "1.2.246.562.24.95499907842")
+    )))
+
+    val jsonStringFromFile = ClassPathUtil.readFileFromClasspath(getClass, "student-results-from-ytl.json")
+    implicit val formats: Formats = Student.formatsStudent
+    val studentsFromYtlTestData: Seq[Student] = JsonMethods.parse(jsonStringFromFile).extract[Seq[Student]]
+
+    val zipResults: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = Seq(Right((mock[ZipInputStream],
+      studentsFromYtlTestData.iterator))).iterator
+
+    Mockito.when(ytlHttpClient.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any())).thenReturn(zipResults)
+
+    findAllSuoritusFromDatabase should be(Nil)
+    findAllArvosanasFromDatabase should be(Nil)
+
+    ytlIntegration.syncAll()
+    
+    val mustBeReadyUntil = new LocalDateTime().plusMinutes(1)
+    while (new LocalDateTime().isBefore(mustBeReadyUntil) &&
+      (findAllSuoritusFromDatabase.size < 9 || findAllArvosanasFromDatabase.size < 89)) {
+      Thread.sleep(50)
+    }
+    val allSuoritusFromDatabase = findAllSuoritusFromDatabase.sortBy(_.henkilo)
+    val allArvosanasFromDatabase = findAllArvosanasFromDatabase.sortBy(a => (a.aine, a.lisatieto, a.arvio.toString))
+    allSuoritusFromDatabase should have size 9
+    allArvosanasFromDatabase should have size 89
+
+    Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
+}
 
   private def findAllSuoritusFromDatabase: Seq[VirallinenSuoritus with Identified[UUID]] = {
     findFromDatabase(rekisterit.suoritusRekisteri, SuoritusQuery())
