@@ -24,6 +24,8 @@ object Config {
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
   lazy val mockDevConfig = new MockDevConfig
+
+  val callerId: String = s"${OrganisaatioOids.oph}.suoritusrekisteri.backend"
 }
 
 object OrganisaatioOids {
