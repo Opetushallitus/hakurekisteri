@@ -87,9 +87,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     komoOid match {
       case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN") => true
-      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid => {
+      case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid if !(suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)) => {
         logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
-        suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
+        false
       }
       case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
         logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus.")
@@ -118,6 +118,16 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     isRemovable
   }
 
+  private def containsPerusopetuksenOppiaineenOppimaara(oikeudet: Seq[KoskiOpiskeluoikeus]): Boolean = {
+    oikeudet.exists(oikeus =>
+      oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
+  }
+
+  private def filterOnlyPerusopetuksenOppiaineenOppimaaras(oikeudet: Seq[KoskiOpiskeluoikeus]): Seq[KoskiOpiskeluoikeus] = {
+    oikeudet.filter(oikeus =>
+      oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
+  }
+
   def ensureAinoastaanViimeisinOpiskeluoikeusJokaisestaTyypista(oikeudet: Seq[KoskiOpiskeluoikeus], henkiloOid: Option[String]): Seq[KoskiOpiskeluoikeus] = {
     var viimeisimmatOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus] = Seq()
     //Poistetaan viimeisimmän opiskeluoikeuden päättelystä sellaiset peruskoulusuoritukset joilla ei ole ysiluokan suoritusta
@@ -131,8 +141,14 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppia
       } else {
         val viimeisin = getViimeisinOpiskeluoikeusjakso(tataTyyppia)
-        if (viimeisin.isDefined) {
+        if (viimeisin.isDefined && !containsPerusopetuksenOppiaineenOppimaara(tataTyyppia)) {
           viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
+        } else if (viimeisin.isDefined) {
+          // Jos opiskeluoikeudesta löytyy perusopetuksen oppiaineen oppimäärän suorituksia, lisätään myös ne.
+          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet :+ viimeisin.get
+          var tataTyyppiaPOO = tataTyyppia.filterNot(oikeus => oikeus.equals(viimeisin.get))
+          tataTyyppiaPOO = filterOnlyPerusopetuksenOppiaineenOppimaaras(tataTyyppiaPOO)
+          viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet ++ tataTyyppiaPOO
         }
       }
     })
@@ -317,7 +333,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
             }
           } catch {
             case e: Exception =>
-              logger.error(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
+              logger.warn(s"Koski-suoritusarvosanojen ${s} tallennus henkilölle ${henkilöOid} epäonnistui.", e)
               Future.successful(Left(e))
           }
           case _ => Future.successful(Right(None))
