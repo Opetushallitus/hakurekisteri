@@ -110,7 +110,6 @@ class KoskiSuoritusArvosanaParser {
             case (a: String, b: Option[KoskiKieli]) if a == "AI" => Option(KoskiUtil.aidinkieli(b.get.koodiarvo))
             case _ => None
           }
-
           val isPakollinen = isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)
           var ord: Option[Int] = None
 
@@ -149,9 +148,7 @@ class KoskiSuoritusArvosanaParser {
               res = res :+ createArvosana(personOid, arvio, tunniste.koodiarvo, lisatieto, valinnainen = !isPakollinen, ord, käytettäväArviointiPäivä)
             }
           } else {
-            //check for A2B2 langs because they aren't saved as elective courses, they are converted to mandatory on SURE side of things. The laajuus
-            //check needs to be done on them too, not just elective grades.
-            if( (!isPakollinen || tunniste.a2b2Kielet) && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
+            if(!isPakollinen && isVVTLaajuus && laajuus.arvo.getOrElse(BigDecimal(0)) < 2) {
               //nop, only add ones that have two or more study points (vuosiviikkotuntia is the actual unit, code 3), everything else is saved
             } else {
               val käytettäväArviointiPäivä = ArvosanaMyonnettyParser.findArviointipäivä(suoritus, personOid, tunniste.koodiarvo, suorituksenValmistumispäivä)

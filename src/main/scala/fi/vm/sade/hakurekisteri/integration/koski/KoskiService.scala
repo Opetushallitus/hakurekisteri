@@ -173,6 +173,15 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     }
   }
 
+  override def updateHenkilotWithAliases(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
+    logger.info(s"Haetaan oppijanumerorekisteristä aliakset oppijanumeroille: $oppijaOids")
+    val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(oppijaOids),
+      Duration(1, TimeUnit.MINUTES))
+    val aliasCount: Int = personOidsWithAliases.henkiloOidsWithLinkedOids.size - oppijaOids.size
+    logger.info(s"Yhteensä ${personOidsWithAliases.henkiloOidsWithLinkedOids.size} oppijanumeroa joista aliaksia ${aliasCount} kpl.")
+    updateHenkilot(personOidsWithAliases.henkiloOidsWithLinkedOids, params)
+  }
+
   override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = {
     val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
       .postObjectWithCodes[Set[String],Seq[KoskiHenkiloContainer]]("koski.sure", Seq(200), maxRetries = 2, resource = oppijaOids, basicAuth = true)
