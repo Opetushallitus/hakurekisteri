@@ -57,7 +57,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
         .setField("haeAmmatilliset", haeAmmatilliset.toString).build(),
       Changes.EMPTY)
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilot(Set(personOid), KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
+      override val is: Future[_] = koskiService.updateHenkilotWithAliases(Set(personOid), KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
   }
 
@@ -78,7 +78,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
         .setField("oppijaOids", personOids.toString()).build(),
       Changes.EMPTY)
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilot(personOids, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
+      override val is: Future[_] = koskiService.updateHenkilotWithAliases(personOids, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
     }
   }
 
