@@ -54,13 +54,10 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       logger.info("refreshChangedOppijasFromKoski : Cutoff date of {} reached, stopping.", endDateSuomiTime.toString)
     } else {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
-        //Some("2018-06-01T00:00:00+02:00") kovakoodattu oletusaikaleima, tällä saadaan kaikki kesällä tapahtuneen koski-sure-päivitysten sulkemisen
-        //jälkeen tulleet muutokset haettua. Tulee vähän ylimääräistäkin tietoa, mutta parempi erehtyä siihen suuntaan.
         val timestamp: Option[String] =
           if (!cursor.isDefined)
             //Some(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(360))))
-            Some("2018-06-01T00:00:00+02:00") //Hyvä arvo tuotantoon
-            //Some("2018-01-01T00:00:00+02:00") Hyvä arvo QA:lla
+            Some("2019-06-01T00:00:00+02:00")
           else None
         val params = SearchParamsWithCursor(timestamp, cursor)
         fetchChangedOppijas(params).onComplete {
