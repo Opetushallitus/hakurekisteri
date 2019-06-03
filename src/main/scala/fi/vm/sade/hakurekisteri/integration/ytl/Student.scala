@@ -144,7 +144,7 @@ object StudentToKokelas {
     val osakokeet = s.exams.flatMap(exam => exam.sections.map(section => {
       Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate, oid)
     }))
-    Kokelas(oid,suoritus,None,yoTodistus,osakokeet)
+    Kokelas(oid, suoritus, yoTodistus, osakokeet)
   }
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {

@@ -19,17 +19,11 @@ class YtlActor(suoritusRekisteri: ActorRef,
                arvosanaRekisteri: ActorRef,
                hakemusService: IHakemusService,
                config: Config) extends Actor with ActorLogging {
+  import YtlActor._
+
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   var haut = Set[String]()
-  val ytlConfig = config.integrations.ytlConfig
-
-  def nextSendTime: Option[DateTime] = {
-    val times = ytlConfig.map(_.sendTimes).filter(_.nonEmpty)
-    Timer.countNextSend(times)
-  }
-
-  if (ytlConfig.isEmpty) log.warning("Starting ytlActor without config")
 
   var kokelaat = Map[String, Kokelas]()
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
@@ -39,14 +33,12 @@ class YtlActor(suoritusRekisteri: ActorRef,
 
     case k: KokelasWithPersonAliases =>
       val kokelas = k.kokelas
-      log.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo} lukio: ${kokelas.lukio}")
-      context.actorOf(Props(new YoSuoritusUpdateActor(kokelas.yo, k.personOidsWithAliases, suoritusRekisteri)))
+      log.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo}")
+      context.actorOf(Props(new YoSuoritusUpdateActor(actorExpectingResult = sender(), kokelas.yo, k.personOidsWithAliases, suoritusRekisteri)))
       kokelaat = kokelaat + (kokelas.oid -> kokelas)
-      kokelas.lukio.foreach(lukio => {
-        suoritusRekisteri ! UpsertResource[UUID, Suoritus](lukio, k.personOidsWithAliases)
-      })
+      Thread.sleep(1)  // TODO why do I need this???
 
-    case vs: VirallinenSuoritus with Identified[_] if vs.id.isInstanceOf[UUID] && vs.komo == YoTutkinto.yotutkinto =>
+    case (vs: VirallinenSuoritus with Identified[_], actorToReceiveSuccess: ActorRef) if vs.id.isInstanceOf[UUID] && vs.komo == YoTutkinto.yotutkinto =>
       val s = vs.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
@@ -55,6 +47,7 @@ class YtlActor(suoritusRekisteri: ActorRef,
         kokelaat = kokelaat - kokelas.oid
         suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
       }
+      actorToReceiveSuccess ! akka.actor.Status.Success
 
     case ActorIdentity(id: UUID, Some(ref)) =>
       for (
@@ -78,25 +71,28 @@ class YtlActor(suoritusRekisteri: ActorRef,
           log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
       }
 
+    case OperationFailed(actorToReceiveFailure, e: RuntimeException) =>
+      actorToReceiveFailure ! akka.actor.Status.Failure(e)
+
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
       sender ! new IllegalArgumentException(errorMessage)
-
   }
+}
+
+object YtlActor {
+  case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
+
+  case class OperationSucceeded(actorToReceiveSuccess: ActorRef)
+
+  case class OperationFailed(actorToReceiveFailure: ActorRef, e: Throwable)
 }
 
 case class Kokelas(oid: String,
                    yo: VirallinenSuoritus,
-                   lukio: Option[Suoritus],
                    yoTodistus: Seq[Koe],
                    osakokeet: Seq[Koe])
-
-case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
-
-object IsSaving
-
-object Send
 
 object Timer {
   implicit val dtOrder: Ordering[LocalTime] = new Ordering[LocalTime] {
@@ -412,7 +408,8 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
   }
 }
 
-class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
+class YoSuoritusUpdateActor(val actorExpectingResult: ActorRef,
+                            yoSuoritus: VirallinenSuoritus,
                             personOidsWithAliases: PersonOidsWithAliases,
                             suoritusRekisteri: ActorRef) extends Actor with ActorLogging {
   private def ennenVuotta1990Valmistuneet(s: Seq[_]) = s.map {
@@ -435,7 +432,11 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
         }
       }
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
-      context.parent ! v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
+      context.parent ! (v.asInstanceOf[VirallinenSuoritus with Identified[UUID]], actorExpectingResult)
+      context.stop(self)
+
+    case Status.Failure(e) =>
+      context.parent ! YtlActor.OperationFailed(actorExpectingResult, e)
       context.stop(self)
 
     case unknown =>
@@ -473,7 +474,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
       } foreach (arvosanaRekisteri ! _)
       uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) foreach (arvosanaRekisteri ! _)
       context.stop(self)
-    case Kokelas(_, _, _ , todistus, osakokeet) => kokeet = todistus ++ osakokeet
+    case Kokelas(_, _, todistus, osakokeet) => kokeet = todistus ++ osakokeet
 
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
@@ -488,8 +489,6 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
     fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, arvosanaRekisteri, ArvosanaQuery(suoritus.id)))
   }
 }
-
-case class YTLConfig(host: String, username: String, password: String, inbox: String, outbox: String, sendTimes: Seq[LocalTime], localStore: String)
 
 case class HakuList(haut: Set[String])
 

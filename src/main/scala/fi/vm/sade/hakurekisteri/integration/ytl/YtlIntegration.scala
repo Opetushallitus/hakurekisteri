@@ -6,9 +6,11 @@ import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 
 import akka.actor.ActorRef
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor.KokelasWithPersonAliases
 import fi.vm.sade.properties.OphProperties
 import javax.mail.Message.RecipientType
 import javax.mail.Session
@@ -17,7 +19,7 @@ import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
 import scala.concurrent._
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 
@@ -56,8 +58,12 @@ class YtlIntegration(properties: OphProperties,
                     Failure(new RuntimeException(noData))
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
-                    persistKokelas(kokelas, personOidsWithAliases)
-                    Success(kokelas)
+                    val persistKokelasStatus = persistKokelas(kokelas, personOidsWithAliases)
+                    val result: Boolean = Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 1.seconds)
+                    if (result)
+                      Success(kokelas)
+                    else
+                      Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed"))
                 }
               case None =>
                 val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
@@ -153,7 +159,7 @@ class YtlIntegration(properties: OphProperties,
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
-    val allSucceeded = new AtomicBoolean(true)
+    val allSucceeded = new AtomicBoolean(false)
     try {
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
@@ -163,18 +169,25 @@ class YtlIntegration(properties: OphProperties,
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count!")
-            students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
-              case Some(personOid) =>
-                Try(StudentToKokelas.convert(personOid, student)) match {
-                  case Success(candidate) => Some(candidate)
-                  case Failure(exception) =>
-                    logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
-                    None
-                }
-              case None =>
-                logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
-                None
-            }).foreach(kokelas => persistKokelas(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+            val persistKokelasFutures =
+              students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
+                case Some(personOid) =>
+                  Try(StudentToKokelas.convert(personOid, student)) match {
+                    case Success(candidate) => Some(candidate)
+                    case Failure(exception) =>
+                      logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
+                      None
+                  }
+                case None =>
+                  logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
+                  None
+              }).map(kokelas => persistKokelas(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+            val futureList: Future[Iterator[Boolean]] = Future.sequence(persistKokelasFutures)
+            val didAllSucceedFuture: Future[Boolean] = futureList.map(_.foldLeft(true)((a, b) => {
+              if (b) a else false
+            }))
+            val didAllSucceed: Boolean = Await.result(didAllSucceedFuture, config.ytlSyncAllTimeout.duration)
+            if (didAllSucceed) allSucceeded.set(true)
           } finally {
             IOUtils.closeQuietly(zip)
           }
@@ -194,8 +207,18 @@ class YtlIntegration(properties: OphProperties,
     }
   }
 
-  private def persistKokelas(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases): Unit = {
-    ytlActor ! KokelasWithPersonAliases(kokelas, personOidsWithAliases)
+  private def persistKokelas(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases): Future[Boolean] = {
+    val askYtlActorFuture: Future[Any] = akka.pattern.ask(ytlActor, KokelasWithPersonAliases(kokelas, personOidsWithAliases))(config.ytlSyncTimeout)
+      .recover {
+        case ex: TimeoutException =>
+          logger.error(s"persistKokelas timeout expired for kokelas=${kokelas.oid}", ex)
+          false
+        case ex: Throwable =>
+          logger.error(s"persistKokelas failed for kokelas=${kokelas.oid}", ex)
+          false
+      }
+    val trueOnlyIfSuccessFuture: Future[Boolean] = askYtlActorFuture.map(_ == akka.actor.Status.Success)
+    trueOnlyIfSuccessFuture
   }
 
   private class RealFailureEmailSender extends FailureEmailSender {
@@ -225,8 +248,6 @@ class YtlIntegration(properties: OphProperties,
   }
 }
 
-trait FailureEmailSender {
+abstract class FailureEmailSender {
   def sendFailureEmail(txt: String): Unit
 }
-
-

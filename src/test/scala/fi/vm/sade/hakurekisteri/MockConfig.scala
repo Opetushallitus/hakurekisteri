@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import java.nio.file.Paths
 
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import support.SureDbLoggingConfig
 
@@ -27,4 +28,6 @@ class MockConfig extends Config {
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
   override val valintaTulosTimeout: FiniteDuration = 1.minute
+  override val ytlSyncTimeout: Timeout = Timeout(3, SECONDS)
+  override val ytlSyncAllTimeout: Timeout = Timeout(10, SECONDS)
 }

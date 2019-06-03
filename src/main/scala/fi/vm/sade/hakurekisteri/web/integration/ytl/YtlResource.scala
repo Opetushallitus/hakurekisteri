@@ -4,7 +4,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.{Changes, Target}
 import fi.vm.sade.hakurekisteri.{AuditUtil, YTLSyncForAll, YTLSyncForPerson}
-import fi.vm.sade.hakurekisteri.integration.ytl.{Kokelas, Send, YtlIntegration}
+import fi.vm.sade.hakurekisteri.integration.ytl.{Kokelas, YtlIntegration}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
@@ -28,7 +28,6 @@ class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val sy
 
   get("/request") {
     shouldBeAdmin
-    ytl ! Send
     Accepted()
   }
   post("/http_request") {
@@ -43,7 +42,7 @@ class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val sy
     val personOid = params("personOid")
     logger.info(s"Fetching YTL data for person OID $personOid")
     audit.log(auditUser, YTLSyncForPerson, AuditUtil.targetFromParams(params).build, Changes.EMPTY)
-    val done: Seq[Try[Kokelas]] = Await.result(ytlIntegration.sync(personOid), 10.seconds)
+    val done: Seq[Try[Kokelas]] = Await.result(ytlIntegration.sync(personOid), 30.seconds)
     val exists = done.exists {
       case Success(s) => true
       case Failure(e) =>

@@ -5,11 +5,10 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.Properties
 
 import akka.actor.ActorSystem
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
-import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
-import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
@@ -115,6 +114,8 @@ class DefaultConfig extends Config {
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
   override val valintaTulosTimeout: FiniteDuration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.valintatulos.max.minutes", "configuration key missing: suoritusrekisteri.valintatulos.max.minutes")).minutes
+  override val ytlSyncTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.sync.timeout.seconds", "10").toLong, SECONDS)
+  override val ytlSyncAllTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.syncall.timeout.seconds", "500").toLong, SECONDS)
 }
 
 class MockDevConfig extends Config {
@@ -135,6 +136,9 @@ class MockDevConfig extends Config {
   override val reallySlowQuery: Long = defaultDbLoggingConfig.reallySlowQueryMillis
   override val maxDbLogLineLength: Int = defaultDbLoggingConfig.maxLogLineLength
   override val valintaTulosTimeout: FiniteDuration = 1.minute
+
+  override val ytlSyncTimeout: Timeout = Timeout(5, SECONDS)
+  override val ytlSyncAllTimeout: Timeout = Timeout(10, SECONDS)
 
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -159,6 +163,9 @@ abstract class Config {
   val maxDbLogLineLength: Int
 
   val valintaTulosTimeout: FiniteDuration
+
+  val ytlSyncTimeout: Timeout
+  val ytlSyncAllTimeout: Timeout
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
@@ -339,18 +346,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val valintatulosRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.valintatulos", "2").toInt
 
   val asyncOperationThreadPoolSize: Int = properties.getOrElse("suoritusrekisteri.async.pools.size", "9").toInt
-
-  import RicherString._
-
-  val ytlConfig = for (
-    host <- properties.get("suoritusrekisteri.ytl.host").flatMap(_.blankOption);
-    user <- properties.get("suoritusrekisteri.ytl.user").flatMap(_.blankOption);
-    password <- properties.get("suoritusrekisteri.ytl.password").flatMap(_.blankOption);
-    inbox <- properties.get("suoritusrekisteri.ytl.inbox").flatMap(_.blankOption);
-    outbox <- properties.get("suoritusrekisteri.ytl.outbox").flatMap(_.blankOption);
-    poll <- properties.get("suoritusrekisteri.ytl.poll").flatMap(_.blankOption);
-    localStore <- properties.get("suoritusrekisteri.ytl.localstore").flatMap(_.blankOption)
-  ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(";").map(LocalTime.parse), localStore)
 
   private def findMandatoryPropertyValue(key: String): String = {
     properties.getOrElse(key, {

@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
@@ -27,7 +27,16 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   val fileSystem = YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
   val config: Config = new MockConfig
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri, new TestProbe(system).ref, config)
+
+  class SuccessfulYtlActor extends Actor {
+    override def receive: Receive = {
+      case k: YtlActor.KokelasWithPersonAliases =>
+        sender() ! akka.actor.Status.Success
+    }
+  }
+  val successfulYtlActor: ActorRef = system.actorOf(Props(new SuccessfulYtlActor), "ytl-successful")
+
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri, successfulYtlActor, config)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
