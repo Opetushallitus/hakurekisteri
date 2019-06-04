@@ -355,6 +355,9 @@ class KoskiSuoritusArvosanaParser {
         case Oids.perusopetusKomoOid =>
           if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || (KoskiUtil.isAfterDeadlineDate() && !isVahvistettu)) {
             "KESKEYTYNYT"
+          } else if (suoritusTila.equals("VALMIS") && !KoskiUtil.isAfterDeadlineDate() && !isVahvistettu) {
+            logger.warn("Henkilö {}: Perusopetus on tilassa VALMIS, mutta ilman vahvistusta. Deadlinea ei ole ohitettu. Käytetään tilaa KESKEN.", personOid)
+            "KESKEN"
           } else suoritusTila
 
         case _ => suoritusTila

@@ -399,11 +399,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    result should have length 3
+    result should have length 4
     val pt = getPerusopetusPäättötodistus(result)
-    pt shouldBe None
+    pt.get.suoritus.asInstanceOf[VirallinenSuoritus].tila shouldBe "KESKEYTYNYT"
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_ei_vahvistusta_yksi_nelonen.json data" in {
@@ -841,7 +842,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
     val seq = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     seq should have length 2
