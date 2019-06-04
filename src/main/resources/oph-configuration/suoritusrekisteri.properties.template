@@ -157,3 +157,4 @@ suoritusrekisteri.ytl.error.report.recipients={{suoritusrekisteri_ytl_error_repo
 
 # Koski integration settings
 suoritusrekisteri.use.koski.integration={{ suoritusrekisteri_use_koski_integration | default('false') }}
+suoritusrekisteri.use.koski.importer.resource={{ suoritusrekisteri_use_koski_importer_resource | default('true') }}

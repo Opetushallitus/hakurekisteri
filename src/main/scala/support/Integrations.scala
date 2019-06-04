@@ -218,7 +218,13 @@ class BaseIntegrations(rekisterit: Registers,
     quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
       newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
   } else {
-    logger.info("Koski-integration has been disabled by env parameter.")
+    logger.info("Automatic Koski-integrations has been disabled by env parameter.")
+  }
+
+  if (KoskiUtil.koskiImporterResourceInUse) {
+    logger.info("Manual Koski-integration api is available for rekisterinpitäjät")
+  } else {
+    logger.info("Manual Koski-integration api is disabled by env parameter")
   }
 
   override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef =

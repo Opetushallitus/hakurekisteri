@@ -33,9 +33,9 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
   override protected def applicationDescription: String = "Koski integraation rest-api"
 
   def checkAccessAndIntegrationStatus: User = {
-    if (!KoskiUtil.koskiIntegrationInUse) {
-      logger.warning("Koski-integration has been disabled, but KoskiImporterResource was still called by user " + currentUser.get.username)
-      throw new RuntimeException(s"Koski-integration is disabled by an env parameter!")
+    if (!KoskiUtil.koskiImporterResourceInUse) {
+      logger.warning("Manual Koski-integration has been disabled, but KoskiImporterResource was still called by user " + currentUser.get.username)
+      throw new RuntimeException(s"Manual Koski-integration is disabled by an env parameter!")
     }
     currentUser match {
       case Some(u) if u.isAdmin => u
