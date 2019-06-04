@@ -86,15 +86,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
 
     komoOid match {
-      case Oids.perusopetusKomoOid => {
-        if (opiskeluoikeus.tila.determineSuoritusTila.equals("KESKEN"))
-          true
-        else {
-          val shouldSave = suoritus.vahvistus.isDefined || loytyykoHylattyja(suoritus)
-          if (!shouldSave) logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} ei vahvistettu tai hylättyjä sisältävä suoritus (komoOid: ${komoOid}).")
-          shouldSave
-        }
-      }
       case Oids.lukioKomoOid if !(opiskeluoikeus.tila.determineSuoritusTila.eq("VALMIS") && suoritus.vahvistus.isDefined) => {
         logger.info(s"Filtteröitiin henkilöltä ${henkilöOid} keskeneräinen, ei vahvistettu lukiosuoritus.")
         false
