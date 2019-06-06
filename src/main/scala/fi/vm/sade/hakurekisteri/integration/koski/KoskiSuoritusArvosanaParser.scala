@@ -335,7 +335,7 @@ class KoskiSuoritusArvosanaParser {
         case Oids.valmaKomoOid | Oids.telmaKomoOid =>
           val tarpeeksiOpintopisteita = ((komoOid == Oids.valmaKomoOid && suoritus.opintopisteitaVahintaan(30))
             || (komoOid == Oids.telmaKomoOid && suoritus.opintopisteitaVahintaan(25)))
-          if (tarpeeksiOpintopisteita && isVahvistettu) {
+          if (tarpeeksiOpintopisteita) {
             "VALMIS"
           } else {
             if (KoskiUtil.isAfterDeadlineDate()) {
