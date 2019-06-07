@@ -2548,7 +2548,39 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
     arvosanat.head should equal("3")
   }
-  
+
+  it should "store perusopetuksen suoritus as valmis and also save arvosanas if after deadline and contains nelosia" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "perusopetus_with_nelosia_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(7)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    val suoritusTilat: Seq[String] = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("VALMIS")
+    val arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal("13")
+
+  }
+
+  it should "store perusopetuksen suoritus as kesken but save arvosanas if under 2 weeks before deadline and contains nelosia" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "perusopetus_with_nelosia_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(7)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    val suoritusTilat: Seq[String] = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("KESKEN")
+    val arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal("13")
+
+  }
+
    it should "store valinnaiset äidinkielet with correct ordering" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valinnaisia_aidinkielia.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
