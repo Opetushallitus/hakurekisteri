@@ -235,6 +235,13 @@ class KoskiSuoritusArvosanaParser {
     failed && !succeeded
   }
 
+  private def perusopetuksenArvosanatSisaltavatNelosia(arvosanat: Seq[Arvosana]): Boolean = {
+    arvosanat.exists(a => a.arvio match {
+      case Arvio410(arvosana) => arvosana.contentEquals("4")
+      case _ => false
+    })
+  }
+
   private def createSuoritusArvosanat(personOid: String, suoritukset: Seq[KoskiSuoritus], tilat: Seq[KoskiTila], opiskeluoikeus: KoskiOpiskeluoikeus): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
@@ -274,10 +281,7 @@ class KoskiSuoritusArvosanaParser {
             as = Seq.empty
           }
 
-          val containsOneFailure: Boolean = as.exists(a => a.arvio match {
-            case Arvio410(arvosana) => arvosana.contentEquals("4")
-            case _ => false
-          })
+          val containsOneFailure = perusopetuksenArvosanatSisaltavatNelosia(as)
 
           //Tuodaan arvosanat kaikille valmiille suorituksille, jotka on vahvistettu ennen deadlinea.
           //Jos deadlineen on alle kaksi viikkoa, tuodaan myös keskeytyneiden suoritusten arvosanat jos mukana on nelosia.
@@ -353,11 +357,17 @@ class KoskiSuoritusArvosanaParser {
           }
 
         case Oids.perusopetusKomoOid =>
-          if (failedNinthGrade || suoritus.jääLuokalle.contains(true) || (KoskiUtil.isAfterDeadlineDate() && !isVahvistettu)) {
+          val arvosanoissaNelosia = perusopetuksenArvosanatSisaltavatNelosia(arvosanat)
+          if (failedNinthGrade || suoritus.jääLuokalle.contains(true)) {
+            logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: merkitään luokalle jääväksi merkitty perusopetuksen suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)")
             "KESKEYTYNYT"
-          } else if (suoritusTila.equals("VALMIS") && !KoskiUtil.isAfterDeadlineDate() && !isVahvistettu) {
-            logger.warn("Henkilö {}: Perusopetus on tilassa VALMIS, mutta ilman vahvistusta. Deadlinea ei ole ohitettu. Käytetään tilaa KESKEN.", personOid)
-            "KESKEN"
+          } else if (!suoritusTila.equals("KESKEYTYNYT") && arvosanoissaNelosia && KoskiUtil.isAfterDeadlineDate()){
+            //On ok, että tässä merkitään poikkeuksellisesti suoritus valmiiksi myös ilman vahvistusta. Muualla tätä ei pitäisi tapahtua.
+            logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: arvosanoissa on nelosia, tila ei ole keskeytynyt ja deadline on ohitettu. Merkitään perusopetuksen suoritus tilaan VALMIS (aiempi tila $suoritusTila)")
+            "VALMIS"
+          } else if ((suoritusTila.equals("VALMIS") || suoritusTila.equals("KESKEN")) && !isVahvistettu && !arvosanoissaNelosia && KoskiUtil.isAfterDeadlineDate()) {
+            logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: perusopetuksen suorituksella ei ole vahvistusta eikä nelosia ja deadline on ohitettu. Merkitään suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)")
+            "KESKEYTYNYT"
           } else suoritusTila
 
         case _ => suoritusTila

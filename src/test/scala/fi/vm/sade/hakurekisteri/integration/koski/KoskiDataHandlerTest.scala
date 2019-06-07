@@ -413,10 +413,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     henkilo.opiskeluoikeudet.filter(_.tyyppi.get.koodiarvo.contentEquals("perusopetuksenoppimaara"))
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
     result should have length 4
     val pt = getPerusopetusPäättötodistus(result).get
+    pt.suoritus.asInstanceOf[VirallinenSuoritus].tila shouldEqual "VALMIS"
     pt.arvosanat should have length 18
   }
 
@@ -1488,7 +1490,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.size should equal(0)
   }
 
-  it should "store peruskoulu as keskeytynyt without arvosanat if deadline date is yesterday" in {
+  it should "store peruskoulu as keskeytynyt without arvosanat if deadline date is yesterday and no vahvistus" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
