@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorLogging, ActorRef, Status}
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
@@ -10,9 +10,13 @@ import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedExc
 import support.TypedActorRef
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
+case class UpdateValintatulos(haku: String)
+case class FetchValintatulos(haku: String)
+case class FetchValintatulosResult(haku: String, result: Try[SijoitteluTulos])
 
 class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
@@ -20,68 +24,48 @@ class ValintaTulosActor(client: VirkailijaRestClient,
                         cacheTime: Option[Long] = None,
                         retryTime: Option[Long] = None) extends Actor with ActorLogging {
 
+  implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
   private val cache = cacheFactory.getInstance[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis), this.getClass, classOf[SijoitteluTulos], "sijoittelu-tulos")
-  private var calling: Boolean = false
 
-  case class CacheResponse(haku: String, response: SijoitteluTulos)
-  case class UpdateFailed(haku: String, t: Throwable)
-  object UpdateNext
+  override def receive: Receive = updateRequestQueue(Map.empty)
 
-  private var updateRequestQueue: Map[String, Seq[Promise[SijoitteluTulos]]] = Map()
-  private var scheduledUpdates: Map[String, Cancellable] = Map()
+  private def updateRequestQueue(requestQueue: Map[String, Vector[ActorRef]]): Receive = {
+      case ValintaTulosQuery(hakuOid, Some(hakemusOid)) =>
+        hakemuksenTulos(hakuOid, hakemusOid) pipeTo sender
 
-  override def receive: Receive = {
-    case ValintaTulosQuery(hakuOid, Some(hakemusOid)) =>
-      hakemuksenTulos(hakuOid, hakemusOid) pipeTo sender
+      case ValintaTulosQuery(hakuOid, None) =>
+        cache.get(hakuOid, hakuOid => { (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_)) }).map(_.get) pipeTo sender
 
-    case ValintaTulosQuery(hakuOid, None) =>
-      cache.get(hakuOid, hakuOid => {
-        implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
-        (self ? UpdateValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_))
-      }).map(_.get) pipeTo sender
+      case UpdateValintatulos(hakuOid) =>
+        (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos].onComplete {
+          case Success(tulos) => cache + (hakuOid, tulos)
+          case Failure(t) =>
+            log.error(t, s"Failed to update valintatulos of haku $hakuOid, retrying in $retry")
+            context.system.scheduler.scheduleOnce(retry, self, UpdateValintatulos(hakuOid))
+        }
 
-    case UpdateValintatulos(haku) =>
-      val p = Promise[SijoitteluTulos]()
-      updateRequestQueue = updateRequestQueue + (haku -> (updateRequestQueue.getOrElse(haku, Seq()) :+ p))
-      p.future pipeTo sender
-      self ! UpdateNext
+      case FetchValintatulos(hakuOid) =>
+        if (requestQueue.isEmpty) {
+          haunTulos(hakuOid).onComplete(self ! FetchValintatulosResult(hakuOid, _))
+        }
+        context.become(updateRequestQueue(requestQueue + (hakuOid -> (requestQueue.getOrElse(hakuOid, Vector.empty) :+ sender))))
 
-    case UpdateNext if !calling && updateRequestQueue.nonEmpty =>
-      calling = true
-      val (haku, waitingRequests) = nextUpdateRequest
-      val result = haunTulos(haku)
-      waitingRequests.foreach(_.tryCompleteWith(result))
-      result.failed.foreach {
-        case t =>
-          log.error(t, s"valinta tulos update failed for haku $haku: ${t.getMessage}")
-          rescheduleHaku(haku, retry)
-      }
-      result
-        .map(CacheResponse(haku, _))
-        .recoverWith {
-        case t: Throwable =>
-          Future.successful(UpdateFailed(haku, t))
-      } pipeTo self
-
-    case CacheResponse(haku, tulos) =>
-      cache + (haku, tulos)
-      calling = false
-      self ! UpdateNext
-
-    case UpdateFailed(haku, t) =>
-      log.error(t, s"failed to fetch sijoittelu for haku $haku")
-      calling = false
-      self ! UpdateNext
-  }
-
-  private def nextUpdateRequest: (String, Seq[Promise[SijoitteluTulos]]) = {
-    val sortedRequests = updateRequestQueue.toList.sortBy(_._2.length)(Ordering[Int].reverse)
-    val updateRequest = sortedRequests.head
-    updateRequestQueue = updateRequestQueue - updateRequest._1
-    updateRequest
+      case FetchValintatulosResult(hakuOid, result) =>
+        result match {
+          case Success(tulos) =>
+            requestQueue.get(hakuOid).foreach(_.foreach(_ ! tulos))
+          case Failure(t) =>
+            requestQueue.get(hakuOid).foreach(_.foreach(_ ! Status.Failure(t)))
+        }
+        val newQueue = requestQueue - hakuOid
+        if (newQueue.nonEmpty) {
+          val nextHakuOid = newQueue.maxBy(_._2.length)._1
+          haunTulos(nextHakuOid).onComplete(self ! FetchValintatulosResult(nextHakuOid, _))
+        }
+        context.become(updateRequestQueue(newQueue))
   }
 
   private def is404(t: Throwable): Boolean = t match {
@@ -110,19 +94,6 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       }
       .map(ts =>  ValintaTulosToSijoitteluTulos(ts.map(t => t.hakemusOid -> t).toMap))
   }
-
-  private def rescheduleHaku(haku: String, time: FiniteDuration) {
-    log.warning(s"rescheduling haku $haku in $time")
-    if (scheduledUpdates.contains(haku) && !scheduledUpdates(haku).isCancelled) {
-      scheduledUpdates(haku).cancel()
-    }
-    scheduledUpdates = scheduledUpdates + (haku -> context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku)))
-  }
-
-  override def postStop(): Unit = scheduledUpdates.foreach(_._2.cancel())
-
 }
-
-case class UpdateValintatulos(haku: String)
 
 case class ValintaTulosActorRef(actor: ActorRef) extends TypedActorRef
