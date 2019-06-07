@@ -34,9 +34,14 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   private var scheduledUpdates: Map[String, Cancellable] = Map()
 
   override def receive: Receive = {
-    case q: ValintaTulosQuery =>
-      getSijoittelu(q) pipeTo sender
-      self ! UpdateNext
+    case ValintaTulosQuery(hakuOid, Some(hakemusOid)) =>
+      callBackend(hakuOid, Some(hakemusOid)) pipeTo sender
+
+    case ValintaTulosQuery(hakuOid, None) =>
+      cache.get(hakuOid, hakuOid => {
+        implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
+        (self ? UpdateValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_))
+      }).map(_.get) pipeTo sender
 
     case BatchUpdateValintatulos(haut) =>
       haut.foreach(haku =>
@@ -82,17 +87,6 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     val updateRequest = sortedRequests.head
     updateRequestQueue = updateRequestQueue - updateRequest._1
     updateRequest
-  }
-
-  private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-    if (q.hakemusOid.isEmpty) {
-      cache.get(q.hakuOid, (_: String) => {
-        implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
-        (self ? UpdateValintatulos(q.hakuOid)).mapTo[SijoitteluTulos].map(Some(_))
-      }).map(_.get)
-    } else {
-      callBackend(q.hakuOid, q.hakemusOid)
-    }
   }
 
   private def callBackend(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
