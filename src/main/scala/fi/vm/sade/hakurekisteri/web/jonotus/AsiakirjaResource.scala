@@ -5,19 +5,17 @@ import java.util.concurrent.{ExecutionException, TimeoutException}
 
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{AsiakirjaLuku, AuditUtil}
+import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.integration.valintatulos.InitialLoadingNotDone
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support._
+import fi.vm.sade.hakurekisteri.{AsiakirjaLuku, AuditUtil}
 import org.json4s.Formats
-import org.scalatra._
-import org.json4s._
 import org.json4s.jackson.Serialization.write
+import org.scalatra._
 
 class EmptyAsiakirjaException extends RuntimeException()
 case class LocalizedMessage(message: String, parameter: Option[String] = None)
@@ -83,8 +81,6 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
           case _ =>
             InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
         }
-      case i: InitialLoadingNotDone =>
-        InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.alustuskesken")))
       case e: EmptyAsiakirjaException =>
         NoContent()
       case _ =>
