@@ -35,7 +35,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 
   override def receive: Receive = {
     case ValintaTulosQuery(hakuOid, Some(hakemusOid)) =>
-      callBackend(hakuOid, Some(hakemusOid)) pipeTo sender
+      hakemuksenTulos(hakuOid, hakemusOid) pipeTo sender
 
     case ValintaTulosQuery(hakuOid, None) =>
       cache.get(hakuOid, hakuOid => {
@@ -57,7 +57,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     case UpdateNext if !calling && updateRequestQueue.nonEmpty =>
       calling = true
       val (haku, waitingRequests) = nextUpdateRequest
-      val result = callBackend(haku, None)
+      val result = haunTulos(haku)
       waitingRequests.foreach(_.tryCompleteWith(result))
       result.failed.foreach {
         case t =>
@@ -89,40 +89,31 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     updateRequest
   }
 
-  private def callBackend(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
-    def is404(t: Throwable): Boolean = t match {
-      case PreconditionFailedException(_, 404) => true
-      case _ => false
-    }
+  private def is404(t: Throwable): Boolean = t match {
+    case PreconditionFailedException(_, 404) => true
+    case _ => false
+  }
 
-    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = client.
-      readObject[ValintaTulos]("valinta-tulos-service.hakemus",hakuOid,hakemusOid)(200, maxRetries).
-      recoverWith {
-        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
+  private def hakemuksenTulos(hakuOid: String, hakemusOid: String): Future[SijoitteluTulos] = {
+    client
+      .readObject[ValintaTulos]("valinta-tulos-service.hakemus", hakuOid, hakemusOid)(200, maxRetries)
+      .recover {
+        case t: ExecutionException if is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
-          Future.successful(ValintaTulos(hakemusOid, Seq()))
-      }.
-      map(t => valintaTulokset2SijoitteluTulos(t))
+          ValintaTulos(hakemusOid, Seq())
+      }
+      .map(t => ValintaTulosToSijoitteluTulos(Map(t.hakemusOid -> t)))
+  }
 
-    def getHaku(haku: String): Future[SijoitteluTulos] = client.
-      readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", haku)(200).
-      recoverWith {
+  private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
+    client
+      .readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", hakuOid)(200)
+      .recover {
         case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
-          log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
-          Future.successful(Seq[ValintaTulos]())
-      }.
-      map(valintaTulokset2SijoitteluTulos)
-
-    def valintaTulokset2SijoitteluTulos(tulokset: ValintaTulos*): SijoitteluTulos = ValintaTulosToSijoitteluTulos(tulokset.groupBy(t => t.hakemusOid).mapValues(_.head).map(identity))
-
-    hakemusOid match {
-      case Some(oid) =>
-        getSingleHakemus(oid)
-
-      case None =>
-        getHaku(hakuOid)
-    }
-
+          log.warning(s"valinta tulos not found with haku $hakuOid: $t")
+          Seq[ValintaTulos]()
+      }
+      .map(ts =>  ValintaTulosToSijoitteluTulos(ts.map(t => t.hakemusOid -> t).toMap))
   }
 
   private def rescheduleHaku(haku: String, time: FiniteDuration) {
