@@ -792,7 +792,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   val cacheFactory = MockCacheFactory.get
 
   private val mockConfig = new MockConfig
-  val sijoittelu = new ValintaTulosActorRef(system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, mockConfig, cacheFactory, initOnStartup = true))))
+  val sijoittelu = new ValintaTulosActorRef(system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, mockConfig, cacheFactory))))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger

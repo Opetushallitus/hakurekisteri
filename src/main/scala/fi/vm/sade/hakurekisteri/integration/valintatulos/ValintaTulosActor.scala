@@ -12,24 +12,19 @@ import support.TypedActorRef
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-case class InitialLoadingNotDone() extends Exception("Initial loading not yet done")
-
 case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
 
 class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
                         cacheFactory: CacheFactory,
                         cacheTime: Option[Long] = None,
-                        retryTime: Option[Long] = None,
-                        initOnStartup: Boolean = false) extends Actor with ActorLogging {
+                        retryTime: Option[Long] = None) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
   private val cache = cacheFactory.getInstance[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis), this.getClass, classOf[SijoitteluTulos], "sijoittelu-tulos")
   private var calling: Boolean = false
-  private var initialLoadingDone = initOnStartup
-  private val startTimeMillis: Long = System.currentTimeMillis()
 
   case class CacheResponse(haku: String, response: SijoitteluTulos)
   case class UpdateFailed(haku: String, t: Throwable)
@@ -53,11 +48,6 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       updateRequestQueue = updateRequestQueue + (haku -> (updateRequestQueue.getOrElse(haku, Seq()) :+ p))
       p.future pipeTo sender
       self ! UpdateNext
-
-    case UpdateNext if !calling && updateRequestQueue.isEmpty && !initialLoadingDone =>
-      initialLoadingDone = true
-      val initialLoadingDurationS: Long = (System.currentTimeMillis() - startTimeMillis) / 1000
-      log.info(s"initial loading done in $initialLoadingDurationS seconds")
 
     case UpdateNext if !calling && updateRequestQueue.nonEmpty =>
       calling = true
@@ -95,10 +85,6 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   }
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-    if (!initialLoadingDone) {
-      //Future.failed(InitialLoadingNotDone())
-      log.warning("Initial loading not yet done. Query params - HakuOid: " + q.hakuOid + ", hakemusOid: " + q.hakemusOid.getOrElse(""))
-    }
     if (q.hakemusOid.isEmpty) {
       cache.get(q.hakuOid, (_: String) => {
         implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
