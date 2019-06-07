@@ -43,11 +43,6 @@ class ValintaTulosActor(client: VirkailijaRestClient,
         (self ? UpdateValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_))
       }).map(_.get) pipeTo sender
 
-    case BatchUpdateValintatulos(haut) =>
-      haut.foreach(haku =>
-        if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
-      self ! UpdateNext
-
     case UpdateValintatulos(haku) =>
       val p = Promise[SijoitteluTulos]()
       updateRequestQueue = updateRequestQueue + (haku -> (updateRequestQueue.getOrElse(haku, Seq()) :+ p))
@@ -129,7 +124,5 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 }
 
 case class UpdateValintatulos(haku: String)
-
-case class BatchUpdateValintatulos(haut: Set[UpdateValintatulos])
 
 case class ValintaTulosActorRef(actor: ActorRef) extends TypedActorRef

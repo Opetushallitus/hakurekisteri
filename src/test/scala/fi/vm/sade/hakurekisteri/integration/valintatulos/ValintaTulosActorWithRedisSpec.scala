@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
-import org.json4s.{DefaultFormats, Formats}
+import org.json4s.Formats
 import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
@@ -20,9 +20,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import redis.embedded.RedisServer
-import org.json4s.jackson.JsonMethods.parse
 
-import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutorService, Future}
 
@@ -176,7 +174,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           retryTime = Some(100)
         )))
 
-        valintaTulosActor ! BatchUpdateValintatulos((11 to 12).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+        for (i <- 11 to 12) { valintaTulosActor ! UpdateValintatulos(s"1.2.246.562.29.$i") }
 
         Thread.sleep(300)
 
@@ -204,7 +202,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
           retryTime = Some(100)
         )))
 
-        valintaTulosActor ! BatchUpdateValintatulos((11 to 14).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+        for (i <- 11 to 14) { valintaTulosActor ! UpdateValintatulos(s"1.2.246.562.29.$i") }
 
         Thread.sleep(300)
 
