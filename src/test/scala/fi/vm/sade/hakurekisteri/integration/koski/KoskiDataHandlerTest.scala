@@ -279,15 +279,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
   }
 
-  it should "not store alle 30 opintopisteen valmistunut VALMA data" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "VALMA_22_op_valmis.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).size
-    result should equal(0)
-  }
-
 /*
   //TODO is the test data valid???
   it should "parse peruskoulu_lisäopetus_ei_vahvistettu.json data" in {
@@ -2023,130 +2014,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.head should equal ("KESKEYTYNYT")
   }
 
-  /*it should "store katsotaaneronneeksi VALMA-suoritus with 30 opintopistettä as kesken before deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_30_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (2)
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.29176843356'".as[String]))
-    suoritukset.head should equal ("KESKEN")
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
-    suoritukset.head should equal ("KESKEN")
-  }*/
-
-  /*it should "store katsotaaneronneeksi VALMA-suoritus with 30 opintopistettä as keskeytynyt after deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_30_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (2)
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.29176843356'".as[String]))
-    suoritukset.head should equal ("KESKEYTYNYT")
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
-    suoritukset.head should equal ("KESKEYTYNYT")
-  }*/
-
-  it should "not store katsotaaneronneeksi VALMA-suoritus with 29 opintopistettä before deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_29_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (1)
-    suoritukset.head should equal ("KESKEN")
-  }
-
-  it should "not store katsotaaneronneeksi VALMA-suoritus with 29 opintopistettä after deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_katsotaaneronneeksi_29_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (1)
-    suoritukset.head should equal ("KESKEYTYNYT")
-  }
-
-  /*it should "store peruutettu VALMA-suoritus with 30 opintopistettä as kesken before deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_peruutettu_30_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (2)
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.29176843356'".as[String]))
-    suoritukset.head should equal ("KESKEN")
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
-    suoritukset.head should equal ("KESKEN")
-  }*/
-
-  /*it should "store peruutettu VALMA-suoritus with 30 opintopistettä as keskeytynyt after deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_peruutettu_30_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    var suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (2)
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.29176843356'".as[String]))
-    suoritukset.head should equal ("KESKEYTYNYT")
-    suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma' and myontaja = '1.2.246.562.10.58998320111'".as[String]))
-    suoritukset.head should equal ("KESKEYTYNYT")
-  }*/
-
-  it should "not store peruutettu VALMA-suoritus with 29 opintopistettä before deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_peruutettu_29_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (1)
-    suoritukset.head should equal ("KESKEN")
-  }
-
-  it should "not store peruutettu VALMA-suoritus with 29 opintopistettä after deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_peruutettu_29_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    val suoritukset = run(database.run(sql"select tila from suoritus where komo = 'valma'".as[String]))
-    suoritukset.size should equal (1)
-    suoritukset.head should equal ("KESKEYTYNYT")
-  }
-
   it should "store suoritus without arvosanat as keskeytynyt if marked as jää luokalle in Koski 30 days before deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_ysiluokka_jaa_luokalle.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -2183,30 +2050,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.head should equal ("KESKEYTYNYT")
     val arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
     arvosanat.head should equal ("0")
-  }
-
-  it should "not store anything if only one katsotaaneronneeksi VALMA-suoritus with 29 opintopistettä before or after deadline date" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_vain_katsotaaneronneeksi.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("0")
-    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
-
-    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
-
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-
-    opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
   }
 
   it should "correct valmistumispäivämäärä in keskeytynyt peruskoulusuoritus with hylätty" in {
@@ -2280,7 +2123,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritukset.head should equal("1")
   }
 
-  it should "not store alle 30 opintopisteen valma-suoritus before or after deadline date" in {
+  it should "store alle 30 opintopisteen valma-suoritus as KESKEN before deadline date" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_valmis_alle_30_op.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -2291,21 +2134,32 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("0")
+    opiskelija.head should equal("1")
     var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
+    suoritukset.head should equal("1")
+    var suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("KESKEN")
+  }
+
+  it should "store alle 30 opintopisteen valma-suoritus as KESKEYTYNYT after deadline date" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_valma_valmis_alle_30_op.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
 
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
 
-    opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("0")
-    suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
+    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+    var suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("KESKEYTYNYT")
   }
 
-  it should "set correct luokkatieto when detecting oppilaitos and luokka" in {
+    it should "set correct luokkatieto when detecting oppilaitos and luokka" in {
     //LUVA
     var suoritusLuokka = SuoritusLuokka(VirallinenSuoritus("1.2.246.562.5.2013112814572429142840", "1.2.246.562.10.96398657237", "KESKEN", new LocalDate("2019-05-02"), "1.2.246.562.24.60460151267", yksilollistaminen.Ei, "FI", None, true, "koski", None),"LUVA", new LocalDate("2018-08-27"), None)
     var opiskelija = koskiOpiskelijaParser.createOpiskelija("1.2.246.562.24.80710434876", suoritusLuokka)

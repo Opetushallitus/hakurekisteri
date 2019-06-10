@@ -94,25 +94,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-  private def removeUnwantedValmas(henkiloOid: Option[String], opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
-    val eiHaluttuValmaAlle30op: KoskiTila => Boolean = koskiTila =>
-      KoskiUtil.eiHalututAlle30opValmaTilat.contains(koskiTila.tila.koodiarvo)
-
-    val alle30PisteenValma: KoskiSuoritus => Boolean = koskiSuoritus =>
-      koskiSuoritus.tyyppi.exists(_.koodiarvo == "valma") &&
-        !koskiSuoritus.opintopisteitaVahintaan(30)
-
-    val isRemovable = opiskeluoikeus.tyyppi.get.koodiarvo.equals("ammatillinenkoulutus") &&
-      opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(eiHaluttuValmaAlle30op) &&
-      opiskeluoikeus.suoritukset.exists(alle30PisteenValma)
-
-    if (isRemovable) {
-      logger.info(s"Filtteröidään henkilöltä {$henkiloOid} alle 30 opintopisteen VALMA-suoritus tilassa {${opiskeluoikeus.tila}}.",
-        henkiloOid.getOrElse("(Tuntematon oppijanumero)"))
-    }
-    isRemovable
-  }
-
   private def containsPerusopetuksenOppiaineenOppimaara(oikeudet: Seq[KoskiOpiskeluoikeus]): Boolean = {
     oikeudet.exists(oikeus =>
       oikeus.suoritukset.exists(suoritus => suoritus.tyyppi.contains(KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi"))))
@@ -147,8 +128,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         }
       }
     })
-    // Poistetaan VALMA-suorituksista kaikki, joissa on alle 30 suorituspistettä ja tila on jokin seuraavista: "eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu, valmis".
-    viimeisimmatOpiskeluoikeudet = viimeisimmatOpiskeluoikeudet.filterNot(oo => removeUnwantedValmas(henkiloOid, oo))
     // Filtteröidään opiskeluoikeuksista ei toivotut suoritukset
     viimeisimmatOpiskeluoikeudet.map { oo =>
       oo.copy(suoritukset = oo.suoritukset.filter(s => shouldSaveSuoritus(henkiloOid.getOrElse(throw new RuntimeException("Puuttuva henkilöOid")), s, oo)))
