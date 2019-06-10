@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
-case class UpdateValintatulos(haku: String)
+case class UpdateValintatulos(haku: String, isRetry: Boolean = false)
 case class FetchValintatulos(haku: String)
 case class FetchValintatulosResult(haku: String, result: Try[SijoitteluTulos])
 
@@ -39,13 +39,18 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       case ValintaTulosQuery(hakuOid, None) =>
         cache.get(hakuOid, hakuOid => { (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_)) }).map(_.get) pipeTo sender
 
-      case UpdateValintatulos(hakuOid) =>
-        (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos].onComplete {
-          case Success(tulos) => cache + (hakuOid, tulos)
-          case Failure(t) =>
-            log.error(t, s"Failed to update valintatulos of haku $hakuOid, retrying in $retry")
-            context.system.scheduler.scheduleOnce(retry, self, UpdateValintatulos(hakuOid))
-        }
+      case UpdateValintatulos(hakuOid, isRetry) =>
+        (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos]
+          .flatMap(cache + (hakuOid, _))
+          .failed
+          .foreach(t => {
+            if (isRetry) {
+              log.error(t, s"Failed to update valintatulos of haku $hakuOid")
+            } else {
+              log.warning(s"Failed to update valintatulos of haku $hakuOid, retrying in $retry")
+              context.system.scheduler.scheduleOnce(retry, self, UpdateValintatulos(hakuOid, true))
+            }
+          })
 
       case FetchValintatulos(hakuOid) =>
         if (requestQueue.isEmpty) {
