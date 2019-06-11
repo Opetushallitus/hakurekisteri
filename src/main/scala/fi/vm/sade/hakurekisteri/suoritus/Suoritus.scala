@@ -38,6 +38,8 @@ object Suoritus {
       case s: VirallinenSuoritus => s.copy(henkilo = henkiloOid).identify(id)
     }
   }
+
+  lazy val realValmistuminenNotKnownLocalDate = new LocalDate(0)
 }
 
 sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean, val source: String) extends UUIDResource[Suoritus]{

@@ -109,8 +109,7 @@ object XMLHakemus {
   def resolveYear(suoritus: VirallinenSuoritus):Option[String] = suoritus match {
     case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _, _, _) => None
     case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _, _, _)  =>
-      val year = date.getYear.toString
-      if (!"1970".equals(year))
+      if (!Suoritus.realValmistuminenNotKnownLocalDate.equals(date))
         Some(date.getYear.toString)
       else
         None
