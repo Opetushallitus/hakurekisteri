@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.text.SimpleDateFormat
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{Config, Oids}
@@ -17,6 +17,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
+import org.slf4j.LoggerFactory._
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
@@ -54,7 +55,6 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   private implicit val defaultTimeout: Timeout = 120.seconds
   private val acceptedResponseCode: Int = 200
-
   private val maxRetries: Int = 2
 
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
@@ -201,10 +201,12 @@ object AkkaHakupalvelu {
   )
 
 
-  def getVuosi(vastaukset: Koulutustausta)(pohjakoulutus: String): Option[String] = pohjakoulutus match {
+  def getVuosi(vastaukset: Koulutustausta)(pohjakoulutus: String)(koosteData: Option[Map[String,String]]): Option[String] = pohjakoulutus match {
     case "9" => vastaukset.lukioPaattotodistusVuosi
     case "7" => Some((LocalDate.now.getYear + 1).toString)
-    case _ => vastaukset.PK_PAATTOTODISTUSVUOSI
+    case _ =>
+      val vuosiKoosteDatasta = koosteData.flatMap(_.get("PK_PAATTOTODISTUSVUOSI"))
+      if (vuosiKoosteDatasta.isDefined) vuosiKoosteDatasta else vastaukset.PK_PAATTOTODISTUSVUOSI
   }
 
   def kaydytLisapisteKoulutukset(tausta: Koulutustausta): scala.Iterable[String] = {
@@ -340,14 +342,13 @@ object AkkaHakupalvelu {
       def getOsaaminenOsaalue(key: String): Option[String] = {
         hakemus.answers.flatMap(_.osaaminen match { case Some(a) => a.get(key) case None => None })
       }
-
       val kesa: MonthDay = new MonthDay(6, 4)
       val koulutustausta: Option[Koulutustausta] = hakemus.koulutustausta
       val lahtokoulu: Option[String] = hakemus.lahtokoulu
       val myontaja: String = lahtokoulu.getOrElse("")
       val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
-      val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)) yield v
-      val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
+      val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; k <- koulutustausta; v <- getVuosi(k)(p)(koosteData)) yield v
+      val valmistuminen: LocalDate = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(Suoritus.realValmistuminenNotKnownLocalDate)
       val kieli: String = hakemus.aidinkieli
       val opetuskieli: Option[String] = koosteData.flatMap(_.get("perusopetuksen_kieli"))
       val suorittaja: String = hakemus.personOid.getOrElse("")
