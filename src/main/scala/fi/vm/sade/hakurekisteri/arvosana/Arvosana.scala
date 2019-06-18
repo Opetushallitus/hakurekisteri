@@ -25,7 +25,20 @@ case class Arvosana(suoritus: UUID,
   override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 
   override val core = ArvosanaCore(suoritus, aine, lisatieto, valinnainen, myonnetty, jarjestys)
+
+  val koskiCore = KoskiCore(suoritus, aine, lisatieto, valinnainen, jarjestys)
+  val koskiUpdateableFields = KoskiUpdateable(arvio, myonnetty, lahdeArvot)
 }
+
+case class KoskiUpdateable(arvio: Arvio,
+                           myonnetty: Option[LocalDate],
+                           lahdeArvot: Map[String,String])
+
+case class KoskiCore(suoritus: UUID,
+                        aine: String,
+                        lisatieto: Option[String],
+                        valinnainen: Boolean,
+                        jarjestys: Option[Int])
 
 case class ArvosanaCore(suoritus: UUID,
                         aine: String,
