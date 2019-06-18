@@ -66,7 +66,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
       ))
     }
 
-    override def getByOids(oids: Set[String]): Future[Seq[Henkilo]] = Future.successful(Seq.empty)
+    override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = Future.successful(Map.empty)
   }
 
 

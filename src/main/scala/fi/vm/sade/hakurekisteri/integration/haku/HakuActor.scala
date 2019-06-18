@@ -6,11 +6,10 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos, ValintaTulosActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{UpdateValintatulos, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.ytl.{HakuList, YtlIntegration}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
@@ -116,7 +115,7 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
   }
 
   def refreshKeepAlives() {
-    valintaTulos.actor.!(BatchUpdateValintatulos(storedHakus.filter(_.isActive).map(h => UpdateValintatulos(h.oid)).toSet))
+    storedHakus.filter(_.isActive).foreach(haku => valintaTulos.actor ! UpdateValintatulos(haku.oid))
   }
 
   override def postStop(): Unit = {
