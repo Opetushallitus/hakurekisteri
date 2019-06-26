@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, Cancellable, Status}
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
@@ -30,7 +30,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
  organisaatioClient: VirkailijaRestClient,
  hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef) extends Actor {
   val logger = Logging(context.system, this)
-  implicit val executor: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global // TODO: replace with dedicated context?
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   implicit val timeout: akka.util.Timeout = 450.seconds
   private var organizationAuthorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
   private var organizationCacheUpdater: Cancellable = _
