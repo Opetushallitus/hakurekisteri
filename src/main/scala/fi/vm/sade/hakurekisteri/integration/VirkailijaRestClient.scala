@@ -13,7 +13,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import dispatch._
+import dispatch.{FunctionHandler, Http, HttpExecutor, Req, Res}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties

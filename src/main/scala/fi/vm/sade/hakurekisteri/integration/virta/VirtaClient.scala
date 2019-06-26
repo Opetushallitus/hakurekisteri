@@ -100,8 +100,6 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
               retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
     val t0 = Platform.currentTime
 
-    import dispatch._
-
     object VirtaHandler extends AsyncCompletionHandler[Option[VirtaResult]]{
       override def onCompleted(response: Response): Option[VirtaResult] = {
 
@@ -134,7 +132,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       case Failure(e) => s"failure: $e"
     }
 
-    val res = client((url(requestUrl) << requestEnvelope).setContentType("text/xml", Charset.forName("UTF-8")) > VirtaHandler)
+    val res = client((dispatch.url(requestUrl) << requestEnvelope).setContentType("text/xml", Charset.forName("UTF-8")) > VirtaHandler)
     res.onComplete(t => logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - t0} ms, result ${result(t)}"))
     res
   }
