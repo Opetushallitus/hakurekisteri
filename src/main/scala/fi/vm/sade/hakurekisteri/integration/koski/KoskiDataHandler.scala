@@ -265,12 +265,13 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def removeOldArvosanasNotPresentInNew(existingArvosanas: Seq[Arvosana with Identified[UUID]], newArvosanas: Seq[Arvosana]) = {
-    Future.sequence(existingArvosanas.map(oa => if (!newArvosanas.exists(na => oa.koskiCore.equals(na.koskiCore))) {
-      logger.debug("KSK-5: Vanhaa arvosanaa ei löydy uusista. Poistetaan {}.", oa)
-      arvosanaRekisteri ? DeleteResource(oa.id, "koski-arvosanat")
-    } else {
-      Future.successful({})
-    }))
+    Future.sequence(existingArvosanas.map(existingArvosana =>
+      if (!newArvosanas.exists(newArvosana => existingArvosana.koskiCore.equals(newArvosana.koskiCore))) {
+        logger.debug("KSK-5: Vanhaa arvosanaa ei löydy uusista. Poistetaan {}.", existingArvosana)
+        arvosanaRekisteri ? DeleteResource(existingArvosana.id, "koski-arvosanat")
+      } else {
+        Future.successful({})
+      }))
   }
 
   private def updateArvosana(oldArvosana: Arvosana with Identified[UUID], newArvosana: Arvosana): Future[Any] = {
