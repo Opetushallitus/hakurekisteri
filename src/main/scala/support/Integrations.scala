@@ -7,6 +7,7 @@ import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef, MockKoodistoActor}
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
@@ -40,6 +41,7 @@ trait Integrations {
   val hakemusService: IHakemusService
   val koosteService: IKoosteService
   val tarjonta: TarjontaActorRef
+  val haut: ActorRef
   val koodisto: KoodistoActorRef
   val ytl: ActorRef
   val ytlIntegration: YtlIntegration
@@ -90,6 +92,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytl, config)
+  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, valintaTulos, ytl, ytlIntegration, config)), "haut")
 
   override val proxies = new MockProxies
   override val hakemusClient = null
@@ -178,6 +181,7 @@ class BaseIntegrations(rekisterit: Registers,
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytl, config)
+  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, valintaTulos, ytl, ytlIntegration, config)), "haut")
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
