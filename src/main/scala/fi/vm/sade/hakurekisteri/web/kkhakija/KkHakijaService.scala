@@ -237,24 +237,15 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def matchHylatyt(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): Boolean = {
-    valintaTulos.valintatila(hakemusOid, hakukohdeOid) match {
-      case Some(t) => t == Valintatila.HYLATTY
-      case _ => false
-    }
+    valintaTulos.valintatila.get(hakemusOid, hakukohdeOid).contains(Valintatila.HYLATTY)
   }
 
   private def matchVastaanottaneet(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): Boolean = {
-    valintaTulos.vastaanottotila(hakemusOid, hakukohdeOid) match {
-      case Some(t) => isVastaanottanut(t)
-      case _ => false
-    }
+    valintaTulos.vastaanottotila.get(hakemusOid, hakukohdeOid).exists(isVastaanottanut)
   }
 
   private def matchHyvaksytyt(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): Boolean = {
-    valintaTulos.valintatila(hakemusOid, hakukohdeOid) match {
-      case Some(t) => isHyvaksytty(t)
-      case _ => false
-    }
+    valintaTulos.valintatila.get(hakemusOid, hakukohdeOid).exists(isHyvaksytty)
   }
 
   private val Pattern = "preference(\\d+)-Koulutus-id".r
@@ -334,8 +325,8 @@ class KkHakijaService(hakemusService: IHakemusService,
             hakukohde = toive.koulutusId.getOrElse(""),
             hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
-            valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
-            vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
+            valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemusOid, hakukohdeOid),
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = getPohjakoulutukset(answers.koulutustausta.getOrElse(Koulutustausta())),
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -374,8 +365,8 @@ class KkHakijaService(hakemusService: IHakemusService,
             hakukohde = toive.koulutusId.getOrElse(""),
             hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
-            valinnanTila = sijoitteluTulos.valintatila(hakemus.oid, hakukohdeOid),
-            vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemus.oid, hakukohdeOid),
+            valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemus.oid, hakukohdeOid),
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = hakemus.kkPohjakoulutus,
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -842,7 +833,7 @@ object KkHakijaUtil {
 
     val lukuvuosi: (Int, Int) = kausiVuosiToLukuvuosiPair(kvp)
 
-    Future(sijoittelunTulos.ilmoittautumistila(hakemusOid, hakukohde).map {
+    Future(sijoittelunTulos.ilmoittautumistila.get(hakemusOid, hakukohde).map {
       case Ilmoittautumistila.EI_TEHTY              => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
       case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI  => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
       case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI => Seq(Poissa(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))

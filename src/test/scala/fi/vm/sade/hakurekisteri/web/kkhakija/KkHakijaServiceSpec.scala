@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import akka.actor.Props
+import akka.actor.{Actor, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
@@ -54,9 +54,22 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
 
-  private val hakuOids: Set[String] = Set("1.2.246.562.29.64944541586", "1.2.246.562.29.31587915971", FullHakemus1.applicationSystemId)
-
-  private val valintaTulosMock = new ValintaTulosActorRef(system.actorOf(Props(new MockedValintaTulosActor(hakuOids))))
+  private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case HakemuksenValintatulos(hakuOid, _) => sender ! SijoitteluTulos(hakuOid, Seq())
+      case HaunValintatulos("1.1") => sender ! SijoitteluTulos(
+        "1.1",
+        ValintaTulos("1.25.1", Seq(ValintaTulosHakutoive(
+          "1.11.2",
+          "",
+          Valintatila.HYVAKSYTTY,
+          Vastaanottotila.KESKEN,
+          HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
+          None
+        ))))
+      case HaunValintatulos(hakuOid) => sender ! SijoitteluTulos(hakuOid, Seq())
+    }
+  })))
   private val valintaRekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new MockedValintarekisteriActor(personOidWithLukuvuosimaksu = personOidWithLukuvuosimaksu,
     paymentRequiredHakukohdeWithMaksettu = paymentRequiredHakukohdeWithMaksettu,
     noPaymentRequiredHakukohdeButMaksettu = noPaymentRequiredHakukohdeButMaksettu))))
@@ -140,12 +153,13 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
 
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus1))
 
-    val sijoitteluTulos = new SijoitteluTulos {
-      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
-      override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
-      override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
-      override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
-    }
+    val sijoitteluTulos = SijoitteluTulos(
+      "1.2.3",
+      Map(("", "1.5.1") -> BigDecimal(4.0)),
+      Map(("", "1.5.1") -> Valintatila.KESKEN),
+      Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
+      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
+    )
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Lasna(Kevat(2015))))
@@ -169,12 +183,13 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
 
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus2))
 
-    val sijoitteluTulos = new SijoitteluTulos {
-      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_SYKSY)
-      override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
-      override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
-      override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
-    }
+    val sijoitteluTulos = SijoitteluTulos(
+      "1.2.3",
+      Map(("", "1.5.1") -> BigDecimal(4.0)),
+      Map(("", "1.5.1") -> Valintatila.KESKEN),
+      Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
+      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_SYKSY)
+    )
     val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2016))))
@@ -199,12 +214,13 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     val koulutusSyksy = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
 
-    val sijoitteluTulos = new SijoitteluTulos {
-      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
-      override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
-      override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
-      override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
-    }
+    val sijoitteluTulos = SijoitteluTulos(
+      "1.2.3",
+      Map(("", "1.5.1") -> BigDecimal(4.0)),
+      Map(("", "1.5.1") -> Valintatila.KESKEN),
+      Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
+      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
+    )
     val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
     ilmoittautumiset should (contain(Lasna(Syksy(2016))) and contain(Lasna(Kevat(2017))))

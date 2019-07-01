@@ -50,7 +50,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
 
         waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").toString should be (Valintatila.KESKEN.toString)
         })
 
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
@@ -101,7 +101,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
 
         waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
+          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").toString should be (Valintatila.KESKEN.toString)
         })
 
         verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))

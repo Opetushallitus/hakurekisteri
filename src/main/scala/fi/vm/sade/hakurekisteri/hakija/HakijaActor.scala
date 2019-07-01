@@ -344,21 +344,21 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
     hakijas.map(tila(tulos.valintatila, tulos.vastaanottotila, tulos.ilmoittautumistila)).map(yhteispisteet(tulos.pisteet))
 
-  def yhteispisteet(pisteet: (String, String) => Option[BigDecimal])(h:Hakija) : Hakija = {
+  def yhteispisteet(pisteet: Map[(String, String), BigDecimal])(h:Hakija) : Hakija = {
     val toiveet = h.hakemus.hakutoiveet.map((ht) => {
       val oid: String = ht.hakukohde.oid
-      val yhteispisteet: Option[BigDecimal] = pisteet(h.hakemus.hakemusnumero, oid)
+      val yhteispisteet: Option[BigDecimal] = pisteet.get(h.hakemus.hakemusnumero, oid)
       ht withPisteet yhteispisteet
     })
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }
 
-  def tila(valinta: (String, String) => Option[Valintatila], vastaanotto: (String, String) => Option[Vastaanottotila], ilmoittautumistila: (String,String) => Option[Ilmoittautumistila])(h:Hakija): Hakija = {
+  def tila(valinta: Map[(String, String), Valintatila], vastaanotto: Map[(String, String), Vastaanottotila], ilmoittautumistila: Map[(String,String), Ilmoittautumistila])(h:Hakija): Hakija = {
     val hakemusnumero: String = h.hakemus.hakemusnumero
     h.copy(hakemus =
       h.hakemus.copy(hakutoiveet =
         for (ht <- h.hakemus.hakutoiveet)
-          yield Hakutoive(ht, valinta(hakemusnumero, ht.hakukohde.oid), vastaanotto(hakemusnumero, ht.hakukohde.oid), ilmoittautumistila(hakemusnumero, ht.hakukohde.oid))))
+          yield Hakutoive(ht, valinta.get(hakemusnumero, ht.hakukohde.oid), vastaanotto.get(hakemusnumero, ht.hakukohde.oid), ilmoittautumistila.get(hakemusnumero, ht.hakukohde.oid))))
   }
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(

@@ -86,7 +86,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           ValintaTulos(hakemusOid, Seq())
       }
-      .map(t => ValintaTulosToSijoitteluTulos(Map(t.hakemusOid -> t)))
+      .map(SijoitteluTulos(hakuOid, _))
   }
 
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
@@ -97,7 +97,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
           log.warning(s"valinta tulos not found with haku $hakuOid: $t")
           Seq[ValintaTulos]()
       }
-      .map(ts =>  ValintaTulosToSijoitteluTulos(ts.map(t => t.hakemusOid -> t).toMap))
+      .map(SijoitteluTulos(hakuOid, _))
   }
 }
 

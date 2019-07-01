@@ -51,22 +51,3 @@ class MockedHakuActor(haku1: RestHaku) extends Actor {
         sender ! Nil
     }
   }
-
-  class MockedValintaTulosActor(hakuOids: Set[String]) extends Actor {
-    override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if hakuOids.contains(q.hakuOid) =>
-        sender ! new SijoitteluTulos {
-          override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
-          override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
-          override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.HYVAKSYTTY)
-          override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
-        }
-      case q: ValintaTulosQuery =>
-        sender ! new SijoitteluTulos {
-          override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = None
-          override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = None
-          override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = None
-          override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = None
-        }
-    }
-  }

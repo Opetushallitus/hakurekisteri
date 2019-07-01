@@ -72,12 +72,12 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
 
         waitFuture(querySijoitteluTulos(valintaTulosActor, "1.2.246.562.29.90697286251"))(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
+          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").toString should be (KESKEN.toString)
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
           classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos").get("1.2.246.562.29.90697286251", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
-        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
+        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").toString should be (KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
       }
@@ -127,12 +127,12 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286253", None)
 
         waitFuture(querySijoitteluTulos(valintaTulosActor, "1.2.246.562.29.90697286253"))(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
+          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").toString should be (KESKEN.toString)
         })
 
         val cached = Await.result(cacheFactory.getInstance[String, SijoitteluTulos](1111,
           classOf[ValintaTulosActor], classOf[SijoitteluTulos], "sijoittelu-tulos").get("1.2.246.562.29.90697286253", (_: String) => Future.failed(new RuntimeException("should not be called"))), 10.seconds)
-        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (KESKEN.toString)
+        cached.get.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").toString should be (KESKEN.toString)
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286253"))
       }
@@ -242,7 +242,7 @@ class ValintaTulosActorWithRedisSpec extends ScalatraFunSuite with FutureWaiting
         val tulokset: Seq[(Int, Future[SijoitteluTulos])] = 1.to(10).map((_, querySijoitteluTulos(valintaTulosActor, hakuOid)))
 
         tulokset.foreach { case (_, f) =>
-          Await.result(f, 5.seconds).valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029") should be(Some(KESKEN))
+          Await.result(f, 5.seconds).valintatila.get("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029") should be(Some(KESKEN))
         }
 
         verify(endPoint, times(1)).request(forUrl("http://localhost/valinta-tulos-service/haku/" + hakuOid))
