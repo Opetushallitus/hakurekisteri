@@ -6,7 +6,7 @@ import _root_.akka.pattern.AskTimeoutException
 import fi.vm.sade.auditlog.{Changes, Target}
 import fi.vm.sade.hakurekisteri.{AuditUtil, ReprocessHaunHakemukset}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
-import fi.vm.sade.hakurekisteri.integration.haku.HakuRequest
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport}
@@ -31,7 +31,7 @@ class HakuResource(hakuActor: ActorRef, hakemusService: IHakemusService)(implici
 
       import scala.concurrent.duration._
       override implicit def timeout: Duration = 60.seconds
-      val is = (hakuActor ? HakuRequest)(30.seconds)
+      val is: Future[Seq[Haku]] = (hakuActor ? HakuRequest)(30.seconds).mapTo[AllHaut].map(_.haut)
     }
   }
 

@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Status}
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, HakuRequest}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
 import support.TypedActorRef
 
@@ -13,64 +14,64 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-case class ValintaTulosQuery(hakuOid: String, hakemusOid: Option[String])
-case class UpdateValintatulos(haku: String, isRetry: Boolean = false)
-case class FetchValintatulos(haku: String)
-case class FetchValintatulosResult(haku: String, result: Try[SijoitteluTulos])
+case class HakemuksenValintatulos(hakuOid: String, hakemusOid: String)
+case class HaunValintatulos(hakuOid: String)
 
-class ValintaTulosActor(client: VirkailijaRestClient,
+class ValintaTulosActor(hautActor: ActorRef,
+                        client: VirkailijaRestClient,
                         config: Config,
                         cacheFactory: CacheFactory,
-                        cacheTime: Option[Long] = None,
-                        retryTime: Option[Long] = None) extends Actor with ActorLogging {
+                        cacheTime: Option[Long] = None) extends Actor with ActorLogging {
 
-  implicit val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
-  private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
-  private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
+  implicit private val timeout: akka.util.Timeout = config.integrations.valintaTulosConfig.httpClientRequestTimeout.milliseconds
+  implicit private val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
+  private val maxRetries = config.integrations.valintaTulosConfig.httpClientMaxRetries
   private val cache = cacheFactory.getInstance[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis), this.getClass, classOf[SijoitteluTulos], "sijoittelu-tulos")
+  private val cacheRefreshInterval = config.integrations.valintatulosRefreshTimeHours.hours
+  private val cacheRefreshScheduler = context.system.scheduler.schedule(1.second, cacheRefreshInterval, hautActor, HakuRequest)
 
-  override def receive: Receive = updateRequestQueue(Map.empty)
+  override def receive: Receive = withQueue(Map.empty)
 
-  private def updateRequestQueue(requestQueue: Map[String, Vector[ActorRef]]): Receive = {
-      case ValintaTulosQuery(hakuOid, Some(hakemusOid)) =>
+  override def postStop(): Unit = {
+    cacheRefreshScheduler.cancel()
+    super.postStop()
+  }
+
+  private def withQueue(haunValintatulosFetchQueue: Map[String, Vector[ActorRef]]): Receive = {
+      case HakemuksenValintatulos(hakuOid, hakemusOid) =>
         hakemuksenTulos(hakuOid, hakemusOid) pipeTo sender
 
-      case ValintaTulosQuery(hakuOid, None) =>
-        cache.get(hakuOid, hakuOid => { (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_)) }).map(_.get) pipeTo sender
+      case HaunValintatulos(hakuOid) =>
+        cache.get(hakuOid, hakuOid => { (self ? FetchHaunValintatulos(hakuOid)).mapTo[SijoitteluTulos].map(Some(_)) }).map(_.get) pipeTo sender
 
-      case UpdateValintatulos(hakuOid, isRetry) =>
-        (self ? FetchValintatulos(hakuOid)).mapTo[SijoitteluTulos]
-          .flatMap(cache + (hakuOid, _))
-          .failed
-          .foreach(t => {
-            if (isRetry) {
-              log.error(t, s"Failed to update valintatulos of haku $hakuOid")
-            } else {
-              log.warning(s"Failed to update valintatulos of haku $hakuOid, retrying in $retry")
-              context.system.scheduler.scheduleOnce(retry, self, UpdateValintatulos(hakuOid, true))
-            }
-          })
-
-      case FetchValintatulos(hakuOid) =>
-        if (requestQueue.isEmpty) {
-          haunTulos(hakuOid).onComplete(self ! FetchValintatulosResult(hakuOid, _))
+      case FetchHaunValintatulos(hakuOid) =>
+        if (haunValintatulosFetchQueue.isEmpty) {
+          haunTulos(hakuOid).onComplete(self ! FetchedHaunValintatulos(hakuOid, _))
         }
-        context.become(updateRequestQueue(requestQueue + (hakuOid -> (requestQueue.getOrElse(hakuOid, Vector.empty) :+ sender))))
+        context.become(withQueue(haunValintatulosFetchQueue + (hakuOid -> (haunValintatulosFetchQueue.getOrElse(hakuOid, Vector.empty) :+ sender))))
 
-      case FetchValintatulosResult(hakuOid, result) =>
+      case FetchedHaunValintatulos(hakuOid, result) =>
         result match {
           case Success(tulos) =>
-            requestQueue.get(hakuOid).foreach(_.foreach(_ ! tulos))
+            haunValintatulosFetchQueue.get(hakuOid).foreach(_.foreach(_ ! tulos))
           case Failure(t) =>
-            requestQueue.get(hakuOid).foreach(_.foreach(_ ! Status.Failure(t)))
+            haunValintatulosFetchQueue.get(hakuOid).foreach(_.foreach(_ ! Status.Failure(t)))
         }
-        val newQueue = requestQueue - hakuOid
+        val newQueue = haunValintatulosFetchQueue - hakuOid
         if (newQueue.nonEmpty) {
           val nextHakuOid = newQueue.maxBy(_._2.length)._1
-          haunTulos(nextHakuOid).onComplete(self ! FetchValintatulosResult(nextHakuOid, _))
+          haunTulos(nextHakuOid).onComplete(self ! FetchedHaunValintatulos(nextHakuOid, _))
         }
-        context.become(updateRequestQueue(newQueue))
+        context.become(withQueue(newQueue))
+
+      case AllHaut(haut) =>
+        haut.filter(_.isActive).foreach(haku => self ! FetchHaunValintatulos(haku.oid))
+
+      case tulos: SijoitteluTulos =>
+        cache + (tulos.hakuOid, tulos)
+
+      case Status.Failure(t) =>
+        log.error(t, "Failed to update valintatulos")
   }
 
   private def is404(t: Throwable): Boolean = t match {
@@ -91,7 +92,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
     client
-      .readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", hakuOid)(200)
+      .readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", hakuOid)(200, maxRetries)
       .recover {
         case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid: $t")
@@ -99,6 +100,9 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       }
       .map(SijoitteluTulos(hakuOid, _))
   }
+
+  private case class FetchHaunValintatulos(hakuOid: String)
+  private case class FetchedHaunValintatulos(hakuOid: String, tulos: Try[SijoitteluTulos])
 }
 
 case class ValintaTulosActorRef(actor: ActorRef) extends TypedActorRef

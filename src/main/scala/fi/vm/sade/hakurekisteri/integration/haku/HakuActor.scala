@@ -9,7 +9,6 @@ import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{UpdateValintatulos, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.ytl.{HakuList, YtlIntegration}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
@@ -19,18 +18,15 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, valintaTulos: ValintaTulosActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
+class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   var storedHakus: Seq[Haku] = Seq()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours
   val hakemusRefreshTime = config.integrations.hakemusRefreshTimeHours.hours
-  val valintatulosRefreshTimeHours = config.integrations.valintatulosRefreshTimeHours.hours
-  var starting = true
 
   val update = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
   var retryUpdate: Option[Cancellable] = None
-  var vtsUpdate: Option[Cancellable] = None
 
   import FutureList._
 
@@ -41,14 +37,14 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
     }
   }
 
-  log.info(s"starting haku actor $self (hakuRefreshTime: $hakuRefreshTime, valintatulosRefreshTimeHours: $valintatulosRefreshTimeHours, hakemusRefreshTime: $hakemusRefreshTime, starting: $starting)")
+  log.info(s"starting haku actor $self (hakuRefreshTime: $hakuRefreshTime, hakemusRefreshTime: $hakemusRefreshTime)")
 
   override def receive: Actor.Receive = {
     case Update =>
       log.info(s"updating all hakus for $self from ${sender()}")
       tarjonta.actor ! GetHautQuery
 
-    case HakuRequest => sender ! storedHakus
+    case HakuRequest => sender ! AllHaut(storedHakus)
 
     case q: GetHaku => getHaku(q) pipeTo sender
 
@@ -75,16 +71,6 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
       log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
       log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
       log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
-      if (starting) {
-        starting = false
-        vtsUpdate.foreach(_.cancel())
-        vtsUpdate = Some(context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu))
-        log.info(s"started VTS & hakemus schedulers, starting: $starting")
-      }
-
-    case RefreshSijoittelu =>
-      log.info(s"refreshing sijoittelu from ${sender()}")
-      refreshKeepAlives()
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
@@ -114,13 +100,9 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
     }
   }
 
-  def refreshKeepAlives() {
-    storedHakus.filter(_.isActive).foreach(haku => valintaTulos.actor ! UpdateValintatulos(haku.oid))
-  }
-
   override def postStop(): Unit = {
     update.cancel()
-    Seq(retryUpdate, vtsUpdate).foreach(_.foreach(_.cancel()))
+    retryUpdate.foreach(_.cancel())
     super.postStop()
   }
 }
@@ -129,7 +111,7 @@ object Update
 
 object HakuRequest
 
-object RefreshSijoittelu
+case class AllHaut(haut: Seq[Haku])
 
 case class HakuNotFoundException(m: String) extends Exception(m)
 

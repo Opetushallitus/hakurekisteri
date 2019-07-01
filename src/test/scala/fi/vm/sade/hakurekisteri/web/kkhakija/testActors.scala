@@ -6,13 +6,8 @@ import akka.actor.Actor
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetKoodistoKoodiArvot, GetRinnasteinenKoodiArvoQuery, Koodi, KoodiMetadata, Koodisto, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, SijoitteluTulos, ValintaTulosQuery, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritysTyyppiQuery}
 import fi.vm.sade.utils.slf4j.Logging
 import org.joda.time.LocalDate

@@ -67,7 +67,6 @@ object Integrations {
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: VirtaActorRef = new VirtaActorRef(mockActor("virta", new DummyActor))
   override val virtaResource: VirtaResourceActorRef = new VirtaResourceActorRef(mockActor("virtaResource", new MockVirtaResourceActor))
-  override val valintaTulos: ValintaTulosActorRef = new ValintaTulosActorRef(mockActor("valintaTulos", new DummyActor))
   override val valintarekisteri: ValintarekisteriActorRef = new ValintarekisteriActorRef(mockActor("valintarekisteri", new Actor {
     override def receive: Receive = {
       case ValintarekisteriQuery(_, _) => sender ! Seq()
@@ -92,7 +91,8 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytl, config)
-  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, valintaTulos, ytl, ytlIntegration, config)), "haut")
+  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, ytl, ytlIntegration, config)), "haut")
+  val valintaTulos: ValintaTulosActorRef = new ValintaTulosActorRef(mockActor("valintaTulos", new DummyActor))
 
   override val proxies = new MockProxies
   override val hakemusClient = null
@@ -170,7 +170,6 @@ class BaseIntegrations(rekisterit: Registers,
   val koosteService = new KoosteService(koosteClient)(system)
   val koodisto = new KoodistoActorRef(system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto"))
   val parametrit = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit"))
-  val valintaTulos = new ValintaTulosActorRef(getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config, cacheFactory)), "valintaTulos"))
   val valintarekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri"))
   val ytl = system.actorOf(Props(new YtlActor(
     rekisterit.ytlSuoritusRekisteri,
@@ -181,7 +180,8 @@ class BaseIntegrations(rekisterit: Registers,
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytl, config)
-  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, valintaTulos, ytl, ytlIntegration, config)), "haut")
+  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, ytl, ytlIntegration, config)), "haut")
+  val valintaTulos = new ValintaTulosActorRef(getSupervisedActorFor(Props(new ValintaTulosActor(haut, valintatulosClient, config, cacheFactory)), "valintaTulos"))
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)

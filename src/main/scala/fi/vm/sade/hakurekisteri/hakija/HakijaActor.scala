@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisa
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus}
@@ -363,7 +363,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(ValintaTulosQuery(hakuOid, None))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => (valintaTulosActor.actor ? HaunValintatulos(hakuOid))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 

@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, _}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, HakuActor, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, _}
@@ -724,7 +724,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   val koodistoActor = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
 
-  val valintatulokset: Future[Seq[ValintaTulos]] = Future.successful(
+  val valintatulokset: Seq[ValintaTulos] =
     Seq(
       ValintaTulos(
         FullHakemus1.oid,
@@ -782,22 +782,18 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         )
       )
     )
-  )
-
-  val sijoitteluClient: VirkailijaRestClient = mock[VirkailijaRestClient]
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.1")(200) returns valintatulokset
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.2")(200) returns valintatulokset
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.3")(200) returns valintatulokset
-
-  val cacheFactory = MockCacheFactory.get
 
   private val mockConfig = new MockConfig
-  val sijoittelu = new ValintaTulosActorRef(system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, mockConfig, cacheFactory))))
+  val valintaTulosActor = ValintaTulosActorRef(system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case HaunValintatulos(hakuOid) => sender ! SijoitteluTulos(hakuOid, valintatulokset)
+    }
+  })))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-    val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu, mockConfig)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, valintaTulosActor, mockConfig)))
 
     def get(q: HakijaQuery): Future[Any] = {
       hakijaActor ? q

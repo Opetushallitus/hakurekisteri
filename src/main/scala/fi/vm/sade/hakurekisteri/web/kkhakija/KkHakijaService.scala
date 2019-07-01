@@ -210,7 +210,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery, hakuOid: String): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
     case Some(_) => Future.successful(None)
-    case None => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))
+    case None => (valintaTulos.actor ? HaunValintatulos(hakuOid))(valintaTulosTimeout).mapTo[SijoitteluTulos].map(Some(_))
   }
 
   private def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
@@ -250,23 +250,17 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private val Pattern = "preference(\\d+)-Koulutus-id".r
 
-  private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = valintaTulos.actor.?(q)(valintaTulosTimeout)
-    .mapTo[SijoitteluTulos]
-
   private def getLukuvuosimaksut(hakukohdeOids: Set[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
     (valintaRekisteri.actor ? LukuvuosimaksuQuery(hakukohdeOids, auditSession)).mapTo[Seq[Lukuvuosimaksu]]
   }
 
   private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,
                             kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
-    val valintaTulosQuery = q.oppijanumero match {
-      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid))
-      case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
-    }
-
-    kokoHaunTulos.map(Future.successful)
-      .getOrElse(getValintaTulos(valintaTulosQuery))
-      .flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids)).map(_.flatten))
+    ((kokoHaunTulos, q.oppijanumero) match {
+      case (Some(tulos), _) => Future.successful(tulos)
+      case (None, Some(_)) => (valintaTulos.actor ? HakemuksenValintatulos(hakemus.applicationSystemId, hakemus.oid)).mapTo[SijoitteluTulos]
+      case (None, None) => (valintaTulos.actor ? HaunValintatulos(hakemus.applicationSystemId)).mapTo[SijoitteluTulos]
+    }).flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids)).map(_.flatten))
   }
 
   private def extractHakemukset(hakemus: HakijaHakemus,
