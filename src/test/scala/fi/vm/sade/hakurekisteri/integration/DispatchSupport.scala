@@ -18,7 +18,7 @@ import org.hamcrest.{BaseMatcher, Description, Matcher}
 import org.mockito.hamcrest.MockitoHamcrest
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.language.implicitConversions
 import scala.util.Try
 import scala.util.matching.Regex
@@ -241,7 +241,8 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
   }
 
   def executeScala[T](request: Request, handler: AsyncHandler[T]): Future[T] = {
-    Future.fromTry(Try(handle(handler, request)(executeRequest(request))))
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+    Future { handle(handler, request)(executeRequest(request)) }
   }
 
   def executeRequest[T](request: Request): Option[(Int, List[(String, String)], String)] = {
