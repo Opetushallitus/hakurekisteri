@@ -248,7 +248,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   private def syncArvosanas(existingArvosanas: Seq[Arvosana with Identified[UUID]], newArvosanas: Seq[Arvosana]): Future[Any] = {
     val existingFromKoski = existingArvosanas.filter(_.source.contentEquals(KoskiUtil.koski_integration_source))
     Future.sequence(newArvosanas.map { newArvosana =>
-      val matchingExistingArvosana = existingArvosanas.find(oa => oa.koskiCore.equals(newArvosana.koskiCore)).headOption
+      val matchingExistingArvosana = existingArvosanas.find(oa => oa.koskiCore.equals(newArvosana.koskiCore))
       if (matchingExistingArvosana.isDefined) {
         val existingArvosana = matchingExistingArvosana.get
         if (!existingArvosana.koskiUpdateableFields.equals(newArvosana.koskiUpdateableFields)) {
