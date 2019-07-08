@@ -276,7 +276,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
   private def updateArvosana(oldArvosana: Arvosana with Identified[UUID], newArvosana: Arvosana): Future[Any] = {
     (arvosanaRekisteri ? oldArvosana.copy(arvio = newArvosana.arvio, lahdeArvot = newArvosana.lahdeArvot, source = newArvosana.source, myonnetty = newArvosana.myonnetty))
-      .mapTo[Arvosana with Identified[UUID]].recoverWith{case t: AskTimeoutException => updateArvosana(oldArvosana, newArvosana)}
+      .mapTo[Arvosana with Identified[UUID]].recoverWith{case _: AskTimeoutException => updateArvosana(oldArvosana, newArvosana)}
   }
 
   private def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
