@@ -227,13 +227,13 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
         .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
       logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-      val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
+      val arvosanasFromKoski = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
 
       updateSuoritus(suoritus, useSuoritus)
         .flatMap(_ => fetchArvosanat(suoritus))
-        .flatMap(existingArvosanat => syncArvosanas(existingArvosanat, newArvosanat))
+        .flatMap(arvosanasInSure => syncArvosanas(arvosanasInSure, arvosanasFromKoski))
         .flatMap(_ => saveOpiskelija(opiskelija))
-        .map(_ => SuoritusArvosanat(useSuoritus, newArvosanat,luokka, lasnaDate, luokkaTaso))
+        .map(_ => SuoritusArvosanat(useSuoritus, arvosanasFromKoski,luokka, lasnaDate, luokkaTaso))
     } else {
       saveSuoritus(useSuoritus, personOidsWithAliases)
         .flatMap(suoritus => {
@@ -244,30 +244,28 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     }
   }
 
-
-  private def syncArvosanas(existingArvosanas: Seq[Arvosana with Identified[UUID]], newArvosanas: Seq[Arvosana]): Future[Any] = {
-    val existingFromKoski = existingArvosanas.filter(_.source.contentEquals(KoskiUtil.koski_integration_source))
-    Future.sequence(newArvosanas.map { newArvosana =>
-      val matchingExistingArvosana = existingArvosanas.find(oa => oa.koskiCore.equals(newArvosana.koskiCore))
+  private def syncArvosanas(existingArvosanas: Seq[Arvosana with Identified[UUID]], arvosanasFromKoski: Seq[Arvosana]): Future[Any] = {
+    Future.sequence(arvosanasFromKoski.map { koskiArvosana =>
+      val matchingExistingArvosana = existingArvosanas.find(sureArvosana => sureArvosana.koskiCore.equals(koskiArvosana.koskiCore))
       if (matchingExistingArvosana.isDefined) {
         val existingArvosana = matchingExistingArvosana.get
-        if (!existingArvosana.koskiUpdateableFields.equals(newArvosana.koskiUpdateableFields)) {
-          logger.debug(s"KSK-5: Päivitetään muuttunut arvosana. Vanha {}, uusi {}. Suoritus: {}", existingArvosana, newArvosana, existingArvosana.suoritus)
-          updateArvosana(existingArvosana, newArvosana)
+        if (!existingArvosana.koskiUpdateableFields.equals(koskiArvosana.koskiUpdateableFields)) {
+          logger.debug(s"KSK-5: Päivitetään muuttunut arvosana. Vanha {}, uusi {}. Suoritus: {}", existingArvosana, koskiArvosana, existingArvosana.suoritus)
+          updateArvosana(existingArvosana, koskiArvosana)
         } else {
           //Arvosana jo olemassa, ei muutoksia
           Future.successful({})
         }
       } else {
-        saveArvosana(newArvosana)
+        saveArvosana(koskiArvosana)
       }
-    }).flatMap(_ => removeOldArvosanasNotPresentInNew(existingArvosanas, newArvosanas))
+    }).flatMap(_ => removeArvosanasNotPresentInKoski(existingArvosanas, arvosanasFromKoski))
   }
 
-  private def removeOldArvosanasNotPresentInNew(existingArvosanas: Seq[Arvosana with Identified[UUID]], newArvosanas: Seq[Arvosana]) = {
-    Future.sequence(existingArvosanas.map(existingArvosana =>
-      if (!newArvosanas.exists(newArvosana => existingArvosana.koskiCore.equals(newArvosana.koskiCore))) {
-        logger.debug("KSK-5: Vanhaa arvosanaa ei löydy uusista. Poistetaan {}.", existingArvosana)
+  private def removeArvosanasNotPresentInKoski(arvosanasInSure: Seq[Arvosana with Identified[UUID]], koskiArvosanas: Seq[Arvosana]) = {
+    Future.sequence(arvosanasInSure.map(existingArvosana =>
+      if (!koskiArvosanas.exists(newArvosana => existingArvosana.koskiCore.equals(newArvosana.koskiCore))) {
+        logger.debug("KSK-5: Vanhaa arvosanaa ei löydy enää Koskesta. Poistetaan {}.", existingArvosana)
         arvosanaRekisteri ? DeleteResource(existingArvosana.id, "koski-arvosanat")
       } else {
         Future.successful({})
