@@ -210,7 +210,11 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def saveArvosana(arvosana: Arvosana): Future[Any] = {
-    arvosanaRekisteri ? arvosana
+    (arvosanaRekisteri ? arvosana).recoverWith
+      { case t: AskTimeoutException =>
+          logger.error(s"Operation timed out when saving arvosana for suoritus ${arvosana.suoritus}, retrying", t)
+          saveArvosana(arvosana)
+      }
   }
 
   private def arvosanaToInsertResource(arvosana: Arvosana, suoritus: Suoritus with Identified[UUID], personOidsWithAliases: PersonOidsWithAliases) = {
@@ -227,22 +231,58 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
       }
         .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
       logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-      val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
+      val arvosanasFromKoski = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
 
       updateSuoritus(suoritus, useSuoritus)
         .flatMap(_ => fetchArvosanat(suoritus))
-        .flatMap(existingArvosanat => Future.sequence(existingArvosanat
-          .filter(_.source.contentEquals(KoskiUtil.koski_integration_source))
-          .map(arvosana => deleteArvosana(arvosana))))
-        .flatMap(_ => Future.sequence(newArvosanat.map(saveArvosana)))
+        .flatMap(arvosanasInSure => syncArvosanas(arvosanasInSure, arvosanasFromKoski))
         .flatMap(_ => saveOpiskelija(opiskelija))
-        .map(_ => SuoritusArvosanat(useSuoritus, newArvosanat,luokka, lasnaDate, luokkaTaso))
+        .map(_ => SuoritusArvosanat(useSuoritus, arvosanasFromKoski,luokka, lasnaDate, luokkaTaso))
     } else {
-      saveSuoritus(useSuoritus, personOidsWithAliases).flatMap(suoritus =>
-        Future.sequence(arvosanat.map(a => arvosanaRekisteri ? arvosanaToInsertResource(a, suoritus, personOidsWithAliases)))
-      ).flatMap(_ => saveOpiskelija(opiskelija))
+      saveSuoritus(useSuoritus, personOidsWithAliases)
+        .flatMap(suoritus => {
+          val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
+          Future.sequence(newArvosanat.map(saveArvosana))})
+        .flatMap(_ => saveOpiskelija(opiskelija))
         .map(_ => SuoritusArvosanat(useSuoritus, arvosanat,luokka, lasnaDate, luokkaTaso))
     }
+  }
+
+  private def syncArvosanas(existingArvosanas: Seq[Arvosana with Identified[UUID]], arvosanasFromKoski: Seq[Arvosana]): Future[Any] = {
+    Future.sequence(arvosanasFromKoski.map { koskiArvosana =>
+      val matchingExistingArvosana = existingArvosanas.find(sureArvosana => sureArvosana.koskiCore.equals(koskiArvosana.koskiCore))
+      if (matchingExistingArvosana.isDefined) {
+        val existingArvosana = matchingExistingArvosana.get
+        if (!existingArvosana.koskiUpdateableFields.equals(koskiArvosana.koskiUpdateableFields)) {
+          logger.debug(s"KSK-5: Päivitetään muuttunut arvosana. Vanha {}, uusi {}. Suoritus: {}", existingArvosana, koskiArvosana, existingArvosana.suoritus)
+          updateArvosana(existingArvosana, koskiArvosana)
+        } else {
+          //Arvosana jo olemassa, ei muutoksia
+          Future.successful({})
+        }
+      } else {
+        saveArvosana(koskiArvosana)
+      }
+    }).flatMap(_ => removeArvosanasNotPresentInKoski(existingArvosanas, arvosanasFromKoski))
+  }
+
+  private def removeArvosanasNotPresentInKoski(arvosanasInSure: Seq[Arvosana with Identified[UUID]], koskiArvosanas: Seq[Arvosana]) = {
+    Future.sequence(arvosanasInSure.map(existingArvosana =>
+      if (!koskiArvosanas.exists(newArvosana => existingArvosana.koskiCore.equals(newArvosana.koskiCore))) {
+        logger.debug("KSK-5: Vanhaa arvosanaa ei löydy enää Koskesta. Poistetaan {}.", existingArvosana)
+        arvosanaRekisteri ? DeleteResource(existingArvosana.id, "koski-arvosanat")
+      } else {
+        Future.successful({})
+      }))
+  }
+
+  private def updateArvosana(oldArvosana: Arvosana with Identified[UUID], newArvosana: Arvosana): Future[Any] = {
+    (arvosanaRekisteri ? oldArvosana.copy(arvio = newArvosana.arvio, lahdeArvot = newArvosana.lahdeArvot, source = newArvosana.source, myonnetty = newArvosana.myonnetty))
+      .mapTo[Arvosana with Identified[UUID]].recoverWith
+        { case t: AskTimeoutException =>
+            logger.error(s"Operation timed out when updating arvosana for suoritus ${newArvosana.suoritus}, retrying", t)
+            updateArvosana(oldArvosana, newArvosana)
+        }
   }
 
   private def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {

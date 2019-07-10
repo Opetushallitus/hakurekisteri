@@ -2540,6 +2540,135 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanat.head should equal("1")
   }
 
+  it should "delete no arvosanas when nothing has changed" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_1.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(7)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    val arvosanat = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
+    arvosanat should equal("18")
+
+    //Run the same koskidata again; deleted arvosanas in db should not increase here.
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    val deleted = run(database.run(sql"select count(*) from arvosana where deleted".as[String])).head
+    val arvosanatAfter = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
+    deleted should equal("0")
+    arvosanatAfter should equal("18")
+  }
+
+  it should "properly handle 3 changed and 1 removed arvosanas" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_1.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val json2: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_2.json").mkString
+    val henkilo2: KoskiHenkiloContainer = parse(json2).extract[KoskiHenkiloContainer]
+    henkilo2 should not be null
+    henkilo2.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(7)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    var arvosanat = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
+    val arvosana_TE = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
+    val arvosana_HI = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and current".as[String])).head
+    val arvosana_YH = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and current".as[String])).head
+    var suoritusTilat: Seq[String] = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("VALMIS")
+    arvosanat should equal("18")
+    arvosana_TE should equal("6")
+    arvosana_HI should equal("8")
+    arvosana_YH should equal("6")
+
+    //Now run actually changed data.
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo2, PersonOidsWithAliases(henkilo2.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("VALMIS")
+    val arvosana_TE_after = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
+    val arvosana_HI_after = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and current".as[String])).head
+    val arvosana_YH_after = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and current".as[String])).head
+    val arvosanas_after = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
+    val arvosana_TE_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and not current".as[String])).head
+    val arvosana_HI_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and not current".as[String])).head
+    val arvosana_YH_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and not current".as[String])).head
+    val deleteds_after = run(database.run(sql"select count(*) from arvosana where deleted".as[String])).head
+    arvosana_TE_after should equal("8")
+    arvosana_HI_after should equal("7")
+    arvosana_YH_after should equal("10")
+    arvosana_TE_noncurrent should equal("6")
+    arvosana_HI_noncurrent should equal("8")
+    arvosana_YH_noncurrent should equal("6")
+    arvosanas_after should equal("17")
+    deleteds_after should equal("1")
+
+  }
+
+  it should "properly handle multiple valinnaises arvosanas for same ainees" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "valinnaiset_4_kuvataidetta_3_musiikkia_before.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val json2: String = scala.io.Source.fromFile(jsonDir + "valinnaiset_4_kuvataidetta_3_musiikkia_after.json").mkString
+    val henkilo2: KoskiHenkiloContainer = parse(json2).extract[KoskiHenkiloContainer]
+    henkilo2 should not be null
+    henkilo2.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    val kuvataitees = run(database.run(sql"select count(*) from arvosana where aine = 'KU' and valinnainen and current and not deleted".as[String])).head
+    val musiikkis = run(database.run(sql"select count(*) from arvosana where aine = 'MU' and valinnainen and current and not deleted".as[String])).head
+    kuvataitees should equal("4")
+    musiikkis should equal("3")
+
+    val ku_0_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '0' and valinnainen and current and not deleted".as[String])).head
+    val ku_1_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '1' and valinnainen and current and not deleted".as[String])).head
+    val ku_2_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '2' and valinnainen and current and not deleted".as[String])).head
+    val ku_3_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '3' and valinnainen and current and not deleted".as[String])).head
+    ku_0_arvosana should equal("9")
+    ku_1_arvosana should equal("7")
+    ku_2_arvosana should equal("10")
+    ku_3_arvosana should equal("5")
+
+    val mu_0_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'MU' and jarjestys = '0' and valinnainen and current and not deleted".as[String])).head
+    val mu_1_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'MU' and jarjestys = '1' and valinnainen and current and not deleted".as[String])).head
+    val mu_2_arvosana = run(database.run(sql"select arvosana from arvosana where aine = 'MU' and jarjestys = '2' and valinnainen and current and not deleted".as[String])).head
+    mu_0_arvosana should equal("7")
+    mu_1_arvosana should equal("8")
+    mu_2_arvosana should equal("9")
+
+    val deleteds_before = run(database.run(sql"select count(*) from arvosana where deleted".as[String])).head
+    deleteds_before should equal("0")
+
+    //Ajetaan "Koskessa muuttunut" data
+    //Poistettu MU-arvosana 8, poistettu KU-arvosana 9,
+    //muutettu MU 9 -> 10, muutettu KU 10 -> 6
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo2, PersonOidsWithAliases(henkilo2.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+    val kuvataitees_after = run(database.run(sql"select count(*) from arvosana where aine = 'KU' and valinnainen and current and not deleted".as[String])).head
+    val musiikkis_after = run(database.run(sql"select count(*) from arvosana where aine = 'MU' and valinnainen and current and not deleted".as[String])).head
+    kuvataitees_after should equal("3")
+    musiikkis_after should equal("2")
+
+    val ku_0_arvosana_after = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '0' and valinnainen and current and not deleted".as[String])).head
+    val ku_1_arvosana_after = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '1' and valinnainen and current and not deleted".as[String])).head
+    val ku_2_arvosana_after = run(database.run(sql"select arvosana from arvosana where aine = 'KU' and jarjestys = '2' and valinnainen and current and not deleted".as[String])).head
+    ku_0_arvosana_after should equal("7")
+    ku_1_arvosana_after should equal("6")
+    ku_2_arvosana_after should equal("5")
+
+    val mu_0_arvosana_after = run(database.run(sql"select arvosana from arvosana where aine = 'MU' and jarjestys = '0' and valinnainen and current and not deleted".as[String])).head
+    val mu_1_arvosana_after = run(database.run(sql"select arvosana from arvosana where aine = 'MU' and jarjestys = '1' and valinnainen and current and not deleted".as[String])).head
+    mu_0_arvosana_after should equal("7")
+    mu_1_arvosana_after should equal("10")
+
+    val deleteds_after = run(database.run(sql"select count(*) from arvosana where deleted".as[String])).head
+    deleteds_after should equal("2")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.asInstanceOf[VirallinenSuoritus].komo.contentEquals(Oids.perusopetusKomoOid))
   }
