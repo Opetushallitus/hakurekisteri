@@ -549,7 +549,7 @@ object AkkaHakupalvelu {
         case (false, false, false, true) => Some("SE")
         case _ => None
       }
-      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath, koulutuksenKieli)
+      Hakutoive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath, koulutuksenKieli, None, None, None)
     }
   }
 }
