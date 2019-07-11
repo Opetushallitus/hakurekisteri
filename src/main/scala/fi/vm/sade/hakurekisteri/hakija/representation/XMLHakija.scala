@@ -178,7 +178,9 @@ object XMLHakutoive {
     case Vastaanottotila.KESKEN => "1"
     case Vastaanottotila.VASTAANOTTANUT    => "3"
     case Vastaanottotila.EHDOLLISESTI_VASTAANOTTANUT => "3"
+    case Vastaanottotila.PERUNUT => "4"
     case Vastaanottotila.EI_VASTAANOTETTU_MAARA_AIKANA => "5"
+    case Vastaanottotila.PERUUTETTU => "6"
   }
 }
 
