@@ -15,7 +15,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class YtlResource(ytl: ActorRef, ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport {
+class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport {
 
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)

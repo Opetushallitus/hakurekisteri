@@ -2,7 +2,10 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.UUID
 
+import akka.actor.Status.{Failure, Success}
 import akka.actor._
+import akka.pattern.ask
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
@@ -10,10 +13,15 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, UpsertResource}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen, _}
+import fi.vm.sade.hakurekisteri.tools.ReTryActor
 import org.joda.time._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+
+object YtlActor {
+  case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
+}
 
 class YtlActor(suoritusRekisteri: ActorRef,
                arvosanaRekisteri: ActorRef,
@@ -21,72 +29,49 @@ class YtlActor(suoritusRekisteri: ActorRef,
                config: Config) extends Actor with ActorLogging {
   import YtlActor._
 
+  private case class KokelasSession(kokelas: Kokelas, yoSuoritusUpdateDone: Boolean = false, arvosanaUpdateDone: Boolean = false)
+
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
-
-  var haut = Set[String]()
-
-  var kokelaat = Map[String, Kokelas]()
-  var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
+  implicit val timeout: Timeout = config.ytlSyncTimeout
 
   override def receive: Actor.Receive = {
-    case HakuList(current) => haut = current
 
     case k: KokelasWithPersonAliases =>
+      def makeRetryProxyActor(actor: ActorRef): ActorRef = {
+        context.actorOf(ReTryActor.props(tries = 2, retryTimeOut = 1000.millis, retryInterval = 100.millis, actor))
+      }
+
+      val asker = sender
       val kokelas = k.kokelas
       log.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo}")
-      context.actorOf(Props(new YoSuoritusUpdateActor(actorExpectingResult = sender(), kokelas.yo, k.personOidsWithAliases, suoritusRekisteri)))
-      kokelaat = kokelaat + (kokelas.oid -> kokelas)
-      Thread.sleep(1)  // TODO why do I need this???
-
-    case (vs: VirallinenSuoritus with Identified[_], actorToReceiveSuccess: ActorRef) if vs.id.isInstanceOf[UUID] && vs.komo == YoTutkinto.yotutkinto =>
-      val s = vs.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
-      for (
-        kokelas <- kokelaat.get(s.henkiloOid)
-      ) {
-        context.actorSelection(s.id.toString) ! Identify(s.id)
-        kokelaat = kokelaat - kokelas.oid
-        suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
-      }
-      actorToReceiveSuccess ! akka.actor.Status.Success
-
-    case ActorIdentity(id: UUID, Some(ref)) =>
-      for (
-        (suoritus, kokelas) <- suoritusKokelaat.get(id)
-      ) {
-        ref ! kokelas
-        suoritusKokelaat = suoritusKokelaat - id
-      }
-
-    case ActorIdentity(id: UUID, None) =>
-      try {
-        for (
-          (suoritus, kokelas) <- suoritusKokelaat.get(id)
-        ) {
-          context.actorOf(Props(new ArvosanaUpdateActor(suoritus, kokelas.yoTodistus ++ kokelas.osakokeet, arvosanaRekisteri)), id.toString)
-          suoritusKokelaat = suoritusKokelaat - id
+      val yoSuoritusUpdateActor: ActorRef = context.actorOf(YoSuoritusUpdateActor.props(
+        kokelas.yo,
+        k.personOidsWithAliases,
+        suoritusRekisteri))
+      val arvosanaUpdateActor: ActorRef = context.actorOf(ArvosanaUpdateActor.props(
+        kokelas.yoTodistus ++ kokelas.osakokeet,
+        arvosanaRekisteri, config.ytlSyncTimeout, ec))
+      val arvosanaUpdateActorWithRetryProxy = makeRetryProxyActor(arvosanaUpdateActor)
+      val allOperations = for {
+        virallinenSuoritus <- akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update).mapTo[VirallinenSuoritus with Identified[UUID]]
+        if (virallinenSuoritus.id.isInstanceOf[UUID] && virallinenSuoritus.komo == YoTutkinto.yotutkinto)
+        dummy <- akka.pattern.ask(arvosanaUpdateActorWithRetryProxy, ArvosanaUpdateActor.Update(virallinenSuoritus))
+      } yield true
+      allOperations onComplete {
+        case scala.util.Success(t) => {
+          asker ! akka.actor.Status.Success
         }
-      } catch {
-        case t: Throwable =>
-          context.actorSelection(id.toString) ! Identify(id)
-          log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
+        case scala.util.Failure(t) => {
+          log.error(s"YtlActor update failure (kokelas=${kokelas.oid}", t)
+          asker ! akka.actor.Status.Failure(t)
+        }
       }
-
-    case OperationFailed(actorToReceiveFailure, e: RuntimeException) =>
-      actorToReceiveFailure ! akka.actor.Status.Failure(e)
 
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
       sender ! new IllegalArgumentException(errorMessage)
   }
-}
-
-object YtlActor {
-  case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
-
-  case class OperationSucceeded(actorToReceiveSuccess: ActorRef)
-
-  case class OperationFailed(actorToReceiveFailure: ActorRef, e: Throwable)
 }
 
 case class Kokelas(oid: String,
@@ -408,18 +393,37 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
   }
 }
 
-class YoSuoritusUpdateActor(val actorExpectingResult: ActorRef,
-                            yoSuoritus: VirallinenSuoritus,
+object YoSuoritusUpdateActor {
+  case object Update
+
+  def props(yoSuoritus: VirallinenSuoritus,
+            personOidsWithAliases: PersonOidsWithAliases,
+            suoritusRekisteri: ActorRef): Props = Props(new YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
+                                                                                  personOidsWithAliases: PersonOidsWithAliases,
+                                                                                  suoritusRekisteri: ActorRef))
+}
+
+class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
                             personOidsWithAliases: PersonOidsWithAliases,
                             suoritusRekisteri: ActorRef) extends Actor with ActorLogging {
+  import YoSuoritusUpdateActor._
+
+  var asker: ActorRef = null
+
   private def ennenVuotta1990Valmistuneet(s: Seq[_]) = s.map {
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
       v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
   }.filter(s => s.valmistuminen.isBefore(new LocalDate(1990, 1, 1)) && s.tila == "VALMIS" && s.vahvistettu)
 
   override def receive: Actor.Receive = {
+    case Update =>
+      asker = sender()
+      implicit val ec: ExecutionContext = context.dispatcher
+      val suoritusQuery = SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))
+      val queryWithPersonAliases = SuoritusQueryWithPersonAliases(suoritusQuery, personOidsWithAliases)
+      suoritusRekisteri ! queryWithPersonAliases
+
     case s: Seq[_] =>
-      fetch.foreach(_.cancel())
       if (s.isEmpty) {
         suoritusRekisteri ! UpsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
       } else {
@@ -432,64 +436,87 @@ class YoSuoritusUpdateActor(val actorExpectingResult: ActorRef,
         }
       }
     case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
-      context.parent ! (v.asInstanceOf[VirallinenSuoritus with Identified[UUID]], actorExpectingResult)
+      asker ! v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       context.stop(self)
 
     case Status.Failure(e) =>
-      context.parent ! YtlActor.OperationFailed(actorExpectingResult, e)
+      asker ! akka.actor.Status.Failure(e)
       context.stop(self)
 
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
-      sender ! new IllegalArgumentException(errorMessage)
-  }
-
-  var fetch: Option[Cancellable] = None
-
-  override def preStart(): Unit = {
-    implicit val ec: ExecutionContext = context.dispatcher
-    val suoritusQuery = SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))
-    val queryWithPersonAliases = SuoritusQueryWithPersonAliases(suoritusQuery, personOidsWithAliases)
-    fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, suoritusRekisteri, queryWithPersonAliases))
+      asker ! new IllegalArgumentException(errorMessage)
   }
 }
 
+object ArvosanaUpdateActor {
+  case class Update(suoritus: Suoritus with Identified[UUID])
 
-class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor with ActorLogging {
+  def props(kokeet: Seq[Koe],
+            arvosanaRekisteri: ActorRef,
+            timeout: Timeout,
+            ec: ExecutionContext): Props = Props(new ArvosanaUpdateActor(
+    kokeet: Seq[Koe],
+    arvosanaRekisteri: ActorRef,
+    timeout: Timeout,
+    ec: ExecutionContext))
+}
+
+class ArvosanaUpdateActor(var kokeet: Seq[Koe],
+                          arvosanaRekisteri: ActorRef,
+                          implicit val timeout: Timeout,
+                          implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+  import ArvosanaUpdateActor._
+
+  var asker: ActorRef = null
+
+  var suoritus: Suoritus with Identified[UUID] = null
+
   def isKorvaava(old: Arvosana) = (uusi: Arvosana) =>
     uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto &&
       (uusi.valinnainen == old.valinnainen || (uusi.valinnainen != old.valinnainen && uusi.lahdeArvot != old.lahdeArvot))
 
   override def receive: Actor.Receive = {
+    case Update(s: Suoritus with Identified[UUID]) =>
+      asker = sender
+      suoritus = s
+      arvosanaRekisteri ! ArvosanaQuery(suoritus.id)
+
     case s: Seq[_] =>
-      fetch.foreach(_.cancel())
       val uudet = kokeet.map(_.toArvosana(suoritus))
-      s.map {
-        case (as: Arvosana with Identified[_]) if as.id.isInstanceOf[UUID] =>
-          val a = as.asInstanceOf[Arvosana with Identified[UUID]]
-          val korvaava = uudet.find(isKorvaava(a))
-          if (korvaava.isDefined) korvaava.get.identify(a.id)
-          else a
-      } foreach (arvosanaRekisteri ! _)
-      uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) foreach (arvosanaRekisteri ! _)
+      val arvosanaFutures =
+        s.map {
+          case (as: Arvosana with Identified[_]) if as.id.isInstanceOf[UUID] =>
+            val a = as.asInstanceOf[Arvosana with Identified[UUID]]
+            val korvaava = uudet.find(isKorvaava(a))
+            if (korvaava.isDefined) korvaava.get.identify(a.id)
+            else a
+        } map (arvosanaRekisteri ? _)
+      val futureList1 = Future.sequence(arvosanaFutures)
+
+      val uudetFutures = uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) map (arvosanaRekisteri ? _)
+      val futureList2 = Future.sequence(uudetFutures)
+
+      val allFutures = Future.sequence(Seq(futureList1, futureList2))
+      allFutures onComplete {
+        case scala.util.Success(_) =>
+          asker ! akka.actor.Status.Success
+        case scala.util.Failure(t) =>
+          log.error(s"Failed to update arvosana ($s)", t)
+          asker ! akka.actor.Status.Failure(t)
+      }
+      Await.result(allFutures, timeout.duration)
       context.stop(self)
+
     case Kokelas(_, _, todistus, osakokeet) => kokeet = todistus ++ osakokeet
 
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
-      sender ! new IllegalArgumentException(errorMessage)
-  }
-
-  var fetch: Option[Cancellable] = None
-
-  override def preStart(): Unit = {
-    implicit val ec: ExecutionContext = context.dispatcher
-    fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, arvosanaRekisteri, ArvosanaQuery(suoritus.id)))
+      asker ! akka.actor.Status.Failure(new IllegalArgumentException(errorMessage))
+      context.stop(self)
   }
 }
-
-case class HakuList(haut: Set[String])
 
 case class HakuException(message: String, haku: String, cause: Throwable) extends Exception(message, cause)

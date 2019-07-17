@@ -62,7 +62,6 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
       val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
       val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
-      ytl ! HakuList(ytlHakuOids)
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
       koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)

@@ -5,10 +5,10 @@ import java.util.concurrent.TimeUnit
 import java.util.zip.ZipInputStream
 
 import akka.actor.Status.{Failure, Success}
-import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{ArvioYo, Arvosana, ArvosanatQuery}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, ArvioYo, Arvosana, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HakemusService, HetuPersonOid}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
 
 
 class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar {
@@ -68,6 +68,23 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     }
   }
 
+  class NeverEndingActor extends Actor {
+    override def receive: Receive = {
+      case x =>
+        logger.info(s"NeverEndingActor has received message and will never reply to sender $x")
+    }
+  }
+  val neverEndingActor: ActorRef = system.actorOf(Props(new NeverEndingActor), "never-ending")
+
+  class FailingActor extends Actor {
+    override def receive: Receive = {
+      case x =>
+        logger.info(s"FailingActor has received message $x and will send a failure")
+        sender() ! akka.actor.Status.Failure(new RuntimeException("Forced to fail"))
+    }
+  }
+  val failingActor: ActorRef = system.actorOf(Props(new FailingActor), "failing")
+
   private val rekisterit: BareRegisters = new BareRegisters(system, journals, database, personAliasesProvider, config)
 
   val ytlActor: ActorRef = system.actorOf(Props(new YtlActor(
@@ -77,22 +94,19 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     config
   )), "ytl")
 
-  class NeverEndingYtlActor extends Actor {
-    override def receive: Receive = {
-      case k: YtlActor.KokelasWithPersonAliases =>
-        logger.info(s"NeverEndingYtlActor has received message about kokelas and will never reply to sender ${k.kokelas}")
-    }
-  }
-  val ytlActorNeverEnding: ActorRef = system.actorOf(Props(new NeverEndingYtlActor), "ytl-never-ending")
+  val ytlActorWithFailingArvosanaRekisteri: ActorRef = system.actorOf(Props(new YtlActor(
+    rekisterit.ytlSuoritusRekisteri,
+    arvosanaRekisteri = failingActor,
+    hakemusService,
+    config
+  )), "ytl-failing-arvosana-rekisteri")
 
-  class FailingYtlActor extends Actor {
-    override def receive: Receive = {
-      case k: YtlActor.KokelasWithPersonAliases =>
-        logger.info(s"FailingYtlActor has received message about kokelas and will send a failure")
-        sender() ! akka.actor.Status.Failure(new RuntimeException("Forced to fail"))
-    }
-  }
-  val ytlActorFailing: ActorRef = system.actorOf(Props(new FailingYtlActor), "ytl-failing")
+  val ytlActorWithStuckArvosanaRekisteri: ActorRef = system.actorOf(Props(new YtlActor(
+    rekisterit.ytlSuoritusRekisteri,
+    arvosanaRekisteri = neverEndingActor,
+    hakemusService,
+    config
+  )), "ytl-stuck-arvosana-rekisteri")
 
   trait UseRealYtlActor {
     val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, ytlActor, config)
@@ -100,12 +114,12 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   }
 
   trait UseNeverEndingYtlActor {
-    val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, ytlActorNeverEnding, config)
+    val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, neverEndingActor, config)
     ytlIntegration.setAktiivisetKKHaut((Set(activeHakuOid)))
   }
 
   trait UseFailingYtlActor {
-    val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, ytlActorFailing, config)
+    val ytlIntegration = new YtlIntegration(ophProperties, ytlHttpClient, hakemusService, oppijaNumeroRekisteri, failingActor, config)
     ytlIntegration.setAktiivisetKKHaut((Set(activeHakuOid)))
   }
 
@@ -121,7 +135,15 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       Duration(30, TimeUnit.SECONDS))
   }
 
-  trait SingleEntry {
+  trait ExampleArvosana {
+    def createExampleArvosana(suoritusId: UUID) = {
+      val testArvosana = Arvosana(suoritusId, arvio = Arvio410("S"), "MA",
+        lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Map(), Some(1))
+      Await.result(rekisterit.ytlArvosanaRekisteri ? testArvosana, Duration(30, TimeUnit.SECONDS))
+    }
+  }
+
+  trait HakemusServiceSingleEntry {
     Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
       HetuPersonOid(ssn, henkiloOid)
     )))
@@ -129,7 +151,29 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       .thenReturn(Some("{}", Student(ssn, "surname", "name", language = "fi", exams = Seq())))
   }
 
-  trait TenEntries {
+  trait KokelasWithPersonAliases {
+    val kokelasWithPersonAliases = KokelasWithPersonAliases(StudentToKokelas.convert(henkiloOid, createTestStudent(ssn)),
+      PersonOidsWithAliases(Set(henkiloOid), Map(henkiloOid -> Set(henkiloOid))))
+  }
+
+  trait KokelasWithTooManyPersonOids {
+    val dummyVirallinenSuoritus =  VirallinenSuoritus("", "", "",
+      new LocalDate("2019-12-21"), "", yksilollistaminen.Ei, "",
+      None, true, "", None, Map())
+    val kokelasWithTooManyPersonOids = KokelasWithPersonAliases(
+      Kokelas("", dummyVirallinenSuoritus, List(), List()),
+      PersonOidsWithAliases(Set("1.2.3.4.5.6", "1.2.3.4.5.7"), Map()))
+  }
+
+  trait ExampleSuoritus {
+    val komo = "1.2.246.562.5.2013061010184237348007"
+    val suoritus: VirallinenSuoritus with Identified[UUID] = VirallinenSuoritus(
+      komo, "1.2.246.562.10.43628088406", "KESKEN",
+      new LocalDate("2019-12-21"), "1.2.246.562.24.58341904891", yksilollistaminen.Ei, "FI",
+      None, true, "1.2.246.562.10.43628088406", None, Map()).identify(UUID.randomUUID())
+  }
+
+  trait HakemusServiceTenEntries {
     Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
       HetuPersonOid("030288-9552", "1.2.246.562.24.97187447816"),
       HetuPersonOid("060141-9297", "1.2.246.562.24.26258799406"),
@@ -188,11 +232,102 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     valmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime("2018-12-21").toLocalDate
   )
 
+  behavior of "YoSuoritusUpdateActor's ask pattern"
+
+  it should "succeed when correct data" in new KokelasWithPersonAliases {
+    val yoSuoritusUpdateActor: ActorRef = system.actorOf(YoSuoritusUpdateActor.props(
+      kokelasWithPersonAliases.kokelas.yo,
+      kokelasWithPersonAliases.personOidsWithAliases,
+      rekisterit.ytlSuoritusRekisteri))
+
+    val future = akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update)
+    val result = Await.result(future, 5.seconds)
+
+    result shouldBe a[VirallinenSuoritus with Identified[_]]
+  }
+
+  it should "fail when incorrect data" in new KokelasWithTooManyPersonOids {
+    val yoSuoritusUpdateActor: ActorRef = system.actorOf(YoSuoritusUpdateActor.props(
+      kokelasWithTooManyPersonOids.kokelas.yo,
+      kokelasWithTooManyPersonOids.personOidsWithAliases,
+      rekisterit.ytlSuoritusRekisteri))
+    var failedAsExpected = false
+
+    val future = akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update).recover {
+      case e: IllegalArgumentException =>
+        e.getMessage should startWith ("Got 2 person aliases")
+        failedAsExpected = true
+        Failure(e)
+      case e =>
+        fail("Unexpected way to fail", e)
+    }
+    val result = Await.result(future, 5.seconds)
+
+    result shouldBe a[Failure]
+    failedAsExpected should be (true)
+  }
+
+  behavior of "ArvosanaUpdateActor's ask pattern"
+
+  it should "succeed when everything is ok with arvosanaRekisteri" in new KokelasWithPersonAliases with ExampleSuoritus with ExampleArvosana {
+    createExampleArvosana(suoritus.id)
+    val kokelas = kokelasWithPersonAliases.kokelas
+    val arvosanaUpdateActor: ActorRef = system.actorOf(ArvosanaUpdateActor.props(
+      kokelas.yoTodistus ++ kokelas.osakokeet,
+      rekisterit.ytlArvosanaRekisteri,
+      config.ytlSyncTimeout, ec))
+
+    val future = akka.pattern.ask(arvosanaUpdateActor, ArvosanaUpdateActor.Update(suoritus))
+    val result = Await.result(future, 5.seconds)
+
+    result should be(Success)
+  }
+
+  it should "fail when arvosanaRekisteri actor fails" in new ExampleSuoritus {
+    val arvosanaUpdateFailingActor: ActorRef = system.actorOf(ArvosanaUpdateActor.props(
+      Seq(),
+      arvosanaRekisteri = failingActor,
+      config.ytlSyncTimeout, ec))
+    var failedAsExpected = false
+
+    val future = akka.pattern.ask(arvosanaUpdateFailingActor, ArvosanaUpdateActor.Update(suoritus)).recover {
+      case e: IllegalArgumentException =>
+        e.getMessage should include ("Forced to fail")
+        failedAsExpected = true
+        Failure(e)
+      case e =>
+        fail("Unexpected way to fail", e)
+    }
+    val result = Await.result(future, 5.seconds)
+
+    result shouldBe a[Failure]
+    failedAsExpected should be (true)
+  }
+
+  it should "fail when arvosanaRekisteri actor gets stuck" in new ExampleSuoritus {
+    val arvosanaUpdateFailingActor: ActorRef = system.actorOf(ArvosanaUpdateActor.props(
+      Seq(),
+      arvosanaRekisteri = neverEndingActor,
+      config.ytlSyncTimeout, ec))
+    var failedAsExpected = false
+
+    val future = akka.pattern.ask(arvosanaUpdateFailingActor, ArvosanaUpdateActor.Update(suoritus))
+    try {
+      val result = Await.result(future, 5.seconds)
+      fail("should not be here")
+    } catch {
+      case x: TimeoutException =>
+        failedAsExpected = true
+    }
+
+    failedAsExpected should be (true)
+  }
+
+
   behavior of "YtlActor's ask pattern"
 
-  it should "update existing YTL suoritukset" in new UseRealYtlActor with SingleEntry {
-    val future = akka.pattern.ask(ytlActor, KokelasWithPersonAliases(StudentToKokelas.convert(henkiloOid, createTestStudent(ssn)),
-      PersonOidsWithAliases(Set(henkiloOid), Map(henkiloOid -> Set(henkiloOid)))))
+  it should "update existing YTL suoritukset" in new HakemusServiceSingleEntry with KokelasWithPersonAliases {
+    val future = akka.pattern.ask(ytlActor, kokelasWithPersonAliases)
     val result = Await.result(future, 5.seconds)
 
     result should be (Success)
@@ -203,14 +338,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     suoritukset.head.lahdeArvot should equal(Map("hasCompletedMandatoryExams" -> "true"))
   }
 
-  it should "fail if input data is invalid" in new UseRealYtlActor with SingleEntry {
-    val invalidOid = "1.2.246.562.24.123456"
-    val dummyVirallinenSuoritus =  VirallinenSuoritus("", "", "",
-                                                      new LocalDate("2019-12-21"), "", yksilollistaminen.Ei, "",
-                                                      None, true, "", None, Map())
-    val kokelasWithTooManyPersonOids = KokelasWithPersonAliases(
-      Kokelas("", dummyVirallinenSuoritus, List(), List()),
-      PersonOidsWithAliases(Set("1.2.3.4.5.6", "1.2.3.4.5.7"), Map()))
+  it should "fail if input data is invalid" in new HakemusServiceSingleEntry with KokelasWithTooManyPersonOids {
     var failedAsExpected = false
 
     val future = akka.pattern.ask(ytlActor, kokelasWithTooManyPersonOids).recover {
@@ -223,23 +351,54 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     }
     val result = Await.result(future, 5.seconds)
 
-    result shouldBe a [Failure]
+    result shouldBe a [akka.actor.Status.Failure]
     failedAsExpected should be (true)
   }
 
+  it should "fail if arvosana update fails" in new HakemusServiceSingleEntry with KokelasWithPersonAliases {
+    var failedAsExpected = false
+
+    val future = akka.pattern.ask(ytlActorWithFailingArvosanaRekisteri, kokelasWithPersonAliases).recover {
+      case e: Exception =>
+        e.getMessage should include ("Retries exceeded")
+        failedAsExpected = true
+        Failure(e)
+      case e =>
+        fail("Unexpected way to fail", e)
+    }
+    val result = Await.result(future, 5.seconds)
+
+    result shouldBe a [akka.actor.Status.Failure]
+    failedAsExpected should be (true)
+  }
+
+  it should "fail if arvosana update gets stuck" in new HakemusServiceSingleEntry with KokelasWithPersonAliases {
+    var failedAsExpected = false
+
+    val future = akka.pattern.ask(ytlActorWithStuckArvosanaRekisteri, kokelasWithPersonAliases).recover {
+      case e: Exception =>
+        e.getMessage should include ("Retries exceeded")
+        failedAsExpected = true
+        Failure(e)
+      case e =>
+        fail("Unexpected way to fail", e)
+    }
+    val result = Await.result(future, 5.seconds)
+
+    result shouldBe a [akka.actor.Status.Failure]
+    failedAsExpected should be (true)
+  }
+
+
   behavior of "YtlIntegration sync"
-  it should "update existing YTL suoritukset" in new UseRealYtlActor with HakemusForPerson with SingleEntry {
-    val komo = "1.2.246.562.5.2013061010184237348007"
+
+  it should "update existing YTL suoritukset" in new UseRealYtlActor with HakemusForPerson with HakemusServiceSingleEntry with ExampleSuoritus {
 
     val future = ytlIntegration.sync(henkiloOid)
     val result = Await.result(future, 5.seconds)
 
     val expectedResult =
-      Kokelas("1.2.246.562.24.58341904891",
-        VirallinenSuoritus(
-          komo, "1.2.246.562.10.43628088406", "KESKEN",
-          new LocalDate("2019-12-21"), "1.2.246.562.24.58341904891", yksilollistaminen.Ei, "FI",
-          None, true, "1.2.246.562.10.43628088406", None, Map()), List(), List())
+      Kokelas("1.2.246.562.24.58341904891", suoritus, List(), List())
     val testKokelas: Kokelas = result.head.get
     testKokelas should be (expectedResult)
 
@@ -248,7 +407,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     suoritukset.head.komo should equal(komo)
   }
 
-  it should "return failure if does not succeed in updating suoritukset (actor gets stuck)" in new UseNeverEndingYtlActor with HakemusForPerson with SingleEntry {
+  it should "return failure if does not succeed in updating ytl (ytl actor gets stuck)" in new UseNeverEndingYtlActor with HakemusForPerson with HakemusServiceSingleEntry {
     val future = ytlIntegration.sync(henkiloOid)
     val result = Await.result(future, 10.seconds)
 
@@ -257,7 +416,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     ex.getMessage should be (s"Persist kokelas ${henkiloOid} failed")
   }
 
-  it should "return failure if actor fails" in new UseFailingYtlActor with HakemusForPerson with SingleEntry {
+  it should "return failure if ytl actor fails" in new UseFailingYtlActor with HakemusForPerson with HakemusServiceSingleEntry {
     val future = ytlIntegration.sync(henkiloOid)
     val result = Await.result(future, 5.seconds)
 
@@ -268,7 +427,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
   behavior of "YtlIntegration syncAll"
   it should "successfully insert new suoritus and arvosana records from YTL data, no failure email is sent" in
-              new UseRealYtlActor with TenEntries {
+              new UseRealYtlActor with HakemusServiceTenEntries {
     findAllSuoritusFromDatabase should be(Nil)
     findAllArvosanasFromDatabase should be(Nil)
 
@@ -317,10 +476,10 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     Mockito.verify(failureEmailSenderMock, Mockito.never()).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
 
-  it should "fail if not all suoritus and arvosana records were successfully inserted to ytl" in new UseFailingYtlActor with TenEntries {
+  it should "fail if not all suoritus and arvosana records were successfully inserted to ytl" in new UseFailingYtlActor with HakemusServiceTenEntries {
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
-    
+
     val mustBeReadyUntil = new LocalDateTime().plusSeconds(10)
     while (new LocalDateTime().isBefore(mustBeReadyUntil) &&
       (findAllSuoritusFromDatabase.size < 10 || findAllArvosanasFromDatabase.size < 89)) {
@@ -330,7 +489,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
 
-  it should "fail if ytlActor gets stuck" in new UseNeverEndingYtlActor with TenEntries {
+  it should "fail if ytlActor gets stuck" in new UseNeverEndingYtlActor with HakemusServiceTenEntries {
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 

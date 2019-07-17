@@ -132,7 +132,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/tyhjalisatiedollisetarvosanat", "rest/v1/tyhjalisatiedollisetarvosanat") -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri),
     ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
     ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue), // Continuous Virta queue processing
-    ("/ytl", "ytl") -> new YtlResource(integrations.ytl, integrations.ytlIntegration),
+    ("/ytl", "ytl") -> new YtlResource(integrations.ytlIntegration),
     ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system, config),
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
     ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
