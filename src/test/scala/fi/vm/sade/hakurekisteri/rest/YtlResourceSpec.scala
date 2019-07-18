@@ -15,7 +15,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @RunWith(classOf[JUnitRunner])
 class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMockFixture with MockFactory {
@@ -28,15 +28,11 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
   val config: Config = new MockConfig
 
-  class SuccessfulYtlActor extends Actor {
-    override def receive: Receive = {
-      case k: YtlActor.KokelasWithPersonAliases =>
-        sender() ! akka.actor.Status.Success
-    }
-  }
-  val successfulYtlActor: ActorRef = system.actorOf(Props(new SuccessfulYtlActor), "ytl-successful")
+  val successfulYtlKokelasPersister: KokelasPersister = mock[KokelasPersister]
+  (successfulYtlKokelasPersister.apply(_: KokelasWithPersonAliases)(_: ExecutionContext)).expects(*, *).returns(Future({true}))
 
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri, successfulYtlActor, config)
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri,
+    successfulYtlKokelasPersister, config)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 

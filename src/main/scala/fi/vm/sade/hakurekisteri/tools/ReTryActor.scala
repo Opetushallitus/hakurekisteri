@@ -5,7 +5,6 @@ package fi.vm.sade.hakurekisteri.tools
 import akka.actor.{ ActorRef, Props, Actor, ActorLogging }
 import akka.pattern.ask
 import scala.concurrent.duration._
-import scala.util.Success
 
 object ReTryActor {
   private case class Retry(originalSender: ActorRef, message: Any, times: Int)
@@ -34,20 +33,19 @@ class ReTryActor(val tries: Int, retryTimeOut: FiniteDuration, retryInterval: Fi
       // Process (Re)try here. When future completes it sends result to self
       (forwardTo ? message) (retryTimeOut) onComplete {
 
-        case Success(result) =>
+        case scala.util.Success(result) =>
           self ! Response(originalSender, result) // sending responses via self synchronises results from futures that may come potentially in any order. It also helps the case when the actor is stopped (in this case responses will become deadletters)
 
         case scala.util.Failure(ex) =>
-          if (triesLeft - 1 == 0) {// In case of last try and we got a failure (timeout) lets send Retries exceeded error
-            self ! Response(originalSender, akka.actor.Status.Failure(new Exception("Retries exceeded")))
+          if (triesLeft <= 1) {// In case of last try and we got a failure (timeout) lets send Retries exceeded error
+            log.error("Run out of retries: " + ex)
+            self ! Response(originalSender, akka.actor.Status.Failure(new Exception("Retries exceeded", ex)))
           }
-          else
-            log.error("Error occurred: " + ex)
+          else {
+            log.error(s"Will retry ${triesLeft - 1} more time(s), because error occurred: " + ex)
+            context.system.scheduler.scheduleOnce(retryInterval, self, Retry(originalSender, message, triesLeft - 1))
+          }
       }
-
-      // Send one more retry after interval
-      if (triesLeft - 1 > 0)
-        context.system.scheduler.scheduleOnce(retryInterval, self, Retry(originalSender, message, triesLeft - 1))
 
     case m @ _ =>
       log.error("No handling defined for message: " + m)

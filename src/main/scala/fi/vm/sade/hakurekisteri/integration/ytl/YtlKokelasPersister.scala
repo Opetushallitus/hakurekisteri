@@ -2,102 +2,91 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.UUID
 
-import akka.actor.Status.{Failure, Success}
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
-import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, UpsertResource}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen, _}
 import fi.vm.sade.hakurekisteri.tools.ReTryActor
 import org.joda.time._
+import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
-object YtlActor {
-  case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
+trait KokelasPersister {
+  def apply(kokelas: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Boolean]
 }
 
-class YtlActor(suoritusRekisteri: ActorRef,
-               arvosanaRekisteri: ActorRef,
-               hakemusService: IHakemusService,
-               config: Config) extends Actor with ActorLogging {
-  import YtlActor._
+class YtlKokelasPersister(system: ActorSystem,
+                          suoritusRekisteri: ActorRef,
+                          arvosanaRekisteri: ActorRef,
+                          hakemusService: IHakemusService,
+                          config: Config) extends KokelasPersister {
+  private val logger = LoggerFactory.getLogger(getClass)
 
-  private case class KokelasSession(kokelas: Kokelas, yoSuoritusUpdateDone: Boolean = false, arvosanaUpdateDone: Boolean = false)
-
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
   implicit val timeout: Timeout = config.ytlSyncTimeout
 
-  override def receive: Actor.Receive = {
+  override def apply(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Boolean] = {
+    val howManyTries = 2
+    val timeoutForInvocationsWithRetry = config.ytlSyncTimeout.duration / (howManyTries + 1)
 
-    case k: KokelasWithPersonAliases =>
-      def makeRetryProxyActor(actor: ActorRef): ActorRef = {
-        context.actorOf(ReTryActor.props(tries = 2, retryTimeOut = 1000.millis, retryInterval = 100.millis, actor))
-      }
+    def makeRetryProxyActor(actor: ActorRef): ActorRef = {
+      system.actorOf(ReTryActor.props(
+        tries = howManyTries,
+        retryTimeOut = timeoutForInvocationsWithRetry,
+        retryInterval = 0.millis,
+        actor
+      ))
+    }
 
-      val asker = sender
-      val kokelas = k.kokelas
-      log.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo}")
-      val yoSuoritusUpdateActor: ActorRef = context.actorOf(YoSuoritusUpdateActor.props(
-        kokelas.yo,
-        k.personOidsWithAliases,
-        suoritusRekisteri))
-      val arvosanaUpdateActor: ActorRef = context.actorOf(ArvosanaUpdateActor.props(
-        kokelas.yoTodistus ++ kokelas.osakokeet,
-        arvosanaRekisteri, config.ytlSyncTimeout, ec))
-      val arvosanaUpdateActorWithRetryProxy = makeRetryProxyActor(arvosanaUpdateActor)
-      val allOperations = for {
-        virallinenSuoritus <- akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update).mapTo[VirallinenSuoritus with Identified[UUID]]
-        if (virallinenSuoritus.id.isInstanceOf[UUID] && virallinenSuoritus.komo == YoTutkinto.yotutkinto)
-        dummy <- akka.pattern.ask(arvosanaUpdateActorWithRetryProxy, ArvosanaUpdateActor.Update(virallinenSuoritus))
-      } yield true
+    val kokelas = k.kokelas
+    logger.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo}")
+    val yoSuoritusUpdateActor: ActorRef = system.actorOf(YoSuoritusUpdateActor.props(
+      kokelas.yo,
+      k.personOidsWithAliases,
+      suoritusRekisteri))
+    val arvosanaUpdateActor: ActorRef = system.actorOf(ArvosanaUpdateActor.props(
+      kokelas.yoTodistus ++ kokelas.osakokeet,
+      arvosanaRekisteri, timeoutForInvocationsWithRetry))
+    val arvosanaUpdateActorWithRetryProxy = makeRetryProxyActor(arvosanaUpdateActor)
+    val allOperations: Future[Boolean] = for {
+      virallinenSuoritus <- akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update).mapTo[VirallinenSuoritus with Identified[UUID]]
+      if (virallinenSuoritus.id.isInstanceOf[UUID] && virallinenSuoritus.komo == YoTutkinto.yotutkinto)
+      dummy <- akka.pattern.ask(arvosanaUpdateActorWithRetryProxy, ArvosanaUpdateActor.Update(virallinenSuoritus))
+    } yield true
+
+    def stopTemporaryActors(): Unit = {
+      system.stop(yoSuoritusUpdateActor)
+      system.stop(arvosanaUpdateActor)
+    }
+
+    def addCleanerCallbacks(): Unit = {
       allOperations onComplete {
-        case scala.util.Success(t) => {
-          asker ! akka.actor.Status.Success
-        }
-        case scala.util.Failure(t) => {
-          log.error(s"YtlActor update failure (kokelas=${kokelas.oid}", t)
-          asker ! akka.actor.Status.Failure(t)
-        }
+        case Success(ignoredValue) =>
+          stopTemporaryActors()
+        case Failure(ex) =>
+          logger.error("KokelasPersister failed", ex)
+          stopTemporaryActors()
       }
+    }
 
-    case unknown =>
-      val errorMessage = s"Got unknown message '$unknown'"
-      log.error(errorMessage)
-      sender ! new IllegalArgumentException(errorMessage)
+    addCleanerCallbacks()
+    allOperations
   }
 }
+
+case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
 
 case class Kokelas(oid: String,
                    yo: VirallinenSuoritus,
                    yoTodistus: Seq[Koe],
                    osakokeet: Seq[Koe])
-
-object Timer {
-  implicit val dtOrder: Ordering[LocalTime] = new Ordering[LocalTime] {
-    override def compare(x: LocalTime, y: LocalTime) = x match {
-      case _ if x isEqual y => 0
-      case _ if x isAfter y => 1
-      case _ if y isAfter x => -1
-    }
-  }
-
-  def countNextSend(timeConf: Option[Seq[LocalTime]]): Option[DateTime] = {
-    timeConf.map {
-      (times) =>
-        times.sorted.map(_.toDateTimeToday).find((t) => {
-          val searchTime: DateTime = DateTime.now
-          t.isAfter(searchTime)
-        }).getOrElse(times.sorted.head.toDateTimeToday.plusDays(1))
-    }
-  }
-}
 
 trait Koe {
   def isValinnainenRooli(aineyhdistelmarooli: String) = aineyhdistelmarooli != null && aineyhdistelmarooli.equals("optional-subject")
@@ -455,19 +444,18 @@ object ArvosanaUpdateActor {
 
   def props(kokeet: Seq[Koe],
             arvosanaRekisteri: ActorRef,
-            timeout: Timeout,
-            ec: ExecutionContext): Props = Props(new ArvosanaUpdateActor(
+            timeout: FiniteDuration)(implicit ec: ExecutionContext): Props = Props(new ArvosanaUpdateActor(
     kokeet: Seq[Koe],
     arvosanaRekisteri: ActorRef,
-    timeout: Timeout,
-    ec: ExecutionContext))
+    timeout: FiniteDuration))
 }
 
 class ArvosanaUpdateActor(var kokeet: Seq[Koe],
                           arvosanaRekisteri: ActorRef,
-                          implicit val timeout: Timeout,
-                          implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+                          timeoutForArvosanaOperations: FiniteDuration)(implicit ec: ExecutionContext) extends Actor with ActorLogging {
   import ArvosanaUpdateActor._
+
+  implicit val timeoutForAskPattern = Timeout(timeoutForArvosanaOperations)
 
   var asker: ActorRef = null
 
@@ -503,19 +491,14 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
         case scala.util.Success(_) =>
           asker ! akka.actor.Status.Success
         case scala.util.Failure(t) =>
-          log.error(s"Failed to update arvosana ($s)", t)
+          log.error("Failed to update arvosana ({})", t)
           asker ! akka.actor.Status.Failure(t)
       }
-      Await.result(allFutures, timeout.duration)
-      context.stop(self)
-
-    case Kokelas(_, _, todistus, osakokeet) => kokeet = todistus ++ osakokeet
 
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
       asker ! akka.actor.Status.Failure(new IllegalArgumentException(errorMessage))
-      context.stop(self)
   }
 }
 

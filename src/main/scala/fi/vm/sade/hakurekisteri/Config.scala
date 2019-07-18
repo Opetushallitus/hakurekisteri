@@ -115,7 +115,6 @@ class DefaultConfig extends Config {
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
   override val valintaTulosTimeout: FiniteDuration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.valintatulos.max.minutes", "configuration key missing: suoritusrekisteri.valintatulos.max.minutes")).minutes
   override val ytlSyncTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.sync.timeout.seconds", "10").toLong, SECONDS)
-  override val ytlSyncAllTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.syncall.timeout.seconds", "500").toLong, SECONDS)
 }
 
 class MockDevConfig extends Config {
@@ -137,8 +136,7 @@ class MockDevConfig extends Config {
   override val maxDbLogLineLength: Int = defaultDbLoggingConfig.maxLogLineLength
   override val valintaTulosTimeout: FiniteDuration = 1.minute
 
-  override val ytlSyncTimeout: Timeout = Timeout(5, SECONDS)
-  override val ytlSyncAllTimeout: Timeout = Timeout(10, SECONDS)
+  override val ytlSyncTimeout: Timeout = Timeout(4, SECONDS)
 
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -165,7 +163,6 @@ abstract class Config {
   val valintaTulosTimeout: FiniteDuration
 
   val ytlSyncTimeout: Timeout
-  val ytlSyncAllTimeout: Timeout
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path

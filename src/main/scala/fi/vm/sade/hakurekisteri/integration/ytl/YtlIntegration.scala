@@ -5,12 +5,9 @@ import java.util.concurrent.{Executors, TimeUnit}
 import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 
-import akka.actor.ActorRef
-import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor.KokelasWithPersonAliases
 import fi.vm.sade.properties.OphProperties
 import javax.mail.Message.RecipientType
 import javax.mail.Session
@@ -31,7 +28,7 @@ class YtlIntegration(properties: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      hakemusService: IHakemusService,
                      oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-                     ytlActor: ActorRef,
+                     ytlKokelasPersister: KokelasPersister,
                      config: Config) {
   private val logger = LoggerFactory.getLogger(getClass)
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
@@ -58,8 +55,14 @@ class YtlIntegration(properties: OphProperties,
                     Failure(new RuntimeException(noData))
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
-                    val persistKokelasStatus = persistKokelas(kokelas, personOidsWithAliases)
-                    val result: Boolean = Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 1.seconds)
+                    val persistKokelasStatus = ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases))
+                    persistKokelasStatus onComplete {
+                      case Success(a: Boolean) =>
+                        Success(kokelas)
+                      case Failure(e: Throwable) =>
+                        Failure(new RuntimeException(s"string"))
+                    }
+                    val result = Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 1.seconds)
                     if (result)
                       Success(kokelas)
                     else
@@ -181,13 +184,23 @@ class YtlIntegration(properties: OphProperties,
                 case None =>
                   logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
                   None
-              }).map(kokelas => persistKokelas(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
-            val futureList: Future[Iterator[Boolean]] = Future.sequence(persistKokelasFutures)
-            val didAllSucceedFuture: Future[Boolean] = futureList.map(_.foldLeft(true)((a, b) => {
-              if (b) a else false
-            }))
-            val didAllSucceed: Boolean = Await.result(didAllSucceedFuture, config.ytlSyncAllTimeout.duration)
-            if (didAllSucceed) allSucceeded.set(true)
+              }).map(kokelas => ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid)))))
+            val futureForAllKokelasesToPersist = Future.sequence(persistKokelasFutures)
+            futureForAllKokelasesToPersist onComplete {
+              case Success(statusList) =>
+                val didAllSucceed: Boolean = statusList.forall(_ == true)
+                if (didAllSucceed) allSucceeded.set(true)
+                logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
+                val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
+                if (!allSucceeded.get()) {
+                  failureEmailSender.sendFailureEmail(msg)
+                }
+                logger.info(s"Ytl sync ended $msg!")
+                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
+              case Failure(e) =>
+                logger.error(s"Failed to persist all kokelas", e)
+                failureEmailSender.sendFailureEmail(s"Finished sync all with failing patches!")
+            }
           } finally {
             IOUtils.closeQuietly(zip)
           }
@@ -196,29 +209,7 @@ class YtlIntegration(properties: OphProperties,
       case e: Throwable =>
         allSucceeded.set(false)
         logger.error(s"YTL sync all failed!", e)
-    } finally {
-      logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
-      val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
-      if (!allSucceeded.get()) {
-        failureEmailSender.sendFailureEmail(msg)
-      }
-      logger.info(s"Ytl sync ended $msg!")
-      atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
     }
-  }
-
-  private def persistKokelas(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases): Future[Boolean] = {
-    val askYtlActorFuture: Future[Any] = akka.pattern.ask(ytlActor, KokelasWithPersonAliases(kokelas, personOidsWithAliases))(config.ytlSyncTimeout)
-      .recover {
-        case ex: TimeoutException =>
-          logger.error(s"persistKokelas timeout expired for kokelas=${kokelas.oid}", ex)
-          false
-        case ex: Throwable =>
-          logger.error(s"persistKokelas failed for kokelas=${kokelas.oid}", ex)
-          false
-      }
-    val trueOnlyIfSuccessFuture: Future[Boolean] = askYtlActorFuture.map(_ == akka.actor.Status.Success)
-    trueOnlyIfSuccessFuture
   }
 
   private class RealFailureEmailSender extends FailureEmailSender {

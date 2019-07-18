@@ -84,15 +84,15 @@ class ReTryActorSpec extends TestKit(ActorSystem("RetryTestSpec"))
     client.expectMsg(2.seconds, success)
   }
 
-  it should "Fail when 1 try and timeout - retries exceeded" in {
+  it should "Fail when 2 tries and timeout - retries exceeded" in {
     val client = TestProbe()
     val mockWorker = system.actorOf(MockWorker.props(), "case3-withRetryProxy")
 
-    val mockWorkerWrappedInProxy = system.actorOf(ReTryActor.props(tries = 1, retryTimeOut = 1000.millis, retryInterval = 100.millis, mockWorker))
+    val mockWorkerWrappedInProxy = system.actorOf(ReTryActor.props(tries = 2, retryTimeOut = 1000.millis, retryInterval = 100.millis, mockWorker))
 
 
-    client.send(mockWorkerWrappedInProxy, Work(IndexedSeq(1100.millis)))
-    client.expectMsgPF(2.seconds) { case akka.actor.Status.Failure(e: Exception) if e.getMessage() == "Retries exceeded" => () }
+    client.send(mockWorkerWrappedInProxy, Work(IndexedSeq(1100.millis, 1100.millis)))
+    client.expectMsgPF(4.seconds) { case akka.actor.Status.Failure(e: Exception) if e.getMessage() == "Retries exceeded" => () }
   }
 
   it should "Fail when retries exceeded, 4 tries and all time out" in {

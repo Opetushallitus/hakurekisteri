@@ -17,7 +17,6 @@ import scala.xml.Elem
 
 
 class YtlJsonSpec extends ScalatraFunSuite {
-  import YtlActor._
 
   implicit val formats = Student.formatsStudent
 
