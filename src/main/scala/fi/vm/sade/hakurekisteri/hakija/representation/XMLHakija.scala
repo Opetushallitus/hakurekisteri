@@ -5,6 +5,9 @@ import java.text.SimpleDateFormat
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.{Alueittain, Ei, Kokonaan, Osittain}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
@@ -140,48 +143,44 @@ object XMLHakemus {
 object XMLHakutoive {
   private[hakija] def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.hakukohde.oid, ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
     ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-    ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), lasnaolo(ht),
+    ht.yhteispisteet, ht.valinta.flatMap(valinta.lift), ht.vastaanotto.flatMap(vastaanotto.lift), lasnaolo(ht),
     ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto, ht.koulutuksenKieli)
 
-  def ilmoittautumistilaToLasnaolo(ilmoittaumistila: Ilmoittautumistila): String = {
-    ilmoittaumistila match {
-      case EI_TEHTY => "1"
-      case LASNA_KOKO_LUKUVUOSI => "2"
-      case POISSA_KOKO_LUKUVUOSI => "3"
-      case EI_ILMOITTAUTUNUT => "4"
-      case LASNA_SYKSY => "5"
-      case POISSA_SYKSY => "6"
-      case LASNA => "7"
-      case POISSA => "8"
-    }
-  }
-
   def lasnaolo(ht: Hakutoive): Option[String] = {
-    ht match {
-      case v: Vastaanottanut =>
-        v.ilmoittautumistila match {
-          case Some(ilmo) => Some(ilmoittautumistilaToLasnaolo(ilmo))
-          case _ => None
-        }
+    ht.vastaanotto match {
+      case Some(Vastaanottotila.VASTAANOTTANUT) =>
+        ht.ilmoittautumistila.map(_ match {
+          case EI_TEHTY => "1"
+          case LASNA_KOKO_LUKUVUOSI => "2"
+          case POISSA_KOKO_LUKUVUOSI => "3"
+          case EI_ILMOITTAUTUNUT => "4"
+          case LASNA_SYKSY => "5"
+          case POISSA_SYKSY => "6"
+          case LASNA => "7"
+          case POISSA => "8"
+        })
       case _ => None
     }
   }
 
-  def valinta: PartialFunction[Hakutoive, String] = {
-    case v: Valittu     => "1"
-    case v: Varalla     => "2"
-    case v: Hylatty     => "3"
-    case v: Perunut     => "4"
-    case v: Peruuntunut => "4"
-    case v: Peruutettu  => "5"
+  def valinta: PartialFunction[Valintatila, String] = {
+    case Valintatila.HYVAKSYTTY => "1"
+    case Valintatila.HARKINNANVARAISESTI_HYVAKSYTTY => "1"
+    case Valintatila.VARASIJALTA_HYVAKSYTTY => "1"
+    case Valintatila.VARALLA => "2"
+    case Valintatila.HYLATTY => "3"
+    case Valintatila.PERUNUT => "4"
+    case Valintatila.PERUUNTUNUT => "4"
+    case Valintatila.PERUUTETTU => "5"
   }
 
-  def vastaanotto: PartialFunction[Hakutoive, String] = {
-    case v: Hyvaksytty        => "1"
-    case v: Vastaanottanut    => "3"
-    case v: PerunutValinnan   => "4"
-    case v: EiVastaanotettu   => "5"
-    case v: PeruutettuValinta => "6"
+  def vastaanotto: PartialFunction[Vastaanottotila, String] = {
+    case Vastaanottotila.KESKEN => "1"
+    case Vastaanottotila.VASTAANOTTANUT    => "3"
+    case Vastaanottotila.EHDOLLISESTI_VASTAANOTTANUT => "3"
+    case Vastaanottotila.PERUNUT => "4"
+    case Vastaanottotila.EI_VASTAANOTETTU_MAARA_AIKANA => "5"
+    case Vastaanottotila.PERUUTETTU => "6"
   }
 }
 

@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
@@ -18,7 +18,6 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus}
-import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.kkhakija.Query
 
 import scala.concurrent.duration._
@@ -29,20 +28,19 @@ import scala.util.{Failure, Try}
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
 
-sealed abstract class Hakutoive {
-  val jno: Int
-  val hakukohde: Hakukohde
-  val kaksoistutkinto: Option[Boolean]
-  val urheilijanammatillinenkoulutus: Option[Boolean]
-  val harkinnanvaraisuusperuste: Option[String]
-  val aiempiperuminen: Option[Boolean]
-  val terveys: Option[Boolean]
-  val yhteispisteet: Option[BigDecimal]
-  val organisaatioParendOidPath: String
-  val koulutuksenKieli: Option[String]
-
-  def withPisteet(pisteet: Option[BigDecimal]): Hakutoive
-}
+case class Hakutoive(jno: Int,
+                     hakukohde: Hakukohde,
+                     kaksoistutkinto: Option[Boolean],
+                     urheilijanammatillinenkoulutus: Option[Boolean],
+                     harkinnanvaraisuusperuste: Option[String],
+                     aiempiperuminen: Option[Boolean],
+                     terveys: Option[Boolean],
+                     yhteispisteet: Option[BigDecimal],
+                     organisaatioParendOidPath: String,
+                     koulutuksenKieli: Option[String],
+                     valinta: Option[Valintatila],
+                     vastaanotto: Option[Vastaanottotila],
+                     ilmoittautumistila: Option[Ilmoittautumistila])
 
 sealed trait Lasnaolo
 case class Lasna(kausi: Kausi) extends Lasnaolo
@@ -53,109 +51,6 @@ case class Puuttuu(kausi: Kausi) extends Lasnaolo
 sealed trait Kausi
 case class Kevat(vuosi:Int) extends Kausi
 case class Syksy(vuosi:Int) extends Kausi
-
-
-sealed trait Valittu
-
-sealed trait IlmoitusLahetetty extends Valittu
-
-sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
-
-}
-
-object Hakutoive{
-
-  import Valintatila.isHyvaksytty
-  import Vastaanottotila.isVastaanottanut
-
-  def apply(ht: Hakutoive, valinta: Option[Valintatila], vastaanotto: Option[Vastaanottotila], ilmoittautumistila: Option[Ilmoittautumistila]) = (valinta, vastaanotto) match {
-    case (Some(v), Some(Vastaanottotila.KESKEN)) if isHyvaksytty(v) => Hyvaksytty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(v), Some(vt)) if isHyvaksytty(v) && isVastaanottanut(vt) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli, ilmoittautumistila)
-    case (Some(v), Some(Vastaanottotila.EI_VASTAANOTETTU_MAARA_AIKANA)) if isHyvaksytty(v) => EiVastaanotettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(v), Some(Vastaanottotila.PERUNUT)) if isHyvaksytty(v) => PerunutValinnan(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(v), Some(Vastaanottotila.PERUUTETTU)) if isHyvaksytty(v) => PeruutettuValinta(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(Valintatila.VARALLA), _) => Varalla(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(Valintatila.HYLATTY), _) => Hylatty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(Valintatila.PERUUTETTU), _) => Peruutettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(Valintatila.PERUUNTUNUT), _)  => Peruuntunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (Some(Valintatila.PERUNUT), _) => Perunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-    case (_, _) => didntMatchAnything(ht, valinta, vastaanotto, ilmoittautumistila)
-  }
-
-  private def didntMatchAnything(ht: Hakutoive, valinta: Option[Valintatila], vastaanotto: Option[Vastaanottotila], ilmoittautumistila: Option[Ilmoittautumistila]): Toive = {
-    Toive(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ht.koulutuksenKieli)
-  }
-}
-
-case class Toive(jno: Int, hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                 harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                 yhteispisteet: Option[BigDecimal] = None, organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive {
-  override def withPisteet(pisteet: Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-case class Hyvaksytty(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                   harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                   yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive with Valittu {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-
-case class PerunutValinnan(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                      harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                      yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive with Valittu {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-case class PeruutettuValinta(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                           harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                           yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive with Valittu {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-
-case class EiVastaanotettu(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                      harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                      yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive with IlmoitusLahetetty {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-
-case class Vastaanottanut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                      harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                      yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String], ilmoittautumistila: Option[Ilmoittautumistila]) extends Hakutoive with VastaanottanutPaikan {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-
-case class Varalla(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                   harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                   yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-case class Hylatty(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                   harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                   yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-case class Perunut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                   harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                   yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-case class Peruutettu(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                      harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                      yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
-
-case class Peruuntunut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                       harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                       yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, koulutuksenKieli: Option[String]) extends Hakutoive {
-  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
-}
 
 case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Boolean, hakuOid: String, lisapistekoulutus: Option[String], liitteet: Seq[Liite], osaaminen: Osaaminen)
 
@@ -348,7 +243,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
     val toiveet = h.hakemus.hakutoiveet.map((ht) => {
       val oid: String = ht.hakukohde.oid
       val yhteispisteet: Option[BigDecimal] = pisteet.get(h.hakemus.hakemusnumero, oid)
-      ht withPisteet yhteispisteet
+      ht.copy(yhteispisteet = yhteispisteet)
     })
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }
@@ -358,12 +253,15 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
     h.copy(hakemus =
       h.hakemus.copy(hakutoiveet =
         for (ht <- h.hakemus.hakutoiveet)
-          yield Hakutoive(ht, valinta.get(hakemusnumero, ht.hakukohde.oid), vastaanotto.get(hakemusnumero, ht.hakukohde.oid), ilmoittautumistila.get(hakemusnumero, ht.hakukohde.oid))))
+          yield ht.copy(
+            valinta = valinta.get(hakemusnumero, ht.hakukohde.oid),
+            vastaanotto = vastaanotto.get(hakemusnumero, ht.hakukohde.oid),
+            ilmoittautumistila = ilmoittautumistila.get(hakemusnumero, ht.hakukohde.oid))))
   }
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => (valintaTulosActor.actor ? HaunValintatulos(hakuOid))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(HaunValintatulos(hakuOid))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 
@@ -390,15 +288,23 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
   def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = {
     val hakutoives: Seq[Hakutoive] = q.hakuehto match {
       case Hakuehto.Kaikki => toiveet
-      case Hakuehto.Hyvaksytyt => toiveet.collect {
-        case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-      }
-      case Hakuehto.Vastaanottaneet => toiveet.collect {
-        case ht: Vastaanottanut if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-      }
-      case Hakuehto.Hylatyt => toiveet.collect {
-        case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-      }
+      case Hakuehto.Hyvaksytyt => toiveet.filter(h =>
+        (h.valinta.contains(Valintatila.HYVAKSYTTY) ||
+          h.vastaanotto.contains(Vastaanottotila.PERUNUT) ||
+          h.vastaanotto.contains(Vastaanottotila.PERUUTETTU)) &&
+          matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
+          matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
+      )
+      case Hakuehto.Vastaanottaneet => toiveet.filter(h =>
+        h.vastaanotto.exists(Vastaanottotila.isVastaanottanut) &&
+          matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
+          matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
+      )
+      case Hakuehto.Hylatyt => toiveet.filter(h =>
+        h.valinta.contains(Valintatila.HYLATTY) &&
+          matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
+          matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
+      )
     }
     if (q.version == 2 || q.version == 3 || q.version == 4)
       hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
