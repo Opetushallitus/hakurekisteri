@@ -248,20 +248,19 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }
 
-  def tila(valinta: (String, String) => Option[Valintatila], vastaanotto: (String, String) => Option[Vastaanottotila], ilmoittautumistila: (String,String) => Option[Ilmoittautumistila])(h:Hakija): Hakija = {
+  def tila(valintatilat: Map[(String, String), Valintatila], vastaanotto: Map[(String, String), Vastaanottotila], ilmoittautumistila: Map[(String,String), Ilmoittautumistila])(h:Hakija): Hakija = {
     val hakemusnumero: String = h.hakemus.hakemusnumero
     h.copy(hakemus =
       h.hakemus.copy(hakutoiveet =
         for (ht <- h.hakemus.hakutoiveet)
-          yield ht.copy(
-            valinta = valinta(hakemusnumero, ht.hakukohde.oid),
-            vastaanotto = vastaanotto(hakemusnumero, ht.hakukohde.oid),
-            ilmoittautumistila = ilmoittautumistila(hakemusnumero, ht.hakukohde.oid))))
+          yield ht.copy(valinta = Some(valintatilat(hakemusnumero, ht.hakukohde.oid)),
+            vastaanotto = Some(vastaanotto(hakemusnumero, ht.hakukohde.oid)),
+            ilmoittautumistila = Some(ilmoittautumistila(hakemusnumero, ht.hakukohde.oid)))))
   }
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => (valintaTulosActor.actor ? HaunValintatulos(hakuOid))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => valintaTulosActor.actor.?(HaunValintatulos(hakuOid))(timeout = config.valintaTulosTimeout).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 
