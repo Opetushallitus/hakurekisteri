@@ -144,7 +144,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
           case j: JSessionId =>
             logger.warning(s"Retrying request to $url due to expired JSessionId.")
             Client.request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
-              case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+              case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
                 if (retryCount.getAndIncrement <= maxRetries) {
                   logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
                   Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
@@ -156,7 +156,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
               new RuntimeException(s"Fetching jsession for $serviceUrl failed")
             }
         })
-      case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+      case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
           Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
@@ -171,7 +171,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
             case j: JSessionId =>
               logger.warning(s"Retrying request to $url due to expired JSessionId.")
               Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
-                case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+                case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
                   if (retryCount.getAndIncrement <= maxRetries) {
                     logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
                     Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
@@ -183,12 +183,13 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
                 new RuntimeException(s"Fetching jsession for $serviceUrl failed")
               }
           })
-      case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+      case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
           Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
         } else Future.failed(t)
     }
+
   private def result(t: Try[_]): String = t match {
     case Success(_) => "success"
     case Failure(e) => s"failure: $e"

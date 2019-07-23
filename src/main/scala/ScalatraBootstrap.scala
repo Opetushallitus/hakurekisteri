@@ -107,7 +107,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp(java.lang.Boolean.valueOf(config.properties.getOrElse("suoritusrekisteri.swagger.https", "false"))),
     ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.suoritusRekisteri),
     ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
-    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut, integrations.hakemusService),
+    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(integrations.haut, integrations.hakemusService),
     ("/asiakirja", "asiakirja") -> new AsiakirjaResource(koosteet.siirtotiedostojono),
     ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(koosteet.siirtotiedostojono),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),

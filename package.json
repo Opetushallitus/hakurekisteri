@@ -7,7 +7,7 @@
   "description": "hakurekisteri",
   "version": "0.0.1",
   "devDependencies": {
-    "bower": "1.7.7",
+    "bower": "1.8.8",
     "coffeescript": "1.7.0",
     "mocha-headless-chrome": "^2.0.1"
   }
