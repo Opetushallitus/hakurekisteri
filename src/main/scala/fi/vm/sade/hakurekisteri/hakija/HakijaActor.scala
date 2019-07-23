@@ -253,9 +253,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
     h.copy(hakemus =
       h.hakemus.copy(hakutoiveet =
         for (ht <- h.hakemus.hakutoiveet)
-          yield ht.copy(valinta = Some(valintatilat(hakemusnumero, ht.hakukohde.oid)),
-            vastaanotto = Some(vastaanotto(hakemusnumero, ht.hakukohde.oid)),
-            ilmoittautumistila = Some(ilmoittautumistila(hakemusnumero, ht.hakukohde.oid)))))
+          yield ht.copy(valinta = valintatilat.get(hakemusnumero, ht.hakukohde.oid),
+            vastaanotto = vastaanotto.get(hakemusnumero, ht.hakukohde.oid),
+            ilmoittautumistila = ilmoittautumistila.get(hakemusnumero, ht.hakukohde.oid))))
   }
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.foldLeft(
