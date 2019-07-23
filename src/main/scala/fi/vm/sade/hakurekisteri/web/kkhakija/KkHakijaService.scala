@@ -210,7 +210,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def kokoHaunTulosIfNoOppijanumero(q: KkHakijaQuery, hakuOid: String): Future[Option[SijoitteluTulos]] = q.oppijanumero match {
     case Some(_) => Future.successful(None)
-    case None => getValintaTulos(ValintaTulosQuery(hakuOid, None)).map(Some(_))
+    case None => (valintaTulos.actor ? HaunValintatulos(hakuOid))(valintaTulosTimeout).mapTo[SijoitteluTulos].map(Some(_))
   }
 
   private def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
@@ -237,30 +237,18 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def matchHylatyt(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): Boolean = {
-    valintaTulos.valintatila(hakemusOid, hakukohdeOid) match {
-      case Some(t) => t == Valintatila.HYLATTY
-      case _ => false
-    }
+    valintaTulos.valintatila.get(hakemusOid, hakukohdeOid).contains(Valintatila.HYLATTY)
   }
 
   private def matchVastaanottaneet(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): Boolean = {
-    valintaTulos.vastaanottotila(hakemusOid, hakukohdeOid) match {
-      case Some(t) => isVastaanottanut(t)
-      case _ => false
-    }
+    valintaTulos.vastaanottotila.get(hakemusOid, hakukohdeOid).exists(isVastaanottanut)
   }
 
   private def matchHyvaksytyt(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): Boolean = {
-    valintaTulos.valintatila(hakemusOid, hakukohdeOid) match {
-      case Some(t) => isHyvaksytty(t)
-      case _ => false
-    }
+    valintaTulos.valintatila.get(hakemusOid, hakukohdeOid).exists(isHyvaksytty)
   }
 
   private val Pattern = "preference(\\d+)-Koulutus-id".r
-
-  private def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = valintaTulos.actor.?(q)(valintaTulosTimeout)
-    .mapTo[SijoitteluTulos]
 
   private def getLukuvuosimaksut(hakukohdeOids: Set[String], auditSession: AuditSessionRequest): Future[Seq[Lukuvuosimaksu]] = {
     (valintaRekisteri.actor ? LukuvuosimaksuQuery(hakukohdeOids, auditSession)).mapTo[Seq[Lukuvuosimaksu]]
@@ -268,14 +256,11 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,
                             kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
-    val valintaTulosQuery = q.oppijanumero match {
-      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid))
-      case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
-    }
-
-    kokoHaunTulos.map(Future.successful)
-      .getOrElse(getValintaTulos(valintaTulosQuery))
-      .flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids)).map(_.flatten))
+    ((kokoHaunTulos, q.oppijanumero) match {
+      case (Some(tulos), _) => Future.successful(tulos)
+      case (None, Some(_)) => (valintaTulos.actor ? HakemuksenValintatulos(hakemus.applicationSystemId, hakemus.oid)).mapTo[SijoitteluTulos]
+      case (None, None) => (valintaTulos.actor ? HaunValintatulos(hakemus.applicationSystemId)).mapTo[SijoitteluTulos]
+    }).flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids)).map(_.flatten))
   }
 
   private def extractHakemukset(hakemus: HakijaHakemus,
@@ -334,8 +319,8 @@ class KkHakijaService(hakemusService: IHakemusService,
             hakukohde = toive.koulutusId.getOrElse(""),
             hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
-            valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
-            vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
+            valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemusOid, hakukohdeOid),
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = getPohjakoulutukset(answers.koulutustausta.getOrElse(Koulutustausta())),
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -374,8 +359,8 @@ class KkHakijaService(hakemusService: IHakemusService,
             hakukohde = toive.koulutusId.getOrElse(""),
             hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
-            valinnanTila = sijoitteluTulos.valintatila(hakemus.oid, hakukohdeOid),
-            vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemus.oid, hakukohdeOid),
+            valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemus.oid, hakukohdeOid),
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = hakemus.kkPohjakoulutus,
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -842,7 +827,7 @@ object KkHakijaUtil {
 
     val lukuvuosi: (Int, Int) = kausiVuosiToLukuvuosiPair(kvp)
 
-    Future(sijoittelunTulos.ilmoittautumistila(hakemusOid, hakukohde).map {
+    Future(sijoittelunTulos.ilmoittautumistila.get(hakemusOid, hakukohde).map {
       case Ilmoittautumistila.EI_TEHTY              => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
       case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI  => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
       case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI => Seq(Poissa(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))

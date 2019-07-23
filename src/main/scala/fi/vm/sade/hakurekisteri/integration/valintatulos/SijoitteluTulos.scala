@@ -71,21 +71,43 @@ case class ValintaTulosHakutoive(hakukohdeOid: String,
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
-@SerialVersionUID(1)
-trait SijoitteluTulos extends Serializable {
-  def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
-  def valintatila(hakemus: String, kohde: String): Option[Valintatila]
-  def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila]
-  def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila]
+@SerialVersionUID(2)
+case class SijoitteluTulos(hakuOid: String,
+                           pisteet: Map[(String, String), BigDecimal],
+                           valintatila: Map[(String, String), Valintatila],
+                           vastaanottotila: Map[(String, String), Vastaanottotila],
+                           ilmoittautumistila: Map[(String, String), Ilmoittautumistila])
+
+object SijoitteluTulos {
+  def apply(hakuOid: String, valintatulos: ValintaTulos): SijoitteluTulos = {
+    new SijoitteluTulos(
+      hakuOid,
+      valintatulos.hakutoiveet.collect {
+        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet)) => (valintatulos.hakemusOid, oid) -> pisteet
+      }.toMap,
+      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila).toMap,
+      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila).toMap,
+      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila).toMap
+    )
+  }
+
+  def apply(hakuOid: String, valintatulokset: Seq[ValintaTulos]): SijoitteluTulos = {
+    new SijoitteluTulos(
+      hakuOid,
+      valintatulokset.flatMap(valintatulos => {
+        valintatulos.hakutoiveet.collect {
+          case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet)) => (valintatulos.hakemusOid, oid) -> pisteet
+        }
+      }).toMap,
+      valintatulokset.flatMap(valintatulos => {
+        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila)
+      }).toMap,
+      valintatulokset.flatMap(valintatulos => {
+        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila)
+      }).toMap,
+      valintatulokset.flatMap(valintatulos => {
+        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila)
+      }).toMap
+    )
+  }
 }
-
-case class ValintaTulosToSijoitteluTulos(hakemukset: Map[String, ValintaTulos]) extends SijoitteluTulos {
-
-  private def hakukohde(hakemusOid: String, hakukohdeOid: String): Option[ValintaTulosHakutoive] = hakemukset.get(hakemusOid).flatMap(_.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid))
-
-  override def pisteet(hakemusOid: String, hakukohdeOid: String): Option[BigDecimal] = hakukohde(hakemusOid, hakukohdeOid).flatMap(_.pisteet)
-  override def valintatila(hakemusOid: String, hakukohdeOid: String): Option[Valintatila] = hakukohde(hakemusOid, hakukohdeOid).map(_.valintatila)
-  override def vastaanottotila(hakemusOid: String, hakukohdeOid: String): Option[Vastaanottotila] = hakukohde(hakemusOid, hakukohdeOid).map(_.vastaanottotila)
-  override def ilmoittautumistila(hakemusOid: String, hakukohdeOid: String): Option[Ilmoittautumistila] = hakukohde(hakemusOid, hakukohdeOid).map(_.ilmoittautumistila.ilmoittautumistila)
-}
-

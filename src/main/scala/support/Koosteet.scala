@@ -17,26 +17,23 @@ import scala.concurrent.ExecutionContext
 trait Koosteet {
   val hakijat: ActorRef
   val ensikertalainen: ActorRef
-  val haut: ActorRef
   val virtaQueue: ActorRef
   val siirtotiedostojono: Siirtotiedostojono
   val kkHakijaService: KkHakijaService
 }
 
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers, config: Config) extends Koosteet {
-  val haut = system.actorOf(Props(new HakuActor(integrations.koskiService, integrations.tarjonta, integrations.parametrit, integrations.valintaTulos, integrations.ytl, integrations.ytlIntegration, config)), "haut")
-
   val virtaQueue = system.actorOf(Props(new VirtaQueue(
     integrations.virta,
     integrations.hakemusService,
     integrations.oppijaNumeroRekisteri,
-    haut,
+    integrations.haut,
     config)), "virta-queue")
   val hakupalvelu = new AkkaHakupalvelu(
     integrations.hakemusClient,
     integrations.hakemusService,
     integrations.koosteService,
-    haut,
+    integrations.haut,
     integrations.koodisto,
     config)
   val hakijat = system.actorOf(Props(new HakijaActor(
@@ -44,7 +41,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
       integrations.hakemusClient,
       integrations.hakemusService,
       integrations.koosteService,
-      haut,
+      integrations.haut,
       integrations.koodisto,
       config),
     integrations.organisaatiot,
@@ -57,7 +54,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
     registers.opiskeluoikeusRekisteri,
     integrations.valintarekisteri,
     integrations.tarjonta,
-    haut,
+    integrations.haut,
     integrations.hakemusService,
     integrations.oppijaNumeroRekisteri,
     config)), "ensikertalainen")
@@ -65,7 +62,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   val kkHakijaService: KkHakijaService = new KkHakijaService(integrations.hakemusService,
     hakupalvelu,
     integrations.tarjonta,
-    haut,
+    integrations.haut,
     integrations.koodisto,
     registers.suoritusRekisteri,
     integrations.valintaTulos,
