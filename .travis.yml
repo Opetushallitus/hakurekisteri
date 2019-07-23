@@ -1,5 +1,6 @@
 sudo: required
 language: scala
+  - 2.12.8
 jdk:
   - openjdk11
 services:
