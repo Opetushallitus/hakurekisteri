@@ -6,6 +6,7 @@ import java.util.concurrent.{ExecutionException, TimeUnit, TimeoutException}
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import dispatch.{Http, HttpExecutor, Req}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cas._
 import org.asynchttpclient.{AsyncHttpClient, Response}
 
@@ -76,7 +77,11 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
   }
 
   private def getTgtUrl = {
-    val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") << s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
+    val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") <<
+      s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:<
+      Map("Content-Type" -> "application/x-www-form-urlencoded",
+          "Caller-Id" -> Config.callerId)
+
     internalClient(tgtUrlReq).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
         case (201, Some(location)) => location
@@ -95,7 +100,10 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def tryServiceTicket(retry: Int): Future[String] = {
     getTgtUrl.flatMap(tgtUrl => {
-      val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
+      val proxyReq = dispatch.url(tgtUrl) <<
+        s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:<
+        Map("Content-Type" -> "application/x-www-form-urlencoded",
+            "Caller-Id" -> Config.callerId)
       internalClient(proxyReq).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
@@ -123,7 +131,9 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
     val request: Req = dispatch.url(serviceUrl)
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
-      internalClient(request <<? Map("ticket" -> ticket)).map { r: Response =>
+      internalClient(request <<?
+        Map("ticket" -> ticket) <:<
+        Map("Caller-Id" -> Config.callerId)).map { r: Response =>
         (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie(_, jSessionName)))) match {
           case (200 | 302 | 404, Some(cookie)) =>
             val id = JSessionIdCookieParser.fromString(cookie, jSessionName)
