@@ -410,6 +410,12 @@ class KoskiSuoritusArvosanaParser {
         case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => KoskiUtil.deadlineDate
         case (_,_,_) => valmistuminen.valmistumisPaiva
       }
+
+      val suoritustyyppi = suoritus.tyyppi.map(_.koodiarvo) match {
+        case Some("perusopetuksenvuosiluokka") | Some("ammatillinentutkinto") => Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo)
+        case _ => None
+      }
+
       if (komoOid != Oids.DUMMYOID && valmistuminen.vuosi > 1970) {
         val suoritus = SuoritusArvosanat(VirallinenSuoritus(
           komo = komoOid,
@@ -422,6 +428,7 @@ class KoskiSuoritusArvosanaParser {
           opiskeluoikeus = None,
           vahv = true,
           lahde = KoskiUtil.koski_integration_source,
+          suoritustyyppi = suoritustyyppi,
           lahdeArvot = lahdeArvot), arvosanat, luokka, lasnaDate, luokkataso)
         result = result :+ suoritus
       }
@@ -467,8 +474,8 @@ class KoskiSuoritusArvosanaParser {
       case _ => false
     })
 
-    val newSuoritukset = oppiaineenOppimaarat.filter(_.suoritus.isInstanceOf[VirallinenSuoritus])
-      .groupBy(_.suoritus.asInstanceOf[VirallinenSuoritus].myontaja)
+    val newSuoritukset = oppiaineenOppimaarat
+      .groupBy(_.suoritus.myontaja)
       .map(entry => {
         val suoritukset = entry._2
         var suoritusArvosanatToBeSaved = suoritukset.head
@@ -476,8 +483,8 @@ class KoskiSuoritusArvosanaParser {
         val allArvosanat: Set[Arvosana] = suoritukset.flatMap(_.arvosanat).toSet
 
         suoritukset.foreach(suoritusArvosanat => {
-          val vs = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
-          if (vs.valmistuminen.isAfter(suoritusArvosanatToBeSaved.suoritus.asInstanceOf[VirallinenSuoritus].valmistuminen)) {
+          val vs = suoritusArvosanat.suoritus
+          if (vs.valmistuminen.isAfter(suoritusArvosanatToBeSaved.suoritus.valmistuminen)) {
             suoritusArvosanatToBeSaved = suoritusArvosanat
           }
         })
@@ -493,8 +500,8 @@ class KoskiSuoritusArvosanaParser {
   it just saves the whole perusopetus komo that contains grades and such.
     */
   private def postprocessPeruskouluData(result: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
-    result.filter(_.suoritus.isInstanceOf[VirallinenSuoritus]).map(suoritusArvosanat => {
-      val useSuoritus = suoritusArvosanat.suoritus.asInstanceOf[VirallinenSuoritus]
+    result.map(suoritusArvosanat => {
+      val useSuoritus = suoritusArvosanat.suoritus
       val useArvosanat = if(useSuoritus.komo.equals(Oids.perusopetusKomoOid) && suoritusArvosanat.arvosanat.isEmpty){
         result
           .filter(hs => hs.suoritus match {
@@ -549,6 +556,7 @@ class KoskiSuoritusArvosanaParser {
         opiskeluoikeus = None,
         vahv = true,
         lahde = KoskiUtil.koski_integration_source,
+        suoritustyyppi = useSuoritus.suoritustyyppi,
         lahdeArvot = useSuoritus.lahdeArvot), useArvosanat, useLuokka, useLasnaDate, useLuokkaAste)
     })
   }

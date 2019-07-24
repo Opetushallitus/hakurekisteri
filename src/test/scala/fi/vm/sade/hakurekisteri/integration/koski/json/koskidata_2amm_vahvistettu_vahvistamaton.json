@@ -1,0 +1,1180 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.63645964289",
+    "hetu": "211298-9217",
+    "syntymäaika": "1998-12-21",
+    "etunimet": "Nikita Testi",
+    "kutsumanimi": "Nikita",
+    "sukunimi": "Kosonen-Testi",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.12809552180",
+      "versionumero": 9,
+      "aikaleima": "2019-01-25T13:41:57.903581",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.14206465958",
+        "oppilaitosnumero": {
+          "koodiarvo": "01093",
+          "nimi": {
+            "fi": "Raahen ammattiopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Raahen ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Raahen ammattiopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "678",
+          "nimi": {
+            "fi": "Raahe",
+            "sv": "Brahestad"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.57212223499",
+        "nimi": {
+          "fi": "Raahen Koulutuskuntayhtymä"
+        },
+        "yTunnus": "0210287-9",
+        "kotipaikka": {
+          "koodiarvo": "678",
+          "nimi": {
+            "fi": "Raahe",
+            "sv": "Brahestad"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "päättymispäivä": "2019-01-25",
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2010-01-22",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2019-01-25",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "354207",
+              "nimi": {
+                "fi": "Putkiasentajan ammattitutkinto",
+                "sv": "Yrkesexamen för rörmontör",
+                "en": "Pipefitter, FQ"
+              },
+              "lyhytNimi": {
+                "fi": "Putkiasentajan at",
+                "sv": "Yrkesexamen för rörmontör",
+                "en": "Pipefitter, Further Qualification"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "perusteenDiaarinumero": "26/011/2012",
+            "perusteenNimi": {
+              "fi": "Putkiasentajan ammattitutkinto",
+              "sv": "Yrkesexamen för rörmontör"
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "11",
+              "nimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "lyhytNimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "suoritustapa": {
+            "koodiarvo": "naytto",
+            "nimi": {
+              "fi": "Näyttötutkinto",
+              "sv": "Fristående examen",
+              "en": "Näyttö"
+            },
+            "koodistoUri": "ammatillisentutkinnonsuoritustapa",
+            "koodistoVersio": 1
+          },
+          "tutkintonimike": [
+            {
+              "koodiarvo": "10151",
+              "nimi": {
+                "fi": "Asentaja",
+                "sv": "Montör"
+              },
+              "lyhytNimi": {
+                "fi": "Asentaja",
+                "sv": "Montör"
+              },
+              "koodistoUri": "tutkintonimikkeet",
+              "koodistoVersio": 2
+            }
+          ],
+          "osaamisala": [
+            {
+              "osaamisala": {
+                "koodiarvo": "2093",
+                "nimi": {
+                  "fi": "Putkiasentajan osaamisala",
+                  "sv": "Kompetensområdet för rörmontör"
+                },
+                "lyhytNimi": {
+                  "fi": "Putkiasentajan osaamisala",
+                  "sv": "Kompetensområdet för rörmontör"
+                },
+                "koodistoUri": "osaamisala",
+                "koodistoVersio": 3
+              },
+              "alku": "2010-01-22",
+              "loppu": "2013-01-22"
+            }
+          ],
+          "toimipiste": {
+            "oid": "1.2.246.562.10.14206465958",
+            "oppilaitosnumero": {
+              "koodiarvo": "01093",
+              "nimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Raahen ammattiopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "678",
+              "nimi": {
+                "fi": "Raahe",
+                "sv": "Brahestad"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "alkamispäivä": "2010-01-22",
+          "vahvistus": {
+            "päivä": "2019-01-25",
+            "paikkakunta": {
+              "koodiarvo": "678",
+              "nimi": {
+                "fi": "Raahe",
+                "sv": "Brahestad"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.14206465958",
+              "oppilaitosnumero": {
+                "koodiarvo": "01093",
+                "nimi": {
+                  "fi": "Raahen ammattiopisto"
+                },
+                "lyhytNimi": {
+                  "fi": "Raahen ammattiopisto"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "kotipaikka": {
+                "koodiarvo": "678",
+                "nimi": {
+                  "fi": "Raahe",
+                  "sv": "Brahestad"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "tat",
+                "titteli": {
+                  "fi": "tat"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.14206465958",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "01093",
+                    "nimi": {
+                      "fi": "Raahen ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Raahen ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Raahen ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "678",
+                    "nimi": {
+                      "fi": "Raahe",
+                      "sv": "Brahestad"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "tyyppi": {
+            "koodiarvo": "ammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999904",
+              "nimi": {
+                "fi": "Näyttötutkintoon valmistava koulutus",
+                "sv": "utbildning som förbereder för fristående examen"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            }
+          },
+          "tutkinto": {
+            "tunniste": {
+              "koodiarvo": "354207",
+              "nimi": {
+                "fi": "Putkiasentajan ammattitutkinto",
+                "sv": "Yrkesexamen för rörmontör",
+                "en": "Pipefitter, FQ"
+              },
+              "lyhytNimi": {
+                "fi": "Putkiasentajan at",
+                "sv": "Yrkesexamen för rörmontör",
+                "en": "Pipefitter, Further Qualification"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "perusteenDiaarinumero": "26/011/2012",
+            "perusteenNimi": {
+              "fi": "Putkiasentajan ammattitutkinto",
+              "sv": "Yrkesexamen för rörmontör"
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "11",
+              "nimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "lyhytNimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "tutkintonimike": [
+            {
+              "koodiarvo": "10143",
+              "nimi": {
+                "fi": "Putkiasentaja",
+                "sv": "Rörmontör"
+              },
+              "lyhytNimi": {
+                "fi": "Putkiasentaja",
+                "sv": "Rörmontör"
+              },
+              "koodistoUri": "tutkintonimikkeet",
+              "koodistoVersio": 2
+            }
+          ],
+          "toimipiste": {
+            "oid": "1.2.246.562.10.14206465958",
+            "oppilaitosnumero": {
+              "koodiarvo": "01093",
+              "nimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Raahen ammattiopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "678",
+              "nimi": {
+                "fi": "Raahe",
+                "sv": "Brahestad"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2019-01-22",
+            "paikkakunta": {
+              "koodiarvo": "678",
+              "nimi": {
+                "fi": "Raahe",
+                "sv": "Brahestad"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.14206465958",
+              "oppilaitosnumero": {
+                "koodiarvo": "01093",
+                "nimi": {
+                  "fi": "Raahen ammattiopisto"
+                },
+                "lyhytNimi": {
+                  "fi": "Raahen ammattiopisto"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "kotipaikka": {
+                "koodiarvo": "678",
+                "nimi": {
+                  "fi": "Raahe",
+                  "sv": "Brahestad"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "tat",
+                "titteli": {
+                  "fi": "tat"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.14206465958",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "01093",
+                    "nimi": {
+                      "fi": "Raahen ammattiopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Raahen ammattiopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Raahen ammattiopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "678",
+                    "nimi": {
+                      "fi": "Raahe",
+                      "sv": "Brahestad"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "102541",
+                  "nimi": {
+                    "fi": "LVI-suunnittelu",
+                    "sv": "VVS-planering"
+                  },
+                  "lyhytNimi": {
+                    "fi": "LVI-suunnittelu",
+                    "sv": "VVS-planering"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "kuvaus": {
+                  "fi": "esa"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "nayttotutkintoonvalmistavankoulutuksenosa",
+                "nimi": {
+                  "fi": "Näyttötutkintoon valmistavan koulutuksen osa",
+                  "sv": "Utbildningsdel som förbereder till fristående examen",
+                  "en": "Education preparing for competence demonstration qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "102534",
+                  "nimi": {
+                    "fi": "LV-järjestelmien korjaaminen ja huoltaminen",
+                    "sv": "Reparation och underhåll av värme- och sanitetssystem"
+                  },
+                  "lyhytNimi": {
+                    "fi": "LV-järjestelmien korjaaminen ja huoltaminen",
+                    "sv": "Reparation och underhåll av värme- och sanitetssystem"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "kuvaus": {
+                  "fi": "asdf"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "nayttotutkintoonvalmistavankoulutuksenosa",
+                "nimi": {
+                  "fi": "Näyttötutkintoon valmistavan koulutuksen osa",
+                  "sv": "Utbildningsdel som förbereder till fristående examen",
+                  "en": "Education preparing for competence demonstration qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "102536",
+                  "nimi": {
+                    "fi": "Verkoston tasapainotus ja vesimäärien mittaus",
+                    "sv": "Injustering av nät och mätning av vattenmängder"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Verkoston tasapainotus ja vesimäärien mittaus",
+                    "sv": "Injustering av nät och mätning av vattenmängder"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false
+              },
+              "tyyppi": {
+                "koodiarvo": "nayttotutkintoonvalmistavankoulutuksenosa",
+                "nimi": {
+                  "fi": "Näyttötutkintoon valmistavan koulutuksen osa",
+                  "sv": "Utbildningsdel som förbereder till fristående examen",
+                  "en": "Education preparing for competence demonstration qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "102533",
+                  "nimi": {
+                    "fi": "Vesi- ja viemärijärjestelmien asentaminen",
+                    "sv": "Installation av vatten- och avloppssystem"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Vesi- ja viemärijärjestelmien asentaminen",
+                    "sv": "Installation av vatten- och avloppssystem"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false
+              },
+              "tyyppi": {
+                "koodiarvo": "nayttotutkintoonvalmistavankoulutuksenosa",
+                "nimi": {
+                  "fi": "Näyttötutkintoon valmistavan koulutuksen osa",
+                  "sv": "Utbildningsdel som förbereder till fristående examen",
+                  "en": "Education preparing for competence demonstration qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "101465",
+                  "nimi": {
+                    "fi": "LVI-korjausrakentaminen",
+                    "sv": "VVS-renoveringar"
+                  },
+                  "lyhytNimi": {
+                    "fi": "LVI-korjausrakentaminen",
+                    "sv": "VVS-renoveringar"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false
+              },
+              "tyyppi": {
+                "koodiarvo": "nayttotutkintoonvalmistavankoulutuksenosa",
+                "nimi": {
+                  "fi": "Näyttötutkintoon valmistavan koulutuksen osa",
+                  "sv": "Utbildningsdel som förbereder till fristående examen",
+                  "en": "Education preparing for competence demonstration qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "nayttotutkintoonvalmistavakoulutus",
+            "nimi": {
+              "fi": "Näyttötutkintoon valmistava koulutus",
+              "sv": "Utbildning som förbereder för fristående examen",
+              "en": "Education preparing for competence demonstration qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2010-01-22"
+    },
+    {
+      "oid": "1.2.246.562.15.42522062894",
+      "versionumero": 3,
+      "aikaleima": "2019-01-22T12:49:44.679336",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.14206465958",
+        "oppilaitosnumero": {
+          "koodiarvo": "01093",
+          "nimi": {
+            "fi": "Raahen ammattiopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Raahen ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Raahen ammattiopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "678",
+          "nimi": {
+            "fi": "Raahe",
+            "sv": "Brahestad"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.57212223499",
+        "nimi": {
+          "fi": "Raahen Koulutuskuntayhtymä"
+        },
+        "yTunnus": "0210287-9",
+        "kotipaikka": {
+          "koodiarvo": "678",
+          "nimi": {
+            "fi": "Raahe",
+            "sv": "Brahestad"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2009-01-22",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "354116",
+              "nimi": {
+                "fi": "Levy- ja hitsausalan ammattitutkinto",
+                "sv": "Yrkesexamen inom plåtslagar- och svetsningsbranschen"
+              },
+              "lyhytNimi": {
+                "fi": "Levy- ja hitsausalan ammattitutkinto",
+                "sv": "Yrkesexamen inom plåtslagar- och svetsningsbranschen"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            },
+            "perusteenDiaarinumero": "50/011/2016",
+            "perusteenNimi": {
+              "fi": "Levy- ja hitsausalan ammattitutkinto",
+              "sv": "Yrkesexamen inom plåtslagar- och svetsningsbranschen"
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "11",
+              "nimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "lyhytNimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "suoritustapa": {
+            "koodiarvo": "naytto",
+            "nimi": {
+              "fi": "Näyttötutkinto",
+              "sv": "Fristående examen",
+              "en": "Näyttö"
+            },
+            "koodistoUri": "ammatillisentutkinnonsuoritustapa",
+            "koodistoVersio": 1
+          },
+          "tutkintonimike": [
+            {
+              "koodiarvo": "10022",
+              "nimi": {
+                "fi": "Levyseppähitsaaja",
+                "sv": "Plåtslagare-svetsare"
+              },
+              "lyhytNimi": {
+                "fi": "Levyseppähitsaaja",
+                "sv": "Plåtslagare-svetsare"
+              },
+              "koodistoUri": "tutkintonimikkeet",
+              "koodistoVersio": 2
+            },
+            {
+              "koodiarvo": "10151",
+              "nimi": {
+                "fi": "Asentaja",
+                "sv": "Montör"
+              },
+              "lyhytNimi": {
+                "fi": "Asentaja",
+                "sv": "Montör"
+              },
+              "koodistoUri": "tutkintonimikkeet",
+              "koodistoVersio": 2
+            }
+          ],
+          "osaamisala": [
+            {
+              "osaamisala": {
+                "koodiarvo": "2251",
+                "nimi": {
+                  "fi": "Hitsauksen osaamisala",
+                  "sv": "Kompetensområdet för svetsning"
+                },
+                "lyhytNimi": {
+                  "fi": "Hitsauksen osaamisala",
+                  "sv": "Kompetensområdet för svetsning"
+                },
+                "koodistoUri": "osaamisala",
+                "koodistoVersio": 3
+              },
+              "alku": "2010-08-01",
+              "loppu": "2011-08-01"
+            }
+          ],
+          "toimipiste": {
+            "oid": "1.2.246.562.10.14206465958",
+            "oppilaitosnumero": {
+              "koodiarvo": "01093",
+              "nimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Raahen ammattiopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Raahen ammattiopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "678",
+              "nimi": {
+                "fi": "Raahe",
+                "sv": "Brahestad"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "alkamispäivä": "2009-01-22",
+          "vahvistus": null,
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "103896",
+                  "nimi": {
+                    "fi": "Ohutlevytyöt",
+                    "sv": "Tunnplåtsarbeten"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Ohutlevytyöt"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 10,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "5"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinen15",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2019-01-22",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ammatillisentutkinnonosa",
+                "nimi": {
+                  "fi": "Ammatillisen tutkinnon osa",
+                  "sv": "Yrkesexamensdel",
+                  "en": "A vocational education qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "103906",
+                  "nimi": {
+                    "fi": "Puristintyöt",
+                    "sv": "Pressning"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Puristintyöt"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 10,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "3",
+                    "nimi": {
+                      "fi": "3"
+                    },
+                    "lyhytNimi": {
+                      "fi": "3"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinen15",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2019-01-22",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ammatillisentutkinnonosa",
+                "nimi": {
+                  "fi": "Ammatillisen tutkinnon osa",
+                  "sv": "Yrkesexamensdel",
+                  "en": "A vocational education qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "103892",
+                  "nimi": {
+                    "fi": "Vastushitsaus hitsausprosessilla 21, 22 tai 23",
+                    "sv": "Motståndssvetsning med svetsmetod 21, 22 eller 23"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Vastushitsaus hitsausprosessilla 21, 22 tai 23"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 30,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "5"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinen15",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2019-01-22",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ammatillisentutkinnonosa",
+                "nimi": {
+                  "fi": "Ammatillisen tutkinnon osa",
+                  "sv": "Yrkesexamensdel",
+                  "en": "A vocational education qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "103897",
+                  "nimi": {
+                    "fi": "Paksulevytyöt",
+                    "sv": "Grovplåtsarbeten"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Paksulevytyöt"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 30,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "nimi": {
+                      "fi": "5"
+                    },
+                    "lyhytNimi": {
+                      "fi": "5"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinen15",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2019-01-22",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ammatillisentutkinnonosa",
+                "nimi": {
+                  "fi": "Ammatillisen tutkinnon osa",
+                  "sv": "Yrkesexamensdel",
+                  "en": "A vocational education qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "103901",
+                  "nimi": {
+                    "fi": "Alumiinimateriaalit levytyössä",
+                    "sv": "Aluminiummaterial i plåtarbeten"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Alumiinimateriaalit levytyössä"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 40,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [],
+              "tyyppi": {
+                "koodiarvo": "ammatillisentutkinnonosa",
+                "nimi": {
+                  "fi": "Ammatillisen tutkinnon osa",
+                  "sv": "Yrkesexamensdel",
+                  "en": "A vocational education qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "ammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2009-01-22"
+    }
+  ]
+}
