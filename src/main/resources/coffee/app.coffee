@@ -3,8 +3,11 @@
 injector = angular.injector(['ng']);
 $http = injector.get('$http');
 
-callerId = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
-$http.defaults.headers.common['Caller-Id'] = callerId;
+callerIdHeaderName = 'Caller-Id'
+callerIdHeaderValue = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
+
+$http.defaults.headers.common[callerIdHeaderName] = callerIdHeaderValue;
+$.ajaxSetup({headers: {callerIdHeaderName: callerIdHeaderValue}});
 
 plainUrls = undefined
 window.urls.load("suoritusrekisteri-web-oph.json", {overrides: "rest/v1/properties"}).then ->
