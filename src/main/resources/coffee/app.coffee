@@ -5,6 +5,7 @@ $http = injector.get('$http');
 
 callerIdHeaderName = 'Caller-Id'
 callerIdHeaderValue = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
+window.opintopolku_caller_id = callerIdHeaderValue
 
 $http.defaults.headers.common[callerIdHeaderName] = callerIdHeaderValue;
 $.ajaxSetup({headers: {callerIdHeaderName: callerIdHeaderValue}});
