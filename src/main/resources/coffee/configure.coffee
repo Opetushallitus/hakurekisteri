@@ -1,9 +1,7 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
   callerIdHeaderName = 'Caller-Id'
-  callerIdHeaderValue = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
-  $httpProvider.defaults.headers.common[callerIdHeaderName] = callerIdHeaderValue
-  window.opintopolku_caller_id = callerIdHeaderValue
-  $.ajaxSetup({headers: {callerIdHeaderName: callerIdHeaderValue}});
+  $httpProvider.defaults.headers.common[callerIdHeaderName] = window.opintopolku_caller_id
+  $.ajaxSetup({headers: {callerIdHeaderName: window.opintopolku_caller_id}});
 
   $routeProvider.when "/opiskelijat",
     templateUrl: "templates/muokkaa-obd.html"
