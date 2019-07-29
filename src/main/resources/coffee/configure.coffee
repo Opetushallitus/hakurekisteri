@@ -1,6 +1,5 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
-  callerIdHeaderName = 'Caller-Id'
-  $httpProvider.defaults.headers.common[callerIdHeaderName] = window.opintopolku_caller_id
+  $httpProvider.defaults.headers.common['Caller-Id'] = window.opintopolku_caller_id
   $.ajaxSetup({headers: {callerIdHeaderName: window.opintopolku_caller_id}});
 
   $routeProvider.when "/opiskelijat",
