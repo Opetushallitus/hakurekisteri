@@ -3,13 +3,6 @@
 injector = angular.injector(['ng']);
 $http = injector.get('$http');
 
-callerIdHeaderName = 'Caller-Id'
-callerIdHeaderValue = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
-window.opintopolku_caller_id = callerIdHeaderValue
-
-$http.defaults.headers.common[callerIdHeaderName] = callerIdHeaderValue;
-$.ajaxSetup({headers: {callerIdHeaderName: callerIdHeaderValue}});
-
 plainUrls = undefined
 window.urls.load("suoritusrekisteri-web-oph.json", {overrides: "rest/v1/properties"}).then ->
   $http.get(window.url("cas.myroles"),
