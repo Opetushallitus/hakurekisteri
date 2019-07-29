@@ -1,4 +1,8 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
+  callerIdHeaderName = 'Caller-Id'
+  callerIdHeaderValue = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
+  $httpProvider.defaults.headers.common[callerIdHeaderName] = callerIdHeaderValue
+
   $routeProvider.when "/opiskelijat",
     templateUrl: "templates/muokkaa-obd.html"
     controller: "MuokkaaSuorituksetObdCtrl"
