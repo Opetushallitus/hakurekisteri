@@ -131,7 +131,7 @@ app.factory "MuokkaaTiedot", [
         $scope.ammatillinenKielikoeText = getOphMsg("suoritusrekisteri.komo." + $scope.ammatillisenKielikoeKomo, "Ammatillisen koulutuksen kielikoe")
 
       getMyRoles = ->
-        $http.get(window.url("cas.myroles"), { cache: true }).success((data) ->
+        $http.get(window.url("cas.myroles"), cache: true ).success((data) ->
           $scope.myRoles = angular.fromJson(data)
         ).error ->
           $log.error "cannot connect CAS"
@@ -310,7 +310,7 @@ app.factory "MuokkaaTiedot", [
 
       $scope.isOPH = () -> false
       $scope.showKoskiLink = () -> false
-      $http.get(window.url("cas.myroles"), {cache: true}).success((data) ->
+      $http.get(window.url("cas.myroles"), cache: true).success((data) ->
         $scope.myRoles = angular.fromJson(data)
         if Array.isArray($scope.myRoles)
           $scope.isOPH = () ->
