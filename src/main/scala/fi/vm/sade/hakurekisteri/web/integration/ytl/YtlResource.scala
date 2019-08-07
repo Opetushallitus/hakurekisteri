@@ -52,8 +52,9 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSyst
     if (exists) {
       Accepted()
     } else {
-      logger.error(s"Failure in syncing YTL data for person OID $personOid . Returning error to caller. Got ${done.size} results: $done")
-      InternalServerError()
+      val message = s"Failure in syncing YTL data for person OID $personOid . Returning error to caller. Got ${done.size} results: $done"
+      logger.error(message)
+      BadRequest(reason = message)
     }
   }
 }
