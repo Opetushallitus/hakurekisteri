@@ -30,7 +30,7 @@ class YtlKokelasPersister(system: ActorSystem,
                           config: Config) extends KokelasPersister {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  implicit val timeout: Timeout = config.ytlSyncTimeout
+  val timeout: Timeout = config.ytlSyncTimeout
 
   override def apply(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Boolean] = {
     val howManyTries = 2
@@ -40,7 +40,7 @@ class YtlKokelasPersister(system: ActorSystem,
       system.actorOf(ReTryActor.props(
         tries = howManyTries,
         retryTimeOut = timeoutForInvocationsWithRetry,
-        retryInterval = 0.millis,
+        retryInterval = 500.millis,
         actor
       ))
     }
@@ -56,9 +56,9 @@ class YtlKokelasPersister(system: ActorSystem,
       arvosanaRekisteri, timeoutForInvocationsWithRetry))
     val arvosanaUpdateActorWithRetryProxy = makeRetryProxyActor(arvosanaUpdateActor)
     val allOperations: Future[Boolean] = for {
-      virallinenSuoritus <- akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update).mapTo[VirallinenSuoritus with Identified[UUID]]
+      virallinenSuoritus <- akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update)(timeout).mapTo[VirallinenSuoritus with Identified[UUID]]
       if (virallinenSuoritus.id.isInstanceOf[UUID] && virallinenSuoritus.komo == YoTutkinto.yotutkinto)
-      dummy <- akka.pattern.ask(arvosanaUpdateActorWithRetryProxy, ArvosanaUpdateActor.Update(virallinenSuoritus))
+      dummy <- akka.pattern.ask(arvosanaUpdateActorWithRetryProxy, ArvosanaUpdateActor.Update(virallinenSuoritus))(timeout)
     } yield true
 
     def stopTemporaryActors(): Unit = {
@@ -68,10 +68,11 @@ class YtlKokelasPersister(system: ActorSystem,
 
     def addCleanerCallbacks(): Unit = {
       allOperations onComplete {
-        case Success(ignoredValue) =>
+        case Success(_) =>
+          logger.debug(s"KokelasPersister for ${kokelas.oid} succeeded")
           stopTemporaryActors()
         case Failure(ex) =>
-          logger.error("KokelasPersister failed", ex)
+          logger.error(s"KokelasPersister for ${kokelas.oid} failed", ex)
           stopTemporaryActors()
       }
     }
@@ -488,7 +489,8 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
 
       val allFutures = Future.sequence(Seq(futureList1, futureList2))
       allFutures onComplete {
-        case scala.util.Success(_) =>
+        case scala.util.Success(a) =>
+          log.debug("Updated arvosana {}", if (a!=null) a else "null")
           asker ! akka.actor.Status.Success
         case scala.util.Failure(t) =>
           log.error("Failed to update arvosana ({})", t)

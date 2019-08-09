@@ -47,7 +47,7 @@ class YtlIntegration(properties: OphProperties,
           case Some(personOid) =>
             hakemus.hetu match {
               case Some(hetu) =>
-                logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+                logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL hakemus=$hakemus")
                 ytlHttpClient.fetchOne(hetu) match {
                   case None =>
                     val noData = s"No YTL data for hakemus ${hakemus.oid}"
