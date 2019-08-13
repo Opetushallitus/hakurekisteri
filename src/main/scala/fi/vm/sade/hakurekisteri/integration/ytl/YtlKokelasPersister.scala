@@ -3,15 +3,14 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.UUID
 
 import akka.actor._
-import akka.pattern.ask
+import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Config, Oids}
+import fi.vm.sade.hakurekisteri.{Oids}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.{Identified, UpsertResource}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen, _}
-import fi.vm.sade.hakurekisteri.tools.ReTryActor
 import org.joda.time._
 import org.slf4j.LoggerFactory
 
@@ -20,46 +19,49 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 trait KokelasPersister {
-  def apply(kokelas: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Boolean]
+  def apply(kokelas: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit]
 }
 
 class YtlKokelasPersister(system: ActorSystem,
                           suoritusRekisteri: ActorRef,
                           arvosanaRekisteri: ActorRef,
                           hakemusService: IHakemusService,
-                          config: Config) extends KokelasPersister {
+                          timeout: Timeout) extends KokelasPersister {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  val timeout: Timeout = config.ytlSyncTimeout
-
-  override def apply(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Boolean] = {
+  override def apply(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit] = {
     val howManyTries = 2
-    val timeoutForInvocationsWithRetry = config.ytlSyncTimeout.duration / (howManyTries + 1)
-
-    def makeRetryProxyActor(actor: ActorRef): ActorRef = {
-      system.actorOf(ReTryActor.props(
-        tries = howManyTries,
-        retryTimeOut = timeoutForInvocationsWithRetry,
-        retryInterval = 500.millis,
-        actor
-      ))
-    }
 
     val kokelas = k.kokelas
-    logger.debug(s"sending ytl data for ${kokelas.oid} yo: ${kokelas.yo}")
+    logger.debug(s"sending ytl data for kokelas ${kokelas.oid} yo=${kokelas.yo} timeout=${timeout.duration}")
     val yoSuoritusUpdateActor: ActorRef = system.actorOf(YoSuoritusUpdateActor.props(
       kokelas.yo,
       k.personOidsWithAliases,
       suoritusRekisteri))
     val arvosanaUpdateActor: ActorRef = system.actorOf(ArvosanaUpdateActor.props(
       kokelas.yoTodistus ++ kokelas.osakokeet,
-      arvosanaRekisteri, timeoutForInvocationsWithRetry))
-    val arvosanaUpdateActorWithRetryProxy = makeRetryProxyActor(arvosanaUpdateActor)
-    val allOperations: Future[Boolean] = for {
+      arvosanaRekisteri, timeout.duration))
+
+    def arvosanaUpdateWithRetries(suoritus: Suoritus with Identified[UUID]): Future[Unit] = {
+      def arvosanaUpdateRetry(remainingRetries: Int): Future[Unit] = {
+        (arvosanaUpdateActor ? ArvosanaUpdateActor.Update(suoritus))(timeout).mapTo[Unit].recoverWith {
+          case t: Throwable =>
+            logger.error(s"ArvosanaUpdate Got exception when updating henkilö=${suoritus.henkiloOid} suoritus=${suoritus.id}", t)
+            if (remainingRetries <= 1) {
+              Future.failed(new RuntimeException(s"ArvosanaUpdate: Run out of retries suoritus=${suoritus.id}", t))
+            } else {
+              arvosanaUpdateRetry(remainingRetries - 1)
+            }
+        }
+      }
+      arvosanaUpdateRetry(2)
+    }
+
+    val allOperations = for {
       virallinenSuoritus <- akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update)(timeout).mapTo[VirallinenSuoritus with Identified[UUID]]
       if (virallinenSuoritus.id.isInstanceOf[UUID] && virallinenSuoritus.komo == YoTutkinto.yotutkinto)
-      dummy <- akka.pattern.ask(arvosanaUpdateActorWithRetryProxy, ArvosanaUpdateActor.Update(virallinenSuoritus))(timeout)
-    } yield true
+      arvosanaUpdateResult <- arvosanaUpdateWithRetries(virallinenSuoritus)
+    } yield arvosanaUpdateResult
 
     def stopTemporaryActors(): Unit = {
       system.stop(yoSuoritusUpdateActor)
@@ -468,7 +470,7 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
 
   override def receive: Actor.Receive = {
     case Update(s: Suoritus with Identified[UUID]) =>
-      asker = sender
+      asker = sender()
       suoritus = s
       arvosanaRekisteri ! ArvosanaQuery(suoritus.id)
 
@@ -491,7 +493,8 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
       allFutures onComplete {
         case scala.util.Success(a) =>
           log.debug("Updated arvosana {}", if (a!=null) a else "null")
-          asker ! akka.actor.Status.Success
+          val returnValue: Unit = ()
+          asker ! returnValue
         case scala.util.Failure(t) =>
           log.error("Failed to update arvosana ({})", t)
           asker ! akka.actor.Status.Failure(t)

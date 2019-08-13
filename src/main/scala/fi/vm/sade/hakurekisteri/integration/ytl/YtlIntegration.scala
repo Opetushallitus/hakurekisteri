@@ -56,17 +56,13 @@ class YtlIntegration(properties: OphProperties,
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
                     val persistKokelasStatus = ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases))
-                    persistKokelasStatus onComplete {
-                      case Success(a: Boolean) =>
-                        Success(kokelas)
-                      case Failure(e: Throwable) =>
-                        Failure(new RuntimeException(s"string"))
-                    }
-                    val result = Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 1.seconds)
-                    if (result)
+                    try {
+                      Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 10.seconds)
                       Success(kokelas)
-                    else
-                      Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed"))
+                    } catch {
+                      case e: Throwable =>
+                        Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
+                    }
                 }
               case None =>
                 val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
@@ -162,13 +158,11 @@ class YtlIntegration(properties: OphProperties,
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
-    val allSucceeded = new AtomicBoolean(false)
     try {
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}", e)
-          allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count!")
@@ -187,18 +181,12 @@ class YtlIntegration(properties: OphProperties,
               }).map(kokelas => ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid)))))
             val futureForAllKokelasesToPersist = Future.sequence(persistKokelasFutures)
             futureForAllKokelasesToPersist onComplete {
-              case Success(statusList) =>
-                val didAllSucceed: Boolean = statusList.forall(_ == true)
-                if (didAllSucceed) allSucceeded.set(true)
-                logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
-                val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
-                if (!allSucceeded.get()) {
-                  failureEmailSender.sendFailureEmail(msg)
-                }
-                logger.info(s"Ytl sync ended $msg!")
-                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
+              case Success(_) =>
+                logger.info(s"Finished YTL syncAll! All patches succeeded!")
+                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(true), end = Some(new Date())))
               case Failure(e) =>
                 logger.error(s"Failed to persist all kokelas", e)
+                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
                 failureEmailSender.sendFailureEmail(s"Finished sync all with failing patches!")
             }
           } finally {
@@ -207,7 +195,7 @@ class YtlIntegration(properties: OphProperties,
       }
     } catch {
       case e: Throwable =>
-        allSucceeded.set(false)
+        atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
         logger.error(s"YTL sync all failed!", e)
     }
   }

@@ -42,7 +42,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
   private implicit val system = ActorSystem("test-jdbc")
   private implicit val ec: ExecutionContext = system.dispatcher
-  private implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+  private implicit val timeout: Timeout = Timeout(10, TimeUnit.SECONDS)
 
   private val ophProperties: OphProperties = OphUrlProperties
   private val ytlHttpClient: YtlHttpFetch = mock[YtlHttpFetch]
@@ -93,7 +93,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
         suoritusRekisteri,
         arvosanaRekisteri,
         hakemusService,
-        config)
+        Timeout(3.seconds))
       testYtlKokelasPersister
     }
   }
@@ -226,9 +226,9 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       rekisterit.ytlSuoritusRekisteri))
 
     val future = akka.pattern.ask(yoSuoritusUpdateActor, YoSuoritusUpdateActor.Update)
-    val result = Await.result(future, 5.seconds)
-
-    result shouldBe a[VirallinenSuoritus with Identified[_]]
+    future map { result =>
+      result shouldBe a[VirallinenSuoritus with Identified[_]]
+    }
   }
 
   it should "fail when incorrect data" in new KokelasWithTooManyPersonOids {
@@ -263,9 +263,12 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       config.ytlSyncTimeout.duration))
 
     val future = akka.pattern.ask(arvosanaUpdateActor, ArvosanaUpdateActor.Update(suoritus))
-    val result = Await.result(future, 5.seconds)
-
-    result should be(Success)
+    try {
+      Await.ready(future, 5.seconds)
+      succeed
+    } catch {
+      case e: Throwable => fail(e)
+    }
   }
 
   it should "fail when arvosanaRekisteri actor fails" in new ExampleSuoritus {
@@ -315,14 +318,17 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     val realKokelasPersister = createTestYtlKokelasPersister()
 
     val future = realKokelasPersister(kokelasWithPersonAliases)
-    val result = Await.result(future, 5.seconds)
+    try {
+      Await.ready(future, 5.seconds)
 
-    result should be (true)
+      Thread.sleep(1000)
+      val suoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
 
-    val suoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
-
-    suoritukset should have size 1
-    suoritukset.head.lahdeArvot should equal(Map("hasCompletedMandatoryExams" -> "true"))
+      suoritukset should have size 1
+      suoritukset.head.lahdeArvot should equal(Map("hasCompletedMandatoryExams" -> "true"))
+    } catch {
+      case e: Throwable => fail(e)
+    }
   }
 
   it should "fail if input data is invalid" in new HakemusServiceSingleEntry with KokelasWithTooManyPersonOids with UseYtlKokelasPersister {
@@ -347,7 +353,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     val future = kokelasPersisterWithFailingArvosanaUpdater(kokelasWithPersonAliases).recover {
       case e: Exception =>
-        e.getMessage should include ("Retries exceeded")
+        e.getMessage should include ("Run out of retries")
         e.getCause.getMessage should include ("Forced to fail")
         failedAsExpected = true
       case e =>
@@ -364,7 +370,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     val future = kokelasPersisterWithStuckArvosanaUpdater(kokelasWithPersonAliases).recover {
       case e: Exception =>
-        e.getMessage should include ("Retries exceeded")
+        e.getMessage should include ("Run out of retries")
         e.getCause.getMessage should include ("Ask timed out")
         failedAsExpected = true
       case e =>
@@ -385,6 +391,9 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     val future = ytlIntegration.sync(henkiloOid)
     val result = Await.result(future, 5.seconds)
 
+    result should have size 1
+    result(0) should matchPattern { case scala.util.Success(Kokelas(_, _, _, _)) => }
+
     val expectedResult =
       Kokelas("1.2.246.562.24.58341904891", suoritus, List(), List())
     val testKokelas: Kokelas = result.head.get
@@ -396,41 +405,36 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   }
 
   it should "return failure if does not succeed in updating ytl (ytl persister gets stuck)" in new UseYtlKokelasPersister
-    with UseYtlIntegration with HakemusForPerson with HakemusServiceSingleEntry {
+    with UseYtlIntegration with HakemusForPerson with HakemusServiceSingleEntry with Inside {
 
-    var failedAsExpected = false
     val kokelasPersisterWhichGetsStuck = createTestYtlKokelasPersister(arvosanaRekisteri = neverEndingActor)
     val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichGetsStuck)
 
-    val future = ytlIntegration.sync(henkiloOid).recover {
-      case e: Exception =>
-        e.getMessage should include ("Retries exceeded")
-        e.getCause.getMessage should include ("Ask timed out")
-        failedAsExpected = true
-      case e =>
-        fail("Unexpected way to fail", e)
-    }
+    val future = ytlIntegration.sync(henkiloOid)
     val result = Await.result(future, 15.seconds)
 
-    failedAsExpected should be (true)
+    result should have size 1
+    inside(result(0)) { case scala.util.Failure(e: RuntimeException) =>
+      e.getMessage should include ("Persist kokelas 1.2.246.562.24.58341904891 failed")
+      e.getCause.getMessage should include ("ArvosanaUpdate: Run out of retries")
+      e.getCause.getCause.getMessage should include ("Ask timed out")
+    }
   }
 
-  it should "return failure if ytl persister fails" in new UseYtlKokelasPersister with UseYtlIntegration with HakemusForPerson with HakemusServiceSingleEntry {
-    var failedAsExpected = false
+  it should "return failure if ytl persister fails" in new UseYtlKokelasPersister with UseYtlIntegration
+    with HakemusForPerson with HakemusServiceSingleEntry with Inside {
     val kokelasPersisterWhichFails = createTestYtlKokelasPersister(arvosanaRekisteri = failingActor)
     val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichFails)
 
-    val future = ytlIntegration.sync(henkiloOid).recover {
-      case e: Exception =>
-        e.getMessage should include ("Retries exceeded")
-        e.getCause.getMessage should include ("Forced to fail")
-        failedAsExpected = true
-      case e =>
-        fail("Unexpected way to fail", e)
-    }
-    val result = Await.result(future, 25.seconds)
+    val future = ytlIntegration.sync(henkiloOid)
+    val result = Await.result(future, 10.seconds)
 
-    failedAsExpected should be (true)
+    result should have size 1
+    inside(result(0)) { case scala.util.Failure(e: RuntimeException) =>
+      e.getMessage should include ("Persist kokelas 1.2.246.562.24.58341904891 failed")
+      e.getCause.getMessage should include ("ArvosanaUpdate: Run out of retries")
+      e.getCause.getCause.getMessage should include ("Forced to fail")
+    }
   }
 
   behavior of "YtlIntegration syncAll"

@@ -87,7 +87,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
     hakemusService,
-    config)
+    config.ytlSyncTimeout)
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytlKokelasPersister, config)
@@ -177,7 +177,7 @@ class BaseIntegrations(rekisterit: Registers,
     rekisterit.ytlSuoritusRekisteri,
     rekisterit.ytlArvosanaRekisteri,
     hakemusService,
-    config
+    config.ytlSyncTimeout
   )
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
