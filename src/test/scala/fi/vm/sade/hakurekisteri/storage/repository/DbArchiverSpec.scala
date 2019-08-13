@@ -41,8 +41,14 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
 
   private def insertTestRecords(testData: List[TestData]) = {
     def getEpoch(daysInThePast: Int): Long = {
+      // note: even though the time is set exactly, if the calendar day changes between invocations,
+      // two invocations of this function will return different epoch
       val day = Calendar.getInstance
       day.add(Calendar.DATE, - daysInThePast)
+      day.set(java.util.Calendar.HOUR, 3)
+      day.set(java.util.Calendar.MINUTE, 0)
+      day.set(java.util.Calendar.SECOND, 0)
+      day.set(java.util.Calendar.MILLISECOND, 0)
       day.getTime.getTime
     }
     testData.foreach(t => {
@@ -65,6 +71,19 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
 
     val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
     result2.head.toInt should be(1)
+  }
+
+  it should "keep the original row if transaction fails because the row is already archived" in {
+    insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt + 10, false)))
+    journals.archiver.archive()
+    val whenOkThereShouldNotBeAnythingInOriginalTable = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    whenOkThereShouldNotBeAnythingInOriginalTable.head.toInt should be(0)
+    insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt + 10, false)))
+
+    journals.archiver.archive()
+
+    val nowTheOriginalWillBeStillThereBecauseTheTransactionHasFailed = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    nowTheOriginalWillBeStillThereBecauseTheTransactionHasFailed.head.toInt should be(1)
   }
 
   it should "not archive non-current record if not old enough" in {
