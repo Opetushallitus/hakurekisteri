@@ -163,6 +163,7 @@ abstract class Config {
   val valintaTulosTimeout: FiniteDuration
 
   val ytlSyncTimeout: Timeout
+  val ytlSyncRetires: Int = 2
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
