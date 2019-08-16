@@ -26,12 +26,11 @@ class YtlKokelasPersister(system: ActorSystem,
                           suoritusRekisteri: ActorRef,
                           arvosanaRekisteri: ActorRef,
                           hakemusService: IHakemusService,
-                          timeout: Timeout) extends KokelasPersister {
+                          timeout: Timeout,
+                          howManyTries: Int) extends KokelasPersister {
   private val logger = LoggerFactory.getLogger(getClass)
 
   override def apply(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit] = {
-    val howManyTries = 2
-
     val kokelas = k.kokelas
     logger.debug(s"sending ytl data for kokelas ${kokelas.oid} yo=${kokelas.yo} timeout=${timeout.duration}")
     val yoSuoritusUpdateActor: ActorRef = system.actorOf(YoSuoritusUpdateActor.props(
@@ -48,13 +47,13 @@ class YtlKokelasPersister(system: ActorSystem,
           case t: Throwable =>
             logger.error(s"ArvosanaUpdate Got exception when updating henkilö=${suoritus.henkiloOid} suoritus=${suoritus.id}", t)
             if (remainingRetries <= 1) {
-              Future.failed(new RuntimeException(s"ArvosanaUpdate: Run out of retries suoritus=${suoritus.id}", t))
+              Future.failed(new RuntimeException(s"ArvosanaUpdate: Run out of retries henkilö=${suoritus.henkiloOid} suoritus=${suoritus.id}", t))
             } else {
               arvosanaUpdateRetry(remainingRetries - 1)
             }
         }
       }
-      arvosanaUpdateRetry(2)
+      arvosanaUpdateRetry(howManyTries)
     }
 
     val allOperations = for {
@@ -488,6 +487,8 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
 
       val uudetFutures = uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) map (arvosanaRekisteri ? _)
       val futureList2 = Future.sequence(uudetFutures)
+
+      log.debug("ArvosanaUpdateActor person={} suoritus={} arv={} uudet={}", suoritus.henkiloOid, suoritus.id, arvosanaFutures.size, uudetFutures.size)
 
       val allFutures = Future.sequence(Seq(futureList1, futureList2))
       allFutures onComplete {

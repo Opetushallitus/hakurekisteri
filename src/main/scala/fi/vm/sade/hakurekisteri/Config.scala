@@ -115,6 +115,7 @@ class DefaultConfig extends Config {
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
   override val valintaTulosTimeout: FiniteDuration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.valintatulos.max.minutes", "configuration key missing: suoritusrekisteri.valintatulos.max.minutes")).minutes
   override val ytlSyncTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.sync.timeout.seconds", "90").toLong, SECONDS)
+  override val ytlSyncRetires = properties.getOrElse("suoritusrekisteri.ytl.sync.retries", "2").toInt
 }
 
 class MockDevConfig extends Config {

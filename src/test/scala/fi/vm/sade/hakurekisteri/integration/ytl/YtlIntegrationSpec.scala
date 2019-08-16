@@ -93,7 +93,8 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
         suoritusRekisteri,
         arvosanaRekisteri,
         hakemusService,
-        Timeout(3.seconds))
+        Timeout(3.seconds),
+        2)
       testYtlKokelasPersister
     }
   }
