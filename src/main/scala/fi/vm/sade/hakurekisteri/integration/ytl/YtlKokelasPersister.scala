@@ -43,11 +43,13 @@ class YtlKokelasPersister(system: ActorSystem,
 
     def arvosanaUpdateWithRetries(suoritus: Suoritus with Identified[UUID]): Future[Unit] = {
       def arvosanaUpdateRetry(remainingRetries: Int): Future[Unit] = {
+        val suoritusTxt = s"henkilö=${suoritus.henkiloOid} suoritus=${suoritus.id}"
+        logger.debug(s"ArvosanaUpdate send suoritus to Actor for $suoritusTxt")
         (arvosanaUpdateActor ? ArvosanaUpdateActor.Update(suoritus))(timeout).mapTo[Unit].recoverWith {
           case t: Throwable =>
-            logger.error(s"ArvosanaUpdate Got exception when updating henkilö=${suoritus.henkiloOid} suoritus=${suoritus.id}", t)
+            logger.error(s"ArvosanaUpdate Got exception when updating $suoritusTxt, retries=${remainingRetries-1}", t)
             if (remainingRetries <= 1) {
-              Future.failed(new RuntimeException(s"ArvosanaUpdate: Run out of retries henkilö=${suoritus.henkiloOid} suoritus=${suoritus.id}", t))
+              Future.failed(new RuntimeException(s"ArvosanaUpdate: Run out of retries $suoritusTxt", t))
             } else {
               arvosanaUpdateRetry(remainingRetries - 1)
             }
@@ -70,10 +72,10 @@ class YtlKokelasPersister(system: ActorSystem,
     def addCleanerCallbacks(): Unit = {
       allOperations onComplete {
         case Success(_) =>
-          logger.debug(s"KokelasPersister for ${kokelas.oid} succeeded")
+          logger.debug(s"KokelasPersister succeeded for ${kokelas.oid}")
           stopTemporaryActors()
         case Failure(ex) =>
-          logger.error(s"KokelasPersister for ${kokelas.oid} failed", ex)
+          logger.error(s"KokelasPersister failed for ${kokelas.oid}", ex)
           stopTemporaryActors()
       }
     }
@@ -493,11 +495,11 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
       val allFutures = Future.sequence(Seq(futureList1, futureList2))
       allFutures onComplete {
         case scala.util.Success(a) =>
-          log.debug("Updated arvosana {}", if (a!=null) a else "null")
+          log.debug("Updated arvosana person={} {}", suoritus.henkiloOid, if (a!=null) a else "null")
           val returnValue: Unit = ()
           asker ! returnValue
         case scala.util.Failure(t) =>
-          log.error("Failed to update arvosana ({})", t)
+          log.error("Failed to update arvosana person={} suoritus={} ({})", suoritus.henkiloOid, suoritus.id, t)
           asker ! akka.actor.Status.Failure(t)
       }
 
