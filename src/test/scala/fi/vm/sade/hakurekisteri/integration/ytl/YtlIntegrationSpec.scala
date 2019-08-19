@@ -449,7 +449,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(6000)
+    Thread.sleep(9000)
 
     val mustBeReadyUntil = new LocalDateTime().plusMinutes(1)
     while (new LocalDateTime().isBefore(mustBeReadyUntil) &&
@@ -501,7 +501,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(6000)
+    Thread.sleep(9000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
@@ -512,10 +512,36 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(10000)
+    Thread.sleep(9000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
+
+  it should "fail if tried to start before the previous syncAll was not finished" in
+    new UseYtlKokelasPersister with UseYtlIntegration with HakemusServiceTenEntries {
+      val kokelasPersisterWhichGetsStuck = createTestYtlKokelasPersister(arvosanaRekisteri = neverEndingActor)
+      val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichGetsStuck)
+      ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
+      Thread.sleep(500)
+
+      val thrown = the [RuntimeException] thrownBy {
+        ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
+      }
+      thrown.getMessage should include("syncAll is already running!")
+  }
+
+  it should "succeed to start again when previous syncAll has finished" in
+    new UseYtlKokelasPersister with UseYtlIntegration with HakemusServiceTenEntries {
+      val kokelasPersisterWhichFails = createTestYtlKokelasPersister(arvosanaRekisteri = failingActor)
+      val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichFails)
+      ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
+      Thread.sleep(9000)
+
+      noException should be thrownBy {
+        ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
+      }
+    }
+
 
 
   private def findAllSuoritusFromDatabase: Seq[VirallinenSuoritus with Identified[UUID]] = {

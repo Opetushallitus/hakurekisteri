@@ -178,7 +178,10 @@ class YtlIntegration(properties: OphProperties,
                 case None =>
                   logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
                   None
-              }).map(kokelas => ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid)))))
+              }).map(kokelas => {
+                Thread.sleep(config.ytlSyncDelay)
+                ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+              })
             val futureForAllKokelasesToPersist = Future.sequence(persistKokelasFutures)
             futureForAllKokelasesToPersist onComplete {
               case Success(_) =>
@@ -216,6 +219,7 @@ class YtlIntegration(properties: OphProperties,
         msg.setRecipients(RecipientType.TO, recipients)
         tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
         msg.saveChanges()
+        logger.debug(s"Sending failure email to $recipients (text=$msg)")
         tr.sendMessage(msg, msg.getAllRecipients)
       } catch {
         case e: Throwable =>
