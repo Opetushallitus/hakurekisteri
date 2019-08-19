@@ -201,21 +201,6 @@
         <beans:property name="authenticateAllArtifacts" value="true"/>
     </beans:bean>
 
-    <!-- Tracing -->
-    <!--
-    <beans:bean name="traceInterceptor" class="fi.vm.sade.security.TraceInterceptor">
-    </beans:bean>
-    <beans:bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
-        <beans:property name="beanNames" value="*WS,*Ws,*AdminService,*PublicService"/>
-        <beans:property name="proxyTargetClass" value="false"/>
-        <beans:property name="interceptorNames">
-            <beans:list>
-                <beans:value>traceInterceptor</beans:value>
-            </beans:list>
-        </beans:property>
-    </beans:bean>
-    -->
-
     <beans:bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
         <beans:constructor-arg>
             <beans:list>
