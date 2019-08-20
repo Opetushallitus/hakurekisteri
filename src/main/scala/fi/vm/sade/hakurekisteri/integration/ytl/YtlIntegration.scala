@@ -162,10 +162,10 @@ class YtlIntegration(properties: OphProperties,
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
-          logger.error(s"failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}", e)
+          logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
         case (Right((zip, students)), index) =>
           try {
-            logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count!")
+            logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
             val persistKokelasFutures =
               students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
                 case Some(personOid) =>
@@ -185,12 +185,12 @@ class YtlIntegration(properties: OphProperties,
             val futureForAllKokelasesToPersist = Future.sequence(persistKokelasFutures)
             futureForAllKokelasesToPersist onComplete {
               case Success(_) =>
-                logger.info(s"Finished YTL syncAll! All patches succeeded!")
+                logger.info(s"Finished YTL syncAll! All batches succeeded!")
                 atomicUpdateFetchStatus(l => l.copy(succeeded = Some(true), end = Some(new Date())))
               case Failure(e) =>
                 logger.error(s"Failed to persist all kokelas", e)
                 atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
-                failureEmailSender.sendFailureEmail(s"Finished sync all with failing patches!")
+                failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
             }
           } finally {
             IOUtils.closeQuietly(zip)

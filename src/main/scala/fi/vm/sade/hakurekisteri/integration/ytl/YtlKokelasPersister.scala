@@ -422,7 +422,7 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
       } else {
         val suoritukset = ennenVuotta1990Valmistuneet(s)
         if (suoritukset.nonEmpty) {
-          context.parent ! suoritukset.head
+          asker ! suoritukset.head
           context.stop(self)
         } else {
           suoritusRekisteri ! UpsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
