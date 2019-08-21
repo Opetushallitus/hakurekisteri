@@ -107,7 +107,7 @@ class DefaultConfig extends Config {
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val archiveNonCurrentAfterDays = properties.getOrElse("suoritusrekisteri.db.archiveNonCurrentAfterDays", "180")
-  override val archiveBatchSize = properties.getOrElse("suoritusrekister.db.archiveBatchSize" ,"1000")
+  override val archiveBatchSize = properties.getOrElse("suoritusrekister.db.archiveBatchSize" ,"10000")
   override val slowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.slowquery.millis"))
   override val reallySlowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.reallyslowquery.millis"))
   override val maxDbLogLineLength: Int = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.db.max.log.line.length", "configuration key missing: suoritusrekisteri.db.max.log.line.length"))
