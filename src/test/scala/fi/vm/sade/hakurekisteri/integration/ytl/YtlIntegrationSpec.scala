@@ -501,7 +501,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(9000)
+    Thread.sleep(3000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
@@ -512,7 +512,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(9000)
+    Thread.sleep(11000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
@@ -535,7 +535,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       val kokelasPersisterWhichFails = createTestYtlKokelasPersister(arvosanaRekisteri = failingActor)
       val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichFails)
       ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
-      Thread.sleep(9000)
+      Thread.sleep(1000)
 
       noException should be thrownBy {
         ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)

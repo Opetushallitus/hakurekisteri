@@ -485,15 +485,15 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
             if (korvaava.isDefined) korvaava.get.identify(a.id)
             else a
         } map (arvosanaRekisteri ? _)
-      val futureList1 = Future.sequence(arvosanaFutures)
+      val allArvosanaFuture = Future.sequence(arvosanaFutures)
 
       val uudetFutures = uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) map (arvosanaRekisteri ? _)
-      val futureList2 = Future.sequence(uudetFutures)
+      val allUudetFuture = Future.sequence(uudetFutures)
 
       log.debug("ArvosanaUpdateActor person={} suoritus={} arv={} uudet={}", suoritus.henkiloOid, suoritus.id, arvosanaFutures.size, uudetFutures.size)
 
-      val allFutures = Future.sequence(Seq(futureList1, futureList2))
-      allFutures onComplete {
+      val allArvosanaAndUudetFuture = Future.sequence(Seq(allArvosanaFuture, allUudetFuture))
+      allArvosanaAndUudetFuture onComplete {
         case scala.util.Success(a) =>
           log.debug("Updated arvosana person={} {}", suoritus.henkiloOid, if (a!=null) a else "null")
           val returnValue: Unit = ()
