@@ -47,7 +47,7 @@ class YtlKokelasPersister(system: ActorSystem,
         logger.debug(s"ArvosanaUpdate send suoritus to Actor for $suoritusTxt")
         (arvosanaUpdateActor ? ArvosanaUpdateActor.Update(suoritus))(timeout).mapTo[Unit].recoverWith {
           case t: Throwable =>
-            logger.error(s"ArvosanaUpdate Got exception when updating $suoritusTxt, retries=${remainingRetries-1}", t)
+            logger.error(s"ArvosanaUpdate Got exception when updating $suoritusTxt, retries left=${remainingRetries-1}", t)
             if (remainingRetries <= 1) {
               Future.failed(new RuntimeException(s"ArvosanaUpdate: Run out of retries $suoritusTxt", t))
             } else {
