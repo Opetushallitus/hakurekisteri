@@ -8,7 +8,6 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable.SortedMap
 import scala.concurrent.{Await, Future}
 
 class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {

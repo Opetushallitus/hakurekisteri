@@ -1,4 +1,4 @@
--- Generated on  Thu May 2 18:10:22 EEST 2019
+-- Generated on  Thu Aug 22 10:31:31 EEST 2019
 --
 -- Flyway will use this SQL script to create archive tables and archive functions
 --
@@ -11,8 +11,6 @@
 --
 
 CREATE TABLE IF NOT EXISTS a_arvosana (LIKE arvosana INCLUDING ALL);
-
-ALTER TABLE a_arvosana OWNER TO oph;
 
 
 CREATE OR REPLACE FUNCTION arkistoi_arvosana_deltat(amount integer, oldest bigint)
@@ -54,8 +52,6 @@ ALTER FUNCTION arkistoi_arvosana_deltat(integer, bigint) OWNER TO oph;
 
 CREATE TABLE IF NOT EXISTS a_import_batch (LIKE import_batch INCLUDING ALL);
 
-ALTER TABLE a_import_batch OWNER TO oph;
-
 
 CREATE OR REPLACE FUNCTION arkistoi_import_batch_deltat(amount integer, oldest bigint)
   RETURNS integer AS
@@ -95,8 +91,6 @@ ALTER FUNCTION arkistoi_import_batch_deltat(integer, bigint) OWNER TO oph;
 --
 
 CREATE TABLE IF NOT EXISTS a_opiskelija (LIKE opiskelija INCLUDING ALL);
-
-ALTER TABLE a_opiskelija OWNER TO oph;
 
 
 CREATE OR REPLACE FUNCTION arkistoi_opiskelija_deltat(amount integer, oldest bigint)
@@ -138,8 +132,6 @@ ALTER FUNCTION arkistoi_opiskelija_deltat(integer, bigint) OWNER TO oph;
 
 CREATE TABLE IF NOT EXISTS a_opiskeluoikeus (LIKE opiskeluoikeus INCLUDING ALL);
 
-ALTER TABLE a_opiskeluoikeus OWNER TO oph;
-
 
 CREATE OR REPLACE FUNCTION arkistoi_opiskeluoikeus_deltat(amount integer, oldest bigint)
   RETURNS integer AS
@@ -179,8 +171,6 @@ ALTER FUNCTION arkistoi_opiskeluoikeus_deltat(integer, bigint) OWNER TO oph;
 --
 
 CREATE TABLE IF NOT EXISTS a_suoritus (LIKE suoritus INCLUDING ALL);
-
-ALTER TABLE a_suoritus OWNER TO oph;
 
 
 CREATE OR REPLACE FUNCTION arkistoi_suoritus_deltat(amount integer, oldest bigint)

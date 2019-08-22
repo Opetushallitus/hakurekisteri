@@ -1,3 +1,18 @@
+db.migration Directory
+============================
+
+This is pretty much normal directory containing migration scripts, that will be read by `flyway`
+to initialize database objects. 
+
+Note that not all existing database objects are created by `flyway`. Most of them were created
+manually, before `flyway` was taken into use. As a reminder to that fact, the lowest migration script
+version in this directory is V20. Now that `flyway` is used to create objects, all new database
+objects should be created using `flyway`, by adding migration scripts to this directory. 
+
+In addition to normal sql migration scripts written manually, there is a script 
+`R__recreate_archive_tables_and_functions.sql` which is generated. See the next chapter for the 
+instructions how to (re)generate that script, if needed. 
+
 Archive tables and functions
 ----------------------------
 
