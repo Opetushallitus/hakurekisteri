@@ -4,7 +4,7 @@ import org.scalatra.swagger.DataType
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 
-trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand] =>
+trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: HakurekisteriResource[Opiskeluoikeus] =>
 
   protected val applicationDescription = "Opiskeluoikeustietojen rajapinta"
 
@@ -12,7 +12,7 @@ trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: Hakure
 
   val query = apiOperation[Seq[Opiskeluoikeus]]("opiskeluoikeudet")
     .summary("näyttää kaikki opiskeluoikeustiedot")
-    .notes("Näyttää kaikki opiskeluoikeustiedot. Voit myös hakea eri parametreillä.")
+    .description("Näyttää kaikki opiskeluoikeustiedot. Voit myös hakea eri parametreillä.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
     .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
 

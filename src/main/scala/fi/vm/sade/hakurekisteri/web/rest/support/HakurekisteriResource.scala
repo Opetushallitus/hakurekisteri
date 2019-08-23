@@ -12,8 +12,11 @@ import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.commands._
+import org.scalatra.forms.{FormSupport, MappingValueType}
+import org.scalatra.i18n.I18nSupport
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
@@ -26,7 +29,10 @@ import scala.language.implicitConversions
 import scala.util.Try
 import scalaz.NonEmptyList
 
-trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A, C] with SecuritySupport with JsonSupport[_] =>
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
+
+trait HakurekisteriCrudCommands[A <: Resource[UUID, A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A] with SecuritySupport with JsonSupport[_] =>
 
   before() {
     contentType = formats("json")
@@ -73,7 +79,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       res
     }
   }
-
   post("/:id", operation(update)) {
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else {
@@ -122,6 +127,9 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
   incident {
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: ValidationError => (id) =>
+      logger.info("incident ValidationError: " + t + ", " + t.error.map(_.getMessage))
+      BadRequest(IncidentReport(id, t.error.map(_.getMessage).getOrElse("no message")))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }
@@ -129,26 +137,30 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 case class NotFoundException(resource: String) extends Exception(resource)
 case class UserNotAuthorized(message: String) extends Exception(message)
 
-abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]]
+abstract class HakurekisteriResource[A <: Resource[UUID, A]]
 (actor: ActorRef, qb: Map[String, String] => Query[A])
-(implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A], cf: Manifest[C])
-  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A]
-  with QueryLogging with SecuritySupport {
+(implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A])
+  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport
+  with QueryLogging with SecuritySupport with FormSupport with I18nSupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
+  case class ValidationError(message: String, field: Option[String] = None, error: Option[Exception] = None) extends Exception
 
   case class MalformedResourceException(errors: NonEmptyList[ValidationError]) extends Exception {
     override def getMessage: String = {
       val messages: NonEmptyList[String] = for (
         error <- errors
-      ) yield s"${error.field.map{case FieldName(field) => s"problem with $field: "}.getOrElse("problem: ")} ${error.message}"
+      ) yield s"${error.field.map { s: String => s"problem with $s: " }.getOrElse("problem: ")} ${error.message}"
       messages.list.toList.mkString(", ")
     }
   }
 
   def className[CL](implicit m: Manifest[CL]) = m.runtimeClass.getSimpleName
 
-  lazy val resourceName = className[A]
+  lazy val resourceName: String = className[A]
+
+  def parseResourceFromBody(user: String): Either[ValidationError, A]
 
   protected implicit def executor: ExecutionContext = system.dispatcher
   val timeOut = 120
@@ -171,14 +183,19 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
   def notEnabled = new Exception("operation not enabled")
 
   def createResource(user: Option[User]) = {
-    val msg: Future[AuthorizedCreate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(_.fold(
-      errors => Future.failed(MalformedResourceException(errors)),
-      (resource: A) =>
-        createEnabled(resource, user).flatMap(enabled =>
-          if (enabled) Future.successful(AuthorizedCreate[A, UUID](resource, user.get))
-          else Future.failed(ResourceNotEnabledException)
+    logger.info("Create; Parsing resource")
+    val msg: Future[AuthorizedCreate[A, UUID]] = parseResourceFromBody(user.get.username) match {
+      case Left(e) =>
+        logger.info("Something went wrong with resource creation: " + e + ", " + e.message)
+        Future.failed(e)
+      case Right(res) =>
+        createEnabled(res, user).flatMap(enabled =>
+          if (enabled) {
+            logger.info("Going as planned, resource to be created: " + res)
+            Future.successful(AuthorizedCreate[A, UUID](res, user.get))
+          } else Future.failed(ResourceNotEnabledException)
         )
-    ))
+    }
     new FutureActorResult(msg, ResourceCreated(request.getRequestURL))
   }
 
@@ -195,25 +212,26 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
   def updateEnabled(resource: A, user: Option[User]) = Future.successful(true)
 
   def updateResource(id: UUID, user: Option[User]): Object = {
-    val myCommand: C = command[C]
-
-    val msg = (actor ? id).mapTo[Option[A]].flatMap((a: Option[A]) => a  match {
+    logger.info("Update; parsing resource.")
+    val updatedResource: Either[ValidationError, A] = parseResourceFromBody(user.get.username) //Needs to be parsed now instead of later, or implicit request is not available.
+    val msg: Future[AuthorizedUpdate[A, UUID]] = (actor ? id).mapTo[Option[A]].flatMap((a: Option[A]) => a  match {
       case Some(res) =>
         updateEnabled(res, user).flatMap(enabled =>
           if (enabled) {
-            (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
-              _.fold(
-                errors => Future.failed(MalformedResourceException(errors)),
-                resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
-            )
+            updatedResource match {
+              case Left(e) =>
+                logger.info("Something went wrong with resource creation: " + e)
+                Future.failed(e)
+              case Right(res) =>
+                logger.info("Going as planned, updated resource: " + res)
+                Future.successful(AuthorizedUpdate[A, UUID](identifyResource(res, id), user.get))
+            }
           } else {
             Future.failed(ResourceNotEnabledException)
           })
-      case None => {
+      case None =>
         Future.failed(NotFoundException(id.toString))
-      }
     })
-
     new FutureActorResult[A with Identified[UUID]](msg, Ok(_))
   }
 

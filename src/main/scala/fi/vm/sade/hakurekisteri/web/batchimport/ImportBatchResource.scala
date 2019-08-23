@@ -27,6 +27,7 @@ import org.scalatra.servlet.{FileItem, FileUploadSupport, MultipartConfig, SizeC
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger.{DataType, Swagger, SwaggerSupport}
 import org.scalatra.util.ValueReader
+import org.scalatra.forms._
 import org.xml.sax.SAXParseException
 import siirto.{SchemaDefinition, ValidXml, XMLValidator}
 
@@ -49,7 +50,7 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
                           schema: SchemaDefinition,
                           imports: SchemaDefinition*)
                          (implicit sw: Swagger, s: Security, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
-    extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SecuritySupport with FileUploadSupport with IncidentReporting {
+    extends HakurekisteriResource[ImportBatch](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch] with SecuritySupport with FileUploadSupport with IncidentReporting {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -67,11 +68,11 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
   val schemaCache = (schema +: imports).map((sd) => sd.schemaLocation -> sd.schema).toMap
 
 
-  registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
+  /*registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,
                                                          dataField,
                                                          excelConverter,
-                                                         new ValidXml(schema, imports:_*)))
+                                                         new ValidXml(schema, imports:_*)))*/
 
   before() {
     if (multipart) contentType = formats("html")
@@ -207,7 +208,10 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
     case t: WrongBatchStateException => (id) => BadRequest(IncidentReport(id, "illegal state for reprocessing"))
     case BatchNotFoundException => (id) => NotFound(IncidentReport(id, "batch not found for reprocessing"))
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
-    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.toList.reduce(_ ++ _)))
+    //case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.toList.reduce(_ ++ _)))
+    case t: ValidationError => (id) =>
+      logger.info("incident ValidationError: " + t + ", " + t.error.map(_.getMessage))
+      BadRequest(IncidentReport(id, t.error.map(_.getMessage).getOrElse("no message")))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)."))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
@@ -244,7 +248,7 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
     }
   }
 
-  override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
+  /*override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     val command =
       if (multipart(request))
         newCommand.bindTo[Map[String, FileItem], FileItem](
@@ -257,12 +261,11 @@ class ImportBatchResource(eraOrgRekisteri: ActorRef,
     saveFiles(command.isValid).foreach(entry => {
       logger.info(s"received ${if (command.isValid) "a valid" else "an invalid"} batch (${entry._1}) from ${getUser.username}, saving to storage as ${entry._2.getName}")
     })
-
     command
   }
-}
+  */
 
-case class ImportBatchCommand(externalIdField: String,
+abstract case class ImportBatchCommand(externalIdField: String,
                               batchType: String,
                               dataField: String,
                               converter: XmlConverter,
@@ -273,9 +276,8 @@ case class ImportBatchCommand(externalIdField: String,
 
   override implicit val excelConverter = converter
 
-  val data: Field[Elem] = asType[Elem](dataField).required.validateSchema
-
-  override def toResource(user: String): ImportBatch =
+  //val data: Field[Elem] = asType[Elem](dataField).required.validateSchema
+  /*override def toResource(user: String): ImportBatch =
     ImportBatch(
       data.value.get,
       data.value.flatMap(
@@ -285,7 +287,7 @@ case class ImportBatchCommand(externalIdField: String,
       user,
       BatchState.READY,
       ImportStatus()
-    )
+    )*/
 }
 
 trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
@@ -312,7 +314,7 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
 
   val create: OperationBuilder = apiOperation[ImportBatch]("lisääSiirto")
     .summary("vastaanottaa tiedoston")
-    .notes("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä multipart-koodattuna (kentän nimi 'data') tai XML-muodossa requestin bodyssä. " +
+    .description("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä multipart-koodattuna (kentän nimi 'data') tai XML-muodossa requestin bodyssä. " +
       "Tiedoston voi lähettää esimerkiksi curl-ohjelmaa käyttäen näin: " +
       "<pre>" +
       "<code class='bash'>$ curl -F \"data=@perustiedot.xml\" -H \"CasSecurityTicket: ST-tiketti\" https://testi.virkailija.opintopolku.fi/suoritusrekisteri/rest/v1/siirto/perustiedot</code>" +
@@ -322,15 +324,15 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(bodyParam[String].description("XML-tiedosto").required)
   val query: OperationBuilder = apiOperation[ImportBatch]("haeSiirrot")
     .summary("näyttää kaikki siirrot")
-    .notes("Näyttää kaikki siirrot.")
+    .description("Näyttää kaikki siirrot.")
 
   val isopen: OperationBuilder = apiOperation[TiedonsiirtoOpen]("onkoAvoinna")
     .summary("näyttää onko tiedonsiirto avoinna")
-    .notes("Näyttää onko tiedonsiirto avoinna.")
+    .description("Näyttää onko tiedonsiirto avoinna.")
 
   val withoutdata: OperationBuilder = apiOperation[Seq[ImportBatch]]("withoutdata")
     .summary("näyttää siirrot ilman tiedostoja")
-    .notes("Näyttää siirrot ilman tiedostoja. Eroaa haeSiirrot-operaatiosta siten, että data-kenttä on tyhjä.")
+    .description("Näyttää siirrot ilman tiedostoja. Eroaa haeSiirrot-operaatiosta siten, että data-kenttä on tyhjä.")
 
   val schemaOperation: OperationBuilder = apiOperation[String]("schema")
     .summary("näyttää siirron validointiin käytettävän XML-skeeman")

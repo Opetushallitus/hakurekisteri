@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.web.arvosana
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import org.scalatra.swagger._
-trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
+trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { this: HakurekisteriResource[Arvosana] =>
 
   protected val applicationDescription = "Arvosanatietojen rajapinta"
 
@@ -13,7 +13,7 @@ trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { th
 
   val query = apiOperation[Seq[Arvosana]]("haeArvosanat")
     .summary("näyttää kaikki arvosanat")
-    .notes("Näyttää kaikki arvosanat. Voit myös hakea suorituksella.")
+    .description("Näyttää kaikki arvosanat. Voit myös hakea suorituksella.")
     .parameter(queryParam[Option[String]]("suoritus").description("suorituksen uuid").required)
 
   val create = apiOperation[Arvosana]("lisääArvosana")

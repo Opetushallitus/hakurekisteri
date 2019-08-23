@@ -5,7 +5,7 @@ import org.scalatra.swagger._
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 
-trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
+trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriResource[Opiskelija] =>
 
   protected val applicationDescription = "Opiskelijatietojen rajapinta"
 
@@ -13,7 +13,7 @@ trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriR
 
   val query = apiOperation[Seq[Opiskelija]]("opiskelijat")
     .summary("näyttää kaikki opiskelijatiedot")
-    .notes("Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä.")
+    .description("Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
     .parameter(queryParam[Option[String]]("kausi").description("kausi jonka tietoja haetaan").allowableValues("S", "K"))
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
