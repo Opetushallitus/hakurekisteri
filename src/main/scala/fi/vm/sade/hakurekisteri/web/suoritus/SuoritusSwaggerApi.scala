@@ -5,7 +5,7 @@ import org.scalatra.swagger._
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
 
-trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
+trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResource[Suoritus] =>
 
   protected val applicationDescription = "Suoritustietojen rajapinta"
 
@@ -15,7 +15,7 @@ trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResou
 
   val query = apiOperation[Seq[Suoritus]]("haeSuoritukset")
     .summary("näyttää kaikki suoritukset")
-    .notes("Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä.")
+    .description("Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
     .parameter(queryParam[Option[String]]("kausi").description("päättymisen kausi").allowableValues("S", "K"))
     .parameter(queryParam[Option[String]]("vuosi").description("päättymisen vuosi"))

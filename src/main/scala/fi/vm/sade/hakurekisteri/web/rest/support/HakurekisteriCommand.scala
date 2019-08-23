@@ -10,11 +10,14 @@ import fi.vm.sade.hakurekisteri.tools.SafeXML
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.json4s.JsonAST.{JInt, JString, JValue}
 import org.json4s._
+import org.scalatra.NotFound
 import org.scalatra.commands._
+import org.scalatra.forms.{FormSupport, MappingValueType}
+import org.scalatra.i18n.I18nSupport
 import org.scalatra.json.JsonValueReader
-import org.scalatra.servlet.FileItem
+import org.scalatra.servlet.{FileItem, ServletBase}
 import org.scalatra.util.ValueReader
-import org.scalatra.util.conversion.TypeConverter
+import org.scalatra.util.conversion.{TypeConverter, TypeConverterSupport}
 import org.scalatra.validation.{FieldName, UnknownError, ValidationError}
 import org.xml.sax.SAXParseException
 import siirto.ArvosanatXmlConverter._
@@ -31,16 +34,20 @@ import scalaz.Validation.FlatMap._
 
 object NoXmlConverterSpecifiedException extends Exception(s"no xml converter specified")
 
-trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport with FileItemOperations {
+trait HakurekisteriCommand[R] extends HakurekisteriJsonSupport with FileItemOperations with FormSupport with I18nSupport with ServletBase {
 
 
-  type CommandTypeConverterFactory[T] = FileTypeConverterFactory[T]
+  protected def doNotFound_=(x$1: org.scalatra.Action): Unit = NotFound()
+  def requestPath(implicit request: javax.servlet.http.HttpServletRequest): String = ???
+  protected def routeBasePath(implicit request: javax.servlet.http.HttpServletRequest): String = ???
 
-  override def typeConverterBuilder[I](tc: CommandTypeConverterFactory[_]) = ({
+  //type CommandTypeConverterFactory[T] = FileTypeConverterFactory[T]
+
+  /*override def typeConverterBuilder[I](tc: CommandTypeConverterFactory[_]) = ({
     case r: JsonValueReader => tc.resolveJson.asInstanceOf[TypeConverter[I, _]]
     case f: FileItemMapValueReader => tc.resolveFiles.asInstanceOf[TypeConverter[I, _]]
 
-  }: PartialFunction[ValueReader[_, _], TypeConverter[I, _]]) orElse super.typeConverterBuilder(tc)
+  }: PartialFunction[ValueReader[_, _], TypeConverter[I, _]]) orElse super.typeConverterBuilder(tc)*/
 
 
   import org.json4s.jackson.JsonMethods.parse
@@ -79,9 +86,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     case _ => None
   })
 
-
-  implicit val fileToOptionInt: TypeConverter[FileItem, Option[Int]] = cantConvert
-
+  //implicit val fileToOptionInt: TypeConverter[FileItem, Option[Int]] = safe(_.blankOption)
 
   implicit val stringtoOptionString: TypeConverter[String, Option[String]] = safe(_.blankOption)
 
@@ -98,31 +103,37 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     case _ => Map[String, KierrosParams]()
   })
 
-  implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = cantConvert
+  //implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = cantConvert
 
   implicit val stringToYksilollistaminen: TypeConverter[String, Yksilollistetty] = safeOption(_.blankOption.map (yksilollistaminen.withName))
   implicit val jsonToYksilollistaminen: TypeConverter[JValue, Yksilollistetty] = safeOption(_.extractOpt[Yksilollistetty])
 
-  implicit val fileToYksilollistaminen: TypeConverter[FileItem, Yksilollistetty] = cantConvert
+  //implicit val fileToYksilollistaminen: TypeConverter[FileItem, Yksilollistetty] = cantConvert
 
-  implicit def xmlFieldToValidatable(field: FieldDescriptor[Elem]):ValidatableXml = new ValidatableXml(field)
+  //implicit def xmlFieldToValidatable(field: FieldDescriptor[Elem]):ValidatableXml = new ValidatableXml(field)
 
   def toResource(user: String): R
 
-  def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failureNel
+  //def toForm(): MappingValueType[Any] //fixme type, override this elsewhere
 
-  def extraValidation(res: R): ValidationNel[ValidationError, R] = res.successNel
+  //def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failureNel
 
-  def toValidatedResource(user: String): Future[ModelValidation[R]] =  {
+  //def extraValidation(res: R): ValidationNel[ValidationError, R] = res.successNel
+
+  def toValidatedResource(user: String) = {
+    Future.successful(toResource(user))
+  }
+
+  /*def toValidatedResource(user: String): Future[ModelValidation[R]] =  {
     Future.successful(
       allCatch.withApply(errorFail) {
         extraValidation(toResource(user))
       }
     )
-  }
+  }*/
 }
 
-class ValidatableXml(b: FieldDescriptor[Elem]) {
+/*class ValidatableXml(b: FieldDescriptor[Elem]) {
   def validateSchema(implicit validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): FieldDescriptor[Elem] =
     b.validateWith(abidesSchema(validator))
 
@@ -136,7 +147,7 @@ class ValidatableXml(b: FieldDescriptor[Elem]) {
       new ValidationError("Xml validation failed", Some(FieldName(field)), None, errors.toList)
     })
   }
-}
+}*/
 
 trait XmlConverter {
   def convert(f: FileItem): Elem = f match {
@@ -154,15 +165,15 @@ trait XmlConverter {
 }
 
 
+/*
 trait FileTypeConverterFactory[T] extends JsonTypeConverterFactory[T] {
 
   def resolveFiles: TypeConverter[FileItem, T]
 
-
-
 }
+*/
 
-trait HakurekisteriTypeConverterFactories extends FileBindingImplicits  {
+/*trait HakurekisteriTypeConverterFactories extends FileBindingImplicits {
   implicit def fileTypeConverterFactory[T](implicit
                                            seqConverter: TypeConverter[Seq[String], T],
                                            stringConverter: TypeConverter[String, T],
@@ -176,9 +187,9 @@ trait HakurekisteriTypeConverterFactories extends FileBindingImplicits  {
       def resolveStringParams: TypeConverter[String, T] = stringConverter
       def resolveFiles: TypeConverter[FileItem, T] = fileConverter
     }
-}
+}*/
 
-trait FileBindingImplicits extends JsonBindingImplicits {
+trait FileBindingImplicits extends TypeConverterSupport {
 
   def cantConvert[S,T] = new TypeConverter[S, T] {
     override def apply(s: S): Option[T] = None

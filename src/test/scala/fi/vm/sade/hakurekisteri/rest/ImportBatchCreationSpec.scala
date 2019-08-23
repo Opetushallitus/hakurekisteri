@@ -18,6 +18,7 @@ import scala.xml.Elem
 import scalaz._
 
 
+/*
 class ImportBatchCreationSpec extends FlatSpec
     with Matchers with JsonCommandTestSupport {
 
@@ -155,3 +156,4 @@ trait JsonModifiers {
 
   implicit def jvalueToFieldRemover(json:JValue): FieldRemover = FieldRemover(json)
 }
+*/

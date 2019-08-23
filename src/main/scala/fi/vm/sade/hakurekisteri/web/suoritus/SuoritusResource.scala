@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.suoritus
 
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import _root_.akka.pattern.ask
@@ -8,18 +9,23 @@ import fi.vm.sade.hakurekisteri.KomoOids
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{IsRestrictionActive, ParameterActor, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.web.rest.support.{ResourceNotEnabledException, _}
-import org.scalatra.NotFound
+import org.joda.time.DateTime
+import org.json4s.{DefaultFormats, JValue}
+import org.json4s.JsonAST.JNothing
+import org.scalatra.{MultiParams, NotFound}
+import org.scalatra.forms.{MappingValueType, RequestAttributeErrorsKey, RequestAttributeParamsKey, ValueType, boolean, label, mapping, optional, required, text}
 import org.scalatra.swagger.Swagger
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import scala.util.Try
 
 class SuoritusResource
 (suoritusRekisteriActor: ActorRef, parameterActor: ParametritActorRef, koodistoActor: KoodistoActorRef)(implicit sw: Swagger, s: Security, system: ActorSystem)
-  extends HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteriActor, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus,
-    CreateSuoritusCommand] with SecuritySupport with IncidentReporting{
+  extends HakurekisteriResource[Suoritus](suoritusRekisteriActor, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus] with SecuritySupport with IncidentReporting with LocalDateSupport {
 
   override def createEnabled(resource: Suoritus, user: Option[User]) = {
     resource match {
@@ -42,9 +48,36 @@ class SuoritusResource
 
   override def updateEnabled(resource: Suoritus, user: Option[User]) = createEnabled(resource, user)
 
-  registerCommand[CreateSuoritusCommand](CreateSuoritusCommand(koodistoKielet))
-
   incident {
     case ResourceNotEnabledException => (id) => NotFound(IncidentReport(id, "Suorituksen muokkaaminen ei tällä hetkellä ole mahdollista"))
+  }
+
+  override def parseResourceFromBody(user: String): Either[ValidationError, Suoritus] = {
+    try {
+      val bodyValues = parsedBody.extract[Map[String, JValue]]
+      logger.info("bodyValues: " + bodyValues)
+      val vahv = if (bodyValues.contains("vahvistettu")) bodyValues("vahvistettu").extract[Boolean] else false
+      val yks = if (bodyValues.contains("yksilollistaminen")) bodyValues("yksilollistaminen").extract[Yksilollistetty] else yksilollistaminen.Ei
+      val s = VirallinenSuoritus(
+        komo = bodyValues("komo").extract[String],
+        myontaja = bodyValues("myontaja").extract[String],
+        tila = bodyValues("tila").extract[String],
+        valmistuminen = jsonToLocalDate(bodyValues("valmistuminen")).get,
+        henkilo = bodyValues("henkiloOid").extract[String],
+        yksilollistaminen = yks,
+        suoritusKieli = bodyValues("suoritusKieli").extract[String],
+        vahv = vahv,
+        lahde = user,
+        lahdeArvot = Map()
+      )
+      logger.info("parsed s: " + s)
+      logger.info("vahvistus: " + vahv + ", source: " + bodyValues.get("vahvistettu"))
+      logger.info("yks: " + yks + ", source: " + bodyValues.get("yksilollistaminen"))
+      Right(s)
+    } catch {
+      case e: Exception =>
+        logger.info("Failed to parse Suoritus: " + e)
+        Left(ValidationError("Suoritus parsing failed", None, Some(e)))
+    }
   }
 }
