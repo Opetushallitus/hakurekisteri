@@ -22,7 +22,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
 
   val query = apiOperation[Seq[Oppija]]("haeOppijat")
     .summary("Näyttää oppijoiden tiedot")
-    .notes("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Tämän resurssin oppijoiden Opiskeluoikeudet ovat aina tyhjiä listoja")
+    .description("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Tämän resurssin oppijoiden Opiskeluoikeudet ovat aina tyhjiä listoja")
     .parameter(queryParam[Option[String]]("oppilaitosOid").description("koulutuksen tarjoajan  oid").optional)
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen").optional)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
@@ -31,7 +31,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
 
   val queryPost = apiOperation[Seq[Oppija]]("haeOppijatOppijanumeroidenPerusteella")
     .summary("Näyttää oppijoiden tiedot")
-    .notes("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Vastaava tietorakenne, kuin oppijat-rajapinnassa ilman ensikertalaisuus-tietoja.")
+    .description("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Vastaava tietorakenne, kuin oppijat-rajapinnassa ilman ensikertalaisuus-tietoja.")
     .parameter(bodyParam[String]("oppijanumerot")
       .description(s"""lista oppijanumeroista (max ${OppijatPostSize.maxOppijatPostSize} kpl), esim ["1.2.246.562.24.00000000001", "1.2.246.562.24.00000000002"]""").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
@@ -40,7 +40,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
 
   val read = apiOperation[Oppija]("haeOppija")
     .summary("Näyttää yhden oppijan tiedot")
-    .notes("Näyttää yhden oppijan tiedot oppijanumeron perusteella.")
+    .description("Näyttää yhden oppijan tiedot oppijanumeron perusteella.")
     .parameter(pathParam[String]("oid").description("oppijanumero").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
@@ -48,7 +48,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
 
   val light = apiOperation[Seq[LightWeightTiedot]]("haeOppijatKevyt")
     .summary("Näyttää kevennetyn version opiskelijatiedoista")
-    .notes("Näyttää nimen luokan ja onko henkilön arvosanoissa puutteita")
+    .description("Näyttää nimen luokan ja onko henkilön arvosanoissa puutteita")
     .parameter(queryParam[Option[String]]("oppilaitosOid").description("koulutuksen tarjoajan  oid").optional)
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen").optional)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
