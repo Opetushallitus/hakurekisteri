@@ -12,7 +12,7 @@ import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.sql.SqlAction
-import support.{DbJournals}
+import support.{Archiver, DbJournals}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -22,7 +22,7 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
   private implicit val system = ActorSystem("test-jdbc")
   private implicit val ec: ExecutionContext = system.dispatcher
-  private implicit val timeout: Timeout = Timeout(120, TimeUnit.SECONDS)
+  private implicit val timeout: Timeout = Timeout(2, TimeUnit.SECONDS)
   private val config: MockConfig = new MockConfig
   private val journals: DbJournals = new DbJournals(config)
 
@@ -61,8 +61,21 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
     })
   }
 
+  private trait FailingBatchArchiver {
+    var howManyTimesToFail: Int = 1
+    var batchInvocationCounter: Int = 0
+    val testBatchAchieverFirstThrowThenWorkNormal: journals.archiver.BatchArchiever = () => {
+      batchInvocationCounter = batchInvocationCounter + 1
+      if (batchInvocationCounter <= howManyTimesToFail) {
+        throw new RuntimeException("batch artificial exception")
+      } else {
+        journals.archiver.defaultBatchArchiever()
+      }
+    }
+  }
+
   it should "archive the old-enough non-current record" in {
-    insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt + 1, false)))
+    insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt - 1, true), TestData(config.archiveNonCurrentAfterDays.toInt + 1, false)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
@@ -87,7 +100,7 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   }
 
   it should "not archive non-current record if not old enough" in {
-    insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt - 10, false)))
+    insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt - 1, true), TestData(config.archiveNonCurrentAfterDays.toInt - 10, false)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
@@ -99,7 +112,7 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   }
 
   it should "not archive very old if it is still current" in {
-    insertTestRecords(List(TestData(10, true), TestData(config.archiveNonCurrentAfterDays.toInt + 10, true)))
+    insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt - 1, true), TestData(config.archiveNonCurrentAfterDays.toInt + 10, true)))
 
     val result1 = run(database.run(sql"select count(*) from opiskelija".as[String]))
     result1.head.toInt should be(2)
@@ -113,7 +126,7 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
   it should "archive all what needs to be archived, even if multiple batches are needed" in {
     val numberBiggerThanBatchSize = config.archiveBatchSize.toInt + 5
     insertTestRecords(
-      List.range(0, numberBiggerThanBatchSize).map(i => TestData(config.archiveNonCurrentAfterDays.toInt + i, false))
+      List.range(1, numberBiggerThanBatchSize + 1).map(i => TestData(config.archiveNonCurrentAfterDays.toInt + i, false))
     )
 
     journals.archiver.archive()
@@ -122,6 +135,28 @@ class DbArchiverSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfte
     result1.head.toInt should be(0)
     val result2 = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
     result2.head.toInt should be(numberBiggerThanBatchSize)
+  }
+
+  it should "finish everything if batches do not fail too many times" in new FailingBatchArchiver {
+    insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt + 1, false)))
+    howManyTimesToFail = 2
+
+    journals.archiver.archive(testBatchAchieverFirstThrowThenWorkNormal, maxErrorsAllowed = howManyTimesToFail + 1)
+
+    batchInvocationCounter should be(4)
+    val result = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
+    result.head.toInt should be(1)
+  }
+
+  it should "not finish everything if batch fails too many times" in new FailingBatchArchiver {
+      insertTestRecords(List(TestData(config.archiveNonCurrentAfterDays.toInt + 1, false)))
+      howManyTimesToFail = 3
+
+      journals.archiver.archive(testBatchAchieverFirstThrowThenWorkNormal, maxErrorsAllowed = howManyTimesToFail)
+
+      batchInvocationCounter should be(3)
+      val result = run(database.run(sql"select count(*) from a_opiskelija".as[String]))
+      result.head.toInt should be(0)
   }
 
   it should "acquire lock only once" in {
