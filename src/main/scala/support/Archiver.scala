@@ -1,7 +1,13 @@
 package support
 
 trait Archiver {
-  def archive(): Unit
+  type BatchStatistics = Map[String, Long]
+
+  type BatchArchiever = () => BatchStatistics
+
+  def archive(batchArchiever: BatchArchiever = defaultBatchArchiever, maxErrorsAllowed: Int = 3): Unit
+
+  val defaultBatchArchiever: BatchArchiever
 
   def acquireLockForArchiving(): Boolean
 

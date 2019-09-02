@@ -8,8 +8,6 @@ template=$(cat <<'END-OF-TEMPLATE'
 
 CREATE TABLE IF NOT EXISTS a_%%TABLE (LIKE %%TABLE INCLUDING ALL);
 
-ALTER TABLE a_%%TABLE OWNER TO oph;
-
 
 CREATE OR REPLACE FUNCTION arkistoi_%%TABLE_deltat(amount integer, oldest bigint)
   RETURNS integer AS

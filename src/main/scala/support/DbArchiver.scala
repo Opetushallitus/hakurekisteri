@@ -8,7 +8,6 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable.SortedMap
 import scala.concurrent.{Await, Future}
 
 class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
@@ -24,41 +23,58 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
 
   private def run[T](f: Future[T]): T = Await.result(f, atMost = timeout.duration)
 
-  type BatchStatistics = Map[String, Long]
-
   private def logStatistics(batchStatistics: BatchStatistics, message: String) = {
     val sortedKeys: List[String] = batchStatistics.keys.toList.sortWith(_ < _)
     logger.info(message + " (" + sortedKeys.map(t => t + ": " + batchStatistics(t)).mkString(", ") + ")")
   }
 
-  override def archive() = {
+  override def archive(batchArchiever: BatchArchiever, maxErrorsAllowed: Int): Unit = {
     logger.info("Invoke archive scripts...")
     val startTime = System.nanoTime()
     def elapsedTimeMinutes: Long = TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - startTime)
     var statisticsTotal: BatchStatistics = Map()
     var batchStatistics: BatchStatistics = Map()
+    var errorsAllowed: Int = maxErrorsAllowed
+    var isNextBatchNeeded: Boolean = true
     def isAnythingDoneInLastBatch: Boolean = batchStatistics.exists(_._2 > 0)
     def newStatisticsTotal(currentTotal: BatchStatistics, batch: BatchStatistics): BatchStatistics = {
       batch.keys.map(k => k -> (batch(k) + currentTotal.getOrElse(k, 0l))).toMap
     }
-    do {
+    while(elapsedTimeMinutes < config.archiveTotalTimeoutMinutes.toInt && isNextBatchNeeded) {
       try {
-        batchStatistics = archiveBatch()
+        batchStatistics = batchArchiever()
         if (isAnythingDoneInLastBatch) {
           logStatistics(batchStatistics, "Archived batch rows")
           statisticsTotal = newStatisticsTotal(statisticsTotal, batchStatistics)
           logStatistics(statisticsTotal, "Archived TOTAL rows")
+          isNextBatchNeeded = true
+        } else {
+          logger.debug(s"Archive batch did not have anything to archive, finishing")
+          isNextBatchNeeded = false
         }
       }
       catch {
-        case e: Throwable => logger.warn("Archive batch failed: ", e)
+        case e: Throwable =>
+          errorsAllowed = errorsAllowed - 1
+          if (errorsAllowed > 0) {
+            logger.warn(s"Archive batch failed (${e.getMessage}), retries left: $errorsAllowed ", e)
+            isNextBatchNeeded = true
+          } else {
+            logger.warn(s"Archive batch failed (${e.getMessage}), no more retries", e)
+            isNextBatchNeeded = false
+          }
       }
-    } while(elapsedTimeMinutes < 180 && isAnythingDoneInLastBatch)
-    if (isAnythingDoneInLastBatch) logger.warn("Archiving is stopped because 3h timeout has expired.")
-    else logger.info("Archiving completed")
+    }
+    if (isAnythingDoneInLastBatch) {
+      logger.warn("Archiving finished because 3h timeout has expired.")
+    } else if (errorsAllowed > 0) {
+      logger.info("Archiving finished completely")
+    } else {
+      logger.warn("Archiving finished because of too many errors")
+    }
   }
 
-  private def archiveBatch(): BatchStatistics = {
+  override val defaultBatchArchiever: BatchArchiever = () => {
     val batchSize = config.archiveBatchSize.toInt
     val oldest: Long = getEpoch(config.archiveNonCurrentAfterDays.toInt)
     val tableNames: Seq[String] = Seq("arvosana", "import_batch", "opiskelija", "opiskeluoikeus", "suoritus")
