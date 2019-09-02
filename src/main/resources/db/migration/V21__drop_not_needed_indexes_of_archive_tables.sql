@@ -1,4 +1,4 @@
--- drop all indexes from a_ tables except the primary key ones.
+-- drop all indexes from a_ tables including the primary key ones.
 -- this list of indexes is found in production, it may happen
 -- that in other environments a_ tables have different set of indexes
 
