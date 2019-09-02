@@ -40,7 +40,7 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
     def newStatisticsTotal(currentTotal: BatchStatistics, batch: BatchStatistics): BatchStatistics = {
       batch.keys.map(k => k -> (batch(k) + currentTotal.getOrElse(k, 0l))).toMap
     }
-    while(elapsedTimeMinutes < 180 && isNextBatchNeeded) {
+    while(elapsedTimeMinutes < config.archiveTotalTimeoutMinutes.toInt && isNextBatchNeeded) {
       try {
         batchStatistics = batchArchiever()
         if (isAnythingDoneInLastBatch) {

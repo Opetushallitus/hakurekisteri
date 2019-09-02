@@ -107,6 +107,7 @@ class DefaultConfig extends Config {
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val archiveNonCurrentAfterDays = properties.getOrElse("suoritusrekisteri.db.archiveNonCurrentAfterDays", "180")
+  override val archiveTotalTimeoutMinutes = properties.getOrElse("suoritusrekisteri.db.archiveTotalTimeoutMinutes", "180")
   override val archiveBatchSize = properties.getOrElse("suoritusrekister.db.archiveBatchSize" ,"10000")
   override val slowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.slowquery.millis"))
   override val reallySlowQuery: Long = java.lang.Long.parseLong(getPropertyOrCrash("suoritusrekisteri.db.slowquery.millis", "configuration key missing: suoritusrekisteri.db.reallyslowquery.millis"))
@@ -125,6 +126,7 @@ class MockDevConfig extends Config {
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val archiveNonCurrentAfterDays = properties.getOrElse("suoritusrekisteri.db.archiveNonCurrentAfterDays", "14")
+  override val archiveTotalTimeoutMinutes = properties.getOrElse("suoritusrekisteri.db.archiveTotalTimeoutMinutes", "180")
   override val archiveBatchSize = properties.getOrElse("suoritusrekisteri.db.archiveBatchSize", "14")
 
 
@@ -149,6 +151,7 @@ abstract class Config {
   val postgresUser: String
   val postgresPassword: String
   val archiveNonCurrentAfterDays: String
+  val archiveTotalTimeoutMinutes: String = "180"
   val archiveBatchSize: String
 
   val slowQuery: Long
