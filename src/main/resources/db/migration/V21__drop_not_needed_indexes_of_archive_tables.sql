@@ -5,6 +5,7 @@
 drop index if exists a_arvosana_resource_id_inserted_idx;
 drop index if exists a_arvosana_suoritus_deleted_idx;
 
+alter table if exists a_import_batch drop constraint if exists a_import_batch_pkey;
 drop index if exists a_import_batch_pkey;
 drop index if exists a_import_batch_batch_type_idx;
 drop index if exists a_import_batch_external_id_idx;

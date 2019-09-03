@@ -1,4 +1,4 @@
--- Generated on  Thu Aug 22 10:31:31 EEST 2019
+-- Generated on  Tue Sep 3 19:09:23 EEST 2019
 --
 -- Flyway will use this SQL script to create archive tables and archive functions
 --
@@ -10,7 +10,7 @@
 -- Archive table: arvosana
 --
 
-CREATE TABLE IF NOT EXISTS a_arvosana (LIKE arvosana INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS a_arvosana (LIKE arvosana INCLUDING CONSTRAINTS INCLUDING DEFAULTS);
 
 
 CREATE OR REPLACE FUNCTION arkistoi_arvosana_deltat(amount integer, oldest bigint)
@@ -50,7 +50,7 @@ ALTER FUNCTION arkistoi_arvosana_deltat(integer, bigint) OWNER TO oph;
 -- Archive table: import_batch
 --
 
-CREATE TABLE IF NOT EXISTS a_import_batch (LIKE import_batch INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS a_import_batch (LIKE import_batch INCLUDING CONSTRAINTS INCLUDING DEFAULTS);
 
 
 CREATE OR REPLACE FUNCTION arkistoi_import_batch_deltat(amount integer, oldest bigint)
@@ -90,7 +90,7 @@ ALTER FUNCTION arkistoi_import_batch_deltat(integer, bigint) OWNER TO oph;
 -- Archive table: opiskelija
 --
 
-CREATE TABLE IF NOT EXISTS a_opiskelija (LIKE opiskelija INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS a_opiskelija (LIKE opiskelija INCLUDING CONSTRAINTS INCLUDING DEFAULTS);
 
 
 CREATE OR REPLACE FUNCTION arkistoi_opiskelija_deltat(amount integer, oldest bigint)
@@ -130,7 +130,7 @@ ALTER FUNCTION arkistoi_opiskelija_deltat(integer, bigint) OWNER TO oph;
 -- Archive table: opiskeluoikeus
 --
 
-CREATE TABLE IF NOT EXISTS a_opiskeluoikeus (LIKE opiskeluoikeus INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS a_opiskeluoikeus (LIKE opiskeluoikeus INCLUDING CONSTRAINTS INCLUDING DEFAULTS);
 
 
 CREATE OR REPLACE FUNCTION arkistoi_opiskeluoikeus_deltat(amount integer, oldest bigint)
@@ -170,7 +170,7 @@ ALTER FUNCTION arkistoi_opiskeluoikeus_deltat(integer, bigint) OWNER TO oph;
 -- Archive table: suoritus
 --
 
-CREATE TABLE IF NOT EXISTS a_suoritus (LIKE suoritus INCLUDING ALL);
+CREATE TABLE IF NOT EXISTS a_suoritus (LIKE suoritus INCLUDING CONSTRAINTS INCLUDING DEFAULTS);
 
 
 CREATE OR REPLACE FUNCTION arkistoi_suoritus_deltat(amount integer, oldest bigint)
