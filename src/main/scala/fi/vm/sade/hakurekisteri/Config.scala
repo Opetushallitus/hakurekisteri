@@ -116,7 +116,7 @@ class DefaultConfig extends Config {
   override val valintaTulosTimeout: FiniteDuration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.valintatulos.max.minutes", "configuration key missing: suoritusrekisteri.valintatulos.max.minutes")).minutes
   override val ytlSyncTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.sync.timeout.seconds", "60").toLong, SECONDS)
   override val ytlSyncRetries = properties.getOrElse("suoritusrekisteri.ytl.sync.retries", "5").toInt
-  override val ytlSyncDelay: Long = properties.getOrElse("suoritusrekisteri.ytl.sync.delay.ms", "50").toLong
+  override val ytlSyncParallelism: Int = properties.getOrElse("suoritusrekisteri.ytl.sync.parallelism", "5").toInt
 }
 
 class MockDevConfig extends Config {
@@ -139,6 +139,7 @@ class MockDevConfig extends Config {
   override val valintaTulosTimeout: FiniteDuration = 1.minute
 
   override val ytlSyncTimeout: Timeout = Timeout(4, SECONDS)
+  override val ytlSyncParallelism: Int = properties.getOrElse("suoritusrekisteri.ytl.sync.parallelism", "5").toInt
 
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -166,7 +167,7 @@ abstract class Config {
 
   val ytlSyncTimeout: Timeout
   val ytlSyncRetries: Int = 2
-  val ytlSyncDelay: Long = 50
+  val ytlSyncParallelism: Int = 5
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path

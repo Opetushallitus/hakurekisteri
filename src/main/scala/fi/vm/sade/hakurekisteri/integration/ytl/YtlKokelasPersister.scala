@@ -2,10 +2,13 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.UUID
 
+import akka.Done
 import akka.actor._
-import akka.pattern.{AskTimeoutException, ask}
+import akka.pattern.ask
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Oids}
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
@@ -19,7 +22,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 trait KokelasPersister {
-  def apply(kokelas: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit]
+  def persistSingle(kokelas: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit]
+  def persistMultiple(kokelakset: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases,
+                      parallelism: Int = 1)(implicit ec: ExecutionContext): Future[Unit]
 }
 
 class YtlKokelasPersister(system: ActorSystem,
@@ -29,8 +34,9 @@ class YtlKokelasPersister(system: ActorSystem,
                           timeout: Timeout,
                           howManyTries: Int) extends KokelasPersister {
   private val logger = LoggerFactory.getLogger(getClass)
+  implicit val materializer: ActorMaterializer = ActorMaterializer()(context = system)
 
-  override def apply(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit] = {
+  override def persistSingle(k: KokelasWithPersonAliases)(implicit ec: ExecutionContext): Future[Unit] = {
     val kokelas = k.kokelas
     logger.debug(s"sending ytl data for kokelas ${kokelas.oid} yo=${kokelas.yo} timeout=${timeout.duration}")
     val yoSuoritusUpdateActor: ActorRef = system.actorOf(YoSuoritusUpdateActor.props(
@@ -82,6 +88,16 @@ class YtlKokelasPersister(system: ActorSystem,
 
     addCleanerCallbacks()
     allOperations
+  }
+
+  override def persistMultiple(kokelakset: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases,
+                               parallelism: Int = 1)(implicit ec: ExecutionContext): Future[Unit] = {
+    logger.debug(s"persistMultiple: parallelism=$parallelism")
+    val doneFuture: Future[Done] = Source
+      .fromIterator(() => kokelakset)
+      .mapAsync(parallelism = parallelism)(kokelas => persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid)))))
+      .runForeach {identity}
+    doneFuture.flatMap {_ => Future.unit}
   }
 }
 

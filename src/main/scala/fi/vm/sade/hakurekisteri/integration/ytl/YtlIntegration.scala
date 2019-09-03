@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.concurrent.atomic.{AtomicReference}
 import java.util.concurrent.{Executors, TimeUnit}
 import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
@@ -55,7 +55,7 @@ class YtlIntegration(properties: OphProperties,
                     Failure(new RuntimeException(noData))
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
-                    val persistKokelasStatus = ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases))
+                    val persistKokelasStatus = ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases))
                     try {
                       Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 10.seconds)
                       Success(kokelas)
@@ -156,7 +156,7 @@ class YtlIntegration(properties: OphProperties,
   private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid],
                                failureEmailSender: FailureEmailSender): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
-    val personOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
+    val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
     try {
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
@@ -166,7 +166,7 @@ class YtlIntegration(properties: OphProperties,
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
-            val persistKokelasFutures =
+            val kokelaksetToPersist: Iterator[Kokelas] =
               students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
                 case Some(personOid) =>
                   Try(StudentToKokelas.convert(personOid, student)) match {
@@ -178,12 +178,9 @@ class YtlIntegration(properties: OphProperties,
                 case None =>
                   logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
                   None
-              }).map(kokelas => {
-                Thread.sleep(config.ytlSyncDelay)
-                ytlKokelasPersister(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
               })
-            val futureForAllKokelasesToPersist = Future.sequence(persistKokelasFutures)
-            futureForAllKokelasesToPersist onComplete {
+            val persistedAllKokelakset: Future[Unit] = ytlKokelasPersister.persistMultiple(kokelaksetToPersist, personOidsWithAliases, 3)
+            persistedAllKokelakset onComplete {
               case Success(_) =>
                 logger.info(s"Finished YTL syncAll! All batches succeeded!")
                 atomicUpdateFetchStatus(l => l.copy(succeeded = Some(true), end = Some(new Date())))

@@ -313,12 +313,12 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   }
 
 
-  behavior of "YtlKokelasPersister"
+  behavior of "YtlKokelasPersister persistSingle"
 
   it should "update existing YTL suoritukset" in new HakemusServiceSingleEntry with KokelasWithPersonAliases with UseYtlKokelasPersister {
     val realKokelasPersister = createTestYtlKokelasPersister()
 
-    val future = realKokelasPersister(kokelasWithPersonAliases)
+    val future = realKokelasPersister.persistSingle(kokelasWithPersonAliases)
     try {
       Await.ready(future, 5.seconds)
 
@@ -336,7 +336,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     var failedAsExpected = false
     val realKokelasPersister = createTestYtlKokelasPersister()
 
-    val future = realKokelasPersister(kokelasWithTooManyPersonOids).recover {
+    val future = realKokelasPersister.persistSingle(kokelasWithTooManyPersonOids).recover {
       case e: IllegalArgumentException =>
         e.getMessage should startWith ("Got 2 person aliases")
         failedAsExpected = true
@@ -352,7 +352,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     var failedAsExpected = false
     val kokelasPersisterWithFailingArvosanaUpdater = createTestYtlKokelasPersister(arvosanaRekisteri = failingActor)
 
-    val future = kokelasPersisterWithFailingArvosanaUpdater(kokelasWithPersonAliases).recover {
+    val future = kokelasPersisterWithFailingArvosanaUpdater.persistSingle(kokelasWithPersonAliases).recover {
       case e: Exception =>
         e.getMessage should include ("Run out of retries")
         e.getCause.getMessage should include ("Forced to fail")
@@ -369,7 +369,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     var failedAsExpected = false
     val kokelasPersisterWithStuckArvosanaUpdater = createTestYtlKokelasPersister(arvosanaRekisteri = neverEndingActor)
 
-    val future = kokelasPersisterWithStuckArvosanaUpdater(kokelasWithPersonAliases).recover {
+    val future = kokelasPersisterWithStuckArvosanaUpdater.persistSingle(kokelasWithPersonAliases).recover {
       case e: Exception =>
         e.getMessage should include ("Run out of retries")
         e.getCause.getMessage should include ("Ask timed out")
@@ -540,7 +540,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       noException should be thrownBy {
         ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
       }
-    }
+  }
 
 
 
