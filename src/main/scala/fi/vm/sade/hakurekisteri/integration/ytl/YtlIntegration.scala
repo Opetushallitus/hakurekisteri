@@ -179,7 +179,9 @@ class YtlIntegration(properties: OphProperties,
                   logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
                   None
               })
-            val persistedAllKokelakset: Future[Unit] = ytlKokelasPersister.persistMultiple(kokelaksetToPersist, personOidsWithAliases, 3)
+            val persistedAllKokelakset: Future[Unit] = ytlKokelasPersister.persistMultiple(kokelaksetToPersist,
+              personOidsWithAliases,
+              config.ytlSyncParallelism)
             persistedAllKokelakset onComplete {
               case Success(_) =>
                 logger.info(s"Finished YTL syncAll! All batches succeeded!")

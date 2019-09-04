@@ -92,10 +92,13 @@ class YtlKokelasPersister(system: ActorSystem,
 
   override def persistMultiple(kokelakset: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases,
                                parallelism: Int = 1)(implicit ec: ExecutionContext): Future[Unit] = {
-    logger.debug(s"persistMultiple: parallelism=$parallelism")
+    logger.debug(s"persistMultiple: parallelism=$parallelism notEmpty=${kokelakset.hasNext}")
     val doneFuture: Future[Done] = Source
       .fromIterator(() => kokelakset)
-      .mapAsync(parallelism = parallelism)(kokelas => persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid)))))
+      .mapAsync(parallelism = parallelism)(kokelas => {
+        logger.debug(s"persistMultiple: about to invoke persistSingle for ${kokelas.oid}")
+        persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+      })
       .runForeach {identity}
     doneFuture.flatMap {_ => Future.unit}
   }
