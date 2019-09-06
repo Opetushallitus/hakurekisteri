@@ -49,7 +49,7 @@ suoritusrekisteri.db.max.log.line.length=600
 suoritusrekisteri.db.connectionTimeout={{ host_postgresql_suoritusrekisteri_hikari_connection_timeout_millis | default("1000") }}
 suoritusrekisteri.db.archiveCronJob={{ suoritusrekisteri_db_archive_cronjob | default("0 0 21 * * ?") }}
 suoritusrekisteri.db.archiveNonCurrentAfterDays={{ suoritusrekisteri_db_archive_non_current_after_days | default("180") }}
-suoritusrekisteri.db.archiveBatchSize={{ suoritusrekisteri_db_archive_batch_size | default("10000") }}
+suoritusrekisteri.db.archiveBatchSize={{ suoritusrekisteri_db_archive_batch_size | default("100000") }}
 suoritusrekisteri.swagger.https={{ suoritusrekisteri_swagger_https | default("true") }}
 suoritusrekisteri.hakemuspermissioncheck.max.personoids={{ suoritusrekisteri_hakemuspermissioncheck_max_personoids | default("1000") }}
 
