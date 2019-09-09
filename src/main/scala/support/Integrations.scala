@@ -112,6 +112,7 @@ class BaseIntegrations(rekisterit: Registers,
                        system: ActorSystem,
                        config: Config) extends Integrations {
   private val logger = LoggerFactory.getLogger(getClass)
+  logger.info(s"Initializing BaseIntegrations started...")
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
@@ -215,6 +216,7 @@ class BaseIntegrations(rekisterit: Registers,
   val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
+  logger.info(s"Scheduled syncAll jobs (cron expression=$syncAllCronExpression)")
 
   if (KoskiUtil.koskiIntegrationInUse) {
     koskiService.refreshChangedOppijasFromKoski()
@@ -239,6 +241,7 @@ class BaseIntegrations(rekisterit: Registers,
         organisaatiot,
         config))))
 
+  logger.info(s"Initializing BaseIntegrations ... done!")
 }
 
 trait TypedActorRef {

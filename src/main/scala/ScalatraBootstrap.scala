@@ -35,6 +35,7 @@ import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
 import org.scalatra.{Handler, LifeCycle, ScalatraServlet}
+import org.slf4j.LoggerFactory
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.factory.support.RootBeanDefinition
@@ -50,10 +51,12 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{Await, Future}
 
 class ScalatraBootstrap extends LifeCycle {
+  private val logger = LoggerFactory.getLogger(getClass)
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
 
   override def init(context: ServletContext) {
+    logger.info(s"Scalatra init started...")
     OPHSecurity.init(context)
     val config = WebAppConfig.getConfig(context)
     implicit val security = Security(config)
@@ -89,6 +92,8 @@ class ScalatraBootstrap extends LifeCycle {
     val servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
 
     mountServlets(context)(servlets:_*)
+
+    logger.info(s"Scalatra init... done")
   }
 
   //noinspection ScalaStyle

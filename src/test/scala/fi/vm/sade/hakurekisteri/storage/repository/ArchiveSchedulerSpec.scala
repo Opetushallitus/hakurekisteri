@@ -17,6 +17,14 @@ class ArchiveSchedulerSpec extends FlatSpec with BeforeAndAfterEach with BeforeA
     reset(archiver)
   }
 
+  it should "fail if cron expression is invalid" in {
+    val expectedException =
+      intercept[RuntimeException] {
+        archiveScheduler.start("invalid")
+      }
+    expectedException.getMessage should include ("CronExpression 'invalid' is invalid")
+  }
+
   it should "don't invoke archive() if lock is not acquired" in {
     Mockito.when(archiver.acquireLockForArchiving()).thenReturn(false)
     Mockito.when(archiver.clearLockForArchiving()).thenReturn(true)

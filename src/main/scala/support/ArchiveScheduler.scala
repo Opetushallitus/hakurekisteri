@@ -10,6 +10,7 @@ class ArchiveScheduler(archiver: Archiver) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def start(archiveCronExpression: String): Unit = {
+    logger.info(s"Scheduling archive jobs started... (cron expression=$archiveCronExpression)")
     if (archiveCronExpression == null) {
       logger.warn("Archive cronjob expression not specified, scheduler not created.")
       throw new RuntimeException("Archive cronjob expression not specified, scheduler not created.")
@@ -21,7 +22,7 @@ class ArchiveScheduler(archiver: Archiver) {
 
     quartzScheduler.scheduleJob(lambdaJob(archive()),
       newTrigger().startNow().withSchedule(cronSchedule(archiveCronExpression)).build());
-    logger.info(s"ArchiveScheduler started, cron expression=$archiveCronExpression")
+    logger.info(s"Scheduled archive jobs (cron expression=$archiveCronExpression)")
   }
 
   def archive(): () => Unit = { () => {
