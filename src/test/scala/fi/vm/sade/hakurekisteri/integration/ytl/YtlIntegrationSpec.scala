@@ -535,7 +535,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       val kokelasPersisterWhichFails = createTestYtlKokelasPersister(arvosanaRekisteri = failingActor)
       val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichFails)
       ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
-      Thread.sleep(1000)
+      Thread.sleep(4000)
 
       noException should be thrownBy {
         ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
