@@ -34,7 +34,7 @@ object SequentialBatchExecutor {
   class RealBatchExecutor[A] extends BatchExecutor[A] {
     override def executeBatch(batch: Batch[A], itemFunction: A => Future[Unit])(implicit ec: ExecutionContext): Future[Unit] = {
       val futuresForAllItems: Seq[Future[Unit]] = batch.map { item => itemFunction(item)}
-      println(s"petar evo egzekutiram batch $batch, a futures=$futuresForAllItems")
+      logger.debug(s"Executing batch (size=${batch.length}) $batch")
       Future.sequence(futuresForAllItems).map[Unit](_ => ())
     }
   }

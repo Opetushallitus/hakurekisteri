@@ -541,7 +541,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
         ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
       }
   }
-  
+
   private def findAllSuoritusFromDatabase: Seq[VirallinenSuoritus with Identified[UUID]] = {
     findFromDatabase(rekisterit.suoritusRekisteri, SuoritusQuery())
   }
