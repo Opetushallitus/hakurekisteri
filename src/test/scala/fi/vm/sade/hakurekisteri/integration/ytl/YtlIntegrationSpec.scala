@@ -322,7 +322,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     try {
       Await.ready(future, 5.seconds)
 
-      Thread.sleep(1000)
+      Thread.sleep(500)
       val suoritukset: Seq[VirallinenSuoritus with Identified[UUID]] = findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
 
       suoritukset should have size 1
@@ -449,7 +449,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(9000)
+    Thread.sleep(100)
 
     val mustBeReadyUntil = new LocalDateTime().plusMinutes(1)
     while (new LocalDateTime().isBefore(mustBeReadyUntil) &&
@@ -501,7 +501,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(3000)
+    Thread.sleep(1000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
@@ -535,15 +535,13 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       val kokelasPersisterWhichFails = createTestYtlKokelasPersister(arvosanaRekisteri = failingActor)
       val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichFails)
       ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
-      Thread.sleep(4000)
+      Thread.sleep(500)
 
       noException should be thrownBy {
         ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
       }
   }
-
-
-
+  
   private def findAllSuoritusFromDatabase: Seq[VirallinenSuoritus with Identified[UUID]] = {
     findFromDatabase(rekisterit.suoritusRekisteri, SuoritusQuery())
   }

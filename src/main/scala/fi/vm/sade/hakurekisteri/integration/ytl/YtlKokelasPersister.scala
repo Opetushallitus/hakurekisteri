@@ -412,14 +412,19 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
       v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
   }.filter(s => s.valmistuminen.isBefore(new LocalDate(1990, 1, 1)) && s.tila == "VALMIS" && s.vahvistettu)
 
-  override def receive: Actor.Receive = {
+  override def receive: Actor.Receive = initialHandler
+
+  def initialHandler: Receive = {
     case Update =>
       asker = sender()
+      context.become(handleResponseFromSuoritusRekisteri)
       implicit val ec: ExecutionContext = context.dispatcher
       val suoritusQuery = SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))
       val queryWithPersonAliases = SuoritusQueryWithPersonAliases(suoritusQuery, personOidsWithAliases)
       suoritusRekisteri ! queryWithPersonAliases
+  }
 
+  def handleResponseFromSuoritusRekisteri: Receive = {
     case s: Seq[_] =>
       if (s.isEmpty) {
         suoritusRekisteri ! UpsertResource[UUID,Suoritus](yoSuoritus, personOidsWithAliases)
@@ -443,7 +448,8 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus,
     case unknown =>
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
-      asker ! new IllegalArgumentException(errorMessage)
+      asker ! akka.actor.Status.Failure(new IllegalArgumentException(errorMessage))
+      context.become(initialHandler)
   }
 }
 
@@ -473,12 +479,17 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
     uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto &&
       (uusi.valinnainen == old.valinnainen || (uusi.valinnainen != old.valinnainen && uusi.lahdeArvot != old.lahdeArvot))
 
-  override def receive: Actor.Receive = {
+  override def receive: Actor.Receive = initialHandler
+
+  def initialHandler: Receive = {
     case Update(s: Suoritus with Identified[UUID]) =>
       asker = sender()
+      context.become(handleResponsesFromArvosanaRekisteri)
       suoritus = s
       arvosanaRekisteri ! ArvosanaQuery(suoritus.id)
+  }
 
+  def handleResponsesFromArvosanaRekisteri: Receive = {
     case s: Seq[_] =>
       val uudet = kokeet.map(_.toArvosana(suoritus))
       val arvosanaFutures =
@@ -511,6 +522,7 @@ class ArvosanaUpdateActor(var kokeet: Seq[Koe],
       val errorMessage = s"Got unknown message '$unknown'"
       log.error(errorMessage)
       asker ! akka.actor.Status.Failure(new IllegalArgumentException(errorMessage))
+      context.become(initialHandler)
   }
 }
 
