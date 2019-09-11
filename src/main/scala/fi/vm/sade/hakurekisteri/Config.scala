@@ -114,9 +114,9 @@ class DefaultConfig extends Config {
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
   override val valintaTulosTimeout: FiniteDuration = java.lang.Integer.parseInt(getPropertyOrCrash("suoritusrekisteri.valintatulos.max.minutes", "configuration key missing: suoritusrekisteri.valintatulos.max.minutes")).minutes
-  override val ytlSyncTimeout = Timeout(properties.getOrElse("suoritusrekisteri.ytl.sync.timeout.seconds", "60").toLong, SECONDS)
-  override val ytlSyncRetries = properties.getOrElse("suoritusrekisteri.ytl.sync.retries", "5").toInt
-  override val ytlSyncParallelism: Int = properties.getOrElse("suoritusrekisteri.ytl.sync.parallelism", "10").toInt
+  override val ytlSyncTimeout = Timeout(getPropertyOrCrash("suoritusrekisteri.ytl.sync.timeout.seconds", "configuration key missing: suoritusrekisteri.ytl.sync.timeout.seconds").toLong, SECONDS)
+  override val ytlSyncRetries = getPropertyOrCrash("suoritusrekisteri.ytl.sync.retries", "configuration key missing: suoritusrekisteri.ytl.sync.retries").toInt
+  override val ytlSyncParallelism: Int = getPropertyOrCrash("suoritusrekisteri.ytl.sync.parallelism", "configuration key missing: suoritusrekisteri.ytl.sync.parallelism").toInt
 }
 
 class MockDevConfig extends Config {
