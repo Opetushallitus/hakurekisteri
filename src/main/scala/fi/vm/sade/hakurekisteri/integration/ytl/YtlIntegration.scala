@@ -1,11 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.concurrent.atomic.{AtomicReference}
 import java.util.concurrent.{Executors, TimeUnit}
 import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 
-import akka.actor.ActorRef
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
@@ -17,7 +16,7 @@ import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
 import scala.concurrent._
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 
@@ -29,7 +28,7 @@ class YtlIntegration(properties: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      hakemusService: IHakemusService,
                      oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-                     ytlActor: ActorRef,
+                     ytlKokelasPersister: KokelasPersister,
                      config: Config) {
   private val logger = LoggerFactory.getLogger(getClass)
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
@@ -48,7 +47,7 @@ class YtlIntegration(properties: OphProperties,
           case Some(personOid) =>
             hakemus.hetu match {
               case Some(hetu) =>
-                logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+                logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL hakemus=$hakemus")
                 ytlHttpClient.fetchOne(hetu) match {
                   case None =>
                     val noData = s"No YTL data for hakemus ${hakemus.oid}"
@@ -56,8 +55,14 @@ class YtlIntegration(properties: OphProperties,
                     Failure(new RuntimeException(noData))
                   case Some((json, student)) =>
                     val kokelas = StudentToKokelas.convert(personOid, student)
-                    persistKokelas(kokelas, personOidsWithAliases)
-                    Success(kokelas)
+                    val persistKokelasStatus = ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases))
+                    try {
+                      Await.result(persistKokelasStatus, config.ytlSyncTimeout.duration + 10.seconds)
+                      Success(kokelas)
+                    } catch {
+                      case e: Throwable =>
+                        Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
+                    }
                 }
               case None =>
                 val noHetu = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
@@ -110,7 +115,7 @@ class YtlIntegration(properties: OphProperties,
   /**
     * Begins async synchronization. Throws an exception if an error occurs during it.
     */
-  def syncAll(): Unit = {
+  def syncAll(failureEmailSender: FailureEmailSender = new RealFailureEmailSender): Unit = {
     val fetchStatus = newFetchStatus
     val currentStatus = atomicUpdateFetchStatus(currentStatus => {
       Option(currentStatus) match {
@@ -137,89 +142,95 @@ class YtlIntegration(properties: OphProperties,
       fetchInChunks(activeKKHakuOids.get()).onComplete {
         case Success(persons) =>
           logger.info(s"(Group UUID: ${currentStatus.uuid} ) success fetching personOids, total found: ${persons.size}.")
-          handleHakemukset(currentStatus.uuid, persons)
+          handleHakemukset(currentStatus.uuid, persons, failureEmailSender)
 
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service", e)
-          sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+          failureEmailSender.sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
           atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
           throw e
       }
     }
   }
 
-  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
+  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid],
+                               failureEmailSender: FailureEmailSender): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
-    val personOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
+    val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
-    val allSucceeded = new AtomicBoolean(true)
     try {
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
-          logger.error(s"failed to fetch YTL data (patch ${index + 1}/$count): ${e.getMessage}", e)
-          allSucceeded.set(false)
+          logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
         case (Right((zip, students)), index) =>
           try {
-            logger.info(s"Fetch succeeded on YTL data patch ${index + 1}/$count!")
-            students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
-              case Some(personOid) =>
-                Try(StudentToKokelas.convert(personOid, student)) match {
-                  case Success(candidate) => Some(candidate)
-                  case Failure(exception) =>
-                    logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
-                    None
-                }
-              case None =>
-                logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
-                None
-            }).foreach(kokelas => persistKokelas(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+            logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
+            val kokelaksetToPersist: Iterator[Kokelas] =
+              students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
+                case Some(personOid) =>
+                  Try(StudentToKokelas.convert(personOid, student)) match {
+                    case Success(candidate) => Some(candidate)
+                    case Failure(exception) =>
+                      logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
+                      None
+                  }
+                case None =>
+                  logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
+                  None
+              })
+            val futureForAllKokelasesToPersist: Future[Unit] = SequentialBatchExecutor.runInBatches(
+                kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
+                    ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+                })
+            futureForAllKokelasesToPersist onComplete {
+              case Success(_) =>
+                logger.info(s"Finished YTL syncAll! All batches succeeded!")
+                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(true), end = Some(new Date())))
+              case Failure(e) =>
+                logger.error(s"Failed to persist all kokelas", e)
+                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
+                failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+            }
           } finally {
             IOUtils.closeQuietly(zip)
           }
       }
     } catch {
       case e: Throwable =>
-        allSucceeded.set(false)
+        atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
         logger.error(s"YTL sync all failed!", e)
-    } finally {
-      logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
-      val msg = Option(allSucceeded.get()).filter(_ == true).map(_ => "successfully").getOrElse("with failing patches!")
-      if (!allSucceeded.get()) {
-        sendFailureEmail(msg)
-      }
-      logger.info(s"Ytl sync ended $msg!")
-      atomicUpdateFetchStatus(l => l.copy(succeeded = Some(allSucceeded.get()), end = Some(new Date())))
     }
   }
 
-  private def persistKokelas(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases): Unit = {
-    ytlActor ! KokelasWithPersonAliases(kokelas, personOidsWithAliases)
-  }
-
-  private def sendFailureEmail(txt: String): Unit = {
-
-    val session = Session.getInstance(config.email.getAsJavaProperties())
-    var msg = new MimeMessage(session)
-    msg.setText(txt)
-    msg.setSubject("YTL sync all failed")
-    msg.setFrom(new InternetAddress(config.email.smtpSender))
-    var tr = session.getTransport("smtp")
-    try {
-      val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisteri.ytl.error.report.recipients","")
-        .split(",").map(address => {
-        new InternetAddress(address)
-      })
-      msg.setRecipients(RecipientType.TO, recipients)
-      tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
-      msg.saveChanges()
-      tr.sendMessage(msg, msg.getAllRecipients)
-    } catch {
-      case e: Throwable =>
-        logger.error("Could not send email", e)
-    } finally {
-      tr.close()
+  private class RealFailureEmailSender extends FailureEmailSender {
+    override def sendFailureEmail(txt: String): Unit = {
+      val session = Session.getInstance(config.email.getAsJavaProperties())
+      var msg = new MimeMessage(session)
+      msg.setText(txt)
+      msg.setSubject("YTL sync all failed")
+      msg.setFrom(new InternetAddress(config.email.smtpSender))
+      var tr = session.getTransport("smtp")
+      try {
+        val recipients: Array[javax.mail.Address] = config.properties.getOrElse("suoritusrekisteri.ytl.error.report.recipients","")
+          .split(",").map(address => {
+          new InternetAddress(address)
+        })
+        msg.setRecipients(RecipientType.TO, recipients)
+        tr.connect(config.email.smtpHost, config.email.smtpUsername, config.email.smtpPassword)
+        msg.saveChanges()
+        logger.debug(s"Sending failure email to $recipients (text=$msg)")
+        tr.sendMessage(msg, msg.getAllRecipients)
+      } catch {
+        case e: Throwable =>
+          logger.error("Could not send email", e)
+      } finally {
+        tr.close()
+      }
     }
   }
 }
 
+abstract class FailureEmailSender {
+  def sendFailureEmail(txt: String): Unit
+}

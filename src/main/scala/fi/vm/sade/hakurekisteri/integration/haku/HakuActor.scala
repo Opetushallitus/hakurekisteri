@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.ytl.{HakuList, YtlIntegration}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
 
@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
+class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   var storedHakus: Seq[Haku] = Seq()
@@ -62,7 +62,6 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
       val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
       val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
-      ytl ! HakuList(ytlHakuOids)
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
       koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)

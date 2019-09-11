@@ -17,10 +17,10 @@ import scala.xml.Elem
 
 
 class YtlJsonSpec extends ScalatraFunSuite {
+
   implicit val formats = Student.formatsStudent
 
-
-  test("Parse async YTL json") {
+test("Parse async YTL json") {
   val (a,b) = ylioppilaatJson.splitAt(ylioppilaatJson.length/2)
   val async = StudentAsyncParser()
   async.feedChunk(a).size should equal(0)

@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.ActorSystem
-import akka.testkit.TestProbe
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.ytl._
@@ -15,7 +14,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @RunWith(classOf[JUnitRunner])
 class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMockFixture with MockFactory {
@@ -27,14 +26,19 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   val fileSystem = YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
   val config: Config = new MockConfig
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri, new TestProbe(system).ref, config)
+
+  val successfulYtlKokelasPersister: KokelasPersister = mock[KokelasPersister]
+  (successfulYtlKokelasPersister.persistSingle(_: KokelasWithPersonAliases)(_: ExecutionContext)).expects(*, *).returns(Future.unit)
+
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri,
+    successfulYtlKokelasPersister, config)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
   val answers = HakemusAnswers(henkilotiedot= Some(HakemusHenkilotiedot(Henkilotunnus=Some("050996-9574"))))
   val hakemusWithPersonOidEnding9574 = Future.successful(Seq(FullHakemus("",Some("050996-9574"),someKkHaku,Some(answers),Some("ACTIVE"),Seq(),Seq())))
 
-  addServlet(new YtlResource(null, ytlIntegration), "/*")
+  addServlet(new YtlResource(ytlIntegration), "/*")
 
   val endPoint = mock[Endpoint]
 
