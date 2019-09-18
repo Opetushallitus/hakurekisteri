@@ -76,7 +76,7 @@ class SuoritusResource
       Right(s)
     } catch {
       case e: Exception =>
-        logger.info("Failed to parse Suoritus: " + e)
+        logger.error("Suoritus resource creation failed from {} : {} ", parsedBody, e)
         Left(ValidationError("Suoritus parsing failed", None, Some(e)))
     }
   }

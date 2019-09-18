@@ -57,7 +57,7 @@ class OpiskeluoikeusResource (opiskeluoikeusActor: ActorRef)
       ))
     } catch {
       case e: Exception =>
-        logger.error("Opiskeluoikeus resource creation failed: " + e + ", " + e.getMessage)
+        logger.error("Opiskeluoikeus resource creation failed from {} : {} ", parsedBody, e)
         Left(ValidationError("Opiskeluoikeus parsing failed", None, Some(e)))
     }
   }

@@ -62,7 +62,7 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
       Right(a)
     } catch {
       case e: Exception =>
-        logger.error("Failed to parse Arvosana: " + e.printStackTrace())
+        logger.error("Arvosana resource creation failed from {} : {} ", parsedBody, e)
       Left(ValidationError("Arvosana parsing failed", None, Some(e)))
     }
   }

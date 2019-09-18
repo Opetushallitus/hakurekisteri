@@ -25,7 +25,7 @@ class OpiskelijaResource(opiskelijaActor: ActorRef)
       mandatoryFields.foreach(f =>
         if (!bodyValues.contains(f)) {
           logger.error("failed: " + f)
-          throw ValidationError(message = f + " on pakollinen tieto")
+          throw ValidationError(message = f + " on pakollinen tieto", field = Some(f))
         })
 
       Right(Opiskelija(
@@ -39,7 +39,7 @@ class OpiskelijaResource(opiskelijaActor: ActorRef)
       )
     } catch {
       case e: Exception =>
-        logger.error("Opiskelija resource creation failed: " + e)
+        logger.error("Opiskelija resource creation failed from {} : {} ", parsedBody, e)
         Left(ValidationError(e.getMessage, None, Some(e)))
     }
   }
