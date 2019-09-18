@@ -47,7 +47,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
 
   $routeProvider.when "/tiedonsiirto",
     redirectTo: (routeParams, currentLocation, search) ->
-      "/tiedonsiirto/lahetys"
+      "/tiedonsiirto/hakeneet"
 
   $routeProvider.when "/tiedonsiirto/kkhakeneet",
     templateUrl: "templates/hakeneet.html?aste=kk"
