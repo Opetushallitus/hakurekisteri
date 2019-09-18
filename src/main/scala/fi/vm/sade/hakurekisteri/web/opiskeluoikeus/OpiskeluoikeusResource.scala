@@ -35,10 +35,8 @@ class OpiskeluoikeusResource (opiskeluoikeusActor: ActorRef)
   override def parseResourceFromBody(user: String): Either[ValidationError, Opiskeluoikeus] = {
     try {
       val bodyValues = parsedBody.extract[Map[String, JValue]]
-      logger.info("Opiskeluoikeus body: " + bodyValues)
-      logger.info("Opiskeluoikeus keys: " + bodyValues.keySet)
-      //val mandatoryFields = Seq("alkuPaiva", "henkiloOid", "komo", "myontaja")
-      //mandatoryFields.foreach(f => if (!bodyValues.contains(f)) throw ValidationError(message = f + " on pakollinen tieto"))
+      val errors = checkMandatory(Seq("henkiloOid", "komo", "myontaja", "aika"), bodyValues)
+      if (errors.nonEmpty) throw ValidationError(message = errors.toString())
 
       val aika = bodyValues("aika").extract[Map[String, JValue]]
       logger.info("aika: " + aika)
@@ -56,9 +54,12 @@ class OpiskeluoikeusResource (opiskeluoikeusActor: ActorRef)
         source = user
       ))
     } catch {
+      case e: ValidationError =>
+        logger.error("Opiskeluoikeus resource creation failed: {}, body: {}", e.message, parsedBody)
+        Left(e)
       case e: Exception =>
-        logger.error("Opiskeluoikeus resource creation failed from {} : {} ", parsedBody, e)
-        Left(ValidationError("Opiskeluoikeus parsing failed", None, Some(e)))
+        logger.error("Opiskeluoikeus resource creation failed: {}, body: {} ", e, parsedBody)
+        Left(ValidationError(e.getMessage, None, Some(e)))
     }
   }
 }

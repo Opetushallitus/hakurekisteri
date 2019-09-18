@@ -41,6 +41,9 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
     try {
       logger.info("pbody: " + parsedBody)
       val bodyValues = parsedBody.extract[Map[String, JValue]]
+      val errors = checkMandatory(Seq("suoritus", "arvio", "aine"), bodyValues)
+      if (errors.nonEmpty) throw ValidationError(message = errors.toString())
+
       logger.info("arvosana " + bodyValues)
       val arvio = bodyValues("arvio").extract[Map[String, JValue]]
 
@@ -61,9 +64,12 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
       logger.info("Success, returning parsed arvosana: " + a)
       Right(a)
     } catch {
+      case e: ValidationError =>
+        logger.error("Arvosana resource creation failed: {}, body: {}", e.message, parsedBody)
+        Left(e)
       case e: Exception =>
-        logger.error("Arvosana resource creation failed from {} : {} ", parsedBody, e)
-      Left(ValidationError("Arvosana parsing failed", None, Some(e)))
+        logger.error("Arvosana resource creation failed: {}, body: {} ", e, parsedBody)
+        Left(ValidationError(e.getMessage, None, Some(e)))
     }
   }
 }
