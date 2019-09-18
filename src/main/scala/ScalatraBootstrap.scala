@@ -3,14 +3,12 @@ import java.nio.file.Path
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
-import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3, HakijaResourceV4}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
@@ -82,8 +80,6 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
-    val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
-
     context.setInitParameter(org.scalatra.EnvironmentKey, "production")
     if("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
       context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
@@ -105,10 +101,6 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/komo", "komo") -> new GuiServlet,
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(suoritusActor = registers.suoritusRekisteri, opiskelijaActor = registers.opiskelijaRekisteri, hakemusBasedPermissionCheckerActor = integrations.hakemusBasedPermissionChecker),
-    ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
-    ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
-    ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
-    ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
     ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp(java.lang.Boolean.valueOf(config.properties.getOrElse("suoritusrekisteri.swagger.https", "false"))),
     ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.suoritusRekisteri),
     ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
@@ -139,19 +131,6 @@ class ScalatraBootstrap extends LifeCycle {
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
     ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
   )
-
-  private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =
-    system.actorOf(Props(new ImportBatchProcessingActor(
-      authorizedRegisters.eraOrgRekisteri,
-      authorizedRegisters.eraRekisteri,
-      integrations.henkilo,
-      authorizedRegisters.suoritusRekisteri,
-      authorizedRegisters.opiskelijaRekisteri,
-      integrations.organisaatiot,
-      authorizedRegisters.arvosanaRekisteri,
-      integrations.koodisto,
-      config
-    )), "importBatchProcessing")
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) {
     implicit val sc = context
