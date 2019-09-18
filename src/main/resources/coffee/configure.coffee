@@ -14,14 +14,6 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
     templateUrl: "templates/eihakeneet.html"
     controller: "EihakeneetCtrl"
 
-  $routeProvider.when "/tiedonsiirto/lahetys",
-    templateUrl: "templates/tiedonsiirto.html"
-    controller: "TiedonsiirtoCtrl"
-
-  $routeProvider.when "/tiedonsiirto/tila",
-    templateUrl: "templates/tiedonsiirtotila.html"
-    controller: "TiedonsiirtotilaCtrl"
-
   $routeProvider.when "/tiedonsiirto/hakeneet",
     templateUrl: "templates/hakeneet.html"
     controller: "HakeneetCtrl"
