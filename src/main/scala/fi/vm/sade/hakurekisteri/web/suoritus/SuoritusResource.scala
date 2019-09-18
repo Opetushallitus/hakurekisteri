@@ -55,7 +55,9 @@ class SuoritusResource
   override def parseResourceFromBody(user: String): Either[ValidationError, Suoritus] = {
     try {
       val bodyValues = parsedBody.extract[Map[String, JValue]]
-      logger.info("bodyValues: " + bodyValues)
+      //logger.info("bodyValues: " + bodyValues)
+      val errors = checkMandatory(Seq("komo", "myontaja", "tila", "valmistuminen", "henkiloOid", "suoritusKieli"), bodyValues)
+      if (errors.nonEmpty) throw ValidationError(message = errors.toString())
       val vahv = if (bodyValues.contains("vahvistettu")) bodyValues("vahvistettu").extract[Boolean] else false
       val yks = if (bodyValues.contains("yksilollistaminen")) bodyValues("yksilollistaminen").extract[Yksilollistetty] else yksilollistaminen.Ei
       val s = VirallinenSuoritus(
@@ -75,9 +77,12 @@ class SuoritusResource
       logger.info("yks: " + yks + ", source: " + bodyValues.get("yksilollistaminen"))
       Right(s)
     } catch {
+      case e: ValidationError =>
+        logger.error("Suoritus resource creation failed: {}, body: {}", e.message, parsedBody)
+        Left(e)
       case e: Exception =>
-        logger.error("Suoritus resource creation failed from {} : {} ", parsedBody, e)
-        Left(ValidationError("Suoritus parsing failed", None, Some(e)))
+        logger.error("Suoritus resource creation failed: {}, body: {} ", e, parsedBody)
+        Left(ValidationError(e.getMessage, None, Some(e)))
     }
   }
 }

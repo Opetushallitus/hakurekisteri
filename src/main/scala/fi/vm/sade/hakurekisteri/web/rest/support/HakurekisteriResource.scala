@@ -12,7 +12,8 @@ import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import org.json4s.{DefaultFormats, Formats}
+import org.json4s.JsonAST.JNull
+import org.json4s.{DefaultFormats, Formats, JValue}
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.forms.{FormSupport, MappingValueType}
@@ -128,7 +129,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A]] extends ScalatraServlet 
   incident {
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: ValidationError => (id) =>
-      logger.info("incident ValidationError: " + t + ", " + t.error.map(_.getMessage))
+      //logger.info("incident ValidationError: " + t + ", " + t.error.map(_.getMessage))
       BadRequest(IncidentReport(id, t.error.map(_.getMessage).getOrElse("no message")))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
@@ -161,6 +162,30 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]]
   lazy val resourceName: String = className[A]
 
   def parseResourceFromBody(user: String): Either[ValidationError, A]
+
+  def checkMandatory(fields: Seq[String], bodyValues: Map[String, JValue]): Seq[String] = {
+    var errors: Seq[String] = Seq()
+    fields.foreach(f => {
+        try {
+          val value: Option[JValue] = bodyValues.get(f)
+          if (value.isEmpty) {
+            val msg = String.format("Pakollista kenttää %s ei löydy", f)
+            logger.error(msg)
+            errors = errors :+ msg
+          } else if (JNull.equals(value.get)) {
+            val msg = String.format("Pakollinen kenttä %s on null tai tyhjä ", f)
+            logger.error(msg)
+            errors = errors :+ msg
+          }
+        } catch {
+          case e: Exception =>
+            logger.error("Unexpected exception: " + e)
+            errors = errors :+ String.format("Virhe kentässä %s: %s", f, e.getMessage)
+        }
+    })
+    if (errors.nonEmpty) logger.error("errors in validation: " + errors)
+    errors
+  }
 
   protected implicit def executor: ExecutionContext = system.dispatcher
   val timeOut = 120
