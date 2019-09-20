@@ -20,7 +20,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
   val tarjontaMock: TarjontaActorRef = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
-  val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri, pageSize = 10)
+  val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri(), pageSize = 10)
 
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))

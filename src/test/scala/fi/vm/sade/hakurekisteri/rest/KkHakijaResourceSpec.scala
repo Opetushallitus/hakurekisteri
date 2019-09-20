@@ -31,7 +31,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   private val tarjontaMock = new TarjontaActorRef(mock[ActorRef])
-  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
+  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri())
   private val hakuMock = mock[ActorRef]
   private val suoritusMock = mock[ActorRef]
   private val valintaTulosMock = new ValintaTulosActorRef(mock[ActorRef])

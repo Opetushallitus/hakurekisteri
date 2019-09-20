@@ -90,7 +90,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   }
 }
 
-object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
+class MockOppijaNumeroRekisteri(asiointiKieli: Option[Kieli] = Some(Kieli("fi"))) extends IOppijaNumeroRekisteri {
   implicit val formats = DefaultFormats
   val linkedTestPersonOids = Seq("1.2.246.562.24.58099330694", "1.2.246.562.24.67587718272")
 
@@ -121,14 +121,20 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
       kansalaisuus = List(Kansalaisuus("246")),
       syntymaaika = Some("1989-09-24"),
       sukupuoli = Some("1"),
-      asiointiKieli = Some(Kieli("fi")),
+      asiointiKieli = asiointiKieli,
       turvakielto = Some(false)
     )
   }.toMap)
 }
 
+object MockOppijaNumeroRekisteri {
+  def apply(asiointiKieli: Option[Kieli] = Some(Kieli("fi"))): MockOppijaNumeroRekisteri = {
+    new MockOppijaNumeroRekisteri(asiointiKieli)
+  }
+}
+
 object MockPersonAliasesProvider extends PersonAliasesProvider {
-  override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = MockOppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
+  override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = MockOppijaNumeroRekisteri().enrichWithAliases(henkiloOids)
 }
 
 case class HenkiloViite(henkiloOid: String, masterOid: String)

@@ -39,7 +39,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
   private val tarjontaMock = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
-  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
+  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri())
 
   private val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", "hakutapa_01#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
   private val kausiKoodiS = TarjontaKoodi(Some("S"))
@@ -136,21 +136,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should convert ilmoittautumiset into sequence in syksyn haku") {
-    val haku = Haku(
-      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
-      oid = "1.2.3",
-      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
-      kausi = "kausi_s#1",
-      vuosi = 2014,
-      koulutuksenAlkamiskausi = Some("kausi_k#1"),
-      koulutuksenAlkamisvuosi = Some(2015),
-      kkHaku = true,
-      toisenAsteenHaku = false,
-      viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
-      "hakutapa_01#1"
-    )
-
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus1))
 
     val sijoitteluTulos = SijoitteluTulos(
@@ -166,21 +151,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should convert ilmoittautumiset into sequence in kevään haku") {
-    val haku = Haku(
-      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
-      oid = "1.2.3",
-      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
-      kausi = "kausi_k#1",
-      vuosi = 2015,
-      koulutuksenAlkamiskausi = Some("kausi_s#1"),
-      koulutuksenAlkamisvuosi = Some(2015),
-      kkHaku = true,
-      toisenAsteenHaku = false,
-      viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
-      "hakutapa_01#1"
-    )
-
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus2))
 
     val sijoitteluTulos = SijoitteluTulos(
@@ -196,21 +166,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should convert ilmoittautumiset into sequence in syksy haku but koulutus start season in next year syksy") {
-    val haku = Haku(
-      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
-      oid = "1.2.3",
-      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
-      kausi = "kausi_s#1",
-      vuosi = 2015,
-      koulutuksenAlkamiskausi = Some("kausi_s#1"),
-      koulutuksenAlkamisvuosi = Some(2016),
-      kkHaku = true,
-      toisenAsteenHaku = false,
-      viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
-      "hakutapa_01#1"
-    )
-
     val koulutusSyksy = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
 
@@ -329,6 +284,19 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should not have FI as default aidinkieli, asiointikieli or koulusivistyskieli") {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
+
+    val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
+
+    hakijat.last.aidinkieli should be ("99")
+    hakijat.last.asiointikieli should be ("9") // Default is not empty!
+    hakijat.last.koulusivistyskieli should be ("99")
+  }
+
+  test("PETAR should get asiointikieli from hakemus if not found in ONR") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
