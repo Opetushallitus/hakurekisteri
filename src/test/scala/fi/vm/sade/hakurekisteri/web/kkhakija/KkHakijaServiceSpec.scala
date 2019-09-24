@@ -25,6 +25,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import fi.vm.sade.utils.slf4j.Logging
 import org.joda.time.{DateTime, LocalDate}
 import org.mockito.Mockito._
+import org.scalatest.Assertion
 import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -296,18 +297,32 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     hakijat.last.koulusivistyskieli should be ("99")
   }
 
-  test("PETAR should get asiointikieli from hakemus if not found in ONR") {
+  def testFallbackAsiointikieli(apiVersion: Int): Assertion = {
+    val hakemusServiceWithNoAsiointikieliInOnr =
+      new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri(asiointiKieli = None))
+    val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
+      hakemusServiceWithNoAsiointikieliInOnr, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock,
+      suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
-      .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+      .thenReturn((200, List(), "{}"))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
-      .thenReturn((200, List(), "{\"applications\": []}"))
+      .thenReturn((200, List(), getJson("ataruApplications")))
 
-    val hakijat = Await.result(service.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 1), 15.seconds)
+    val hakijat = Await.result(
+      serviceThatShouldTakeAsiointikieliFromHakemus.getKkHakijat(
+        KkHakijaQuery(
+          Some("1.2.246.562.24.91842462815"), None, None, None, Some("ryhma"),
+          Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))),
+        version = apiVersion), 15.seconds
+    )
 
-    hakijat.last.aidinkieli should be ("99")
-    hakijat.last.asiointikieli should be ("9") // Default is not empty!
-    hakijat.last.koulusivistyskieli should be ("99")
+    hakijat.size should be (2)
+    hakijat.last.asiointikieli should be ("1") // Finnish, and not default
   }
+
+  test("v2 should get asiointikieli from hakemus if not found in ONR")(testFun = testFallbackAsiointikieli(2))
+
+  test("v3 should get asiointikieli from hakemus if not found in ONR")(testFun = testFallbackAsiointikieli(3))
 
   test("should return default kansalaisuus, asuinmaa, kotikunta") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
