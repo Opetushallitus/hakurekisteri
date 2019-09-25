@@ -9,7 +9,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, Kieli, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
@@ -167,12 +167,15 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           val (tarjoajaOid, parentOids) = tarjoajaAndParentOids(hakukohdeOid)
           HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, Some(tarjoajaOid), parentOids, None, None, None, None, None)
       }
+      def henkiloWithFallbackAsiointiKieli(henkilo: Henkilo): Henkilo = {
+        if (henkilo.asiointiKieli.isEmpty) henkilo else henkilo.copy(asiointiKieli = Some(Kieli(hakemus.kieli.toLowerCase)))
+      }
       AtaruHakemus(
         oid = hakemus.oid,
         personOid = Some(hakemus.personOid),
         applicationSystemId = hakemus.applicationSystemId,
         hakutoiveet = Some(hakutoiveet),
-        henkilo = henkilot(hakemus.personOid),
+        henkilo = henkiloWithFallbackAsiointiKieli(henkilot(hakemus.personOid)),
         email = hakemus.email,
         matkapuhelin = hakemus.matkapuhelin,
         lahiosoite = hakemus.lahiosoite,

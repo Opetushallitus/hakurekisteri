@@ -317,12 +317,17 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     )
 
     hakijat.size should be (2)
-    hakijat.last.asiointikieli should be ("1") // Finnish, and not default
+    val finnish = "1"
+    val english = "3"
+    val default = "9"
+    hakijat.exists(_.asiointikieli == finnish) should be (true)
+    hakijat.exists(_.asiointikieli == english) should be (true)
+    hakijat.exists(_.asiointikieli == default) should be (false)
   }
 
-  test("v2 should get asiointikieli from hakemus if not found in ONR")(testFun = testFallbackAsiointikieli(2))
+  test("v2 should get asiointikieli from ataru hakemus if not found in ONR")(testFun = testFallbackAsiointikieli(2))
 
-  test("v3 should get asiointikieli from hakemus if not found in ONR")(testFun = testFallbackAsiointikieli(3))
+  test("v3 should get asiointikieli from ataru hakemus if not found in ONR")(testFun = testFallbackAsiointikieli(3))
 
   test("should return default kansalaisuus, asuinmaa, kotikunta") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))

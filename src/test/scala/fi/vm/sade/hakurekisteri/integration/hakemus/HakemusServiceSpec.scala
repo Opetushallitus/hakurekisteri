@@ -22,6 +22,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri(), pageSize = 10)
 
+  behavior of "hakemuksetForPerson"
+
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
@@ -30,6 +32,27 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
 
     Await.result(hakemusService.hakemuksetForPerson("1.2.246.562.24.81468276424"), 10.seconds).size should be (2)
   }
+
+  it should "return applications from ataru by person oid" in {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), "{}"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), getJson("ataruApplications")))
+    val expectedPersonOid = "1.2.246.562.24.91842462815"
+
+    val hakemukset = Await.result(hakemusService.hakemuksetForPerson(expectedPersonOid), 10.seconds)
+
+    hakemukset.size should be(2)
+    hakemukset.forall(_.personOid == Some(expectedPersonOid)) should be(true)
+  }
+
+  behavior of "enrichAtaruHakemukset"
+
+  it should "use asiointiKieli from ataru hakemus if person (from ONR) does not have its own" in {
+
+  }
+
+  behavior of "hakemusForPersonsInHaku"
 
   it should "return applications when searching with both persons and application system" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
@@ -47,6 +70,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       persons.contains(application.personOid.get) should be(true)
     })
   }
+
+  behavior of "hakemusForHakukohde"
 
   it should "return applications by application option oid" in {
     when(endPoint.request(forPattern(".*listfull.*")))
@@ -70,7 +95,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (20)
   }
 
-  it should "execute trigger function for modified applications" in {
+  "processModifiedHakemukset" should "execute trigger function for modified applications" in {
     val system = ActorSystem("hakurekisteri")
     implicit val scheduler = system.scheduler
 
@@ -118,7 +143,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     triggerCounter should equal(2)
   }
 
-  it should "return hetus and personOids" in {
+  "hetuAndPersonOidForHaku" should "return hetus and personOids" in {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("hetuAndPersonOid")))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
