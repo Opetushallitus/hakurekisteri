@@ -28,7 +28,7 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
   })
   val koskiDataHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val koskiService = new KoskiService(virkailijaRestClient = client,
-    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri(), pageSize = 10,
+    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, pageSize = 10,
     hakemusService = new HakemusServiceMock(),
     koskiDataHandler = koskiDataHandler,
     config = new MockConfig)

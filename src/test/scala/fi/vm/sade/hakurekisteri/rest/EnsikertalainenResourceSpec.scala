@@ -66,7 +66,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
       }
     })),
     hakemusService = hakemusServiceMock,
-    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri()
+    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   ))), hakemusService = hakemusServiceMock), "/ensikertalainen")
 
   test("returns 200 ok") {

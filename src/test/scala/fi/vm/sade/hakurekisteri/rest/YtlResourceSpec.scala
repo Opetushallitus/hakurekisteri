@@ -30,7 +30,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
   val successfulYtlKokelasPersister: KokelasPersister = mock[KokelasPersister]
   (successfulYtlKokelasPersister.persistSingle(_: KokelasWithPersonAliases)(_: ExecutionContext)).expects(*, *).returns(Future.unit)
 
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri(),
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri,
     successfulYtlKokelasPersister, config)
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))

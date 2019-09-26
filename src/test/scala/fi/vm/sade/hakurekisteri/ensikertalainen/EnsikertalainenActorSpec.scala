@@ -193,7 +193,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
         }
       })),
       hakemusService = hakemusServiceMock,
-      oppijaNumeroRekisteri = MockOppijaNumeroRekisteri()
+      oppijaNumeroRekisteri = MockOppijaNumeroRekisteri
     ) {
       override val sizeLimitForFetchingByPersons: Int = 1
     })), valintarekisteri)

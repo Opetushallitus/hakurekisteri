@@ -20,7 +20,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
   val tarjontaMock: TarjontaActorRef = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
-  val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri(), pageSize = 10)
+  val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri, pageSize = 10)
 
   behavior of "hakemuksetForPerson"
 
@@ -48,8 +48,27 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
 
   behavior of "enrichAtaruHakemukset"
 
-  it should "use asiointiKieli from ataru hakemus if person (from ONR) does not have its own" in {
+  it should "use asiointiKieli from ataru hakemus (and NOT from person from ONR)" in {
+    val asiointiKieliFromOnr = "fi"
+    val asiointiKieliFromHakemus = "en"
+    val personOid = "1.2.3.4.5.6"
+    val ataruHenkilo = henkilo.Henkilo(
+      "ataruHenkiloOid", Some("ataruHetu"),
+      "OPPIJA", None, None, None, None, List(),
+      None, None,
+      asiointiKieli = Some(henkilo.Kieli(asiointiKieliFromOnr)),
+      turvakielto = Some(false))
+    val ataruHakemusDto = AtaruHakemusDto(
+      "ataruOid", personOid, "",
+      kieli = asiointiKieliFromHakemus,
+      List(), "", "", "", "", None, None,
+      "", false, false, Map(), Map(), List(), None)
 
+    val ataruHakemukset: List[AtaruHakemus] =
+      Await.result(hakemusService.enrichAtaruHakemukset(List(ataruHakemusDto), Map(personOid -> ataruHenkilo)), 10.seconds)
+
+    ataruHakemukset.size should be(1)
+    ataruHakemukset(0).asiointiKieli should be(asiointiKieliFromHakemus)
   }
 
   behavior of "hakemusForPersonsInHaku"
@@ -134,11 +153,11 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     val ataruHenkilo = henkilo.Henkilo("ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, None, turvakielto = Some(false))
 
     trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
+    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), "hakuOid", None, ataruHenkilo, "fi", "email", "matkapuhelin", "lahiosoite", "postinumero",
       Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", true, true, Map.empty, Map.empty, List.empty, None), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
     trigger.f(FullHakemus("oid", None, "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    trigger.f(AtaruHakemus("ataruOid", None, "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
+    trigger.f(AtaruHakemus("ataruOid", None, "hakuOid", None, ataruHenkilo, "en", "email", "matkapuhelin", "lahiosoite", "postinumero",
       Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", true, true, Map.empty, Map.empty, List.empty, None), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
   }

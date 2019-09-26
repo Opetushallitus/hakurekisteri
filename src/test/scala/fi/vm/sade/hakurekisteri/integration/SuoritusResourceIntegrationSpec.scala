@@ -26,9 +26,8 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
   val aarnenLukioValmistuminen = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "VALMIS")
   val tyynenPeruskoulu = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", peruskouluKomo, "KESKEN")
 
-  val mockOppijaNumeroRekisteri = MockOppijaNumeroRekisteri()
-  val linkedOid1: String = mockOppijaNumeroRekisteri.linkedTestPersonOids.head
-  val linkedOid2: String = mockOppijaNumeroRekisteri.linkedTestPersonOids(1)
+  val linkedOid1: String = MockOppijaNumeroRekisteri.linkedTestPersonOids.head
+  val linkedOid2: String = MockOppijaNumeroRekisteri.linkedTestPersonOids(1)
 
   def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset")
   def postArvosana(arvosana: String): String = postResourceJson(arvosana, "arvosanat")

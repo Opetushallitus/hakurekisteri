@@ -81,7 +81,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor(config = config)(system)))
   override val henkilo: HenkiloActorRef = new HenkiloActorRef(mockActor("henkilo", new MockHenkiloActor(config)))
   override val tarjonta: TarjontaActorRef = new TarjontaActorRef(mockActor("tarjonta", new MockTarjontaActor(config)(system)))
-  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri()
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytlKokelasPersister = new YtlKokelasPersister(
     system,
     rekisterit.ytlSuoritusRekisteri,

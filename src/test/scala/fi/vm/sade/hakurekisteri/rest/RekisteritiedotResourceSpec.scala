@@ -84,7 +84,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
     }
   }))
 
-  val resource = new RekisteritiedotResource(rekisterit, mock[IHakemusService], notImplementedActor, MockOppijaNumeroRekisteri())
+  val resource = new RekisteritiedotResource(rekisterit, mock[IHakemusService], notImplementedActor, MockOppijaNumeroRekisteri)
 
   addServlet(resource, "/*")
 

@@ -23,9 +23,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 class SuoritusJDBCActorSpec extends FlatSpec with BeforeAndAfterEach with  BeforeAndAfterAll with Matchers {
   val logger = LoggerFactory.getLogger(getClass)
 
-  val mockOppijaNumeroRekisteri = MockOppijaNumeroRekisteri()
-  val linkedOid1: String = mockOppijaNumeroRekisteri.linkedTestPersonOids.head
-  val linkedOid2: String = mockOppijaNumeroRekisteri.linkedTestPersonOids(1)
+  val linkedOid1: String = MockOppijaNumeroRekisteri.linkedTestPersonOids.head
+  val linkedOid2: String = MockOppijaNumeroRekisteri.linkedTestPersonOids(1)
   val originalSuoritus: VirallinenSuoritus = VirallinenSuoritus(komo = "komo", myontaja = "myontaja", tila = "KESKEN", valmistuminen = new LocalDate(),
     henkilo = linkedOid1, yksilollistaminen = yksilollistaminen.Ei, suoritusKieli = "FI", lahde = "1.2.246.562.10.1234", vahv = false)
 

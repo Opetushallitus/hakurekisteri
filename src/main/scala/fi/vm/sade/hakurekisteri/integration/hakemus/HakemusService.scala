@@ -167,7 +167,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           val (tarjoajaOid, parentOids) = tarjoajaAndParentOids(hakukohdeOid)
           HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, Some(tarjoajaOid), parentOids, None, None, None, None, None)
       }
-      def henkiloWithFallbackAsiointiKieli(henkilo: Henkilo): Henkilo = {
+      def asiointiKieliFromHakemusOrHenkilo(henkilo: Henkilo): Henkilo = {
         if (henkilo.asiointiKieli.isEmpty) henkilo else henkilo.copy(asiointiKieli = Some(Kieli(hakemus.kieli.toLowerCase)))
       }
       AtaruHakemus(
@@ -175,7 +175,8 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         personOid = Some(hakemus.personOid),
         applicationSystemId = hakemus.applicationSystemId,
         hakutoiveet = Some(hakutoiveet),
-        henkilo = henkiloWithFallbackAsiointiKieli(henkilot(hakemus.personOid)),
+        henkilo = henkilot(hakemus.personOid),
+        asiointiKieli = hakemus.kieli,
         email = hakemus.email,
         matkapuhelin = hakemus.matkapuhelin,
         lahiosoite = hakemus.lahiosoite,
