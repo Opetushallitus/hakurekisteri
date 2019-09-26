@@ -3,6 +3,12 @@
 injector = angular.injector(['ng']);
 $http = injector.get('$http');
 
+callerIdHeaderValue = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
+window.opintopolku_caller_id = callerIdHeaderValue
+
+$http.defaults.headers.common['Caller-Id'] = callerIdHeaderValue;
+$.ajaxSetup({headers: {callerIdHeaderName: callerIdHeaderValue}});
+
 plainUrls = undefined
 window.urls.load("suoritusrekisteri-web-oph.json", {overrides: "rest/v1/properties"}).then ->
   $http.get(window.url("cas.myroles"),
@@ -168,9 +174,6 @@ app.factory "MessageService", ->
   )
 
 app.run ["$http","$cookies", ($http, $cookies) ->
-  callerId = "1.2.246.562.10.00000000001.suoritusrekisteri.frontend"
-  $http.defaults.headers.common['Caller-Id'] = callerId;
-  if $cookies['CSRF']
     $http.defaults.headers.common['CSRF'] = $cookies['CSRF']
 ]
 app.filter "hilight", ->

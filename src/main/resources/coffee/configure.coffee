@@ -1,4 +1,7 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
+  $httpProvider.defaults.headers.common['Caller-Id'] = window.opintopolku_caller_id
+  $.ajaxSetup({headers: {callerIdHeaderName: window.opintopolku_caller_id}});
+
   $routeProvider.when "/opiskelijat",
     templateUrl: "templates/muokkaa-obd.html"
     controller: "MuokkaaSuorituksetObdCtrl"
