@@ -138,7 +138,7 @@ app.controller "HakeneetCtrl", [
           value: "Excel"
           text: "Excel"
         }
-      ]  if isKk() || $scope.rajapinnanVersio is 2
+      ]  if isKk() || $scope.rajapinnanVersio > 1
 
       return [
         {
