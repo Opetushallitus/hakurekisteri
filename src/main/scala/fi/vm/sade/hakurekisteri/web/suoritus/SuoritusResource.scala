@@ -55,7 +55,6 @@ class SuoritusResource
   override def parseResourceFromBody(user: String): Either[ValidationError, Suoritus] = {
     try {
       val bodyValues = parsedBody.extract[Map[String, JValue]]
-      //logger.info("bodyValues: " + bodyValues)
       val errors = checkMandatory(Seq("komo", "myontaja", "tila", "valmistuminen", "henkiloOid", "suoritusKieli"), bodyValues)
       if (errors.nonEmpty) throw ValidationError(message = errors.toString())
       val vahv = if (bodyValues.contains("vahvistettu")) bodyValues("vahvistettu").extract[Boolean] else false
