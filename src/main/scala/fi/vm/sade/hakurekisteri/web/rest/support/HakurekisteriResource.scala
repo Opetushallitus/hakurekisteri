@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import org.json4s.JsonAST.JNull
+import org.json4s.JsonAST.{JNull, JString}
 import org.json4s.{DefaultFormats, Formats, JValue}
 import org.scalatra._
 import org.scalatra.commands._
@@ -21,7 +21,6 @@ import org.scalatra.i18n.I18nSupport
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
-import org.scalatra.validation.{FieldName, ValidationError}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -29,9 +28,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 import scala.util.Try
 import scalaz.NonEmptyList
-
-import scala.reflect.ClassTag
-import scala.reflect.runtime.universe._
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A] with SecuritySupport with JsonSupport[_] =>
 
@@ -142,7 +138,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]]
 (actor: ActorRef, qb: Map[String, String] => Query[A])
 (implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A])
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport
-  with QueryLogging with SecuritySupport with FormSupport with I18nSupport {
+  with QueryLogging with SecuritySupport with I18nSupport with ValidationSupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -162,30 +158,6 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]]
   lazy val resourceName: String = className[A]
 
   def parseResourceFromBody(user: String): Either[ValidationError, A]
-
-  def checkMandatory(fields: Seq[String], bodyValues: Map[String, JValue]): Seq[String] = {
-    var errors: Seq[String] = Seq()
-    fields.foreach(f => {
-        try {
-          val value: Option[JValue] = bodyValues.get(f)
-          if (value.isEmpty) {
-            val msg = String.format("Pakollista kenttää %s ei löydy", f)
-            logger.error(msg)
-            errors = errors :+ msg
-          } else if (JNull.equals(value.get)) {
-            val msg = String.format("Pakollinen kenttä %s on null tai tyhjä ", f)
-            logger.error(msg)
-            errors = errors :+ msg
-          }
-        } catch {
-          case e: Exception =>
-            logger.error("Unexpected exception: " + e)
-            errors = errors :+ String.format("Virhe kentässä %s: %s", f, e.getMessage)
-        }
-    })
-    if (errors.nonEmpty) logger.error("errors in validation: " + errors)
-    errors
-  }
 
   protected implicit def executor: ExecutionContext = system.dispatcher
   val timeOut = 120
