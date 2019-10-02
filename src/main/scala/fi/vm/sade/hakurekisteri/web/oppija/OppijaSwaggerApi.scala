@@ -39,6 +39,7 @@ trait OppijaSwaggerApi
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
+    .tags("oppijat")
 
   val read = apiOperation[Oppija]("haeOppija")
     .summary("näyttää yhden oppijan tiedot")
@@ -53,6 +54,7 @@ trait OppijaSwaggerApi
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
+    .tags("oppijat")
 
   val post = apiOperation[Seq[Oppija]]("haeOppijatPost")
     .summary("näyttää oppijoiden tiedot oppijanumerolistan perusteella")
@@ -67,6 +69,7 @@ trait OppijaSwaggerApi
     .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("oppijat")
 
 }
 

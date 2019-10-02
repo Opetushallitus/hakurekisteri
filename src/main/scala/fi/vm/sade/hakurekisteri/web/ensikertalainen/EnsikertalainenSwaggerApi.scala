@@ -36,6 +36,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
+    .tags("ensikertalainen")
 
   val hakuQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudetHaulle")
     .summary("tarkistaa ovatko haun hakijat ensikertalaisia")
@@ -45,6 +46,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
+    .tags("ensikertalainen")
 
   val postQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudet")
     .summary("tarkistaa ovatko hakijat ensikertalaisia")
@@ -55,5 +57,6 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
+    .tags("ensikertalainen")
 
 }

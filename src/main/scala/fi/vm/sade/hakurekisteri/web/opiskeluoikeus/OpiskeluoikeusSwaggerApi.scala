@@ -15,23 +15,28 @@ trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: Hakure
     .description("Näyttää kaikki opiskeluoikeustiedot. Voit myös hakea eri parametreillä.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
     .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
+    .tags("opiskeluoikeudet")
 
   val create = apiOperation[Opiskeluoikeus]("lisääOpiskeluoikeus")
     .summary("luo opiskeluoikeustiedon ja palauttaa sen tiedot")
     .parameter(bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("uusi opiskeluoikeustieto").required)
+    .tags("opiskeluoikeudet")
 
   val update = apiOperation[Opiskeluoikeus]("päivitäOpiskeluoikeus")
     .summary("päivittää olemassa olevaa opiskeluoikeustietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("opiskeluoikeustiedot uuid").required)
     .parameter(bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("päivitettävä opiskeluoikeustieto").required)
+    .tags("opiskeluoikeudet")
 
   val read = apiOperation[Opiskeluoikeus]("haeOpiskeluoikeus")
     .summary("hakee opiskeluoikeustiedon tiedot")
     .parameter(pathParam[String]("id").description("opiskeluoikeustiedon uuid").required)
+    .tags("opiskeluoikeudet")
 
   val delete = apiOperation[Unit]("poistaOpiskeluoikeus")
     .summary("poistaa olemassa olevan opiskeluoikeustiedon")
     .parameter(pathParam[String]("id").description("opiskeluoikeustiedon uuid").required)
+    .tags("opiskeluoikeudet")
 }
 
 trait OpiskeluoikeusSwaggerModel extends OldSwaggerSyntax {

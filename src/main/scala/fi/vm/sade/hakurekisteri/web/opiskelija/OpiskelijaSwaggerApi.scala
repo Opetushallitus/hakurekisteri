@@ -20,23 +20,28 @@ trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriR
     .parameter(queryParam[Option[Date]]("paiva").description("päivä jonka tietoja haetaan"))
     .parameter(queryParam[Option[String]]("oppilaitosOid").description("oppilaitoksen oid"))
     .parameter(queryParam[Option[String]]("luokka").description("luokan nimi"))
+    .tags("opiskelijat")
 
   val create = apiOperation[Opiskelija]("lisääOpiskelija")
     .summary("luo opiskelijatiedon ja palauttaa sen tiedot")
     .parameter(bodyParam[Opiskelija]("opiskelija").description("uusi opiskelijatieto").required)
+    .tags("opiskelijat")
 
   val update = apiOperation[Opiskelija]("päivitäOpiskelija")
     .summary("päivittää olemassa olevaa opiskelijatietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("opiskelijatiedon uuid").required)
     .parameter(bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelijatieto").required)
+    .tags("opiskelijat")
 
   val read = apiOperation[Opiskelija]("haeOpiskelija")
     .summary("hakee opiskelijatiedon tiedot")
     .parameter(pathParam[String]("id").description("opiskelijatiedon uuid").required)
+    .tags("opiskelijat")
 
   val delete = apiOperation[Unit]("poistaOpiskelija")
     .summary("poistaa olemassa olevan opiskelutiedon")
     .parameter(pathParam[String]("id").description("opiskelutiedon uuid").required)
+    .tags("opiskelijat")
 
 }
 
