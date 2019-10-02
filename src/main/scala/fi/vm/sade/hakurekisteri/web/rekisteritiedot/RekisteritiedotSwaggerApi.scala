@@ -28,6 +28,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("rekisteritiedot")
 
   val queryPost = apiOperation[Seq[Oppija]]("haeOppijatOppijanumeroidenPerusteella")
     .summary("Näyttää oppijoiden tiedot")
@@ -37,6 +38,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("rekisteritiedot")
 
   val read = apiOperation[Oppija]("haeOppija")
     .summary("Näyttää yhden oppijan tiedot")
@@ -45,6 +47,7 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("rekisteritiedot")
 
   val light = apiOperation[Seq[LightWeightTiedot]]("haeOppijatKevyt")
     .summary("Näyttää kevennetyn version opiskelijatiedoista")
@@ -54,5 +57,6 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("rekisteritiedot")
 
 }

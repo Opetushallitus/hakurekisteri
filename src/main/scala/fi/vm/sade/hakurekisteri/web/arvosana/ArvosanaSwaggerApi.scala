@@ -15,23 +15,28 @@ trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { th
     .summary("näyttää kaikki arvosanat")
     .description("Näyttää kaikki arvosanat. Voit myös hakea suorituksella.")
     .parameter(queryParam[Option[String]]("suoritus").description("suorituksen uuid").required)
+    .tags("arvosanat")
 
   val create = apiOperation[Arvosana]("lisääArvosana")
     .summary("luo arvosanatiedon ja palauttaa sen tiedot")
     .parameter(bodyParam[Arvosana]("arvosana").description("uusi arvosanatietoa").required)
+    .tags("arvosanat")
 
   val update = apiOperation[Arvosana]("päivitäArvosana")
     .summary("päivittää olemassa olevaa arvosanatietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("arvosanan uuid").required)
     .parameter(bodyParam[Arvosana]("arvosana").description("päivitettävä arvosanatietoa").required)
+    .tags("arvosanat")
 
   val read = apiOperation[Arvosana]("haeArvosana")
     .summary("hakee arvosanatiedon tiedot")
     .parameter(pathParam[String]("id").description("arvosanatiedon uuid").required)
+    .tags("arvosanat")
 
   val delete = apiOperation[Unit]("poistaArvosana")
     .summary("poistaa olemassa olevan arvosanan tiedot")
     .parameter(pathParam[String]("id").description("arvosanatiedon uuid").required)
+    .tags("arvosanat")
 
 }
 
