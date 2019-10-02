@@ -41,6 +41,7 @@ script:
   - mvn clean install -B -DpostgresRunningOnPort=5432 -DargLine="-Dlog4j.configuration=file:./src/test/resources/log4j.properties"
 
   - mv target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
+  - jar xf $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar META-INF/native && mv META-INF/native $DOCKER_BUILD_DIR/native_libs
   - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
 
   - export BASE_IMAGE="baseimage-fatjar:jdk11"
