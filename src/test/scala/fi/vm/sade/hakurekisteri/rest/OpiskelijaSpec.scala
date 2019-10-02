@@ -62,7 +62,7 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   }
 
   test("send opiskelija with invalid loppuPaiva should return 400") {
-    val json = "{\"oppilaitosOid\":\"1.10.1\",\"luokktaso\":\"9\",\"luokka\":\"9A\",\"heniloOid\":\"1.24.1\",\"alkuPaiva\":\"2015-01-01T00:00:00.000Z\",\"loppuPaiva\":\"2014-12-31T00:00:00.000Z\"}"
+    val json = "{\"oppilaitosOid\":\"1.10.1\",\"luokkataso\":\"9\",\"luokka\":\"9A\",\"henkiloOid\":\"1.24.1\",\"alkuPaiva\":\"2015-01-01T00:00:00.000Z\",\"loppuPaiva\":\"2014-12-31T00:00:00.000Z\"}"
     post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
       status should be(400)
       body should include("loppuPaiva must be after alkuPaiva")
