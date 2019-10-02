@@ -88,7 +88,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "internal server error"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
-
+    .tags("hakijat")
 
   // V2 swagger
 
@@ -149,6 +149,6 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "internal server error"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
-
+    .tags("hakijat")
 
 }

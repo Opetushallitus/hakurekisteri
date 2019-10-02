@@ -103,5 +103,6 @@ trait KkHakijaSwaggerApiV3 extends SwaggerSupport with IncidentReportSwaggerMode
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
+    .tags("kk-hakijat")
 
 }
