@@ -171,25 +171,12 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     suoritusRekisteri ? DeleteResource(s.id, "koski-suoritukset")
   }
 
-  private def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus],
-                             personOidsWithAliases: PersonOidsWithAliases): Boolean = suoritukset.exists {
-    case s: VirallinenSuoritus =>
-      println(s"petar evo me unutar exists = $s s.core=${s.core} suor.core=${suor.core}")
-      val aliases: Set[String] = personOidsWithAliases.aliasesByPersonOids(personOidsWithAliases.henkiloOids.head)
-      if ((aliases contains suor.core.henkilo) && (aliases contains s.core.henkilo)) {
-        println(s"petar jednaki su ali jos i ovo treba da se izjednaci")
-        val a = suor.core.copy(henkilo = "already matches")
-        val b = s.core.copy(henkilo = "already matches")
-        println(s"petar a=$a, b=$b jednakost=${a==b}")
-        a == b
-      }
-      else
-        false
+  private def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
+    case s: VirallinenSuoritus => s.core == suor.core
     case _ => false
   }
 
   private def fetchExistingSuoritukset(henkiloOid: String, personOidsWithAliases: PersonOidsWithAliases): Future[Seq[Suoritus]] = {
-    println(s"petar eveo kao fetchujem henk=$henkiloOid, aliases=$personOidsWithAliases")
     val q = SuoritusQuery(henkilo = Some(henkiloOid))
     val f: Future[Any] = suoritusRekisteri ? SuoritusQueryWithPersonAliases(q, personOidsWithAliases)
     f.mapTo[Seq[Suoritus]].recoverWith {
@@ -215,14 +202,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
   }
 
-  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus,
-                                       arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate,
-                                       luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
+  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
     val opiskelija: Option[Opiskelija] = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
 
-    println(s"petar exi=$existingSuoritukset")
-
-    if (suoritusExists(useSuoritus, existingSuoritukset, personOidsWithAliases)) {
+    if (suoritusExists(useSuoritus, existingSuoritukset)) {
       val suoritus: VirallinenSuoritus with Identified[UUID] = existingSuoritukset.flatMap {
         case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
         case _ => None
@@ -230,17 +213,13 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
       logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
       val arvosanasFromKoski = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
-
-      println(s"petar apdejtujem useSuoritus=$useSuoritus, suoritus=$suoritus")
-
       updateSuoritus(suoritus, useSuoritus)
         .flatMap(_ => fetchArvosanat(suoritus))
         .flatMap(arvosanasInSure => syncArvosanas(arvosanasInSure, arvosanasFromKoski))
         .flatMap(_ => saveOpiskelija(opiskelija))
         .map(_ => SuoritusArvosanat(useSuoritus, arvosanasFromKoski,luokka, lasnaDate, luokkaTaso))
     } else {
-      println(s"petar sejvujem useSuoritus=$useSuoritus, person=$personOidsWithAliases")
-      logger.debug("Käsitellään uusi suoritus " + useSuoritus)
+      logger.debug(s"Käsitellään uusi suoritus $useSuoritus, personOidsWithAliases=$personOidsWithAliases")
       saveSuoritus(useSuoritus, personOidsWithAliases)
         .flatMap(suoritus => {
           val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
@@ -279,7 +258,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def updateArvosana(oldArvosana: Arvosana with Identified[UUID], newArvosana: Arvosana): Future[Any] = {
-    println(s"petar evo azuriram ocene")
     (arvosanaRekisteri ? oldArvosana.copy(arvio = newArvosana.arvio, lahdeArvot = newArvosana.lahdeArvot, source = newArvosana.source, myonnetty = newArvosana.myonnetty))
       .mapTo[Arvosana with Identified[UUID]].recoverWith
         { case t: AskTimeoutException =>
@@ -333,7 +311,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
             //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
             if (!useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
               (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))) {
-              println(s"petar evo me ovde personwithaliases=$personOidsWithAliases")
               saveSuoritusAndArvosanat(henkilöOid, fetchedSuoritukset, useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso, personOidsWithAliases).map((x: SuoritusArvosanat) => Right(Some(x)))
             } else {
               Future.successful(Right(None))
@@ -362,8 +339,25 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   def processHenkilonTiedotKoskesta(koskihenkilöcontainer: KoskiHenkiloContainer,
                                     personOidsWithAliases: PersonOidsWithAliases,
                                     params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
-    val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
-    val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
+
+    def koskiHenkiloWithMainOid(): KoskiHenkiloContainer = {
+      val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
+      val mainOid = personOidsWithAliases.henkiloOids.head
+      if (mainOid == henkiloOid) {
+        koskihenkilöcontainer
+      } else {
+        val aliases: Set[String] = personOidsWithAliases.aliasesByPersonOids(mainOid)
+        if (aliases contains henkiloOid) {
+          koskihenkilöcontainer.copy(henkilö = koskihenkilöcontainer.henkilö.copy(oid = Some(mainOid)))
+        } else {
+          koskihenkilöcontainer
+        }
+      }
+    }
+
+    val koskiHenkiloContainerWithMainOid = koskiHenkiloWithMainOid()
+    val henkiloOid = koskiHenkiloContainerWithMainOid.henkilö.oid.get
+    val suoritukset = createSuorituksetJaArvosanatFromKoski(koskiHenkiloContainerWithMainOid).flatten
     val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
     if (muidenSuoritukset.nonEmpty) {
       return Future.successful(Seq(Left(new RuntimeException(s"Henkilön $henkiloOid Koskitiedoista syntyi suorituksia muille henkilöille ${muidenSuoritukset.map(_.suoritus.henkilo).mkString(", ")}"))))

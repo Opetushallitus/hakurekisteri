@@ -2497,9 +2497,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     def verifyArvosanatVersion1UpdatedWithVersion2() = {
       val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
       opiskelijat.size should equal(1)
-      val opiskelijaOid = opiskelijat.head
-      opiskelijaOid should equal(henkilo.henkilö.oid.getOrElse("impossible"))
-      val suoritusTilat = run(database.run(sql"select tila from suoritus where henkilo_oid = $opiskelijaOid".as[String]))
+      val suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
       suoritusTilat should have length 1
       suoritusTilat.head should equal("VALMIS")
       val arvosana_TE_after = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
@@ -2537,7 +2535,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     verifyArvosanatVersion1UpdatedWithVersion2()
   }
 
-  it should "PETAR properly update arvosanas when person is identified with alias" in new KoskiDataArvosanatUpdateUtils {
+  it should "properly update arvosanas when person is identified with alias" in new KoskiDataArvosanatUpdateUtils {
     val originalOid: String = henkilo.henkilö.oid.getOrElse("impossible")
     val alias = "1.2.3.4.5.6"
     val personOidsWithAliases = PersonOidsWithAliases(Set(originalOid), Map(originalOid -> Set(originalOid, alias)))
