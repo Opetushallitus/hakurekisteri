@@ -43,7 +43,7 @@ trait OppijaFetcher {
 
     logger.info("begin personOids query")
     for (
-      personOids <- timed(s"personOids for query $q",
+      personOids <- timed(s"personOids",
         q.hakukohde match {
           case Some(hakukohdeOid) => hakemusService.personOidsForHakukohde(hakukohdeOid, q.organisaatio)
           case None => hakemusService.personOidsForHaku(q.haku.get, q.organisaatio)
@@ -58,7 +58,7 @@ trait OppijaFetcher {
       DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
     logger.info("begin fetchOppijat query")
-    timed(s"fetch oppijat for query $q",
+    timed(s"fetchOppijat",
       oppijaNumeroRekisteri.enrichWithAliases(persons).flatMap(personOidsWithAliases => {
         val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
         if (ensikertalaisuudet) {
@@ -119,18 +119,23 @@ trait OppijaFetcher {
 
   private def fetchEnsikertalaisuudet(q: HakemusQuery)
                                      (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {
+    val logId = UUID.randomUUID()
+    def timed[A](msg: String, f: Future[A]): Future[A] =
+      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
     logger.info("begin fetchEnsikertalaisuudet query")
-    for (
-      ensikertalaisuudet <- (ensikertalaisuus ? EnsikertalainenQuery(
-        henkiloOids = rekisteriData.map(_.oppijanumero).toSet,
-        hakuOid = q.haku.get,
-        hakukohdeOid = q.hakukohde,
-        Some(rekisteriData.flatMap(_.suoritukset.map(_.suoritus))),
-        Some(rekisteriData.flatMap(_.opiskeluoikeudet))
-      )).mapTo[Seq[Ensikertalainen]].map(_.groupBy(_.henkiloOid).mapValues(_.head))
-    ) yield for (
-      oppija <- rekisteriData
-    ) yield oppija.copy(ensikertalainen = ensikertalaisuudet.get(oppija.oppijanumero).map(_.ensikertalainen))
+    timed(s"fetchEnsikertalaisuudet query",
+      for (
+        ensikertalaisuudet <- (ensikertalaisuus ? EnsikertalainenQuery(
+          henkiloOids = rekisteriData.map(_.oppijanumero).toSet,
+          hakuOid = q.haku.get,
+          hakukohdeOid = q.hakukohde,
+          Some(rekisteriData.flatMap(_.suoritukset.map(_.suoritus))),
+          Some(rekisteriData.flatMap(_.opiskeluoikeudet))
+        )).mapTo[Seq[Ensikertalainen]].map(_.groupBy(_.henkiloOid).mapValues(_.head))
+      ) yield for (
+        oppija <- rekisteriData
+      ) yield oppija.copy(ensikertalainen = ensikertalaisuudet.get(oppija.oppijanumero).map(_.ensikertalainen))
+    )
   }
 
   private def fetchOpiskeluoikeudet(personOidsWithAliases: PersonOidsWithAliases)(implicit user: User): Future[Seq[Opiskeluoikeus]] =
