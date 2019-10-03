@@ -41,6 +41,7 @@ trait OppijaFetcher {
     def timed[A](msg: String, f: Future[A]): Future[A] =
       DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
+    logger.info("begin personOids query")
     for (
       personOids <- timed(s"personOids for query $q",
         q.hakukohde match {
@@ -56,6 +57,7 @@ trait OppijaFetcher {
     def timed[A](msg: String, f: Future[A]): Future[A] =
       DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
+    logger.info("begin fetchOppijat query")
     timed(s"fetch oppijat for query $q",
       oppijaNumeroRekisteri.enrichWithAliases(persons).flatMap(personOidsWithAliases => {
         val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
@@ -117,6 +119,7 @@ trait OppijaFetcher {
 
   private def fetchEnsikertalaisuudet(q: HakemusQuery)
                                      (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {
+    logger.info("begin fetchEnsikertalaisuudet query")
     for (
       ensikertalaisuudet <- (ensikertalaisuus ? EnsikertalainenQuery(
         henkiloOids = rekisteriData.map(_.oppijanumero).toSet,

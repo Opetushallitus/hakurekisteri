@@ -368,6 +368,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
       def timed[A](msg: String, f: Future[A]): Future[A] =
         DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
+      logger.info("begin processModifiedHakemukset")
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
       val allApplications: Future[List[HakijaHakemus]] = timed("allApplications in processModifiedHakemukset",
