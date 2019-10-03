@@ -1,3 +1,4 @@
+/*
 package org.scalatra.commands
 
 import java.util.UUID
@@ -27,3 +28,4 @@ trait HakurekisteriParsing[A <: Resource[UUID, A]] extends CommandSupport with J
   }
 
 }
+*/

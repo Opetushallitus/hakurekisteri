@@ -6,12 +6,14 @@ import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana._
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockPersonAliasesProvider
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusJDBCActor, SuoritusTable}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
+import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, ArvosanaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
@@ -32,6 +34,7 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   implicit var system: ActorSystem = _
   implicit var database: Database = _
   var arvosanaJournal: JDBCJournal[Arvosana, UUID, ArvosanaTable] = _
+  var suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable] = _
   implicit val security = new TestSecurity
   implicit val swagger = new HakurekisteriSwagger
   private val mockConfig: MockConfig = new MockConfig
@@ -40,8 +43,16 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
     system = ActorSystem()
     database = Database.forURL(ItPostgres.getEndpointURL)
     arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
+    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+
     val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig))))))
-    addServlet(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand], "/*")
+    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))))))
+
+    //val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, mockConfig))))))
+    //addServlet(new HakurekisteriResource[Arvosana](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana], "/*")
+    addServlet(new ArvosanaResource(guardedArvosanaRekisteri, guardedSuoritusRekisteri), "/*")
+    //addServlet(new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor, mockKoodistoActor), "/*")
+
     super.beforeAll()
   }
 

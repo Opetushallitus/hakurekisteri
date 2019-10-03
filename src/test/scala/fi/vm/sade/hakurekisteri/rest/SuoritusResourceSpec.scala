@@ -7,11 +7,11 @@ import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.batchimport.MockedKoodistoActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockPersonAliasesProvider
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit._
+import fi.vm.sade.hakurekisteri.koodisto.MockedKoodistoActor
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, HakurekisteriJsonSupport, JDBCJournal, User}
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
