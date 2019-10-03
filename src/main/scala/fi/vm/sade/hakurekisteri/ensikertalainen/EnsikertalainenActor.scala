@@ -114,36 +114,41 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
-    for {
-      haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
-      personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
-      tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(personOidsWithAliases.henkiloOidsWithLinkedOids, q.hakuOid, q.hakukohdeOid)
-      valmistumishetket <- valmistumiset(
-        personOidsWithAliases,
-        q.suoritukset.getOrElse(Seq())
-      )
-      opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-        personOidsWithAliases,
-        q.opiskeluoikeudet.getOrElse(Seq())
-      )
-      vastaanottohetket <- vastaanotot(
-        personOidsWithAliases
-      )
-    } yield {
-      q.henkiloOids.toSeq.flatMap(henkilo => {
-        personOidsWithAliases.aliasesByPersonOids.get(henkilo).map(links => {
-          mergeEnsikertalaisuus(henkilo, links.map(linkedOid => {
-            ensikertalaisuus(
-              henkilo,
-              haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
-              valmistumishetket.get(linkedOid),
-              opiskeluoikeuksienAlkamiset.get(linkedOid),
-              vastaanottohetket.get(linkedOid),
-              tutkintovuodetHakemuksilta.get(linkedOid)
-            )
-          }))
+    if (q.henkiloOids.isEmpty) {
+      log.info("henkiloOids is empty, skipping ensikertalaisuus check")
+      Future(Seq.empty)
+    } else {
+      for {
+        haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
+        personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
+        tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(personOidsWithAliases.henkiloOidsWithLinkedOids, q.hakuOid, q.hakukohdeOid)
+        valmistumishetket <- valmistumiset(
+          personOidsWithAliases,
+          q.suoritukset.getOrElse(Seq())
+        )
+        opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
+          personOidsWithAliases,
+          q.opiskeluoikeudet.getOrElse(Seq())
+        )
+        vastaanottohetket <- vastaanotot(
+          personOidsWithAliases
+        )
+      } yield {
+        q.henkiloOids.toSeq.flatMap(henkilo => {
+          personOidsWithAliases.aliasesByPersonOids.get(henkilo).map(links => {
+            mergeEnsikertalaisuus(henkilo, links.map(linkedOid => {
+              ensikertalaisuus(
+                henkilo,
+                haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
+                valmistumishetket.get(linkedOid),
+                opiskeluoikeuksienAlkamiset.get(linkedOid),
+                vastaanottohetket.get(linkedOid),
+                tutkintovuodetHakemuksilta.get(linkedOid)
+              )
+            }))
+          })
         })
-      })
+      }
     }
   }
 
