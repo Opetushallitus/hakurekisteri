@@ -2472,53 +2472,96 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     arvosanatAfter should equal("18")
   }
 
-  it should "properly handle 3 changed and 1 removed arvosanas" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_1.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+  trait KoskiDataArvosanatUpdateUtils {
+    def getHenkilo(jsonFileName: String): KoskiHenkiloContainer = {
+      val json: String = scala.io.Source.fromFile(jsonDir + jsonFileName).mkString
+      val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+      henkilo should not be null
+      henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+      henkilo
+    }
 
-    val json2: String = scala.io.Source.fromFile(jsonDir + "koskidata_arvosanat_version_2.json").mkString
-    val henkilo2: KoskiHenkiloContainer = parse(json2).extract[KoskiHenkiloContainer]
-    henkilo2 should not be null
-    henkilo2.opiskeluoikeudet.head.tyyppi should not be empty
+    def verifyArvosanatVersion1() = {
+      val arvosanat = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
+      val arvosana_TE = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
+      val arvosana_HI = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and current".as[String])).head
+      val arvosana_YH = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and current".as[String])).head
+      val suoritusTilat: Seq[String] = run(database.run(sql"select tila from suoritus".as[String]))
+      suoritusTilat.head should equal("VALMIS")
+      arvosanat should equal("18")
+      arvosana_TE should equal("6")
+      arvosana_HI should equal("8")
+      arvosana_YH should equal("6")
+    }
+
+    def verifyArvosanatVersion1UpdatedWithVersion2() = {
+      val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+      opiskelijat.size should equal(1)
+      val opiskelijaOid = opiskelijat.head
+      opiskelijaOid should equal(henkilo.henkilö.oid.getOrElse("impossible"))
+      val suoritusTilat = run(database.run(sql"select tila from suoritus where henkilo_oid = $opiskelijaOid".as[String]))
+      suoritusTilat should have length 1
+      suoritusTilat.head should equal("VALMIS")
+      val arvosana_TE_after = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
+      val arvosana_HI_after = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and current".as[String])).head
+      val arvosana_YH_after = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and current".as[String])).head
+      val arvosanas_after = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
+      val arvosana_TE_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and not current".as[String])).head
+      val arvosana_HI_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and not current".as[String])).head
+      val arvosana_YH_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and not current".as[String])).head
+      val deleteds_after = run(database.run(sql"select count(*) from arvosana where deleted".as[String])).head
+      arvosana_TE_after should equal("8")
+      arvosana_HI_after should equal("7")
+      arvosana_YH_after should equal("10")
+      arvosana_TE_noncurrent should equal("6")
+      arvosana_HI_noncurrent should equal("8")
+      arvosana_YH_noncurrent should equal("6")
+      arvosanas_after should equal("17")
+      deleteds_after should equal("1")
+    }
+
+    val henkilo = getHenkilo("koskidata_arvosanat_version_1.json")
+    val henkilo2 = getHenkilo("koskidata_arvosanat_version_2.json")
 
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(7)
+  }
 
+  it should "properly handle 3 changed and 1 removed arvosanas" in new KoskiDataArvosanatUpdateUtils {
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
-    var arvosanat = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
-    val arvosana_TE = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
-    val arvosana_HI = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and current".as[String])).head
-    val arvosana_YH = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and current".as[String])).head
-    var suoritusTilat: Seq[String] = run(database.run(sql"select tila from suoritus".as[String]))
-    suoritusTilat.head should equal("VALMIS")
-    arvosanat should equal("18")
-    arvosana_TE should equal("6")
-    arvosana_HI should equal("8")
-    arvosana_YH should equal("6")
+
+    verifyArvosanatVersion1()
 
     //Now run actually changed data.
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo2, PersonOidsWithAliases(henkilo2.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
 
-    suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
-    suoritusTilat.head should equal("VALMIS")
-    val arvosana_TE_after = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
-    val arvosana_HI_after = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and current".as[String])).head
-    val arvosana_YH_after = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and current".as[String])).head
-    val arvosanas_after = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
-    val arvosana_TE_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and not current".as[String])).head
-    val arvosana_HI_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'HI' and not current".as[String])).head
-    val arvosana_YH_noncurrent = run(database.run(sql"select arvosana from arvosana where aine = 'YH' and not current".as[String])).head
-    val deleteds_after = run(database.run(sql"select count(*) from arvosana where deleted".as[String])).head
-    arvosana_TE_after should equal("8")
-    arvosana_HI_after should equal("7")
-    arvosana_YH_after should equal("10")
-    arvosana_TE_noncurrent should equal("6")
-    arvosana_HI_noncurrent should equal("8")
-    arvosana_YH_noncurrent should equal("6")
-    arvosanas_after should equal("17")
-    deleteds_after should equal("1")
+    verifyArvosanatVersion1UpdatedWithVersion2()
+  }
 
+  it should "PETAR properly update arvosanas when person is identified with alias" in new KoskiDataArvosanatUpdateUtils {
+    val originalOid: String = henkilo.henkilö.oid.getOrElse("impossible")
+    val alias = "1.2.3.4.5.6"
+    val personOidsWithAliases = PersonOidsWithAliases(Set(originalOid), Map(originalOid -> Set(originalOid, alias)))
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        personOidsWithAliases,
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)),
+      5.seconds)
+
+    verifyArvosanatVersion1()
+
+    val henkilo2identifiedByAlias = henkilo2.copy(henkilö = henkilo2.henkilö.copy(oid = Some(alias)))
+
+    // This should update the same person
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo2identifiedByAlias,
+        personOidsWithAliases,
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)),
+      5.seconds)
+
+    verifyArvosanatVersion1UpdatedWithVersion2()
   }
 
   it should "properly handle multiple valinnaises arvosanas for same ainees" in {
