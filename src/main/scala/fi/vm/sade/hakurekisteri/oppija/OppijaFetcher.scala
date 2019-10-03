@@ -36,24 +36,35 @@ trait OppijaFetcher {
   implicit val defaultTimeout: Timeout
 
   def fetchOppijat(ensikertalaisuudet: Boolean, q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
+    val logId = UUID.randomUUID()
+
+    def timed[A](msg: String, f: Future[A]): Future[A] =
+      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
+
     for (
-      personOids <- q.hakukohde match {
-        case Some(hakukohdeOid) => hakemusService.personOidsForHakukohde(hakukohdeOid, q.organisaatio)
-        case None => hakemusService.personOidsForHaku(q.haku.get, q.organisaatio)
-      };
+      personOids <- timed(s"personOids for query $q",
+        q.hakukohde match {
+          case Some(hakukohdeOid) => hakemusService.personOidsForHakukohde(hakukohdeOid, q.organisaatio)
+          case None => hakemusService.personOidsForHaku(q.haku.get, q.organisaatio)
+        });
       oppijat <- fetchOppijat(personOids, ensikertalaisuudet, q)(user)
     ) yield oppijat
   }
 
   def fetchOppijat(persons: Set[String], ensikertalaisuudet: Boolean, q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
-    oppijaNumeroRekisteri.enrichWithAliases(persons).flatMap(personOidsWithAliases => {
-      val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
-      if (ensikertalaisuudet) {
-        rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
-      } else {
-        rekisteriData
-      }
-    })
+    val logId = UUID.randomUUID()
+    def timed[A](msg: String, f: Future[A]): Future[A] =
+      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
+
+    timed(s"fetch oppijat for query $q",
+      oppijaNumeroRekisteri.enrichWithAliases(persons).flatMap(personOidsWithAliases => {
+        val rekisteriData = getRekisteriData(personOidsWithAliases)(user)
+        if (ensikertalaisuudet) {
+          rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
+        } else {
+          rekisteriData
+        }
+      }))
   }
 
   def fetchOppija(person: String, ensikertalaisuudet: Boolean, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {

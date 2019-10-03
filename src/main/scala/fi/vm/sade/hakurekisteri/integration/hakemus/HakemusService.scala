@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.{Date, UUID}
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, ActorSystem, Scheduler}
@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisa
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.tools.DurationHelper
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -363,15 +364,22 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
   def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
+      val logId = UUID.randomUUID()
+      def timed[A](msg: String, f: Future[A]): Future[A] =
+        DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
+
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
-      val allApplications: Future[List[HakijaHakemus]] = for {
+      val allApplications: Future[List[HakijaHakemus]] = timed("allApplications in processModifiedHakemukset",
+        for {
         hakuappApplications: Seq[FullHakemus] <- fetchHakemuksetChunked(
           params = SearchParams(updatedAfter = formattedDate)
         )
         ataruApplications: List[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(None, None, None, None, Some(formattedDate)))
-      } yield hakuappApplications.toList ::: ataruApplications
-      allApplications.flatMap(fetchPersonAliases).onComplete {
+      } yield hakuappApplications.toList ::: ataruApplications)
+
+      timed("fetchPersonAliases for process",
+        allApplications.flatMap(fetchPersonAliases)).onComplete {
         case Success((hakemukset, personOidsWithAliases)) =>
           Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
             case Failure(e) => logger.error(e, "Exception in trigger!")
