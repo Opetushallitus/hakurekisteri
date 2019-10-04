@@ -43,8 +43,8 @@
   "opiskeluoikeudet": [
     {
       "oid": "1.2.246.562.15.44258757523",
-      "versionumero": 2,
-      "aikaleima": "2019-10-04T09:55:18.712413",
+      "versionumero": 4,
+      "aikaleima": "2019-10-04T13:20:44.874304",
       "oppilaitos": {
         "oid": "1.2.246.562.10.94332931636",
         "oppilaitosnumero": {
@@ -107,7 +107,7 @@
       "lisätiedot": {
         "perusopetuksenAloittamistaLykätty": false,
         "aloittanutEnnenOppivelvollisuutta": false,
-        "vuosiluokkiinSitoutumatonOpetus": true
+        "vuosiluokkiinSitoutumatonOpetus": false
       },
       "suoritukset": [
         {
@@ -772,6 +772,74 @@
               "fi": "Perusopetuksen oppimäärä",
               "sv": "Grundläggande utbildningens lärokurs",
               "en": "Basic education syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        },
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "9",
+              "nimi": {
+                "fi": "9. vuosiluokka",
+                "sv": "Årskurs 9"
+              },
+              "koodistoUri": "perusopetuksenluokkaaste",
+              "koodistoVersio": 1
+            },
+            "perusteenDiaarinumero": "104/011/2014"
+          },
+          "luokka": "9Q",
+          "toimipiste": {
+            "oid": "1.2.246.562.10.94332931636",
+            "oppilaitosnumero": {
+              "koodiarvo": "04520",
+              "nimi": {
+                "fi": "Töysän yläaste"
+              },
+              "lyhytNimi": {
+                "fi": "Töysän yläaste"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Töysän yläaste"
+            },
+            "kotipaikka": {
+              "koodiarvo": "010",
+              "nimi": {
+                "fi": "Alavus",
+                "sv": "Alavo"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "alkamispäivä": "2019-08-15",
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "jääLuokalle": false,
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenvuosiluokka",
+            "nimi": {
+              "fi": "Perusopetuksen vuosiluokka",
+              "sv": "Årskurs i grundläggande utbildning",
+              "en": "Basic education class"
             },
             "koodistoUri": "suorituksentyyppi",
             "koodistoVersio": 1
