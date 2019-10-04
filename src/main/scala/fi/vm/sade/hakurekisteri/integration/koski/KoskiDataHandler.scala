@@ -143,7 +143,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
   def updateSuoritus(suoritus: VirallinenSuoritus with Identified[UUID], suor: VirallinenSuoritus): Future[VirallinenSuoritus with Identified[UUID]] =
     (suoritusRekisteri ? suoritus.copy(tila = suor.tila, valmistuminen = suor.valmistuminen, yksilollistaminen = suor.yksilollistaminen,
-      suoritusKieli = suor.suoritusKieli)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
+      suoritusKieli = suor.suoritusKieli, lahdeArvot = suor.lahdeArvot)).mapTo[VirallinenSuoritus with Identified[UUID]].recoverWith{
       case t: AskTimeoutException => updateSuoritus(suoritus, suor)
     }
 
