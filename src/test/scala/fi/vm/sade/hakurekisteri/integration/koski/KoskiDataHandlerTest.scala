@@ -2591,7 +2591,7 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
 
-    var suoritus: Seq[String] = run(database.run(sql"select lahde_arvot from suoritus where henkilo_oid = '1.2.246.562.24.75034821549' and where komo = '1.2.246.562.13.62959769647'".as[String]))
+    var suoritus: Seq[String] = run(database.run(sql"select lahde_arvot from suoritus where henkilo_oid = '1.2.246.562.24.75034821549' and komo = '1.2.246.562.13.62959769647'".as[String]))
     suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
 
     json = scala.io.Source.fromFile(jsonDir + "koskidata_suoritus_update_after.json").mkString
