@@ -5,7 +5,7 @@ import org.scalatra.swagger.SwaggerSupport
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 trait RestrictionsSwaggerApi  extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
-  override protected val applicationName = Some("rest/v1/restrictions")
+  override protected val applicationDescription = "rest/v1/restrictions"
 
   val queryRestriction: OperationBuilder = apiOperation[Boolean]("isRestrictionActiveForKey")
     .summary("checks if any restriction is active for the key")

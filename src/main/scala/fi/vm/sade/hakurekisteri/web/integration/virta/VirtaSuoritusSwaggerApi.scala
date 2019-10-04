@@ -8,7 +8,7 @@ trait VirtaSuoritusSwaggerApi extends SwaggerSupport {
 
   val query = apiOperation[Seq[VirtaOpintosuoritus]]("haeSuoritukset")
     .summary("näyttää henkilön suoritukset")
-    .notes("Näyttää listauksen henkilön suorituksista annetun henkilötunnisteen perusteella")
+    .description("Näyttää listauksen henkilön suorituksista annetun henkilötunnisteen perusteella")
     .parameter(pathParam[String]("id")
       .description("oppijanumero tai henkilötunnus").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))

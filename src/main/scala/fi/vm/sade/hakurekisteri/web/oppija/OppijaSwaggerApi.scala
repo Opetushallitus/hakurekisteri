@@ -24,7 +24,7 @@ trait OppijaSwaggerApi
 
   val query = apiOperation[Seq[Oppija]]("haeOppijat")
     .summary("näyttää oppijoiden tiedot")
-    .notes("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Hakuoid on pakollinen mikäli halutaan saada ensikertalaisuustiedot.")
+    .description("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Hakuoid on pakollinen mikäli halutaan saada ensikertalaisuustiedot.")
     .parameter(queryParam[Option[String]]("haku")
       .description("haun oid").optional)
     .parameter(queryParam[Option[String]]("organisaatio")
@@ -39,10 +39,11 @@ trait OppijaSwaggerApi
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
+    .tags("oppijat")
 
   val read = apiOperation[Oppija]("haeOppija")
     .summary("näyttää yhden oppijan tiedot")
-    .notes("Näyttää yhden oppijan tiedot oppijanumeron perusteella. Jos haun oidia ei anneta parametrinä, ensikertalaisuus-tietoa ei palauteta.")
+    .description("Näyttää yhden oppijan tiedot oppijanumeron perusteella. Jos haun oidia ei anneta parametrinä, ensikertalaisuus-tietoa ei palauteta.")
     .parameter(pathParam[String]("oid")
       .description("oppijanumero").required)
     .parameter(queryParam[String]("haku")
@@ -53,10 +54,11 @@ trait OppijaSwaggerApi
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
     .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
+    .tags("oppijat")
 
   val post = apiOperation[Seq[Oppija]]("haeOppijatPost")
     .summary("näyttää oppijoiden tiedot oppijanumerolistan perusteella")
-    .notes("Näyttää listauksen oppijoiden tiedoista lähetetyn oppijanumerolistan perusteella.")
+    .description("Näyttää listauksen oppijoiden tiedoista lähetetyn oppijanumerolistan perusteella.")
     .parameter(bodyParam[String]("oppijanumerot")
       .description(s"""lista oppijanumeroista (max ${OppijatPostSize.maxOppijatPostSize} kpl), esim ["1.2.246.562.24.00000000001", "1.2.246.562.24.00000000002"]""").required)
     .parameter(queryParam[String]("haku")
@@ -67,6 +69,7 @@ trait OppijaSwaggerApi
     .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("oppijat")
 
 }
 

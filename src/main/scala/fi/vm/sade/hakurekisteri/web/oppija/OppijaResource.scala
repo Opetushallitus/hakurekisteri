@@ -68,6 +68,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
+      logger.info("Begin oppijat query")
       private val oppijatFuture = fetchOppijat(ensikertalaisuudet, q)
 
       logQuery(q, t0, oppijatFuture)
