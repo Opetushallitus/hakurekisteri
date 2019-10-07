@@ -1,12 +1,10 @@
 import java.nio.file.Path
 
 import _root_.support._
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija._
-import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
@@ -17,8 +15,8 @@ import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
-import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaResource, OpiskelijaSwaggerApi}
-import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{OpiskeluoikeusResource, OpiskeluoikeusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
+import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.web.permission.PermissionResource
 import fi.vm.sade.hakurekisteri.web.proxies._

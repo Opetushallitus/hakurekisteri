@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.web.suoritus
 
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import _root_.akka.pattern.ask
@@ -12,16 +11,12 @@ import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.web.rest.support.{ResourceNotEnabledException, _}
-import org.joda.time.DateTime
-import org.json4s.{DefaultFormats, JValue}
-import org.json4s.JsonAST.JNothing
-import org.scalatra.{MultiParams, NotFound}
-import org.scalatra.forms.{MappingValueType, RequestAttributeErrorsKey, RequestAttributeParamsKey, ValueType, boolean, label, mapping, optional, required, text}
+import org.json4s.JValue
+import org.scalatra.NotFound
 import org.scalatra.swagger.Swagger
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.Try
 
 class SuoritusResource
 (suoritusRekisteriActor: ActorRef, parameterActor: ParametritActorRef, koodistoActor: KoodistoActorRef)(implicit sw: Swagger, s: Security, system: ActorSystem)
