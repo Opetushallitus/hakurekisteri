@@ -125,8 +125,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A]] extends ScalatraServlet 
   incident {
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: ValidationError => (id) =>
-      //logger.info("incident ValidationError: " + t + ", " + t.error.map(_.getMessage))
-      BadRequest(IncidentReport(id, t.error.map(_.getMessage).getOrElse("no message")))
+      BadRequest(IncidentReport(id, t.message))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }

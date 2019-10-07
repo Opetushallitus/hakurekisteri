@@ -64,13 +64,12 @@ class OpiskeluoikeusResourceSpec extends ScalatraFunSuite with BeforeAndAfterEac
     }
   }
 
-  //Fixme, the data actually makes no sense, fails for the wrong reason.
-  /*test("send Opiskeluoikeus with invalid loppuPaiva should return 400") {
-    val json = "{\"oppilaitosOid\":\"1.10.1\",\"luokkataso\":\"9\",\"luokka\":\"9A\",\"henkiloOid\":\"1.24.1\",\"alkuPaiva\":\"2015-01-01T00:00:00.000Z\",\"loppuPaiva\":\"2014-12-31T00:00:00.000Z\"}"
+  test("send Opiskeluoikeus without komo should return 400") {
+    val json = "{\"myontaja\":\"1.10.1.10.1\",\"henkiloOid\":\"1.24.12345\",\"aika\":{\"alku\":\"2015-01-01T00:00:00.000Z\",\"loppu\":\"2014-12-31T00:00:00.000Z\"}}"
     post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
       status should be(400)
-      body should include("loppuPaiva must be after alkuPaiva")
+      body should include("Pakollista kenttää komo ei löydy")
     }
-  }*/
+  }
 }
 
