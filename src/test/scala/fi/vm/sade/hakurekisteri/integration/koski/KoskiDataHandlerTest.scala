@@ -2562,6 +2562,35 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     verifyArvosanatVersion1UpdatedWithVersion2()
   }
 
+  it should "properly update arvosanas when person was first identified by alias" in new KoskiDataArvosanatUpdateUtils {
+    val originalOid: String = henkilo.henkilö.oid.getOrElse("impossible")
+    val alias = "1.2.3.4.5.6"
+    val personOidsWithAliasesInitial = PersonOidsWithAliases(Set(alias), Map(alias -> Set(alias)))
+
+    val henkiloIdentifiedByAlias = henkilo.copy(henkilö = henkilo.henkilö.copy(oid = Some(alias)))
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkiloIdentifiedByAlias,
+        personOidsWithAliasesInitial,
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)),
+      5.seconds)
+
+    verifyArvosanatVersion1()
+
+    // This should update the same person, this time identified by "master oid"
+    val personOidsWithAliasesNew = PersonOidsWithAliases(Set(originalOid), Map(originalOid -> Set(originalOid, alias)))
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo2,
+        personOidsWithAliasesNew,
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)),
+      5.seconds)
+
+    verifyArvosanatVersion1UpdatedWithVersion2()
+  }
+
   it should "properly handle multiple valinnaises arvosanas for same ainees" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "valinnaiset_4_kuvataidetta_3_musiikkia_before.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
