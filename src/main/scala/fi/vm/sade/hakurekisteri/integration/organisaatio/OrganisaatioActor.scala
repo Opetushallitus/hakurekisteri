@@ -37,8 +37,6 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
-  log.info("kissa org actor in action!")
-
   private val cache = cacheFactory.getInstance[String, Organisaatio](timeToLive.toMillis, this.getClass, classOf[Organisaatio], "organisaatio")
   private val childOidCache = cacheFactory.getInstance[String, ChildOids](timeToLive.toMillis, this.getClass, classOf[ChildOids], "child-oids")
   private var oppilaitoskoodiIndex: Map[String, String] = Map()

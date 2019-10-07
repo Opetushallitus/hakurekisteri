@@ -52,27 +52,21 @@ class SuoritusResource
       val bodyValues = parsedBody.extract[Map[String, JValue]]
       val errors = checkMandatory(Seq("komo", "myontaja", "tila", "valmistuminen", "henkiloOid", "suoritusKieli"), bodyValues)
       if (errors.nonEmpty) throw ValidationError(message = errors.toString())
-      val vahv = if (bodyValues.contains("vahvistettu")) bodyValues("vahvistettu").extract[Boolean] else false
-      val yks = if (bodyValues.contains("yksilollistaminen")) bodyValues("yksilollistaminen").extract[Yksilollistetty] else yksilollistaminen.Ei
-      val s = VirallinenSuoritus(
+      Right(VirallinenSuoritus(
         komo = bodyValues("komo").extract[String],
         myontaja = bodyValues("myontaja").extract[String],
         tila = bodyValues("tila").extract[String],
         valmistuminen = jsonToLocalDate(bodyValues("valmistuminen")).get,
         henkilo = bodyValues("henkiloOid").extract[String],
-        yksilollistaminen = yks,
+        yksilollistaminen = if (bodyValues.contains("yksilollistaminen")) bodyValues("yksilollistaminen").extract[Yksilollistetty] else yksilollistaminen.Ei,
         suoritusKieli = bodyValues("suoritusKieli").extract[String],
-        vahv = vahv,
+        vahv = if (bodyValues.contains("vahvistettu")) bodyValues("vahvistettu").extract[Boolean] else false,
         lahde = user,
         lahdeArvot = Map()
-      )
-      logger.info("parsed s: " + s)
-      logger.info("vahvistus: " + vahv + ", source: " + bodyValues.get("vahvistettu"))
-      logger.info("yks: " + yks + ", source: " + bodyValues.get("yksilollistaminen"))
-      Right(s)
+      ))
     } catch {
       case e: ValidationError =>
-        logger.error("Suoritus resource creation failed: {}, body: {}", e.message, parsedBody)
+        logger.error("Suoritus resource validation failed: {}, body: {}", e.message, parsedBody)
         Left(e)
       case e: Exception =>
         logger.error("Suoritus resource creation failed: {}, body: {} ", e, parsedBody)

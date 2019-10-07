@@ -187,7 +187,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]]
       case Right(res) =>
         createEnabled(res, user).flatMap(enabled =>
           if (enabled) {
-            logger.info("Going as planned, resource to be created: " + res)
+            logger.info("Going as planned, created resource: " + res)
             Future.successful(AuthorizedCreate[A, UUID](res, user.get))
           } else Future.failed(ResourceNotEnabledException)
         )

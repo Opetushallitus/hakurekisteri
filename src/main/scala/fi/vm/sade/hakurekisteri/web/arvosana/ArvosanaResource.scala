@@ -36,17 +36,12 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
     }
 
   override def parseResourceFromBody(user: String): Either[ValidationError, Arvosana] = {
-    logger.info("PARSING ARVOSANA")
-
     try {
-      logger.info("pbody: " + parsedBody)
       val bodyValues = parsedBody.extract[Map[String, JValue]]
       val errors = checkMandatory(Seq("suoritus", "arvio", "aine"), bodyValues)
       if (errors.nonEmpty) throw ValidationError(message = errors.toString())
 
-      logger.info("arvosana " + bodyValues)
       val arvio = bodyValues("arvio").extract[Map[String, JValue]]
-
       val jarj: Option[Int] = bodyValues.get("jarjestys").map(_.extract[Int])
       logger.info("jarjestys: " + jarj)
 
@@ -59,13 +54,12 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
         myonnetty = if (bodyValues.contains("myonnetty")) jsonToLocalDate(bodyValues("myonnetty")) else None,
         source = if (bodyValues.contains("source")) bodyValues("source").extract[String] else user,
         lahdeArvot = Map(),
-        jarjestys = bodyValues.get("jarjestys").map(_.extract[Int])
+        jarjestys = jarj
       )
-      logger.info("Success, returning parsed arvosana: " + a)
       Right(a)
     } catch {
       case e: ValidationError =>
-        logger.error("Arvosana resource creation failed: {}, body: {}", e.message, parsedBody)
+        logger.error("Arvosana resource validation failed: {}, body: {}", e.message, parsedBody)
         Left(e)
       case e: Exception =>
         logger.error("Arvosana resource creation failed: {}, body: {} ", e, parsedBody)
