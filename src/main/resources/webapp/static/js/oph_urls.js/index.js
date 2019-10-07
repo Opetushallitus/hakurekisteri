@@ -24,11 +24,9 @@
  */
 
 (function() {
-    var version="2.2"
+    var version="2.1"
 
     var exportDests = []
-
-    var callerIdHeaderName = 'Caller-Id';
 
     function addExportDest(exportDest, urlsFN) {
         if(exportDest.urls) {
@@ -294,19 +292,8 @@
     // ajax loading
 
     function ajaxJson(method, url, onload, onerror) {
-        var callerIdHeaderValue = window.opintopolku_caller_id;
-        if (!callerIdHeaderValue) {
-          var msg = 'oph-urls-js error: window.opintopolku-caller-id must be set!';
-          console.error(msg);
-          if (onerror) {
-            onerror(msg)
-          }
-          return;
-        }
-
         var oReq = new XMLHttpRequest();
         oReq.open(method, url, true);
-        oReq.setRequestHeader(callerIdHeaderName, callerIdHeaderValue);
         oReq.onreadystatechange = function() {
             if (oReq.readyState == 4) {
                 if(oReq.status == 200) {
