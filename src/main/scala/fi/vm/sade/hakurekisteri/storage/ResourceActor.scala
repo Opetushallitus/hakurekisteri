@@ -26,7 +26,6 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest](confi
     }
   }
 
-
   def receive: Receive = {
     case q: QueryWithPersonOid[T] =>
       findByWithPersonAliases(q) pipeTo sender
