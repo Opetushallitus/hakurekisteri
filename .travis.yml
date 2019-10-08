@@ -28,7 +28,7 @@ install:
   - git clone https://github.com/Opetushallitus/ci-tools.git
   - source ci-tools/common/setup-tools.sh
   - export ARTIFACT_NAME="suoritusrekisteri"
-  - nvm use node 6
+  - nvm install 6
   - npm install bower
   - node_modules/bower/bin/bower update
 
