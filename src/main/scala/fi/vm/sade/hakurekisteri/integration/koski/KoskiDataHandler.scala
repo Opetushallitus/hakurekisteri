@@ -171,8 +171,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     suoritusRekisteri ? DeleteResource(s.id, "koski-suoritukset")
   }
 
-  private def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
-    case s: VirallinenSuoritus => s.core == suor.core
+  private def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus], aliases: Set[String]): Boolean = suoritukset.exists {
+    case s: VirallinenSuoritus => {
+      s.core.isEqualWithAliases(suor.core, aliases)
+    }
     case _ => false
   }
 
@@ -202,24 +204,35 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
     InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
   }
 
-  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus, arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String], personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
-    val opiskelija: Option[Opiskelija] = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
+  private def getAliases(personOidsWithAliases: PersonOidsWithAliases): Set[String] = {
+    // assuming that there is only one personOid in the structure
+    personOidsWithAliases.aliasesByPersonOids.values.head
+  }
 
-    if (suoritusExists(useSuoritus, existingSuoritukset)) {
+  private def saveSuoritusAndArvosanat(henkilöOid: String, existingSuoritukset: Seq[Suoritus], useSuoritus: VirallinenSuoritus,
+                                       arvosanat: Seq[Arvosana], luokka: String, lasnaDate: LocalDate, luokkaTaso: Option[String],
+                                       personOidsWithAliases: PersonOidsWithAliases): Future[SuoritusArvosanat] = {
+
+    val aliases = getAliases(personOidsWithAliases)
+
+    if (suoritusExists(useSuoritus, existingSuoritukset, aliases)) {
       val suoritus: VirallinenSuoritus with Identified[UUID] = existingSuoritukset.flatMap {
         case s: VirallinenSuoritus with Identified[UUID @unchecked] => Some(s)
         case _ => None
       }
-        .find(s => s.henkiloOid == henkilöOid && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
-      logger.debug("Käsitellään olemassaoleva suoritus " + suoritus)
-      val arvosanasFromKoski = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
+        .find(s => (aliases contains s.henkiloOid) && (aliases contains henkilöOid) && s.myontaja == useSuoritus.myontaja && s.komo == useSuoritus.komo).get
+      logger.debug(s"Käsitellään olemassaoleva suoritus $suoritus henkiloid=${suoritus.henkiloOid}, uusi oid (alias, ignore if different) = $henkilöOid")
+      val opiskelija: Option[Opiskelija] = opiskelijaParser.createOpiskelija(suoritus.henkiloOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
 
+      val arvosanasFromKoski = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
       updateSuoritus(suoritus, useSuoritus)
         .flatMap(_ => fetchArvosanat(suoritus))
         .flatMap(arvosanasInSure => syncArvosanas(arvosanasInSure, arvosanasFromKoski))
         .flatMap(_ => saveOpiskelija(opiskelija))
         .map(_ => SuoritusArvosanat(useSuoritus, arvosanasFromKoski,luokka, lasnaDate, luokkaTaso))
     } else {
+      logger.debug(s"Käsitellään uusi suoritus $useSuoritus, personOidsWithAliases=$personOidsWithAliases")
+      val opiskelija: Option[Opiskelija] = opiskelijaParser.createOpiskelija(henkilöOid, SuoritusLuokka(useSuoritus, luokka, lasnaDate, luokkaTaso))
       saveSuoritus(useSuoritus, personOidsWithAliases)
         .flatMap(suoritus => {
           val newArvosanat = arvosanat.map(toArvosana(_)(suoritus.id)(KoskiUtil.koski_integration_source))
@@ -277,16 +290,20 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   private def toArvosana(arvosana: Arvosana)(suoritus: UUID)(source: String): Arvosana =
     Arvosana(suoritus, arvosana.arvio, arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, arvosana.myonnetty, source, Map(), arvosana.jarjestys)
 
-  private def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus], henkilonSuoritukset: Seq[SuoritusArvosanat], henkilöOid: String): Future[Seq[Unit]] = {
+  private def checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset: Seq[Suoritus],
+                                                                 henkilonSuoritukset: Seq[SuoritusArvosanat],
+                                                                 henkilöOid: String,
+                                                                 aliases: Set[String]): Future[Seq[Unit]] = {
     Future.sequence(fetchedSuoritukset
       .collect {
-        case s: VirallinenSuoritus with Identified[UUID @unchecked] if s.source == KoskiUtil.koski_integration_source && !henkilonSuoritukset.exists(_.suoritus.core == s.core) =>
+        case s: VirallinenSuoritus with Identified[UUID @unchecked] if s.source == KoskiUtil.koski_integration_source && !henkilonSuoritukset.exists(_.suoritus.core.isEqualWithAliases(s.core, aliases)) =>
           logger.info("Found suoritus for henkilö " + henkilöOid + " from Suoritusrekisteri which is not found in Koski anymore " + s.id + ". Deleting it")
           deleteArvosanatAndSuorituksetAndOpiskelija(s, henkilöOid)
       })
   }
 
-  private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat], personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
+  private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(henkilöOid: String, viimeisimmatSuoritukset: Seq[SuoritusArvosanat],
+                                                                     personOidsWithAliases: PersonOidsWithAliases, params: KoskiSuoritusHakuParams): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
 
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
@@ -300,7 +317,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
           .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinenKomoOid))
       }
 
-      checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid).recoverWith{ case e: Exception =>
+      checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid, getAliases(personOidsWithAliases)).recoverWith{ case e: Exception =>
         Future.successful(Seq(Left(new RuntimeException(s"Koski-opiskelijan poisto henkilölle $henkilöOid epäonnistui.", e))))
       }.flatMap(_ =>
         Future.sequence(tallennettavatSuoritukset.map {

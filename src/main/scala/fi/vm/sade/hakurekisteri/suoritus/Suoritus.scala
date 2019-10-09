@@ -144,7 +144,12 @@ object ItseilmoitettuLukioTutkinto {
 
 }
 
-case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean, tyyppi: String)
+case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean, tyyppi: String) {
+  def isEqualWithAliases(otherVirallinenSisalto: VirallinenSisalto, aliases: Set[String]): Boolean = {
+    val bothOidsAreAliases = (aliases contains henkilo) && (aliases contains otherVirallinenSisalto.henkilo)
+    bothOidsAreAliases && (copy(henkilo = otherVirallinenSisalto.henkilo) == otherVirallinenSisalto)
+  }
+}
 
 case class VirallinenSuoritus(komo: String,
                               myontaja: String,
