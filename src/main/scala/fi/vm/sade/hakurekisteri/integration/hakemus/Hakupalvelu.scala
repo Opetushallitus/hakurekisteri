@@ -460,7 +460,7 @@ object AkkaHakupalvelu {
             .getOrElse("FIN")),
           kaksoiskansalaisuus = None,
           kansalaisuudet = Some(hakemus.henkilo.kansalaisuus.flatMap(k => maakoodit.get(k.kansalaisuusKoodi))),
-          asiointiKieli = hakemus.asiointiKieli,
+          asiointiKieli = hakemus.asiointiKieli.toUpperCase,
           opetuskieli = "",
           eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
