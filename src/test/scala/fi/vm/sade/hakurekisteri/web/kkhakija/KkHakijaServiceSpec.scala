@@ -3,19 +3,14 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
@@ -23,8 +18,9 @@ import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import fi.vm.sade.utils.slf4j.Logging
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{LocalDate}
 import org.mockito.Mockito._
+import org.scalatest.Assertion
 import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -136,21 +132,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should convert ilmoittautumiset into sequence in syksyn haku") {
-    val haku = Haku(
-      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
-      oid = "1.2.3",
-      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
-      kausi = "kausi_s#1",
-      vuosi = 2014,
-      koulutuksenAlkamiskausi = Some("kausi_k#1"),
-      koulutuksenAlkamisvuosi = Some(2015),
-      kkHaku = true,
-      toisenAsteenHaku = false,
-      viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
-      "hakutapa_01#1"
-    )
-
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus1))
 
     val sijoitteluTulos = SijoitteluTulos(
@@ -166,21 +147,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should convert ilmoittautumiset into sequence in kevään haku") {
-    val haku = Haku(
-      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
-      oid = "1.2.3",
-      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
-      kausi = "kausi_k#1",
-      vuosi = 2015,
-      koulutuksenAlkamiskausi = Some("kausi_s#1"),
-      koulutuksenAlkamisvuosi = Some(2015),
-      kkHaku = true,
-      toisenAsteenHaku = false,
-      viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
-      "hakutapa_01#1"
-    )
-
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus2))
 
     val sijoitteluTulos = SijoitteluTulos(
@@ -196,21 +162,6 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   }
 
   test("should convert ilmoittautumiset into sequence in syksy haku but koulutus start season in next year syksy") {
-    val haku = Haku(
-      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
-      oid = "1.2.3",
-      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
-      kausi = "kausi_s#1",
-      vuosi = 2015,
-      koulutuksenAlkamiskausi = Some("kausi_s#1"),
-      koulutuksenAlkamisvuosi = Some(2016),
-      kkHaku = true,
-      toisenAsteenHaku = false,
-      viimeinenHakuaikaPaattyy = Some(new DateTime()),
-      None,
-      "hakutapa_01#1"
-    )
-
     val koulutusSyksy = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)
     val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
 
@@ -340,6 +291,38 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     hakijat.last.asiointikieli should be ("9") // Default is not empty!
     hakijat.last.koulusivistyskieli should be ("99")
   }
+
+  def testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(apiVersion: Int): Assertion = {
+    val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
+      hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock,
+      suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), "{}"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), getJson("ataruApplications")))
+
+    val hakijat = Await.result(
+      serviceThatShouldTakeAsiointikieliFromHakemus.getKkHakijat(
+        KkHakijaQuery(
+          Some("1.2.246.562.24.91842462815"), None, None, None, Some("ryhma"),
+          Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))),
+        version = apiVersion), 15.seconds
+    )
+
+    hakijat.size should be (2)
+    val finnish = "1"
+    val swedishAsInMockOnr = "2"
+    val english = "3"
+    val default = "9"
+    hakijat.exists(_.asiointikieli == finnish) should be (true)
+    hakijat.exists(_.asiointikieli == english) should be (true)
+    hakijat.exists(_.asiointikieli == default) should be (false)
+    hakijat.exists(_.asiointikieli == swedishAsInMockOnr) should be (false)
+  }
+
+  test("v2 should get asiointikieli from ataru hakemus")(testFun = testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(2))
+
+  test("v3 should get asiointikieli from ataru hakemus")(testFun = testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(3))
 
   test("should return default kansalaisuus, asuinmaa, kotikunta") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))

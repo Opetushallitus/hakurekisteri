@@ -22,6 +22,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
   val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri, pageSize = 10)
 
+  behavior of "hakemuksetForPerson"
+
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
@@ -30,6 +32,45 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
 
     Await.result(hakemusService.hakemuksetForPerson("1.2.246.562.24.81468276424"), 10.seconds).size should be (2)
   }
+
+  it should "return applications from ataru by person oid" in {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), "{}"))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), getJson("ataruApplications")))
+    val expectedPersonOid = "1.2.246.562.24.91842462815"
+
+    val hakemukset = Await.result(hakemusService.hakemuksetForPerson(expectedPersonOid), 10.seconds)
+
+    hakemukset.size should be(2)
+    hakemukset.forall(_.personOid == Some(expectedPersonOid)) should be(true)
+  }
+
+  behavior of "enrichAtaruHakemukset"
+
+  it should "use asiointiKieli from ataru hakemus (and NOT from person from ONR)" in {
+    val asiointiKieliFromOnr = "fi"
+    val asiointiKieliFromHakemus = "en"
+    val personOid = "1.2.3.4.5.6"
+    val ataruHenkilo = henkilo.Henkilo(
+      "ataruHenkiloOid", Some("ataruHetu"),
+      "OPPIJA", None, None, None, None, List(),
+      None, None,
+      turvakielto = Some(false))
+    val ataruHakemusDto = AtaruHakemusDto(
+      "ataruOid", personOid, "",
+      kieli = asiointiKieliFromHakemus,
+      List(), "", "", "", "", None, None,
+      "", false, false, Map(), Map(), List(), None)
+
+    val ataruHakemukset: List[AtaruHakemus] =
+      Await.result(hakemusService.enrichAtaruHakemukset(List(ataruHakemusDto), Map(personOid -> ataruHenkilo)), 10.seconds)
+
+    ataruHakemukset.size should be(1)
+    ataruHakemukset(0).asiointiKieli should be(asiointiKieliFromHakemus)
+  }
+
+  behavior of "hakemusForPersonsInHaku"
 
   it should "return applications when searching with both persons and application system" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
@@ -47,6 +88,8 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       persons.contains(application.personOid.get) should be(true)
     })
   }
+
+  behavior of "hakemusForHakukohde"
 
   it should "return applications by application option oid" in {
     when(endPoint.request(forPattern(".*listfull.*")))
@@ -70,7 +113,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (20)
   }
 
-  it should "execute trigger function for modified applications" in {
+  "processModifiedHakemukset" should "execute trigger function for modified applications" in {
     val system = ActorSystem("hakurekisteri")
     implicit val scheduler = system.scheduler
 
@@ -106,19 +149,19 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
       triggerCounter += 1
     })
     val answers = Some(HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("123456-7890")))))
-    val ataruHenkilo = henkilo.Henkilo("ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, None, turvakielto = Some(false))
+    val ataruHenkilo = henkilo.Henkilo("ataruHenkiloOid", Some("ataruHetu"), "OPPIJA", None, None, None, None, List(), None, None, turvakielto = Some(false))
 
     trigger.f(FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
+    trigger.f(AtaruHakemus("ataruOid", Some("ataruHakijaOid"), "hakuOid", None, ataruHenkilo, "fi", "email", "matkapuhelin", "lahiosoite", "postinumero",
       Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", true, true, Map.empty, Map.empty, List.empty, None), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
     trigger.f(FullHakemus("oid", None, "hakuOid", answers, None, Nil), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
-    trigger.f(AtaruHakemus("ataruOid", None, "hakuOid", None, ataruHenkilo, "email", "matkapuhelin", "lahiosoite", "postinumero",
+    trigger.f(AtaruHakemus("ataruOid", None, "hakuOid", None, ataruHenkilo, "en", "email", "matkapuhelin", "lahiosoite", "postinumero",
       Some("postitoimipaikka"), Some("kotikunta"), "asuinmaa", true, true, Map.empty, Map.empty, List.empty, None), PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid"))))
     triggerCounter should equal(2)
   }
 
-  it should "return hetus and personOids" in {
+  "hetuAndPersonOidForHaku" should "return hetus and personOids" in {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("hetuAndPersonOid")))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))

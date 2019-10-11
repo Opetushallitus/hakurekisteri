@@ -497,10 +497,10 @@ class KkHakijaService(hakemusService: IHakemusService,
           kotikunta = hakemus.kotikunta.getOrElse("999"),
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
           aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
-          asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
-            case Some("fi") => "1"
-            case Some("sv") => "2"
-            case Some("en") => "3"
+          asiointikieli = hakemus.asiointiKieli.toLowerCase match {
+            case "fi" => "1"
+            case "sv" => "2"
+            case "en" => "3"
             case _ => "9"
           },
           koulusivistyskieli = "99",
@@ -584,10 +584,10 @@ class KkHakijaService(hakemusService: IHakemusService,
           kotikunta = hakemus.kotikunta.getOrElse("999"),
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
           aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
-          asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
-            case Some("fi") => "1"
-            case Some("sv") => "2"
-            case Some("en") => "3"
+          asiointikieli = hakemus.asiointiKieli match {
+            case "fi" => "1"
+            case "sv" => "2"
+            case "en" => "3"
             case _ => "9"
           },
           koulusivistyskieli = "99",
@@ -669,10 +669,10 @@ class KkHakijaService(hakemusService: IHakemusService,
           kotikunta = hakemus.kotikunta.getOrElse("999"),
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
           aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
-          asiointikieli = hakemus.henkilo.asiointiKieli.map(_.kieliKoodi) match {
-            case Some("fi") => "1"
-            case Some("sv") => "2"
-            case Some("en") => "3"
+          asiointikieli = hakemus.asiointiKieli match {
+            case "fi" => "1"
+            case "sv" => "2"
+            case "en" => "3"
             case _ => "9"
           },
           koulusivistyskieli = "99",

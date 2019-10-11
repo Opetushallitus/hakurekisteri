@@ -121,7 +121,6 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
       kansalaisuus = List(Kansalaisuus("246")),
       syntymaaika = Some("1989-09-24"),
       sukupuoli = Some("1"),
-      asiointiKieli = Some(Kieli("fi")),
       turvakielto = Some(false)
     )
   }.toMap)
