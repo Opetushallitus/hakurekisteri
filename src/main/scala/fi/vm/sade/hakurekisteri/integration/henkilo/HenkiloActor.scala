@@ -125,7 +125,6 @@ case class Henkilo(oidHenkilo: String,
                    kansalaisuus: List[Kansalaisuus],
                    syntymaaika: Option[String],
                    sukupuoli: Option[String],
-                   asiointiKieli: Option[Kieli],
                    turvakielto: Option[Boolean])
 
 case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)

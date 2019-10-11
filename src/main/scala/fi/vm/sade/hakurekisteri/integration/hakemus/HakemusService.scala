@@ -167,9 +167,6 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
           val (tarjoajaOid, parentOids) = tarjoajaAndParentOids(hakukohdeOid)
           HakutoiveDTO(index, Some(hakukohdeOid), None, None, None, Some(tarjoajaOid), parentOids, None, None, None, None, None)
       }
-      def asiointiKieliFromHakemusOrHenkilo(henkilo: Henkilo): Henkilo = {
-        if (henkilo.asiointiKieli.isEmpty) henkilo else henkilo.copy(asiointiKieli = Some(Kieli(hakemus.kieli.toLowerCase)))
-      }
       AtaruHakemus(
         oid = hakemus.oid,
         personOid = Some(hakemus.personOid),
