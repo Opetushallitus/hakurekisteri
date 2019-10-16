@@ -13,8 +13,6 @@ import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
 import support.TypedActorRef
 
-case class SearchKomoQuery(koulutus: String)
-
 case class GetKomoQuery(oid: String)
 
 case class HakukohdeQuery(oid: String)
@@ -90,15 +88,10 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
   override def receive: Receive = {
-    case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender
     case q: GetKomoQuery => getKomo(q.oid) pipeTo sender
     case q: HakukohdeQuery => getHakukohde(q.oid) pipeTo sender
     case GetHautQuery => getHaut pipeTo sender
     case oid: HakukohdeOid => getHakukohteenKoulutuksetViaCache(oid) pipeTo sender
-  }
-
-  def searchKomo(koulutus: String): Future[Seq[Komo]] = {
-    restClient.readObject[TarjontaResultResponse[Seq[Komo]]]("tarjonta-service.komo.search", koulutus)(200, maxRetries).map(_.result)
   }
 
   def getKomo(oid: String): Future[KomoResponse] = {
