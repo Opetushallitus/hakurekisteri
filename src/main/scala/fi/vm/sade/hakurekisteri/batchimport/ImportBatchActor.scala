@@ -44,6 +44,7 @@ case class ImportBatchQuery(externalId: Option[String],
                             batchType: Option[String],
                             maxCount: Option[Int] = None) extends support.Query[ImportBatch]
 
+@Deprecated
 class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int, config: Config)
   extends ResourceActor[ImportBatch, UUID](config) with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
 

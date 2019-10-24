@@ -11,7 +11,7 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
 
   val read = apiOperation[Boolean]("paivitaOpiskelijaKoskesta")
     .summary("Päivittää annetun oppijan tiedot koskesta")
-    .notes("Palauttaa true jos päivitys onnistui, muutoin false")
+    .description("Palauttaa true jos päivitys onnistui, muutoin false")
     .parameter(pathParam[String]("oppijaOid")
       .description("oppijanumero").required)
     .parameter(queryParam[Option[Boolean]]("haelukio").description("Haetaanko koskesta myös lukio-opiskelijoiden arvosanat").optional.defaultValue(Some(false)))
@@ -19,10 +19,11 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(404, "oppija not found"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("koskiimporter")
 
   val updateHenkilot = apiOperation[Boolean]("paivitaOpiskelijaListaKoskesta")
     .summary("Päivittää annetun oppijalistan tiedot koskesta")
-    .notes("Palauttaa true jos päivitys onnistui, muutoin false")
+    .description("Palauttaa true jos päivitys onnistui, muutoin false")
     .parameter(bodyParam[String]("oppijaoids")
       .description(s"""lista oppijanumeroista (max ${maxOppijatPostSize} kpl), esim ["1.2.246.562.24.00000000001", "1.2.246.562.24.00000000002"]""").required)
     .parameter(queryParam[Option[Boolean]]("haelukio").description("Haetaanko koskesta myös lukio-opiskelijoiden arvosanat").optional.defaultValue(Some(false)))
@@ -30,10 +31,11 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(404, "oppija not found"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("koskiimporter")
 
   val updateForHaku = apiOperation[Boolean]("paivitaOpiskelijatKoskestaHaulle")
     .summary("Päivittää haun hakijoiden tiedot koskesta")
-    .notes("Palauttaa true jos päivitys onnistui, muutoin false")
+    .description("Palauttaa true jos päivitys onnistui, muutoin false")
     .parameter(pathParam[String]("hakuOid")
       .description("haun oid").required)
     .parameter(queryParam[Option[Boolean]]("haelukio").description("Haetaanko koskesta myös lukio-opiskelijoiden arvosanat").optional.defaultValue(Some(false)))
@@ -41,5 +43,6 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(404, "oppija not found"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("koskiimporter")
 
 }

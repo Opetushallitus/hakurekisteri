@@ -21,7 +21,7 @@ class RestrictionsResource(parameterActor: ParametritActorRef)
   with FutureSupport with HakurekisteriJsonSupport with RestrictionsSwaggerApi with SecuritySupport with JacksonJsonSupport with QueryLogging{
 
 
-  override protected def applicationDescription: String = "Ohjausparametrirajoitteiden hakemisen rajapinta"
+  //override protected def applicationDescription: String = "Ohjausparametrirajoitteiden hakemisen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)

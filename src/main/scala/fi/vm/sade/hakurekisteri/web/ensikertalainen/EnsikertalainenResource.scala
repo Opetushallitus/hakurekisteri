@@ -29,7 +29,6 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport
     with FutureSupport with SecuritySupport with QueryLogging {
 
-  override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)

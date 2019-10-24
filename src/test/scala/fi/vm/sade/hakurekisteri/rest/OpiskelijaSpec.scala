@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, Opi
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaResource, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
@@ -36,7 +36,9 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
     database = Database.forURL(ItPostgres.getEndpointURL)
     val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = mockConfig)
     val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig))))))
-    addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/*")
+    //addServlet(new HakurekisteriResource[Opiskelija](guardedOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija], "/*") //fixme
+    addServlet(new OpiskelijaResource(guardedOpiskelijaRekisteri), "/*")
+
     super.beforeAll()
   }
 

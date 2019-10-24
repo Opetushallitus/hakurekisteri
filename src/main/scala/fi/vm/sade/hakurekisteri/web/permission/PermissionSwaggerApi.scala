@@ -26,7 +26,7 @@ trait PermissionSwaggerApi extends OldSwaggerSyntax with SwaggerSupport {
 
   val checkPermission = apiOperation[PermissionCheckResponse]("checkPermission")
     .summary("tarkistaa käyttöoikeuden")
-    .notes("Tarkistaa onko henkilöllä käyttöoikeus johonkin listatuista organisaatioista. " +
+    .description("Tarkistaa onko henkilöllä käyttöoikeus johonkin listatuista organisaatioista. " +
       "Virkailijat annetuista organisaatioista saavat katsella vain ko. organisaatioihin liittettyjen henkilöiden tietoja.")
     .parameter(bodyParam(permissionRequestModel))
     .responseMessage(ModelResponseMessage(400, "virhe kutsussa", Some("PermissionErrorResponse")))

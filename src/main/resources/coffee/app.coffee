@@ -234,20 +234,6 @@ app.directive "tiedonsiirtomenu", ->
           messageKey: "suoritusrekisteri.tiedonsiirto.menu.kkhakeneet"
           text: "Hakeneet ja valitut (KK)"
         }
-        {
-          path: "/tiedonsiirto/lahetys"
-          href: "#/tiedonsiirto/lahetys"
-          role: "app_tiedonsiirto_crud"
-          messageKey: "suoritusrekisteri.tiedonsiirto.menu.tiedostonlahetys"
-          text: "Tiedoston lähetys"
-        }
-        {
-          path: "/tiedonsiirto/tila"
-          href: "#/tiedonsiirto/tila"
-          role: "app_tiedonsiirto"
-          messageKey: "suoritusrekisteri.tiedonsiirto.menu.tila"
-          text: "Tiedonsiirtojen tila"
-        }
       ]
 
       $scope.isActive = (path) ->

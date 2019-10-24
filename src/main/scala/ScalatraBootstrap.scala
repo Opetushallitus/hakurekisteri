@@ -1,16 +1,12 @@
 import java.nio.file.Path
 
 import _root_.support._
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.opiskelija._
-import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
-import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3, HakijaResourceV4}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
@@ -19,8 +15,8 @@ import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
-import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
-import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{CreateOpiskeluoikeusCommand, OpiskeluoikeusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
+import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.web.permission.PermissionResource
 import fi.vm.sade.hakurekisteri.web.proxies._
@@ -82,8 +78,6 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
-    val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
-
     context.setInitParameter(org.scalatra.EnvironmentKey, "production")
     if("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
       context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
@@ -105,10 +99,6 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/komo", "komo") -> new GuiServlet,
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(suoritusActor = registers.suoritusRekisteri, opiskelijaActor = registers.opiskelijaRekisteri, hakemusBasedPermissionCheckerActor = integrations.hakemusBasedPermissionChecker),
-    ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
-    ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
-    ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
-    ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraOrgRekisteri,authorizedRegisters.eraRekisteri, integrations.organisaatiot, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
     ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp(java.lang.Boolean.valueOf(config.properties.getOrElse("suoritusrekisteri.swagger.https", "false"))),
     ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.suoritusRekisteri),
     ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
@@ -122,9 +112,9 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(koosteet.kkHakijaService),
     ("/rest/v2/kkhakijat", "rest/v2/kkhakijat") -> new KkHakijaResourceV2(koosteet.kkHakijaService, config),
     ("/rest/v3/kkhakijat", "rest/v3/kkhakijat") -> new KkHakijaResourceV3(koosteet.kkHakijaService, config),
-    ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
+    ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new OpiskelijaResource(authorizedRegisters.opiskelijaRekisteri),
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemusService, koosteet.ensikertalainen, integrations.oppijaNumeroRekisteri),
-    ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
+    ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new OpiskeluoikeusResource(authorizedRegisters.opiskeluoikeusRekisteri),
     ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new SuoritusResource(authorizedRegisters.suoritusRekisteri, integrations.parametrit, integrations.koodisto),
     ("/rest/v1/virta/henkilot", "rest/v1/virta/henkilot") -> new VirtaSuoritusResource(integrations.virtaResource, integrations.hakemusBasedPermissionChecker, integrations.oppijaNumeroRekisteri),
     ("/rest/v1/rajoitukset", "rest/v1/rajoitukset") -> new RestrictionsResource(integrations.parametrit),
@@ -137,19 +127,6 @@ class ScalatraBootstrap extends LifeCycle {
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
     ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
   )
-
-  private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =
-    system.actorOf(Props(new ImportBatchProcessingActor(
-      authorizedRegisters.eraOrgRekisteri,
-      authorizedRegisters.eraRekisteri,
-      integrations.henkilo,
-      authorizedRegisters.suoritusRekisteri,
-      authorizedRegisters.opiskelijaRekisteri,
-      integrations.organisaatiot,
-      authorizedRegisters.arvosanaRekisteri,
-      integrations.koodisto,
-      config
-    )), "importBatchProcessing")
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) {
     implicit val sc = context
