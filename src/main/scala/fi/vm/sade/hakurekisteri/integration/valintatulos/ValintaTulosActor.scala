@@ -69,6 +69,7 @@ class ValintaTulosActor(hautActor: ActorRef,
         haut.filter(_.isActive).foreach(haku => self ! FetchHaunValintatulos(haku.oid))
 
       case tulos: SijoitteluTulos =>
+        log.info("caching haun tulos for haku {}: jonot {}", tulos.hakuOid, tulos.valintatapajono)
         cache + (tulos.hakuOid, tulos)
 
       case Status.Failure(t) =>

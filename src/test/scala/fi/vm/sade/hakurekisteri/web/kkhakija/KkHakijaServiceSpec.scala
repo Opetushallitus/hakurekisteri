@@ -121,6 +121,19 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     hakijat.size should be (5)
   }
 
+  test("should not null pointer :(") {
+    when(endPoint.request(forPattern(".*listfull.*")))
+      .thenReturn((200, List(), getJson("byApplicationOption")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
+
+    val hakijat = Await.result(
+      service.getKkHakijat(KkHakijaQuery(None, None, None, Some("1.2.246.562.20.649956391810"), None, Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))), 4), 150.seconds
+    )
+
+    hakijat.size should be (5)
+  }
+
   test("should return one hyvaksytty hakija") {
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
