@@ -220,7 +220,9 @@ class KkHakijaService(hakemusService: IHakemusService,
 
     getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap((lukuvuosimaksut: Seq[Lukuvuosimaksu]) => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos => {
-        val kiinnostavatJonot: Set[String] = if (kokoHaunTulos.isDefined) kokoHaunTulos.get.valintatapajono.values.toSet else Set.empty
+        logger.info("jonomap: " + kokoHaunTulos.get.valintatapajono)
+        val kiinnostavatJonot: Set[String] = if (kokoHaunTulos.isDefined && kokoHaunTulos.get.valintatapajono.nonEmpty) kokoHaunTulos.get.valintatapajono.values.toSet else Set.empty
+        logger.info("kiinnostavat jonot: " + kiinnostavatJonot)
         valintaperusteetService.getValintatapajonot(kiinnostavatJonot).flatMap { jonotiedot: Seq[ValintatapajononTiedot] =>
           val maksusByHakijaAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]] = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
           Future.sequence(hakemukset.flatMap(getKkHakijaV4(haku, q, kokoHaunTulos, hakukohdeOids, maksusByHakijaAndHakukohde, jonotiedot)))
