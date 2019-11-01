@@ -175,6 +175,10 @@ app.controller "HakeneetCtrl", [
           }
           {
             value: 3,
+            text: "3"
+          }
+          {
+            value: 4,
             text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
           }
         ]
@@ -205,7 +209,7 @@ app.controller "HakeneetCtrl", [
     $scope.rajapinnanVersiot = rajapintaVaihtoehdot()
 
     if(isKk())
-      $scope.rajapinnanVersio = 3
+      $scope.rajapinnanVersio = 4
     else
       $scope.rajapinnanVersio = 4
 
