@@ -264,6 +264,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
+  val valintaperusteetServiceUrl = properties.getOrElse("foo", "sos")
 
   val hakuappPageSize: Int = properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
 
@@ -339,6 +340,13 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     properties = properties,
     maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.oppijanumerorekisteri-service.max-connections").toInt,
     maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.oppijanumerorekisteri-service.max-connection-queue-ms").toInt)
+  val valintaperusteetServiceConfig = ServiceConfig(casUrl = casUrl,
+    serviceUrl = valintaperusteetServiceUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue("suoritusrekisteri.valintaperusteet-service.max-connections").toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue("suoritusrekisteri.valintaperusteet-service.max-connection-queue-ms").toInt)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt

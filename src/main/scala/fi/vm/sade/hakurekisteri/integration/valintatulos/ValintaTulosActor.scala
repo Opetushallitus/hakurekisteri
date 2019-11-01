@@ -7,6 +7,7 @@ import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, HakuRequest}
+import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintatapajononTiedot
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
 import support.TypedActorRef
 
@@ -101,6 +102,16 @@ class ValintaTulosActor(hautActor: ActorRef,
       .map(SijoitteluTulos(hakuOid, _))
   }
 
+  private def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] = {
+    if (jonoOids.nonEmpty) {
+      //logger.info("Getting jonotietos from valintaperusteet for jonos: " + jonoOids)
+      client.postObject[Set[String], Seq[ValintatapajononTiedot]]("valintaperusteet.valintatapajonosByOids")(200, jonoOids)
+    } else {
+      //logger.info("Empty list of jonoOids provided for getValintatapajonot.")
+      Future.successful(List.empty)
+    }
+
+  }
   private case class FetchHaunValintatulos(hakuOid: String)
   private case class FetchedHaunValintatulos(hakuOid: String, tulos: Try[SijoitteluTulos])
 }
