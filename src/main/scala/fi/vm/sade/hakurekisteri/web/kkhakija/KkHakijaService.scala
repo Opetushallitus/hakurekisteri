@@ -217,7 +217,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       case h: FullHakemus => h.preferenceEligibilities.filter(_.maksuvelvollisuus.isDefined).map(_.aoId)
       case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
     }).toSet
-    
+
     getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap((lukuvuosimaksut: Seq[Lukuvuosimaksu]) => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos => {
         val kiinnostavatJonot: Set[String] = if (kokoHaunTulos.isDefined) kokoHaunTulos.get.valintatapajono.values.toSet else Set.empty
@@ -283,9 +283,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       case (Some(tulos), _) => Future.successful(tulos)
       case (None, Some(_)) => (valintaTulos.actor ? HakemuksenValintatulos(hakemus.applicationSystemId, hakemus.oid)).mapTo[SijoitteluTulos]
       case (None, None) => (valintaTulos.actor ? HaunValintatulos(hakemus.applicationSystemId)).mapTo[SijoitteluTulos]
-    }).flatMap(tulos =>
-
-      Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids, jonotiedot)).map(_.flatten))
+    }).flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids, jonotiedot)).map(_.flatten))
   }
 
   private def extractHakemukset(hakemus: HakijaHakemus,
@@ -321,7 +319,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def jononTyyppiForHakemus(tila: Option[Valintatila], jonoOid: String, jonoTiedot: Seq[ValintatapajononTiedot]): Option[String] = {
     if (jonoTiedot.nonEmpty && tila.isDefined && Valintatila.isHyvaksytty(tila.get)) {
-      val jono: Option[ValintatapajononTiedot] = jonoTiedot.find(j => jonoOid.equals(j.oid))
+      val jono: Option[ValintatapajononTiedot] = jonoTiedot.find(j => j.oid.equals(jonoOid))
       if (jono.isDefined) Some(jono.get.tyyppiToReadable()) else {
         logger.warn("VTKU-112: No jonotieto found for jono {}, but it has a hyväksytty hakija!", jonoOid)
         None
