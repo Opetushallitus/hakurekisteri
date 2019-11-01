@@ -241,6 +241,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
   val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
+  val valintaperusteetServiceUrlQa = s"https://$hostQa/valintaperusteet-service"
 
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
   val virtaJarjestelmaTest = ""
@@ -263,7 +264,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
-  val valintaperusteetServiceUrl = properties.getOrElse("foo", "sos")
+  val valintaperusteetServiceUrl = properties.getOrElse("cas.service.valintaperusteet-service", valintaperusteetServiceUrlQa)
 
   val hakuappPageSize: Int = properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
 
