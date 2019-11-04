@@ -72,7 +72,7 @@ case class ValintaTulosHakutoive(hakukohdeOid: String,
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
-@SerialVersionUID(2)
+@SerialVersionUID(3)
 case class SijoitteluTulos(hakuOid: String,
                            pisteet: Map[(String, String), BigDecimal],
                            valintatila: Map[(String, String), Valintatila],
@@ -90,7 +90,8 @@ object SijoitteluTulos {
       valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila).toMap,
       valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila).toMap,
       valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila).toMap,
-      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid).toMap
+      valintatulos.hakutoiveet.filter(h => h.valintatapajonoOid.nonEmpty).
+        map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid).toMap
     )
   }
 
@@ -112,7 +113,8 @@ object SijoitteluTulos {
         valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila)
       }).toMap,
       valintatulokset.flatMap(valintatulos => {
-        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
+        valintatulos.hakutoiveet.filter(h => h.valintatapajonoOid.nonEmpty)
+          .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
       }).toMap
     )
   }
