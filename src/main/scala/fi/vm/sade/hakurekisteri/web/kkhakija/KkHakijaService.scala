@@ -307,7 +307,7 @@ class KkHakijaService(hakemusService: IHakemusService,
           toive,
           haku,
           sijoitteluTulos,
-          jonotiedot: Seq[ValintatapajononTiedot]
+          jonotiedot
         )
       else Future.successful(None)
     )).getOrElse(Seq.empty)
@@ -326,9 +326,7 @@ class KkHakijaService(hakemusService: IHakemusService,
         logger.warn("VTKU-112: No jonotieto found for jono {}, but it has a hyväksytty hakija!", jonoOid)
         None
       }
-    }
-    else
-      None
+    } else None
   }
 
   private def extractSingleHakemus(h: HakijaHakemus,
@@ -559,14 +557,14 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def getKkHakijaV4(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String],
-                            lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]], jonotiedotByOid: Seq[ValintatapajononTiedot])(h: HakijaHakemus): Option[Future[Hakija]] = h match {
+                            lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]], jonotiedot: Seq[ValintatapajononTiedot])(h: HakijaHakemus): Option[Future[Hakija]] = h match {
     case hakemus: FullHakemus =>
       for {
         answers: HakemusAnswers <- hakemus.answers
         henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
         henkiloOid <- hakemus.personOid
       } yield for {
-        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(henkiloOid, Map()), q, kokoHaunTulos, hakukohdeOids, jonotiedotByOid)
+        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(henkiloOid, Map()), q, kokoHaunTulos, hakukohdeOids, jonotiedot)
         maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
         toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa, koodisto)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
@@ -604,7 +602,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       )
     case hakemus: AtaruHakemus =>
       Some(for {
-        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.personOid.get, Map()), q, kokoHaunTulos, hakukohdeOids, jonotiedotByOid)
+        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.personOid.get, Map()), q, kokoHaunTulos, hakukohdeOids, jonotiedot)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = hakemus.henkilo.oidHenkilo, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
       } yield {
         val syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s)))
