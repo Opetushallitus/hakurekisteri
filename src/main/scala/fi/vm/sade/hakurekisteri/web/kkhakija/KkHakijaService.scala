@@ -325,7 +325,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def jononTyyppiForHakemus(tila: Option[Valintatila], jonoOid: String, jonoTiedot: Seq[ValintatapajononTiedot]): Option[String] = {
-    if (jonoTiedot.nonEmpty && tila.isDefined && Valintatila.isHyvaksytty(tila.get)) {
+    if (jonoTiedot.nonEmpty && tila.isDefined && Valintatila.isHyvaksytty(tila.getOrElse(Valintatila.KESKEN))) {
       val jono: Option[ValintatapajononTiedot] = jonoTiedot.find(j => j.oid.equals(jonoOid))
       if (jono.isDefined) Some(jono.get.tyyppiToReadable()) else {
         logger.warn("VTKU-112: No jonotieto found for jono {}, but it has a hyväksytty hakija!", jonoOid)
