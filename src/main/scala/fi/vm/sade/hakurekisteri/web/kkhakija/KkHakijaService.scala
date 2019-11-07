@@ -220,14 +220,9 @@ class KkHakijaService(hakemusService: IHakemusService,
 
     getLukuvuosimaksut(maksuvelvollisuudet, q.user.get.auditSession()).flatMap((lukuvuosimaksut: Seq[Lukuvuosimaksu]) => {
       kokoHaunTulosIfNoOppijanumero(q, haku.oid).flatMap { kokoHaunTulos => {
-        logger.info("jonomap: " + kokoHaunTulos.get.valintatapajono)
-        val kiinnostavatJonot: Set[String] = if (kokoHaunTulos.isDefined && kokoHaunTulos.get.valintatapajono.nonEmpty) kokoHaunTulos.get.valintatapajono.values.toSet else Set.empty
-        logger.info("kiinnostavat jonot: " + kiinnostavatJonot)
-        valintaperusteetService.getValintatapajonot(kiinnostavatJonot).flatMap { jonotiedot: Seq[ValintatapajononTiedot] =>
-          val maksusByHakijaAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]] = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
-          Future.sequence(hakemukset.flatMap(getKkHakijaV4(haku, q, kokoHaunTulos, hakukohdeOids, maksusByHakijaAndHakukohde, jonotiedot)))
-            .map(_.filter(_.hakemukset.nonEmpty))
-        }
+        val maksusByHakijaAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]] = lukuvuosimaksut.groupBy(_.personOid).mapValues(_.toList.groupBy(_.hakukohdeOid))
+        Future.sequence(hakemukset.flatMap(getKkHakijaV4(haku, q, kokoHaunTulos, hakukohdeOids, maksusByHakijaAndHakukohde)))
+          .map(_.filter(_.hakemukset.nonEmpty))
       }
       }
     })
@@ -280,12 +275,22 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def getHakemukset(haku: Haku, hakemus: HakijaHakemus, lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]], q: KkHakijaQuery,
-                            kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String], jonotiedot: Seq[ValintatapajononTiedot] = Seq.empty): Future[Seq[Hakemus]] = {
+                            kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String]): Future[Seq[Hakemus]] = {
     ((kokoHaunTulos, q.oppijanumero) match {
       case (Some(tulos), _) => Future.successful(tulos)
       case (None, Some(_)) => (valintaTulos.actor ? HakemuksenValintatulos(hakemus.applicationSystemId, hakemus.oid)).mapTo[SijoitteluTulos]
       case (None, None) => (valintaTulos.actor ? HaunValintatulos(hakemus.applicationSystemId)).mapTo[SijoitteluTulos]
-    }).flatMap(tulos => Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids, jonotiedot)).map(_.flatten))
+    }).flatMap(tulos => {
+      val jonotiedot = q.version match {
+        case(v) if (v < 4) =>
+          logger.info("Getting hakemukset, version earlier than 4. Not getting jonotietos.")
+          Future.successful(Seq.empty)
+        case(_) =>
+          logger.info("Getting hakemukset, version at least 4. Getting jonotietos.")
+          valintaperusteetService.getValintatapajonot(tulos.valintatapajono.values.toSet)
+      }
+      jonotiedot.flatMap(j =>  Future.sequence(extractHakemukset(hakemus, lukuvuosimaksutByHakukohdeOid, q, haku, tulos, hakukohdeOids, j)).map(_.flatten))
+    })
   }
 
   private def extractHakemukset(hakemus: HakijaHakemus,
@@ -557,14 +562,14 @@ class KkHakijaService(hakemusService: IHakemusService,
   }
 
   private def getKkHakijaV4(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos], hakukohdeOids: Seq[String],
-                            lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]], jonotiedot: Seq[ValintatapajononTiedot])(h: HakijaHakemus): Option[Future[Hakija]] = h match {
+                            lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]])(h: HakijaHakemus): Option[Future[Hakija]] = h match {
     case hakemus: FullHakemus =>
       for {
         answers: HakemusAnswers <- hakemus.answers
         henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
         henkiloOid <- hakemus.personOid
       } yield for {
-        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(henkiloOid, Map()), q, kokoHaunTulos, hakukohdeOids, jonotiedot)
+        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(henkiloOid, Map()), q, kokoHaunTulos, hakukohdeOids)
         maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
         toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa, koodisto)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
@@ -602,7 +607,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       )
     case hakemus: AtaruHakemus =>
       Some(for {
-        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.personOid.get, Map()), q, kokoHaunTulos, hakukohdeOids, jonotiedot)
+        hakemukset <- getHakemukset(haku, hakemus, lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(hakemus.personOid.get, Map()), q, kokoHaunTulos, hakukohdeOids)
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = hakemus.henkilo.oidHenkilo, komo = YoTutkinto.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
       } yield {
         val syntymaaika = hakemus.henkilo.syntymaaika.map(s => new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s)))
