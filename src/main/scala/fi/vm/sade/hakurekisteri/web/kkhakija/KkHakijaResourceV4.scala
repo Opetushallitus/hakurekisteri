@@ -20,7 +20,7 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 class KkHakijaResourceV4(kkHakijaService: KkHakijaService, ophConfig: Config)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
-  extends HakuJaValintarekisteriStack with KkHakijaSwaggerApiV3 with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
+  extends HakuJaValintarekisteriStack with KkHakijaSwaggerApiV4 with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
     with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging with HakijaResourceSupport {
 
   protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
