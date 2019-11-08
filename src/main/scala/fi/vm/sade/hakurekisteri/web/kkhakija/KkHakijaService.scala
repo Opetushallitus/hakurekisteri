@@ -129,6 +129,7 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   def getKkHakijat(q: KkHakijaQuery, version: Int): Future[Seq[Hakija]] = {
     logger.info("getkkhakijat called with query {}, version {}", q, version )
+    val queryFixed = q.copy(version = version) //Yhdenmukaistetaan siirtotiedostojono ja suorat rajapintakutsut
     def resolveMultipleHakukohdeOidsAsHakemukset(hakukohdeOids: Seq[String]): Future[Seq[HakijaHakemus]] = {
       hakemusService.hakemuksetForHakukohdes(hakukohdeOids.toSet, q.organisaatio)
     }
@@ -138,20 +139,21 @@ class KkHakijaService(hakemusService: IHakemusService,
     }
 
     for (
-      hakemukset <- q match {
+      hakemukset <- queryFixed match {
         case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
         case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
         case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _) =>
           hakupalvelu.getHakukohdeOids(hakukohderyhma, haku).flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
-      hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery), version)(q)
+      hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery), version)(queryFixed)
     ) yield hakijat
   }
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   private def fullHakemukset2hakijat(hakemukset: Seq[HakijaHakemus], version: Int)(q: KkHakijaQuery): Future[Seq[Hakija]] = {
+    logger.info("fullHakemukset2hakijat, hakemuksia {}", hakemukset.size)
     val fullHakemusesByHakuOid: Map[String, Seq[HakijaHakemus]] = hakemukset.groupBy(_.applicationSystemId)
     Future.sequence(fullHakemusesByHakuOid.map {
       case (hakuOid, fullHakemuses) =>
