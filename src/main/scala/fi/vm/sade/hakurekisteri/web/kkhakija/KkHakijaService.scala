@@ -128,6 +128,7 @@ class KkHakijaService(hakemusService: IHakemusService,
   implicit def executor: ExecutionContext = system.dispatcher
 
   def getKkHakijat(q: KkHakijaQuery, version: Int): Future[Seq[Hakija]] = {
+    logger.info("getkkhakijat called with query {}, version {}", q, version )
     def resolveMultipleHakukohdeOidsAsHakemukset(hakukohdeOids: Seq[String]): Future[Seq[HakijaHakemus]] = {
       hakemusService.hakemuksetForHakukohdes(hakukohdeOids.toSet, q.organisaatio)
     }
@@ -159,14 +160,18 @@ class KkHakijaService(hakemusService: IHakemusService,
             q.hakukohderyhma.map(hakupalvelu.getHakukohdeOids(_, haku.oid)).getOrElse(Future.successful(Seq())).flatMap(hakukohdeOids => {
               version match {
                 case 1 =>
+                  logger.info("Kkhakijat v{} requested, query version: {}", version, q.version)
                   kokoHaunTulosIfNoOppijanumero(q, hakuOid).flatMap { kokoHaunTulos =>
                     Future.sequence(fullHakemuses.flatMap(getKkHakijaV1(haku, q, kokoHaunTulos, hakukohdeOids))).map(_.filter(_.hakemukset.nonEmpty))
                   }
                 case 2 =>
+                  logger.info("Kkhakijat v{} requested, query version: {}", version, q.version)
                   createV2Hakijas(q, fullHakemuses, haku, hakukohdeOids)
                 case 3 =>
+                  logger.info("Kkhakijat v{} requested, query version: {}", version, q.version)
                   createV3Hakijas(q, fullHakemuses, haku, hakukohdeOids)
                 case 4 =>
+                  logger.info("Kkhakijat v{} requested, query version: {}", version, q.version)
                   createV4Hakijas(q, fullHakemuses, haku, hakukohdeOids)
               }
             })
@@ -281,6 +286,7 @@ class KkHakijaService(hakemusService: IHakemusService,
       case (None, Some(_)) => (valintaTulos.actor ? HakemuksenValintatulos(hakemus.applicationSystemId, hakemus.oid)).mapTo[SijoitteluTulos]
       case (None, None) => (valintaTulos.actor ? HaunValintatulos(hakemus.applicationSystemId)).mapTo[SijoitteluTulos]
     }).flatMap(tulos => {
+      logger.info("Tuloksessa jonoja: {}", tulos.valintatapajono.size)
       val jonotiedot = q.version match {
         case(v) if (v < 4) =>
           logger.info("Getting hakemukset, version earlier than 4. Not getting jonotietos.")
