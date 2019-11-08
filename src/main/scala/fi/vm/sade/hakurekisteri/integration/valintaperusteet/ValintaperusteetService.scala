@@ -35,7 +35,7 @@ class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val sys
       restClient.postObject[Set[String], Seq[ValintatapajononTiedot]]("valintaperusteet.valintatapajonosByOids")(200, jonoOids)
     } else {
       logger.info("Empty list of jonoOids provided for getValintatapajonot.")
-      Future.successful(List.empty)
+      Future.successful(Seq.empty)
     }
 
   }
