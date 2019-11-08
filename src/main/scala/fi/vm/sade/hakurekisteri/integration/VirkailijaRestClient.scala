@@ -66,8 +66,12 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     aClient match {
       case Some(asyncHttpClient) => new HttpExecutor {
         override def client: AsyncHttpClient = asyncHttpClient
+        logger.info("client cookies: " + client.getConfig.getCookieStore.getAll.toString)
+        client
       }
-      case None => Http.withConfiguration(_.
+      case None =>
+        logger.info("NEW HTTP WITH CONFIGURATION")
+        var temp = Http.withConfiguration(_.
         setConnectTimeout(config.httpClientConnectionTimeout).
         setRequestTimeout(config.httpClientRequestTimeout).
         setReadTimeout(config.httpClientRequestTimeout).
@@ -76,6 +80,8 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         setMaxRequestRetry(2).
         setUseNativeTransport(config.useNativeTransport).
         addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs)))
+        logger.info("COOKIES FOR NEW HTTP CONFIG: " + temp.client.getConfig.getCookieStore.getAll.toString)
+        temp
     }
   }
 
@@ -90,7 +96,10 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     import org.json4s.jackson.Serialization._
 
     private def addCookies(request: Req, cookies: Seq[Cookie]): Req = {
-      cookies.foldLeft[Req](request)((req, cookie) => req.addOrReplaceCookie(cookie))
+      logger.info("method: " + request.toRequest.getMethod)
+      var temp = cookies.foldLeft[Req](request)((req, cookie) => req.addOrReplaceCookie(cookie))
+      logger.info("cookies after cookies set: " + temp.toRequest.getCookies.toString)
+      temp
     }
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
@@ -99,8 +108,10 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
       val requestWithPostHeaders = body match {
         case Some(jsonBody) =>
-          cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
-          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> "suoritusrekisteri")
+
+          var test = (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> "suoritusrekisteri")
+          logger.info("REQUEST WITH POST HEADERS COOKIES: " +request.toRequest.getCookies)
+          test
         case None => request
       }
 
@@ -111,19 +122,29 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
             jsession <- jSessionId;
             result <- {
               cookies += new DefaultCookie(jSessionName, jsession.sessionId)
+              logger.info("BEFORE REQUEST WITH COOKIES COOKIES: " + cookies.toString())
+              cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
               val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
+              logger.info("case (Some(un), Some(pw), false) request cookies: " + requestWithCookies.getCookies.toString)
               internalClient(requestWithCookies, handler)
             }
           ) yield result
         case (Some(un), Some(pw), true) =>
           for (
             result <- {
-              internalClient(addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest, handler)
+              cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
+              val request1 = addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest
+              logger.info("case (Some(un), Some(pw), true) request cookies: " + request1.getCookies.toString)
+
+              internalClient(request1, handler)
             }
           ) yield result
         case _ =>
+          cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
+          val request2 = addCookies(requestWithPostHeaders, cookies).toRequest
+          logger.info("case _ request cookies: " + request2.getCookies.toString)
           for (
-            result <- internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
+            result <- internalClient(request2, handler)
           ) yield result
       }
     }
@@ -238,6 +259,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     val retryCount = new AtomicInteger(1)
     val url = OphUrlProperties.url(uriKey, args:_*)
     val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+    logger.info("tryPostClient: " + result.toString)
     logLongQuery(result, url)
     result
   }
