@@ -42,5 +42,5 @@ class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val sys
 }
 
 class ValintaperusteetServiceMock extends IValintaperusteetService {
-  override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] = Future.successful(List.empty)
+  override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] = Future.successful(jonoOids.map(oid => ValintatapajononTiedot(oid, Some("valintatapajono_m"))).toSeq)
 }
