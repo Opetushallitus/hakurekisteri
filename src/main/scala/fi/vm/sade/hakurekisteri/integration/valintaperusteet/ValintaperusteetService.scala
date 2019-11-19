@@ -11,12 +11,12 @@ case class ValintatapajononTiedot(oid: String,
 
   def tyyppiToReadable(): String = {
     tyyppi.getOrElse("") match {
-      case "valintatapajono_av" => "valintatapajono_av"
-      case "valintatapajono_km" => "valintatapajono_km"
-      case "valintatapajono_kp" => "KOEPISTEET"
-      case "valintatapajono_m" => "valintatapajono_m"
-      case "valintatapajono_tv" => "valintatapajono_tv"
-      case "valintatapajono_yp" => "YHTEISPISTEET"
+      case "valintatapajono_av" => "Avoin väylä"
+      case "valintatapajono_km" => "Kilpailumenestys"
+      case "valintatapajono_kp" => "Koepisteet"
+      case "valintatapajono_m" => "Muu"
+      case "valintatapajono_tv" => "Todistusvalinta"
+      case "valintatapajono_yp" => "Yhteispisteet"
       case _ => "tuntematon"
     }
   }
