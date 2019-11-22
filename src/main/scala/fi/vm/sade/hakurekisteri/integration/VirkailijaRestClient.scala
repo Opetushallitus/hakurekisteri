@@ -119,14 +119,16 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
           for (
             result <- {
               cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
-              internalClient(addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest, handler)
+              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest
+              internalClient(requestWithCookies, handler)
             }
           ) yield result
         case _ =>
           for (
             result <- {
               cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
-              internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)}
+              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
+              internalClient(requestWithCookies, handler)}
           ) yield result
       }
     }
