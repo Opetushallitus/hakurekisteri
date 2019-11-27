@@ -36,7 +36,7 @@ class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val sys
   override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] = {
     if (jonoOids.nonEmpty) {
       val batches: Seq[Set[String]] = jonoOids.grouped(MAX_VALINTATAPAJONOT_BATCH_SIZE).toSeq
-      logger.info("Getting jonotietos from valintaperusteet for jonos: " + jonoOids + s" in ${batches.size}")
+      logger.info(s"Getting jonotietos from valintaperusteet for jonos: $jonoOids in ${batches.size} batches")
       Future.sequence(batches.map(oidBatch => restClient.postObject[Set[String], Seq[ValintatapajononTiedot]]("valintaperusteet.valintatapajonosByOids")(200, oidBatch)))
         .map(_.flatten.toSeq)
     } else {
