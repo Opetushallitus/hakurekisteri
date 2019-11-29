@@ -99,7 +99,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
       val requestWithPostHeaders = body match {
         case Some(jsonBody) =>
-          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> "suoritusrekisteri")
+          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> Config.csrf)
         case None => request
       }
 
@@ -110,7 +110,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
             jsession <- jSessionId;
             result <- {
               cookies += new DefaultCookie(jSessionName, jsession.sessionId)
-              cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
+              cookies += new DefaultCookie("CSRF", Config.csrf)
               val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
               internalClient(requestWithCookies, handler)
             }
@@ -118,7 +118,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case (Some(un), Some(pw), true) =>
           for (
             result <- {
-              cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
+              cookies += new DefaultCookie("CSRF", Config.csrf)
               val requestWithCookies = addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest
               internalClient(requestWithCookies, handler)
             }
@@ -126,7 +126,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case _ =>
           for (
             result <- {
-              cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
+              cookies += new DefaultCookie("CSRF", Config.csrf)
               val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
               internalClient(requestWithCookies, handler)}
           ) yield result

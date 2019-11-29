@@ -25,6 +25,7 @@ object Config {
   lazy val mockDevConfig = new MockDevConfig
 
   val callerId: String = s"${OrganisaatioOids.oph}.suoritusrekisteri.backend"
+  val csrf: String = "suoritusrekisteri"
 }
 
 object OrganisaatioOids {

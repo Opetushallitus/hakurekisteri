@@ -80,7 +80,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
     val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") <<
       s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:<
       Map("Content-Type" -> "application/x-www-form-urlencoded",
-          "Caller-Id" -> Config.callerId)
+          "Caller-Id" -> Config.callerId,
+          "CSRF" -> Config.csrf)
 
     internalClient(tgtUrlReq).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
@@ -103,7 +104,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       val proxyReq = dispatch.url(tgtUrl) <<
         s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:<
         Map("Content-Type" -> "application/x-www-form-urlencoded",
-            "Caller-Id" -> Config.callerId)
+            "Caller-Id" -> Config.callerId,
+            "CSRF" -> Config.csrf)
       internalClient(proxyReq).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
@@ -133,7 +135,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
       internalClient(request <<?
         Map("ticket" -> ticket) <:<
-        Map("Caller-Id" -> Config.callerId)).map { r: Response =>
+        Map("Caller-Id" -> Config.callerId,
+            "CSRF" -> Config.csrf)).map { r: Response =>
         (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie(_, jSessionName)))) match {
           case (200 | 302 | 404, Some(cookie)) =>
             val id = JSessionIdCookieParser.fromString(cookie, jSessionName)
