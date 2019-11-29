@@ -109,6 +109,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
         Map("Content-Type" -> "application/x-www-form-urlencoded",
             "Caller-Id" -> Config.callerId,
             "CSRF" -> Config.csrf)
+      proxyReq.addCookie(new DefaultCookie("CSRF", Config.csrf))
       internalClient(proxyReq).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
