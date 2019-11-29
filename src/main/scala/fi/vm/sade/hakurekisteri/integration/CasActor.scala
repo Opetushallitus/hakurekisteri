@@ -8,6 +8,7 @@ import akka.pattern.pipe
 import dispatch.{Http, HttpExecutor, Req}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cas._
+import io.netty.handler.codec.http.cookie.DefaultCookie
 import org.asynchttpclient.{AsyncHttpClient, Response}
 
 import scala.collection.JavaConverters._
@@ -82,6 +83,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
       Map("Content-Type" -> "application/x-www-form-urlencoded",
           "Caller-Id" -> Config.callerId,
           "CSRF" -> Config.csrf)
+
+    tgtUrlReq.addCookie(new DefaultCookie("CSRF", Config.csrf))
 
     internalClient(tgtUrlReq).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
