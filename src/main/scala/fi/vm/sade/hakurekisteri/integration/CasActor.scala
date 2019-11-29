@@ -78,7 +78,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
   }
 
   private def getTgtUrl = {
-    val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") <<
+    val tgtUrlReq: Req = dispatch.url(s"${casUrl.get}/v1/tickets") <<
       s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:<
       Map("Content-Type" -> "application/x-www-form-urlencoded",
           "Caller-Id" -> Config.callerId,
@@ -104,7 +104,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def tryServiceTicket(retry: Int): Future[String] = {
     getTgtUrl.flatMap(tgtUrl => {
-      val proxyReq = dispatch.url(tgtUrl) <<
+      val proxyReq: Req = dispatch.url(tgtUrl) <<
         s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:<
         Map("Content-Type" -> "application/x-www-form-urlencoded",
             "Caller-Id" -> Config.callerId,
@@ -137,6 +137,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
     val request: Req = dispatch.url(serviceUrl)
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
+      request.addCookie(new DefaultCookie("CSRF", Config.csrf))
       internalClient(request <<?
         Map("ticket" -> ticket) <:<
         Map("Caller-Id" -> Config.callerId,
