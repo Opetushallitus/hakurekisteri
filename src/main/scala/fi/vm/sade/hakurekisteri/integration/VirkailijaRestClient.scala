@@ -94,7 +94,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     }
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
-      val request = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
+      val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
       val requestWithPostHeaders = body match {

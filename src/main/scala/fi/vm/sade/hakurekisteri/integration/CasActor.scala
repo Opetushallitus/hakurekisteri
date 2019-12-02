@@ -84,8 +84,9 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
           "Caller-Id" -> Config.callerId,
           "CSRF" -> Config.csrf)
 
-    tgtUrlReq.addCookie(new DefaultCookie("CSRF", Config.csrf))
-
+    tgtUrlReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+    log.error("tgtUrlReq: " + tgtUrlReq.toRequest.toString)
+    log.error("tgtUrlReq cookies: " + tgtUrlReq.toRequest.getCookies.toString)
     internalClient(tgtUrlReq).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
         case (201, Some(location)) => location
@@ -109,7 +110,9 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
         Map("Content-Type" -> "application/x-www-form-urlencoded",
             "Caller-Id" -> Config.callerId,
             "CSRF" -> Config.csrf)
-      proxyReq.addCookie(new DefaultCookie("CSRF", Config.csrf))
+      proxyReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+      log.error("proxyReq: " + proxyReq.toRequest.toString)
+      log.error("proxyReq cookies: " + proxyReq.toRequest.getCookies.toString)
       internalClient(proxyReq).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
@@ -135,9 +138,11 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def getJSession: Future[JSessionId] = {
     val request: Req = dispatch.url(serviceUrl)
+    request.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+    log.error("request: " + request.toRequest.toString)
+    log.error("request cookies: " + request.toRequest.getCookies.toString)
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
-      request.addCookie(new DefaultCookie("CSRF", Config.csrf))
       internalClient(request <<?
         Map("ticket" -> ticket) <:<
         Map("Caller-Id" -> Config.callerId,
