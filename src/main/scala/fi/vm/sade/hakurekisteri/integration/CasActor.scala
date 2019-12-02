@@ -85,8 +85,6 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
           "CSRF" -> Config.csrf)
 
     val tgtUrlReqWithCsrf: Req = tgtUrlReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
-    log.error("tgtUrlReq: " + tgtUrlReq.toRequest.toString)
-    log.error("tgtUrlReq cookies: " + tgtUrlReq.toRequest.getCookies.toString)
     internalClient(tgtUrlReqWithCsrf).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
         case (201, Some(location)) => location
@@ -110,9 +108,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
         Map("Content-Type" -> "application/x-www-form-urlencoded",
             "Caller-Id" -> Config.callerId,
             "CSRF" -> Config.csrf)
+
       val proxyReqWithCsrf: Req = proxyReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
-      log.error("proxyReq: " + proxyReq.toRequest.toString)
-      log.error("proxyReq cookies: " + proxyReq.toRequest.getCookies.toString)
       internalClient(proxyReqWithCsrf).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
@@ -138,9 +135,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def getJSession: Future[JSessionId] = {
     val request: Req = dispatch.url(serviceUrl)
+
     val requestWithCsrf: Req = request.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
-    log.error("request: " + request.toRequest.toString)
-    log.error("request cookies: " + request.toRequest.getCookies.toString)
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
       internalClient(requestWithCsrf <<?
