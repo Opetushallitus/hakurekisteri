@@ -84,10 +84,10 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
           "Caller-Id" -> Config.callerId,
           "CSRF" -> Config.csrf)
 
-    tgtUrlReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+    val tgtUrlReqWithCsrf: Req = tgtUrlReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
     log.error("tgtUrlReq: " + tgtUrlReq.toRequest.toString)
     log.error("tgtUrlReq cookies: " + tgtUrlReq.toRequest.getCookies.toString)
-    internalClient(tgtUrlReq).map {
+    internalClient(tgtUrlReqWithCsrf).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
         case (201, Some(location)) => location
         case (201, None) => throw LocationHeaderNotFoundException("location header not found")
@@ -110,10 +110,10 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
         Map("Content-Type" -> "application/x-www-form-urlencoded",
             "Caller-Id" -> Config.callerId,
             "CSRF" -> Config.csrf)
-      proxyReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+      val proxyReqWithCsrf: Req = proxyReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
       log.error("proxyReq: " + proxyReq.toRequest.toString)
       log.error("proxyReq cookies: " + proxyReq.toRequest.getCookies.toString)
-      internalClient(proxyReq).map { r: Response =>
+      internalClient(proxyReqWithCsrf).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
           case (200, st) => throw InvalidServiceTicketException(st)
@@ -138,12 +138,12 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def getJSession: Future[JSessionId] = {
     val request: Req = dispatch.url(serviceUrl)
-    request.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+    val requestWithCsrf: Req = request.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
     log.error("request: " + request.toRequest.toString)
     log.error("request cookies: " + request.toRequest.getCookies.toString)
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
-      internalClient(request <<?
+      internalClient(requestWithCsrf <<?
         Map("ticket" -> ticket) <:<
         Map("Caller-Id" -> Config.callerId,
             "CSRF" -> Config.csrf)).map { r: Response =>
