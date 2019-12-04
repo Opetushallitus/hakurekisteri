@@ -185,21 +185,26 @@ class YtlIntegration(properties: OphProperties,
                 })
             futureForAllKokelasesToPersist onComplete {
               case Success(_) =>
-                logger.info(s"Finished YTL syncAll! All batches succeeded!")
+                logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
                 atomicUpdateFetchStatus(l => l.copy(succeeded = Some(true), end = Some(new Date())))
               case Failure(e) =>
-                logger.error(s"Failed to persist all kokelas", e)
+                logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
                 atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
                 failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+                // TODO: Throw here?
             }
           } finally {
+            logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
             IOUtils.closeQuietly(zip)
           }
       }
+      logger.info(s"YTL syncAll was successful!")
     } catch {
       case e: Throwable =>
         atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
-        logger.error(s"YTL sync all failed!", e)
+        logger.error(s"YTL syncAll failed!", e)
+    } finally {
+      logger.info(s"Finished YTL syncAll.")
     }
   }
 
