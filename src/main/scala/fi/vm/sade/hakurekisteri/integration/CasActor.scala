@@ -8,6 +8,7 @@ import akka.pattern.pipe
 import dispatch.{Http, HttpExecutor, Req}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cas._
+import io.netty.handler.codec.http.cookie.DefaultCookie
 import org.asynchttpclient.{AsyncHttpClient, Response}
 
 import scala.collection.JavaConverters._
@@ -77,12 +78,14 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
   }
 
   private def getTgtUrl = {
-    val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") <<
+    val tgtUrlReq: Req = dispatch.url(s"${casUrl.get}/v1/tickets") <<
       s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:<
       Map("Content-Type" -> "application/x-www-form-urlencoded",
-          "Caller-Id" -> Config.callerId)
+          "Caller-Id" -> Config.callerId,
+          "CSRF" -> Config.csrf)
 
-    internalClient(tgtUrlReq).map {
+    val tgtUrlReqWithCsrf: Req = tgtUrlReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+    internalClient(tgtUrlReqWithCsrf).map {
       r: Response => (r.getStatusCode, Option(r.getHeader("Location"))) match {
         case (201, Some(location)) => location
         case (201, None) => throw LocationHeaderNotFoundException("location header not found")
@@ -100,11 +103,14 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def tryServiceTicket(retry: Int): Future[String] = {
     getTgtUrl.flatMap(tgtUrl => {
-      val proxyReq = dispatch.url(tgtUrl) <<
+      val proxyReq: Req = dispatch.url(tgtUrl) <<
         s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:<
         Map("Content-Type" -> "application/x-www-form-urlencoded",
-            "Caller-Id" -> Config.callerId)
-      internalClient(proxyReq).map { r: Response =>
+            "Caller-Id" -> Config.callerId,
+            "CSRF" -> Config.csrf)
+
+      val proxyReqWithCsrf: Req = proxyReq.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
+      internalClient(proxyReqWithCsrf).map { r: Response =>
         (r.getStatusCode, r.getResponseBody.trim) match {
           case (200, st) if TicketValidator.isValidSt(st) => st
           case (200, st) => throw InvalidServiceTicketException(st)
@@ -129,11 +135,14 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient], j
 
   private def getJSession: Future[JSessionId] = {
     val request: Req = dispatch.url(serviceUrl)
+
+    val requestWithCsrf: Req = request.addOrReplaceCookie(new DefaultCookie("CSRF", Config.csrf))
     getServiceTicket.flatMap(ticket => {
       log.debug(s"about to call $serviceUrl with ticket $ticket to get jsession")
-      internalClient(request <<?
+      internalClient(requestWithCsrf <<?
         Map("ticket" -> ticket) <:<
-        Map("Caller-Id" -> Config.callerId)).map { r: Response =>
+        Map("Caller-Id" -> Config.callerId,
+            "CSRF" -> Config.csrf)).map { r: Response =>
         (r.getStatusCode, Option(r.getHeaders("Set-Cookie")).flatMap(_.asScala.find(JSessionIdCookieParser.isJSessionIdCookie(_, jSessionName)))) match {
           case (200 | 302 | 404, Some(cookie)) =>
             val id = JSessionIdCookieParser.fromString(cookie, jSessionName)

@@ -94,13 +94,12 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     }
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
-      val request = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
+      val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
       val requestWithPostHeaders = body match {
         case Some(jsonBody) =>
-          cookies += new DefaultCookie("CSRF", "suoritusrekisteri")
-          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> "suoritusrekisteri")
+          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> Config.csrf)
         case None => request
       }
 
@@ -111,6 +110,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
             jsession <- jSessionId;
             result <- {
               cookies += new DefaultCookie(jSessionName, jsession.sessionId)
+              cookies += new DefaultCookie("CSRF", Config.csrf)
               val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
               internalClient(requestWithCookies, handler)
             }
@@ -118,12 +118,17 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case (Some(un), Some(pw), true) =>
           for (
             result <- {
-              internalClient(addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest, handler)
+              cookies += new DefaultCookie("CSRF", Config.csrf)
+              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest
+              internalClient(requestWithCookies, handler)
             }
           ) yield result
         case _ =>
           for (
-            result <- internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
+            result <- {
+              cookies += new DefaultCookie("CSRF", Config.csrf)
+              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
+              internalClient(requestWithCookies, handler)}
           ) yield result
       }
     }
