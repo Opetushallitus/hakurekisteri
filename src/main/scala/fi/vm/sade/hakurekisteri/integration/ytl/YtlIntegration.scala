@@ -159,6 +159,7 @@ class YtlIntegration(properties: OphProperties,
     val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
     try {
+      logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
@@ -166,6 +167,7 @@ class YtlIntegration(properties: OphProperties,
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
+
             val kokelaksetToPersist: Iterator[Kokelas] =
               students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
                 case Some(personOid) =>
@@ -179,10 +181,12 @@ class YtlIntegration(properties: OphProperties,
                   logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
                   None
               })
+
             val futureForAllKokelasesToPersist: Future[Unit] = SequentialBatchExecutor.runInBatches(
                 kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
                     ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
                 })
+
             futureForAllKokelasesToPersist onComplete {
               case Success(_) =>
                 logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
