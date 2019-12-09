@@ -202,13 +202,13 @@ class YtlIntegration(properties: OphProperties,
             IOUtils.closeQuietly(zip)
           }
       }
-      logger.info(s"YTL syncAll was successful!")
     } catch {
       case e: Throwable =>
         atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
         logger.error(s"YTL syncAll failed!", e)
     } finally {
-      logger.info(s"Finished YTL syncAll.")
+      val succeededOpt: Option[Boolean] = getLastFetchStatus.flatMap(_.succeeded)
+      logger.info(s"Finished YTL syncAll, succeeded: ${succeededOpt}")
     }
   }
 
