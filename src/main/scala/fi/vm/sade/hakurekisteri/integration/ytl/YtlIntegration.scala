@@ -120,19 +120,24 @@ class YtlIntegration(properties: OphProperties,
 
   def getLastFetchStatus: Option[LastFetchStatus] = Option(lastFetchStatus.get())
 
+  def getCurrentStatusAndAlreadyRunning: (LastFetchStatus,Boolean) = {
+    val newStatus = newFetchStatus
+    val currentStatus = atomicUpdateFetchStatus(oldStatus => {
+      Option(oldStatus) match {
+        case Some(status) if status.inProgress => oldStatus
+        case _ => newStatus
+      }
+    })
+    val isAlreadyRunningAtomic = currentStatus != newStatus
+    (currentStatus, isAlreadyRunningAtomic)
+  }
+
   /**
     * Begins async synchronization. Throws an exception if an error occurs during it.
     */
   def syncAll(failureEmailSender: FailureEmailSender = new RealFailureEmailSender): Unit = {
-    val fetchStatus = newFetchStatus
-    val currentStatus = atomicUpdateFetchStatus(currentStatus => {
-      Option(currentStatus) match {
-        case Some(status) if status.inProgress => currentStatus
-        case _ => fetchStatus
-      }
-    })
-    val isAlreadyRunningAtomic = currentStatus != fetchStatus
-    if(isAlreadyRunningAtomic) {
+    val (currentStatus, isAlreadyRunningAtomic) = getCurrentStatusAndAlreadyRunning
+    if (isAlreadyRunningAtomic) {
       val message = s"syncAll is already running! $currentStatus"
       logger.error(message)
       throw new RuntimeException(message)
