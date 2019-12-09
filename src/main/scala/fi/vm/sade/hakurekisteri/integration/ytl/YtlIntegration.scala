@@ -117,11 +117,9 @@ class YtlIntegration(properties: OphProperties,
     */
   def syncAll(failureEmailSender: FailureEmailSender = new RealFailureEmailSender): Unit = {
     val fetchStatus = newFetchStatus
-    val currentStatus = atomicUpdateFetchStatus(currentStatus => {
-      Option(currentStatus) match {
-        case Some(status) if status.inProgress => currentStatus
-        case _ => fetchStatus
-      }
+    val currentStatus = atomicUpdateFetchStatus({
+      case oldStatus if oldStatus.inProgress => oldStatus
+      case _ => fetchStatus
     })
     val isAlreadyRunningAtomic = currentStatus != fetchStatus
     if(isAlreadyRunningAtomic) {
