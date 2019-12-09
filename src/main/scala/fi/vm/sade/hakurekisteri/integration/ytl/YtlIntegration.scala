@@ -164,6 +164,7 @@ class YtlIntegration(properties: OphProperties,
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
+          atomicUpdateFetchStatus(l => l.copy(hasFailures = Some(true), end = Some(new Date())))
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
