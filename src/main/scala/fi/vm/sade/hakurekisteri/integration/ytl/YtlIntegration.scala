@@ -110,6 +110,14 @@ class YtlIntegration(properties: OphProperties,
     )
   }
 
+  private def atomicUpdateFetchStatusHasFailures(hasFailures: Boolean): Unit = {
+    atomicUpdateFetchStatus(l => {
+      val newHasFailures = Some(hasFailures)
+      val end = Some(new Date())
+      l.copy(hasFailures = newHasFailures, end = end)
+    })
+  }
+
   def getLastFetchStatus: Option[LastFetchStatus] = Option(lastFetchStatus.get())
 
   /**
@@ -145,7 +153,7 @@ class YtlIntegration(properties: OphProperties,
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service", e)
           failureEmailSender.sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-          atomicUpdateFetchStatus(l => l.copy(hasFailures=Some(true), end = Some(new Date())))
+          atomicUpdateFetchStatusHasFailures(hasFailures = true)
           throw e
       }
     }
@@ -162,7 +170,7 @@ class YtlIntegration(properties: OphProperties,
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
-          atomicUpdateFetchStatus(l => l.copy(hasFailures = Some(true), end = Some(new Date())))
+          atomicUpdateFetchStatusHasFailures(hasFailures = true)
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
@@ -195,7 +203,7 @@ class YtlIntegration(properties: OphProperties,
                 })
               case Failure(e) =>
                 logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
-                atomicUpdateFetchStatus(l => l.copy(hasFailures = Some(true), end = Some(new Date())))
+                atomicUpdateFetchStatusHasFailures(hasFailures = true)
                 failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
                 // TODO: Throw here?
             }
@@ -206,7 +214,7 @@ class YtlIntegration(properties: OphProperties,
       }
     } catch {
       case e: Throwable =>
-        atomicUpdateFetchStatus(l => l.copy(hasFailures = Some(true), end = Some(new Date())))
+        atomicUpdateFetchStatusHasFailures(hasFailures = true)
         logger.error(s"YTL syncAll failed!", e)
     } finally {
       val hasFailuresOpt: Option[Boolean] = getLastFetchStatus.flatMap(_.hasFailures)
