@@ -112,7 +112,7 @@ class YtlIntegration(properties: OphProperties,
 
   private def atomicUpdateFetchStatusHasFailures(hasFailures: Boolean): Unit = {
     atomicUpdateFetchStatus(l => {
-      val newHasFailures = Some(hasFailures)
+      val newHasFailures = Some(l.hasFailures.getOrElse(false)) // one-way: don't change to false if was already true
       val end = Some(new Date())
       l.copy(hasFailures = newHasFailures, end = end)
     })
@@ -199,10 +199,7 @@ class YtlIntegration(properties: OphProperties,
             futureForAllKokelasesToPersist onComplete {
               case Success(_) =>
                 logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
-                atomicUpdateFetchStatus(l => {
-                  val newHasFailures = Some(l.hasFailures.getOrElse(false)) // one-way: don't change to false if was already true
-                  l.copy(hasFailures = newHasFailures, end = Some(new Date()))
-                })
+                atomicUpdateFetchStatusHasFailures(hasFailures = false)
               case Failure(e) =>
                 logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
                 atomicUpdateFetchStatusHasFailures(hasFailures = true)
