@@ -212,7 +212,8 @@ class YtlIntegration(properties: OphProperties,
             futureForAllKokelasesToPersist onComplete {
               case Success(_) =>
                 logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
-                atomicUpdateStatusHasFailures(hasFailures = false)
+                val latestStatus = atomicUpdateStatusHasFailures(hasFailures = false)
+                logger.info(s"Latest status after update: ${latestStatus}")
               case Failure(e) =>
                 logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
                 atomicUpdateStatusHasFailures(hasFailures = true)
