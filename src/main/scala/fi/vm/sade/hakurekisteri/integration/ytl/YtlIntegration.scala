@@ -110,7 +110,7 @@ class YtlIntegration(properties: OphProperties,
     )
   }
 
-  private def atomicUpdateStatusHasFailures(hasFailures: Boolean): Unit = {
+  private def atomicUpdateStatusHasFailures(hasFailures: Boolean): LastFetchStatus = {
     atomicUpdateStatus(l => {
       val newHasFailures = l.hasFailures match {
         case Some(true) =>
