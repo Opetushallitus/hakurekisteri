@@ -112,7 +112,7 @@ class YtlIntegration(properties: OphProperties,
 
   private def atomicUpdateStatusHasFailures(hasFailures: Boolean): Unit = {
     atomicUpdateStatus(l => {
-      val newHasFailures = if (l.hasFailures.contains(false)) false else hasFailures // one-way: don't change to false if was already true
+      val newHasFailures = if (l.hasFailures.contains(true)) true else hasFailures // one-way: don't change to false if was already true
       val end = Some(new Date())
       l.copy(hasFailures = Some(newHasFailures), end = end)
     })
