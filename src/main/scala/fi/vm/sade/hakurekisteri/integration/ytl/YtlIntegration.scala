@@ -114,15 +114,11 @@ class YtlIntegration(properties: OphProperties,
     atomicUpdateStatus(l => {
       val newHasFailures = l.hasFailures match {
         case Some(true) =>
-          // one-way: don't change to false if was already true
-          logger.info(s"hasFailures was already set to true (tried to set to ${hasFailures})")
-          true
-        case old =>
-          logger.info(s"Setting hasFailures to ${hasFailures}, was ${old}")
+          true // one-way: don't change to false if was already true
+        case _ =>
           hasFailures
       }
-      val end = Some(new Date())
-      l.copy(hasFailures = Some(newHasFailures), end = end)
+      l.copy(hasFailures = Some(newHasFailures), end = Some(new Date()))
     })
   }
 
