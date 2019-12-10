@@ -182,10 +182,11 @@ class YtlIntegration(properties: OphProperties,
     try {
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
-      ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
+      val futures: Iterator[Future[Unit]] = ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.map {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
           atomicUpdateStatusHasFailures(hasFailures = true)
+          Future.failed(e)
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
@@ -209,7 +210,7 @@ class YtlIntegration(properties: OphProperties,
                     ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
                 })
 
-            futureForAllKokelasesToPersist onComplete {
+            futureForAllKokelasesToPersist.andThen {
               case Success(_) =>
                 logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
                 val latestStatus = atomicUpdateStatusHasFailures(hasFailures = false)
@@ -218,20 +219,23 @@ class YtlIntegration(properties: OphProperties,
                 logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
                 atomicUpdateStatusHasFailures(hasFailures = true)
                 failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
-                // TODO: Throw here?
             }
           } finally {
             logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
             IOUtils.closeQuietly(zip)
           }
       }
+
+      Future.sequence(futures.toSeq).onComplete { _ =>
+          val hasFailuresOpt: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
+          logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+      }
     } catch {
       case e: Throwable =>
         atomicUpdateStatusHasFailures(hasFailures = true)
         logger.error(s"YTL syncAll failed!", e)
     } finally {
-      val hasFailuresOpt: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
-      logger.info(s"Finished YTL syncAll, hasFailures: ${hasFailuresOpt}")
+      logger.info(s"Finished YTL syncAll")
     }
   }
 
