@@ -230,6 +230,7 @@ class YtlIntegration(properties: OphProperties,
       case e: Throwable =>
         atomicUpdateStatusHasFailures(hasFailures = true)
         logger.error(s"YTL syncAll failed!", e)
+        failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
     } finally {
       logger.info(s"Finished YTL syncAll")
     }
