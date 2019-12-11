@@ -184,15 +184,6 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     Mockito.when(ytlHttpClient.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any())).thenReturn(zipResults)
   }
 
-  trait HakemusServiceTenEntriesThatFailsFetch {
-    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(tenEntries))
-
-    private val ytlHttpClientThatThrows: YtlHttpFetch = mock[YtlHttpFetch]
-    private val lefts = Seq(Left(new RuntimeException("mocked failure")))
-    Mockito.when(ytlHttpClientThatThrows.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any(classOf[Seq[String]])))
-      .thenReturn(lefts.toIterator)
-  }
-
   override protected def beforeEach(): Unit = {
     Mockito.reset(hakemusService, oppijaNumeroRekisteri, failureEmailSenderMock, ytlHttpClient)
     Mockito.when(oppijaNumeroRekisteri.enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))).thenAnswer(new Answer[Future[PersonOidsWithAliases]] {
@@ -528,7 +519,31 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
 
-  it should "fail if ytl fetch throws" in new UseYtlKokelasPersister with UseYtlIntegration with HakemusServiceTenEntriesThatFailsFetch {
+  it should "fail if ytl fetch returns throwables" in new UseYtlKokelasPersister with UseYtlIntegration {
+    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(tenEntries))
+
+    private val ytlHttpClientThatReturnsThrowables: YtlHttpFetch = mock[YtlHttpFetch]
+    private val lefts = Seq(Left(new RuntimeException("mocked failure")))
+    Mockito.when(ytlHttpClientThatReturnsThrowables.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any(classOf[Seq[String]])))
+      .thenReturn(lefts.toIterator)
+
+    val realKokelasPersister = createTestYtlKokelasPersister()
+    val ytlIntegration = createTestYtlIntegration(realKokelasPersister)
+
+    ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
+
+    Thread.sleep(11000)
+
+    Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
+  }
+
+  it should "fail if ytl fetch throws" in new UseYtlKokelasPersister with UseYtlIntegration {
+    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(tenEntries))
+
+    private val ytlHttpClientThatThrows: YtlHttpFetch = mock[YtlHttpFetch]
+    Mockito.when(ytlHttpClientThatThrows.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any(classOf[Seq[String]])))
+      .thenThrow(new RuntimeException("mocked failure"))
+
     val realKokelasPersister = createTestYtlKokelasPersister()
     val ytlIntegration = createTestYtlIntegration(realKokelasPersister)
 
