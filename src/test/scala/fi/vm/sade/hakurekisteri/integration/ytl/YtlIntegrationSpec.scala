@@ -159,19 +159,21 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       None, true, "1.2.246.562.10.43628088406", None, Map()).identify(UUID.randomUUID())
   }
 
+  private val tenEntries = Seq(
+    HetuPersonOid("030288-9552", "1.2.246.562.24.97187447816"),
+    HetuPersonOid("060141-9297", "1.2.246.562.24.26258799406"),
+    HetuPersonOid("081007-982P", "1.2.246.562.24.28012286739"),
+    HetuPersonOid("091001A941F", "1.2.246.562.24.58341904891"),
+    HetuPersonOid("101206-919A", "1.2.246.562.24.72419942839"),
+    HetuPersonOid("111028-9213", "1.2.246.562.24.69534493441"),
+    HetuPersonOid("121096-901M", "1.2.246.562.24.27918240375"),
+    HetuPersonOid("210253-989R", "1.2.246.562.24.48985825650"),
+    HetuPersonOid("210955-920N", "1.2.246.562.24.82063315187"),
+    HetuPersonOid("281000-967A", "1.2.246.562.24.95499907842")
+  )
+
   trait HakemusServiceTenEntries {
-    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(Seq(
-      HetuPersonOid("030288-9552", "1.2.246.562.24.97187447816"),
-      HetuPersonOid("060141-9297", "1.2.246.562.24.26258799406"),
-      HetuPersonOid("081007-982P", "1.2.246.562.24.28012286739"),
-      HetuPersonOid("091001A941F", "1.2.246.562.24.58341904891"),
-      HetuPersonOid("101206-919A", "1.2.246.562.24.72419942839"),
-      HetuPersonOid("111028-9213", "1.2.246.562.24.69534493441"),
-      HetuPersonOid("121096-901M", "1.2.246.562.24.27918240375"),
-      HetuPersonOid("210253-989R", "1.2.246.562.24.48985825650"),
-      HetuPersonOid("210955-920N", "1.2.246.562.24.82063315187"),
-      HetuPersonOid("281000-967A", "1.2.246.562.24.95499907842")
-    )))
+    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(tenEntries))
     val jsonStringFromFile = ClassPathUtil.readFileFromClasspath(getClass, "student-results-from-ytl.json")
     implicit val formats: Formats = Student.formatsStudent
     val studentsFromYtlTestData: Seq[Student] = JsonMethods.parse(jsonStringFromFile).extract[Seq[Student]]
@@ -180,6 +182,15 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
       studentsFromYtlTestData.iterator))).iterator
 
     Mockito.when(ytlHttpClient.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any())).thenReturn(zipResults)
+  }
+
+  trait HakemusServiceTenEntriesThatFailsFetch {
+    Mockito.when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid)).thenReturn(Future.successful(tenEntries))
+
+    private val ytlHttpClientThatThrows: YtlHttpFetch = mock[YtlHttpFetch]
+    private val lefts = Seq(Left(new RuntimeException("mocked failure")))
+    Mockito.when(ytlHttpClientThatThrows.fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any(classOf[Seq[String]])))
+      .thenReturn(lefts.toIterator)
   }
 
   override protected def beforeEach(): Unit = {
@@ -509,6 +520,17 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
   it should "fail if ytl persister gets stuck" in new UseYtlKokelasPersister with UseYtlIntegration with HakemusServiceTenEntries {
     val kokelasPersisterWhichGetsStuck = createTestYtlKokelasPersister(arvosanaRekisteri = neverEndingActor)
     val ytlIntegration = createTestYtlIntegration(kokelasPersisterWhichGetsStuck)
+
+    ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
+
+    Thread.sleep(11000)
+
+    Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
+  }
+
+  it should "fail if ytl fetch throws" in new UseYtlKokelasPersister with UseYtlIntegration with HakemusServiceTenEntriesThatFailsFetch {
+    val realKokelasPersister = createTestYtlKokelasPersister()
+    val ytlIntegration = createTestYtlIntegration(realKokelasPersister)
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
