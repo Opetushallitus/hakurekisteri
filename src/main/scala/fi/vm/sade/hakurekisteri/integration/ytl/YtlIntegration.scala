@@ -107,14 +107,17 @@ class YtlIntegration(properties: OphProperties,
       throw new RuntimeException(message)
     } else {
       logger.info(s"Starting sync all!")
+
       def fetchInChunks(hakuOids: Set[String]): Future[Set[HetuPersonOid]] = {
         def fetchChunk(chunk: Set[String]): Future[Set[HetuPersonOid]] = {
           Future.sequence(chunk.map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))).map(_.flatten)
         }
+
         hakuOids.grouped(10).foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
           case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
         }
       }
+
       logger.info(s"Fetching in chunks, activeKKHakuOids: ${activeKKHakuOids.get()}")
       fetchInChunks(activeKKHakuOids.get()).onComplete {
         case Success(persons) =>
@@ -130,7 +133,8 @@ class YtlIntegration(properties: OphProperties,
     }
   }
 
-  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid],
+  private def handleHakemukset(groupUuid: String,
+                               persons: Set[HetuPersonOid],
                                failureEmailSender: FailureEmailSender): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
@@ -148,8 +152,8 @@ class YtlIntegration(properties: OphProperties,
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
 
-            val kokelaksetToPersist: Iterator[Kokelas] = getKokelaksetToPersist(students, hetuToPersonOid)
-            persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases, failureEmailSender, index, count)
+            val kokelaksetToPersist = getKokelaksetToPersist(students, hetuToPersonOid)
+            persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
               .andThen {
                 case Success(_) =>
                   logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
@@ -195,7 +199,7 @@ class YtlIntegration(properties: OphProperties,
     })
   }
 
-  private def persistKokelaksetInBatches(kokelaksetToPersist: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases, failureEmailSender: FailureEmailSender, index: Int, count: Int): Future[Unit] = {
+  private def persistKokelaksetInBatches(kokelaksetToPersist: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases): Future[Unit] = {
     SequentialBatchExecutor.runInBatches(
       kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
       ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
