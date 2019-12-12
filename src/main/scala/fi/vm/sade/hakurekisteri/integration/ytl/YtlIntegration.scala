@@ -227,55 +227,55 @@ class YtlIntegration(properties: OphProperties,
       }
     }
   }
+
+  object AtomicStatus {
+    case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], hasFailures: Option[Boolean]) {
+      def inProgress = end.isEmpty
+    }
+
+    private val lastStatus = new AtomicReference[LastFetchStatus]()
+
+    private def createNewStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
+
+    def getLastStatusHasFailures: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
+
+    def getLastStatus: Option[LastFetchStatus] = Option(lastStatus.get())
+
+    private def updateAndGetStatus(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
+      lastStatus.updateAndGet(
+        new UnaryOperator[LastFetchStatus]{
+          override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
+        }
+      )
+    }
+
+    def getNewOrExistingStatusAndIsAlreadyRunning(): (LastFetchStatus,Boolean) = {
+      val newStatus = createNewStatus
+      val currentStatus = updateAndGetStatus(oldStatus => {
+        Option(oldStatus) match {
+          case Some(status) if status.inProgress => oldStatus
+          case _ => newStatus
+        }
+      })
+      val isAlreadyRunningAtomic = currentStatus != newStatus
+      (currentStatus, isAlreadyRunningAtomic)
+    }
+
+    def updateHasFailures(hasFailures: Boolean): LastFetchStatus = {
+      updateAndGetStatus(l => {
+        val newHasFailures = l.hasFailures match {
+          case Some(true) =>
+            true // one-way: don't change to false if was already true
+          case _ =>
+            hasFailures
+        }
+        l.copy(hasFailures = Some(newHasFailures), end = Some(new Date()))
+      })
+    }
+
+  }
 }
 
 abstract class FailureEmailSender {
   def sendFailureEmail(txt: String): Unit
-}
-
-object AtomicStatus {
-  case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], hasFailures: Option[Boolean]) {
-    def inProgress = end.isEmpty
-  }
-
-  private val lastStatus = new AtomicReference[LastFetchStatus]()
-
-  private def createNewStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
-
-  def getLastStatusHasFailures: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
-
-  def getLastStatus: Option[LastFetchStatus] = Option(lastStatus.get())
-
-  private def updateAndGetStatus(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
-    lastStatus.updateAndGet(
-      new UnaryOperator[LastFetchStatus]{
-        override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
-      }
-    )
-  }
-
-  def getNewOrExistingStatusAndIsAlreadyRunning(): (LastFetchStatus,Boolean) = {
-    val newStatus = createNewStatus
-    val currentStatus = updateAndGetStatus(oldStatus => {
-      Option(oldStatus) match {
-        case Some(status) if status.inProgress => oldStatus
-        case _ => newStatus
-      }
-    })
-    val isAlreadyRunningAtomic = currentStatus != newStatus
-    (currentStatus, isAlreadyRunningAtomic)
-  }
-
-  def updateHasFailures(hasFailures: Boolean): LastFetchStatus = {
-    updateAndGetStatus(l => {
-      val newHasFailures = l.hasFailures match {
-        case Some(true) =>
-          true // one-way: don't change to false if was already true
-        case _ =>
-          hasFailures
-      }
-      l.copy(hasFailures = Some(newHasFailures), end = Some(new Date()))
-    })
-  }
-
 }

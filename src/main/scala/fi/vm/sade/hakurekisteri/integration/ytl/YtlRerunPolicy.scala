@@ -15,7 +15,7 @@ object YtlRerunPolicy {
     logger.info(s"First YTL fetch at '${nextTimestamp(expression, new Date())}'")
 
     () => {
-      val fetchStatus = AtomicStatus.getLastStatus
+      val fetchStatus = ytlIntegration.AtomicStatus.getLastStatus
       val isRunning = fetchStatus.exists(_.inProgress)
       if(isRunning) {
         logger.info(s"Scheduled to make YTL fetch but fetch is already running! Next try will be ${nextTimestamp(expression, new Date())}")
