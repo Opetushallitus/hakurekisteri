@@ -175,6 +175,7 @@ class YtlIntegration(properties: OphProperties,
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
+
     try {
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
@@ -185,39 +186,21 @@ class YtlIntegration(properties: OphProperties,
           Future.failed(e)
         case (Right((zip, students)), index) =>
           try {
-            logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
-
-            val kokelaksetToPersist: Iterator[Kokelas] =
-              students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
-                case Some(personOid) =>
-                  Try(StudentToKokelas.convert(personOid, student)) match {
-                    case Success(candidate) => Some(candidate)
-                    case Failure(exception) =>
-                      logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
-                      None
-                  }
-                case None =>
-                  logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
-                  None
-              })
-
-            val futureForAllKokelasesToPersist: Future[Unit] = SequentialBatchExecutor.runInBatches(
-                kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
-                    ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
-                })
-
-            futureForAllKokelasesToPersist.andThen {
-              case Success(_) =>
-                logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
-                val latestStatus = atomicUpdateStatusHasFailures(hasFailures = false)
-                logger.info(s"Latest status after update: ${latestStatus}")
-              case Failure(e) =>
-                logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
-                atomicUpdateStatusHasFailures(hasFailures = true)
-                failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
-            }
+            logger.info("Fetch succeeded on YTL data batch !")
+            val kokelaksetToPersist: Iterator[Kokelas] = getKokelaksetToPersist(students, hetuToPersonOid)
+            persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases, failureEmailSender, index, count)
+              .andThen {
+                case Success(_) =>
+                  logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
+                  val latestStatus = atomicUpdateStatusHasFailures(hasFailures = false)
+                  logger.info(s"Latest status after update: ${latestStatus}")
+                case Failure(e) =>
+                  logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
+                  atomicUpdateStatusHasFailures(hasFailures = true)
+                  failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+              }
           } finally {
-            logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
+            logger.info("Closing zip file on YTL data batch ")
             IOUtils.closeQuietly(zip)
           }
       }
@@ -234,6 +217,28 @@ class YtlIntegration(properties: OphProperties,
     } finally {
       logger.info(s"Finished YTL syncAll")
     }
+  }
+
+  private def getKokelaksetToPersist(students: Iterator[Student], hetuToPersonOid: Map[String, String]): Iterator[Kokelas] = {
+    students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
+      case Some(personOid) =>
+        Try(StudentToKokelas.convert(personOid, student)) match {
+          case Success(candidate) => Some(candidate)
+          case Failure(exception) =>
+            logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
+            None
+        }
+      case None =>
+        logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
+        None
+    })
+  }
+
+  private def persistKokelaksetInBatches(kokelaksetToPersist: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases, failureEmailSender: FailureEmailSender, index: Int, count: Int): Future[Unit] = {
+    SequentialBatchExecutor.runInBatches(
+      kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
+      ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+    })
   }
 
   private class RealFailureEmailSender extends FailureEmailSender {
