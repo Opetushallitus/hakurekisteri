@@ -27,7 +27,7 @@ import org.quartz.CronScheduleBuilder._
 import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
-import support.YtlRerunPolicy.rerunPolicy
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlRerunPolicy
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
@@ -216,7 +216,7 @@ class BaseIntegrations(rekisterit: Registers,
   }
 
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
-  val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
+  val rerunSync = YtlRerunPolicy.rerunPolicy(syncAllCronExpression, ytlIntegration)
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   logger.info(s"Scheduled syncAll jobs (cron expression=$syncAllCronExpression)")

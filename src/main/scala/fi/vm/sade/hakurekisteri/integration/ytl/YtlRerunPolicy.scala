@@ -1,9 +1,8 @@
-package support
+package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import fi.vm.sade.hakurekisteri.integration.ytl.YtlIntegration
 import org.apache.commons.lang3.time.DateUtils
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
@@ -16,7 +15,7 @@ object YtlRerunPolicy {
     logger.info(s"First YTL fetch at '${nextTimestamp(expression, new Date())}'")
 
     () => {
-      val fetchStatus = ytlIntegration.getLastStatus
+      val fetchStatus = AtomicStatus.getLastStatus
       val isRunning = fetchStatus.exists(_.inProgress)
       if(isRunning) {
         logger.info(s"Scheduled to make YTL fetch but fetch is already running! Next try will be ${nextTimestamp(expression, new Date())}")

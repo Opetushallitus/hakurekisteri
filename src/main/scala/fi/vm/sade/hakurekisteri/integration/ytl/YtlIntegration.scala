@@ -233,7 +233,7 @@ abstract class FailureEmailSender {
   def sendFailureEmail(txt: String): Unit
 }
 
-private object AtomicStatus {
+object AtomicStatus {
   case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], hasFailures: Option[Boolean]) {
     def inProgress = end.isEmpty
   }
@@ -244,7 +244,7 @@ private object AtomicStatus {
 
   def getLastStatusHasFailures: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
 
-  private def getLastStatus: Option[LastFetchStatus] = Option(lastStatus.get())
+  def getLastStatus: Option[LastFetchStatus] = Option(lastStatus.get())
 
   private def updateAndGetStatus(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
     lastStatus.updateAndGet(
