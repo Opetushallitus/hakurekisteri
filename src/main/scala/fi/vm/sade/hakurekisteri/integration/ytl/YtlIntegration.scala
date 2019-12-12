@@ -146,7 +146,8 @@ class YtlIntegration(properties: OphProperties,
           Future.failed(e)
         case (Right((zip, students)), index) =>
           try {
-            logger.info("Fetch succeeded on YTL data batch !")
+            logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
+
             val kokelaksetToPersist: Iterator[Kokelas] = getKokelaksetToPersist(students, hetuToPersonOid)
             persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases, failureEmailSender, index, count)
               .andThen {
@@ -160,7 +161,7 @@ class YtlIntegration(properties: OphProperties,
                   failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
               }
           } finally {
-            logger.info("Closing zip file on YTL data batch ")
+            logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
             IOUtils.closeQuietly(zip)
           }
       }
