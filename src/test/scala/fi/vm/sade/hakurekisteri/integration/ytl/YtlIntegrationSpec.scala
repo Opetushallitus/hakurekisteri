@@ -532,7 +532,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(11000)
+    Thread.sleep(1000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
@@ -549,7 +549,7 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
     ytlIntegration.syncAll(failureEmailSender = failureEmailSenderMock)
 
-    Thread.sleep(11000)
+    Thread.sleep(1000)
 
     Mockito.verify(failureEmailSenderMock, Mockito.times(1)).sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
   }
