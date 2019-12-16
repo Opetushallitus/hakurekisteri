@@ -240,23 +240,13 @@ class YtlIntegration(properties: OphProperties,
 
     private val lastStatus = new AtomicReference[LastFetchStatus]()
 
-    private def createNewStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
-
     def getLastStatusHasFailures: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
 
     def getLastStatus: Option[LastFetchStatus] = Option(lastStatus.get())
 
-    private def updateAndGetStatus(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
-      lastStatus.updateAndGet(
-        new UnaryOperator[LastFetchStatus]{
-          override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
-        }
-      )
-    }
-
     def getNewOrExistingStatusAndIsAlreadyRunning(): (LastFetchStatus,Boolean) = {
       val newStatus = createNewStatus
-      val currentStatus = updateAndGetStatus(oldStatus => {
+      val currentStatus = updateStatusAtomic(oldStatus => {
         Option(oldStatus) match {
           case Some(status) if status.inProgress => oldStatus
           case _ => newStatus
@@ -267,7 +257,7 @@ class YtlIntegration(properties: OphProperties,
     }
 
     def updateHasFailures(hasFailures: Boolean): LastFetchStatus = {
-      updateAndGetStatus(l => {
+      updateStatusAtomic(l => {
         val newHasFailures = l.hasFailures match {
           case Some(true) =>
             true // one-way: don't change to false if was already true
@@ -278,6 +268,15 @@ class YtlIntegration(properties: OphProperties,
       })
     }
 
+    private def createNewStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
+
+    private def updateStatusAtomic(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
+      lastStatus.updateAndGet(
+        new UnaryOperator[LastFetchStatus]{
+          override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
+        }
+      )
+    }
   }
 }
 
