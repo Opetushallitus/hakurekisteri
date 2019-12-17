@@ -19,11 +19,6 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-
-case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeeded: Option[Boolean]) {
-  def inProgress = end.isEmpty
-}
-
 class YtlIntegration(properties: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      hakemusService: IHakemusService,
@@ -32,8 +27,6 @@ class YtlIntegration(properties: OphProperties,
                      config: Config) {
   private val logger = LoggerFactory.getLogger(getClass)
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
-  private val lastFetchStatus = new AtomicReference[LastFetchStatus]()
-  private def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
   private val audit = SuoritusAuditBackend.audit
@@ -102,42 +95,29 @@ class YtlIntegration(properties: OphProperties,
     }
   }
 
-  private def atomicUpdateFetchStatus(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
-    lastFetchStatus.updateAndGet(
-      new UnaryOperator[LastFetchStatus]{
-        override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
-      }
-    )
-  }
-
-  def getLastFetchStatus: Option[LastFetchStatus] = Option(lastFetchStatus.get())
 
   /**
     * Begins async synchronization. Throws an exception if an error occurs during it.
     */
   def syncAll(failureEmailSender: FailureEmailSender = new RealFailureEmailSender): Unit = {
-    val fetchStatus = newFetchStatus
-    val currentStatus = atomicUpdateFetchStatus(currentStatus => {
-      Option(currentStatus) match {
-        case Some(status) if status.inProgress => currentStatus
-        case _ => fetchStatus
-      }
-    })
-    val isAlreadyRunningAtomic = currentStatus != fetchStatus
-    if(isAlreadyRunningAtomic) {
+    val (currentStatus, isAlreadyRunningAtomic) = AtomicStatus.getNewOrExistingStatusAndIsAlreadyRunning()
+    if (isAlreadyRunningAtomic) {
       val message = s"syncAll is already running! $currentStatus"
       logger.error(message)
       throw new RuntimeException(message)
     } else {
       logger.info(s"Starting sync all!")
+
       def fetchInChunks(hakuOids: Set[String]): Future[Set[HetuPersonOid]] = {
         def fetchChunk(chunk: Set[String]): Future[Set[HetuPersonOid]] = {
           Future.sequence(chunk.map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))).map(_.flatten)
         }
+
         hakuOids.grouped(10).foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
           case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
         }
       }
+
       logger.info(s"Fetching in chunks, activeKKHakuOids: ${activeKKHakuOids.get()}")
       fetchInChunks(activeKKHakuOids.get()).onComplete {
         case Success(persons) =>
@@ -147,60 +127,83 @@ class YtlIntegration(properties: OphProperties,
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service", e)
           failureEmailSender.sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-          atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
+          AtomicStatus.updateHasFailures(hasFailures = true)
           throw e
       }
     }
   }
 
-  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid],
+  private def handleHakemukset(groupUuid: String,
+                               persons: Set[HetuPersonOid],
                                failureEmailSender: FailureEmailSender): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases: PersonOidsWithAliases = Await.result(oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
       Duration(1, TimeUnit.MINUTES))
+
     try {
+      logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
-      ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
+      val futures: Iterator[Future[Unit]] = ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.map {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
+          AtomicStatus.updateHasFailures(hasFailures = true)
+          Future.failed(e)
         case (Right((zip, students)), index) =>
           try {
             logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
-            val kokelaksetToPersist: Iterator[Kokelas] =
-              students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
-                case Some(personOid) =>
-                  Try(StudentToKokelas.convert(personOid, student)) match {
-                    case Success(candidate) => Some(candidate)
-                    case Failure(exception) =>
-                      logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
-                      None
-                  }
-                case None =>
-                  logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
-                  None
-              })
-            val futureForAllKokelasesToPersist: Future[Unit] = SequentialBatchExecutor.runInBatches(
-                kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
-                    ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
-                })
-            futureForAllKokelasesToPersist onComplete {
-              case Success(_) =>
-                logger.info(s"Finished YTL syncAll! All batches succeeded!")
-                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(true), end = Some(new Date())))
-              case Failure(e) =>
-                logger.error(s"Failed to persist all kokelas", e)
-                atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
-                failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
-            }
+
+            val kokelaksetToPersist = getKokelaksetToPersist(students, hetuToPersonOid)
+            persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
+              .andThen {
+                case Success(_) =>
+                  logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
+                  val latestStatus = AtomicStatus.updateHasFailures(hasFailures = false)
+                  logger.info(s"Latest status after update: ${latestStatus}")
+                case Failure(e) =>
+                  logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
+                  AtomicStatus.updateHasFailures(hasFailures = true)
+                  failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+              }
           } finally {
+            logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
             IOUtils.closeQuietly(zip)
           }
       }
+
+      Future.sequence(futures.toSeq).onComplete { _ =>
+          val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
+          logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+      }
     } catch {
       case e: Throwable =>
-        atomicUpdateFetchStatus(l => l.copy(succeeded = Some(false), end = Some(new Date())))
-        logger.error(s"YTL sync all failed!", e)
+        AtomicStatus.updateHasFailures(hasFailures = true)
+        logger.error(s"YTL syncAll failed!", e)
+        failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
+    } finally {
+      logger.info(s"Finished YTL syncAll")
     }
+  }
+
+  private def getKokelaksetToPersist(students: Iterator[Student], hetuToPersonOid: Map[String, String]): Iterator[Kokelas] = {
+    students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
+      case Some(personOid) =>
+        Try(StudentToKokelas.convert(personOid, student)) match {
+          case Success(candidate) => Some(candidate)
+          case Failure(exception) =>
+            logger.error(s"Skipping student with SSN = ${student.ssn} because ${exception.getMessage}", exception)
+            None
+        }
+      case None =>
+        logger.error(s"Skipping student as SSN (${student.ssn}) didnt match any person OID")
+        None
+    })
+  }
+
+  private def persistKokelaksetInBatches(kokelaksetToPersist: Iterator[Kokelas], personOidsWithAliases: PersonOidsWithAliases): Future[Unit] = {
+    SequentialBatchExecutor.runInBatches(
+      kokelaksetToPersist, config.ytlSyncParallelism)(kokelas => {
+      ytlKokelasPersister.persistSingle(KokelasWithPersonAliases(kokelas, personOidsWithAliases.intersect(Set(kokelas.oid))))
+    })
   }
 
   private class RealFailureEmailSender extends FailureEmailSender {
@@ -227,6 +230,52 @@ class YtlIntegration(properties: OphProperties,
       } finally {
         tr.close()
       }
+    }
+  }
+
+  object AtomicStatus {
+    case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], hasFailures: Option[Boolean]) {
+      def inProgress = end.isEmpty
+    }
+
+    private val lastStatus = new AtomicReference[LastFetchStatus]()
+
+    def getLastStatusHasFailures: Option[Boolean] = getLastStatus.flatMap(_.hasFailures)
+
+    def getLastStatus: Option[LastFetchStatus] = Option(lastStatus.get())
+
+    def getNewOrExistingStatusAndIsAlreadyRunning(): (LastFetchStatus,Boolean) = {
+      val newStatus = createNewStatus
+      val currentStatus = updateStatusAtomic(oldStatus => {
+        Option(oldStatus) match {
+          case Some(status) if status.inProgress => oldStatus
+          case _ => newStatus
+        }
+      })
+      val isAlreadyRunningAtomic = currentStatus != newStatus
+      (currentStatus, isAlreadyRunningAtomic)
+    }
+
+    def updateHasFailures(hasFailures: Boolean): LastFetchStatus = {
+      updateStatusAtomic(l => {
+        val newHasFailures = l.hasFailures match {
+          case Some(true) =>
+            true // one-way: don't change to false if was already true
+          case _ =>
+            hasFailures
+        }
+        l.copy(hasFailures = Some(newHasFailures), end = Some(new Date()))
+      })
+    }
+
+    private def createNewStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
+
+    private def updateStatusAtomic(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
+      lastStatus.updateAndGet(
+        new UnaryOperator[LastFetchStatus]{
+          override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
+        }
+      )
     }
   }
 }
