@@ -49,7 +49,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   }
 
   def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit = {
-    val endDateSuomiTime = DateTime.parse("2019-06-05T18:00:00").withZoneRetainFields(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+    val endDateSuomiTime = KoskiUtil.deadlineDate.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(HelsinkiTimeZone))
     if(endDateSuomiTime.isBeforeNow) {
       logger.info("refreshChangedOppijasFromKoski : Cutoff date of {} reached, stopping.", endDateSuomiTime.toString)
     } else {
