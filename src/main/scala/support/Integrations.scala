@@ -221,10 +221,13 @@ class BaseIntegrations(rekisterit: Registers,
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   logger.info(s"Scheduled syncAll jobs (cron expression=$syncAllCronExpression)")
 
+  koskiService.refreshChangedOppijasFromKoski()
+  val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob") // TSEKKAA mistä testivirheet johtuvat...
+  quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivinenKkAsteenHaut()),
+    newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+
   if (KoskiUtil.koskiIntegrationInUse) {
-    koskiService.refreshChangedOppijasFromKoski()
-    val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
-    quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
+    quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivinenToisenAsteenHaut()),
       newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
   } else {
     logger.info("Automatic Koski-integrations has been disabled by env parameter.")
