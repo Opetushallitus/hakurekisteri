@@ -222,7 +222,7 @@ class BaseIntegrations(rekisterit: Registers,
   logger.info(s"Scheduled syncAll jobs (cron expression=$syncAllCronExpression)")
 
   koskiService.refreshChangedOppijasFromKoski()
-  val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob") // TSEKKAA mistä testivirheet johtuvat...
+  val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
   quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivinenKkAsteenHaut()),
     newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
 
