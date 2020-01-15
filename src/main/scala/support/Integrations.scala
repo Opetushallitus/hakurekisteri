@@ -15,6 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.koski._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{IValintaperusteetService, ValintaperusteetService, ValintaperusteetServiceMock}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriActorRef, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosActor, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.virta._
@@ -53,6 +54,7 @@ trait Integrations {
   val hakemusClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
   val koskiService: IKoskiService
+  val valintaperusteetService: IValintaperusteetService
 }
 
 object Integrations {
@@ -76,6 +78,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val hakemusService = new HakemusServiceMock
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
+  override val valintaperusteetService = new ValintaperusteetServiceMock
   override val koodisto: KoodistoActorRef = new KoodistoActorRef(mockActor("koodisto", new MockKoodistoActor()))
   override val organisaatiot: OrganisaatioActorRef = new OrganisaatioActorRef(mockActor("organisaatiot", new MockOrganisaatioActor(config)))
   override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor(config = config)(system)))
@@ -151,6 +154,7 @@ class BaseIntegrations(rekisterit: Registers,
   private val ataruPermissionCheckerClient = new VirkailijaRestClient(config.integrations.ataruConfig, None, jSessionName = "ring-session",
     serviceUrlSuffix = "/auth/cas")(restEc, system)
   private val onrClient = new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system)
+  private val valintaperusteetClient = new VirkailijaRestClient(config.integrations.valintaperusteetServiceConfig, None)(restEc, system)
 
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(BackoffSupervisor.props(
     Backoff.onStop(
@@ -170,6 +174,7 @@ class BaseIntegrations(rekisterit: Registers,
   val koskiDataHandler = new KoskiDataHandler(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri, rekisterit.opiskelijaRekisteri)(system.dispatcher)
   val koskiService = new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler, config)(system)
   val koosteService = new KoosteService(koosteClient)(system)
+  val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
   val koodisto = new KoodistoActorRef(system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto"))
   val parametrit = new ParametritActorRef(system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit"))
   val valintarekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri"))
