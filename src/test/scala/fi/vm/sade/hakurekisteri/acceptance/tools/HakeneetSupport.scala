@@ -735,7 +735,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Valintatila.HYVAKSYTTY,
             Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
-            None
+            None,
+            ""
           ),
           ValintaTulosHakutoive(
             "1.11.1",
@@ -743,7 +744,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Valintatila.PERUUTETTU,
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
-            None
+            None,
+            ""
           )
         )
       ),
@@ -756,7 +758,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Valintatila.KESKEN,
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
-            None
+            None,
+            ""
           ),
           ValintaTulosHakutoive(
             "1.11.2",
@@ -764,7 +767,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Valintatila.KESKEN,
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
-            None
+            None,
+            ""
           )
         )
       ),
@@ -777,7 +781,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Valintatila.HYVAKSYTTY,
             Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
-            None
+            None,
+            ""
           )
         )
       )
