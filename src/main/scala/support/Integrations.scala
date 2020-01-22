@@ -228,7 +228,7 @@ class BaseIntegrations(rekisterit: Registers,
 
   if (KoskiUtil.updateKkHaut || KoskiUtil.updateToisenAsteenHaut) {
     logger.info(s"sAutomatic Koski-integrations statuses {updateKkHaut=${KoskiUtil.updateKkHaut}," +
-      s"{updateToisenAsteenHaut=${KoskiUtil.updateToisenAsteenHaut}")
+      s" updateToisenAsteenHaut=${KoskiUtil.updateToisenAsteenHaut}}")
     val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
     if (KoskiUtil.updateKkHaut) {
       quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivinenKkAsteenHaut()),
