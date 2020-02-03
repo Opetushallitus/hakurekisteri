@@ -156,6 +156,10 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
             KkExcelUtilV2.write(bytes, hakijat)
           case 3 =>
             KkExcelUtilV3.write(bytes, hakijat)
+          case 4 =>
+            KkExcelUtilV4.write(bytes, hakijat)
+          case _ =>
+            throw new RuntimeException("Unknown version number requested")
         }
           bytes.toByteArray
       }

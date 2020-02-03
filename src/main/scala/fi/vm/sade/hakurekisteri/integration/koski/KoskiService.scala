@@ -85,24 +85,31 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
   /*
     *OK-227 : haun automatisointi.
     * Hakee joka yö:
-    * - Aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta
     * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
     */
-  override def updateAktiivisetHaut(): () => Unit = { () =>
-    var haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
-    logger.info("Saatiin tarjonnasta toisen asteen aktiivisia hakuja " + haut.size + " kpl, aloitetaan lukiosuoritusten päivitys.")
-    haut.foreach(haku => {
-      logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
-      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.hours)
-    })
-    logger.info("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis.")
-    haut = aktiivisetKKYhteisHakuOidit.get()
-    logger.info("Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja " + haut.size + " kpl, aloitetaan ammatillisten suoritusten päivitys.")
+  override def updateAktiivinenKkAsteenHaut(): () => Unit = { () =>
+    val haut: Set[String] = aktiivisetKKYhteisHakuOidit.get()
+    logger.info(s"Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja ${haut.size} kpl, aloitetaan ammatillisten suoritusten päivitys.")
     haut.foreach(haku => {
       logger.info(s"Käynnistetään Koskesta aktiivisten korkeakouluhakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}")
       Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.hours)
     })
     logger.info("Aktiivisten korkeakoulu-yhteishakujen ammatillisten suoritusten päivitys valmis.")
+  }
+
+  /*
+    *OK-227 : haun automatisointi.
+    * Hakee joka yö:
+    * - Aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta
+    */
+  override def updateAktiivinenToisenAsteenHaut(): () => Unit = { () =>
+    val haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
+    logger.info(s"Saatiin tarjonnasta toisen asteen aktiivisia hakuja ${haut.size} kpl, aloitetaan lukiosuoritusten päivitys.")
+    haut.foreach(haku => {
+      logger.info(s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}")
+      Await.result(updateHenkilotForHaku(haku, KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.hours)
+    })
+    logger.info("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis.")
   }
 
   override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = {

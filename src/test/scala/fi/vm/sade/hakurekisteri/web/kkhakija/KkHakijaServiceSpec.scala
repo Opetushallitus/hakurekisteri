@@ -10,6 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
@@ -18,7 +19,7 @@ import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import fi.vm.sade.utils.slf4j.Logging
-import org.joda.time.{LocalDate}
+import org.joda.time.LocalDate
 import org.mockito.Mockito._
 import org.scalatest.Assertion
 import org.scalatest.concurrent.Waiters
@@ -49,6 +50,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val paymentRquiredHakukohdeWithoutPayment = "1.2.246.562.20.95810447722"
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
+  private val valintaperusteetMock = new ValintaperusteetServiceMock
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -61,7 +63,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
           Valintatila.HYVAKSYTTY,
           Vastaanottotila.KESKEN,
           HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
-          None
+          None,
+          "1.2.jonoOid"
         ))))
       case HaunValintatulos(hakuOid) => sender ! SijoitteluTulos(hakuOid, Seq())
     }
@@ -69,7 +72,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   private val valintaRekisteri = new ValintarekisteriActorRef(system.actorOf(Props(new MockedValintarekisteriActor(personOidWithLukuvuosimaksu = personOidWithLukuvuosimaksu,
     paymentRequiredHakukohdeWithMaksettu = paymentRequiredHakukohdeWithMaksettu,
     noPaymentRequiredHakukohdeButMaksettu = noPaymentRequiredHakukohdeButMaksettu))))
-  private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
+  private val service = new KkHakijaService(hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, valintaperusteetMock, Timeout(1.minute))
 
   override def beforeEach() {
     super.beforeEach()
@@ -139,7 +142,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       Map(("", "1.5.1") -> BigDecimal(4.0)),
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
-      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
+      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty
     )
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
@@ -154,7 +158,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       Map(("", "1.5.1") -> BigDecimal(4.0)),
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
-      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_SYKSY)
+      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_SYKSY),
+      Map.empty
     )
     val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
@@ -170,7 +175,8 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
       Map(("", "1.5.1") -> BigDecimal(4.0)),
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
-      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
+      Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty
     )
     val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
@@ -295,7 +301,7 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
   def testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(apiVersion: Int): Assertion = {
     val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
       hakemusService, Hakupalvelu, tarjontaMock, hakuMock, koodistoMock,
-      suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
+      suoritusMock, valintaTulosMock, valintaRekisteri, valintaperusteetMock, Timeout(1.minute))
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), "{}"))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
