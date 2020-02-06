@@ -115,6 +115,8 @@ suoritusrekisteri.koski.max-connection-queue-ms={{ suoritusrekisteri_koski_max_c
 suoritusrekisteri.koski.max.oppijat.post.size={{ suoritusrekisteri_koski_max_oppijat_post_size | default('5000') }}
 suoritusrekisteri.koski.max.oppijat.batch.size={{ suoritusrekisteri_koski_max_oppijat_batch_size | default('500') }}
 suoritusrekisteri.koski.update.cronJob={{ suoritusrekisteri_koski_update_cronjob | default('0 0 0 * * ?') }}
+suoritusrekisteri.koski.update.kkHaut={{ suoritusrekisteri_koski_update_kkHaut | default('false') }}
+suoritusrekisteri.koski.update.toisenAsteenHaut={{ suoritusrekisteri_koski_update_toisenAsteenHaut | default('false') }}
 suoritusrekisteri.oppijanumerorekisteri-service.max-connections={{ suoritusrekisteri_oppijanumerorekisteriservice_max_connections | default('50')}}
 suoritusrekisteri.oppijanumerorekisteri-service.max-connection-queue-ms={{ suoritusrekisteri_oppijanumerorekisteriservice_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.oppijanumerorekisteri-service.max.oppijat.batch.size={{ suoritusrekisteri_oppijanumerorekisteriservice_max_oppijat_batch_size | default('5000')}}
@@ -152,5 +154,4 @@ smtp.sender={{ryhmasahkoposti_smtp_sender}}
 suoritusrekisteri.ytl.error.report.recipients={{suoritusrekisteri_ytl_error_report_recipients}}
 
 # Koski integration settings
-suoritusrekisteri.use.koski.integration={{ suoritusrekisteri_use_koski_integration | default('false') }}
 suoritusrekisteri.use.koski.importer.resource={{ suoritusrekisteri_use_koski_importer_resource | default('true') }}

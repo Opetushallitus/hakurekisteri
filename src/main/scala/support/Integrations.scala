@@ -221,13 +221,22 @@ class BaseIntegrations(rekisterit: Registers,
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   logger.info(s"Scheduled syncAll jobs (cron expression=$syncAllCronExpression)")
 
-  if (KoskiUtil.koskiIntegrationInUse) {
-    koskiService.refreshChangedOppijasFromKoski()
+  if (KoskiUtil.updateKkHaut || KoskiUtil.updateToisenAsteenHaut) {
+    logger.info(s"Enabled automatic Koski-integrations: updateKkHaut=${KoskiUtil.updateKkHaut}, "
+        + s"updateToisenAsteenHaut=${KoskiUtil.updateToisenAsteenHaut}")
     val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
-    quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetHaut()),
-      newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+    if (KoskiUtil.updateKkHaut) {
+      quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetKkAsteenHaut()),
+        newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+    }
+    if (KoskiUtil.updateToisenAsteenHaut) {
+      // refreshChangedOppijasFromKoski is bound to toisen asteen haut
+      koskiService.refreshChangedOppijasFromKoski()
+      quartzScheduler.scheduleJob(lambdaJob(koskiService.updateAktiivisetToisenAsteenHaut()),
+        newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build())
+    }
   } else {
-    logger.info("Automatic Koski-integrations has been disabled by env parameter.")
+    logger.info("Automatic Koski-integrations has been disabled by env parameters.")
   }
 
   if (KoskiUtil.koskiImporterResourceInUse) {
