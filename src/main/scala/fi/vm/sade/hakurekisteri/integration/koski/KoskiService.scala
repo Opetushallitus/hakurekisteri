@@ -87,7 +87,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     * Hakee joka yö:
     * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
     */
-  override def updateAktiivinenKkAsteenHaut(): () => Unit = { () =>
+  override def updateAktiivisetKkAsteenHaut(): () => Unit = { () =>
     val haut: Set[String] = aktiivisetKKYhteisHakuOidit.get()
     logger.info(s"Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja ${haut.size} kpl, aloitetaan ammatillisten suoritusten päivitys.")
     haut.foreach(haku => {
@@ -102,7 +102,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
     * Hakee joka yö:
     * - Aktiivisten 2. asteen hakujen lukiosuoritukset Koskesta
     */
-  override def updateAktiivinenToisenAsteenHaut(): () => Unit = { () =>
+  override def updateAktiivisetToisenAsteenHaut(): () => Unit = { () =>
     val haut: Set[String] = aktiiviset2AsteYhteisHakuOidit.get()
     logger.info(s"Saatiin tarjonnasta toisen asteen aktiivisia hakuja ${haut.size} kpl, aloitetaan lukiosuoritusten päivitys.")
     haut.foreach(haku => {

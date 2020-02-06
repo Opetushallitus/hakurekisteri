@@ -10,7 +10,6 @@ object KoskiUtil {
 
   val koski_integration_source = "koski"
   var deadlineDate: LocalDate = new LocalDate(OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date"))
-  lazy val koskiIntegrationInUse: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.use.koski.integration").toBoolean
   lazy val koskiImporterResourceInUse: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.use.koski.importer.resource").toBoolean
   lazy val updateKkHaut: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.kkHaut").toBoolean
   lazy val updateToisenAsteenHaut: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.toisenAsteenHaut").toBoolean
