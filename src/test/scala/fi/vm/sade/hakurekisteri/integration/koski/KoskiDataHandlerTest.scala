@@ -385,14 +385,12 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
 
     val henkilo2 = henkiloList(1)
     henkilo2 should not be null
-    val lisätiedot2 = henkilo.opiskeluoikeudet.head.lisätiedot
+    val lisätiedot2 = henkilo2.opiskeluoikeudet.head.lisätiedot
     lisätiedot2 shouldBe defined
     lisätiedot2.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
 
-    val result2 = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    result2 should have length 4
-
-    result2(2).suoritus.tila should equal("VALMIS")
+    val result2 = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo2).head
+    result2 should have length 2
   }
 
   it should "parse arvosanat from peruskoulu_9_luokka_päättötodistus.json" in {
@@ -2473,14 +2471,6 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
   }
 
   trait KoskiDataArvosanatUpdateUtils {
-    def getHenkilo(jsonFileName: String): KoskiHenkiloContainer = {
-      val json: String = scala.io.Source.fromFile(jsonDir + jsonFileName).mkString
-      val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-      henkilo should not be null
-      henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-      henkilo
-    }
-
     def verifyArvosanatVersion1() = {
       val arvosanat = run(database.run(sql"select count(*) from arvosana where current and not deleted".as[String])).head
       val arvosana_TE = run(database.run(sql"select arvosana from arvosana where aine = 'TE' and current".as[String])).head
@@ -2591,6 +2581,33 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     verifyArvosanatVersion1UpdatedWithVersion2()
   }
 
+  trait KoskiDataSuorituksetUpdateUtils {
+    def verifySuorituksetCount(expectedSuorituksetCount: Int) = {
+      val suoritukset = run(database.run(sql"select tila from suoritus where not deleted".as[String]))
+      suoritukset should have length expectedSuorituksetCount
+    }
+
+    val henkilo = getHenkilo("koskidata_amm_ja_lukio.json")
+
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(7)
+  }
+
+  it should "properly handle suoritukset when using different parameters" in new KoskiDataSuorituksetUpdateUtils {
+    val originalOid: String = henkilo.henkilö.oid.getOrElse("impossible")
+    val personOidsWithAliases = PersonOidsWithAliases(Set(originalOid), Map(originalOid -> Set(originalOid)))
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases,
+      KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)), 5.seconds)
+
+    verifySuorituksetCount(1)
+
+    // Same data with different parameters
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases,
+      KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)), 5.seconds)
+
+    verifySuorituksetCount(2)
+  }
+
   it should "properly handle multiple valinnaises arvosanas for same ainees" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "valinnaiset_4_kuvataidetta_3_musiikkia_before.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -2682,6 +2699,14 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
   def getYsiluokat(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
     val luokat = arvosanat.filter(a => a.suoritus.komo.contentEquals("luokka") && a.luokka.startsWith("9"))
     luokat
+  }
+
+  def getHenkilo(jsonFileName: String): KoskiHenkiloContainer = {
+    val json: String = scala.io.Source.fromFile(jsonDir + jsonFileName).mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    henkilo
   }
 
   def getPerusopetusB2Kielet(arvosanat: Seq[SuoritusArvosanat]): Seq[Arvosana] = {
