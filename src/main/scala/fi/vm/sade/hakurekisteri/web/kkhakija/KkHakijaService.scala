@@ -73,7 +73,7 @@ case class Hakemus(haku: String,
                    hakukohdeKkId: Option[String],
                    avoinVayla: Option[Boolean],
                    valinnanTila: Option[Valintatila],
-                   valintatapajononTyyppi: Option[String] = None, //Tiedossa vain hyväksytyille hakijoille
+                   valintatapajononTyyppi: Option[String], //Tiedossa vain hyväksytyille hakijoille
                    vastaanottotieto: Option[Vastaanottotila],
                    ilmoittautumiset: Seq[Lasnaolo],
                    pohjakoulutus: Seq[String],
@@ -243,10 +243,10 @@ class KkHakijaService(hakemusService: IHakemusService,
 
   private def getEnoughTuloksesToSatisfyQuery(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = hakemusOid match {
     case Some(h) =>
-      logger.info("Getting tulokset for one hakemus: {}", h)
+      logger.debug("Getting tulokset for one hakemus: {}", h)
       (valintaTulos.actor ? HakemuksenValintatulos(hakuOid, h)).mapTo[SijoitteluTulos]
     case None =>
-      logger.info("Getting tulokset for whole haku: {}", hakuOid)
+      logger.debug("Getting tulokset for whole haku: {}", hakuOid)
       (valintaTulos.actor ? HaunValintatulos(hakuOid))(valintaTulosTimeout).mapTo[SijoitteluTulos]
   }
 
@@ -336,13 +336,13 @@ class KkHakijaService(hakemusService: IHakemusService,
       toive.organizationParentOids.intersect(getKnownOrganizations(q.user)).nonEmpty
   }
 
-  private def jononTyyppiForHakemus(tila: Option[Valintatila], jonoOid: String, jonoTiedot: Seq[ValintatapajononTiedot]): Option[String] = {
-    if (Valintatila.isHyvaksytty(tila.getOrElse(Valintatila.KESKEN))) {
-      val jono: Option[ValintatapajononTiedot] = jonoTiedot.find(j => j.oid.equals(jonoOid))
-      if (jono.isDefined) Some(jono.get.tyyppiToReadable()) else {
+  private def jononTyyppiForHakemus(tila: Option[Valintatila], jonoOid: Option[String], jonoTiedot: Seq[ValintatapajononTiedot]): Option[String] = {
+    if (tila.exists(Valintatila.isHyvaksytty)) {
+      val tyyppi: Option[String] = jonoOid.flatMap(oid => jonoTiedot.find(_.oid == oid)).map(_.tyyppiReadable)
+      if (tyyppi.isEmpty) {
         logger.warn("VTKU-112: No jonotieto found for jono {}, but it has a hyväksytty hakija!", jonoOid)
-        None
       }
+      tyyppi
     } else None
   }
 
@@ -377,8 +377,8 @@ class KkHakijaService(hakemusService: IHakemusService,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
             vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemusOid, hakukohdeOid),
-            valintatapajononTyyppi=jononTyyppiForHakemus(sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
-              sijoitteluTulos.valintatapajono.get(hakemusOid, hakukohdeOid).getOrElse(""), jonotiedot),
+            valintatapajononTyyppi = jononTyyppiForHakemus(sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
+              sijoitteluTulos.valintatapajono.get(hakemusOid, hakukohdeOid), jonotiedot),
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = getPohjakoulutukset(answers.koulutustausta.getOrElse(Koulutustausta())),
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -419,8 +419,8 @@ class KkHakijaService(hakemusService: IHakemusService,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
             vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemus.oid, hakukohdeOid),
-            valintatapajononTyyppi=jononTyyppiForHakemus(sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
-              sijoitteluTulos.valintatapajono.get(hakemus.oid, hakukohdeOid).getOrElse(""), jonotiedot),
+            valintatapajononTyyppi = jononTyyppiForHakemus(sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
+              sijoitteluTulos.valintatapajono.get(hakemus.oid, hakukohdeOid), jonotiedot),
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = hakemus.kkPohjakoulutus,
             julkaisulupa = Some(hakemus.julkaisulupa),

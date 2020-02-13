@@ -10,15 +10,16 @@ import scala.concurrent.Future
 case class ValintatapajononTiedot(oid: String,
                                   tyyppi: Option[String]) {
 
-  def tyyppiToReadable(): String = {
-    tyyppi.getOrElse("") match {
-      case "valintatapajono_av" => "Avoin väylä"
-      case "valintatapajono_km" => "Kilpailumenestys"
-      case "valintatapajono_kp" => "Koepisteet"
-      case "valintatapajono_m" => "Muu"
-      case "valintatapajono_tv" => "Todistusvalinta"
-      case "valintatapajono_yp" => "Yhteispisteet"
-      case _ => "tuntematon"
+  val tyyppiReadable: String = {
+    tyyppi match {
+      case Some("valintatapajono_av") => "Avoin väylä"
+      case Some("valintatapajono_km") => "Kilpailumenestys"
+      case Some("valintatapajono_kp") => "Koepisteet"
+      case Some("valintatapajono_m")  => "Muu"
+      case Some("valintatapajono_tv") => "Todistusvalinta"
+      case Some("valintatapajono_yp") => "Yhteispisteet"
+      case Some(_)                    => "Tuntematon"
+      case None                       => "Ei tyyppiä"
     }
   }
 }
