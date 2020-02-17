@@ -21,7 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil.{logger, _}
 import org.joda.time.DateTime
 import org.scalatra.util.RicherString._
 import org.slf4j.LoggerFactory
@@ -336,16 +336,6 @@ class KkHakijaService(hakemusService: IHakemusService,
       toive.organizationParentOids.intersect(getKnownOrganizations(q.user)).nonEmpty
   }
 
-  private def jononTyyppiForHakemus(tila: Option[Valintatila], jonoOid: Option[String], jonoTiedot: Seq[ValintatapajononTiedot]): Option[String] = {
-    if (tila.exists(Valintatila.isHyvaksytty)) {
-      val tyyppi: Option[String] = jonoOid.flatMap(oid => jonoTiedot.find(_.oid == oid)).map(_.tyyppiReadable)
-      if (tyyppi.isEmpty) {
-        logger.warn("VTKU-112: No jonotieto found for jono {}, but it has a hyväksytty hakija!", jonoOid)
-      }
-      tyyppi
-    } else None
-  }
-
   private def extractSingleHakemus(h: HakijaHakemus,
                                    lukuvuosimaksutByHakukohdeOid: Map[String, List[Lukuvuosimaksu]],
                                    q: KkHakijaQuery,
@@ -361,6 +351,8 @@ class KkHakijaService(hakemusService: IHakemusService,
       for {
         hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
+        jononTyyppi: Option[String] <- jononTyyppiForHakemusF(sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
+          sijoitteluTulos.valintatapajono.get(hakemusOid, hakukohdeOid), jonotiedot)
         lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
       } yield {
         if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
@@ -377,8 +369,7 @@ class KkHakijaService(hakemusService: IHakemusService,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
             vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemusOid, hakukohdeOid),
-            valintatapajononTyyppi = jononTyyppiForHakemus(sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
-              sijoitteluTulos.valintatapajono.get(hakemusOid, hakukohdeOid), jonotiedot),
+            valintatapajononTyyppi = jononTyyppi,
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = getPohjakoulutukset(answers.koulutustausta.getOrElse(Koulutustausta())),
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -399,6 +390,8 @@ class KkHakijaService(hakemusService: IHakemusService,
         hakukohdeOid <- toive.koulutusId.fold[Future[String]](Future.failed(new RuntimeException("No hakukohde OID")))(Future.successful)
         hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemus.oid, koodisto)
+        jononTyyppi: Option[String] <- jononTyyppiForHakemusF(sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
+          sijoitteluTulos.valintatapajono.get(hakemus.oid, hakukohdeOid), jonotiedot)
         lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemus.oid, hakukohteenkoulutukset.koulutukset)
       } yield {
         if (matchHakuehto(sijoitteluTulos, hakemus.oid, hakukohdeOid)(q.hakuehto)) {
@@ -419,8 +412,7 @@ class KkHakijaService(hakemusService: IHakemusService,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
             vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemus.oid, hakukohdeOid),
-            valintatapajononTyyppi = jononTyyppiForHakemus(sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
-              sijoitteluTulos.valintatapajono.get(hakemus.oid, hakukohdeOid), jonotiedot),
+            valintatapajononTyyppi = jononTyyppi,
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = hakemus.kkPohjakoulutus,
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -571,6 +563,29 @@ class KkHakijaService(hakemusService: IHakemusService,
           hakemukset = hakemukset
         )
       })
+  }
+
+  private def getJononTyyppiFromKoodisto(koodiUri: String): Future[Option[String]] = {
+    (koodisto.actor ? GetKoodi("valintatapajono", koodiUri))
+      .mapTo[Option[Koodi]]
+      .map {
+        case Some(k) => Some(k.koodiArvo)
+        case None =>
+          logger.warn("VTKU-112: No koodi found for koodiuri {} in valintatapajono-koodisto, returning Tuntematon", koodiUri)
+          Some("Tuntematon")
+      }
+  }
+
+  def jononTyyppiForHakemusF(tila: Option[Valintatila], jonoOid: Option[String], jonoTiedot: Seq[ValintatapajononTiedot])(implicit timeout: Timeout, ec: ExecutionContext): Future[Option[String]] = {
+    if (tila.exists(Valintatila.isHyvaksytty)) {
+      val tyyppi: Option[String] = jonoOid.flatMap(oid => jonoTiedot.find(_.oid == oid)).flatMap(_.tyyppi)
+      tyyppi match {
+        case Some(t) => getJononTyyppiFromKoodisto(t)
+        case None =>
+          logger.warn("VTKU-112: No jonotieto found for jono {}, but it has a hyväksytty hakija!", jonoOid)
+          Future.successful(None)
+      }
+    } else Future.successful(None)
   }
 
   private def getKkHakijaV4(haku: Haku, q: KkHakijaQuery, tulokset: SijoitteluTulos, hakukohdeOids: Seq[String],

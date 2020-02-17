@@ -7,22 +7,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-case class ValintatapajononTiedot(oid: String,
-                                  tyyppi: Option[String]) {
-
-  val tyyppiReadable: String = {
-    tyyppi match {
-      case Some("valintatapajono_av") => "Avoin väylä"
-      case Some("valintatapajono_km") => "Kilpailumenestys"
-      case Some("valintatapajono_kp") => "Koepisteet"
-      case Some("valintatapajono_m")  => "Muu"
-      case Some("valintatapajono_tv") => "Todistusvalinta"
-      case Some("valintatapajono_yp") => "Yhteispisteet"
-      case Some(_)                    => "Tuntematon"
-      case None                       => "Ei tyyppiä"
-    }
-  }
-}
+case class ValintatapajononTiedot(oid: String, tyyppi: Option[String])
 
 trait IValintaperusteetService {
   def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]]
