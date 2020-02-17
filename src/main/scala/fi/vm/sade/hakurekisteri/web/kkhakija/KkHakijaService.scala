@@ -569,9 +569,15 @@ class KkHakijaService(hakemusService: IHakemusService,
     (koodisto.actor ? GetKoodi("valintatapajono", koodiUri))
       .mapTo[Option[Koodi]]
       .map {
-        case Some(k) => Some(k.koodiArvo)
+        case Some(k) =>
+          k.metadata.find(_.kieli == "FI") match {
+            case Some(m) => Some(m.nimi)
+            case None =>
+              logger.warn("VTKU-112: No metadata for kieli FI found for koodiuri {} in valintatapajono-koodisto, resolving as Tuntematon", koodiUri)
+              Some("Tuntematon")
+          }
         case None =>
-          logger.warn("VTKU-112: No koodi found for koodiuri {} in valintatapajono-koodisto, returning Tuntematon", koodiUri)
+          logger.warn("VTKU-112: No koodi found for koodiuri {} in valintatapajono-koodisto, resolving as Tuntematon", koodiUri)
           Some("Tuntematon")
       }
   }
