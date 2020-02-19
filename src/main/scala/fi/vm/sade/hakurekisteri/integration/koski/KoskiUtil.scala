@@ -53,4 +53,6 @@ object KoskiUtil {
   val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 
   val eiHalututAlle30opValmaTilat: Seq[String] = Seq("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu", "valmistunut")
+
+  val eronneeseenRinnastettavatKoskiTilat = Set("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu")
 }

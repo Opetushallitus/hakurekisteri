@@ -87,10 +87,10 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
 
     true
   }
-
+  
   private def viimeisinOpiskeluoikeus(oikeudet: Seq[KoskiOpiskeluoikeus]): Option[(KoskiOpiskeluoikeus, Seq[KoskiOpiskeluoikeus])] = {
     val (eronnut, eiEronnut) = oikeudet.sortBy(_.tila.opiskeluoikeusjaksot.map(_.alku).max)(Ordering[String].reverse)
-      .partition(_.tila.opiskeluoikeusjaksot.exists(_.tila.koodiarvo == "eronnut"))
+      .partition(_.tila.opiskeluoikeusjaksot.exists(jakso => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(jakso.tila.koodiarvo)))
     eiEronnut.headOption.map((_, eiEronnut.tail ++ eronnut)).orElse(eronnut.headOption.map((_, eronnut.tail)))
   }
 
