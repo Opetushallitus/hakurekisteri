@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
+import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActorRef
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaService}
@@ -37,8 +38,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   private val valintaTulosMock = new ValintaTulosActorRef(mock[ActorRef])
   private val valintaRekisteri = new ValintarekisteriActorRef(mock[ActorRef])
   private val koodistoMock = new KoodistoActorRef(mock[ActorRef])
+  private val valintaperusteetMock = new ValintaperusteetServiceMock
 
-  val service = new KkHakijaService(hakemusService, mock[Hakupalvelu], tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, Timeout(1.minute))
+  val service = new KkHakijaService(hakemusService, mock[Hakupalvelu], tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, valintaperusteetMock, Timeout(1.minute))
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")
 
