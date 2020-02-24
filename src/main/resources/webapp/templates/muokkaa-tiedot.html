@@ -57,7 +57,7 @@
                 </header>
                 <div class="panel-body">
                 <aside>
-                    <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="!henkilo.hetu || henkilo.virtatiedot">
+                    <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="henkilo.virtatiedot">
                         <span oph-msg="suoritusrekisteri.muokkaa.naytavirtatiedot">Näytä tiedot Virta-järjestelmästä</span>
                         <span class="glyphicon glyphicon-list"></span>
                     </button>
@@ -138,7 +138,7 @@
                         </table>
                     </div>
                     <aside>
-                        <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="!henkilo.hetu">
+                        <button type="button" class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()">
                             <span oph-msg="suoritusrekisteri.muokkaa.virtatiedotuudelleen">Hae tiedot Virta-järjestelmästä uudelleen</span>
                             <span class="glyphicon glyphicon-list"></span>
                         </button>
