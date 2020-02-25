@@ -43,6 +43,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
 
   get("/:hetu", operation(query)) {
     val hetu = params("hetu")
+    println(s"hetu: ${hetu}")
     val user = currentUser.getOrElse(throw new UserNotAuthorized("not authorized"))
     val au = security.auditUser
     new AsyncResult() {
