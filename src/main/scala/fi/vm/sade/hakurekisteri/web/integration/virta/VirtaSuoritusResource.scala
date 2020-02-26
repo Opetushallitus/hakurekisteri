@@ -37,22 +37,6 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
       (hakemusBasedPermissionChecker.actor ? HasPermission(user, personOid)).mapTo[Boolean]
     }
 
-  def getHenkilosVirtaSuorituksetByHetuOrHenkiloOid(hetuOrHenkiloOid: String, user: User, auditUser: fi.vm.sade.auditlog.User): Future[Any] = {
-    oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
-      hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
-        if (access) {
-          audit.log(auditUser,
-            HenkilonTiedotVirrasta,
-            new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
-            new Changes.Builder().build())
-          virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetuOrHenkiloOid))
-        } else {
-          Future.successful(VirtaResult(hetuOrHenkiloOid))
-        }
-      })
-    })
-  }
-
   before() {
     contentType = formats("json")
   }
@@ -67,12 +51,35 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
 
       override val is =
         if (HetuUtil.toSyntymaAika(hetuOrHenkiloOid).isDefined) {
-          getHenkilosVirtaSuorituksetByHetuOrHenkiloOid(hetuOrHenkiloOid, user, au)
+          oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
+            hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
+              if (access) {
+                audit.log(auditUser,
+                  HenkilonTiedotVirrasta,
+                  new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
+                  new Changes.Builder().build())
+                virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetuOrHenkiloOid))
+              } else {
+                Future.successful(VirtaResult(hetuOrHenkiloOid))
+              }
+            })
+          })
         } else {
           // getByOids queries for master henkilos with the given oid,
           // therefore the returned head should be the master henkilo of this henkiloOid
           oppijaNumeroRekisteri.getByOids(Set(hetuOrHenkiloOid)).flatMap(map => {
-            getHenkilosVirtaSuorituksetByHetuOrHenkiloOid(map.head._2.oidHenkilo, user, au)
+              val henkilo = map.head._2
+              hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
+                if (access) {
+                  audit.log(auditUser,
+                    HenkilonTiedotVirrasta,
+                    new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
+                    new Changes.Builder().build())
+                  virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetuOrHenkiloOid))
+                } else {
+                  Future.successful(VirtaResult(hetuOrHenkiloOid))
+                }
+              })
           })
         }
     }
