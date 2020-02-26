@@ -54,7 +54,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
-                audit.log(auditUser,
+                audit.log(au,
                   HenkilonTiedotVirrasta,
                   new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
                   new Changes.Builder().build())
@@ -71,7 +71,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
               val henkilo = map.head._2
               hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
                 if (access) {
-                  audit.log(auditUser,
+                  audit.log(au,
                     HenkilonTiedotVirrasta,
                     new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
                     new Changes.Builder().build())
