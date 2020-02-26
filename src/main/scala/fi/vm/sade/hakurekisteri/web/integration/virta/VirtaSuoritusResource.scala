@@ -37,17 +37,17 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
       (hakemusBasedPermissionChecker.actor ? HasPermission(user, personOid)).mapTo[Boolean]
     }
 
-  def getHenkilosVirtaSuorituksetByHetu[Any](hetu: String, user: User, auditUser: fi.vm.sade.auditlog.User) = {
-    oppijaNumeroRekisteri.getByHetu(hetu).flatMap(henkilo => {
+  def getHenkilosVirtaSuorituksetByHetuOrHenkiloOid(hetuOrHenkiloOid: String, user: User, auditUser: fi.vm.sade.auditlog.User): Future[Any] = {
+    oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
       hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
         if (access) {
           audit.log(auditUser,
             HenkilonTiedotVirrasta,
-            new Target.Builder().setField("hetu", hetu).build(),
+            new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
             new Changes.Builder().build())
-          virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetu))
+          virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetuOrHenkiloOid))
         } else {
-          Future.successful(VirtaResult(hetu))
+          Future.successful(VirtaResult(hetuOrHenkiloOid))
         }
       })
     })
@@ -67,10 +67,12 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
 
       override val is =
         if (HetuUtil.toSyntymaAika(hetuOrHenkiloOid).isDefined) {
-          getHenkilosVirtaSuorituksetByHetu(hetuOrHenkiloOid, user, au)
+          getHenkilosVirtaSuorituksetByHetuOrHenkiloOid(hetuOrHenkiloOid, user, au)
         } else {
+          // getByOids queries for master henkilos with the given oid,
+          // therefore the returned head should be the master henkilo of this henkiloOid
           oppijaNumeroRekisteri.getByOids(Set(hetuOrHenkiloOid)).flatMap(map => {
-            getHenkilosVirtaSuorituksetByHetu(map.head._2.hetu.get, user, au)
+            getHenkilosVirtaSuorituksetByHetuOrHenkiloOid(map.head._2.oidHenkilo, user, au)
           })
         }
     }
