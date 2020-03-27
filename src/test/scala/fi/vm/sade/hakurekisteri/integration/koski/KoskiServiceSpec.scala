@@ -33,12 +33,29 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
     koskiDataHandler = koskiDataHandler,
     config = new MockConfig)
 
+
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
+
+  it should "retry on occasional errors when updating henkilot for haku" in {
+    val params = KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
+    val numeros = Range(1, 12345).map(n => s"1.2.3.$n")
+    when(endPoint.request(forUrl("http://localhost/koski/api/sure/oids")))
+      .thenReturn((200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"))
+      .thenThrow(new RuntimeException("the first surprising failure!"))
+      .thenReturn((200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"))
+      .thenThrow(new RuntimeException("another one fails!"))
+      .thenThrow(new RuntimeException("another one fails, 2 in a row!"))
+      .thenThrow(new RuntimeException("another one fails, 3 in a row!"))
+      .thenReturn((200, List(), "[]"))
+    val future = koskiService.handleHenkiloUpdate(numeros, params, "just testing!")
+    Await.result(future, 10.seconds)
+  }
 
   it should "return successful future for handleHenkiloUpdate" in {
     when(endPoint.request(forUrl("http://localhost/koski/api/sure/oids")))
       .thenReturn((200, List(), "[]"))
-    val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true))
+    val future = koskiService.handleHenkiloUpdate(Seq("1.2.3.4"), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true), "just testing!")
     Await.result(future, 10.seconds)
   }
+
 }
