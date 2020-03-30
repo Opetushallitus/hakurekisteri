@@ -139,7 +139,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
 
   def handleHenkiloUpdate(personOids: Seq[String], params: KoskiSuoritusHakuParams, description: String = ""): Future[Unit] = {
     if (personOids.isEmpty) {
-      logger.info("HandleHenkiloUpdate : no personOids to process.")
+      logger.info(s"HandleHenkiloUpdate ($description) no personOids to process.")
       Future.successful({})
     } else {
       logger.info(s"HandleHenkiloUpdate ($description) {} oppijanumeros", personOids.size)
@@ -147,7 +147,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
       val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
       val totalGroups: Int = groupedOids.length
       var updateHenkiloResults = (Seq[String](), Seq[String]())
-      logger.info(s"HandleHenkiloUpdate: ($description) yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
+      logger.info(s"HandleHenkiloUpdate ($description) yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä.")
 
       def handleBatch(batches: Seq[(Seq[String], Int)], acc: (Seq[String], Seq[String])): Future[(Seq[String], Seq[String])] = {
         def updateHenkilotWithRetries(oppijaOids: Set[String], params: KoskiSuoritusHakuParams, era: Int, retriesLeft: Int): Future[(Seq[String], Seq[String])] = {
@@ -165,7 +165,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
           Future(acc)
         } else {
           val (subSeq, index) = batches.head
-          logger.info(s"HandleHenkiloUpdate ($description) Päivitetään Koskesta $maxOppijatBatchSize henkilöä sureen: Erä ${index+1} / $totalGroups.")
+          logger.info(s"HandleHenkiloUpdate ($description) Päivitetään Koskesta $maxOppijatBatchSize henkilön tiedot Sureen. Erä ${index+1} / $totalGroups.")
           updateHenkilotWithRetries(subSeq.toSet, params, index+1,3).flatMap(s => {
             logger.info(s"HandleHenkiloUpdate ($description) Erä ${index + 1} / $totalGroups käsitelty virheittä.")
             handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
