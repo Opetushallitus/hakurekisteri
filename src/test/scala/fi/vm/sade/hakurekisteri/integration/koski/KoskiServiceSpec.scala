@@ -37,7 +37,7 @@ class KoskiServiceSpec extends FlatSpec with Matchers with MockitoSugar with Dis
   override val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/koski/json/"
 
   it should "retry on occasional errors when updating henkilot for haku" in {
-    val params = KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
+    val params = KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true, retryWaitMillis = 1000)
     val numeros = Range(1, 12345).map(n => s"1.2.3.$n")
     when(endPoint.request(forUrl("http://localhost/koski/api/sure/oids")))
       .thenReturn((200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"), (200, List(), "[]"))

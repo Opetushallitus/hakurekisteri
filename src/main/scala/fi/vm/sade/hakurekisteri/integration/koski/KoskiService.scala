@@ -155,7 +155,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
             case e: Exception =>
               if (retriesLeft > 0) {
                 logger.error(e, s"HandleHenkiloUpdate ($description) Virhe päivitettäessä henkilöiden tietoja erässä $era / $totalGroups, yritetään uudelleen. Uudelleenyrityksiä jäljellä: $retriesLeft")
-                Future { Thread.sleep(10000) }.flatMap(_ => updateHenkilotWithRetries(oppijaOids, params, era, retriesLeft - 1))
+                Future { Thread.sleep(params.retryWaitMillis) }.flatMap(_ => updateHenkilotWithRetries(oppijaOids, params, era, retriesLeft - 1))
               } else {
                 logger.error(e, s"HandleHenkiloUpdate ($description) Virhe päivitettäessä henkilöiden tietoja erässä $era / $totalGroups, ei enää uudelleenyrityksiä jäljellä.")
                 throw e
