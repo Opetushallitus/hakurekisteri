@@ -166,7 +166,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         } else {
           val (subSeq, index) = batches.head
           logger.info(s"HandleHenkiloUpdate ($description) Päivitetään Koskesta $maxOppijatBatchSize henkilön tiedot Sureen. Erä ${index+1} / $totalGroups.")
-          updateHenkilotWithRetries(subSeq.toSet, params, index+1,3).flatMap(s => {
+          updateHenkilotWithRetries(subSeq.toSet, params, index+1, retriesLeft = 3).flatMap(s => {
             logger.info(s"HandleHenkiloUpdate ($description) Erä ${index + 1} / $totalGroups käsitelty virheittä.")
             handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
           })}
