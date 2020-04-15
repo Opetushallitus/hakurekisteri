@@ -132,9 +132,13 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
 
   def getHakukohde(oid: String): Future[Option[Hakukohde]] = {
     val loader: String => Future[Option[Option[Hakukohde]]] = { hakukohdeOid =>
-      restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hakukohdeOid)(200, maxRetries).map(r => r.result).map(Option(_))
+      val result = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hakukohdeOid)(200, maxRetries).map(r => r.result).map(Option(_))
+      result.flatMap {
+        case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found from Tarjonta with $hakukohdeOid"))
+        case Some(None) => Future.failed(HakukohdeNotFoundException(s"empty hakukohde returned from Tarjonta with $hakukohdeOid"))
+        case Some(result) => Future.successful(Option(result))
+      }
     }
-
     hakukohdeCache.get(oid, loader).map(_.get)
   }
 
