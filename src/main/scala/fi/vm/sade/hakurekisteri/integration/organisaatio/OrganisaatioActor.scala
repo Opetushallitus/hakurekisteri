@@ -84,6 +84,11 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case _ => false
   }
 
+  private def isForbidden(t: Throwable) = t match {
+    case PreconditionFailedException(_, 403) => true
+    case _ => false
+  }
+
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
     if (tunniste.isEmpty) {
       val errorMessage = "findAndCache error: string tunniste must not be empty"
@@ -93,6 +98,9 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
       val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
         case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
           log.warning(s"organisaatio not found with tunniste $tunniste")
+          Future.successful(None)
+        case p: ExecutionException if p.getCause != null && isForbidden(p.getCause) =>
+          log.warning(s"organisaatio forbidden with tunniste $tunniste.")
           Future.successful(None)
       }
 
