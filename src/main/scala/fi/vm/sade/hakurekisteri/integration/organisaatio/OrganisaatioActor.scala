@@ -99,9 +99,23 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
         case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
           log.warning(s"organisaatio not found with tunniste $tunniste")
           Future.successful(None)
-        case p: ExecutionException if p.getCause != null && isForbidden(p.getCause) =>
+        case p: PreconditionFailedException if p.responseCode.equals(403) =>
           log.warning(s"organisaatio forbidden with tunniste $tunniste.")
           Future.successful(None)
+        case o: Exception =>
+          log.error(o, s"Unforeseen error occurred while fetching organisaatio with tunniste $tunniste")
+          try {
+            if (o.getCause != null) {
+              log.error(o.getCause, s"1st cause, error code ${o.getCause.asInstanceOf[PreconditionFailedException].responseCode}")
+              if (o.getCause.getCause != null) {
+                log.error(o.getCause.getCause, s"2nd cause, error code ${o.getCause.getCause.asInstanceOf[PreconditionFailedException].responseCode}")
+              }
+            }
+          } catch {
+            case e: Exception =>
+              log.error(e, s"Error parsing failed.")
+          }
+          throw o
       }
 
       val organisationWithChildren: Future[Option[Organisaatio]] = organisationWithoutChildren.flatMap {
