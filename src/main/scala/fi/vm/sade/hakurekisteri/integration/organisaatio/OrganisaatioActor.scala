@@ -84,9 +84,20 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case _ => false
   }
 
-  private def isForbidden(t: Throwable) = t match {
-    case PreconditionFailedException(_, 403) => true
-    case _ => false
+  private def isCausedBy403(t: Throwable): Boolean = {
+    try {
+      t.getCause match {
+        case PreconditionFailedException(_, 403)=>
+          log.warning(s"Exception has been caused by HTTP 403")
+          true
+        case e: Exception => isCausedBy403(e)
+        case _ => false
+      }
+    } catch {
+      case e: Exception =>
+        log.error(e, s"Unexpected error in isCausedBy403, defaulting to false")
+        false
+    }
   }
 
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
@@ -95,26 +106,16 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
       log.error(errorMessage)
       Future.failed(new IllegalArgumentException(errorMessage))
     } else {
-      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
+      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_))
+        .recoverWith {
         case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
           log.warning(s"organisaatio not found with tunniste $tunniste")
           Future.successful(None)
-        case p: PreconditionFailedException if p.responseCode.equals(403) =>
-          log.warning(s"organisaatio forbidden with tunniste $tunniste.")
+        case e: Exception if isCausedBy403(e) =>
+          log.warning(s"Organisaatio forbidden with tunniste $tunniste. Ignoring the organization.")
           Future.successful(None)
         case o: Exception =>
           log.error(o, s"Unforeseen error occurred while fetching organisaatio with tunniste $tunniste")
-          try {
-            if (o.getCause != null) {
-              log.error(o.getCause, s"1st cause, error code ${o.getCause.asInstanceOf[PreconditionFailedException].responseCode}")
-              if (o.getCause.getCause != null) {
-                log.error(o.getCause.getCause, s"2nd cause, error code ${o.getCause.getCause.asInstanceOf[PreconditionFailedException].responseCode}")
-              }
-            }
-          } catch {
-            case e: Exception =>
-              log.error(e, s"Error parsing failed.")
-          }
           throw o
       }
 
