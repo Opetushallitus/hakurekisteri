@@ -106,7 +106,9 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
       log.error(errorMessage)
       Future.failed(new IllegalArgumentException(errorMessage))
     } else {
-      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_))
+      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient
+        .readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries)
+        .map(Option(_))
         .recoverWith {
         case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
           log.warning(s"organisaatio not found with tunniste $tunniste")
