@@ -84,16 +84,41 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     case _ => false
   }
 
+  private def isCausedBy403(t: Throwable): Boolean = {
+    try {
+      t.getCause match {
+        case PreconditionFailedException(_, 403)=>
+          log.warning(s"Exception has been caused by HTTP 403")
+          true
+        case e: Exception => isCausedBy403(e)
+        case _ => false
+      }
+    } catch {
+      case e: Exception =>
+        log.error(e, s"Unexpected error in isCausedBy403, defaulting to false")
+        false
+    }
+  }
+
   private def findAndCache(tunniste: String): Future[Option[Organisaatio]] = {
     if (tunniste.isEmpty) {
       val errorMessage = "findAndCache error: string tunniste must not be empty"
       log.error(errorMessage)
       Future.failed(new IllegalArgumentException(errorMessage))
     } else {
-      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
+      val organisationWithoutChildren: Future[Option[Organisaatio]] = organisaatioClient
+        .readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries)
+        .map(Option(_))
+        .recoverWith {
         case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
           log.warning(s"organisaatio not found with tunniste $tunniste")
           Future.successful(None)
+        case e: Exception if isCausedBy403(e) =>
+          log.warning(s"Organisaatio forbidden with tunniste $tunniste. Ignoring the organization.")
+          Future.successful(None)
+        case o: Exception =>
+          log.error(o, s"Unforeseen error occurred while fetching organisaatio with tunniste $tunniste")
+          throw o
       }
 
       val organisationWithChildren: Future[Option[Organisaatio]] = organisationWithoutChildren.flatMap {
