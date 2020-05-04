@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, InMemoryFutureCache}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
@@ -80,9 +80,13 @@ case class KoulutusNotFoundException(message: String) extends TarjontaException(
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
 class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory) extends Actor with ActorLogging {
-  private val koulutusCache = cacheFactory.getInstance[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[HakukohteenKoulutukset], "koulutus")
-  private val komoCache = cacheFactory.getInstance[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[KomoResponse], "komo")
-  private val hakukohdeCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[Hakukohde], "hakukohde")
+
+  private val koulutusMainCache = cacheFactory.getInstance[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[HakukohteenKoulutukset], "koulutus")
+  private val komoMainCache = cacheFactory.getInstance[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[KomoResponse], "komo")
+  private val hakukohdeMainCache = cacheFactory.getInstance[String, Option[Hakukohde]](config.integrations.tarjontaCacheHours.hours.toMillis, this.getClass, classOf[Hakukohde], "hakukohde")
+
+  private val komoInMemoryCache = new InMemoryFutureCache[String, KomoResponse](5.minutes.toMillis)
+  private val hakukohdeInMemoryCache = new InMemoryFutureCache[String, Hakukohde](5.minutes.toMillis)
 
   val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
@@ -95,10 +99,20 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getKomo(oid: String): Future[KomoResponse] = {
+    log.info(s"Getting komo $oid through local cache")
+    komoInMemoryCache.get(oid, oid => getKomoFromMainCache(oid).map(Option(_)))
+      .flatMap {
+        case Some(foundKomo) => Future.successful(foundKomo)
+        case None => Future.failed(new RuntimeException(s"Could not retrieve komo $oid"))
+      }
+  }
+
+  def getKomoFromMainCache(oid: String): Future[KomoResponse] = {
+    log.info(s"Komo $oid not found in local cache; getting from redis or source.")
     val loader: String => Future[Option[KomoResponse]] = o => restClient.readObject[TarjontaResultResponse[Option[Komo]]]("tarjonta-service.komo", oid)(200, maxRetries)
       .map(res => KomoResponse(oid, res.result))
       .map(Option(_))
-    komoCache.get(oid, loader).flatMap {
+    komoMainCache.get(oid, loader).flatMap {
       case Some(foundKomo) => Future.successful(foundKomo)
       case None => Future.failed(new RuntimeException(s"Could not retrieve komo $oid"))
     }
@@ -131,6 +145,12 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getHakukohde(oid: String): Future[Option[Hakukohde]] = {
+    log.info(s"Getting hakukohde $oid through local cache")
+    hakukohdeInMemoryCache.get(oid, oid => getHakukohdeFromMainCache(oid))
+  }
+
+  def getHakukohdeFromMainCache(oid: String): Future[Option[Hakukohde]] = {
+    log.info(s"Hakukohde $oid not found in local cache; getting from redis or source.")
     val loader: String => Future[Option[Option[Hakukohde]]] = { hakukohdeOid =>
       val result = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]]("tarjonta-service.hakukohde", hakukohdeOid)(200, maxRetries).map(r => r.result).map(Option(_))
       result.flatMap {
@@ -139,7 +159,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
         case Some(result) => Future.successful(Option(result))
       }
     }
-    hakukohdeCache.get(oid, loader).map(_.get)
+    hakukohdeMainCache.get(oid, loader).map(_.get)
   }
 
   def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus)).map(_.foldLeft(Seq[Hakukohteenkoulutus]())(_ ++ _))
@@ -156,7 +176,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
         }
     }
 
-    koulutusCache.get(hk.oid, loader).flatMap {
+    koulutusMainCache.get(hk.oid, loader).flatMap {
       case Some(foundHakukohteenKoulutukset) => Future.successful(foundHakukohteenKoulutukset)
       case None => Future.failed(new RuntimeException(s"Could not retrieve koulutukset for Hakukohde ${hk.oid}"))
     }
