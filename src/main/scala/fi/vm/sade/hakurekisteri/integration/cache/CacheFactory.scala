@@ -229,12 +229,12 @@ object CacheFactory {
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
      override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-       logger.info(s"Getting key $key through local cache if possible")
+       logger.debug(s"Getting key $key through local cache if possible")
        localMemoryCache.get(key, key => getFromPersistentCache(key, loader))
       }
 
       def getFromPersistentCache(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        logger.info(s"Key $key not found in local cache; getting from redis or source.")
+        logger.debug(s"Key $key not found in local cache; getting from redis or source.")
         getFromRedis(key).flatMap {
           case Some(v) => Future.successful(Some(v))
           case None => updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
