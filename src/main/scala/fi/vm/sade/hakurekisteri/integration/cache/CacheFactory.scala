@@ -70,9 +70,11 @@ object CacheFactory {
                            limitOfWaitingClientsToLog: Int,
                            cacheHandlingThreadPoolSize: Int,
                            slowRedisRequestThresholdMillis: Int
-                          )(implicit m: Manifest[T])  extends MonadCache[Future, K, T] {
+                          )(implicit m: Manifest[T]) extends MonadCache[Future, K, T] {
 
       val logger = org.slf4j.LoggerFactory.getLogger(getClass)
+
+      val localMemoryCache = new InMemoryFutureCache[K, T](10.minutes.toMillis)
 
       implicit val executor: ExecutionContext = ExecutorUtil.createExecutor(cacheHandlingThreadPoolSize, s"cache-access-$cacheKeyPrefix")
 
@@ -205,7 +207,7 @@ object CacheFactory {
         }
       }
 
-      private def get(key: K): Future[Option[T]] = {
+      private def getFromRedis(key: K): Future[Option[T]] = {
         val prefixKey = k(key)
         val startTime = System.currentTimeMillis
         logger.trace(s"Getting value with key ${prefixKey} from Redis cache")
@@ -226,8 +228,14 @@ object CacheFactory {
 
       private def k(key: K): String = k(key, cacheKeyPrefix)
 
-      override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-        get(key).flatMap {
+     override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
+       logger.info(s"Getting key $key through local cache if possible")
+       localMemoryCache.get(key, key => getFromPersistentCache(key, loader))
+      }
+
+      def getFromPersistentCache(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
+        logger.info(s"Key $key not found in local cache; getting from redis or source.")
+        getFromRedis(key).flatMap {
           case Some(v) => Future.successful(Some(v))
           case None => updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
         }
