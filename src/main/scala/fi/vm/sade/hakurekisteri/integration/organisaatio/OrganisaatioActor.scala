@@ -87,9 +87,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   private def isCausedBy403(t: Throwable): Boolean = {
     try {
       t.getCause match {
-        case PreconditionFailedException(_, 403)=>
-          log.warning(s"Exception has been caused by HTTP 403")
-          true
+        case PreconditionFailedException(_, 403) => true
         case e: Exception => isCausedBy403(e)
         case _ => false
       }
