@@ -28,7 +28,7 @@ class ArvioSerializer extends CustomSerializer[Arvio](format => (
     case ArvioYo(arvosana, None) =>
       JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString("YO")) :: Nil)
     case ArvioOsakoe(osakoepisteet) =>
-      JObject(JField("arvosana", JString(osakoepisteet)) :: JField("asteikko", JString("OSAKOE")) :: Nil)
+      JObject(JField("arvosana", JString(Option(osakoepisteet).getOrElse("0"))) :: JField("asteikko", JString("OSAKOE")) :: Nil)
     case ArvioHyvaksytty(arvosana) =>
       JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString("HYVAKSYTTY")) :: Nil)
   }
