@@ -127,7 +127,7 @@ class YtlIntegration(properties: OphProperties,
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service", e)
           failureEmailSender.sendFailureEmail(s"Ytl sync failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-          AtomicStatus.updateHasFailures(hasFailures = true)
+          AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
           throw e
       }
     }
@@ -146,7 +146,7 @@ class YtlIntegration(properties: OphProperties,
       val futures: Iterator[Future[Unit]] = ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.map {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
-          AtomicStatus.updateHasFailures(hasFailures = true)
+          AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
           Future.failed(e)
         case (Right((zip, students)), index) =>
           try {
@@ -157,12 +157,11 @@ class YtlIntegration(properties: OphProperties,
               .andThen {
                 case Success(_) =>
                   logger.info(s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!")
-                  val latestStatus = AtomicStatus.updateHasFailures(hasFailures = false)
+                  val latestStatus = AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
                   logger.info(s"Latest status after update: ${latestStatus}")
                 case Failure(e) =>
                   logger.error(s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count", e)
-                  AtomicStatus.updateHasFailures(hasFailures = true)
-                  failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+                  AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
               }
           } finally {
             logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
@@ -171,12 +170,16 @@ class YtlIntegration(properties: OphProperties,
       }
 
       Future.sequence(futures.toSeq).onComplete { _ =>
-          val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
-          logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
+        val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
+        logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+        if (hasFailuresOpt.getOrElse(false))
+          failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+
       }
     } catch {
       case e: Throwable =>
-        AtomicStatus.updateHasFailures(hasFailures = true)
+        AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
         logger.error(s"YTL syncAll failed!", e)
         failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
     } finally {
@@ -256,7 +259,7 @@ class YtlIntegration(properties: OphProperties,
       (currentStatus, isAlreadyRunningAtomic)
     }
 
-    def updateHasFailures(hasFailures: Boolean): LastFetchStatus = {
+    def updateHasFailures(hasFailures: Boolean, hasEnded: Boolean): LastFetchStatus = {
       updateStatusAtomic(l => {
         val newHasFailures = l.hasFailures match {
           case Some(true) =>
@@ -264,7 +267,15 @@ class YtlIntegration(properties: OphProperties,
           case _ =>
             hasFailures
         }
-        l.copy(hasFailures = Some(newHasFailures), end = Some(new Date()))
+        val endTimestamp =
+          if (hasEnded && l.end.isEmpty) {
+            val end = new Date()
+            logger.info(s"YTL Batch ${l.uuid} has ended, marking timestamp as $end, has failures: $newHasFailures")
+            Some(end)
+          } else {
+            l.end
+          }
+        l.copy(hasFailures = Some(newHasFailures), end = endTimestamp)
       })
     }
 
