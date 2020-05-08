@@ -113,7 +113,7 @@ case class Exam(examId: String,
                 points: Option[Int],
                 sections: Seq[Section])
 
-case class Section(sectionId: String, sectionPoints: String)
+case class Section(sectionId: String, sectionPoints: Option[String])
 
 trait Kausi {
   def toLocalDate : LocalDate
@@ -142,7 +142,7 @@ object StudentToKokelas {
     val suoritus: VirallinenSuoritus = toYoTutkinto(oid, s)
     val yoTodistus = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate, oid))
     val osakokeet = s.exams.flatMap(exam => exam.sections.map(section => {
-      Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate, oid)
+      Osakoe(ArvioOsakoe(section.sectionPoints.getOrElse("0")), exam.examId, section.sectionId, exam.examRoleShort, exam.examRoleLegacy, exam.period.toLocalDate, oid)
     }))
     Kokelas(oid, suoritus, yoTodistus, osakokeet)
   }
