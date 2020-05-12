@@ -368,6 +368,9 @@ class KoskiSuoritusArvosanaParser {
           } else if ((suoritusTila.equals("VALMIS") || suoritusTila.equals("KESKEN")) && !isVahvistettu && !arvosanoissaNelosia && KoskiUtil.isAfterDeadlineDate()) {
             logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: perusopetuksen suorituksella ei ole vahvistusta eikä nelosia ja deadline on ohitettu. Merkitään suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)")
             "KESKEYTYNYT"
+          } else if (vuosiluokkiinSitomatonOpetus && KoskiUtil.isAfterDeadlineDate() && (!suoritusTila.equals("VALMIS") || !isVahvistettu)) {
+            logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: vuosiluokkiinSitomatonOpetus ja tila ei ole valmis ja deadline on ohitettu. Merkitään perusopetuksen suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)")
+            "KESKEYTYNYT"
           } else suoritusTila
 
         case _ => suoritusTila
