@@ -499,7 +499,7 @@
               }
             ],
             "tyyppi": {
-              "koodiarvo": "perusopetuksenvuosiluokka",
+              "koodiarvo": "perusopetuksenoppimaara",
               "koodistoUri": "suorituksentyyppi"
             }
           },
@@ -1154,7 +1154,7 @@
               }
             ],
             "tyyppi": {
-              "koodiarvo": "perusopetuksenvuosiluokka",
+              "koodiarvo": "perusopetuksenoppimaara",
               "koodistoUri": "suorituksentyyppi"
             }
           },
@@ -1188,7 +1188,7 @@
             },
             "jääLuokalle": false,
             "tyyppi": {
-              "koodiarvo": "perusopetuksenvuosiluokka",
+              "koodiarvo": "perusopetuksenoppimaara",
               "koodistoUri": "suorituksentyyppi"
             }
           },
