@@ -393,6 +393,28 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     result2 should have length 2
   }
 
+  it should "parse when vuosiluokkiinSitoutumatonOpetus == true and tila != valmis data" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_vuosiluokkiinSitoutumatonOpetus_true_vahvistus_false.json").mkString
+    val henkiloList: List[KoskiHenkiloContainer] = parse(json).extract[List[KoskiHenkiloContainer]]
+    val henkilo = henkiloList.head
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val lisätiedot = henkilo.opiskeluoikeudet.head.lisätiedot
+    lisätiedot shouldBe defined
+    lisätiedot.get.vuosiluokkiinSitoutumatonOpetus should be(Some(true))
+    val opiskeluoikeus = henkilo.opiskeluoikeudet.head
+    opiskeluoikeus.suoritukset.head.vahvistus should be(None)
+    KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
+
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
+
+    peruskouluB2KieletShouldNotBeValinnainen(result)
+
+    result should have length 4
+    getPerusopetusPäättötodistus(result).get.luokka shouldEqual "9C"
+    result(2).suoritus.tila should equal("KESKEYTYNYT")
+  }
+
   it should "parse arvosanat from peruskoulu_9_luokka_päättötodistus.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]

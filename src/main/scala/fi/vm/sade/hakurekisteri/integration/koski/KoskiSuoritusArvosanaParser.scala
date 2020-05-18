@@ -361,6 +361,9 @@ class KoskiSuoritusArvosanaParser {
           if (failedNinthGrade || suoritus.jääLuokalle.contains(true)) {
             logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: merkitään luokalle jääväksi merkitty perusopetuksen suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)")
             "KESKEYTYNYT"
+          } else if (vuosiluokkiinSitomatonOpetus && KoskiUtil.isAfterDeadlineDate() && (!suoritusTila.equals("VALMIS") || !isVahvistettu)) {
+            logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: vuosiluokkiinSitomatonOpetus ja tila ei ole valmis ja deadline on ohitettu. Merkitään perusopetuksen suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)")
+            "KESKEYTYNYT"
           } else if (!suoritusTila.equals("KESKEYTYNYT") && arvosanoissaNelosia && KoskiUtil.isAfterDeadlineDate()){
             //On ok, että tässä merkitään poikkeuksellisesti suoritus valmiiksi myös ilman vahvistusta. Muualla tätä ei pitäisi tapahtua.
             logger.info(s"Perusopetuksen tilapäättely - henkilö $personOid: arvosanoissa on nelosia, tila ei ole keskeytynyt ja deadline on ohitettu. Merkitään perusopetuksen suoritus tilaan VALMIS (aiempi tila $suoritusTila)")
