@@ -280,7 +280,6 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def fetchArvosanat(s: VirallinenSuoritus with Identified[UUID]): Future[Seq[Arvosana with Identified[UUID]]] = {
-    println("petar suoritus=" + s)
     (arvosanaRekisteri ? ArvosanaQuery(suoritus = s.id)).mapTo[Seq[Arvosana with Identified[UUID]]]
   }
 
@@ -313,7 +312,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
       }
       if (!params.saveAmmatillinen) {
-        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => Oids.ammatillisetKomoOids contains s.suoritus.komo) // petar ovde izbacuje ammatilliset
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => Oids.ammatillisetKomoOids contains s.suoritus.komo)
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid, getAliases(personOidsWithAliases)).recoverWith{ case e: Exception =>
