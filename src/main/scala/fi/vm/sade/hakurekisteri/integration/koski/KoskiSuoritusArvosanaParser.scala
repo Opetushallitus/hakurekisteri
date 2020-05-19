@@ -249,6 +249,7 @@ class KoskiSuoritusArvosanaParser {
     for {
       suoritus <- suoritukset
     } yield {
+      println("petar suoritus= " + suoritus)
       val isVahvistettu = suoritus.vahvistus.isDefined
       val valmistuminen: Valmistuminen = getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
       val suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
@@ -260,6 +261,7 @@ class KoskiSuoritusArvosanaParser {
         case (_,_) => valmistuminen.valmistumisPaiva
       }
       val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
+      println("petar komooid=" + komoOid)
       val luokkataso: Option[String] = suoritus.getLuokkataso(opiskeluoikeus.isAikuistenPerusopetus)
 
       val vuosiluokkiinSitomatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
@@ -309,8 +311,8 @@ class KoskiSuoritusArvosanaParser {
             s = s.filter(osaSuoritus => osaSuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodistoUri.contentEquals("koskioppiaineetyleissivistava"))
             osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
           } else {
-        (Seq(), yksilollistaminen.Ei)
-      }
+            (Seq(), yksilollistaminen.Ei)
+          }
 
 
         //Ei tallenneta arvosanoja VALMA, TELMA. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.

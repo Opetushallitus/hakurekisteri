@@ -9,6 +9,7 @@ class KoskiOpiskelijaParser {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def createOpiskelija(henkiloOid: String, suoritusLuokka: SuoritusLuokka): Option[Opiskelija] = {
+    println("petar evo kreiram opiskelija=" + suoritusLuokka)
     val alku = suoritusLuokka.lasnaDate.toDateTimeAtStartOfDay
     var loppu = suoritusLuokka.suoritus.valmistuminen.toDateTimeAtStartOfDay
     val oppilaitosAndLuokka: Option[OppilaitosAndLuokka] = detectOppilaitosAndLuokka(suoritusLuokka)
@@ -23,6 +24,9 @@ class KoskiOpiskelijaParser {
 
     if (oppilaitosAndLuokka.isEmpty) {
       logger.error(s"Opiskelijan muodostus henkilölle ${henkiloOid} suoritusluokasta ${suoritusLuokka} epäonnistui.")
+      None
+    } else if (Oids.ammatillisetKomoOids contains suoritusLuokka.suoritus.komo) {
+      println("petar ne pravim opiskelija!")
       None
     } else {
       //luokkatieto käytännössä
