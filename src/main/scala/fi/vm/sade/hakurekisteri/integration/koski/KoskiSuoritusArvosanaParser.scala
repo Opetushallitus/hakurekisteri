@@ -309,8 +309,8 @@ class KoskiSuoritusArvosanaParser {
             s = s.filter(osaSuoritus => osaSuoritus.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodistoUri.contentEquals("koskioppiaineetyleissivistava"))
             osasuoritusToArvosana(personOid, komoOid, s, opiskeluoikeus.lisätiedot, None, suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva)
           } else {
-        (Seq(), yksilollistaminen.Ei)
-      }
+            (Seq(), yksilollistaminen.Ei)
+          }
 
 
         //Ei tallenneta arvosanoja VALMA, TELMA. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.

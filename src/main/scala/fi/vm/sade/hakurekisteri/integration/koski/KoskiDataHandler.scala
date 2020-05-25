@@ -312,9 +312,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
       }
       if (!params.saveAmmatillinen) {
-        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.erikoisammattitutkintoKomoOid))
-          .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinentutkintoKomoOid))
-          .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinenKomoOid))
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => Oids.ammatillisetKomoOids contains s.suoritus.komo)
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid, getAliases(personOidsWithAliases)).recoverWith{ case e: Exception =>
