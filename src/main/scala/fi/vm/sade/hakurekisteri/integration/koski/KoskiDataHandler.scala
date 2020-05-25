@@ -348,7 +348,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def suoritusDuplicates(suoritukset: Seq[SuoritusArvosanat]): Seq[Seq[SuoritusArvosanat]] = {
-    suoritukset.groupBy(_.suoritus.core).collect {
+    suoritukset
+      .filter(s => s.suoritus.komo != Oids.perusopetusLuokkaKomoOid) //Näitä löytyy Koskesta duplikaatteina luokalle jääneille, eivät ole haitaksi.
+      .groupBy(_.suoritus.core).collect {
       case (_, suoritusarvosanat) if suoritusarvosanat.size > 1 => suoritusarvosanat
     }.toSeq
   }
