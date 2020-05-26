@@ -57,7 +57,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         val timestamp: Option[String] =
           if (!cursor.isDefined)
             //Some(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(360))))
-            Some("2019-06-01T00:00:00+02:00")
+            Some("2020-05-20T00:00:00+02:00")
           else None
         val params = SearchParamsWithCursor(timestamp, cursor)
         fetchChangedOppijas(params).onComplete {
@@ -68,15 +68,15 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
               case Success(s) =>
                 logger.info("refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}", response.result.size)
                 if (response.mayHaveMore)
-                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 1.minutes) //Haetaan nopeammin jos kaikkia tietoja samalla cursorilla ei vielä saatu
+                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 15.seconds) //Haetaan nopeammin jos kaikkia tietoja samalla cursorilla ei vielä saatu
                 else
-                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 5.minutes)
+                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 1.minutes)
               case Failure(e) =>
                 logger.error("refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden tietojen haussa: {}", e)
-                refreshChangedOppijasFromKoski(cursor, 5.minutes)
+                refreshChangedOppijasFromKoski(cursor, 2.minutes)
             }
           case Failure(e) => logger.error("refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden selvittämisessä : {}", e)
-            refreshChangedOppijasFromKoski(cursor, 5.minutes)
+            refreshChangedOppijasFromKoski(cursor, 2.minutes)
         }
       })
     }
