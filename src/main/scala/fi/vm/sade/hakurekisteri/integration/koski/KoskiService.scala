@@ -57,7 +57,7 @@ class KoskiService(virkailijaRestClient: VirkailijaRestClient,
         val timestamp: Option[String] =
           if (!cursor.isDefined)
             //Some(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(360))))
-            Some("2020-05-20T00:00:00+02:00")
+            Some("2020-05-25T00:00:00+02:00")
           else None
         val params = SearchParamsWithCursor(timestamp, cursor)
         fetchChangedOppijas(params).onComplete {
