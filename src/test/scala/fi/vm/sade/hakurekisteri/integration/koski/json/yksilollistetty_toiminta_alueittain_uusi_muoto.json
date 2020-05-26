@@ -1,0 +1,3182 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.1853646356643",
+    "hetu" : "021189-0123",
+    "syntymäaika" : "1989-02-11",
+    "etunimet" : "Edgar Allan",
+    "kutsumanimi" : "Edgar",
+    "sukunimi" : "Boer",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : true
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.6656436594666",
+    "versionumero" : 9,
+    "aikaleima" : "2019-09-02T01:21:26.656323",
+    "lähdejärjestelmänId" : {
+      "id" : "140807",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.52192338711",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "07526",
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Maatilan koulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "297",
+        "nimi" : {
+          "fi" : "Raahe",
+          "sv" : "Raahe"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.59236753021",
+      "nimi" : {
+        "fi" : "Raahen kaupunki"
+      },
+      "yTunnus" : "0171450-7",
+      "kotipaikka" : {
+        "koodiarvo" : "297",
+        "nimi" : {
+          "fi" : "Raahe",
+          "sv" : "Raahe"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2017-08-10",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "perusopetuksenAloittamistaLykätty" : false,
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "tukimuodot" : [ {
+        "koodiarvo" : "3",
+        "nimi" : {
+          "fi" : "Avustajapalvelut",
+          "sv" : "Assistenttjänster"
+        },
+        "koodistoUri" : "perusopetuksentukimuoto",
+        "koodistoVersio" : 1
+      } ],
+      "vuosiluokkiinSitoutumatonOpetus" : false,
+      "kuljetusetu" : {
+        "alku" : "2018-08-13",
+        "loppu" : "2019-06-01"
+      }
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "7",
+          "nimi" : {
+            "fi" : "7. vuosiluokka",
+            "sv" : "Årskurs 7"
+          },
+          "koodistoUri" : "perusopetuksenluokkaaste",
+          "koodistoVersio" : 1
+        },
+        "perusteenDiaarinumero" : "104/011/2014"
+      },
+      "luokka" : "7Lm",
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.52692238711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07526",
+          "nimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "alkamispäivä" : "2017-08-10",
+      "vahvistus" : {
+        "päivä" : "2018-06-02",
+        "paikkakunta" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.52692238711",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "07526",
+            "nimi" : {
+              "fi" : "Maatilan koulu"
+            },
+            "lyhytNimi" : {
+              "fi" : "Maatilan koulu"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "297",
+            "nimi" : {
+              "fi" : "Raahe",
+              "sv" : "Raahe"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "Merja Laininen",
+          "titteli" : {
+            "fi" : "Rehtori"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.52692238711",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "07526",
+              "nimi" : {
+                "fi" : "Maatilan koulu"
+              },
+              "lyhytNimi" : {
+                "fi" : "Maatilan koulu"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Maatilan koulu"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "297",
+              "nimi" : {
+                "fi" : "Raahe",
+                "sv" : "Raahe"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "jääLuokalle" : false,
+      "käyttäytymisenArvio" : {
+        "arvosana" : {
+          "koodiarvo" : "S",
+          "nimi" : {
+            "fi" : "hyväksytty",
+            "sv" : "godkänd"
+          },
+          "lyhytNimi" : {
+            "fi" : "S"
+          },
+          "koodistoUri" : "arviointiasteikkoyleissivistava",
+          "koodistoVersio" : 1
+        },
+        "kuvaus" : {
+          "fi" : "Osaat noudattaa  yleensä yhdessä sovittuja sääntöjä sekä yhteisiä sopimuksia. Osaat käyttäytyä ystävällisesti ja asiallisesti. Osaat toimia yhteistyössä luokkakavereiden kanssa ja haluat olla mukana yhteisissä tekemisissä. Osaat iloita omasta työstäsi."
+        },
+        "päivä" : "2018-06-02",
+        "hyväksytty" : true
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "104/011/2014"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Kuuntelet mielelläsi tarinoita ja kyselet niistä. Tunnistat kirjainhahmoja ja harjoittelet niiden kirjoittamista edelleen."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MA",
+            "nimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "104/011/2014"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Lasket lukualueella 0-5. Harjoittelet lukuhahmoja lukualueella 0-10. Tarvitset aikuisen apua ja tukea tehtävien tekemisessä."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "ORIy",
+            "nimi" : {
+              "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet harjoitellut asiointeja ja liikenteessä liikkumisia lähiympäristössä ja kaupungissa.\r\nOlet osallistunut uskonnontunneilla keskusteluihin."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29738",
+            "nimi" : {
+              "fi" : "TAITO-  JA TAIDEAINEET (musiikki, kuvataide, käsityö, liikunta, kotitalous)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "TAIY"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet osallistunut liikunnantunneille. Pallopelit kiinnostavat sinua. Pidät kävelylenkeistä.\r\nTeet käsityöt sinnikkäästi loppuun tuettuna. Osallistut omien mallien suunnitteluun ja sommittelet värejä sointuvasti. Teet tuettuna kuvataiteen töitä yleensä innokkaasti. Iloitset valmiista töistäsi. Tarvitset paljon aikuisen tukea kotitaloustunneilla. Olet kuitenkin innokas tekijä ja annetut työtehtävät onnistuvat sinulta hyvin. Erityisen taitava olet jälkitöiden tekemisessä ja tiskaus on erityisen mieluisaa ja teet sen hyvin ja huolellisesti. Osallistut myönteisesti yhteiseen musisointiin , lauluihin ja musiikkiliikuntaan . Pidät erityisesti rumpujensoitosta ."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenvuosiluokka",
+        "nimi" : {
+          "fi" : "Perusopetuksen vuosiluokka",
+          "sv" : "Årskurs i grundläggande utbildning"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "8",
+          "nimi" : {
+            "fi" : "8. vuosiluokka",
+            "sv" : "Årskurs 8"
+          },
+          "koodistoUri" : "perusopetuksenluokkaaste",
+          "koodistoVersio" : 1
+        },
+        "perusteenDiaarinumero" : "1/011/2004"
+      },
+      "luokka" : "8Pm",
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.52692238711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07526",
+          "nimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "alkamispäivä" : "2017-08-10",
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "jääLuokalle" : false,
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MA",
+            "nimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "ORIy",
+            "nimi" : {
+              "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29738",
+            "nimi" : {
+              "fi" : "TAITO-  JA TAIDEAINEET (musiikki, kuvataide, käsityö, liikunta, kotitalous)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "TAIY"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenvuosiluokka",
+        "nimi" : {
+          "fi" : "Perusopetuksen vuosiluokka",
+          "sv" : "Årskurs i grundläggande utbildning"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "1/011/2004",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 11
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.52692238711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07526",
+          "nimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Kuuntelet mielelläsi tarinoita ja kyselet niistä. Tunnistat kirjainhahmoja ja harjoittelet niiden kirjoittamista edelleen."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MA",
+            "nimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Lasket lukualueella 0-5. Harjoittelet lukuhahmoja lukualueella 0-10. Tarvitset aikuisen apua ja tukea tehtävien tekemisessä."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "ORIy",
+            "nimi" : {
+              "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet harjoitellut asiointeja ja liikenteessä liikkumisia lähiympäristössä ja kaupungissa.\r\nOlet osallistunut uskonnontunneilla keskusteluihin."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29738",
+            "nimi" : {
+              "fi" : "TAITO-  JA TAIDEAINEET (musiikki, kuvataide, käsityö, liikunta, kotitalous)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "TAIY"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet osallistunut liikunnantunneille. Pallopelit kiinnostavat sinua. Pidät kävelylenkeistä.\r\nTeet käsityöt sinnikkäästi loppuun tuettuna. Osallistut omien mallien suunnitteluun ja sommittelet värejä sointuvasti. Teet tuettuna kuvataiteen töitä yleensä innokkaasti. Iloitset valmiista töistäsi. Tarvitset paljon aikuisen tukea kotitaloustunneilla. Olet kuitenkin innokas tekijä ja annetut työtehtävät onnistuvat sinulta hyvin. Erityisen taitava olet jälkitöiden tekemisessä ja tiskaus on erityisen mieluisaa ja teet sen hyvin ja huolellisesti. Osallistut myönteisesti yhteiseen musisointiin , lauluihin ja musiikkiliikuntaan . Pidät erityisesti rumpujensoitosta ."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppimäärä",
+          "sv" : "Grundläggande utbildningens lärokurs"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2017-08-10"
+  }, {
+    "oid" : "1.2.246.562.15.97737670998",
+    "versionumero" : 2,
+    "aikaleima" : "2018-10-11T00:52:42.952208",
+    "lähdejärjestelmänId" : {
+      "id" : "146962",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.52692238711",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "07526",
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Maatilan koulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "297",
+        "nimi" : {
+          "fi" : "Raahe",
+          "sv" : "Raahe"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.59286753021",
+      "nimi" : {
+        "fi" : "Raahen kaupunki"
+      },
+      "yTunnus" : "0171450-7",
+      "kotipaikka" : {
+        "koodiarvo" : "297",
+        "nimi" : {
+          "fi" : "Raahe",
+          "sv" : "Raahe"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2017-08-10",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "perusopetuksenAloittamistaLykätty" : false,
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "tukimuodot" : [ {
+        "koodiarvo" : "3",
+        "nimi" : {
+          "fi" : "Avustajapalvelut",
+          "sv" : "Assistenttjänster"
+        },
+        "koodistoUri" : "perusopetuksentukimuoto",
+        "koodistoVersio" : 1
+      } ],
+      "vuosiluokkiinSitoutumatonOpetus" : false,
+      "kuljetusetu" : {
+        "alku" : "2018-08-13",
+        "loppu" : "2019-06-01"
+      }
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "8",
+          "nimi" : {
+            "fi" : "8. vuosiluokka",
+            "sv" : "Årskurs 8"
+          },
+          "koodistoUri" : "perusopetuksenluokkaaste",
+          "koodistoVersio" : 1
+        },
+        "perusteenDiaarinumero" : "1/011/2004"
+      },
+      "luokka" : "8Pm",
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.52692238711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07526",
+          "nimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "alkamispäivä" : "2018-08-13",
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "jääLuokalle" : false,
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MA",
+            "nimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "ORIy",
+            "nimi" : {
+              "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29738",
+            "nimi" : {
+              "fi" : "TAITO-  JA TAIDEAINEET (musiikki, kuvataide, käsityö, liikunta, kotitalous)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "TAIY"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenvuosiluokka",
+        "nimi" : {
+          "fi" : "Perusopetuksen vuosiluokka",
+          "sv" : "Årskurs i grundläggande utbildning"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "1/011/2004",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 11
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.52692238711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07526",
+          "nimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Kuuntelet mielelläsi tarinoita ja kyselet niistä. Tunnistat kirjainhahmoja ja harjoittelet niiden kirjoittamista edelleen."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MA",
+            "nimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : false,
+          "perusteenDiaarinumero" : "1/011/2004"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Lasket lukualueella 0-5. Harjoittelet lukuhahmoja lukualueella 0-10. Tarvitset aikuisen apua ja tukea tehtävien tekemisessä."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "ORIy",
+            "nimi" : {
+              "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "ORIENTOIVAT AINEET (ympäristö- ja luonnontieto, terveystieto, uskonto)"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet harjoitellut asiointeja ja liikenteessä liikkumisia lähiympäristössä ja kaupungissa.\r\nOlet osallistunut uskonnontunneilla keskusteluihin."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29738",
+            "nimi" : {
+              "fi" : "TAITO-  JA TAIDEAINEET (musiikki, kuvataide, käsityö, liikunta, kotitalous)"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "TAIY"
+          },
+          "perusteenDiaarinumero" : "1/011/2004",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet osallistunut liikunnantunneille. Pallopelit kiinnostavat sinua. Pidät kävelylenkeistä.\r\nTeet käsityöt sinnikkäästi loppuun tuettuna. Osallistut omien mallien suunnitteluun ja sommittelet värejä sointuvasti. Teet tuettuna kuvataiteen töitä yleensä innokkaasti. Iloitset valmiista töistäsi. Tarvitset paljon aikuisen tukea kotitaloustunneilla. Olet kuitenkin innokas tekijä ja annetut työtehtävät onnistuvat sinulta hyvin. Erityisen taitava olet jälkitöiden tekemisessä ja tiskaus on erityisen mieluisaa ja teet sen hyvin ja huolellisesti. Osallistut myönteisesti yhteiseen musisointiin , lauluihin ja musiikkiliikuntaan . Pidät erityisesti rumpujensoitosta ."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppimäärä",
+          "sv" : "Grundläggande utbildningens lärokurs"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2017-08-10"
+  }, {
+    "oid" : "1.2.246.562.15.41845892144",
+    "versionumero" : 13,
+    "aikaleima" : "2020-03-12T10:29:21.051469",
+    "lähdejärjestelmänId" : {
+      "id" : "149641",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.52692238711",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "07526",
+        "nimi" : {
+          "fi" : "Maatilan koulu",
+          "sv" : "Maatilan koulu",
+          "en" : "Maatilan koulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Maatilan koulu",
+          "sv" : "Maatilan koulu",
+          "en" : "Maatilan koulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Maatilan koulu",
+        "sv" : "Maatilan koulu",
+        "en" : "Maatilan koulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "297",
+        "nimi" : {
+          "fi" : "Raahe",
+          "sv" : "Raahe"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.59286753021",
+      "nimi" : {
+        "fi" : "Raahen kaupunki"
+      },
+      "yTunnus" : "0171450-7",
+      "kotipaikka" : {
+        "koodiarvo" : "297",
+        "nimi" : {
+          "fi" : "Raahe",
+          "sv" : "Raahe"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2017-08-10",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2020-03-10",
+        "tila" : {
+          "koodiarvo" : "eronnut",
+          "nimi" : {
+            "fi" : "Eronnut",
+            "sv" : "Utskriven",
+            "en" : "Discontinued"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "perusopetuksenAloittamistaLykätty" : false,
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "tukimuodot" : [ {
+        "koodiarvo" : "3",
+        "nimi" : {
+          "fi" : "Avustajapalvelut",
+          "sv" : "Assistenttjänster"
+        },
+        "koodistoUri" : "perusopetuksentukimuoto",
+        "koodistoVersio" : 1
+      } ],
+      "vuosiluokkiinSitoutumatonOpetus" : false,
+      "vaikeastiVammainen" : [ {
+        "alku" : "2017-08-10"
+      } ],
+      "kuljetusetu" : {
+        "alku" : "2019-08-12",
+        "loppu" : "2020-05-30"
+      }
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "9",
+          "nimi" : {
+            "fi" : "9. vuosiluokka",
+            "sv" : "Årskurs 9"
+          },
+          "koodistoUri" : "perusopetuksenluokkaaste",
+          "koodistoVersio" : 1
+        },
+        "perusteenDiaarinumero" : "104/011/2014"
+      },
+      "luokka" : "9Pm",
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.52692238711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07526",
+          "nimi" : {
+            "fi" : "Maatilan koulu",
+            "sv" : "Maatilan koulu",
+            "en" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu",
+            "sv" : "Maatilan koulu",
+            "en" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu",
+          "sv" : "Maatilan koulu",
+          "en" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "alkamispäivä" : "2019-08-12",
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "jääLuokalle" : false,
+      "osasuoritukset" : [ ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenvuosiluokka",
+        "nimi" : {
+          "fi" : "Perusopetuksen vuosiluokka",
+          "sv" : "Årskurs i grundläggande utbildning",
+          "en" : "Basic education class"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "104/011/2014",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "16",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.5269213322711",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "07516",
+          "nimi" : {
+            "fi" : "Maatilan koulu",
+            "sv" : "Maatilan koulu",
+            "en" : "Maatilan koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Maatilan koulu",
+            "sv" : "Maatilan koulu",
+            "en" : "Maatilan koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Maatilan koulu",
+          "sv" : "Maatilan koulu",
+          "en" : "Maatilan koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "297",
+          "nimi" : {
+            "fi" : "Raahe",
+            "sv" : "Raahe"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29181",
+            "nimi" : {
+              "fi" : "Motoriikka"
+            }
+          },
+          "laajuus" : {
+            "arvo" : 3.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Motoriikka"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Olet harjoitellut hienomotorisia harjoitteita esim. palikoiden, helmien ja kynän avulla. Karkeamotorisia harjoitteita olet tehnyt myös liikuntatunneilla. Tarvitset lisää harjoitusta motoriikan alueella. Saat leikattua itsekin saksilla viivaa pitkin, kun vain keskityt ja pidät katseesi työssäsi. Käytät kauniisti värejä. Saat työsi valmiiksi aikuisen avustuksella."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29197",
+            "nimi" : {
+              "fi" : "Kommunikaatiotaidot"
+            }
+          },
+          "laajuus" : {
+            "arvo" : 3.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Kommunikaatiotaidot"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Osallistut luokan yhteisiin keskusteluihin kuuntelemalla ja toisinaan lyhyesti vastaamalla sekä kyselemällä aiheesta lisää. Ymmärrät aikuisen antamat selkeät konkreettiset ohjeet. Osaat pyytää tarvittaessa myös apua."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29244",
+            "nimi" : {
+              "fi" : "Sosiaaliset taidot"
+            }
+          },
+          "laajuus" : {
+            "arvo" : 3.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Sosiaaliset taidot"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Tarvitset aikuisen tukea ja ohjausta sosiaalisissa tilanteissa. Suhtaudut positiivisesti ja myönteisesti ympärillä oleviin ihmisiin."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29269",
+            "nimi" : {
+              "fi" : "Päivittäisten toimintojen taidot"
+            }
+          },
+          "laajuus" : {
+            "arvo" : 3.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Päivittäisten toimintojen taidot"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Tarvitset aikuisen tukea ja ohjausta päivittäisissä toiminnoissa, mm. ruokailuissa ja hygienia-asioissa. Muista kuunnella opetusta ja harjoitella arkielämän taitoja. Kotitaloustunneilla teet pieniä tehtäviä. Tarvitset työskentelyyn paljon apua, mutta olet innokas ruoanlaittaja. Hiljennä vauhtia, niin jälki paranee. Asenteesi musiikkiin on myönteinen ja musiikki kiinnostaa sinua."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "29294",
+            "nimi" : {
+              "fi" : "Tiedolliset taidot"
+            }
+          },
+          "laajuus" : {
+            "arvo" : 3.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Tiedolliset taidot"
+          },
+          "perusteenDiaarinumero" : "104/011/2014",
+          "pakollinen" : false
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kuvaus" : {
+            "fi" : "Osaat nimetä esineitä ja asioita. Osaat luetella numerot 1-10 ja tiedät lukumäärävastaavuuden 1-3. Tunnistat kaikki tavallisimmat kirjaimet. Osaat jäljentää sanoja mallin mukaan aikuisen avustuksella. Olet tutustunut mielenkiinnolla koneompelun perusteisiin. Tarvitset paljon tukea suunnittelussa, työhön ryhtymisessä ja tuotteiden valmistamisessa. Teet annetut tehtävät mielelläsi ja pyrit aina tekemään kaiken huolellisesti loppuun. Tarvitset paljon apua työskentelyyn."
+          },
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppimäärä",
+          "sv" : "Grundläggande utbildningens lärokurs",
+          "en" : "Basic education syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2017-08-10",
+    "päättymispäivä" : "2020-03-10"
+  }, {
+    "oid" : "1.2.246.562.15.43089868590",
+    "versionumero" : 6,
+    "aikaleima" : "2020-05-22T16:35:58.726789",
+    "lähdejärjestelmänId" : {
+      "id" : "615268",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.21458335409",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "03094",
+        "nimi" : {
+          "fi" : "Holkkilankankaan peruskoulu",
+          "sv" : "Holkkilankankaan peruskoulu",
+          "en" : "Holkkilankankaan peruskoulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Holkkilankankaan peruskoulu",
+          "sv" : "Holkkilankankaan peruskoulu",
+          "en" : "Holkkilankankaan peruskoulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Holkkilankankaan peruskoulu",
+        "sv" : "Holkkilankankaan peruskoulu",
+        "en" : "Holkkilankankaan peruskoulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2020-03-10",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2020-05-30",
+        "tila" : {
+          "koodiarvo" : "valmistunut",
+          "nimi" : {
+            "fi" : "Valmistunut",
+            "sv" : "Utexaminerad",
+            "en" : "Graduated"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "perusopetuksenAloittamistaLykätty" : false,
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "pidennettyOppivelvollisuus" : {
+        "alku" : "2020-03-11",
+        "loppu" : "2020-07-31"
+      },
+      "erityisenTuenPäätökset" : [ {
+        "alku" : "2020-03-11",
+        "loppu" : "2020-07-31",
+        "opiskeleeToimintaAlueittain" : true,
+        "erityisryhmässä" : true
+      } ],
+      "vuosiluokkiinSitoutumatonOpetus" : false
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "9",
+          "nimi" : {
+            "fi" : "9. vuosiluokka",
+            "sv" : "Årskurs 9"
+          },
+          "koodistoUri" : "perusopetuksenluokkaaste",
+          "koodistoVersio" : 1
+        },
+        "perusteenDiaarinumero" : "104/011/2014"
+      },
+      "luokka" : "TOI 2",
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.21458335409",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "03094",
+          "nimi" : {
+            "fi" : "Holkkilankankaan peruskoulu",
+            "sv" : "Holkkilankankaan peruskoulu",
+            "en" : "Holkkilankankaan peruskoulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Holkkilankankaan peruskoulu",
+            "sv" : "Holkkilankankaan peruskoulu",
+            "en" : "Holkkilankankaan peruskoulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Holkkilankankaan peruskoulu",
+          "sv" : "Holkkilankankaan peruskoulu",
+          "en" : "Holkkilankankaan peruskoulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "alkamispäivä" : "2019-08-08",
+      "vahvistus" : {
+        "päivä" : "2020-05-30",
+        "paikkakunta" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.21458335409",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "03094",
+            "nimi" : {
+              "fi" : "Holkkilankankaan peruskoulu",
+              "sv" : "Holkkilankankaan peruskoulu",
+              "en" : "Holkkilankankaan peruskoulu"
+            },
+            "lyhytNimi" : {
+              "fi" : "Holkkilankankaan peruskoulu",
+              "sv" : "Holkkilankankaan peruskoulu",
+              "en" : "Holkkilankankaan peruskoulu"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Holkkilankankaan peruskoulu",
+            "sv" : "Holkkilankankaan peruskoulu",
+            "en" : "Holkkilankankaan peruskoulu"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "Leena Hiillos",
+          "titteli" : {
+            "fi" : "rehtori"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.21458335409",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "03094",
+              "nimi" : {
+                "fi" : "Holkkilankankaan peruskoulu",
+                "sv" : "Holkkilankankaan peruskoulu",
+                "en" : "Holkkilankankaan peruskoulu"
+              },
+              "lyhytNimi" : {
+                "fi" : "Holkkilankankaan peruskoulu",
+                "sv" : "Holkkilankankaan peruskoulu",
+                "en" : "Holkkilankankaan peruskoulu"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Holkkilankankaan peruskoulu",
+              "sv" : "Holkkilankankaan peruskoulu",
+              "en" : "Holkkilankankaan peruskoulu"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "jääLuokalle" : false,
+      "osasuoritukset" : [ ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenvuosiluokka",
+        "nimi" : {
+          "fi" : "Perusopetuksen vuosiluokka",
+          "sv" : "Årskurs i grundläggande utbildning",
+          "en" : "Basic education class"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "104/011/2014",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "16",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.21458335409",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "03094",
+          "nimi" : {
+            "fi" : "Holkkilankankaan peruskoulu",
+            "sv" : "Holkkilankankaan peruskoulu",
+            "en" : "Holkkilankankaan peruskoulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Holkkilankankaan peruskoulu",
+            "sv" : "Holkkilankankaan peruskoulu",
+            "en" : "Holkkilankankaan peruskoulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Holkkilankankaan peruskoulu",
+          "sv" : "Holkkilankankaan peruskoulu",
+          "en" : "Holkkilankankaan peruskoulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "vahvistus" : {
+        "päivä" : "2020-05-30",
+        "paikkakunta" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.21458335409",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "03094",
+            "nimi" : {
+              "fi" : "Holkkilankankaan peruskoulu",
+              "sv" : "Holkkilankankaan peruskoulu",
+              "en" : "Holkkilankankaan peruskoulu"
+            },
+            "lyhytNimi" : {
+              "fi" : "Holkkilankankaan peruskoulu",
+              "sv" : "Holkkilankankaan peruskoulu",
+              "en" : "Holkkilankankaan peruskoulu"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Holkkilankankaan peruskoulu",
+            "sv" : "Holkkilankankaan peruskoulu",
+            "en" : "Holkkilankankaan peruskoulu"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "Leena Hiillos",
+          "titteli" : {
+            "fi" : "rehtori"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.21458335409",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "03094",
+              "nimi" : {
+                "fi" : "Holkkilankankaan peruskoulu",
+                "sv" : "Holkkilankankaan peruskoulu",
+                "en" : "Holkkilankankaan peruskoulu"
+              },
+              "lyhytNimi" : {
+                "fi" : "Holkkilankankaan peruskoulu",
+                "sv" : "Holkkilankankaan peruskoulu",
+                "en" : "Holkkilankankaan peruskoulu"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Holkkilankankaan peruskoulu",
+              "sv" : "Holkkilankankaan peruskoulu",
+              "en" : "Holkkilankankaan peruskoulu"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "2",
+            "nimi" : {
+              "fi" : "kieli ja kommunikaatio",
+              "sv" : "språkliga och kommunikativa färdigheter"
+            },
+            "koodistoUri" : "perusopetuksentoimintaalue",
+            "koodistoVersio" : 1
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2020-05-05",
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksentoimintaalue",
+          "nimi" : {
+            "fi" : "Perusopetuksen toiminta-alue",
+            "sv" : "Verksamhetsområde i grundläggande utbildning",
+            "en" : "Basic education Sphere of activity"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "kognitiiviset taidot",
+              "sv" : "kognitiva färdigheter"
+            },
+            "koodistoUri" : "perusopetuksentoimintaalue",
+            "koodistoVersio" : 1
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2020-05-05",
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksentoimintaalue",
+          "nimi" : {
+            "fi" : "Perusopetuksen toiminta-alue",
+            "sv" : "Verksamhetsområde i grundläggande utbildning",
+            "en" : "Basic education Sphere of activity"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "1",
+            "nimi" : {
+              "fi" : "motoriset taidot",
+              "sv" : "motoriska färdigheter"
+            },
+            "koodistoUri" : "perusopetuksentoimintaalue",
+            "koodistoVersio" : 1
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2020-05-05",
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksentoimintaalue",
+          "nimi" : {
+            "fi" : "Perusopetuksen toiminta-alue",
+            "sv" : "Verksamhetsområde i grundläggande utbildning",
+            "en" : "Basic education Sphere of activity"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "4",
+            "nimi" : {
+              "fi" : "päivittäisten toimintojen taidot",
+              "sv" : "vardagsfärdigheter"
+            },
+            "koodistoUri" : "perusopetuksentoimintaalue",
+            "koodistoVersio" : 1
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2020-05-05",
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksentoimintaalue",
+          "nimi" : {
+            "fi" : "Perusopetuksen toiminta-alue",
+            "sv" : "Verksamhetsområde i grundläggande utbildning",
+            "en" : "Basic education Sphere of activity"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "3",
+            "nimi" : {
+              "fi" : "sosiaaliset taidot",
+              "sv" : "sociala färdigheter"
+            },
+            "koodistoUri" : "perusopetuksentoimintaalue",
+            "koodistoVersio" : 1
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2020-05-05",
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksentoimintaalue",
+          "nimi" : {
+            "fi" : "Perusopetuksen toiminta-alue",
+            "sv" : "Verksamhetsområde i grundläggande utbildning",
+            "en" : "Basic education Sphere of activity"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppimäärä",
+          "sv" : "Grundläggande utbildningens lärokurs",
+          "en" : "Basic education syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2020-03-10",
+    "päättymispäivä" : "2020-05-30"
+  } ]
+}

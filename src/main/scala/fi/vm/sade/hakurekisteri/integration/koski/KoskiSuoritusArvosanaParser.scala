@@ -168,10 +168,19 @@ class KoskiSuoritusArvosanaParser {
     if (yksilöllistetty == yksilollistaminen.Ei) {
       for {
         lisatieto <- lisatiedot
-        tuenPaatos <- lisatieto.erityisenTuenPäätös
       } yield {
-        if (tuenPaatos.opiskeleeToimintaAlueittain.getOrElse(false)) {
-          yksilöllistetty = yksilollistaminen.Alueittain
+        for {
+          tuenPaatos <- lisatieto.erityisenTuenPäätös //legacy
+        } yield {
+          if (tuenPaatos.opiskeleeToimintaAlueittain.getOrElse(false)) {
+            yksilöllistetty = yksilollistaminen.Alueittain
+          }
+        }
+        for {
+          tuenpaatokset <- lisatieto.erityisenTuenPäätökset //new format
+        } yield {
+          if (tuenpaatokset.exists(tp => tp.opiskeleeToimintaAlueittain.getOrElse(false)))
+            yksilöllistetty = yksilollistaminen.Alueittain
         }
       }
     }
