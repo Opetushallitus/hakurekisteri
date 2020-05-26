@@ -2701,6 +2701,24 @@ class KoskiDataHandlerTest extends FlatSpec with BeforeAndAfterEach with BeforeA
     suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
   }
 
+  it should "store henkilon suoritukset even when there are doubled luokkas in koskidata" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "pk_kaksi_kasiluokkaa.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val originalOid: String = henkilo.henkilö.oid.getOrElse("impossible")
+    val personOidsWithAliases = PersonOidsWithAliases(Set(originalOid), Map(originalOid -> Set(originalOid)))
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(7)
+
+    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo, personOidsWithAliases, KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)), 5.seconds)
+    val suoritusTilat: Seq[String] = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritusTilat.head should equal("VALMIS")
+    suoritusTilat.size should equal(1)
+    val arvosanat = run(database.run(sql"select count(*) from arvosana".as[String]))
+    arvosanat.head should equal("18")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.komo.contentEquals(Oids.perusopetusKomoOid))
   }
