@@ -312,9 +312,7 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
         tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
       }
       if (!params.saveAmmatillinen) {
-        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.erikoisammattitutkintoKomoOid))
-          .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinentutkintoKomoOid))
-          .filterNot(s => s.suoritus.komo.equals(Oids.ammatillinenKomoOid))
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s => Oids.ammatillisetKomoOids contains s.suoritus.komo)
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(fetchedSuoritukset, viimeisimmatSuoritukset, henkilöOid, getAliases(personOidsWithAliases)).recoverWith{ case e: Exception =>
@@ -348,7 +346,9 @@ class KoskiDataHandler(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef,
   }
 
   private def suoritusDuplicates(suoritukset: Seq[SuoritusArvosanat]): Seq[Seq[SuoritusArvosanat]] = {
-    suoritukset.groupBy(_.suoritus.core).collect {
+    suoritukset
+      .filter(s => s.suoritus.komo != Oids.perusopetusLuokkaKomoOid) //Näitä löytyy Koskesta duplikaatteina luokalle jääneille, eivät ole haitaksi.
+      .groupBy(_.suoritus.core).collect {
       case (_, suoritusarvosanat) if suoritusarvosanat.size > 1 => suoritusarvosanat
     }.toSeq
   }

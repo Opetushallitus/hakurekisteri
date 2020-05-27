@@ -24,6 +24,8 @@ class KoskiOpiskelijaParser {
     if (oppilaitosAndLuokka.isEmpty) {
       logger.error(s"Opiskelijan muodostus henkilölle ${henkiloOid} suoritusluokasta ${suoritusLuokka} epäonnistui.")
       None
+    } else if (Oids.ammatillisetKomoOids contains suoritusLuokka.suoritus.komo) {
+      None
     } else {
       //luokkatieto käytännössä
       val opiskelija = Opiskelija(

@@ -214,7 +214,8 @@ case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganis
 case class KoskiKieli(koodiarvo: String, koodistoUri: String)
 
 case class KoskiLisatiedot(
-                            erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos],
+                            erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos], //legacy
+                            erityisenTuenPäätökset: Option[List[KoskiErityisenTuenPaatos]], //new format
                             vuosiluokkiinSitoutumatonOpetus: Option[Boolean])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
