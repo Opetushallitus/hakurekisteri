@@ -97,7 +97,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
       .thenReturn((200, List(), "{\"applications\": []}"))
 
-    Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (6)
+    Await.result(hakemusService.hakemuksetForHakukohde(hakuOid = None, "1.2.246.562.20.649956391810", None), 10.seconds).size should be (6)
   }
 
   it should "support haku-app pagination" in {
@@ -110,7 +110,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
       .thenReturn((200, List(), "{\"applications\": []}"))
 
-    Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (20)
+    Await.result(hakemusService.hakemuksetForHakukohde(hakuOid = None, "1.2.246.562.20.649956391810", None), 10.seconds).size should be (20)
   }
 
   "processModifiedHakemukset" should "execute trigger function for modified applications" in {

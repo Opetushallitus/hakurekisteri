@@ -116,7 +116,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient,
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
           hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
-          hakukohteittain <- Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, organisaatio)))
+          hakukohteittain <- Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(hakuOid = None, _, organisaatio)))
           hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
           hakijat <- Future.sequence(for {
             (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined // when would it not be defined?

@@ -72,7 +72,7 @@ object ListFullSearchDto {
 
 trait IHakemusService {
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]]
-  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
+  def hakemuksetForHakukohde(hakuOid: Option[String], hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
   def hakemuksetForHakukohdes(hakukohdeOid: Set[String], organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
   def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]]
@@ -247,13 +247,13 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
     } yield hakuappHakemukset ++ ataruHakemukset
   }
 
-  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
+  def hakemuksetForHakukohde(hakuOid: Option[String], hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]] = {
     for {
       hakuappHakemukset <- fetchHakemuksetChunked(params = SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull))
       ataruHakemukset <- ataruhakemukset(AtaruSearchParams(
         hakijaOids = None,
         hakukohdeOids = Some(List(hakukohdeOid)),
-        hakuOid = None,
+        hakuOid = hakuOid,
         organizationOid = organisaatio,
         modifiedAfter = None
       ))
@@ -422,7 +422,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
 class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForPerson(personOid: String) = Future.successful(Seq[FullHakemus]())
 
-  override def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
+  override def hakemuksetForHakukohde(hakuOid: Option[String], hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
 
   override def hakemuksetForHakukohdes(hakukohdeOids: Set[String], organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
 
