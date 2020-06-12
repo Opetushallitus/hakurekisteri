@@ -140,7 +140,7 @@ class KkHakijaService(hakemusService: IHakemusService,
     for (
       hakemukset <- queryFixed match {
         case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
-        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
+        case KkHakijaQuery(None, haku, _, Some(hakukohde), _, _, _, _) => hakemusService.hakemuksetForHakukohde(haku, hakukohde, q.organisaatio)
         case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _) =>
           hakupalvelu.getHakukohdeOids(hakukohderyhma, haku).flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
