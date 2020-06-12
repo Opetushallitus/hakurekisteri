@@ -153,9 +153,10 @@ class YtlIntegrationSpec extends FlatSpec with BeforeAndAfterEach with BeforeAnd
 
   trait ExampleSuoritus {
     val komo = "1.2.246.562.5.2013061010184237348007"
+    val valmistuminen: LocalDate = Student.parseKausi(Student.nextKausi).get
     val suoritus: VirallinenSuoritus with Identified[UUID] = VirallinenSuoritus(
       komo, "1.2.246.562.10.43628088406", "KESKEN",
-      new LocalDate("2020-06-01"), "1.2.246.562.24.58341904891", yksilollistaminen.Ei, "FI",
+      valmistuminen, "1.2.246.562.24.58341904891", yksilollistaminen.Ei, "FI",
       None, true, "1.2.246.562.10.43628088406", None, Map()).identify(UUID.randomUUID())
   }
 
