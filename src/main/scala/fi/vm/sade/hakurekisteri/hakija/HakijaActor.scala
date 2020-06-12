@@ -289,7 +289,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu,
     val hakutoives: Seq[Hakutoive] = q.hakuehto match {
       case Hakuehto.Kaikki => toiveet
       case Hakuehto.Hyvaksytyt => toiveet.filter(h =>
-        (h.valinta.contains(Valintatila.HYVAKSYTTY) ||
+        (h.valinta.exists(Valintatila.isHyvaksytty) ||
           h.vastaanotto.contains(Vastaanottotila.PERUNUT) ||
           h.vastaanotto.contains(Vastaanottotila.PERUUTETTU)) &&
           matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
