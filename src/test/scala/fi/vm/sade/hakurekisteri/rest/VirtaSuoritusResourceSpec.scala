@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, LinkedHenkiloOids}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaClient, VirtaResourceActor, VirtaResourceActorRef, VirtaResults}
 import fi.vm.sade.hakurekisteri.integration.{CapturingAsyncHttpClient, DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
@@ -46,7 +46,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
   }))
 
   val fakeOppijaNumeroRekisteri = new IOppijaNumeroRekisteri {
-    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
       throw new UnsupportedOperationException("Not implemented")
     }
     override def getByHetu(hetu: String): Future[Henkilo] = {

@@ -16,20 +16,25 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-trait IOppijaNumeroRekisteri {
-  /**
-    Fetches linked henkilo oids from oppijanumerorekisteri.
-    Return map where every oid is mathed to set of linked oids
+/**
+Fields:
 
-    Example: Henkilos A and B are linked. C is not linked. Therefore this method returns map:
-    A -> [A, B]
-    B -> [A, B]
-    C -> [C]
-    */
-  protected def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]]
+    oidToLinkedOids: map where every oid is mathed to set of linked oids
+
+                    Example: Henkilos A and B are linked. C is not linked. Therefore this method returns map:
+                    A -> [A, B]
+                    B -> [A, B]
+                    C -> [C]
+
+    oidToMasterOid: map where every oid is mapped to its masterOid
+  */
+case class LinkedHenkiloOids(oidToLinkedOids: Map[String, Set[String]], oidToMasterOid: Map[String, String])
+
+trait IOppijaNumeroRekisteri {
+  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids]
 
   def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
-    fetchLinkedHenkiloOidsMap(henkiloOids).map(PersonOidsWithAliases(henkiloOids, _))
+    fetchLinkedHenkiloOidsMap(henkiloOids).map(_.oidToLinkedOids).map(PersonOidsWithAliases(henkiloOids, _))
   }
 
   def getByHetu(hetu: String): Future[Henkilo]
@@ -49,28 +54,33 @@ object IOppijaNumeroRekisteri {
 class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSystem, config: Config) extends IOppijaNumeroRekisteri {
   private val logger = Logging.getLogger(system, this)
 
-  override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+  override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
     if (henkiloOids.isEmpty) {
-      Future.successful(Map())
+      Future.successful(LinkedHenkiloOids(Map(), Map()))
     } else {
       queryFromOppijaNumeroRekisteri(henkiloOids)
     }
   }
 
-  private def queryFromOppijaNumeroRekisteri(henkiloOids: Set[String]) = {
+  private def queryFromOppijaNumeroRekisteri(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
     val queryObject: Map[String, Set[String]] = Map("henkiloOids" -> henkiloOids)
     logger.debug(s"Querying with $queryObject")
 
     client.postObject[Map[String, Set[String]], Seq[HenkiloViite]]("oppijanumerorekisteri-service.duplicatesByPersonOids")(resource = queryObject, acceptedResponseCode = HttpStatus.SC_OK).map(viitteet => {
-      val masterOids = viitteet.map(_.masterOid)
-      val linkedOids = viitteet.map(_.henkiloOid)
-      val viitteetByMasterOid = viitteet.groupBy(_.masterOid).map(kv => (kv._1, kv._2.map(_.henkiloOid)))
-      val viitteetByLinkedOid = viitteet.groupBy(_.henkiloOid).map(kv => (kv._1, kv._2.map(_.masterOid)))
-      val allPairs: Map[String, Seq[String]] = viitteetByMasterOid ++ viitteetByLinkedOid
-      henkiloOids.map((queriedOid: String) => {
-        val allAliases: Seq[String] = allPairs.getOrElse(queriedOid, Nil)
-        (queriedOid, (List(queriedOid) ++ allAliases).toSet)
-      }).toMap
+      val oidToLinkedOids = {
+        val viitteetByMasterOid = viitteet.groupBy(_.masterOid).map(kv => (kv._1, kv._2.map(_.henkiloOid)))
+        val viitteetByLinkedOid = viitteet.groupBy(_.henkiloOid).map(kv => (kv._1, kv._2.map(_.masterOid)))
+        val allPairs: Map[String, Seq[String]] = viitteetByMasterOid ++ viitteetByLinkedOid
+        henkiloOids.map((queriedOid: String) => {
+          val allAliases: Seq[String] = allPairs.getOrElse(queriedOid, Nil)
+          (queriedOid, (List(queriedOid) ++ allAliases).toSet)
+        }).toMap
+      }
+      val oidToMasterOid = viitteet
+        .filter(viite => oidToLinkedOids.contains(viite.henkiloOid))
+        .map(viite => (viite.henkiloOid, viite.masterOid))
+        .toMap
+      LinkedHenkiloOids(oidToLinkedOids, oidToMasterOid)
     })
   }
 
@@ -92,16 +102,20 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
 
 object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
   implicit val formats = DefaultFormats
-  val linkedTestPersonOids = Seq("1.2.246.562.24.58099330694", "1.2.246.562.24.67587718272")
+  val masterOid = "1.2.246.562.24.67587718272"
+  val henkiloOid = "1.2.246.562.24.58099330694"
+  val linkedTestPersonOids = Seq(henkiloOid, masterOid)
 
-  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
-    Future.successful(henkiloOids.map { queriedOid =>
-      if (linkedTestPersonOids.contains(queriedOid)) {
-        (queriedOid, linkedTestPersonOids.toSet)
-      } else {
-        (queriedOid, Set(queriedOid))
-      }
-    }.toMap)
+  def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
+    Future.successful({
+      val oidToLinkedOids = henkiloOids.map { queriedOid =>
+          if (linkedTestPersonOids.contains(queriedOid)) {
+            (queriedOid, linkedTestPersonOids.toSet)
+          } else {
+            (queriedOid, Set(queriedOid))
+          }
+        }.toMap
+      LinkedHenkiloOids(oidToLinkedOids, Map(henkiloOid -> masterOid))})
   }
 
   def getByHetu(hetu: String): Future[Henkilo] = {
