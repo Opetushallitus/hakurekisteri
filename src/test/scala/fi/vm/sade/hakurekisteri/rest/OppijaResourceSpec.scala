@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, MockPersonAliasesProvider}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, LinkedHenkiloOids, MockPersonAliasesProvider}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
@@ -61,12 +61,12 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   val henkiloOidWithAliases = "1.2.246.562.24.12345678901"
   val aliasesOfHenkiloOid = Set("1.2.246.562.24.12345678902", "1.2.246.562.24.12345678903")
   val fakeOppijaNumeroRekisteri = new IOppijaNumeroRekisteri {
-    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[Map[String, Set[String]]] = {
+    override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
       val oidsOfAllLinked = aliasesOfHenkiloOid + henkiloOidWithAliases
       val allMappingsOfLinked = if (henkiloOids.intersect(oidsOfAllLinked).nonEmpty) {
         oidsOfAllLinked.map((_, oidsOfAllLinked)).toMap
       } else Map()
-      Future.successful(henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap ++ allMappingsOfLinked)
+      Future.successful(LinkedHenkiloOids(henkiloOids.map(henkilo => (henkilo, Set(henkilo))).toMap ++ allMappingsOfLinked, Map()))
     }
     override def getByHetu(hetu: String): Future[Henkilo] = {
       throw new UnsupportedOperationException("Not implemented")

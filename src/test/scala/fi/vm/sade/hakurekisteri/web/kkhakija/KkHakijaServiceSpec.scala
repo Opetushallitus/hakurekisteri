@@ -368,6 +368,37 @@ class KkHakijaServiceSpec extends ScalatraFunSuite with HakeneetSupport with Moc
     lukuvuosimaksuForNoPaymentRequiredButAnywayPaidHakukohde should be (Some(Maksuntila.maksettu.toString))
   }
 
+  def testIncludeHakemuksetForAllHakijaAliasesAndSetToMasterOid(apiVersion: Int): Assertion = {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), getJson("applicationsByPersonOidWithAliases")))
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn((200, List(), "{\"applications\": []}"))
+    val hakijaWithAliases = MockOppijaNumeroRekisteri.henkiloOid
+
+    val hakijat = Await.result(
+      service.getKkHakijat(
+        KkHakijaQuery(
+          Some(hakijaWithAliases), None, None, None, None,
+          Hakuehto.Kaikki, 1, Some(testUser("test", "1.2.246.562.10.00000000001"))),
+        version = apiVersion), 15.seconds
+    )
+
+    hakijat.size should be (3)
+    hakijat.forall(_.oppijanumero == MockOppijaNumeroRekisteri.masterOid) should be (true)
+  }
+
+  test("v4 Include hakemukset for duplicate henkilöoid's (alias)") {
+    testIncludeHakemuksetForAllHakijaAliasesAndSetToMasterOid(4)
+  }
+
+  test("v3 Include hakemukset for duplicate henkilöoid's (alias)") {
+    testIncludeHakemuksetForAllHakijaAliasesAndSetToMasterOid(3)
+  }
+
+  test("v2 Include hakemukset for duplicate henkilöoid's (alias)") {
+    testIncludeHakemuksetForAllHakijaAliasesAndSetToMasterOid(2)
+  }
+
   def testUser(user: String, organisaatioOid: String) = new User {
     override val username: String = user
     override val auditSession = AuditSessionRequest(user, Set(organisaatioOid), "", "")

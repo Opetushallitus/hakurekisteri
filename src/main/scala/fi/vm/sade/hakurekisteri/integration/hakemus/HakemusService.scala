@@ -9,7 +9,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, Kieli, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, Kieli, LinkedHenkiloOids, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
@@ -221,8 +221,10 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
     for {
+      linkedHenkiloOids: LinkedHenkiloOids <- oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(Set(personOid))
+      masterOid: String <- Future(linkedHenkiloOids.oidToMasterOid.getOrElse(personOid, personOid))
       hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuappRestClient
-        .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, Set(personOid))
+        .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, linkedHenkiloOids.oidToLinkedOids.getOrElse(personOid, Set()))
       ataruHakemukset: Seq[HakijaHakemus] <- ataruhakemukset(AtaruSearchParams(
         hakijaOids = Some(List(personOid)),
         hakukohdeOids = None,
@@ -230,7 +232,7 @@ class HakemusService(hakuappRestClient: VirkailijaRestClient,
         organizationOid = None,
         modifiedAfter = None
       ))
-    } yield hakuappHakemukset.getOrElse(personOid, Seq[FullHakemus]()) ++ ataruHakemukset
+    } yield hakuappHakemukset.values.toList.flatten.map(_.copy(personOid = Some(masterOid))) ++ ataruHakemukset
   }
 
   def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[HakijaHakemus]] = {

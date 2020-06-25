@@ -1,0 +1,15 @@
+[
+  {
+    "henkiloOid": "111",
+    "masterOid": "321"
+  },
+  {
+    "henkiloOid": "222",
+    "masterOid": "321"
+  },
+  {
+    "henkiloOid": "333",
+    "masterOid": "321"
+  }
+
+]
