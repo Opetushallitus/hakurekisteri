@@ -6,6 +6,7 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijat, XMLHakijat}
+import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 
 trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
 
@@ -43,7 +44,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     ModelField("lisapistekoulutus", null, DataType.String, required = false),
     ModelField("yleinenkoulumenestys", null, DataType("double"), required = false),
     ModelField("painotettavataineet", null, DataType("double"), required = false),
-    ModelField("hakutoiveet", null, DataType.GenList(DataType("XMLHakutoive"))))
+    ModelField("hakutoiveet", null, ContainerDataType("List", Some(ValueDataType("XMLHakutoive", None, Some("XMLHakutoive"))))))
 
   registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map{ t => (t.name, t) }.toMap))
 
@@ -64,11 +65,11 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     ModelField("sukupuoli", null, DataType.String),
     ModelField("aidinkieli", null, DataType.String),
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean),
-    ModelField("hakemus", null, DataType("XMLHakemus")))
+    ModelField("hakemus", null, ValueDataType("XMLHakemus", None, Some("XMLHakemus"))))
 
   registerModel(Model("XMLHakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
 
-  val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenList(DataType("XMLHakija"))))
+  val hakijatFields = Seq(ModelField("hakijat", null, ContainerDataType("List", Some(ValueDataType("XMLHakija", None, Some("XMLHakija"))))))
 
   registerModel(Model("XMLHakijat", "Hakijat", hakijatFields.map{ t => (t.name, t) }.toMap))
 
@@ -93,7 +94,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
   // V2 swagger
 
   val hakijatFieldsV2 = Seq(
-    ModelField("hakijat", null, DataType.GenList(DataType("JSONHakija")))
+    ModelField("hakijat", null, ContainerDataType("List", Some(ValueDataType("JSONHakija", None, Some("JSONHakija")))))
   )
 
   val hakijaFieldsV2 = Seq(
@@ -117,8 +118,8 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     ModelField("huoltajannimi", null, DataType.String, required = false),
     ModelField("huoltajanpuhelinnumero", null, DataType.String, required = false),
     ModelField("huoltajansahkoposti", null, DataType.String, required = false),
-    ModelField("hakemus", null, DataType("XMLHakemus")),
-    ModelField("lisakysymykset", null, DataType("JSONLisakysymys")))
+    ModelField("hakemus", null, ValueDataType("XMLHakemus", None, Some("XMLHakemus"))),
+    ModelField("lisakysymykset", null, ValueDataType("JSONLisakysymys", None, Some("JSONLisakysymys"))))
 
   val lisakysymysVastausFields = Seq(
     ModelField("vastausid", null, DataType.String),
@@ -128,10 +129,10 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     ModelField("kysymysid", null, DataType.String),
     ModelField("kysymystyyppi", null, DataType.String),
     ModelField("kysymysteksti", null, DataType.String),
-    ModelField("vastaukset", null, DataType("JSONLisakysymysVastaus"))
+    ModelField("vastaukset", null, ValueDataType("JSONLisakysymysVastaus", None, Some("JSONLisakysymysVastaus")))
   )
-  registerModel(Model("JSONHakijat", "Hakijat", hakijatFieldsV2.map{ t => (t.name, t) }.toMap))
   registerModel(Model("JSONHakija", "Hakija", hakijaFieldsV2.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijat", "Hakijat", hakijatFieldsV2.map{ t => (t.name, t) }.toMap))
   registerModel(Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map{ t => (t.name, t) }.toMap))
   registerModel(Model("JSONLisakysymysVastaus", "LisakysymysVastaus", lisakysymysVastausFields.map{ t => (t.name, t) }.toMap))
 
