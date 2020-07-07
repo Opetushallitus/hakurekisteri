@@ -5,8 +5,9 @@ import fi.vm.sade.hakurekisteri.web.arvosana.ArvosanaSwaggerModel
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaSwaggerModel
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusSwaggerModel
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusSwaggerModel
-import fi.vm.sade.hakurekisteri.web.rest.support.{OldSwaggerSyntax, ModelResponseMessage, IncidentReportSwaggerModel}
+import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
+import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 
 trait OppijaSwaggerApi
     extends SwaggerSupport with OppijaSwaggerModel with ArvosanaSwaggerModel with SuoritusSwaggerModel
@@ -78,15 +79,15 @@ trait OppijaSwaggerModel extends OldSwaggerSyntax  {
 
   val oppijaFields = Seq(
     ModelField("oppijanumero", null, DataType.String),
-    ModelField("opiskelu", null, DataType.GenList(DataType("Opiskelija"))),
-    ModelField("suoritukset", null, DataType.GenList(DataType("Todistus"))),
-    ModelField("opiskeluoikeudet", null, DataType.GenList(DataType("Opiskeluoikeus"))),
+    ModelField("opiskelu", null, ContainerDataType("List", Some(ValueDataType("Opiskelija", None, Some("Opiskelija"))))),
+    ModelField("suoritukset", null, ContainerDataType("List", Some(ValueDataType("Todistus", None, Some("Todistus"))))),
+    ModelField("opiskeluoikeudet", null, ContainerDataType("List", Some(ValueDataType("Opiskeluoikeus", None, Some("Opiskeluoikeus"))))),
     ModelField("ensikertalainen", null, DataType.Boolean, required = false)
   )
 
   val todistusFields = Seq(
-    ModelField("suoritus", null, DataType("Suoritus")),
-    ModelField("arvosanat", null, DataType.GenList(DataType("Arvosana")))
+    ModelField("suoritus", null, ValueDataType("Suoritus", None, Some("Suoritus"))),
+    ModelField("arvosanat", null, ContainerDataType("List", Some(ValueDataType("Arvosana", None, Some("Arvosana")))))
   )
 
   def todistusModel = Model("Todistus", "Todistus", todistusFields.map(t => (t.name, t)).toMap)
