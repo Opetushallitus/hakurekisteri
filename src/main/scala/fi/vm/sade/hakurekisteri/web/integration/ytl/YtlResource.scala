@@ -10,15 +10,20 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport {
+class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security, sw: Swagger)
+  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport
+    with YtlSwaggerApi {
 
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
+  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected def applicationDescription: String = "Ytl-Resource"
 
   before() {
     contentType = formats("json")
@@ -37,7 +42,7 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSyst
     ytlIntegration.syncAll()
     Accepted("YTL sync started")
   }
-  get("/http_request/:personOid") {
+  get("/http_request/:personOid", operation(syncPerson)) {
     shouldBeAdmin
     val personOid = params("personOid")
     logger.info(s"Fetching YTL data for person OID $personOid")
