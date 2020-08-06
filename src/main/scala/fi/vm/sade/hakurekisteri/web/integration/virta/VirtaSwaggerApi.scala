@@ -1,16 +1,16 @@
 package fi.vm.sade.hakurekisteri.web.integration.virta
 
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaStatus
-import fi.vm.sade.hakurekisteri.web.rest.support.{ModelResponseMessage, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.web.rest.support.OldSwaggerSyntax
 import org.scalatra.swagger.{DataType, Model, SwaggerSupport}
 
 trait VirtaSwaggerApi extends SwaggerSupport with VirtaSwaggerModel {
 
   registerModel(virtaStatusModel)
 
-  val process = apiOperation[VirtaStatus]("käynnistäVirtaProsessonti")
-    .summary("Käynnistää VIRTA-prosessionnin")
-    .description("Käynnistää virta-prosessionnin, pitkä versio.")
+  val process = apiOperation[VirtaStatus]("käynnistäVirtaProsessointi")
+    .summary("Käynnistää VIRTA-prosessoinnin")
+    .description("Käynnistää virta-prosessoinnin.")
     .tags("virta")
 
   val refreshOppija = apiOperation[VirtaStatus]("päivitäOppijanTiedot")

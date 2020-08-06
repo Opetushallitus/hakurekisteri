@@ -21,14 +21,14 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil.{logger, _}
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
 import org.joda.time.DateTime
 import org.scalatra.util.RicherString._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 case class KkHakijaQuery(oppijanumero: Option[String],
                          haku: Option[String],

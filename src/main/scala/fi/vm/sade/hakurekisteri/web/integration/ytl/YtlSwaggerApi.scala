@@ -1,11 +1,8 @@
 package fi.vm.sade.hakurekisteri.web.integration.ytl
 
-import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSwaggerModel
-import fi.vm.sade.hakurekisteri.web.rest.support.{ModelResponseMessage, OldSwaggerSyntax}
-import org.scalatra.AsyncResult
-import org.scalatra.swagger.{DataType, Model, SwaggerSupport}
+import org.scalatra.swagger.SwaggerSupport
 
-trait YtlSwaggerApi extends SwaggerSupport with YtlSwaggerModel {
+trait YtlSwaggerApi extends SwaggerSupport {
 
   val syncPerson = apiOperation[Any]("status")
     .summary("Päivittää yhden henkilön YTL-tiedot Suoritusrekisteriin.")
@@ -13,8 +10,4 @@ trait YtlSwaggerApi extends SwaggerSupport with YtlSwaggerModel {
     .parameter(pathParam[String]("personOid")
       .description("personOid").required)
     .tags("Ytl-resource")
-}
-
-trait YtlSwaggerModel {
-
 }

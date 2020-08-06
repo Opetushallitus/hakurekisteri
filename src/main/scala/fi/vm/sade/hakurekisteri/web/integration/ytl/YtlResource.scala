@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.integration.ytl
 
-import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.auditlog.{Changes, Target}
 import fi.vm.sade.hakurekisteri.{AuditUtil, YTLSyncForAll, YTLSyncForPerson}
