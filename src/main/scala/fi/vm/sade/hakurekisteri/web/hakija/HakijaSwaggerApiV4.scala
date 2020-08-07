@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
-import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijat, XMLHakijat}
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV4
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
+import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
@@ -42,61 +43,11 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("lisapistekoulutus", null, DataType.String, required = false),
     ModelField("yleinenkoulumenestys", null, DataType("double"), required = false),
     ModelField("painotettavataineet", null, DataType("double"), required = false),
-    ModelField("hakutoiveet", null, DataType.GenList(DataType("XMLHakutoive"))))
+    ModelField("hakutoiveet", null, ContainerDataType("List", Some(ValueDataType("XMLHakutoive", None, Some("XMLHakutoive"))))))
 
   registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map{ t => (t.name, t) }.toMap))
 
-  val hakijaFields = Seq(
-    ModelField("hetu", null, DataType.String),
-    ModelField("oppijanumero", null, DataType.String),
-    ModelField("sukunimi", null, DataType.String),
-    ModelField("etunimet", null, DataType.String),
-    ModelField("kutsumanimi", null, DataType.String, required = false),
-    ModelField("lahiosoite", null, DataType.String),
-    ModelField("postinumero", null, DataType.String),
-    ModelField("postitoimipaikka", null, DataType.String),
-    ModelField("maa", null, DataType.String),
-    //ModelField("kansalaisuus", null, DataType.String),
-    ModelField("kansalaisuudet", null, DataType.GenList(DataType.String)),
-    ModelField("matkapuhelin", null, DataType.String, required = false),
-    ModelField("sahkoposti", null, DataType.String, required = false),
-    ModelField("kotikunta", null, DataType.String, required = false),
-    ModelField("sukupuoli", null, DataType.String),
-    ModelField("aidinkieli", null, DataType.String),
-    ModelField("koulutusmarkkinointilupa", null, DataType.Boolean),
-    ModelField("hakemus", null, DataType("XMLHakemus")))
-
-  registerModel(Model("XMLHakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
-
-  val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenList(DataType("XMLHakija"))))
-
-  registerModel(Model("XMLHakijat", "Hakijat", hakijatFields.map{ t => (t.name, t) }.toMap))
-
-  registerModel(incidentReportModel)
-
-  val query: OperationBuilder = apiOperation[XMLHakijat]("haeHakijat")
-    .summary("näyttää kaikki hakijat")
-    .description("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
-    .parameter(queryParam[Option[String]]("haku").description("haun oid").optional)
-    .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
-    .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
-    .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
-    .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.values.toList).required)
-    .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
-    .produces("application/json", "application/xml", "application/octet-stream")
-    .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
-    .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
-    .responseMessage(ModelResponseMessage(500, "internal server error"))
-    .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
-    .tags("hakijat")
-
-  // V2 swagger
-
-  val hakijatFieldsV2 = Seq(
-    ModelField("hakijat", null, DataType.GenList(DataType("JSONHakija")))
-  )
-
-  val hakijaFieldsV2 = Seq(
+  val hakijaFieldsV4 = Seq(
     ModelField("hetu", null, DataType.String),
     ModelField("oppijanumero", null, DataType.String),
     ModelField("sukunimi", null, DataType.String),
@@ -117,8 +68,8 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("huoltajannimi", null, DataType.String, required = false),
     ModelField("huoltajanpuhelinnumero", null, DataType.String, required = false),
     ModelField("huoltajansahkoposti", null, DataType.String, required = false),
-    ModelField("hakemus", null, DataType("XMLHakemus")),
-    ModelField("lisakysymykset", null, DataType("JSONLisakysymys")))
+    ModelField("hakemus", null, ValueDataType("XMLHakemus", None, Some("XMLHakemus"))),
+    ModelField("lisakysymykset", null, ValueDataType("JSONLisakysymys", None, Some("JSONLisakysymys"))))
 
   val lisakysymysVastausFields = Seq(
     ModelField("vastausid", null, DataType.String),
@@ -128,14 +79,19 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("kysymysid", null, DataType.String),
     ModelField("kysymystyyppi", null, DataType.String),
     ModelField("kysymysteksti", null, DataType.String),
-    ModelField("vastaukset", null, DataType("JSONLisakysymysVastaus"))
+    ModelField("vastaukset", null, ValueDataType("JSONLisakysymysVastaus", None, Some("JSONLisakysymysVastaus")))
   )
-  registerModel(Model("JSONHakijat", "Hakijat", hakijatFieldsV2.map{ t => (t.name, t) }.toMap))
-  registerModel(Model("JSONHakija", "Hakija", hakijaFieldsV2.map{ t => (t.name, t) }.toMap))
+
+  val hakijatFieldsV4 = Seq(
+    ModelField("hakijat", null, ContainerDataType("List", Some(ValueDataType("JSONHakijaV4", None, Some("JSONHakijaV4")))))
+  )
+
+  registerModel(Model("JSONHakijatV4", "Hakijat", hakijatFieldsV4.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijaV4", "Hakija", hakijaFieldsV4.map{ t => (t.name, t) }.toMap))
   registerModel(Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map{ t => (t.name, t) }.toMap))
   registerModel(Model("JSONLisakysymysVastaus", "LisakysymysVastaus", lisakysymysVastausFields.map{ t => (t.name, t) }.toMap))
 
-  val queryV2: OperationBuilder = apiOperation[JSONHakijat]("haeHakijat")
+  val queryV2: OperationBuilder = apiOperation[JSONHakijatV4]("haeHakijat")
     .summary("näyttää kaikki hakijat")
     .description("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
     .parameter(queryParam[Option[String]]("haku").description("haun oid").required)

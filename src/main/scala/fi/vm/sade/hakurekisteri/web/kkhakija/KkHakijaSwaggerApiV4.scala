@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
+import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
@@ -35,12 +36,12 @@ trait KkHakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerMode
     ModelField("valinnanTila", null, DataType.String, None, AllowableValues(Valintatila.values.map(_.toString)), required = false),
     ModelField("valintatapajononTyyppi", null, DataType.String, None, required = false),
     ModelField("vastaanottotieto", null, DataType.String, None, AllowableValues(Vastaanottotila.values.map(_.toString)), required = false),
-    ModelField("ilmoittautumiset", null, DataType.GenList(DataType("Ilmoittautuminen"))),
+    ModelField("ilmoittautumiset", null, ContainerDataType("List", Some(ValueDataType("Ilmoittautuminen", None, Some("Ilmoittautuminen"))))),
     ModelField("pohjakoulutus", null, DataType.GenList(DataType.String), None, AllowableValues("yo", "am", "amt", "kk", "ulk", "avoin", "muu")),
     ModelField("julkaisulupa", null, DataType.Boolean, required = false),
     ModelField("hKelpoisuus", null, DataType.String, Some(""), AllowableValues("NOT_CHECKED", "ELIGIBLE", "INADEQUATE", "INELIGIBLE")),
     ModelField("hKelpoisuusLahde", null, DataType.String, None, AllowableValues("UNKNOWN", "REGISTER", "ORIGINAL_DIPLOMA", "OFFICIALLY_AUTHENTICATED_COPY", "LEARNING_PROVIDER", "COPY", "AUTHENTICATED_COPY"), required = false),
-    ModelField("hakukohteenKoulutukset", null, DataType.GenList(DataType("HakukohteenKoulutus")))
+    ModelField("hakukohteenKoulutukset", null, ContainerDataType("List", Some(ValueDataType("HakukohteenKoulutus", None, Some("HakukohteenKoulutus")))))
   )
 
   val liiteFields: Seq[ModelField] = Seq(
@@ -51,7 +52,7 @@ trait KkHakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerMode
     ModelField("vastaanottaja", null, DataType.String)
   )
 
-  registerModel(Model("Hakemus", "Hakemus", hakemusFields.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("HakemusV4", "HakemusV4", hakemusFields.map{ t => (t.name, t) }.toMap))
 
   registerModel(Model("Liite", "Liite", liiteFields.map{ t => (t.name, t) }.toMap))
 
@@ -79,15 +80,15 @@ trait KkHakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerMode
     ModelField("onYlioppilas", null, DataType.Boolean),
     ModelField("yoSuoritusvuosi", null, DataType.String),
     ModelField("turvakielto", null, DataType.Boolean),
-    ModelField("hakemukset", null, DataType.GenList(DataType("Hakemus"))),
-    ModelField("liitteet", null, DataType.GenList(DataType("Liite")))
+    ModelField("hakemukset", null, ContainerDataType("List", Some(ValueDataType("HakemusV4", None, Some("HakemusV4"))))),
+    ModelField("liitteet", null, ContainerDataType("List", Some(ValueDataType("Liite", None, Some("Liite")))))
   )
 
-  registerModel(Model("Hakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("HakijaV4", "HakijaV4", hakijaFields.map{ t => (t.name, t) }.toMap))
 
   registerModel(incidentReportModel)
 
-  val query: OperationBuilder = apiOperation[Seq[Hakija]]("haeKkHakijat")
+  val query: OperationBuilder = apiOperation[Seq[HakijaV4]]("haeKkHakijat")
     .summary("näyttää kaikki hakijat")
     .description("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
     .parameter(queryParam[Option[String]]("oppijanumero").description("henkilön oid / oppijanumero, pakollinen jos hakukohdetta ei ole määritetty").optional)

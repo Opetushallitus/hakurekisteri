@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -18,9 +19,13 @@ object Status extends Enumeration {
   val OK, TIMEOUT, FAILURE = Value
 }
 
-class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport {
+class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val security: Security, sw: Swagger)
+  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport
+    with FutureSupport with SecuritySupport with VirtaSwaggerApi {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
+  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected def applicationDescription: String = "VIRTA-rajapinnat"
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -39,7 +44,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
 
   def hasAccess: Boolean = currentUser.exists(_.isAdmin)
 
-  get("/process") {
+  get("/process", operation(process)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
@@ -62,7 +67,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
   }
 
   //Raikasta yhden oppijan tiedot Virrasta
-  get("/refresh/:oppijaOid") {
+  get("/refresh/:oppijaOid", operation(refreshOppija)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {
       val oppijaOid = params("oppijaOid")
@@ -87,7 +92,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
     }
   }
 
-  get("/status") {
+  get("/status", operation(statusQuery)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds

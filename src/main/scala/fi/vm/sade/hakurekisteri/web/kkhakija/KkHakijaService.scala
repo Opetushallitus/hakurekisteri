@@ -21,14 +21,14 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil.{logger, _}
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
 import org.joda.time.DateTime
 import org.scalatra.util.RicherString._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 case class KkHakijaQuery(oppijanumero: Option[String],
                          haku: Option[String],
@@ -96,6 +96,56 @@ case class Hakija(hetu: String,
                   maa: String,
                   kansalaisuus: Option[String],
                   kaksoiskansalaisuus: Option[String],
+                  kansalaisuudet: Option[List[String]],
+                  syntymaaika: Option[String],
+                  matkapuhelin: Option[String],
+                  puhelin: Option[String],
+                  sahkoposti: Option[String],
+                  kotikunta: String,
+                  sukupuoli: String,
+                  aidinkieli: String,
+                  asiointikieli: String,
+                  koulusivistyskieli: String,
+                  koulutusmarkkinointilupa: Option[Boolean],
+                  onYlioppilas: Boolean,
+                  yoSuoritusVuosi: Option[String],
+                  turvakielto: Boolean,
+                  hakemukset: Seq[Hakemus])
+
+case class HakijaV3(hetu: String,
+                    oppijanumero: String,
+                    sukunimi: String,
+                    etunimet: String,
+                    kutsumanimi: String,
+                    lahiosoite: String,
+                    postinumero: String,
+                    postitoimipaikka: String,
+                    maa: String,
+                    kansalaisuudet: Option[List[String]],
+                    syntymaaika: Option[String],
+                    matkapuhelin: Option[String],
+                    puhelin: Option[String],
+                    sahkoposti: Option[String],
+                    kotikunta: String,
+                    sukupuoli: String,
+                    aidinkieli: String,
+                    asiointikieli: String,
+                    koulusivistyskieli: String,
+                    koulutusmarkkinointilupa: Option[Boolean],
+                    onYlioppilas: Boolean,
+                    yoSuoritusVuosi: Option[String],
+                    turvakielto: Boolean,
+                    hakemukset: Seq[Hakemus])
+
+case class HakijaV4(hetu: String,
+                  oppijanumero: String,
+                  sukunimi: String,
+                  etunimet: String,
+                  kutsumanimi: String,
+                  lahiosoite: String,
+                  postinumero: String,
+                  postitoimipaikka: String,
+                  maa: String,
                   kansalaisuudet: Option[List[String]],
                   syntymaaika: Option[String],
                   matkapuhelin: Option[String],

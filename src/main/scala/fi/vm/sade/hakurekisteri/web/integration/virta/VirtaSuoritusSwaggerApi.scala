@@ -16,4 +16,5 @@ trait VirtaSuoritusSwaggerApi extends SwaggerSupport {
     .responseMessage(ModelResponseMessage(500, "virta error"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .tags("virta")
 }
