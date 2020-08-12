@@ -95,11 +95,12 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
           case Some(id) =>
             jono.getAsiakirjaWithId(id) match {
               case Some((format, status, Some(owner))) =>
-                if(owner.username.equals(user.username)) {
+                if (owner.username.equals(user.username)) {
 
                   status match {
                     case Left(exception) =>
-                      logger.error("Create asiakirja with exception: {}", exception)
+                      logger.error("Create asiakirja with exception: {}",
+                        if (exception.getCause != null) exception.getCause else exception)
                       AsiakirjaWithExceptions(exception)
                     case Right(bytes) =>
                       Asiakirja(format, bytes)
