@@ -48,8 +48,9 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
       override implicit def timeout: Duration = 30.seconds
       override val is =
         if (HetuUtil.toSyntymaAika(hetuOrHenkiloOid).isDefined) {
-          println(s"Querying with hetu: ${hetuOrHenkiloOid}")
           oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
+            println(s"Querying with hetu: ${hetuOrHenkiloOid}")
+            println(s"henkilo.oidHenkilo is now: ${henkilo.oidHenkilo}")
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
                 audit.log(au,
@@ -74,7 +75,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
                   HenkilonTiedotVirrasta,
                   new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
                   new Changes.Builder().build())
-                virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetuOrHenkiloOid))
+                virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Option.empty)
               } else {
                 Future.successful(VirtaResult(hetuOrHenkiloOid))
               }
