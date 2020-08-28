@@ -69,13 +69,14 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           oppijaNumeroRekisteri.getByOids(Set(hetuOrHenkiloOid)).flatMap(map => {
             val henkilo = map.head._2
             println(s"Querying with henkilo oid: ${henkilo.oidHenkilo}")
+            println(s"Querying with henkilo hetu: ${henkilo.hetu}")
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
                 audit.log(au,
                   HenkilonTiedotVirrasta,
                   new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
                   new Changes.Builder().build())
-                virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Option.empty)
+                virtaActor.actor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = henkilo.hetu)
               } else {
                 Future.successful(VirtaResult(hetuOrHenkiloOid))
               }
