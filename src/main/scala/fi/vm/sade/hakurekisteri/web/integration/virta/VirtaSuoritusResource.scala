@@ -49,10 +49,10 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
       override val is =
         if (HetuUtil.toSyntymaAika(hetuOrHenkiloOid).isDefined) {
           oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
-            println(s"Querying with hetu: ${hetuOrHenkiloOid}")
-            println(s"henkilo.oidHenkilo is now: ${henkilo.oidHenkilo}")
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
+                println(s"Querying with hetu: ${hetuOrHenkiloOid}")
+                println(s"henkilo.oidHenkilo is now: ${henkilo.oidHenkilo}")
                 audit.log(au,
                   HenkilonTiedotVirrasta,
                   new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
@@ -68,10 +68,10 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           // therefore the returned head should be the master henkilo of this henkiloOid
           oppijaNumeroRekisteri.getByOids(Set(hetuOrHenkiloOid)).flatMap(map => {
             val henkilo = map.head._2
-            println(s"Querying with henkilo oid: ${henkilo.oidHenkilo}")
-            println(s"Querying with henkilo hetu: ${henkilo.hetu}")
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
+                println(s"Querying with henkilo oid: ${henkilo.oidHenkilo}")
+                println(s"Querying with henkilo hetu: ${henkilo.hetu}")
                 audit.log(au,
                   HenkilonTiedotVirrasta,
                   new Target.Builder().setField("hetu", hetuOrHenkiloOid).build(),
