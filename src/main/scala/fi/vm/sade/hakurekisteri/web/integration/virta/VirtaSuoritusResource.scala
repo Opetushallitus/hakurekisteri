@@ -42,13 +42,13 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
 
   get("/:hetu", operation(query)) {
     val hetuOrHenkiloOid = params("hetu")
-    println(s"hetu: ${hetuOrHenkiloOid}")
     val user = currentUser.getOrElse(throw new UserNotAuthorized("not authorized"))
     val au = security.auditUser
     new AsyncResult() {
       override implicit def timeout: Duration = 30.seconds
       override val is =
         if (HetuUtil.toSyntymaAika(hetuOrHenkiloOid).isDefined) {
+          println(s"Querying with hetu: ${hetuOrHenkiloOid}")
           oppijaNumeroRekisteri.getByHetu(hetuOrHenkiloOid).flatMap(henkilo => {
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
@@ -67,6 +67,7 @@ class VirtaSuoritusResource(virtaActor: VirtaResourceActorRef, hakemusBasedPermi
           // therefore the returned head should be the master henkilo of this henkiloOid
           oppijaNumeroRekisteri.getByOids(Set(hetuOrHenkiloOid)).flatMap(map => {
             val henkilo = map.head._2
+            println(s"Querying with henkilo oid: ${henkilo.oidHenkilo}")
             hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
               if (access) {
                 audit.log(au,
