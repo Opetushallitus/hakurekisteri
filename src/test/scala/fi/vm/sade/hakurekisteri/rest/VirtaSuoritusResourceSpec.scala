@@ -103,6 +103,13 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
 
   addServlet(new VirtaSuoritusResource(virtaSuoritusActor, permissionChecker, fakeOppijaNumeroRekisteri), "/*")
 
+  test("should return required fields from Virta for empty response when querying with hetu") {
+    get("/111111-1976") {
+      status should be (200)
+      body should be ("{\"oppijanumero\":\"1.2.4\",\"opiskeluoikeudet\":[],\"tutkinnot\":[],\"suoritukset\":[]}")
+    }
+  }
+
   test("should return required fields from Virta response when querying with hetu") {
     get("/111111-1975") {
       status should be (200)
