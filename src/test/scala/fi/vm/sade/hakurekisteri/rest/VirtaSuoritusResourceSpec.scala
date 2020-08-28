@@ -28,6 +28,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
   val endPoint = mock[Endpoint]
 
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.4"))).thenReturn((200, List(), VirtaResults.emptyResp))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("111111-1976"))).thenReturn((200, List(), VirtaResults.emptyResp))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.5"))).thenReturn((500, List(), "Internal Server Error"))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.3.0"))).thenReturn((200, List(), VirtaResults.multipleStudents))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.5.0"))).thenReturn((500, List(), VirtaResults.fault))
@@ -50,22 +51,53 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
       throw new UnsupportedOperationException("Not implemented")
     }
     override def getByHetu(hetu: String): Future[Henkilo] = {
-      Future.successful(Henkilo(
-        oidHenkilo = "1.2.4",
-        hetu = Some("111111-1975"),
-        henkiloTyyppi = "OPPIJA",
-        etunimet = None,
-        kutsumanimi = None,
-        sukunimi = None,
-        aidinkieli = None,
-        kansalaisuus = List.empty,
-        syntymaaika = None,
-        sukupuoli = None,
-        turvakielto = Some(false)
-      ))
+      if (hetu.equals("111111-1975")) {
+        Future.successful(Henkilo(
+          oidHenkilo = "1.2.4",
+          hetu = Some("111111-1975"),
+          henkiloTyyppi = "OPPIJA",
+          etunimet = None,
+          kutsumanimi = None,
+          sukunimi = None,
+          aidinkieli = None,
+          kansalaisuus = List.empty,
+          syntymaaika = None,
+          sukupuoli = None,
+          turvakielto = Some(false)
+        ))
+      } else {
+        Future.successful(Henkilo(
+          oidHenkilo = "1.2.4",
+          hetu = Some("111111-1976"),
+          henkiloTyyppi = "OPPIJA",
+          etunimet = None,
+          kutsumanimi = None,
+          sukunimi = None,
+          aidinkieli = None,
+          kansalaisuus = List.empty,
+          syntymaaika = None,
+          sukupuoli = None,
+          turvakielto = Some(false)
+        ))
+      }
     }
 
-    override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = Future.successful(Map.empty)
+    override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = Future.successful(Map(
+      ("1.2.3",
+        Henkilo(
+          oidHenkilo = "1.2.3",
+          hetu = Some("111111-1975"),
+          henkiloTyyppi = "OPPIJA",
+          etunimet = None,
+          kutsumanimi = None,
+          sukunimi = None,
+          aidinkieli = None,
+          kansalaisuus = List.empty,
+          syntymaaika = None,
+          sukupuoli = None,
+          turvakielto = Some(false))
+      )
+    ))
   }
 
 
@@ -76,6 +108,13 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
     get("/1.2.4") {
       status should be (200)
       body should be ("{\"oppijanumero\":\"1.2.4\",\"opiskeluoikeudet\":[],\"tutkinnot\":[],\"suoritukset\":[]}")
+    }
+  }
+
+  test("should return required fields from Virta response when querying with hetu") {
+    get("/111111-1975") {
+      status should be (200)
+      body should include ("875101")
     }
   }
 
