@@ -3,7 +3,8 @@ package fi.vm.sade.hakurekisteri.tarjonta
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, RestHaku, RestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.haku.RestHaku
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, RestHakuAika}
 import org.joda.time.LocalDate
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite

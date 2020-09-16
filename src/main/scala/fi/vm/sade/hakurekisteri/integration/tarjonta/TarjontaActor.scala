@@ -8,6 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.haku.{RestHaku, RestHakuResult}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
@@ -19,23 +20,7 @@ case class HakukohdeQuery(oid: String)
 
 object GetHautQuery
 
-case class RestHakuResult(result: List[RestHaku])
-
 case class GetHautQueryFailedException(m: String, cause: Throwable) extends Exception(m, cause)
-
-case class RestHaku(oid:Option[String],
-                    hakuaikas: List[RestHakuAika],
-                    nimi: Map[String, String],
-                    hakukausiUri: String,
-                    hakutapaUri: String,
-                    hakukausiVuosi: Int,
-                    koulutuksenAlkamiskausiUri: Option[String],
-                    koulutuksenAlkamisVuosi: Option[Int],
-                    kohdejoukkoUri: Option[String],
-                    kohdejoukonTarkenne: Option[String],
-                    tila: String) {
-  def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
-}
 
 case class RestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
 

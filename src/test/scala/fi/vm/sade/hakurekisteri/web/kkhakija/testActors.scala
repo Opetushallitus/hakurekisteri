@@ -5,7 +5,7 @@ import java.util.Date
 import akka.actor.Actor
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.InFuture
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, RestHaku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Lukuvuosimaksu, LukuvuosimaksuQuery, Maksuntila}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritysTyyppiQuery}

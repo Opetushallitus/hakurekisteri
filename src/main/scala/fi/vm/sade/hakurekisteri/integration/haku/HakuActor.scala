@@ -1,15 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
+import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration}
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlIntegration
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
 
@@ -18,41 +19,48 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
+class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, koutaInternal: KoutaInternalActorRef, parametrit: ParametritActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
 
-  var storedHakus: Seq[Haku] = Seq()
+  var storedHakus: Map[String, Haku] = Map()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours
   val hakemusRefreshTime = config.integrations.hakemusRefreshTimeHours.hours
 
-  val update = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
+  val updateTarjontaHaut = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, UpdateTarjontaHaut)
+  val updateKoutaInternalHaut = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, UpdateKoutaInternalHaut)
   var retryUpdate: Option[Cancellable] = None
 
   import FutureList._
 
   def getHaku(q: GetHaku): Future[Haku] = Future {
-    storedHakus.find(_.oid == q.oid) match {
+    storedHakus.find(_._2.oid == q.oid) match {
       case None => throw HakuNotFoundException(s"no stored haku found with oid ${q.oid}")
-      case Some(h) => h
+      case Some(h) => h._2
     }
   }
 
   log.info(s"starting haku actor $self (hakuRefreshTime: $hakuRefreshTime, hakemusRefreshTime: $hakemusRefreshTime)")
 
   override def receive: Actor.Receive = {
-    case Update =>
-      log.info(s"updating all hakus for $self from ${sender()}")
+    case UpdateTarjontaHaut =>
+      log.info(s"updating all tarjonta hakus for $self from ${sender()}")
       tarjonta.actor ! GetHautQuery
 
-    case HakuRequest => sender ! AllHaut(storedHakus)
+    case UpdateKoutaInternalHaut =>
+      log.info(s"updating all kouta-internal hakus for $self from ${sender()}")
+      koutaInternal.actor ! GetHautQuery
+
+    case HakuRequest => sender ! AllHaut(storedHakus.values.toSeq)
 
     case q: GetHaku => getHaku(q) pipeTo sender
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
     case sq: Seq[_] =>
-      storedHakus = sq.collect{ case h: Haku => h}
-      val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
+      storedHakus = sq
+        .collect{ case h: Haku => h }
+        .foldLeft(storedHakus)((acc, haku) => { acc + (haku.oid -> haku) })
+      val activeHakus: Seq[Haku] = storedHakus.values.filter(_.isActive).toSeq
       val ytlHakus = activeHakus.filter(_.kkHaku)
       val activeYhteisHakus: Seq[Haku] = activeHakus.filter(_.hakutapaUri.startsWith("hakutapa_01"))
       val activeKKYhteisHakus = activeYhteisHakus.filter(_.kkHaku)
@@ -74,7 +82,7 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
       retryUpdate.foreach(_.cancel())
-      retryUpdate = Some(context.system.scheduler.scheduleOnce(1.minute, self, Update))
+      retryUpdate = Some(context.system.scheduler.scheduleOnce(1.minute, self, UpdateTarjontaHaut))
 
     case Failure(t) =>
       log.error(t, s"got failure from ${sender()}")
@@ -100,13 +108,16 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
   }
 
   override def postStop(): Unit = {
-    update.cancel()
+    updateTarjontaHaut.cancel()
+    updateKoutaInternalHaut.cancel()
     retryUpdate.foreach(_.cancel())
     super.postStop()
   }
 }
 
-object Update
+object UpdateTarjontaHaut
+
+object UpdateKoutaInternalHaut
 
 object HakuRequest
 

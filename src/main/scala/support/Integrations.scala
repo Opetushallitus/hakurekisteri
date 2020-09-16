@@ -12,6 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef, MockKoodistoActor}
 import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
 import fi.vm.sade.hakurekisteri.integration.koski._
+import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActor, KoutaInternalActorRef, MockKoutaInternalActor}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor, TarjontaActorRef}
@@ -42,6 +43,7 @@ trait Integrations {
   val hakemusService: IHakemusService
   val koosteService: IKoosteService
   val tarjonta: TarjontaActorRef
+  val koutaInternal: KoutaInternalActorRef
   val haut: ActorRef
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
@@ -84,6 +86,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val parametrit: ParametritActorRef = new ParametritActorRef(mockActor("parametrit", new MockParameterActor(config = config)(system)))
   override val henkilo: HenkiloActorRef = new HenkiloActorRef(mockActor("henkilo", new MockHenkiloActor(config)))
   override val tarjonta: TarjontaActorRef = new TarjontaActorRef(mockActor("tarjonta", new MockTarjontaActor(config)(system)))
+  override val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(mockActor(name = "koutaInternal", new MockKoutaInternalActor(config)))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytlKokelasPersister = new YtlKokelasPersister(
     system,
@@ -95,7 +98,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytlKokelasPersister, config)
-  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)), "haut")
+  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, koutaInternal, parametrit, ytlIntegration, config)), "haut")
   val valintaTulos: ValintaTulosActorRef = new ValintaTulosActorRef(mockActor("valintaTulos", new DummyActor))
 
   override val proxies = new MockProxies
@@ -138,6 +141,7 @@ class BaseIntegrations(rekisterit: Registers,
   })
 
   private val tarjontaClient = new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(restEc, system)
+  private val koutaInternalClient = new VirkailijaRestClient(config.integrations.koutaInternalConfig, None, jSessionName = "session", serviceUrlSuffix = "/auth/login")(restEc, system)
   private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(restEc, system)
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
   val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
@@ -167,6 +171,7 @@ class BaseIntegrations(rekisterit: Registers,
 
   val cacheFactory = CacheFactory.apply(OphUrlProperties)(system)
   val tarjonta: TarjontaActorRef = new TarjontaActorRef(getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config, cacheFactory)), "tarjonta"))
+  val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(getSupervisedActorFor(Props(new KoutaInternalActor(koutaInternalClient, config)), "koutaInternal"))
   val organisaatiot = new OrganisaatioActorRef(getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)), "organisaatio"))
   val henkilo = new HenkiloActorRef(system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(onrClient, config)), "henkilo"))
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(onrClient, system, config)
@@ -189,7 +194,7 @@ class BaseIntegrations(rekisterit: Registers,
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
   val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, oppijaNumeroRekisteri, ytlKokelasPersister, config)
-  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)), "haut")
+  val haut: ActorRef = system.actorOf(Props(new HakuActor(koskiService, tarjonta, koutaInternal, parametrit, ytlIntegration, config)), "haut")
   val valintaTulos = new ValintaTulosActorRef(getSupervisedActorFor(Props(new ValintaTulosActor(haut, valintatulosClient, config, cacheFactory)), "valintaTulos"))
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
