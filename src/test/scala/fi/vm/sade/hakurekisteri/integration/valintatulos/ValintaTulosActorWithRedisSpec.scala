@@ -8,8 +8,13 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaRestHaku, TarjontaRestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  AllHaut,
+  Haku,
+  HakuRequest,
+  RestHaku,
+  RestHakuAika
+}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.KESKEN
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -155,10 +160,10 @@ class ValintaTulosActorWithRedisSpec
                 sender ! AllHaut(
                   Seq(
                     Haku(
-                      TarjontaRestHaku(
+                      RestHaku(
                         Some("1.2.246.562.29.90697286252"),
                         List(
-                          TarjontaRestHakuAika(
+                          RestHakuAika(
                             DateTime.now().minusDays(1).getMillis,
                             None
                           )
@@ -256,10 +261,10 @@ class ValintaTulosActorWithRedisSpec
       valintaTulosActor ! AllHaut(
         Seq(
           Haku(
-            TarjontaRestHaku(
+            RestHaku(
               Some("1.2.246.562.29.90697286253"),
               List(
-                TarjontaRestHakuAika(
+                RestHakuAika(
                   DateTime.now().minusDays(1).getMillis,
                   None
                 )
@@ -348,10 +353,10 @@ class ValintaTulosActorWithRedisSpec
       valintaTulosActor ! AllHaut(
         Seq(
           Haku(
-            TarjontaRestHaku(
+            RestHaku(
               Some("1.2.246.562.29.90697286253"),
               List(
-                TarjontaRestHakuAika(
+                RestHakuAika(
                   DateTime.now().minusDays(1).getMillis,
                   None
                 )

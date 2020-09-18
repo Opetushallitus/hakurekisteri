@@ -5,8 +5,7 @@ import java.util.Date
 import akka.actor.Actor
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.InFuture
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, RestHaku}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
   Lukuvuosimaksu,
   LukuvuosimaksuQuery,
@@ -19,7 +18,7 @@ import org.joda.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MockedHakuActor(haku1: TarjontaRestHaku) extends Actor {
+class MockedHakuActor(haku1: RestHaku) extends Actor {
   override def receive: Actor.Receive = {
     case q: GetHaku if q.oid == "1.3.10" =>
       Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
