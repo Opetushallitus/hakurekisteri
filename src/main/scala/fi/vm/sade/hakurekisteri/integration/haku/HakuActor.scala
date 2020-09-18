@@ -1,10 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
+import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.parametrit.{
@@ -13,9 +13,8 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.{
   ParametritActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration}
-import fi.vm.sade.hakurekisteri.tools.RicherString._
-import org.joda.time.{DateTime, ReadableInstant}
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlIntegration
+import org.joda.time.ReadableInstant
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -141,58 +140,6 @@ case class GetHaku(oid: String)
 case class GetHakuOption(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
-
-case class Haku(
-  nimi: Kieliversiot,
-  oid: String,
-  aika: Ajanjakso,
-  kausi: String,
-  vuosi: Int,
-  koulutuksenAlkamiskausi: Option[String],
-  koulutuksenAlkamisvuosi: Option[Int],
-  kkHaku: Boolean,
-  toisenAsteenHaku: Boolean,
-  viimeinenHakuaikaPaattyy: Option[DateTime],
-  kohdejoukkoUri: Option[String],
-  hakutapaUri: String,
-  hakutyyppiUri: String
-) {
-  val isActive: Boolean = aika.isCurrently
-}
-
-object Haku {
-  def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
-    val ajanjakso = Ajanjakso(findStart(haku), loppu)
-    Haku(
-      Kieliversiot(
-        haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption),
-        haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption),
-        haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)
-      ),
-      haku.oid.get,
-      ajanjakso,
-      haku.hakukausiUri,
-      haku.hakukausiVuosi,
-      haku.koulutuksenAlkamiskausiUri,
-      haku.koulutuksenAlkamisVuosi,
-      kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
-      toisenAsteenHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")),
-      viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
-      kohdejoukkoUri = haku.kohdejoukkoUri,
-      hakutapaUri = haku.hakutapaUri,
-      hakutyyppiUri = haku.hakutyyppiUri
-    )
-  }
-
-  def findHakuajanPaatos(haku: RestHaku): Option[DateTime] = {
-    val sortedHakuajat = haku.hakuaikas.sortBy(_.alkuPvm)
-    sortedHakuajat.lastOption.flatMap(_.loppuPvm.map(new DateTime(_)))
-  }
-
-  def findStart(haku: RestHaku): DateTime = {
-    new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
-  }
-}
 
 class FutureList[A](futures: Seq[Future[A]]) {
   def waitForAll(implicit ec: ExecutionContext): Future[Seq[A]] = Future.sequence(futures)
