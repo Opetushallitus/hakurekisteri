@@ -19,7 +19,7 @@ import org.joda.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MockedHakuActor(haku1: RestHaku) extends Actor {
+class MockedHakuActor(haku1: TarjontaRestHaku) extends Actor {
   override def receive: Actor.Receive = {
     case q: GetHaku if q.oid == "1.3.10" =>
       Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
