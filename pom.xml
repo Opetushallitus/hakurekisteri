@@ -1519,6 +1519,19 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.0.1</version>
+                <configuration>
+                    <scala>
+                        <scalafmt>
+                            <version>2.7.1</version>
+                            <file>${project.basedir}/.scalafmt.conf</file>
+                        </scalafmt>
+                    </scala>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>1.4.1</version>
