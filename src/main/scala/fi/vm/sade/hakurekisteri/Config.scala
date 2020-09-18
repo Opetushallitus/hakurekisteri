@@ -252,7 +252,7 @@ abstract class Config {
   val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA
-  val hostQa = "testi.virkailija.opintopolku.fi"
+  val hostQa = "virkailija.testiopintopolku.fi"
 
   lazy val resources = propertyLocations.map(ophConfDir.resolve(_))
 
