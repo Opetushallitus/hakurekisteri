@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.{RestHaku, RestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
@@ -59,9 +60,9 @@ class KkHakijaServiceSpec
     MockOppijaNumeroRekisteri
   )
 
-  private val haku1 = TarjontaRestHaku(
+  private val haku1 = RestHaku(
     Some("1.2"),
-    List(TarjontaRestHakuAika(1L, Some(2L))),
+    List(RestHakuAika(1L, Some(2L))),
     Map("fi" -> "testihaku"),
     "kausi_s#1",
     "hakutapa_01#1",

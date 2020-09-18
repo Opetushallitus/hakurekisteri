@@ -6,20 +6,26 @@ import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
-import akka.pattern.pipe
+import akka.pattern.{AskableActorRef, pipe}
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  GetHautQuery,
+  RestHaku,
+  RestHakuAika,
+  RestHakuResult
+}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
-import support.TypedActorRef
+import support.{TypedActorRef, TypedAskableActorRef}
 
 case class GetKomoQuery(oid: String)
 
 case class HakukohdeQuery(oid: String)
 
-object GetHautQuery
-
-case class TarjontaRestHakuResult(result: List[TarjontaRestHaku])
+case class TarjontaRestHakuResult(result: List[TarjontaRestHaku]) {
+  def toRestHakuResult: RestHakuResult = RestHakuResult(result.map(_.toRestHaku))
+}
 
 case class GetHautQueryFailedException(m: String, cause: Throwable) extends Exception(m, cause)
 
@@ -37,9 +43,25 @@ case class TarjontaRestHaku(
   tila: String
 ) {
   def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
+
+  def toRestHaku: RestHaku = RestHaku(
+    oid = oid,
+    hakuaikas = hakuaikas.map(_.toRestHakuAika),
+    nimi = nimi,
+    hakukausiUri = hakukausiUri,
+    hakutapaUri = hakutapaUri,
+    hakukausiVuosi = hakukausiVuosi,
+    koulutuksenAlkamiskausiUri = koulutuksenAlkamiskausiUri,
+    koulutuksenAlkamisVuosi = koulutuksenAlkamisVuosi,
+    kohdejoukkoUri = kohdejoukkoUri,
+    kohdejoukonTarkenne = kohdejoukonTarkenne,
+    tila = tila
+  )
 }
 
-case class TarjontaRestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
+case class TarjontaRestHakuAika(alkuPvm: Long, loppuPvm: Option[Long]) {
+  def toRestHakuAika: RestHakuAika = RestHakuAika(alkuPvm = alkuPvm, loppuPvm = loppuPvm)
+}
 
 case class TarjontaResultResponse[T](result: T)
 
@@ -138,17 +160,20 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     }
   }
 
-  def includeHaku(haku: TarjontaRestHaku): Boolean = {
+  def includeHaku(haku: RestHaku): Boolean = {
     haku.tila == "JULKAISTU" || (haku.tila == "VALMIS" && haku.isJatkotutkintohaku)
   }
 
-  def getHaut: Future[TarjontaRestHakuResult] = restClient
-    .readObject[TarjontaRestHakuResult]("tarjonta-service.haku.findAll")(200)
-    .map(res => res.copy(res.result.filter(includeHaku)))
-    .recover { case t: Throwable =>
-      log.error(t, "error retrieving all hakus")
-      throw GetHautQueryFailedException("error retrieving all hakus", t)
-    }
+  def getHaut: Future[RestHakuResult] = {
+    restClient
+      .readObject[TarjontaRestHakuResult]("tarjonta-service.haku.findAll")(200)
+      .map(_.toRestHakuResult)
+      .map(res => res.copy(result = res.result.filter(includeHaku)))
+      .recover { case t: Throwable =>
+        log.error(t, "error retrieving all hakus")
+        throw GetHautQueryFailedException("error retrieving all hakus", t)
+      }
+  }
 
   def getKoulutus(oid: String): Future[Seq[Hakukohteenkoulutus]] = {
     val koulutus: Future[Option[Koulutus]] = restClient
@@ -268,12 +293,11 @@ class MockTarjontaActor(config: Config)(implicit val system: ActorSystem)
       sender ! response
 
     case GetHautQuery =>
-      sender ! TarjontaRestHakuResult(
+      sender ! RestHakuResult(
         List(
-          TarjontaRestHaku(
+          RestHaku(
             oid = Some("1.2.3.4"),
-            hakuaikas =
-              List(TarjontaRestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
+            hakuaikas = List(RestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
             nimi = Map("kieli_fi" -> "haku 1", "kieli_sv" -> "haku 1", "kieli_en" -> "haku 1"),
             hakukausiUri = "kausi_k#1",
             hakutapaUri = "hakutapa_01#1",
@@ -292,4 +316,4 @@ class MockTarjontaActor(config: Config)(implicit val system: ActorSystem)
   }
 }
 
-case class TarjontaActorRef(actor: ActorRef) extends TypedActorRef
+case class TarjontaActorRef(actor: AskableActorRef) extends TypedAskableActorRef

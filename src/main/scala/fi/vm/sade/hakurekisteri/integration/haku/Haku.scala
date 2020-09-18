@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaRestHaku
 import fi.vm.sade.hakurekisteri.tools.RicherString.stringToRicherString
 import org.joda.time.{DateTime, ReadableInstant}
 
@@ -23,7 +22,7 @@ case class Haku(
 }
 
 object Haku {
-  def apply(haku: TarjontaRestHaku)(loppu: ReadableInstant): Haku = {
+  def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
     val ajanjakso = Ajanjakso(findStart(haku), loppu)
     Haku(
       Kieliversiot(
@@ -45,12 +44,12 @@ object Haku {
     )
   }
 
-  def findHakuajanPaatos(haku: TarjontaRestHaku): Option[DateTime] = {
+  def findHakuajanPaatos(haku: RestHaku): Option[DateTime] = {
     val sortedHakuajat = haku.hakuaikas.sortBy(_.alkuPvm)
     sortedHakuajat.lastOption.flatMap(_.loppuPvm.map(new DateTime(_)))
   }
 
-  def findStart(haku: TarjontaRestHaku): DateTime = {
+  def findStart(haku: RestHaku): DateTime = {
     new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
   }
 }
