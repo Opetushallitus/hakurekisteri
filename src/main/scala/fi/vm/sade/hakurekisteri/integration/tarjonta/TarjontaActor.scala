@@ -19,13 +19,13 @@ case class HakukohdeQuery(oid: String)
 
 object GetHautQuery
 
-case class RestHakuResult(result: List[RestHaku])
+case class TarjontaRestHakuResult(result: List[TarjontaRestHaku])
 
 case class GetHautQueryFailedException(m: String, cause: Throwable) extends Exception(m, cause)
 
-case class RestHaku(
+case class TarjontaRestHaku(
   oid: Option[String],
-  hakuaikas: List[RestHakuAika],
+  hakuaikas: List[TarjontaRestHakuAika],
   nimi: Map[String, String],
   hakukausiUri: String,
   hakutapaUri: String,
@@ -40,7 +40,7 @@ case class RestHaku(
   def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
 }
 
-case class RestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
+case class TarjontaRestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
 
 case class TarjontaResultResponse[T](result: T)
 
@@ -143,12 +143,12 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     }
   }
 
-  def includeHaku(haku: RestHaku): Boolean = {
+  def includeHaku(haku: TarjontaRestHaku): Boolean = {
     haku.tila == "JULKAISTU" || (haku.tila == "VALMIS" && haku.isJatkotutkintohaku)
   }
 
-  def getHaut: Future[RestHakuResult] = restClient
-    .readObject[RestHakuResult]("tarjonta-service.haku.findAll")(200)
+  def getHaut: Future[TarjontaRestHakuResult] = restClient
+    .readObject[TarjontaRestHakuResult]("tarjonta-service.haku.findAll")(200)
     .map(res => res.copy(res.result.filter(includeHaku)))
     .recover { case t: Throwable =>
       log.error(t, "error retrieving all hakus")
@@ -275,11 +275,12 @@ class MockTarjontaActor(config: Config)(implicit val system: ActorSystem)
       sender ! response
 
     case GetHautQuery =>
-      sender ! RestHakuResult(
+      sender ! TarjontaRestHakuResult(
         List(
-          RestHaku(
+          TarjontaRestHaku(
             oid = Some("1.2.3.4"),
-            hakuaikas = List(RestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
+            hakuaikas =
+              List(TarjontaRestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
             nimi = Map("kieli_fi" -> "haku 1", "kieli_sv" -> "haku 1", "kieli_en" -> "haku 1"),
             hakukausiUri = "kausi_k#1",
             hakutapaUri = "hakutapa_01#1",

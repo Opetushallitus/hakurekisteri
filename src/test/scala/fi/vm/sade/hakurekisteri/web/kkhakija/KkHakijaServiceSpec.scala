@@ -62,9 +62,9 @@ class KkHakijaServiceSpec
     MockCacheFactory.get()
   )
 
-  private val haku1 = RestHaku(
+  private val haku1 = TarjontaRestHaku(
     Some("1.2"),
-    List(RestHakuAika(1L, Some(2L))),
+    List(TarjontaRestHakuAika(1L, Some(2L))),
     Map("fi" -> "testihaku"),
     "kausi_s#1",
     "hakutapa_01#1",

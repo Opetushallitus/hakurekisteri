@@ -3,7 +3,11 @@ package fi.vm.sade.hakurekisteri.tarjonta
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, RestHaku, RestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  MockTarjontaActor,
+  TarjontaRestHaku,
+  TarjontaRestHakuAika
+}
 import org.joda.time.LocalDate
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -19,9 +23,9 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     new MockTarjontaActor(new MockConfig())
   ).underlyingActor
   val jatkotutkintohaunTarkenne = "haunkohdejoukontarkenne_3#1"
-  val mockHaku = RestHaku(
+  val mockHaku = TarjontaRestHaku(
     oid = Some("1.2.3.4"),
-    hakuaikas = List(RestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
+    hakuaikas = List(TarjontaRestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
     nimi = Map("kieli_fi" -> "haku 1", "kieli_sv" -> "haku 1", "kieli_en" -> "haku 1"),
     hakukausiUri = "kausi_k#1",
     hakutapaUri = "hakutapa_01#1",
