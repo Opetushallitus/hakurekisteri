@@ -62,7 +62,8 @@ class HakuActor(
 
     case q: GetHaku => getHaku(q) pipeTo sender
 
-    case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
+    case TarjontaRestHakuResult(hakus: List[TarjontaRestHaku]) =>
+      enrich(hakus).waitForAll pipeTo self
 
     case sq: Seq[_] =>
       storedHakus = sq.collect { case h: Haku => h }
@@ -96,7 +97,7 @@ class HakuActor(
 
   }
 
-  def enrich(hakus: List[RestHaku]): List[Future[Haku]] = {
+  def enrich(hakus: List[TarjontaRestHaku]): List[Future[Haku]] = {
     for (
       haku <- hakus
       if haku.oid.isDefined && haku.hakuaikas.nonEmpty
