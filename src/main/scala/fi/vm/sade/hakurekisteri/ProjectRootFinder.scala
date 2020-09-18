@@ -21,6 +21,9 @@ object ProjectRootFinder {
   }
 
   private def pomExists(currentDirectory: File) = {
-    List("pom.xml", "build.sbt", "build.gradle", "build.xml").map(new File(currentDirectory, _)).find(_.exists()).isDefined
+    List("pom.xml", "build.sbt", "build.gradle", "build.xml")
+      .map(new File(currentDirectory, _))
+      .find(_.exists())
+      .isDefined
   }
 }

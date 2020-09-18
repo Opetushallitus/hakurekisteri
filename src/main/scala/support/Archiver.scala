@@ -5,7 +5,10 @@ trait Archiver {
 
   type BatchArchiever = () => BatchStatistics
 
-  def archive(batchArchiever: BatchArchiever = defaultBatchArchiever, maxErrorsAllowed: Int = 3): Unit
+  def archive(
+    batchArchiever: BatchArchiever = defaultBatchArchiever,
+    maxErrorsAllowed: Int = 3
+  ): Unit
 
   val defaultBatchArchiever: BatchArchiever
 

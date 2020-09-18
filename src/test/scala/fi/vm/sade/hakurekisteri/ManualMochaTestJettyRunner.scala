@@ -5,9 +5,9 @@ object ManualMochaTestJettyRunner extends App {
   val baseUrl = s"http://localhost:$port"
 
   SharedTestJetty.restart()
-  println( "*************************************************************************")
-  println( "*                                                                       *")
+  println("*************************************************************************")
+  println("*                                                                       *")
   println(s"    ${getClass.getSimpleName} running at $baseUrl")
-  println( "*                                                                       *")
-  println( "*************************************************************************")
+  println("*                                                                       *")
+  println("*************************************************************************")
 }

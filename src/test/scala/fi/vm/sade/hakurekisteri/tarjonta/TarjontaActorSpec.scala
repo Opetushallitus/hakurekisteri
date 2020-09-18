@@ -15,9 +15,12 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
 
   implicit val system: ActorSystem = ActorSystem()
 
-  val tarjontaUnderlyingActor = TestActorRef(new MockTarjontaActor(new MockConfig())).underlyingActor
+  val tarjontaUnderlyingActor = TestActorRef(
+    new MockTarjontaActor(new MockConfig())
+  ).underlyingActor
   val jatkotutkintohaunTarkenne = "haunkohdejoukontarkenne_3#1"
-  val mockHaku = RestHaku(oid = Some("1.2.3.4"),
+  val mockHaku = RestHaku(
+    oid = Some("1.2.3.4"),
     hakuaikas = List(RestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
     nimi = Map("kieli_fi" -> "haku 1", "kieli_sv" -> "haku 1", "kieli_en" -> "haku 1"),
     hakukausiUri = "kausi_k#1",
@@ -27,7 +30,8 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),
     kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
     None,
-    tila = "LUONNOS")
+    tila = "LUONNOS"
+  )
 
   test("luonnos is not included") {
     tarjontaUnderlyingActor.includeHaku(mockHaku) should be(false)
@@ -42,11 +46,15 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
   }
 
   test("jatkotutkintohaku is not included") {
-    tarjontaUnderlyingActor.includeHaku(mockHaku.copy(kohdejoukonTarkenne = Some(jatkotutkintohaunTarkenne))) should be(false)
+    tarjontaUnderlyingActor.includeHaku(
+      mockHaku.copy(kohdejoukonTarkenne = Some(jatkotutkintohaunTarkenne))
+    ) should be(false)
   }
 
   test("valmis jatkotutkintohaku is included") {
-    tarjontaUnderlyingActor.includeHaku(mockHaku.copy(tila = "VALMIS", kohdejoukonTarkenne = Some(jatkotutkintohaunTarkenne))) should be(true)
+    tarjontaUnderlyingActor.includeHaku(
+      mockHaku.copy(tila = "VALMIS", kohdejoukonTarkenne = Some(jatkotutkintohaunTarkenne))
+    ) should be(true)
   }
 
   override def stop(): Unit = {

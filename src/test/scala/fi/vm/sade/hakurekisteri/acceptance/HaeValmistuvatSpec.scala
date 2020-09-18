@@ -14,8 +14,8 @@ class HaeValmistuvatSpec extends HakurekisteriContainer with GivenWhenThen {
   feature("Lähtökoulu- ja luokka-tiedot") {
     scenario("Keväällä valmistuminen") {
       Given("Kaksi henkilöä valmistuu keväällä")
-      Mikko valmistuu(Keväällä, 2014) koulusta "1.2.3"
-      Matti valmistuu(Keväällä, 2014) koulusta "1.2.4"
+      Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
+      Matti valmistuu (Keväällä, 2014) koulusta "1.2.4"
 
       When("haetaan suorituksia toiselle henkilölle keväältä")
       val haettu = hae(
@@ -35,8 +35,8 @@ class HaeValmistuvatSpec extends HakurekisteriContainer with GivenWhenThen {
 
     scenario("Valmistuu kahdesti") {
       Given("henkilö valmistuu keväällä ja syksyllä")
-      Mikko valmistuu(Keväällä, 2014) koulusta "1.2.3"
-      Mikko valmistuu(Syksyllä, 2014) koulusta "1.2.4"
+      Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
+      Mikko valmistuu (Syksyllä, 2014) koulusta "1.2.4"
 
       When("haetaan suorituksia toiselle henkilölle keväältä")
       val haettu = hae(
@@ -55,6 +55,3 @@ class HaeValmistuvatSpec extends HakurekisteriContainer with GivenWhenThen {
     }
   }
 }
-
-
-

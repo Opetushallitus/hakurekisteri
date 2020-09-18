@@ -13,13 +13,13 @@ object OpiskeluoikeusRow {
 
 import OpiskeluoikeusRow._
 
-class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, OpiskeluoikeusType](tag, "opiskeluoikeus") {
+class OpiskeluoikeusTable(tag: Tag)
+    extends JournalTable[Opiskeluoikeus, UUID, OpiskeluoikeusType](tag, "opiskeluoikeus") {
   def alkuPaiva: Rep[Long] = column[Long]("alku_paiva")
   def loppuPaiva: Rep[Option[Long]] = column[Option[Long]]("loppu_paiva")
   def henkiloOid: Rep[String] = column[String]("henkilo_oid")
   def komo: Rep[String] = column[String]("komo")
   def myontaja: Rep[String] = column[String]("myontaja")
-
 
   override def resourceShape = (alkuPaiva, loppuPaiva, henkiloOid, komo, myontaja, source).shaped
 
@@ -32,17 +32,32 @@ class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, O
     oo.source
   )
 
-  override val deletedValues: String => OpiskeluoikeusType = (lahde) => (
-    0L,
-    None,
-    "",
-    "",
-    "",
-    lahde
+  override val deletedValues: String => OpiskeluoikeusType = (lahde) =>
+    (
+      0L,
+      None,
+      "",
+      "",
+      "",
+      lahde
     )
   override val resource: OpiskeluoikeusType => Opiskeluoikeus = {
-    case  (alkuPaiva: Long, loppuPaiva: Option[Long], henkiloOid: String, komo: String, myontaja: String, source) =>
-      Opiskeluoikeus(new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), henkiloOid, komo, myontaja, source)
+    case (
+          alkuPaiva: Long,
+          loppuPaiva: Option[Long],
+          henkiloOid: String,
+          komo: String,
+          myontaja: String,
+          source
+        ) =>
+      Opiskeluoikeus(
+        new DateTime(alkuPaiva),
+        loppuPaiva.map(new DateTime(_)),
+        henkiloOid,
+        komo,
+        myontaja,
+        source
+      )
   }
   override val extractSource: OpiskeluoikeusType => String = _._6
 }

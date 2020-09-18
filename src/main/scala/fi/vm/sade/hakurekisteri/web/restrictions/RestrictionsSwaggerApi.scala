@@ -1,10 +1,17 @@
 package fi.vm.sade.hakurekisteri.web.restrictions
 
-import fi.vm.sade.hakurekisteri.web.rest.support.{ModelResponseMessage, OldSwaggerSyntax, IncidentReportSwaggerModel}
+import fi.vm.sade.hakurekisteri.web.rest.support.{
+  ModelResponseMessage,
+  OldSwaggerSyntax,
+  IncidentReportSwaggerModel
+}
 import org.scalatra.swagger.SwaggerSupport
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
-trait RestrictionsSwaggerApi  extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
+trait RestrictionsSwaggerApi
+    extends SwaggerSupport
+    with IncidentReportSwaggerModel
+    with OldSwaggerSyntax {
   override protected val applicationDescription = "rest/v1/restrictions"
 
   val queryRestriction: OperationBuilder = apiOperation[Boolean]("isRestrictionActiveForKey")

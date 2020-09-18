@@ -21,16 +21,26 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
 
   "VirtaQueue" when {
     val virtaWaiter = new Waiter()
-    val virtaHandler: PartialFunction[Any, Any] = {
-      case q: VirtaQuery =>
-        virtaWaiter { q.oppijanumero should be("foo") }
-        virtaWaiter.dismiss()
-        QueryProsessed(q)
+    val virtaHandler: PartialFunction[Any, Any] = { case q: VirtaQuery =>
+      virtaWaiter { q.oppijanumero should be("foo") }
+      virtaWaiter.dismiss()
+      QueryProsessed(q)
     }
-    val hakuHandler: PartialFunction[Any, Any] = {
-      case q: GetHaku =>
-        Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014,
-          Some("kausi_k#1"), Some(2015), true, false, None, None, "hakutapa_01#1")
+    val hakuHandler: PartialFunction[Any, Any] = { case q: GetHaku =>
+      Haku(
+        Kieliversiot(Some("haku"), None, None),
+        "1.2",
+        Ajanjakso(new DateTime(), InFuture),
+        "kausi_s#1",
+        2014,
+        Some("kausi_k#1"),
+        Some(2015),
+        true,
+        false,
+        None,
+        None,
+        "hakutapa_01#1"
+      )
     }
 
     val virtaActor = new VirtaActorRef(TestActorRef[MockActor](Props(new MockActor(virtaHandler))))
@@ -39,7 +49,17 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     val hakemusService = new HakemusServiceMock
 
     "receiving query" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor, mockConfig)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](
+        Props(
+          new VirtaQueue(
+            virtaActor,
+            hakemusService,
+            oppijaNumeroRekisteri = MockOppijaNumeroRekisteri,
+            hakuActor,
+            mockConfig
+          )
+        )
+      )
       val q = VirtaQuery("foo", Some("bar"))
       virtaQueue ! q
 
@@ -49,7 +69,17 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "consuming all" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor, mockConfig)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](
+        Props(
+          new VirtaQueue(
+            virtaActor,
+            hakemusService,
+            oppijaNumeroRekisteri = MockOppijaNumeroRekisteri,
+            hakuActor,
+            mockConfig
+          )
+        )
+      )
       virtaQueue ! VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQuery("foo", Some("bar2"))
       virtaQueue ! StartVirtaProcessing
@@ -62,7 +92,17 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "receiving the same query multiple times" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor, mockConfig)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](
+        Props(
+          new VirtaQueue(
+            virtaActor,
+            hakemusService,
+            oppijaNumeroRekisteri = MockOppijaNumeroRekisteri,
+            hakuActor,
+            mockConfig
+          )
+        )
+      )
       val q1 = VirtaQuery("foo", Some("bar"))
       val q2 = VirtaQuery("foo", Some("bar"))
       virtaQueue ! q1
@@ -77,21 +117,30 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       import scala.concurrent.duration._
       implicit val timeout: Timeout = 30.seconds
 
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusService, oppijaNumeroRekisteri = MockOppijaNumeroRekisteri, hakuActor, mockConfig)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](
+        Props(
+          new VirtaQueue(
+            virtaActor,
+            hakemusService,
+            oppijaNumeroRekisteri = MockOppijaNumeroRekisteri,
+            hakuActor,
+            mockConfig
+          )
+        )
+      )
       (0 until 1000000).foreach(i => virtaQueue ! VirtaQuery(s"foo$i", None))
 
       val healthcheck = Await.result((virtaQueue ? VirtaHealth).mapTo[VirtaStatus], 30.seconds)
       "be fast enough to respond to healthcheck in 30 seconds" in {
-        healthcheck.queueLength should be (1000000)
+        healthcheck.queueLength should be(1000000)
       }
     }
   }
 }
 
 class MockActor(handler: PartialFunction[Any, Any] = { case a: Any => a }) extends Actor {
-  override def receive: Receive = {
-    case a: Any =>
-      val q = handler(a)
-      sender ! q
+  override def receive: Receive = { case a: Any =>
+    val q = handler(a)
+    sender ! q
   }
 }

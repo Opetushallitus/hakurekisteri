@@ -11,7 +11,6 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-
 class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaiting {
   implicit val timeout: Timeout = 5.seconds
 
@@ -20,7 +19,7 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
     val resourceActor = TestActorRef[TestActor]
     val resource = new TestResource("foo")
     resourceActor ! resource
-    resourceActor.underlyingActor.store.values should contain (resource)
+    resourceActor.underlyingActor.store.values should contain(resource)
     Await.result(system.terminate(), 15.seconds)
   }
 

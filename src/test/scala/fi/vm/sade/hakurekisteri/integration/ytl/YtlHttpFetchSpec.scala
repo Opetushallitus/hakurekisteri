@@ -17,42 +17,47 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   private val logger = LoggerFactory.getLogger(getClass)
   val config = ytlProperties.addDefault("ytl.http.buffersize", "128")
   val fileSystem = YtlFileSystem(config)
-  val ytlHttpFetch = new YtlHttpFetch(config,fileSystem)
+  val ytlHttpFetch = new YtlHttpFetch(config, fileSystem)
 
   test("zip to students") {
     var bytesRead = 0
 
-    val p = Iterator(getClass.getResource("/s.json").openStream()).map(ProgressInputStream(bytesRead += _))
+    val p = Iterator(getClass.getResource("/s.json").openStream())
+      .map(ProgressInputStream(bytesRead += _))
 
     val students = ytlHttpFetch.streamToStudents(p).map(_._2)
-    bytesRead should equal (0)
+    bytesRead should equal(0)
     var lastReadBytes = 0
-    Iterator.continually(students.next)
+    Iterator
+      .continually(students.next)
       .takeWhile(_ => students.hasNext)
       .foreach(student => {
         bytesRead should be > lastReadBytes
-        logger.info(s"Bytes read from ${lastReadBytes} -> $bytesRead while getting ${student.firstnames}")
+        logger.info(
+          s"Bytes read from ${lastReadBytes} -> $bytesRead while getting ${student.firstnames}"
+        )
         lastReadBytes = bytesRead
       })
   }
 
   test("Fetch one with basic auth") {
 
-    val Some((_,student)) = ytlHttpFetch.fetchOne("050996-9574")
-    student.lastname should equal ("Vasala")
-    student.firstnames should equal ("Sampsa")
+    val Some((_, student)) = ytlHttpFetch.fetchOne("050996-9574")
+    student.lastname should equal("Vasala")
+    student.firstnames should equal("Sampsa")
   }
 
   test("Fetch many as zip") {
     1.to(10).foreach { n =>
       val groupUuid = UUID.randomUUID().toString
-      val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = ytlHttpFetch.fetch(groupUuid, List("050996-9574"))
+      val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
+        ytlHttpFetch.fetch(groupUuid, List("050996-9574"))
 
       val (zip, stream) = students.map {
         case Right(x) => x
-        case Left(e) => throw e
+        case Left(e)  => throw e
       }.next
-      stream.size should equal (5)
+      stream.size should equal(5)
     }
   }
 
@@ -71,10 +76,11 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
 
   test("Single failure is retried") {
     makePostFail(1)
-    val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = ytlHttpFetch.fetch("1", List("050996-9574"))
+    val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
+      ytlHttpFetch.fetch("1", List("050996-9574"))
     val student = students.next().right.map(_._2.next()).right.get
-    student.lastname should equal ("Testinen")
-    student.firstnames should equal ("Jussi Johannes")
+    student.lastname should equal("Testinen")
+    student.firstnames should equal("Jussi Johannes")
   }
 
   def createVeryLargeZip(groupUuid: String, uuid: String): Unit = {
@@ -87,9 +93,11 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     zout.write("[")
     val last = 100000
     for (a <- 1 to last) {
-      val json: String = write(Student("050996-9574", "", "", None, None, None, None, None, "fi", Nil))
+      val json: String = write(
+        Student("050996-9574", "", "", None, None, None, None, None, "fi", Nil)
+      )
       zout.write(json.getBytes)
-      if(a != last) {
+      if (a != last) {
         zout.write(",")
       }
       //zout.flush()

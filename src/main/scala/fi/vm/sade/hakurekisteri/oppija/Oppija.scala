@@ -8,11 +8,14 @@ import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 
-case class Oppija(oppijanumero: String,
-                  opiskelu: Seq[Opiskelija],
-                  suoritukset: Seq[Todistus],
-                  opiskeluoikeudet: Seq[Opiskeluoikeus],
-                  ensikertalainen: Option[Boolean]) extends Resource[String, Oppija] with Identified[String] {
+case class Oppija(
+  oppijanumero: String,
+  opiskelu: Seq[Opiskelija],
+  suoritukset: Seq[Todistus],
+  opiskeluoikeudet: Seq[Opiskeluoikeus],
+  ensikertalainen: Option[Boolean]
+) extends Resource[String, Oppija]
+    with Identified[String] {
 
   override val id = oppijanumero
 
@@ -30,8 +33,7 @@ case class InvalidTodistus(suoritus: Suoritus, arvosanat: Seq[Arvosana], errors:
 
 object InvalidTodistus {
 
-  def apply(todistus: Todistus, errors: Seq[String]): InvalidTodistus = InvalidTodistus(todistus.suoritus, todistus.arvosanat, errors)
+  def apply(todistus: Todistus, errors: Seq[String]): InvalidTodistus =
+    InvalidTodistus(todistus.suoritus, todistus.arvosanat, errors)
 
 }
-
-

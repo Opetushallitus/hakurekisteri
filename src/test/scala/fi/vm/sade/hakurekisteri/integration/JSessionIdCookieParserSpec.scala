@@ -11,7 +11,7 @@ class JSessionIdCookieParserSpec extends FlatSpec with Matchers {
 
     val cookie = JSessionIdCookieParser.fromString(c, "JSESSIONID")
 
-    cookie.sessionId should be ("abcd")
+    cookie.sessionId should be("abcd")
   }
 
   it should "not fail with cookie options" in {
@@ -19,7 +19,7 @@ class JSessionIdCookieParserSpec extends FlatSpec with Matchers {
 
     val cookie = JSessionIdCookieParser.fromString(c, "JSESSIONID")
 
-    cookie.sessionId should be ("abcd")
+    cookie.sessionId should be("abcd")
   }
 
   it should "throw JSessionIdCookieException on other cookies" in {
@@ -43,5 +43,6 @@ class JSessionIdCookieParserSpec extends FlatSpec with Matchers {
 
     val cookie = JSessionIdCookieParser.fromString(c, "ring-session")
 
-    cookie.sessionId should be ("asdasd")  }
+    cookie.sessionId should be("asdasd")
+  }
 }

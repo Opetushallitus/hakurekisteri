@@ -7,5 +7,7 @@ import fi.vm.sade.scalaproperties.OphProperties
 import scala.concurrent.Future
 
 object MockCacheFactory {
-  def get() = CacheFactory.apply(new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false"))(null)
+  def get() = CacheFactory.apply(
+    new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false")
+  )(null)
 }

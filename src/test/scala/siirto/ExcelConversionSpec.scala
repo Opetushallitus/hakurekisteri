@@ -14,10 +14,13 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
   behavior of "Excel conversion"
 
   it should "convert excel into xml" in {
-    val rowWriter: RowWriter = (elem,row) =>
-      elem.copy(child = elem.child ++ Seq(<default>{row.map((cell) => <tag>{cell.value}</tag>.copy(label = cell.name))}</default>))
+    val rowWriter: RowWriter = (elem, row) =>
+      elem.copy(child = elem.child ++ Seq(<default>{
+        row.map((cell) => <tag>{cell.value}</tag>.copy(label = cell.name))
+      }</default>))
 
-    val reader: CollectionReader = (elem) => (elem \ "default").map(_.child.map(node => DataCell(node.label, node.text)))
+    val reader: CollectionReader =
+      (elem) => (elem \ "default").map(_.child.map(node => DataCell(node.label, node.text)))
 
     val converter = ExcelExtractor(
       "default" -> (rowWriter, reader)
@@ -32,7 +35,7 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
         """
     ).toExcel
 
-    converter.set(<data/>, Workbook(wb)) should equal (
+    converter.set(<data/>, Workbook(wb)) should equal(
       <data>
         <default>
           <column1>data11</column1>
@@ -48,8 +51,8 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
     )(after being normalized)
   }
 
- it should "handle multiple sheets" in {
-   val wb = WorkbookData(
+  it should "handle multiple sheets" in {
+    val wb = WorkbookData(
       "default" ->
         """
           |column1|column2|column3
@@ -64,17 +67,20 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
         """
     ).toExcel
 
-   def rowWriter(itemName: String): RowWriter = (elem,row) =>
-     elem.copy(child = elem.child ++ Seq(<default>{row.map((cell) => <tag>{cell.value}</tag>.copy(label = cell.name))}</default>.copy(label = itemName)))
+    def rowWriter(itemName: String): RowWriter = (elem, row) =>
+      elem.copy(child = elem.child ++ Seq(<default>{
+        row.map((cell) => <tag>{cell.value}</tag>.copy(label = cell.name))
+      }</default>.copy(label = itemName)))
 
-   def reader(itemName: String): CollectionReader = (elem) => (elem \ itemName).map(_.child.map(node => DataCell(node.label, node.text)))
+    def reader(itemName: String): CollectionReader =
+      (elem) => (elem \ itemName).map(_.child.map(node => DataCell(node.label, node.text)))
 
-   val converter = ExcelExtractor(
-     "default" -> (rowWriter("default"), reader("default")),
-     "default2" -> (rowWriter("default2"), reader("default2"))
-   )
+    val converter = ExcelExtractor(
+      "default" -> (rowWriter("default"), reader("default")),
+      "default2" -> (rowWriter("default2"), reader("default2"))
+    )
 
-   converter.set(<data/>, Workbook(wb)) should equal (
+    converter.set(<data/>, Workbook(wb)) should equal(
       <data>
         <default>
           <column1>data11</column1>
@@ -121,37 +127,39 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
     }
 
     def addIdentity(row: DataRow, nodes: Seq[Node]): Seq[Node] = {
-      val id = row.collectFirst{case DataCell("id", id) => id}.get
+      val id = row.collectFirst { case DataCell("id", id) => id }.get
       nodes match {
         case nodes if !nodes.exists((idNode) => idNode.label == "id") => nodes ++ <id>{id}</id>
-        case default => default
+        case default                                                  => default
       }
     }
 
     val sheet1Lens: Elem @> DataRow = Lens.lensu(
-      (item, row) =>
-        {
-          val sheetData = <sheet1>
-            {row.collect {
-              case DataCell(name, value) if Set("column2", "column3").contains(name) => <tag>
+      (item, row) => {
+        val sheetData = <sheet1>
+            {
+          row.collect {
+            case DataCell(name, value) if Set("column2", "column3").contains(name) => <tag>
                 {value}
               </tag>.copy(label = name)
-            }}
-          </sheet1>
-          item.copy(child = addIdentity(row, item.child) ++ sheetData)
+          }
         }
-        ,
+          </sheet1>
+        item.copy(child = addIdentity(row, item.child) ++ sheetData)
+      },
       (item) => Seq()
     )
 
     val sheet2Lens: Elem @> DataRow = Lens.lensu(
       (item, row) => {
         val sheetData = <sheet2>
-          {row.collect {
+          {
+          row.collect {
             case DataCell(name, value) if Set("column2", "column3").contains(name) => <tag>
               {value}
             </tag>.copy(label = name)
-          }}
+          }
+        }
         </sheet2>
         val result = item.copy(child = addIdentity(row, item.child) ++ sheetData)
         result
@@ -164,7 +172,7 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
       "sheet2" -> sheet2Lens
     )
 
-    converter.set(<data/>, Workbook(wb)) should equal (
+    converter.set(<data/>, Workbook(wb)) should equal(
       <data>
         <item>
           <id>id1</id>
@@ -192,12 +200,3 @@ class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with E
     )(after being normalized)
   }
 }
-
-
-
-
-
-
-
-
-

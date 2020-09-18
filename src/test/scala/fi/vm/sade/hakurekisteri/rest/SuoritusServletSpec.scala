@@ -7,7 +7,11 @@ import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockPersonAliasesProvider
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetKoodistoKoodiArvot,
+  KoodistoActorRef,
+  KoodistoKoodiArvot
+}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{IsRestrictionActive, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.koodisto.MockedKoodistoActor
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
@@ -41,29 +45,71 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   override def beforeAll(): Unit = {
     system = ActorSystem("test-tuo-suoritus")
     database = Database.forURL(ItPostgres.getEndpointURL)
-    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+    suoritusJournal =
+      new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
     val mockParameterActor = new ParametritActorRef(system.actorOf(Props(new Actor {
-      override def receive: Actor.Receive = {
-        case IsRestrictionActive(_) => sender ! true
+      override def receive: Actor.Receive = { case IsRestrictionActive(_) =>
+        sender ! true
       }
     })))
     val mockKoodistoActor = new KoodistoActorRef(system.actorOf(Props(new Actor {
-      override def receive: Actor.Receive = {
-        case q: GetKoodistoKoodiArvot => q.koodistoUri match {
-          case "oppiaineetyleissivistava" => sender ! KoodistoKoodiArvot(
-            koodistoUri = "oppiaineetyleissivistava",
-            arvot = Seq("AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "BI", "FI","FY", "GE",
-              "HI", "KE", "KO", "KS", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
-          )
-          case "kieli" => sender ! KoodistoKoodiArvot(
-            koodistoUri = "kieli",
-            arvot = Seq("FI", "SV", "EN")
-          )
+      override def receive: Actor.Receive = { case q: GetKoodistoKoodiArvot =>
+        q.koodistoUri match {
+          case "oppiaineetyleissivistava" =>
+            sender ! KoodistoKoodiArvot(
+              koodistoUri = "oppiaineetyleissivistava",
+              arvot = Seq(
+                "AI",
+                "A1",
+                "A12",
+                "A2",
+                "A22",
+                "B1",
+                "B2",
+                "B22",
+                "B23",
+                "B3",
+                "B32",
+                "B33",
+                "BI",
+                "FI",
+                "FY",
+                "GE",
+                "HI",
+                "KE",
+                "KO",
+                "KS",
+                "KT",
+                "KU",
+                "LI",
+                "MA",
+                "MU",
+                "PS",
+                "TE",
+                "YH"
+              )
+            )
+          case "kieli" =>
+            sender ! KoodistoKoodiArvot(
+              koodistoUri = "kieli",
+              arvot = Seq("FI", "SV", "EN")
+            )
         }
       }
     })))
-    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))))))
-    addServlet(new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor, mockKoodistoActor), "/*")
+    val guardedSuoritusRekisteri = system.actorOf(
+      Props(
+        new FakeAuthorizer(
+          system.actorOf(
+            Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))
+          )
+        )
+      )
+    )
+    addServlet(
+      new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor, mockKoodistoActor),
+      "/*"
+    )
     super.beforeAll()
   }
 
@@ -89,13 +135,47 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   implicit val formats = HakurekisteriJsonSupport.format
 
   test("save vahvistamaton suoritus should return vahvistettu:false") {
-    post("/", write(VirallinenSuoritus("1.2.246.562.5.00000000001", "1.2.246.562.10.00000000001", "KESKEN", new LocalDate(), "1.2.246.562.24.00000000001", yksilollistaminen.Ei, "FI", None, false, "1.2.246.562.24.00000000001")), Map("Content-Type" -> "application/json; charset=utf-8")) {
+    post(
+      "/",
+      write(
+        VirallinenSuoritus(
+          "1.2.246.562.5.00000000001",
+          "1.2.246.562.10.00000000001",
+          "KESKEN",
+          new LocalDate(),
+          "1.2.246.562.24.00000000001",
+          yksilollistaminen.Ei,
+          "FI",
+          None,
+          false,
+          "1.2.246.562.24.00000000001"
+        )
+      ),
+      Map("Content-Type" -> "application/json; charset=utf-8")
+    ) {
       body should include("\"vahvistettu\":false")
     }
   }
 
   test("save vahvistettu suoritus should return vahvistettu:true") {
-    post("/", write(VirallinenSuoritus("1.2.246.562.5.00000000001", "1.2.246.562.10.00000000001", "KESKEN", new LocalDate(), "1.2.246.562.24.00000000001", yksilollistaminen.Ei, "FI", None, true, "1.2.246.562.24.00000000001")), Map("Content-Type" -> "application/json; charset=utf-8")) {
+    post(
+      "/",
+      write(
+        VirallinenSuoritus(
+          "1.2.246.562.5.00000000001",
+          "1.2.246.562.10.00000000001",
+          "KESKEN",
+          new LocalDate(),
+          "1.2.246.562.24.00000000001",
+          yksilollistaminen.Ei,
+          "FI",
+          None,
+          true,
+          "1.2.246.562.24.00000000001"
+        )
+      ),
+      Map("Content-Type" -> "application/json; charset=utf-8")
+    ) {
       body should include("\"vahvistettu\":true")
     }
   }

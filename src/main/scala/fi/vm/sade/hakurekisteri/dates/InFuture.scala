@@ -18,7 +18,7 @@ object InFuture extends ReadableInstant {
 
   override def getZone: DateTimeZone = DateTimeZone.UTC
 
-  override def getChronology: Chronology = new BaseChronology{
+  override def getChronology: Chronology = new BaseChronology {
     override def withZone(zone: DateTimeZone): Chronology = this
 
     override def withUTC(): Chronology = this

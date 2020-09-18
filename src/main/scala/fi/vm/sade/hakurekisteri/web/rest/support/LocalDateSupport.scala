@@ -11,12 +11,19 @@ trait LocalDateSupport extends HakurekisteriJsonSupport { this: HakurekisteriRes
 
   import fi.vm.sade.hakurekisteri.tools.RicherString._
 
-  implicit val stringToLocalDate: TypeConverter[String, LocalDate] = safeOption((in: String) => in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
-  implicit val jsonToLocalDate: TypeConverter[JValue, LocalDate] = safeOption(_.extractOpt[LocalDate])
+  implicit val stringToLocalDate: TypeConverter[String, LocalDate] = safeOption((in: String) =>
+    in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate
+  )
+  implicit val jsonToLocalDate: TypeConverter[JValue, LocalDate] = safeOption(
+    _.extractOpt[LocalDate]
+  )
   //implicit val fileToLocalDate: TypeConverter[FileItem, LocalDate] = cantConvert
 
-  implicit val stringToOptionLocalDate: TypeConverter[String, Option[LocalDate]] = safe((in: String) => in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
-  implicit val jsonToOptionLocalDate: TypeConverter[JValue, Option[LocalDate]] = safe(_.extractOpt[LocalDate])
+  implicit val stringToOptionLocalDate: TypeConverter[String, Option[LocalDate]] =
+    safe((in: String) => in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
+  implicit val jsonToOptionLocalDate: TypeConverter[JValue, Option[LocalDate]] = safe(
+    _.extractOpt[LocalDate]
+  )
   //implicit val fileToOptionLocalDate: TypeConverter[FileItem, Option[LocalDate]] = cantConvert
 
 }

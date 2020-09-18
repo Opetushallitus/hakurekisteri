@@ -7,8 +7,9 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.json.JacksonJsonSupport
 
-
-class GuiServlet(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with JacksonJsonSupport {
+class GuiServlet(implicit val system: ActorSystem)
+    extends HakuJaValintarekisteriStack
+    with JacksonJsonSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   override protected implicit def jsonFormats: Formats = DefaultFormats
@@ -41,21 +42,23 @@ class GuiServlet(implicit val system: ActorSystem) extends HakuJaValintarekister
 
 }
 
-case class GuiOidit(yotutkintoKomoOid: String,
-                    perusopetusKomoOid: String,
-                    lisaopetusKomoOid: String,
-                    lisaopetusTalousKomoOid: String,
-                    ammattistarttiKomoOid: String,
-                    valmentavaKomoOid: String,
-                    ammatilliseenvalmistavaKomoOid: String,
-                    ulkomainenkorvaavaKomoOid: String,
-                    lukioKomoOid: String,
-                    ammatillinenKomoOid: String,
-                    ammatillinentutkintoKomoOid: String,
-                    erikoisammattitutkintoKomoOid: String,
-                    lukioonvalmistavaKomoOid: String,
-                    ylioppilastutkintolautakunta: String,
-                    kansanopistoKomoOid: String,
-                    valmaKomoOid: String,
-                    telmaKomoOid: String,
-                    perusopetuksenOppiaineenOppimaaraOid: String)
+case class GuiOidit(
+  yotutkintoKomoOid: String,
+  perusopetusKomoOid: String,
+  lisaopetusKomoOid: String,
+  lisaopetusTalousKomoOid: String,
+  ammattistarttiKomoOid: String,
+  valmentavaKomoOid: String,
+  ammatilliseenvalmistavaKomoOid: String,
+  ulkomainenkorvaavaKomoOid: String,
+  lukioKomoOid: String,
+  ammatillinenKomoOid: String,
+  ammatillinentutkintoKomoOid: String,
+  erikoisammattitutkintoKomoOid: String,
+  lukioonvalmistavaKomoOid: String,
+  ylioppilastutkintolautakunta: String,
+  kansanopistoKomoOid: String,
+  valmaKomoOid: String,
+  telmaKomoOid: String,
+  perusopetuksenOppiaineenOppimaaraOid: String
+)

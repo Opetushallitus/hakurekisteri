@@ -4,7 +4,8 @@ import org.scalatra.swagger.DataType
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 
-trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: HakurekisteriResource[Opiskeluoikeus] =>
+trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel {
+  this: HakurekisteriResource[Opiskeluoikeus] =>
 
   protected val applicationDescription = "Opiskeluoikeustietojen rajapinta"
 
@@ -19,13 +20,19 @@ trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: Hakure
 
   val create = apiOperation[Opiskeluoikeus]("lisääOpiskeluoikeus")
     .summary("luo opiskeluoikeustiedon ja palauttaa sen tiedot")
-    .parameter(bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("uusi opiskeluoikeustieto").required)
+    .parameter(
+      bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("uusi opiskeluoikeustieto").required
+    )
     .tags("opiskeluoikeudet")
 
   val update = apiOperation[Opiskeluoikeus]("päivitäOpiskeluoikeus")
     .summary("päivittää olemassa olevaa opiskeluoikeustietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("opiskeluoikeustiedot uuid").required)
-    .parameter(bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("päivitettävä opiskeluoikeustieto").required)
+    .parameter(
+      bodyParam[Opiskeluoikeus]("opiskeluoikeus")
+        .description("päivitettävä opiskeluoikeustieto")
+        .required
+    )
     .tags("opiskeluoikeudet")
 
   val read = apiOperation[Opiskeluoikeus]("haeOpiskeluoikeus")
@@ -40,7 +47,7 @@ trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel { this: Hakure
 }
 
 trait OpiskeluoikeusSwaggerModel extends OldSwaggerSyntax {
-  
+
   val opiskeluoikeusFields = Seq(
     ModelField("id", "opiskeluoikeustiedon uuid", DataType.String),
     ModelField("alkuPaiva", null, DataType.Date),
@@ -50,6 +57,10 @@ trait OpiskeluoikeusSwaggerModel extends OldSwaggerSyntax {
     ModelField("myontaja", null, DataType.String)
   )
 
-  def opiskeluoikeusModel = Model("Opiskeluoikeus", "Opiskeluoikeustiedot", opiskeluoikeusFields.map(t => (t.name, t)).toMap)
+  def opiskeluoikeusModel = Model(
+    "Opiskeluoikeus",
+    "Opiskeluoikeustiedot",
+    opiskeluoikeusFields.map(t => (t.name, t)).toMap
+  )
 
 }

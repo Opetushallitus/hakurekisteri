@@ -13,12 +13,16 @@ object DurationHelper {
   def atTime(hour: Int = 0, minute: Int = 0, second: Int = 0): FiniteDuration = {
     val todayAtTime = new LocalDateTime().withTime(hour, minute, second, 0)
     todayAtTime match {
-      case d if d.isBefore(new LocalDateTime()) => Duration(d.plusDays(1).toDate.getTime - Platform.currentTime, TimeUnit.MILLISECONDS)
+      case d if d.isBefore(new LocalDateTime()) =>
+        Duration(d.plusDays(1).toDate.getTime - Platform.currentTime, TimeUnit.MILLISECONDS)
       case d => Duration(d.toDate.getTime - Platform.currentTime, TimeUnit.MILLISECONDS)
     }
   }
 
-  def timed[A](logger: LoggingAdapter, threshold: Duration)(msg: String, f: Future[A]): Future[A] = {
+  def timed[A](
+    logger: LoggingAdapter,
+    threshold: Duration
+  )(msg: String, f: Future[A]): Future[A] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     val start = Platform.currentTime
     f.onComplete(_ => {

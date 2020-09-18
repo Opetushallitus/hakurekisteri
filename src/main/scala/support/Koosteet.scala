@@ -22,44 +22,70 @@ trait Koosteet {
   val kkHakijaService: KkHakijaService
 }
 
-class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers, config: Config) extends Koosteet {
-  val virtaQueue = system.actorOf(Props(new VirtaQueue(
-    integrations.virta,
-    integrations.hakemusService,
-    integrations.oppijaNumeroRekisteri,
-    integrations.haut,
-    config)), "virta-queue")
+class BaseKoosteet(
+  system: ActorSystem,
+  integrations: Integrations,
+  registers: Registers,
+  config: Config
+) extends Koosteet {
+  val virtaQueue = system.actorOf(
+    Props(
+      new VirtaQueue(
+        integrations.virta,
+        integrations.hakemusService,
+        integrations.oppijaNumeroRekisteri,
+        integrations.haut,
+        config
+      )
+    ),
+    "virta-queue"
+  )
   val hakupalvelu = new AkkaHakupalvelu(
     integrations.hakemusClient,
     integrations.hakemusService,
     integrations.koosteService,
     integrations.haut,
     integrations.koodisto,
-    config)
-  val hakijat = system.actorOf(Props(new HakijaActor(
-    new AkkaHakupalvelu(
-      integrations.hakemusClient,
-      integrations.hakemusService,
-      integrations.koosteService,
-      integrations.haut,
-      integrations.koodisto,
-      config),
-    integrations.organisaatiot,
-    integrations.koodisto,
-    integrations.valintaTulos,
-    config)), "hakijat")
+    config
+  )
+  val hakijat = system.actorOf(
+    Props(
+      new HakijaActor(
+        new AkkaHakupalvelu(
+          integrations.hakemusClient,
+          integrations.hakemusService,
+          integrations.koosteService,
+          integrations.haut,
+          integrations.koodisto,
+          config
+        ),
+        integrations.organisaatiot,
+        integrations.koodisto,
+        integrations.valintaTulos,
+        config
+      )
+    ),
+    "hakijat"
+  )
 
-  override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(
-    registers.suoritusRekisteri,
-    registers.opiskeluoikeusRekisteri,
-    integrations.valintarekisteri,
-    integrations.tarjonta,
-    integrations.haut,
+  override val ensikertalainen: ActorRef = system.actorOf(
+    Props(
+      new EnsikertalainenActor(
+        registers.suoritusRekisteri,
+        registers.opiskeluoikeusRekisteri,
+        integrations.valintarekisteri,
+        integrations.tarjonta,
+        integrations.haut,
+        integrations.hakemusService,
+        integrations.oppijaNumeroRekisteri,
+        config
+      )
+    ),
+    "ensikertalainen"
+  )
+
+  val kkHakijaService: KkHakijaService = new KkHakijaService(
     integrations.hakemusService,
-    integrations.oppijaNumeroRekisteri,
-    config)), "ensikertalainen")
-
-  val kkHakijaService: KkHakijaService = new KkHakijaService(integrations.hakemusService,
     hakupalvelu,
     integrations.tarjonta,
     integrations.haut,
@@ -68,6 +94,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
     integrations.valintaTulos,
     integrations.valintarekisteri,
     integrations.valintaperusteetService,
-    Timeout(config.valintaTulosTimeout))(system)
+    Timeout(config.valintaTulosTimeout)
+  )(system)
   val siirtotiedostojono = new Siirtotiedostojono(hakijat, kkHakijaService)(system)
 }

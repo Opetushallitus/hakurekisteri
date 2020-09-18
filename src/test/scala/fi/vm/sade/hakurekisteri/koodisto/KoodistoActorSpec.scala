@@ -4,7 +4,12 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, Koodisto, KoodistoActor}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetRinnasteinenKoodiArvoQuery,
+  Koodi,
+  Koodisto,
+  KoodistoActor
+}
 import org.junit.runner.RunWith
 import org.scalatest.Matchers
 import org.scalatest.junit.JUnitRunner
@@ -31,22 +36,46 @@ class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar
 
   val mockRestClient = mock[VirkailijaRestClient]
   val mockKoodi = Koodi(koodiArvo, koodiUri, Koodisto(koodisto), null)
-  val mockRinnasteinen = Koodi(rinnasteinenArvo, rinnasteinenUri, Koodisto(rinnasteinenKoodisto), null)
-  val koodistoActor = TestActorRef(new KoodistoActor(mockRestClient, new MockConfig(), cacheFactory)).underlyingActor
+  val mockRinnasteinen =
+    Koodi(rinnasteinenArvo, rinnasteinenUri, Koodisto(rinnasteinenKoodisto), null)
+  val koodistoActor = TestActorRef(
+    new KoodistoActor(mockRestClient, new MockConfig(), cacheFactory)
+  ).underlyingActor
 
-  when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", koodisto, koodiArvo)(responseCode, maxRetries)).thenReturn(
+  when(
+    mockRestClient.readObject[Seq[Koodi]](
+      "koodisto-service.koodisByKoodistoAndArvo",
+      koodisto,
+      koodiArvo
+    )(responseCode, maxRetries)
+  ).thenReturn(
     Future.successful(Seq(mockKoodi))
   )
- when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodiUri)(responseCode, maxRetries)).thenReturn(
+  when(
+    mockRestClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodiUri)(
+      responseCode,
+      maxRetries
+    )
+  ).thenReturn(
     Future.successful(Seq(mockKoodi))
   )
 
-  when(mockRestClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", koodiUri)(responseCode, maxRetries)).thenReturn(
+  when(
+    mockRestClient.readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", koodiUri)(
+      responseCode,
+      maxRetries
+    )
+  ).thenReturn(
     Future.successful(Seq(mockRinnasteinen))
   )
 
   test("should fetch rinnasteinen koodiarvo from koodisto for given koodiarvo") {
-    Await.result(koodistoActor.getRinnasteinenKoodiArvo(GetRinnasteinenKoodiArvoQuery(koodisto, koodiArvo, rinnasteinenKoodisto)), Duration.Inf) should be(mockRinnasteinen.koodiArvo)
+    Await.result(
+      koodistoActor.getRinnasteinenKoodiArvo(
+        GetRinnasteinenKoodiArvoQuery(koodisto, koodiArvo, rinnasteinenKoodisto)
+      ),
+      Duration.Inf
+    ) should be(mockRinnasteinen.koodiArvo)
   }
 
   override def stop(): Unit = {

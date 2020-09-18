@@ -4,7 +4,6 @@ import fi.vm.sade.hakurekisteri.tools.SafeXML
 
 import scala.xml.Elem
 
-
 object Perustiedot extends SchemaDefinition {
   val schemaLocation = "perustiedot.xsd"
   val schema = <xs:schema attributeFormDefault="unqualified"
@@ -261,8 +260,18 @@ object PerustiedotV2 extends SchemaDefinition {
 
 }
 
-
-object PerustiedotKoodisto extends IncludeSchema("http://service.koodisto.sade.vm.fi/types/koodisto", "https://virkailija.opintopolku.fi/koodisto-service/rest/kunta.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/oppilaitosnumero.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/kieli.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/maatjavaltiot2.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/posti.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/sukupuoli.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/yksilollistaminen.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/suorituksentila.xsd") {
+object PerustiedotKoodisto
+    extends IncludeSchema(
+      "http://service.koodisto.sade.vm.fi/types/koodisto",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/kunta.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/oppilaitosnumero.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/kieli.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/maatjavaltiot2.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/posti.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/sukupuoli.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/yksilollistaminen.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/suorituksentila.xsd"
+    ) {
   override val schemaLocation: String = "perustiedot-koodisto.xsd"
 }
 
@@ -275,22 +284,24 @@ abstract class IncludeSchema(namespace: String, remoteschemas: String*) extends 
       {includes}
     </xs:schema>
 
-  def includes: Seq[Elem] = for (
-    remote <- remoteschemas
-  ) yield <xs:include schemaLocation={remote}/>
+  def includes: Seq[Elem] = for (remote <- remoteschemas) yield <xs:include schemaLocation={
+    remote
+  }/>
 }
 
 trait RemoteSchema extends SchemaDefinition {
-  lazy val schema: Elem  = SafeXML.load(schemaLocation)
+  lazy val schema: Elem = SafeXML.load(schemaLocation)
 }
 
-trait SchemaWithRemotes extends SchemaDefinition  {
-  lazy val remotes: Seq[SchemaDefinition] = (schema \\ "include" \\ "@schemaLocation").map((sl) => new RemoteSchema {
-    override val schemaLocation: String = sl.text
-  })
+trait SchemaWithRemotes extends SchemaDefinition {
+  lazy val remotes: Seq[SchemaDefinition] = (schema \\ "include" \\ "@schemaLocation").map((sl) =>
+    new RemoteSchema {
+      override val schemaLocation: String = sl.text
+    }
+  )
 }
 
 trait SchemaDefinition {
-  val schemaLocation:String
+  val schemaLocation: String
   val schema: Elem
 }

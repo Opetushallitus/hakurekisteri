@@ -15,7 +15,8 @@ object ImportBatchTable {
 
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchTable._
 
-class ImportBatchTable(tag: Tag) extends JournalTable[ImportBatch, UUID, ImportBatchRow](tag, "import_batch") {
+class ImportBatchTable(tag: Tag)
+    extends JournalTable[ImportBatch, UUID, ImportBatchRow](tag, "import_batch") {
   def data: Rep[Elem] = column[Elem]("data", O.SqlType("TEXT"))
   def externalId: Rep[Option[String]] = column[Option[String]]("external_id")
   def batchType: Rep[String] = column[String]("batch_type")
@@ -28,7 +29,8 @@ class ImportBatchTable(tag: Tag) extends JournalTable[ImportBatch, UUID, ImportB
 
   override def resourceShape = (data, externalId, batchType, source, state, status).shaped
   override def row(resource: ImportBatch): Option[ImportBatchRow] = ImportBatch.unapply(resource)
-  override val deletedValues: String => ImportBatchRow = lahde => (<emptybatch/>, None, "deleted", lahde, BatchState.READY, ImportStatus())
+  override val deletedValues: String => ImportBatchRow = lahde =>
+    (<emptybatch/>, None, "deleted", lahde, BatchState.READY, ImportStatus())
   override val resource: ImportBatchRow => ImportBatch = (ImportBatch.apply _).tupled
   override val extractSource: ImportBatchRow => String = _._4
 }

@@ -18,15 +18,19 @@ class SequentialBatchExecutorSpec extends AsyncFlatSpec with MockitoSugar {
     val realBatchExecutor = new SequentialBatchExecutor.RealBatchExecutor[Int]
     val spiedBatchExecutor = spy(realBatchExecutor)
 
-    val result: Future[Unit] = SequentialBatchExecutor.runInBatches(items.iterator, 4, spiedBatchExecutor)
-    { _ => Future {
+    val result: Future[Unit] =
+      SequentialBatchExecutor.runInBatches(items.iterator, 4, spiedBatchExecutor) { _ =>
+        Future {
           Thread.sleep(10)
         }
-    }
-    result map {_ =>
+      }
+    result map { _ =>
       {
-        Mockito.verify(spiedBatchExecutor, Mockito.times(3))
-          .executeBatch(mockito.ArgumentMatchers.any(), mockito.ArgumentMatchers.any())(mockito.ArgumentMatchers.any())
+        Mockito
+          .verify(spiedBatchExecutor, Mockito.times(3))
+          .executeBatch(mockito.ArgumentMatchers.any(), mockito.ArgumentMatchers.any())(
+            mockito.ArgumentMatchers.any()
+          )
         assert(true)
       }
     }

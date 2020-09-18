@@ -44,12 +44,13 @@ class ZipStreamSpec extends ScalatraFunSuite {
     asyncParser.feedChunk(s1)
     val result = asyncParser.feedChunk(s2)
 
-    result.map(_._2).head.get.lastname should equal ("\u0628")
+    result.map(_._2).head.get.lastname should equal("\u0628")
   }
 
   private def inifiniteStudentJsonStream: InputStream = new SequenceInputStream(
-      new ByteArrayInputStream("["),
-      new InfiniteInputStream(studentJson + ","))
+    new ByteArrayInputStream("["),
+    new InfiniteInputStream(studentJson + ",")
+  )
 
   private def readFromStream(len: Int, s: InputStream) = {
     val b = new Array[Byte](len)
@@ -69,7 +70,8 @@ class ZipStreamSpec extends ScalatraFunSuite {
     difference
   }
   def studentJson: String = {
-    val json = scala.io.Source.fromFile(getClass.getResource("/ytl-student.json").getFile).getLines.mkString
+    val json =
+      scala.io.Source.fromFile(getClass.getResource("/ytl-student.json").getFile).getLines.mkString
     compact(render(parse(json)))
   }
 

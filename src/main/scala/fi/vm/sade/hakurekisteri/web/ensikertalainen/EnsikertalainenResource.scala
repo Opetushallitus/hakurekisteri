@@ -7,13 +7,22 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import fi.vm.sade.auditlog.{Changes, Target}
 import fi.vm.sade.hakurekisteri.{AuditUtil, EnsikertalainenHaussaQuery, KaikkiHaunEnsikertalaiset}
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, HaunEnsikertalaisetQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{
+  Ensikertalainen,
+  EnsikertalainenQuery,
+  HaunEnsikertalaisetQuery
+}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, QueryLogging, Security, SecuritySupport}
+import fi.vm.sade.hakurekisteri.web.rest.support.{
+  IncidentReport,
+  QueryLogging,
+  Security,
+  SecuritySupport
+}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
@@ -24,10 +33,18 @@ import scala.concurrent.duration._
 
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
-class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService: IHakemusService)
-                             (implicit val sw: Swagger, system: ActorSystem, val security: Security)
-  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport
-    with FutureSupport with SecuritySupport with QueryLogging {
+class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService: IHakemusService)(
+  implicit
+  val sw: Swagger,
+  system: ActorSystem,
+  val security: Security
+) extends HakuJaValintarekisteriStack
+    with HakurekisteriJsonSupport
+    with EnsikertalainenSwaggerApi
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with QueryLogging {
 
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -42,10 +59,12 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     val henkiloOid = params("henkilo")
     val hakuOid = params("haku")
 
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       EnsikertalainenHaussaQuery,
       new Target.Builder().setField("henkilo", henkiloOid).setField("haku", hakuOid).build(),
-      new Changes.Builder().build())
+      new Changes.Builder().build()
+    )
     new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       private val q = (ensikertalainenActor ? EnsikertalainenQuery(
@@ -60,13 +79,16 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
   get("/haku/:haku", operation(hakuQuery)) {
     val t0 = Platform.currentTime
     val hakuOid = params("haku")
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       KaikkiHaunEnsikertalaiset,
       AuditUtil.targetFromParams(params).build(),
-      new Changes.Builder().build())
+      new Changes.Builder().build()
+    )
     new AsyncResult() {
       override implicit def timeout: Duration = 15.minutes
-      override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(15.minutes).mapTo[Seq[Ensikertalainen]]
+      override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(15.minutes)
+        .mapTo[Seq[Ensikertalainen]]
       logQuery(Map("haku" -> hakuOid), t0, is)
     }
   }
@@ -77,10 +99,15 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     if (personOids.isEmpty) throw ParamMissingException("request body does not contain person oids")
     val hakuOid = params("haku")
 
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       EnsikertalainenHaussaQuery,
-      new Target.Builder().setField("henkilot", personOids.toString()).setField("haku", hakuOid).build(),
-      new Changes.Builder().build())
+      new Target.Builder()
+        .setField("henkilot", personOids.toString())
+        .setField("haku", hakuOid)
+        .build(),
+      new Changes.Builder().build()
+    )
 
     new AsyncResult() {
       override implicit def timeout: Duration = 5.minutes
@@ -94,12 +121,13 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
   }
 
   incident {
-    case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, t.getMessage))
+    case t: HakuNotFoundException  => (id) => NotFound(IncidentReport(id, t.getMessage))
     case t: NoSuchElementException => (id) => BadRequest(IncidentReport(id, t.getMessage))
-    case t: ParamMissingException => (id) => BadRequest(IncidentReport(id, t.getMessage))
-    case t: ExecutionException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
-    case t: PreconditionFailedException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
+    case t: ParamMissingException  => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: ExecutionException =>
+      (id) => InternalServerError(IncidentReport(id, "backend service failed"))
+    case t: PreconditionFailedException =>
+      (id) => InternalServerError(IncidentReport(id, "backend service failed"))
   }
 
 }
-

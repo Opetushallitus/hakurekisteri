@@ -5,7 +5,8 @@ import org.scalatra.swagger._
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 
-trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriResource[Opiskelija] =>
+trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel {
+  this: HakurekisteriResource[Opiskelija] =>
 
   protected val applicationDescription = "Opiskelijatietojen rajapinta"
 
@@ -15,7 +16,11 @@ trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriR
     .summary("näyttää kaikki opiskelijatiedot")
     .description("Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
-    .parameter(queryParam[Option[String]]("kausi").description("kausi jonka tietoja haetaan").allowableValues("S", "K"))
+    .parameter(
+      queryParam[Option[String]]("kausi")
+        .description("kausi jonka tietoja haetaan")
+        .allowableValues("S", "K")
+    )
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
     .parameter(queryParam[Option[Date]]("paiva").description("päivä jonka tietoja haetaan"))
     .parameter(queryParam[Option[String]]("oppilaitosOid").description("oppilaitoksen oid"))
@@ -30,7 +35,9 @@ trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriR
   val update = apiOperation[Opiskelija]("päivitäOpiskelija")
     .summary("päivittää olemassa olevaa opiskelijatietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("opiskelijatiedon uuid").required)
-    .parameter(bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelijatieto").required)
+    .parameter(
+      bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelijatieto").required
+    )
     .tags("opiskelijat")
 
   val read = apiOperation[Opiskelija]("haeOpiskelija")
@@ -57,6 +64,7 @@ trait OpiskelijaSwaggerModel extends OldSwaggerSyntax {
     ModelField("loppuPaiva", null, DataType.Date, required = false)
   )
 
-  def opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", opiskelijaFields.map(t => (t.name, t)).toMap)
+  def opiskelijaModel =
+    Model("Opiskelija", "Opiskelijatiedot", opiskelijaFields.map(t => (t.name, t)).toMap)
 
 }

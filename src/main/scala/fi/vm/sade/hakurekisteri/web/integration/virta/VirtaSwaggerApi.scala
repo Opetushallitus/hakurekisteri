@@ -16,8 +16,11 @@ trait VirtaSwaggerApi extends SwaggerSupport with VirtaSwaggerModel {
   val refreshOppija = apiOperation[VirtaStatus]("päivitäOppijanTiedot")
     .summary("Päivittää yhden oppijan tiedot VIRTA-järjestelmästä.")
     .description("Päivittää yhden oppijan tiedot VIRTA-järjestelmästä.")
-    .parameter(pathParam[String]("oppijaOid")
-      .description("oppijanumero").required)
+    .parameter(
+      pathParam[String]("oppijaOid")
+        .description("oppijanumero")
+        .required
+    )
     .tags("virta")
 
   val statusQuery = apiOperation[VirtaStatus]("status")
@@ -29,11 +32,17 @@ trait VirtaSwaggerApi extends SwaggerSupport with VirtaSwaggerModel {
 trait VirtaSwaggerModel extends OldSwaggerSyntax {
 
   val virtaStatusFields = Seq(
-    ModelField("lastProcessDone", "Koska viimeisin käsittely on valmistunut", DataType.DateTime, required = false),
+    ModelField(
+      "lastProcessDone",
+      "Koska viimeisin käsittely on valmistunut",
+      DataType.DateTime,
+      required = false
+    ),
     ModelField("processing", "Onko käsittely käynnissä", DataType.Boolean, required = false),
     ModelField("queueLength", "Jonon pituus", DataType.Long),
     ModelField("status", "Tila", DataType.String)
   )
 
-  def virtaStatusModel: Model = Model("VirtaStatus", "VirtaStatus", virtaStatusFields.map(t => (t.name, t)).toMap)
+  def virtaStatusModel: Model =
+    Model("VirtaStatus", "VirtaStatus", virtaStatusFields.map(t => (t.name, t)).toMap)
 }

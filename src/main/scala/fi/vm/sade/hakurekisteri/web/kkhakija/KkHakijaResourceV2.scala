@@ -20,9 +20,21 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
-class KkHakijaResourceV2(kkHakijaService: KkHakijaService, ophConfig: Config)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
-    extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
-    with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging with HakijaResourceSupport {
+class KkHakijaResourceV2(kkHakijaService: KkHakijaService, ophConfig: Config)(implicit
+  system: ActorSystem,
+  sw: Swagger,
+  val security: Security,
+  val ct: ClassTag[Seq[Hakija]]
+) extends HakuJaValintarekisteriStack
+    with KkHakijaSwaggerApi
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with ExcelSupport[Seq[Hakija]]
+    with DownloadSupport
+    with QueryLogging
+    with HakijaResourceSupport {
 
   protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   protected implicit def swagger: SwaggerEngine[_] = sw
@@ -35,13 +47,11 @@ class KkHakijaResourceV2(kkHakijaService: KkHakijaService, ophConfig: Config)(im
     val q = KkHakijaQuery(params, currentUser)
     val tyyppi = getFormatFromTypeParam()
     if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
-    val thisResponse= response
-    audit.log(auditUser,
-      KKHakijatLuku,
-      AuditUtil.targetFromParams(params).build(),
-      Changes.EMPTY)
+    val thisResponse = response
+    audit.log(auditUser, KKHakijatLuku, AuditUtil.targetFromParams(params).build(), Changes.EMPTY)
     val kkhakijatFuture = kkHakijaService.getKkHakijat(q, 2).flatMap {
-      case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+      case result
+          if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
         setContentDisposition(tyyppi, thisResponse, "hakijat")
         Future.successful(result)
       case result => Future.successful(result)
@@ -50,13 +60,15 @@ class KkHakijaResourceV2(kkHakijaService: KkHakijaService, ophConfig: Config)(im
   }
 
   incident {
-    case KkHakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "either parameter oppijanumero or hakukohde must be given"))
-    case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
+    case KkHakijaParamMissingException =>
+      (id) =>
+        BadRequest(IncidentReport(id, "either parameter oppijanumero or hakukohde must be given"))
+    case t: TarjontaException =>
+      (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
     case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, s"$t"))
-    case t: InvalidSyntymaaikaException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
+    case t: InvalidSyntymaaikaException =>
+      (id) => InternalServerError(IncidentReport(id, s"error: $t"))
     case t: InvalidKausiException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
   }
 
 }
-
-

@@ -8,38 +8,45 @@ import scala.xml.Source._
 
 import scala.language.implicitConversions
 
-
 class ValidXmlSpec extends FlatSpec with Matchers {
 
-  implicit def elemToInputSource(elem:Elem): InputSource = {
+  implicit def elemToInputSource(elem: Elem): InputSource = {
     fromReader(new StringReader(elem.toString()))
   }
 
   behavior of "Xml Validation"
 
-  val testiKoodisto =  Seq(Kunnat, Oppilaitokset, Kielet, MaatJaValtiot, Posti, Sukupuoli, YksilollistysKoodisto, SuorituksenTila)
+  val testiKoodisto = Seq(
+    Kunnat,
+    Oppilaitokset,
+    Kielet,
+    MaatJaValtiot,
+    Posti,
+    Sukupuoli,
+    YksilollistysKoodisto,
+    SuorituksenTila
+  )
 
-  val validator = new ValidXml(Perustiedot,  (PerustiedotKoodisto +: testiKoodisto):_*)
+  val validator = new ValidXml(Perustiedot, (PerustiedotKoodisto +: testiKoodisto): _*)
 
-  val validatorV2 = new ValidXml(PerustiedotV2,  (PerustiedotKoodisto +: testiKoodisto):_*)
+  val validatorV2 = new ValidXml(PerustiedotV2, (PerustiedotKoodisto +: testiKoodisto): _*)
 
   it should "find invalid xml" in {
-    validator.load(<perustiedot></perustiedot>).isFailure should be (true)
+    validator.load(<perustiedot></perustiedot>).isFailure should be(true)
   }
 
   it should "parse valid Xml" in {
-    validator.load(valid).isSuccess should be (true)
+    validator.load(valid).isSuccess should be(true)
   }
 
   it should "disregard conflicting schema in root element" in {
     val path = getClass.getClassLoader.getResource("simple.xml")
-    validator.load(path).isSuccess should be (false)
+    validator.load(path).isSuccess should be(false)
   }
 
   it should "validate v2 schema" in {
-    validatorV2.load(validV2).isSuccess should be (true)
+    validatorV2.load(validV2).isSuccess should be(true)
   }
-
 
   val valid =
     <perustiedot>
@@ -213,8 +220,6 @@ class ValidXmlSpec extends FlatSpec with Matchers {
       </henkilot>
     </perustiedot>
 
-
-
   object Kunnat extends SchemaDefinition {
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -233,11 +238,13 @@ class ValidXmlSpec extends FlatSpec with Matchers {
         </xs:simpleType>
       </xs:schema>
 
-    override val schemaLocation: String = "https://virkailija.opintopolku.fi/koodisto-service/rest/kunta.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/kunta.xsd"
   }
 
   object Oppilaitokset extends SchemaDefinition {
-    override val schemaLocation: String = "https://virkailija.opintopolku.fi/koodisto-service/rest/oppilaitosnumero.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/oppilaitosnumero.xsd"
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
                                            targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
@@ -257,7 +264,8 @@ class ValidXmlSpec extends FlatSpec with Matchers {
   }
 
   object Kielet extends SchemaDefinition {
-    override val schemaLocation: String = "https://virkailija.opintopolku.fi/koodisto-service/rest/kieli.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/kieli.xsd"
 
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -279,7 +287,8 @@ class ValidXmlSpec extends FlatSpec with Matchers {
   }
 
   object MaatJaValtiot extends SchemaDefinition {
-    override val schemaLocation: String ="https://virkailija.opintopolku.fi/koodisto-service/rest/maatjavaltiot2.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/maatjavaltiot2.xsd"
 
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -301,7 +310,8 @@ class ValidXmlSpec extends FlatSpec with Matchers {
   }
 
   object Posti extends SchemaDefinition {
-    override val schemaLocation: String = "https://virkailija.opintopolku.fi/koodisto-service/rest/posti.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/posti.xsd"
 
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -322,7 +332,8 @@ class ValidXmlSpec extends FlatSpec with Matchers {
   }
 
   object Sukupuoli extends SchemaDefinition {
-    override val schemaLocation: String = "https://virkailija.opintopolku.fi/koodisto-service/rest/sukupuoli.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/sukupuoli.xsd"
 
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -351,7 +362,8 @@ class ValidXmlSpec extends FlatSpec with Matchers {
   }
 
   object YksilollistysKoodisto extends SchemaDefinition {
-    override val schemaLocation: String ="https://virkailija.opintopolku.fi/koodisto-service/rest/yksilollistaminen.xsd"
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/yksilollistaminen.xsd"
 
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -369,8 +381,9 @@ class ValidXmlSpec extends FlatSpec with Matchers {
       </xs:schema>
   }
 
-  object SuorituksenTila extends  SchemaDefinition {
-    override val schemaLocation: String ="https://virkailija.opintopolku.fi/koodisto-service/rest/suorituksentila.xsd"
+  object SuorituksenTila extends SchemaDefinition {
+    override val schemaLocation: String =
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/suorituksentila.xsd"
 
     override val schema: Elem =
       <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -387,5 +400,3 @@ class ValidXmlSpec extends FlatSpec with Matchers {
       </xs:schema>
   }
 }
-
-

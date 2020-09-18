@@ -7,6 +7,7 @@ import scala.concurrent.Future
 
 class MockProxies extends Proxies with HakurekisteriJsonSupport {
   lazy val vastaanottotiedot = new VastaanottotiedotProxy {
-    override def historia(henkiloOid: String): Future[String] = Future.successful(ValintarekisteriMock.getHistoria(henkiloOid))
+    override def historia(henkiloOid: String): Future[String] =
+      Future.successful(ValintarekisteriMock.getHistoria(henkiloOid))
   }
 }

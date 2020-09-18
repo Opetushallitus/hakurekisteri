@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 import org.joda.time.LocalDate
 
-case class VirtaOpintosuoritus (
+case class VirtaOpintosuoritus(
   suoritusPvm: LocalDate,
   nimi: Option[String],
   koulutuskoodi: Option[String],

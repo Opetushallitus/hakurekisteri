@@ -4,7 +4,12 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.{MockConfig, SpecsLikeMockito}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{
+  Oppilaitos,
+  OppilaitosResponse,
+  Organisaatio,
+  OrganisaatioActorRef
+}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
@@ -12,7 +17,6 @@ import org.joda.time.LocalDate
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.Future
-
 
 class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito {
   implicit val system = ActorSystem("test-virta-system")
@@ -63,7 +67,7 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     val oWaiter = new Waiter()
 
     val opiskeluoikeusHandler = (o: Opiskeluoikeus) => {
-      oWaiter { o.myontaja should be ("1.3.0") }
+      oWaiter { o.myontaja should be("1.3.0") }
       oWaiter.dismiss()
     }
 
@@ -74,8 +78,19 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
         }
         sWaiter.dismiss()
     })))
-    val opiskeluoikeusActor = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus, UUID](opiskeluoikeusHandler)))
-    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor, suoritusActor, opiskeluoikeusActor, new MockConfig)))
+    val opiskeluoikeusActor =
+      system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus, UUID](opiskeluoikeusHandler)))
+    val virtaActor: ActorRef = system.actorOf(
+      Props(
+        new VirtaActor(
+          virtaClient,
+          organisaatioActor,
+          suoritusActor,
+          opiskeluoikeusActor,
+          new MockConfig
+        )
+      )
+    )
 
     virtaActor ! VirtaQuery("1.2.3", Some("111111-1975"))
 
@@ -84,7 +99,6 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     sWaiter.await(timeout(5.seconds), dismissals(1))
     oWaiter.await(timeout(5.seconds), dismissals(1))
   }
-
 
   class MockedOrganisaatioActor extends Actor {
     val hkiYliopisto = Organisaatio(
@@ -99,13 +113,15 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
     override def receive: Receive = {
       case Oppilaitos(o) => sender ! OppilaitosResponse(o, hkiYliopisto)
-      case oid: String => sender ! None
+      case oid: String   => sender ! None
     }
   }
 
   object AllResources
 
-  val organisaatioActor = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
+  val organisaatioActor = new OrganisaatioActorRef(
+    system.actorOf(Props(new MockedOrganisaatioActor()))
+  )
 
   val json782603 = """{
     |"result":[
@@ -156,5 +172,3 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     |]}""".stripMargin
 
 }
-
-

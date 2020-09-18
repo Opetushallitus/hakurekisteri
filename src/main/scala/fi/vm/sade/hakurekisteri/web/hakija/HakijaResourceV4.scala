@@ -20,9 +20,21 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
-class HakijaResourceV4(hakijaActor: ActorRef)
-                      (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[JSONHakijatV4])
-  extends HakuJaValintarekisteriStack with HakijaSwaggerApiV4 with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[JSONHakijatV4] with DownloadSupport with QueryLogging with HakijaResourceSupport  {
+class HakijaResourceV4(hakijaActor: ActorRef)(implicit
+  system: ActorSystem,
+  sw: Swagger,
+  val security: Security,
+  val ct: ClassTag[JSONHakijatV4]
+) extends HakuJaValintarekisteriStack
+    with HakijaSwaggerApiV4
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with ExcelSupport[JSONHakijatV4]
+    with DownloadSupport
+    with QueryLogging
+    with HakijaResourceSupport {
   implicit val defaultTimeout: Timeout = 120.seconds
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -44,7 +56,8 @@ class HakijaResourceV4(hakijaActor: ActorRef)
     val tyyppi = getFormatFromTypeParam()
     val thisResponse = response
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
-      case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+      case result
+          if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
         setContentDisposition(tyyppi, thisResponse, "hakijat")
         Future.successful(result)
       case result =>
@@ -54,11 +67,10 @@ class HakijaResourceV4(hakijaActor: ActorRef)
   }
 
   incident {
-    case HakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
-    case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
+    case HakijaParamMissingException =>
+      (id) =>
+        BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
+    case t: AskTimeoutException =>
+      (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }
-
-
-
-

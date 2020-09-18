@@ -26,10 +26,15 @@ import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 class PreemptiveAuthInterceptor(creds: UsernamePasswordCredentials) extends HttpRequestInterceptor {
-  override def process(request: HttpRequest, context: HttpContext): Unit = request.addHeader(new BasicScheme().authenticate(creds, request, context))
+  override def process(request: HttpRequest, context: HttpContext): Unit =
+    request.addHeader(new BasicScheme().authenticate(creds, request, context))
 }
 
-class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()) {
+class YtlHttpFetch(
+  config: OphProperties,
+  fileSystem: YtlFileSystem,
+  builder: ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()
+) {
   val log = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
   implicit val formats = Student.formatsStudent
@@ -52,20 +57,21 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
 
   val client = buildClient(builder)
 
-  def zipToStudents(z: ZipInputStream): Iterator[(String,Student)] = {
+  def zipToStudents(z: ZipInputStream): Iterator[(String, Student)] = {
     streamToStudents(Zip.toInputStreams(z))
   }
 
-  def zipToStudents(z: Iterator[ZipInputStream]): Iterator[(String,Student)] = {
+  def zipToStudents(z: Iterator[ZipInputStream]): Iterator[(String, Student)] = {
     streamToStudents(Zip.toInputStreams(z))
   }
 
-  def streamToStudents(streams: Iterator[InputStream]): Iterator[(String, Student)] = streams.flatMap(
-    input => {
+  def streamToStudents(streams: Iterator[InputStream]): Iterator[(String, Student)] =
+    streams.flatMap(input => {
       val parser = StudentAsyncParser()
       val data = new Array[Byte](bufferSize)
 
-      Iterator.continually(ByteStreams.read(input, data, 0, data.length))
+      Iterator
+        .continually(ByteStreams.read(input, data, 0, data.length))
         .takeWhile(_ != 0)
         .flatMap {
           case x if x == data.length => safeParseStudentsFromBytes(parser, data)
@@ -74,10 +80,12 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
             Array.copy(data, 0, newarr, 0, x)
             safeParseStudentsFromBytes(parser, newarr)
         }
-    }
-  )
+    })
 
-  private def safeParseStudentsFromBytes(parser: StudentAsyncParser, data: Array[Byte]): Seq[(String,Student)] = {
+  private def safeParseStudentsFromBytes(
+    parser: StudentAsyncParser,
+    data: Array[Byte]
+  ): Seq[(String, Student)] = {
     parser.feedChunk(data).flatMap {
       case (json, Success(student)) => Some(json, student)
       case (json, Failure(e)) =>
@@ -87,16 +95,21 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   }
 
   def fetchOne(hetu: String): Option[(String, Student)] =
-    client.get("ytl.http.host.fetchone", hetu).expectStatus(200,404).execute((r:OphHttpResponse) => {
-      r.getStatusCode match {
-        case 404 => None
-        case 200 =>
-          val json = r.asText()
-          Some(json, parse(json).extract[Student])
-      }
-    })
+    client
+      .get("ytl.http.host.fetchone", hetu)
+      .expectStatus(200, 404)
+      .execute((r: OphHttpResponse) => {
+        r.getStatusCode match {
+          case 404 => None
+          case 200 =>
+            val json = r.asText()
+            Some(json, parse(json).extract[Student])
+        }
+      })
 
-  private def internalFetch(groupUuid: String)(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
+  private def internalFetch(
+    groupUuid: String
+  )(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
@@ -107,48 +120,70 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     }
   }
 
-  def fetch(groupUuid: String, hetus: Seq[String]): Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
+  def fetch(
+    groupUuid: String,
+    hetus: Seq[String]
+  ): Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
     hetus.grouped(chunkSize).map(internalFetch(groupUuid))
 
   @tailrec
-  private def fetchStatus(uuid: String): Either[Throwable,Status] = {
+  private def fetchStatus(uuid: String): Either[Throwable, Status] = {
     log.debug(s"Fetching with opertationUuid $uuid")
     implicit val formats = new DefaultFormats {
       override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     } + StatusDeserializer
-    Try(client.get("ytl.http.host.status", uuid).expectStatus(200).execute((r: OphHttpResponse) => {
-      parse(r.asText()).extract[Status]
-    })) match {
+    Try(
+      client
+        .get("ytl.http.host.status", uuid)
+        .expectStatus(200)
+        .execute((r: OphHttpResponse) => {
+          parse(r.asText()).extract[Status]
+        })
+    ) match {
       case Success(e: InProgress) => {
         Thread.sleep(1000)
         log.debug(e.toString)
         fetchStatus(uuid)
       }
       case Success(e: Finished) => Right(e)
-      case Success(e: Failed) => Left(new RuntimeException(s"Polling YTL service returned failed status ${e}"))
+      case Success(e: Failed) =>
+        Left(new RuntimeException(s"Polling YTL service returned failed status ${e}"))
       case Failure(e) => Left(e)
-      case status => Left(new RuntimeException(s"Unknown status ${status}"))
+      case status     => Left(new RuntimeException(s"Unknown status ${status}"))
     }
   }
 
   def downloadZip(groupUuid: String)(uuid: String): Either[Throwable, InputStream] = {
     Try[InputStream] {
       log.info(s"Making request to YTL for uuid $uuid ...")
-      client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r: OphHttpResponse) => {
-        val responseContent: Array[Byte] = IOUtils.toByteArray(r.asInputStream())
-        log.info(s"Read ${responseContent.length} bytes from YTL for uuid $uuid . Storing to ${fileSystem.getClass.getSimpleName} and returning for processing.")
-        fileSystem.write(groupUuid, uuid)(new ByteArrayInputStream(responseContent))
-        new ByteArrayInputStream(responseContent)
-      })
+      client
+        .get("ytl.http.host.download", uuid)
+        .expectStatus(200)
+        .execute((r: OphHttpResponse) => {
+          val responseContent: Array[Byte] = IOUtils.toByteArray(r.asInputStream())
+          log.info(
+            s"Read ${responseContent.length} bytes from YTL for uuid $uuid . Storing to ${fileSystem.getClass.getSimpleName} and returning for processing."
+          )
+          fileSystem.write(groupUuid, uuid)(new ByteArrayInputStream(responseContent))
+          new ByteArrayInputStream(responseContent)
+        })
     }.toEither
   }
 
   def fetchOperation(hetus: Seq[String]): Either[Throwable, Operation] = {
-    Try[Operation](client.post("ytl.http.host.bulk")
-      .dataWriter("application/json", "UTF-8", new OphRequestPostWriter() {
-        override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
-      })
-      .expectStatus(200).execute((r: OphHttpResponse) => parse(r.asText()).extract[Operation])) match {
+    Try[Operation](
+      client
+        .post("ytl.http.host.bulk")
+        .dataWriter(
+          "application/json",
+          "UTF-8",
+          new OphRequestPostWriter() {
+            override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
+          }
+        )
+        .expectStatus(200)
+        .execute((r: OphHttpResponse) => parse(r.asText()).extract[Operation])
+    ) match {
       case Success(e) => {
         log.info(s"Got operation uuid ${e.operationUuid}")
         Right(e)
@@ -157,8 +192,10 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     }
   }
 
-  private implicit def function0ToRunnable[U](f:(OphHttpResponse) => U): OphHttpResponseHandler[U] =
-    new OphHttpResponseHandler[U]{
+  private implicit def function0ToRunnable[U](
+    f: (OphHttpResponse) => U
+  ): OphHttpResponseHandler[U] =
+    new OphHttpResponseHandler[U] {
       override def handleResponse(ophHttpResponse: OphHttpResponse): U = f(ophHttpResponse)
     }
 }

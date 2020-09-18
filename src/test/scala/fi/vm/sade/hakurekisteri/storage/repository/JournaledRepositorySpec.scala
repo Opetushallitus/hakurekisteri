@@ -11,26 +11,34 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+class JournaledRepositorySpec
+    extends FlatSpec
+    with Matchers
+    with RepositoryBehaviors[TestResource] {
 
-class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBehaviors[TestResource] {
-
-  val repoConstructor = (items:Seq[TestResource]) => {
+  val repoConstructor = (items: Seq[TestResource]) => {
     val resources = items.map(TestResource.identify)
     TestRepo(TestJournal[TestResource](resources))
   }
 
-  def itemConstructor:TestResource = {
+  def itemConstructor: TestResource = {
     TestResource(java.util.UUID.randomUUID.toString)
   }
 
-  def itemUpdater(original:TestResource with Identified[UUID]):TestResource with Identified[UUID] = {
-    TestResource(original.id, original.name , value=Some(original.value.getOrElse(original.name) + " updated"))
+  def itemUpdater(
+    original: TestResource with Identified[UUID]
+  ): TestResource with Identified[UUID] = {
+    TestResource(
+      original.id,
+      original.name,
+      value = Some(original.value.getOrElse(original.name) + " updated")
+    )
   }
 
   it should behave like basicRepoBehaviors(repoConstructor, itemConstructor, itemUpdater)
 
   abstract class Repo {
-    val journal:Journal[TestResource, UUID]
+    val journal: Journal[TestResource, UUID]
     lazy val repo = TestRepo(journal)
 
   }
@@ -42,16 +50,22 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
   trait JournalWithEntries extends Repo {
     val amount = 100
     val ids = Stream.continually(java.util.UUID.randomUUID).take(amount)
-    val resources = Stream.continually(ids).take(2).flatten.zip(Stream.tabulate(amount * 2){(i) => if (i >= amount) s"updated${UUID.randomUUID}" else s"original${UUID.randomUUID}"}).map{case (id, round) => TestResource(id, round.toString, None)}
+    val resources = Stream
+      .continually(ids)
+      .take(2)
+      .flatten
+      .zip(Stream.tabulate(amount * 2) { (i) =>
+        if (i >= amount) s"updated${UUID.randomUUID}" else s"original${UUID.randomUUID}"
+      })
+      .map { case (id, round) => TestResource(id, round.toString, None) }
     val journal = TestJournal[TestResource](resources)
   }
-
 
   it should "add the modification to the journal" in new EmptyJournal {
 
     val idResource = saveItem(repo, TestResource("first item"))
-    val delta:Delta[TestResource, UUID] = Updated(idResource)
-    journal.journal(None).last should be (delta)
+    val delta: Delta[TestResource, UUID] = Updated(idResource)
+    journal.journal(None).last should be(delta)
 
   }
 
@@ -60,32 +74,23 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
     val resu = TestResource("test")
     repo.save(resu)
     repo.save(resu)
-    journal.journal(None).length should be (1)
+    journal.journal(None).length should be(1)
 
   }
-
-
-
 
   "A repository with a journal with entries" should "contain all the resources in journal" in new JournalWithEntries {
 
-
-    forAll(Table("id",ids:_*)) {
-      (id) => repo.get(id) should not be None
+    forAll(Table("id", ids: _*)) { (id) =>
+      repo.get(id) should not be None
     }
   }
 
-
-
-
-
   it should "contain the latest version of a given resource" in new JournalWithEntries {
 
-    forAll(Table("id",ids:_*)) {
-      (id) => repo.get(id).map(_.name.take(7)) should be (Some("updated"))
+    forAll(Table("id", ids: _*)) { (id) =>
+      repo.get(id).map(_.name.take(7)) should be(Some("updated"))
 
     }
-
 
   }
 
@@ -93,8 +98,8 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
 
     val deleteJournal = TestJournal[TestResource](resources, ids)
     val deleteRepo = TestRepo(deleteJournal)
-    forAll(Table("id",ids:_*)) {
-      (id) => deleteRepo.get(id).map(_.name) should be (None)
+    forAll(Table("id", ids: _*)) { (id) =>
+      deleteRepo.get(id).map(_.name) should be(None)
 
     }
 
@@ -103,8 +108,8 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
   it should "mark a delete delta in journal when deleted" in new JournalWithEntries {
     val resource = repo.get(ids.tail.head).get
     repo.delete(ids.head, source = "Test")
-    val delta:Delta[TestResource, UUID] = Deleted(ids.head, source = "Test")
-    journal.journal(None).last should be (delta)
+    val delta: Delta[TestResource, UUID] = Deleted(ids.head, source = "Test")
+    journal.journal(None).last should be(delta)
   }
 
   it should "deduplicate when the same information is received multiple times" in new JournalWithEntries {
@@ -114,12 +119,11 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
     val saved = saveItem(repo, tr)
     val saved2 = saveItem(repo, tr2)
 
-    saved.id should be (saved2.id)
+    saved.id should be(saved2.id)
   }
 
   private def saveItem[T](repo: Repository[T, UUID], item: T): T with Identified[UUID] = {
     Await.result(repo.save(item), atMost = Duration(1, TimeUnit.SECONDS))
   }
-
 
 }

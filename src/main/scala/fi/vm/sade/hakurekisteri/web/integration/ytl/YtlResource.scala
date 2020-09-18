@@ -16,10 +16,15 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSystem, val security: Security, sw: Swagger)
-  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SecuritySupport
+class YtlResource(ytlIntegration: YtlIntegration)(implicit
+  val system: ActorSystem,
+  val security: Security,
+  sw: Swagger
+) extends HakuJaValintarekisteriStack
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with SecuritySupport
     with YtlSwaggerApi {
-
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -57,7 +62,8 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit val system: ActorSyst
     if (exists) {
       Accepted()
     } else {
-      val message = s"Failure in syncing YTL data for person OID $personOid . Returning error to caller. Got ${done.size} results: $done"
+      val message =
+        s"Failure in syncing YTL data for person OID $personOid . Returning error to caller. Got ${done.size} results: $done"
       logger.error(message)
       BadRequest(message)
     }

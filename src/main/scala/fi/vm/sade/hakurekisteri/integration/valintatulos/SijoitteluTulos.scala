@@ -47,7 +47,7 @@ object Ilmoittautumistila extends Enumeration {
   val POISSA_KOKO_LUKUVUOSI = Value("POISSA_KOKO_LUKUVUOSI") // Poissa (koko lukuvuosi)
   val EI_ILMOITTAUTUNUT = Value("EI_ILMOITTAUTUNUT") // Ei ilmoittautunut
   val LASNA_SYKSY = Value("LASNA_SYKSY") // Läsnä syksy, poissa kevät
-  val POISSA_SYKSY = Value ("POISSA_SYKSY") // Poissa syksy, läsnä kevät
+  val POISSA_SYKSY = Value("POISSA_SYKSY") // Poissa syksy, läsnä kevät
   val LASNA = Value("LASNA") // Läsnä, keväällä alkava koulutus
   val POISSA = Value("POISSA") // Poissa, keväällä alkava koulutus
 
@@ -62,60 +62,93 @@ import Ilmoittautumistila.Ilmoittautumistila
 
 case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
 
-case class ValintaTulosHakutoive(hakukohdeOid: String,
-                                 tarjoajaOid: String,
-                                 valintatila: Valintatila,
-                                 vastaanottotila: Vastaanottotila,
-                                 ilmoittautumistila: HakutoiveenIlmoittautumistila,
-                                 pisteet: Option[BigDecimal],
-                                 valintatapajonoOid: String)
+case class ValintaTulosHakutoive(
+  hakukohdeOid: String,
+  tarjoajaOid: String,
+  valintatila: Valintatila,
+  vastaanottotila: Vastaanottotila,
+  ilmoittautumistila: HakutoiveenIlmoittautumistila,
+  pisteet: Option[BigDecimal],
+  valintatapajonoOid: String
+)
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
 @SerialVersionUID(3)
-case class SijoitteluTulos(hakuOid: String,
-                           pisteet: Map[(String, String), BigDecimal],
-                           valintatila: Map[(String, String), Valintatila],
-                           vastaanottotila: Map[(String, String), Vastaanottotila],
-                           ilmoittautumistila: Map[(String, String), Ilmoittautumistila],
-                           valintatapajono: Map[(String, String), String])
+case class SijoitteluTulos(
+  hakuOid: String,
+  pisteet: Map[(String, String), BigDecimal],
+  valintatila: Map[(String, String), Valintatila],
+  vastaanottotila: Map[(String, String), Vastaanottotila],
+  ilmoittautumistila: Map[(String, String), Ilmoittautumistila],
+  valintatapajono: Map[(String, String), String]
+)
 
 object SijoitteluTulos {
   def apply(hakuOid: String, valintatulos: ValintaTulos): SijoitteluTulos = {
     new SijoitteluTulos(
       hakuOid,
       valintatulos.hakutoiveet.collect {
-        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _) => (valintatulos.hakemusOid, oid) -> pisteet
+        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _) =>
+          (valintatulos.hakemusOid, oid) -> pisteet
       }.toMap,
-      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila).toMap,
-      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila).toMap,
-      valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila).toMap,
-      valintatulos.hakutoiveet.filter(h => h.valintatapajonoOid.nonEmpty).
-        map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid).toMap
+      valintatulos.hakutoiveet
+        .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila)
+        .toMap,
+      valintatulos.hakutoiveet
+        .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila)
+        .toMap,
+      valintatulos.hakutoiveet
+        .map(h =>
+          (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila
+        )
+        .toMap,
+      valintatulos.hakutoiveet
+        .filter(h => h.valintatapajonoOid.nonEmpty)
+        .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
+        .toMap
     )
   }
 
   def apply(hakuOid: String, valintatulokset: Seq[ValintaTulos]): SijoitteluTulos = {
     new SijoitteluTulos(
       hakuOid,
-      valintatulokset.flatMap(valintatulos => {
-        valintatulos.hakutoiveet.collect {
-          case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _) => (valintatulos.hakemusOid, oid) -> pisteet
-        }
-      }).toMap,
-      valintatulokset.flatMap(valintatulos => {
-        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila)
-      }).toMap,
-      valintatulokset.flatMap(valintatulos => {
-        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila)
-      }).toMap,
-      valintatulokset.flatMap(valintatulos => {
-        valintatulos.hakutoiveet.map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila)
-      }).toMap,
-      valintatulokset.flatMap(valintatulos => {
-        valintatulos.hakutoiveet.filter(h => h.valintatapajonoOid.nonEmpty)
-          .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
-      }).toMap
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet.collect {
+            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _) =>
+              (valintatulos.hakemusOid, oid) -> pisteet
+          }
+        })
+        .toMap,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet.map(h =>
+            (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila
+          )
+        })
+        .toMap,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet.map(h =>
+            (valintatulos.hakemusOid, h.hakukohdeOid) -> h.vastaanottotila
+          )
+        })
+        .toMap,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet.map(h =>
+            (valintatulos.hakemusOid, h.hakukohdeOid) -> h.ilmoittautumistila.ilmoittautumistila
+          )
+        })
+        .toMap,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet
+            .filter(h => h.valintatapajonoOid.nonEmpty)
+            .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
+        })
+        .toMap
     )
   }
 }

@@ -29,12 +29,16 @@ object ItPostgres extends Logging {
   } else {
     log.info(s"PostgreSQL use own instance")
     if (!dataDirFile.isDirectory) {
-      log.info(s"PostgreSQL data directory $dataDirPath does not exist, initing new database there.")
+      log.info(
+        s"PostgreSQL data directory $dataDirPath does not exist, initing new database there."
+      )
       Files.createDirectories(dataDirFile.toPath)
       runBlocking(s"chmod 0700 $dataDirPath")
       runBlocking(s"initdb -D $dataDirPath --no-locale")
     } else {
-      log.info(s"PostgreSQL data directory $dataDirPath exists, assuming that database is there and initialized.")
+      log.info(
+        s"PostgreSQL data directory $dataDirPath exists, assuming that database is there and initialized."
+      )
     }
     log.info(s"Using PostgreSQL in port $port with data directory $dataDirPath")
   }
@@ -65,8 +69,8 @@ object ItPostgres extends Logging {
   private def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = {
     times match {
       case n if n < 1 => false
-      case 1 => thunk()
-      case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
+      case 1          => thunk()
+      case n          => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
     }
   }
 
@@ -86,8 +90,14 @@ object ItPostgres extends Logging {
         case None =>
           log.info(s"PostgreSQL pid file cannot be read, starting in port $port:")
           s"postgres --config_file=postgresql/postgresql.conf -d 0 -D $dataDirPath -p $port".run()
-          if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(()=> ItPostgres.this.isAcceptingConnections())) {
-            throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+          if (
+            !tryTimes(startStopRetries, startStopRetryIntervalMillis)(() =>
+              ItPostgres.this.isAcceptingConnections()
+            )
+          ) {
+            throw new RuntimeException(
+              s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals"
+            )
           }
           log.info(s"PostgreSQL started in port $port , (re)creating database $dbName")
           runBlocking(s"dropdb -p $port --if-exists $dbName")
@@ -115,7 +125,9 @@ object ItPostgres extends Logging {
           log.info(s"Killing PostgreSQL process $pid")
           runBlocking(s"kill -s SIGINT $pid")
           if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(() => readPid.isEmpty)) {
-            log.warn(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+            log.warn(
+              s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals"
+            )
           }
         }
         case None => log.info("No PostgreSQL pid found, not trying to stop it.")

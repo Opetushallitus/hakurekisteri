@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.mocks
 
-
 object SuoritusMock {
   def getResourceJson(filename: String): String = {
-    scala.io.Source.fromInputStream(getClass.getResourceAsStream(filename))
+    scala.io.Source
+      .fromInputStream(getClass.getResourceAsStream(filename))
       .getLines()
       .mkString
   }
@@ -15,7 +15,9 @@ object SuoritusMock {
           "1.2.246.562.5.2013061010184237348007" ->
             Map(
               "KESKEN" -> getResourceJson("/mock-data/suoritus/suoritus-aarne-lukio-kesken.json"),
-              "VALMIS" -> getResourceJson("/mock-data/suoritus/suoritus-aarne-lukio-valmis.json"))),
+              "VALMIS" -> getResourceJson("/mock-data/suoritus/suoritus-aarne-lukio-valmis.json")
+            )
+        ),
       "1.2.246.562.24.98743797763" ->
         Map(
           "1.2.246.562.5.2013061010184237348007" ->
@@ -24,8 +26,11 @@ object SuoritusMock {
             ),
           "1.2.246.562.13.62959769647" ->
             Map(
-              "KESKEN" -> getResourceJson("/mock-data/suoritus/suoritus-tyyne-peruskoulu-kesken.json")
+              "KESKEN" -> getResourceJson(
+                "/mock-data/suoritus/suoritus-tyyne-peruskoulu-kesken.json"
+              )
             )
-        ))(henkiloOid)(komo)(tila)
+        )
+    )(henkiloOid)(komo)(tila)
   }
 }

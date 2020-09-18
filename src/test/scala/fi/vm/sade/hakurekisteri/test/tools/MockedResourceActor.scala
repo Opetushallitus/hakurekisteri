@@ -6,7 +6,10 @@ import akka.actor.Actor
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, UUIDResource, Query}
 import fi.vm.sade.hakurekisteri.storage.Identified
 
-class MockedResourceActor[T <: Resource[I, T] : Manifest, I](save: (T with Identified[I]) => Unit = {(r: T) => }, query: (Query[T]) => Seq[T] = {(q: Query[T]) => Seq()}) extends Actor {
+class MockedResourceActor[T <: Resource[I, T]: Manifest, I](
+  save: (T with Identified[I]) => Unit = { (r: T) => },
+  query: (Query[T]) => Seq[T] = { (q: Query[T]) => Seq() }
+) extends Actor {
   override def receive: Receive = {
     case q: Query[T] =>
       sender ! query(q)

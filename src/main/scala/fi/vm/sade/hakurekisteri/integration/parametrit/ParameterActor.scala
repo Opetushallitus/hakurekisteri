@@ -13,16 +13,22 @@ import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
-case class ParamsFailedException(haku: String, from: ActorRef, t: Throwable) extends Exception(s"call to parameter service failed for haku $haku", t)
-case class NoParamFoundException(haku: String) extends Exception(s"no parameter found for haku $haku")
+case class ParamsFailedException(haku: String, from: ActorRef, t: Throwable)
+    extends Exception(s"call to parameter service failed for haku $haku", t)
+case class NoParamFoundException(haku: String)
+    extends Exception(s"no parameter found for haku $haku")
 
 object ParameterActor {
   val opoUpdateGraduation = "opoUpdateGraduation"
 }
 
 abstract class ParameterActor(config: Config) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
-  private val tiedonsiirtoSendingPeriodCache = new InMemoryFutureCache[String, Boolean](2.minute.toMillis)
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+    config.integrations.asyncOperationThreadPoolSize,
+    getClass.getSimpleName
+  )
+  private val tiedonsiirtoSendingPeriodCache =
+    new InMemoryFutureCache[String, Boolean](2.minute.toMillis)
   protected val HTTP_OK = 200
 
   object ProcessNext
@@ -34,7 +40,7 @@ abstract class ParameterActor(config: Config) extends Actor with ActorLogging {
     case IsSendingEnabled(key) =>
       isSendingEnabled(key) pipeTo sender
 
-      case IsRestrictionActive(restriction) =>
+    case IsRestrictionActive(restriction) =>
       isRestrictionActive(restriction) pipeTo sender
 
   }
@@ -43,7 +49,7 @@ abstract class ParameterActor(config: Config) extends Actor with ActorLogging {
     val loader: String => Future[Option[Boolean]] = _ => isEnabledFromRest(key).map(Option(_))
     tiedonsiirtoSendingPeriodCache.get(key, loader).flatMap {
       case Some(found) => Future.successful(found)
-      case None => Future.failed(new IllegalArgumentException(s"Could not find key $key"))
+      case None        => Future.failed(new IllegalArgumentException(s"Could not find key $key"))
     }
   }
 
@@ -63,51 +69,72 @@ abstract class ParameterActor(config: Config) extends Actor with ActorLogging {
   protected def isRestrictionActive(restriction: String): Future[Boolean]
 }
 
-class HttpParameterActor(restClient: VirkailijaRestClient, config: Config) extends ParameterActor(config) {
-  private val allResponseCache = new InMemoryFutureCache[String, Map[String, KierrosParams]](1.minute.toMillis)
+class HttpParameterActor(restClient: VirkailijaRestClient, config: Config)
+    extends ParameterActor(config) {
+  private val allResponseCache =
+    new InMemoryFutureCache[String, Map[String, KierrosParams]](1.minute.toMillis)
   private val all = "ALL"
 
   private def getAll: Future[Map[String, KierrosParams]] = {
-    val loader: String => Future[Option[Map[String, KierrosParams]]] = _ => restClient.readObject[Map[String, KierrosParams]]("ohjausparametrit-service.all")(200, 2).map(Option(_))
+    val loader: String => Future[Option[Map[String, KierrosParams]]] = _ =>
+      restClient
+        .readObject[Map[String, KierrosParams]]("ohjausparametrit-service.all")(200, 2)
+        .map(Option(_))
     allResponseCache.get(all, loader).flatMap {
       case Some(found) => Future.successful(found)
-      case None => Future.failed(new RuntimeException("Could not retrieve all paraleters"))
+      case None        => Future.failed(new RuntimeException("Could not retrieve all paraleters"))
     }
   }
 
   override def getParams(hakuOid: String): Future[DateTime] = {
     val allMap = getAll
-    allMap.map(m => m.get(hakuOid) match {
-      case Some(KierrosParams(Some(KierrosEndParams(date)))) => new DateTime(date)
-      case _ => throw NoParamFoundException(hakuOid)
-    })
+    allMap.map(m =>
+      m.get(hakuOid) match {
+        case Some(KierrosParams(Some(KierrosEndParams(date)))) => new DateTime(date)
+        case _                                                 => throw NoParamFoundException(hakuOid)
+      }
+    )
   }
 
   override def isEnabledFromRest(key: String): Future[Boolean] =
-    restClient.readObject[TiedonsiirtoSendingPeriods]("ohjausparametrit-service.parametri", "tiedonsiirtosendingperiods")(HTTP_OK).map(p => key match {
-    case k if k == ImportBatch.batchTypePerustiedot => isPeriodEffective(p.perustiedot)
-    case k if k == ImportBatch.batchTypeArvosanat => isPeriodEffective(p.arvosanat)
-    case _ => false
-  }).recoverWith {
-    case t: Throwable =>
-      log.error(t, "error retrieving parameter")
-      Future.successful(false)
-  }
+    restClient
+      .readObject[TiedonsiirtoSendingPeriods](
+        "ohjausparametrit-service.parametri",
+        "tiedonsiirtosendingperiods"
+      )(HTTP_OK)
+      .map(p =>
+        key match {
+          case k if k == ImportBatch.batchTypePerustiedot => isPeriodEffective(p.perustiedot)
+          case k if k == ImportBatch.batchTypeArvosanat   => isPeriodEffective(p.arvosanat)
+          case _                                          => false
+        }
+      )
+      .recoverWith { case t: Throwable =>
+        log.error(t, "error retrieving parameter")
+        Future.successful(false)
+      }
 
   override def isRestrictionActive(restriction: String): Future[Boolean] =
-    restClient.readObject[RestrictionPeriods]("ohjausparametrit-service.parametri", "restrictedperiods")(HTTP_OK).map(p => restriction match {
-    case ParameterActor.opoUpdateGraduation =>  {
-      isAnyPeriodEffective(p.opoUpdateGraduation)
-    }
-    case _ => false
-  }).recoverWith {
-    case t: Throwable =>
-      log.error(t, "error retrieving parameter")
-      Future.successful(false)
-  }
+    restClient
+      .readObject[RestrictionPeriods]("ohjausparametrit-service.parametri", "restrictedperiods")(
+        HTTP_OK
+      )
+      .map(p =>
+        restriction match {
+          case ParameterActor.opoUpdateGraduation => {
+            isAnyPeriodEffective(p.opoUpdateGraduation)
+          }
+          case _ => false
+        }
+      )
+      .recoverWith { case t: Throwable =>
+        log.error(t, "error retrieving parameter")
+        Future.successful(false)
+      }
 }
 
-class MockParameterActor(active: Boolean = false, config: Config)(implicit val system:ActorSystem) extends ParameterActor(config) {
+class MockParameterActor(active: Boolean = false, config: Config)(implicit val system: ActorSystem)
+    extends ParameterActor(config) {
 
   override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 

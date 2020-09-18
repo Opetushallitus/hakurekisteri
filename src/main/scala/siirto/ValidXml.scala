@@ -18,9 +18,6 @@ import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
 import scalaz.Scalaz._
 import scalaz._
 
-
-
-
 trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
   import scala.xml.Source._
   def adapter: FactoryAdapter
@@ -29,12 +26,12 @@ trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
   def parser: SAXParser
 
   /**
-   * Loads XML from the given InputSource, using the supplied parser.
-   *  The methods available in scala.xml.XML use the XML parser in the JDK.
-   */
+    * Loads XML from the given InputSource, using the supplied parser.
+    *  The methods available in scala.xml.XML use the XML parser in the JDK.
+    */
   def loadXML(source: InputSource, parser: SAXParser): T
 
-  def validate(xml: Elem):T
+  def validate(xml: Elem): T
 
   /** Loads XML from the given file, file descriptor, or filename. */
   def loadFile(file: File): T = loadXML(fromFile(file), parser)
@@ -52,47 +49,66 @@ trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
   def loadString(string: String): T = loadXML(fromString(string), parser)
 }
 
-object NoSchemaValidator extends XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem] {
+object NoSchemaValidator
+    extends XMLValidator[ValidationNel[(String, SAXParseException), Elem], NonEmptyList[
+      (String, SAXParseException)
+    ], Elem] {
   override def adapter: FactoryAdapter = ???
 
   /* Override this to use a different SAXParser. */
-  override def parser: SAXParser =  {
+  override def parser: SAXParser = {
     val f = SafeXML.safeSAXParserFactory
     f.setNamespaceAware(false)
     f.newSAXParser()
   }
 
   /**
-   * Loads XML from the given InputSource, using the supplied parser.
-   * The methods available in scala.xml.XML use the XML parser in the JDK.
-   */
-  override def loadXML(source: InputSource, parser: SAXParser): ValidationNel[(String, SAXParseException), Elem] = XML.loadXML(source, parser).successNel
+    * Loads XML from the given InputSource, using the supplied parser.
+    * The methods available in scala.xml.XML use the XML parser in the JDK.
+    */
+  override def loadXML(
+    source: InputSource,
+    parser: SAXParser
+  ): ValidationNel[(String, SAXParseException), Elem] = XML.loadXML(source, parser).successNel
 
-  override def validate(xml: Elem): ValidationNel[(String, SAXParseException), Elem] = xml.successNel
+  override def validate(xml: Elem): ValidationNel[(String, SAXParseException), Elem] =
+    xml.successNel
 }
 
-
-class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem] {
+class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*)
+    extends XMLValidator[ValidationNel[(String, SAXParseException), Elem], NonEmptyList[
+      (String, SAXParseException)
+    ], Elem] {
 
   lazy val resolver = new LSResourceResolver {
 
     val localSchemaSources: List[SchemaDefinition] = List(Perustiedot) ++ imports
 
-
-    lazy val schemaCache ={
+    lazy val schemaCache = {
       val given = localSchemaSources.map(_.schemaLocation).toSet
-      localSchemaSources.collect{
-        case wr: SchemaWithRemotes => wr +: wr.remotes.filterNot((sd) => given.contains(sd.schemaLocation))
-        case s => Seq(s)
-      }.flatten.map((sd) => sd.schemaLocation -> sd.schema).toMap
+      localSchemaSources
+        .collect {
+          case wr: SchemaWithRemotes =>
+            wr +: wr.remotes.filterNot((sd) => given.contains(sd.schemaLocation))
+          case s => Seq(s)
+        }
+        .flatten
+        .map((sd) => sd.schemaLocation -> sd.schema)
+        .toMap
 
     }
 
-    override def resolveResource(tyyppi: String, namespaceURI: String, publicId: String, systemId: String, baseURI: String): LSInput = {
+    override def resolveResource(
+      tyyppi: String,
+      namespaceURI: String,
+      publicId: String,
+      systemId: String,
+      baseURI: String
+    ): LSInput = {
 
-      def schemaUrl(systemId:String) = systemId match
-      {
-        case localFile if Option(getClass.getResource(localFile)).isDefined =>  getClass.getResource(localFile).getPath
+      def schemaUrl(systemId: String) = systemId match {
+        case localFile if Option(getClass.getResource(localFile)).isDefined =>
+          getClass.getResource(localFile).getPath
         case url if url.startsWith("http") => systemId
 
       }
@@ -120,7 +136,8 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
         override def setStringData(stringData: String): Unit = ???
 
-        override def getStringData: String = schemaCache.getOrElse(systemId,loadRemote(systemId)).toString
+        override def getStringData: String =
+          schemaCache.getOrElse(systemId, loadRemote(systemId)).toString
 
         override def setByteStream(byteStream: InputStream): Unit = ???
 
@@ -135,16 +152,11 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
         }
       }
 
-
-
     }
-
 
   }
 
-
-
-  lazy val schemaFactory=  {
+  lazy val schemaFactory = {
     val factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
     factory.setResourceResolver(resolver)
     factory
@@ -154,22 +166,23 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     schemaFactory.newSchema(new SAXSource(fromReader(new StringReader(schemaDoc.schema.toString))))
   }
 
-  override def validate(xml: Elem):ValidationNel[(String, SAXParseException), Elem] = validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
+  override def validate(xml: Elem): ValidationNel[(String, SAXParseException), Elem] =
+    validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
 
   def validate(source: Source): ValidationNel[(String, SAXParseException), Elem] = {
-    val exceptions: mutable.MutableList[(String, SAXParseException)] = new mutable.MutableList[(String, SAXParseException)]
+    val exceptions: mutable.MutableList[(String, SAXParseException)] =
+      new mutable.MutableList[(String, SAXParseException)]
 
-    val handler = new ErrorHandler{
-      override def fatalError(e: SAXParseException): Unit = {exceptions.+=("fatal" -> e)}
+    val handler = new ErrorHandler {
+      override def fatalError(e: SAXParseException): Unit = { exceptions.+=("fatal" -> e) }
 
-      override def error(e: SAXParseException): Unit = {exceptions.+=("error" -> e)}
+      override def error(e: SAXParseException): Unit = { exceptions.+=("error" -> e) }
 
-      override def warning(e: SAXParseException): Unit = {exceptions.+=("warn" -> e)}
+      override def warning(e: SAXParseException): Unit = { exceptions.+=("warn" -> e) }
     }
-    val validator  = schema.newValidator()
+    val validator = schema.newValidator()
     validator.setErrorHandler(handler)
     validator.validate(source)
-
 
     exceptions.toList.toNel.map(_.failure).getOrElse(<result/>.successNel)
   }
@@ -182,8 +195,10 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     f.newSAXParser()
   }
 
-
-  override def loadXML(source: InputSource, parser: SAXParser): ValidationNel[(String, SAXParseException), Elem] = {
+  override def loadXML(
+    source: InputSource,
+    parser: SAXParser
+  ): ValidationNel[(String, SAXParseException), Elem] = {
     val newAdapter = adapter
     newAdapter.scopeStack push TopScope
     parser.parse(source, newAdapter)
@@ -191,42 +206,35 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     newAdapter.validatedResult(_.rootElem.asInstanceOf[Elem])
   }
 
-
-
   trait ErrorCollector { this: FactoryAdapter =>
 
-
-    def validatedResult[R](f:FactoryAdapter => R) : ValidationNel[(String, SAXParseException), R]
+    def validatedResult[R](f: FactoryAdapter => R): ValidationNel[(String, SAXParseException), R]
 
   }
 
-  case class CollectedException(exceptions: List[(String, SAXParseException)]) extends IOException("Multiple exceptions occured")
+  case class CollectedException(exceptions: List[(String, SAXParseException)])
+      extends IOException("Multiple exceptions occured")
 
-  override def adapter: FactoryAdapter with ErrorCollector = new NoBindingFactoryAdapter() with ErrorCollector {
+  override def adapter: FactoryAdapter with ErrorCollector = new NoBindingFactoryAdapter()
+    with ErrorCollector {
 
     val exceptions = new mutable.MutableList[(String, SAXParseException)]
 
     import scalaz._
     import Scalaz._
 
-
-    def validatedResult[R](f:FactoryAdapter => R): ValidationNel[(String, SAXParseException), R] = {
+    def validatedResult[R](
+      f: FactoryAdapter => R
+    ): ValidationNel[(String, SAXParseException), R] = {
       exceptions.toList.toNel.map(_.failure).getOrElse(f(this).successNel)
     }
 
-    override def fatalError(e: SAXParseException): Unit = {exceptions.+=("fatal" -> e)}
+    override def fatalError(e: SAXParseException): Unit = { exceptions.+=("fatal" -> e) }
 
-    override def error(e: SAXParseException): Unit = {exceptions.+=("error" -> e)}
+    override def error(e: SAXParseException): Unit = { exceptions.+=("error" -> e) }
 
-    override def warning(e: SAXParseException): Unit = {exceptions.+=("warn" -> e)}
-
+    override def warning(e: SAXParseException): Unit = { exceptions.+=("warn" -> e) }
 
   }
 
-
 }
-
-
-
-
-

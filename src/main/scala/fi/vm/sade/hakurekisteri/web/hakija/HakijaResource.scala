@@ -26,20 +26,35 @@ import scala.util.Try
 import scala.xml._
 
 object HakijaQuery {
-  def apply(params: Map[String,String], currentUser: Option[User], version: Int): HakijaQuery = new HakijaQuery(
+  def apply(params: Map[String, String], currentUser: Option[User], version: Int): HakijaQuery =
+    new HakijaQuery(
       haku = params.get("haku").flatMap(_.blankOption),
       organisaatio = params.get("organisaatio").flatMap(_.blankOption),
       hakukohdekoodi = params.get("hakukohdekoodi").flatMap(_.blankOption),
-      hakuehto = Try(Hakuehto.withName(s = params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
+      hakuehto = Try(Hakuehto.withName(s = params("hakuehto"))).recover { case _ =>
+        Hakuehto.Kaikki
+      }.get,
       user = currentUser,
-      version = version)
+      version = version
+    )
 }
 
 import scala.concurrent.duration._
 
-class HakijaResource(hakijaActor: ActorRef)
-                    (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[XMLHakijat])
-    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
+class HakijaResource(hakijaActor: ActorRef)(implicit
+  system: ActorSystem,
+  sw: Swagger,
+  val security: Security,
+  val ct: ClassTag[XMLHakijat]
+) extends HakuJaValintarekisteriStack
+    with HakijaSwaggerApi
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with ExcelSupport[XMLHakijat]
+    with DownloadSupport
+    with QueryLogging {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
@@ -48,19 +63,27 @@ class HakijaResource(hakijaActor: ActorRef)
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   def getContentType(t: ApiFormat): String = t match {
-    case ApiFormat.Json => formats("json")
-    case ApiFormat.Xml => formats("xml")
+    case ApiFormat.Json  => formats("json")
+    case ApiFormat.Xml   => formats("xml")
     case ApiFormat.Excel => formats("binary")
-    case tyyppi => throw new IllegalArgumentException(s"tyyppi $tyyppi is not supported")
+    case tyyppi          => throw new IllegalArgumentException(s"tyyppi $tyyppi is not supported")
   }
 
-  override protected def renderPipeline: RenderPipeline = renderCustom orElse renderExcel orElse super.renderPipeline
+  override protected def renderPipeline: RenderPipeline =
+    renderCustom orElse renderExcel orElse super.renderPipeline
   override val streamingRender: (OutputStream, XMLHakijat) => Unit = (out, hakijat) => {
 
-    ExcelUtilV1.write(out,hakijat)
+    ExcelUtilV1.write(out, hakijat)
   }
   protected def renderCustom: RenderPipeline = {
-    case hakijat: XMLHakijat if format == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
+    case hakijat: XMLHakijat if format == "xml" =>
+      XML.write(
+        response.writer,
+        Utility.trim(hakijat.toXml),
+        response.characterEncoding.get,
+        xmlDecl = true,
+        doctype = null
+      )
   }
 
   get("/", operation(query)) {
@@ -75,12 +98,10 @@ class HakijaResource(hakijaActor: ActorRef)
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
       val hakuResult = hakijaActor ? q
-      audit.log(auditUser,
-        HakijatLuku,
-        AuditUtil.targetFromParams(params).build(),
-        Changes.EMPTY)
+      audit.log(auditUser, HakijatLuku, AuditUtil.targetFromParams(params).build(), Changes.EMPTY)
       val hakijatFuture = hakuResult.flatMap {
-        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+        case result
+            if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
           setContentDisposition(tyyppi, response, "hakijat")
           Future.successful(result)
         case result =>
@@ -94,11 +115,10 @@ class HakijaResource(hakijaActor: ActorRef)
   }
 
   incident {
-    case HakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
-    case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
+    case HakijaParamMissingException =>
+      (id) =>
+        BadRequest(IncidentReport(id, "pakolliset parametrit puuttuvat: haku ja organisaatio"))
+    case t: AskTimeoutException =>
+      (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }
-
-
-
-

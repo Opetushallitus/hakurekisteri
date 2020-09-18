@@ -11,10 +11,19 @@ trait IKoskiService {
   def updateAktiivisetKkAsteenHaut(): () => Unit
   def updateAktiivisetToisenAsteenHaut(): () => Unit
   def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit]
-  def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])]
-  def updateHenkilotWithAliases(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])]
+  def updateHenkilot(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])]
+  def updateHenkilotWithAliases(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])]
 
-  def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit
+  def refreshChangedOppijasFromKoski(
+    cursor: Option[String] = None,
+    timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
+  )(implicit scheduler: Scheduler): Unit
 }
 
 class KoskiServiceMock extends IKoskiService {
@@ -22,9 +31,21 @@ class KoskiServiceMock extends IKoskiService {
   override def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = None
   override def updateAktiivisetKkAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenHaut(): () => Unit = () => ()
-  override def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = Future.successful(())
-  override def updateHenkilot(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
-  override def updateHenkilotWithAliases(oppijaOids: Set[String], params: KoskiSuoritusHakuParams): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
+  override def updateHenkilotForHaku(
+    hakuOid: String,
+    params: KoskiSuoritusHakuParams
+  ): Future[Unit] = Future.successful(())
+  override def updateHenkilot(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
+  override def updateHenkilotWithAliases(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
 
-  override def refreshChangedOppijasFromKoski(cursor: Option[String] = None, timeToWaitUntilNextBatch: FiniteDuration = 1.minutes)(implicit scheduler: Scheduler): Unit = {}
+  override def refreshChangedOppijasFromKoski(
+    cursor: Option[String] = None,
+    timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
+  )(implicit scheduler: Scheduler): Unit = {}
 }

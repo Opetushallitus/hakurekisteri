@@ -27,33 +27,47 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Futu
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-
-case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
+case class PreconditionFailedException(message: String, responseCode: Int)
+    extends Exception(message)
 
 class HttpConfig(properties: Map[String, String] = Map.empty) {
-  val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
-  val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "6000000").toInt
-  val httpClientPooledConnectionIdleTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.idle.timeout.ms", "59001").toInt
-  val httpClientMaxRetries = properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
-  val httpClientSlowRequest = properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
-  val useNativeTransport: Boolean = properties.getOrElse("suoritusrekisteri.http.client.use.native.transport", "false").toBoolean
+  val httpClientConnectionTimeout =
+    properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
+  val httpClientRequestTimeout =
+    properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "6000000").toInt
+  val httpClientPooledConnectionIdleTimeout =
+    properties.getOrElse("suoritusrekisteri.http.client.connection.idle.timeout.ms", "59001").toInt
+  val httpClientMaxRetries =
+    properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
+  val httpClientSlowRequest =
+    properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
+  val useNativeTransport: Boolean =
+    properties.getOrElse("suoritusrekisteri.http.client.use.native.transport", "false").toBoolean
 }
 
-case class ServiceConfig(casUrl: Option[String] = None,
-                         serviceUrl: String,
-                         user: Option[String] = None,
-                         password: Option[String] = None,
-                         properties: Map[String, String] = Map.empty,
-                         maxSimultaneousConnections: Int = 50,
-                         maxConnectionQueueMs: Int = 60000) extends HttpConfig(properties)
+case class ServiceConfig(
+  casUrl: Option[String] = None,
+  serviceUrl: String,
+  user: Option[String] = None,
+  password: Option[String] = None,
+  properties: Map[String, String] = Map.empty,
+  maxSimultaneousConnections: Int = 50,
+  maxConnectionQueueMs: Int = 60000
+) extends HttpConfig(properties)
 
 object OphUrlProperties extends OphProperties("/suoritusrekisteri-oph.properties") {
-  addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
+  addOptionalFiles(
+    Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString
+  )
 }
 
-class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None,
-                           jSessionName: String = "JSESSIONID", serviceUrlSuffix: String = "/j_spring_cas_security_check")
-                          (implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
+class VirkailijaRestClient(
+  config: ServiceConfig,
+  aClient: Option[AsyncHttpClient] = None,
+  jSessionName: String = "JSESSIONID",
+  serviceUrlSuffix: String = "/j_spring_cas_security_check"
+)(implicit val ec: ExecutionContext, val system: ActorSystem)
+    extends HakurekisteriJsonSupport {
   private implicit val defaultTimeout: Timeout = 60.seconds
 
   private val serviceUrl: String = config.serviceUrl
@@ -64,24 +78,38 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   private val internalClient: HttpExecutor = {
     aClient match {
-      case Some(asyncHttpClient) => new HttpExecutor {
-        override def client: AsyncHttpClient = asyncHttpClient
-      }
-      case None => Http.withConfiguration(_.
-        setConnectTimeout(config.httpClientConnectionTimeout).
-        setRequestTimeout(config.httpClientRequestTimeout).
-        setReadTimeout(config.httpClientRequestTimeout).
-        setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout).
-        setFollowRedirect(true).
-        setMaxRequestRetry(2).
-        setUseNativeTransport(config.useNativeTransport).
-        addRequestFilter(new ThrottleRequestFilter(config.maxSimultaneousConnections, config.maxConnectionQueueMs)))
+      case Some(asyncHttpClient) =>
+        new HttpExecutor {
+          override def client: AsyncHttpClient = asyncHttpClient
+        }
+      case None =>
+        Http.withConfiguration(
+          _.setConnectTimeout(config.httpClientConnectionTimeout)
+            .setRequestTimeout(config.httpClientRequestTimeout)
+            .setReadTimeout(config.httpClientRequestTimeout)
+            .setPooledConnectionIdleTimeout(config.httpClientPooledConnectionIdleTimeout)
+            .setFollowRedirect(true)
+            .setMaxRequestRetry(2)
+            .setUseNativeTransport(config.useNativeTransport)
+            .addRequestFilter(
+              new ThrottleRequestFilter(
+                config.maxSimultaneousConnections,
+                config.maxConnectionQueueMs
+              )
+            )
+        )
     }
   }
 
-  val configToLog = config.copy(password = Some("*****"), properties = Map("properties" -> "censored"))
-  logger.info(s"Initialized internal http client of class ${internalClient.getClass} with config $configToLog")
-  private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient, jSessionName, serviceUrlSuffix)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
+  val configToLog =
+    config.copy(password = Some("*****"), properties = Map("properties" -> "censored"))
+  logger.info(
+    s"Initialized internal http client of class ${internalClient.getClass} with config $configToLog"
+  )
+  private lazy val casActor = system.actorOf(
+    Props(new CasActor(config, aClient, jSessionName, serviceUrlSuffix)),
+    s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}"
+  )
 
   object Client {
     private def jSessionId: Future[JSessionId] = (casActor ? GetJSession).mapTo[JSessionId]
@@ -93,18 +121,25 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       cookies.foldLeft[Req](request)((req, cookie) => req.addOrReplaceCookie(cookie))
     }
 
-    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
+    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
+      url: String,
+      basicAuth: Boolean = false
+    )(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
       val requestWithPostHeaders = body match {
         case Some(jsonBody) =>
-          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", Charset.forName("UTF-8")) <:< Map("CSRF" -> Config.csrf)
+          (request << write[A](jsonBody)(jsonFormats))
+            .setContentType("application/json", Charset.forName("UTF-8")) <:< Map(
+            "CSRF" -> Config.csrf
+          )
         case None => request
       }
 
-      internalClient.client.getConfig.getCookieStore.remove(_.name().toLowerCase == jSessionName.toLowerCase)
-      (user, password, basicAuth) match{
+      internalClient.client.getConfig.getCookieStore
+        .remove(_.name().toLowerCase == jSessionName.toLowerCase)
+      (user, password, basicAuth) match {
         case (Some(un), Some(pw), false) =>
           for (
             jsession <- jSessionId;
@@ -119,7 +154,8 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
           for (
             result <- {
               cookies += new DefaultCookie("CSRF", Config.csrf)
-              val requestWithCookies = addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest
+              val requestWithCookies =
+                addCookies(requestWithPostHeaders, cookies).as_!(un, pw).toRequest
               internalClient(requestWithCookies, handler)
             }
           ) yield result
@@ -128,72 +164,121 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
             result <- {
               cookies += new DefaultCookie("CSRF", Config.csrf)
               val requestWithCookies = addCookies(requestWithPostHeaders, cookies).toRequest
-              internalClient(requestWithCookies, handler)}
+              internalClient(requestWithCookies, handler)
+            }
           ) yield result
       }
     }
   }
 
   def retryable(t: Throwable): Boolean = t match {
-    case t: TimeoutException => true
-    case t: ConnectException => true
+    case t: TimeoutException                                 => true
+    case t: ConnectException                                 => true
     case PreconditionFailedException(_, code) if code >= 500 => true
-    case _ => false
+    case _                                                   => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger): Future[A] =
-    Client.request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
-      case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
-        logger.warning("Expired jsession, fetching new JSessionId")
-        Client.refreshJSessionId.flatMap (_ match {
-          case j: JSessionId =>
-            logger.warning(s"Retrying request to $url due to expired JSessionId.")
-            Client.request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes:_*)).recoverWith {
-              case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
-                if (retryCount.getAndIncrement <= maxRetries) {
-                  logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-                  Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
-                } else Future.failed(t)
-            }
-          case _ =>
-            Future.failed {
-              logger.error(s"Fetching jsession for $serviceUrl failed")
-              new RuntimeException(s"Fetching jsession for $serviceUrl failed")
-            }
-        })
-      case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
-        if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount))
-        } else Future.failed(t)
-    }
-
-  private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String, basicAuth: Boolean = false)(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger, resource: A): Future[B] =
-    Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
-      case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
+  private def tryClient[A <: AnyRef: Manifest](
+    url: String,
+    basicAuth: Boolean = false
+  )(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger): Future[A] =
+    Client
+      .request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes: _*))
+      .recoverWith {
+        case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
           logger.warning("Expired jsession, fetching new JSessionId")
-          Client.refreshJSessionId.flatMap (_ match {
+          Client.refreshJSessionId.flatMap(_ match {
             case j: JSessionId =>
               logger.warning(s"Retrying request to $url due to expired JSessionId.")
-              Client.request[A, B](url, basicAuth)(JsonExtractor.handler[B](acceptedResponseCodes:_*), Some(resource)).recoverWith {
-                case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
-                  if (retryCount.getAndIncrement <= maxRetries) {
-                    logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-                    Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
-                  } else Future.failed(t)
-              }
+              Client
+                .request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes: _*))
+                .recoverWith {
+                  case t: Exception
+                      if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
+                    if (retryCount.getAndIncrement <= maxRetries) {
+                      logger.warning(
+                        s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}"
+                      )
+                      Future { Thread.sleep(1000) }.flatMap(u =>
+                        tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount)
+                      )
+                    } else Future.failed(t)
+                }
             case _ =>
               Future.failed {
                 logger.error(s"Fetching jsession for $serviceUrl failed")
                 new RuntimeException(s"Fetching jsession for $serviceUrl failed")
               }
           })
-      case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
-        if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
-          Future { Thread.sleep(1000) }.flatMap(u => tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource))
-        } else Future.failed(t)
-    }
+        case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
+          if (retryCount.getAndIncrement <= maxRetries) {
+            logger.warning(
+              s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}"
+            )
+            Future { Thread.sleep(1000) }.flatMap(u =>
+              tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount)
+            )
+          } else Future.failed(t)
+      }
+
+  private def tryPostClient[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
+    url: String,
+    basicAuth: Boolean = false
+  )(
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int,
+    retryCount: AtomicInteger,
+    resource: A
+  ): Future[B] =
+    Client
+      .request[A, B](url, basicAuth)(
+        JsonExtractor.handler[B](acceptedResponseCodes: _*),
+        Some(resource)
+      )
+      .recoverWith {
+        case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
+          logger.warning("Expired jsession, fetching new JSessionId")
+          Client.refreshJSessionId.flatMap(_ match {
+            case j: JSessionId =>
+              logger.warning(s"Retrying request to $url due to expired JSessionId.")
+              Client
+                .request[A, B](url, basicAuth)(
+                  JsonExtractor.handler[B](acceptedResponseCodes: _*),
+                  Some(resource)
+                )
+                .recoverWith {
+                  case t: Exception
+                      if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
+                    if (retryCount.getAndIncrement <= maxRetries) {
+                      logger.warning(
+                        s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}"
+                      )
+                      Future { Thread.sleep(1000) }.flatMap(u =>
+                        tryPostClient(url, basicAuth)(
+                          acceptedResponseCodes,
+                          maxRetries,
+                          retryCount,
+                          resource
+                        )
+                      )
+                    } else Future.failed(t)
+                }
+            case _ =>
+              Future.failed {
+                logger.error(s"Fetching jsession for $serviceUrl failed")
+                new RuntimeException(s"Fetching jsession for $serviceUrl failed")
+              }
+          })
+        case t: Exception if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
+          if (retryCount.getAndIncrement <= maxRetries) {
+            logger.warning(
+              s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}"
+            )
+            Future { Thread.sleep(1000) }.flatMap(u =>
+              tryPostClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+            )
+          } else Future.failed(t)
+      }
 
   private def result(t: Try[_]): String = t match {
     case Success(_) => "success"
@@ -205,44 +290,73 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     f.onComplete(t => {
       val took = Platform.currentTime - t0
       if (took > config.httpClientSlowRequest) {
-        logger.warning(s"slow request: url $url took $took ms to complete, result was ${result(t)}, " +
-          s"parameters: connectTimeout=${internalClient.client.getConfig.getConnectTimeout}, " +
-          s"requestTimeout=${internalClient.client.getConfig.getRequestTimeout}, " +
-          s"pooledConnectionIdleTimeout=${internalClient.client.getConfig.getPooledConnectionIdleTimeout}")
+        logger.warning(
+          s"slow request: url $url took $took ms to complete, result was ${result(t)}, " +
+            s"parameters: connectTimeout=${internalClient.client.getConfig.getConnectTimeout}, " +
+            s"requestTimeout=${internalClient.client.getConfig.getRequestTimeout}, " +
+            s"pooledConnectionIdleTimeout=${internalClient.client.getConfig.getPooledConnectionIdleTimeout}"
+        )
       }
     })
   }
 
-  def readObject[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
-    readObjectWithCodes[A](uriKey, Seq(acceptedResponseCode), maxRetries, args:_*)
+  def readObject[A <: AnyRef: Manifest](
+    uriKey: String,
+    args: AnyRef*
+  )(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
+    readObjectWithCodes[A](uriKey, Seq(acceptedResponseCode), maxRetries, args: _*)
   }
 
-  def readObjectWithCodes[A <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, args: AnyRef*): Future[A] = {
-    val url1: String = OphUrlProperties.url(uriKey, args:_*)
+  def readObjectWithCodes[A <: AnyRef: Manifest](
+    uriKey: String,
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int,
+    args: AnyRef*
+  ): Future[A] = {
+    val url1: String = OphUrlProperties.url(uriKey, args: _*)
     readObjectFromUrl(url1, acceptedResponseCodes, maxRetries)
   }
 
-  def readObjectWithBasicAuth[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
-    val url1: String = OphUrlProperties.url(uriKey, args:_*)
+  def readObjectWithBasicAuth[A <: AnyRef: Manifest](
+    uriKey: String,
+    args: AnyRef*
+  )(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
+    val url1: String = OphUrlProperties.url(uriKey, args: _*)
     //logger.info(s"Tehdään rajapintakutsu: " + url1)
     readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
   }
 
-  def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCodes: Seq[Int], maxRetries: Int = 0, basicAuth: Boolean = false): Future[A] = {
+  def readObjectFromUrl[A <: AnyRef: Manifest](
+    url: String,
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int = 0,
+    basicAuth: Boolean = false
+  ): Future[A] = {
     val retryCount = new AtomicInteger(1)
     val result = tryClient[A](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount)
     logLongQuery(result, url)
     result
   }
 
-  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A, basicAuth: Boolean = false): Future[B] = {
-    postObjectWithCodes[A,B](uriKey, Seq(acceptedResponseCode), 0, resource, basicAuth, args:_*)
+  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
+    uriKey: String,
+    args: AnyRef*
+  )(acceptedResponseCode: Int = 200, resource: A, basicAuth: Boolean = false): Future[B] = {
+    postObjectWithCodes[A, B](uriKey, Seq(acceptedResponseCode), 0, resource, basicAuth, args: _*)
   }
 
-  def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, acceptedResponseCodes: Seq[Int], maxRetries: Int, resource: A, basicAuth: Boolean, args: AnyRef*): Future[B] = {
+  def postObjectWithCodes[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
+    uriKey: String,
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int,
+    resource: A,
+    basicAuth: Boolean,
+    args: AnyRef*
+  ): Future[B] = {
     val retryCount = new AtomicInteger(1)
-    val url = OphUrlProperties.url(uriKey, args:_*)
-    val result = tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
+    val url = OphUrlProperties.url(uriKey, args: _*)
+    val result =
+      tryPostClient[A, B](url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount, resource)
     logLongQuery(result, url)
     result
   }
@@ -257,13 +371,16 @@ object JSessionIdCookieParser {
   }
 
   def fromString(cookie: String, jSessionName: String): JSessionId = {
-    if (!isJSessionIdCookie(cookie, jSessionName)) throw JSessionIdCookieException(s"not a JSESSIONID cookie: $cookie")
+    if (!isJSessionIdCookie(cookie, jSessionName))
+      throw JSessionIdCookieException(s"not a JSESSIONID cookie: $cookie")
 
     val value = cookie.split(";").headOption match {
-      case Some(c) => c.split("=").lastOption match {
-        case Some(v) => v
-        case None => throw JSessionIdCookieException(s"JSESSIONID value not found from cookie: $cookie")
-      }
+      case Some(c) =>
+        c.split("=").lastOption match {
+          case Some(v) => v
+          case None =>
+            throw JSessionIdCookieException(s"JSESSIONID value not found from cookie: $cookie")
+        }
       case None => throw JSessionIdCookieException(s"invalid JSESSIONID cookie structure: $cookie")
     }
 
@@ -275,13 +392,16 @@ object ExecutorUtil {
   def createExecutor(threads: Int, poolName: String): ExecutionContextExecutorService = {
     val threadNumber = new AtomicInteger(1)
 
-    val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
-      override def newThread(r: Runnable): Thread = {
-        val t = new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
-        t.setDaemon(true)
-        t
+    val pool = Executors.newFixedThreadPool(
+      threads,
+      new ThreadFactory() {
+        override def newThread(r: Runnable): Thread = {
+          val t = new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
+          t.setDaemon(true)
+          t
+        }
       }
-    })
+    )
 
     ExecutionContext.fromExecutorService(pool)
   }
@@ -295,12 +415,11 @@ object JsonExtractor extends HakurekisteriJsonSupport {
         resp.getResponseBody.asInstanceOf[T]
       } else {
         val reader = new InputStreamReader(resp.getResponseBodyAsStream)
-        Try(read[T](reader)).recover {
-          case t: Throwable =>
-            val logger = Logging.getLogger(system, this)
-            logger.error(s"Error when parsing data from ${resp.getUri}: ${t.getMessage}")
-            reader.close()
-            throw t
+        Try(read[T](reader)).recover { case t: Throwable =>
+          val logger = Logging.getLogger(system, this)
+          logger.error(s"Error when parsing data from ${resp.getUri}: ${t.getMessage}")
+          reader.close()
+          throw t
         }.get
       }
     }
@@ -309,13 +428,18 @@ object JsonExtractor extends HakurekisteriJsonSupport {
         if (isRedirectToCasLogin(response)) {
           throw new JSessionIdCookieException("JSESSIONID is expired")
         } else if (codes.contains(response.getStatusCode)) {
-            super.onCompleted(response)
+          super.onCompleted(response)
         } else {
-          throw PreconditionFailedException(s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response.getResponseBody(Charset.forName("utf-8"))}", response.getStatusCode)
+          throw PreconditionFailedException(
+            s"precondition failed for url: ${response.getUri}, status code: ${response.getStatusCode}, body: ${response
+              .getResponseBody(Charset.forName("utf-8"))}",
+            response.getStatusCode
+          )
         }
       }
 
-      private def isRedirectToCasLogin(response: Res): Boolean = response.getUri.getPath.equals("/cas/login")
+      private def isRedirectToCasLogin(response: Res): Boolean =
+        response.getUri.getPath.equals("/cas/login")
     }
   }
 }

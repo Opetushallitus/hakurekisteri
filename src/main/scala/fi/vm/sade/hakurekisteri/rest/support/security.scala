@@ -18,11 +18,11 @@ object Roles {
   val subjects: PartialFunction[String, PartialFunction[String, (String) => Set[String]]] =
     Map(
       "SUORITUSREKISTERI" -> {
-        case x if resources.contains(x)  => (org: String) => Set(org)
+        case x if resources.contains(x) => (org: String) => Set(org)
       },
       "KKHAKUVIRKAILIJA" -> {
-        case "Arvosana" =>  (_) => Set(YoTutkinto.YTL)
-        case "Suoritus" => (_) => Set(YoTutkinto.YTL, Oids.cscOrganisaatioOid)
+        case "Arvosana"       => (_) => Set(YoTutkinto.YTL)
+        case "Suoritus"       => (_) => Set(YoTutkinto.YTL, Oids.cscOrganisaatioOid)
         case "Opiskeluoikeus" => (_) => Set(Oids.cscOrganisaatioOid)
       }
     )
@@ -32,25 +32,27 @@ object Roles {
     finder <- serviceResolver.lift(resource)
   ) yield finder(org)
 
-  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "Hakukohde", "ImportBatch", "Virta")
+  val resources =
+    Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "Hakukohde", "ImportBatch", "Virta")
 
   def findRoles(finder: (String) => Option[Set[String]])(actions: Set[String]): Set[DefinedRole] = {
     for (
       action <- actions;
       resource <- resources;
       subject <- finder(resource).getOrElse(Set())
-    ) yield DefinedRole(action, resource,  subject)
+    ) yield DefinedRole(action, resource, subject)
   }
 
-  def apply(authority:String) =  authority match {
+  def apply(authority: String) = authority match {
     case role(service, right, org) =>
-      def roleFinder(roles: String*):Set[DefinedRole] = findRoles(findSubjects(service, org))(roles.toSet)
+      def roleFinder(roles: String*): Set[DefinedRole] =
+        findRoles(findSubjects(service, org))(roles.toSet)
       right match {
-        case "CRUD" =>  roleFinder("DELETE", "WRITE", "READ")
+        case "CRUD" => roleFinder("DELETE", "WRITE", "READ")
 
         case "READ_UPDATE" => roleFinder("WRITE", "READ")
-        case "READ" => roleFinder("READ")
-        case _ => Set(UnknownRole)
+        case "READ"        => roleFinder("READ")
+        case _             => Set(UnknownRole)
       }
     case _ => Set(UnknownRole)
   }
@@ -80,25 +82,29 @@ trait Roles {
 }
 
 trait RoleUser extends User with Roles {
-  override def orgsFor(action: String, resource: String): Set[String] = roles.collect{
-    case DefinedRole(`action`,`resource`, org) => org
+  override def orgsFor(action: String, resource: String): Set[String] = roles.collect {
+    case DefinedRole(`action`, `resource`, org) => org
   }
 }
 
-case class AuditSessionRequest(personOid: String, roles: Set[String], userAgent: String, inetAddress: String)
+case class AuditSessionRequest(
+  personOid: String,
+  roles: Set[String],
+  userAgent: String,
+  inetAddress: String
+)
 
-case class OPHUser(username: String,
-                   authorities: Set[String],
-                   userAgent: String,
-                   inetAddress: String,
-                   casAuthenticationToken: CasAuthenticationToken) extends RoleUser {
+case class OPHUser(
+  username: String,
+  authorities: Set[String],
+  userAgent: String,
+  inetAddress: String,
+  casAuthenticationToken: CasAuthenticationToken
+) extends RoleUser {
   override val auditSession = AuditSessionRequest(username, authorities, userAgent, inetAddress)
-  override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
+  override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect {
     case d: DefinedRole => d
   }
 }
 
 //case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser
-
-
-

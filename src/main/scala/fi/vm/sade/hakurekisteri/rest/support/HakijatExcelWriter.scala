@@ -24,8 +24,8 @@ object Row {
   def apply(index: Int)(cells: Cell*): Row = Row(index, cells.toSet)
 }
 
-object StringCell{
-  def apply(i: Int, v: String) = Cell(i,v)
+object StringCell {
+  def apply(i: Int, v: String) = Cell(i, v)
 }
 
 class Workbook(val sheets: Seq[Sheet]) {
@@ -40,7 +40,7 @@ class Workbook(val sheets: Seq[Sheet]) {
 
     for (sheet <- sheets) {
       val eSheet = workbook.createSheet(sheet.name)
-      for(row <- sheet.rows) {
+      for (row <- sheet.rows) {
         val eRow = eSheet.createRow(row.index)
         for (cell <- row.cells) {
           val eCell = eRow.createCell(cell.index, STRING)
@@ -60,9 +60,9 @@ object Workbook {
     implicit def cellToString(cell: poi.Cell): String = cell.getCellTypeEnum match {
       case STRING =>
         cell.getStringCellValue
-      case BLANK => ""
+      case BLANK   => ""
       case BOOLEAN => cell.getBooleanCellValue.toString
-      case ERROR => throw new Exception("error in excel")
+      case ERROR   => throw new Exception("error in excel")
       case FORMULA => throw new Exception("Formulas not supported")
       case NUMERIC if poi.DateUtil.isCellDateFormatted(cell) =>
         val d = new LocalDate(cell.getDateCellValue)
@@ -73,9 +73,7 @@ object Workbook {
       case cellType => throw new Exception(s"unknown cell type $cellType")
     }
 
-    val sheets  = for (
-      index <- 0 until original.getNumberOfSheets
-    ) yield {
+    val sheets = for (index <- 0 until original.getNumberOfSheets) yield {
       val os = original.getSheetAt(index)
       import scala.collection.JavaConverters._
       val readRow: (poi.Row) => Row = (row) => {
@@ -84,7 +82,8 @@ object Workbook {
       try {
         Sheet(os.getSheetName, os.asScala.map(readRow).toSet)
       } catch {
-        case e: Throwable => e.printStackTrace()
+        case e: Throwable =>
+          e.printStackTrace()
           throw e
       }
 
@@ -94,8 +93,6 @@ object Workbook {
   }
 
 }
-
-
 
 trait HakijatExcelWriter[T] {
 

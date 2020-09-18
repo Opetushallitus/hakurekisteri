@@ -26,10 +26,39 @@ import scala.language.implicitConversions
 
 class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   val suoritus = UUID.randomUUID()
-  val arvosana1 = Arvosana(suoritus, Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "Test", Map())
-  val arvosana12 = Arvosana(suoritus, Arvio410("10"), "AI", Some("FI"), valinnainen = true, None, "Test", Map(), Some(0))
-  val arvosana2 = Arvosana(UUID.randomUUID(), ArvioYo("L", Some(100)), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test", Map())
-  val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("10"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test", Map())
+  val arvosana1 =
+    Arvosana(suoritus, Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "Test", Map())
+  val arvosana12 = Arvosana(
+    suoritus,
+    Arvio410("10"),
+    "AI",
+    Some("FI"),
+    valinnainen = true,
+    None,
+    "Test",
+    Map(),
+    Some(0)
+  )
+  val arvosana2 = Arvosana(
+    UUID.randomUUID(),
+    ArvioYo("L", Some(100)),
+    "AI",
+    Some("FI"),
+    valinnainen = false,
+    Some(new LocalDate()),
+    "Test",
+    Map()
+  )
+  val arvosana3 = Arvosana(
+    UUID.randomUUID(),
+    ArvioOsakoe("10"),
+    "AI",
+    Some("FI"),
+    valinnainen = false,
+    Some(new LocalDate()),
+    "Test",
+    Map()
+  )
 
   implicit var system: ActorSystem = _
   implicit var database: Database = _
@@ -42,11 +71,27 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   override def beforeAll(): Unit = {
     system = ActorSystem()
     database = Database.forURL(ItPostgres.getEndpointURL)
-    arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
-    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+    arvosanaJournal =
+      new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
+    suoritusJournal =
+      new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
 
-    val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig))))))
-    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))))))
+    val guardedArvosanaRekisteri = system.actorOf(
+      Props(
+        new FakeAuthorizer(
+          system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig)))
+        )
+      )
+    )
+    val guardedSuoritusRekisteri = system.actorOf(
+      Props(
+        new FakeAuthorizer(
+          system.actorOf(
+            Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))
+          )
+        )
+      )
+    )
 
     //val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, mockConfig))))))
     //addServlet(new HakurekisteriResource[Arvosana](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana], "/*")
@@ -66,7 +111,9 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = {
     ItPostgres.reset()
-    Seq(arvosana1, arvosana12, arvosana2, arvosana3).foreach(a => arvosanaJournal.addModification(Updated(a.identify)))
+    Seq(arvosana1, arvosana12, arvosana2, arvosana3).foreach(a =>
+      arvosanaJournal.addModification(Updated(a.identify))
+    )
   }
 
   test("query should return 200") {
@@ -118,7 +165,9 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   }
 
   test("send YO arvosana without myonnetty should return bad request") {
-    val json = "{\"suoritus\":\"" + UUID.randomUUID().toString + "\",\"arvio\":{\"asteikko\":\"YO\",\"arvosana\":\"L\"},\"aine\":\"MA\",\"valinnainen\":false}"
+    val json = "{\"suoritus\":\"" + UUID
+      .randomUUID()
+      .toString + "\",\"arvio\":{\"asteikko\":\"YO\",\"arvosana\":\"L\"},\"aine\":\"MA\",\"valinnainen\":false}"
     post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
       status should be(400)
       body should include("myonnetty is required for asteikko YO and OSAKOE")
@@ -126,7 +175,9 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   }
 
   test("send valinnainen 4-10 arvosana without jarjestys should return bad request") {
-    val json = "{\"suoritus\":\"" + UUID.randomUUID().toString + "\",\"arvio\":{\"asteikko\":\"4-10\",\"arvosana\":\"10\"},\"aine\":\"MA\",\"valinnainen\":true}"
+    val json = "{\"suoritus\":\"" + UUID
+      .randomUUID()
+      .toString + "\",\"arvio\":{\"asteikko\":\"4-10\",\"arvosana\":\"10\"},\"aine\":\"MA\",\"valinnainen\":true}"
     post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
       status should be(400)
       body should include("jarjestys is required for valinnainen arvosana")

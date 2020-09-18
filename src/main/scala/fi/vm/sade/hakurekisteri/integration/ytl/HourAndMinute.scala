@@ -10,17 +10,21 @@ case class HourAndMinute(hour: Int, minute: Int) {
   }
 
   def asTrigger = newTrigger()
-      .startNow()
-      .withSchedule(dailyAtHourAndMinute(hour,minute)).build()
+    .startNow()
+    .withSchedule(dailyAtHourAndMinute(hour, minute))
+    .build()
 }
-
 
 object HourAndMinute {
   private val hourAndMinute = """(\d\d):(\d\d)""".r
 
   def apply(hourAndMinuteSpec: String): HourAndMinute = hourAndMinuteSpec match {
-    case hourAndMinute(hour, minute) => HourAndMinute.apply(Integer.parseInt(hour), Integer.parseInt(minute))
-    case s => throw new IllegalArgumentException(s"Illegal hourAndMinute specification '$s'. Expected format i.e. 01:00")
+    case hourAndMinute(hour, minute) =>
+      HourAndMinute.apply(Integer.parseInt(hour), Integer.parseInt(minute))
+    case s =>
+      throw new IllegalArgumentException(
+        s"Illegal hourAndMinute specification '$s'. Expected format i.e. 01:00"
+      )
   }
 
 }

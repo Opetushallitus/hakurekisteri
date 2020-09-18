@@ -28,19 +28,22 @@ trait MonadCache[F[_], K, T] {
 
   def getVersion: Future[Option[Long]]
 
-  protected def k(key: K, prefix:String) = s"${prefix}:${key}"
+  protected def k(key: K, prefix: String) = s"${prefix}:${key}"
 }
 
-class InMemoryFutureCache[K, T: TypeTag](val expirationDurationMillis: Long = 60.minutes.toMillis) extends MonadCache[Future, K, T] {
+class InMemoryFutureCache[K, T: TypeTag](val expirationDurationMillis: Long = 60.minutes.toMillis)
+    extends MonadCache[Future, K, T] {
   routeCaffeineLoggingToSlf4j()
 
   private val typeName = typeOf[T].typeSymbol.name.toString
-  private implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(4, s"${getClass.getSimpleName}-for-$typeName")
+  private implicit val ec: ExecutionContext =
+    ExecutorUtil.createExecutor(4, s"${getClass.getSimpleName}-for-$typeName")
 
-  private val caffeineCache: AsyncCache[K, T] = Caffeine.newBuilder().
-    expireAfterWrite(JavaDuration.ofMillis(expirationDurationMillis)).
-    buildAsync().
-    asInstanceOf[AsyncCache[K, T]]
+  private val caffeineCache: AsyncCache[K, T] = Caffeine
+    .newBuilder()
+    .expireAfterWrite(JavaDuration.ofMillis(expirationDurationMillis))
+    .buildAsync()
+    .asInstanceOf[AsyncCache[K, T]]
 
   def +(key: K, v: T): Future[_] = {
     caffeineCache.put(key, CompletableFuture.completedFuture(v))
@@ -63,19 +66,20 @@ class InMemoryFutureCache[K, T: TypeTag](val expirationDurationMillis: Long = 60
   def getCache: Map[K, T] = caffeineCache.synchronous().asMap().asScala.toMap
 
   override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
-    val loadingFunction: BiFunction[K, Executor, CompletableFuture[T]] = (t: K, u: Executor) => {
-      FutureConverters.toJava(loader.apply(t).flatMap {
-        case Some(x) => Future.successful(x)
-        case None => null
-      })
-    }.toCompletableFuture
+    val loadingFunction: BiFunction[K, Executor, CompletableFuture[T]] = (t: K, u: Executor) =>
+      {
+        FutureConverters.toJava(loader.apply(t).flatMap {
+          case Some(x) => Future.successful(x)
+          case None    => null
+        })
+      }.toCompletableFuture
 
     FutureConverters.toScala(caffeineCache.get(key, loadingFunction)).flatMap { value =>
       Future.successful(Option(value))
     }
   }
 
-  override def getVersion: Future[Option[Long]] = Future.successful(Some(0l))
+  override def getVersion: Future[Option[Long]] = Future.successful(Some(0L))
 
   private def routeCaffeineLoggingToSlf4j(): Unit = {
     SLF4JBridgeHandler.removeHandlersForRootLogger()

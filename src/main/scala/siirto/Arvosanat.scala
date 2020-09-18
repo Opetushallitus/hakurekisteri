@@ -264,13 +264,19 @@ object Arvosanat extends SchemaDefinition {
 
     <xs:simpleType name="valmistuvanPaivaysType">
       <xs:restriction base="xs:date">
-        <xs:maxInclusive value={DateTimeFormat.forPattern("yyyy-MM-dd").print(saturdayOfWeek22(LocalDate.now().getYear))}/>
+        <xs:maxInclusive value={
+    DateTimeFormat.forPattern("yyyy-MM-dd").print(saturdayOfWeek22(LocalDate.now().getYear))
+  }/>
       </xs:restriction>
     </xs:simpleType>
 
     <xs:simpleType name="luokalleJaavanPaivaysType">
       <xs:restriction base="xs:date">
-        <xs:minInclusive value={DateTimeFormat.forPattern("yyyy-MM-dd").print(LocalDate.now().withMonthOfYear(8).withDayOfMonth(1))}/>
+        <xs:minInclusive value={
+    DateTimeFormat
+      .forPattern("yyyy-MM-dd")
+      .print(LocalDate.now().withMonthOfYear(8).withDayOfMonth(1))
+  }/>
       </xs:restriction>
     </xs:simpleType>
 
@@ -668,7 +674,9 @@ object ArvosanatV2 extends SchemaDefinition {
 
     <xs:simpleType name="valmistuvanPaivaysType">
       <xs:restriction base="xs:date">
-        <xs:maxInclusive value={DateTimeFormat.forPattern("yyyy-MM-dd").print(saturdayOfWeek22(LocalDate.now().getYear))}/>
+        <xs:maxInclusive value={
+    DateTimeFormat.forPattern("yyyy-MM-dd").print(saturdayOfWeek22(LocalDate.now().getYear))
+  }/>
       </xs:restriction>
     </xs:simpleType>
 
@@ -838,6 +846,12 @@ object ArvosanatV2 extends SchemaDefinition {
 
 }
 
-object ArvosanatKoodisto extends IncludeSchema("http://service.koodisto.sade.vm.fi/types/koodisto", "https://virkailija.opintopolku.fi/koodisto-service/rest/oppilaitosnumero.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/kieli.xsd", "https://virkailija.opintopolku.fi/koodisto-service/rest/aidinkielijakirjallisuus.xsd") {
+object ArvosanatKoodisto
+    extends IncludeSchema(
+      "http://service.koodisto.sade.vm.fi/types/koodisto",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/oppilaitosnumero.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/kieli.xsd",
+      "https://virkailija.opintopolku.fi/koodisto-service/rest/aidinkielijakirjallisuus.xsd"
+    ) {
   override val schemaLocation: String = "arvosanat-koodisto.xsd"
 }

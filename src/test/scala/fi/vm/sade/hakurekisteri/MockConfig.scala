@@ -26,7 +26,10 @@ class MockConfig extends Config {
   override val maxDbLogLineLength: Int = defaultDbLoggingConfig.maxLogLineLength
 
   override val importBatchProcessingInitialDelay = 1.seconds
-  lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
+  lazy val ophConfDir = Paths.get(
+    ProjectRootFinder.findProjectRoot().getAbsolutePath,
+    "src/test/resources/oph-configuration"
+  )
   override val valintaTulosTimeout: FiniteDuration = 1.minute
   override val ytlSyncTimeout: Timeout = Timeout(1, SECONDS)
 }

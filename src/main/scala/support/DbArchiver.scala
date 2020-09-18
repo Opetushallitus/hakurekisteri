@@ -17,7 +17,7 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
 
   private def getEpoch(daysInThePast: Int): Long = {
     val day = Calendar.getInstance
-    day.add(Calendar.DATE, - daysInThePast)
+    day.add(Calendar.DATE, -daysInThePast)
     day.getTime.getTime
   }
 
@@ -25,7 +25,9 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
 
   private def logStatistics(batchStatistics: BatchStatistics, message: String) = {
     val sortedKeys: List[String] = batchStatistics.keys.toList.sortWith(_ < _)
-    logger.info(message + " (" + sortedKeys.map(t => t + ": " + batchStatistics(t)).mkString(", ") + ")")
+    logger.info(
+      message + " (" + sortedKeys.map(t => t + ": " + batchStatistics(t)).mkString(", ") + ")"
+    )
   }
 
   override def archive(batchArchiever: BatchArchiever, maxErrorsAllowed: Int): Unit = {
@@ -37,10 +39,13 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
     var errorsAllowed: Int = maxErrorsAllowed
     var isNextBatchNeeded: Boolean = true
     def isAnythingDoneInLastBatch: Boolean = batchStatistics.exists(_._2 > 0)
-    def newStatisticsTotal(currentTotal: BatchStatistics, batch: BatchStatistics): BatchStatistics = {
-      batch.keys.map(k => k -> (batch(k) + currentTotal.getOrElse(k, 0l))).toMap
+    def newStatisticsTotal(
+      currentTotal: BatchStatistics,
+      batch: BatchStatistics
+    ): BatchStatistics = {
+      batch.keys.map(k => k -> (batch(k) + currentTotal.getOrElse(k, 0L))).toMap
     }
-    while(elapsedTimeMinutes < config.archiveTotalTimeoutMinutes.toInt && isNextBatchNeeded) {
+    while (elapsedTimeMinutes < config.archiveTotalTimeoutMinutes.toInt && isNextBatchNeeded) {
       try {
         batchStatistics = batchArchiever()
         if (isAnythingDoneInLastBatch) {
@@ -52,8 +57,7 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
           logger.debug(s"Archive batch did not have anything to archive, finishing")
           isNextBatchNeeded = false
         }
-      }
-      catch {
+      } catch {
         case e: Throwable =>
           errorsAllowed = errorsAllowed - 1
           if (errorsAllowed > 0) {
@@ -77,11 +81,16 @@ class DbArchiver(config: Config)(implicit val db: Database) extends Archiver {
   override val defaultBatchArchiever: BatchArchiever = () => {
     val batchSize = config.archiveBatchSize.toInt
     val oldest: Long = getEpoch(config.archiveNonCurrentAfterDays.toInt)
-    val tableNames: Seq[String] = Seq("arvosana", "import_batch", "opiskelija", "opiskeluoikeus", "suoritus")
-    val batchStatistics: BatchStatistics = tableNames.map(tableName => {
-      val archivedRows = run(db.run(sql"""select arkistoi_#${tableName}_deltat(${batchSize}, ${oldest})""".as[(Long)])).head
-      tableName -> archivedRows
-    }).toMap
+    val tableNames: Seq[String] =
+      Seq("arvosana", "import_batch", "opiskelija", "opiskeluoikeus", "suoritus")
+    val batchStatistics: BatchStatistics = tableNames
+      .map(tableName => {
+        val archivedRows = run(
+          db.run(sql"""select arkistoi_#${tableName}_deltat(${batchSize}, ${oldest})""".as[(Long)])
+        ).head
+        tableName -> archivedRows
+      })
+      .toMap
     batchStatistics
   }
 

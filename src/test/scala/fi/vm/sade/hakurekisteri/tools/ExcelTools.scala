@@ -22,13 +22,9 @@ trait ExcelTools {
 
       def addSheet(name: String, stringTable: Array[Array[String]]): XSSFWorkbook = {
         val sheet: XSSFSheet = workbook.createSheet(name)
-        for (
-          (row, index) <- stringTable.zipWithIndex
-        ) {
+        for ((row, index) <- stringTable.zipWithIndex) {
           val xslRow = sheet.createRow(index)
-          for (
-            (c, cellIndex) <- row.zipWithIndex
-          ) {
+          for ((c, cellIndex) <- row.zipWithIndex) {
             val xssfCell = xslRow.createCell(cellIndex, STRING)
             xssfCell.setCellValue(c)
             ophXssfCellStyles.apply(xssfCell)
@@ -42,9 +38,7 @@ trait ExcelTools {
 
     val toExcel: Workbook = {
       val result = new XSSFWorkbook()
-      for (
-        (name, data) <- sheets
-      ) result.addSheet(name)(data)
+      for ((name, data) <- sheets) result.addSheet(name)(data)
       result
     }
   }

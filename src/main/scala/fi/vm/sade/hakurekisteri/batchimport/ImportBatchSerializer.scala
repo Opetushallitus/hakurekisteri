@@ -12,42 +12,51 @@ import org.json4s.Xml.{toJson, toXml}
 
 import scala.xml.Elem
 
+class ImportBatchSerializer
+    extends CustomSerializer[ImportBatch](format =>
+      (
+        { case json: JObject =>
+          val id = json.findField(jf => jf._1 == "id").map(_._2).collect { case JString(i) =>
+            UUID.fromString(i)
+          }
+          val rawData = json \ "data"
+          val external = json.findField(jf => jf._1 == "externalId").map(_._2).collect {
+            case JString(eid) => eid
+          }
+          val JString(batchType) = json \ "batchType"
+          val JString(source) = json \ "source"
+          val JString(state) = json \ "state"
+          val status: JValue = json \ "status"
 
-class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
-  {
-    case json: JObject =>
-      val id = json.findField(jf => jf._1 == "id").map(_._2).collect { case JString(i) => UUID.fromString(i)}
-      val rawData = json \ "data"
-      val external = json.findField(jf => jf._1 == "externalId").map(_._2).collect { case JString(eid) => eid}
-      val JString(batchType) = json \ "batchType"
-      val JString(source) = json \ "source"
-      val JString(state) = json \ "state"
-      val status: JValue = json \ "status"
+          implicit val formats = HakurekisteriJsonSupport.format
+          val importstatus = Extraction.extract[ImportStatus](status)
 
-      implicit val formats = HakurekisteriJsonSupport.format
-      val importstatus = Extraction.extract[ImportStatus](status)
+          val batch = ImportBatch(
+            toXml(rawData).collectFirst { case e: Elem => e }.get,
+            external,
+            batchType,
+            source,
+            BatchState.withName(state),
+            importstatus
+          )
 
-      val batch = ImportBatch(toXml(rawData).collectFirst{case e:Elem => e}.get, external, batchType, source, BatchState.withName(state), importstatus)
+          id.map(i => batch.identify(i)).getOrElse(batch)
+        },
+        { case ib: ImportBatch with Identified[UUID @unchecked] =>
+          implicit val formats = HakurekisteriJsonSupport.format
+          val s: JObject = Extraction.decompose(ib.status) match {
+            case o: JObject => o
+            case _          => JObject(List())
+          }
 
-      id.map(i => batch.identify(i)).getOrElse(batch)
-  },
-  {
+          val result = ("id" -> ib.id.toString) ~
+            ("data" -> toJson(ib.data)) ~
+            ("batchType" -> ib.batchType) ~
+            ("source" -> ib.source) ~
+            ("state" -> ib.state.toString) ~
+            ("status" -> s)
 
-    case ib: ImportBatch with Identified[UUID @unchecked] =>
-      implicit val formats = HakurekisteriJsonSupport.format
-      val s: JObject = Extraction.decompose(ib.status) match {
-        case o: JObject => o
-        case _ => JObject(List())
-      }
-
-      val result =  ("id" -> ib.id.toString) ~
-        ("data" -> toJson(ib.data)) ~
-        ("batchType" -> ib.batchType) ~
-        ("source" -> ib.source) ~
-        ("state" -> ib.state.toString) ~
-        ("status" -> s)
-
-      ib.externalId.map(id => result ~ ("externalId" -> id)).getOrElse(result)
-  }
-  )
-)
+          ib.externalId.map(id => result ~ ("externalId" -> id)).getOrElse(result)
+        }
+      )
+    )

@@ -39,11 +39,14 @@ trait Security {
 class SpringSecurity extends Security {
   import scala.collection.JavaConverters._
 
-  private def userAgent(r: HttpServletRequest): String = Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
-  private def inetAddress(r: HttpServletRequest): String = HttpServletRequestUtils.getRemoteAddress(r)
+  private def userAgent(r: HttpServletRequest): String =
+    Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
+  private def inetAddress(r: HttpServletRequest): String =
+    HttpServletRequestUtils.getRemoteAddress(r)
 
-  override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map { a =>
-    OPHUser(username(a), authorities(a).toSet,userAgent(request),inetAddress(request), a)
+  override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
+    a =>
+      OPHUser(username(a), authorities(a).toSet, userAgent(request), inetAddress(request), a)
   }
 
   override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = {
@@ -64,21 +67,34 @@ class SpringSecurity extends Security {
     if Option(authority).isDefined
   ) yield authority
 
-
-  def userPrincipal(implicit request: HttpServletRequest): Option[CasAuthenticationToken] = Option(request.getUserPrincipal)
-    .map(_.asInstanceOf[CasAuthenticationToken])
+  def userPrincipal(implicit request: HttpServletRequest): Option[CasAuthenticationToken] =
+    Option(request.getUserPrincipal)
+      .map(_.asInstanceOf[CasAuthenticationToken])
 }
 
 class TestSecurity extends Security {
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
-  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User = new fi.vm.sade.auditlog.User(InetAddress.getByName("111.222.111.2"), "abc999_test", "mockAgent")
+  override def currentUser(implicit
+    request: HttpServletRequest
+  ): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
+  override def auditUser(implicit request: HttpServletRequest): fi.vm.sade.auditlog.User =
+    new fi.vm.sade.auditlog.User(InetAddress.getByName("111.222.111.2"), "abc999_test", "mockAgent")
 
 }
 
 object TestUser extends User {
-  override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+  override def orgsFor(action: String, resource: String): Set[String] = Set(
+    "1.2.246.562.10.00000000001"
+  )
   override val username: String = "Test"
-  override val auditSession = AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "", "")
+  override val auditSession =
+    AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "", "")
   override def toString: String = ToStringBuilder.reflectionToString(this)
-  override def casAuthenticationToken: CasAuthenticationToken = new CasAuthenticationToken("key", "principal", "credentials", Nil.asJava, null, new AssertionImpl(new AttributePrincipalImpl("testprincipal")))
+  override def casAuthenticationToken: CasAuthenticationToken = new CasAuthenticationToken(
+    "key",
+    "principal",
+    "credentials",
+    Nil.asJava,
+    null,
+    new AssertionImpl(new AttributePrincipalImpl("testprincipal"))
+  )
 }

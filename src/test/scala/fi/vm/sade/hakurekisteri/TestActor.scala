@@ -10,17 +10,19 @@ import fi.vm.sade.hakurekisteri.storage.{Identified, InMemQueryingResourceServic
 
 import scala.concurrent.ExecutionContext
 
-
-
-class TestActor(val journal: Journal[TestResource, UUID], val config: Config) extends ResourceActor[TestResource, UUID](config)  with JournaledRepository[TestResource, UUID] with InMemQueryingResourceService[TestResource ,UUID] {
-  override implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(8, getClass.getSimpleName)
+class TestActor(val journal: Journal[TestResource, UUID], val config: Config)
+    extends ResourceActor[TestResource, UUID](config)
+    with JournaledRepository[TestResource, UUID]
+    with InMemQueryingResourceService[TestResource, UUID] {
+  override implicit val executionContext: ExecutionContext =
+    ExecutorUtil.createExecutor(8, getClass.getSimpleName)
 
   def this() = this(new InMemJournal[TestResource, UUID], config = new MockConfig)
 
   override val logger = Logging(context.system, this)
 
-
-  override val matcher: PartialFunction[Query[TestResource], (TestResource with Identified[UUID]) => Boolean] = {
+  override val matcher
+    : PartialFunction[Query[TestResource], (TestResource with Identified[UUID]) => Boolean] = {
     case _ => (_) => true
   }
 }

@@ -15,39 +15,41 @@ import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
 
-
 class YtlJsonSpec extends ScalatraFunSuite {
 
   implicit val formats = Student.formatsStudent
 
-test("Parse async YTL json") {
-  val (a,b) = ylioppilaatJson.splitAt(ylioppilaatJson.length/2)
-  val async = StudentAsyncParser()
-  async.feedChunk(a).size should equal(0)
-  async.feedChunk(b).size should equal(1)
-}
+  test("Parse async YTL json") {
+    val (a, b) = ylioppilaatJson.splitAt(ylioppilaatJson.length / 2)
+    val async = StudentAsyncParser()
+    async.feedChunk(a).size should equal(0)
+    async.feedChunk(b).size should equal(1)
+  }
 
-test("Parse YTL json") {
-  val json = scala.io.Source.fromFile(getClass.getResource("/ytl-students.json").getFile).getLines.mkString
-  val ytlstudents = parse(json).extract[List[Student]]
-  ytlstudents.size should equal (1)
+  test("Parse YTL json") {
+    val json =
+      scala.io.Source.fromFile(getClass.getResource("/ytl-students.json").getFile).getLines.mkString
+    val ytlstudents = parse(json).extract[List[Student]]
+    ytlstudents.size should equal(1)
 
-  ytlstudents.head.graduationDate should equal(Some(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate("2016-06-04")))
-  ytlstudents.head.graduationPeriod should equal (Some(Kevat(2015)))
-  ytlstudents.head.exams.size should equal (1)
-  ytlstudents.head.exams.head.sections.isEmpty should equal (true)
-}
+    ytlstudents.head.graduationDate should equal(
+      Some(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate("2016-06-04"))
+    )
+    ytlstudents.head.graduationPeriod should equal(Some(Kevat(2015)))
+    ytlstudents.head.exams.size should equal(1)
+    ytlstudents.head.exams.head.sections.isEmpty should equal(true)
+  }
 
-test("Kokelas from json should equal kokelas from XML") {
-  val oid = "1.2.246.562.24.71944845619"
-  val oidFinder: String => Future[String] = hetu => Future.successful(oid)
-  val student = parse(ylioppilaatJson).extract[Student]
+  test("Kokelas from json should equal kokelas from XML") {
+    val oid = "1.2.246.562.24.71944845619"
+    val oidFinder: String => Future[String] = hetu => Future.successful(oid)
+    val student = parse(ylioppilaatJson).extract[Student]
 
-  val kokelasFromJson: Kokelas = StudentToKokelas.convert(oid, student)
+    val kokelasFromJson: Kokelas = StudentToKokelas.convert(oid, student)
 
-  kokelasFromJson.yoTodistus should not be empty
-  kokelasFromJson.osakokeet should not be empty
-}
+    kokelasFromJson.yoTodistus should not be empty
+    kokelasFromJson.osakokeet should not be empty
+  }
 
   val ylioppilaatJson =
     """
