@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
-import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
@@ -19,10 +18,11 @@ import org.joda.time.ReadableInstant
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+import scala.util.Failure
 
 class HakuActor(
+  hakuAggregator: HakuAggregatorActorRef,
   koskiService: IKoskiService,
-  tarjonta: TarjontaActorRef,
   parametrit: ParametritActorRef,
   ytlIntegration: YtlIntegration,
   config: Config
@@ -60,7 +60,7 @@ class HakuActor(
   override def receive: Actor.Receive = {
     case Update =>
       log.info(s"updating all hakus for $self from ${sender()}")
-      tarjonta.actor ! GetHautQuery
+      hakuAggregator.actor ! GetHautQuery
 
     case HakuRequest => sender ! AllHaut(storedHakus)
 
@@ -68,7 +68,7 @@ class HakuActor(
 
     case q: GetHakuOption => getHakuOption(q) pipeTo sender
 
-    case TarjontaRestHakuResult(hakus: List[TarjontaRestHaku]) => enrich(hakus).waitForAll pipeTo self
+    case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
     case sq: Seq[_] =>
       storedHakus = sq.collect { case h: Haku => h }
@@ -102,7 +102,7 @@ class HakuActor(
 
   }
 
-  def enrich(hakus: List[TarjontaRestHaku]): List[Future[Haku]] = {
+  def enrich(hakus: List[RestHaku]): List[Future[Haku]] = {
     for (
       haku <- hakus
       if haku.oid.isDefined && haku.hakuaikas.nonEmpty
