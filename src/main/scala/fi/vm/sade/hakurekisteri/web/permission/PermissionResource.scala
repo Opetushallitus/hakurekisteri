@@ -5,7 +5,10 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonMappingException
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermissionFromOrgs}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  HakemusBasedPermissionCheckerActorRef,
+  HasPermissionFromOrgs
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -22,13 +25,18 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class PermissionResource(suoritusActor: ActorRef,
-                         opiskelijaActor: ActorRef,
-                         hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef,
-                         timeout: Option[Timeout] = Some(2.minutes)
-                        )
-                        (implicit system: ActorSystem, sw: Swagger)
-  extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with QueryLogging {
+class PermissionResource(
+  suoritusActor: ActorRef,
+  opiskelijaActor: ActorRef,
+  hakemusBasedPermissionCheckerActor: HakemusBasedPermissionCheckerActorRef,
+  timeout: Option[Timeout] = Some(2.minutes)
+)(implicit system: ActorSystem, sw: Swagger)
+    extends HakuJaValintarekisteriStack
+    with PermissionSwaggerApi
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with QueryLogging {
 
   override protected def applicationDescription: String = "Oikeuksien tarkistuksen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -39,19 +47,29 @@ class PermissionResource(suoritusActor: ActorRef,
   before() {
     contentType = formats("json")
   }
-  
+
   post("/", operation(checkPermission)) {
     val t0 = Platform.currentTime
     val r: PermissionCheckRequest = read[PermissionCheckRequest](request.body)
-    logger.info(s"Checking permission for: personOidsForSamePerson ${r.personOidsForSamePerson} organisationOids ${r.organisationOids}.")
+    logger.info(
+      s"Checking permission for: personOidsForSamePerson ${r.personOidsForSamePerson} organisationOids ${r.organisationOids}."
+    )
 
     new AsyncResult() {
       val permissionFuture = for {
-        suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Suoritus]]
-        opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(PersonOidsWithAliases(r.personOidsForSamePerson))).mapTo[Seq[Opiskelija]]
-        hakemusGrantsPermission: Boolean <- hakemusGrantsPermission(r.personOidsForSamePerson, r.organisationOids)
+        suoritukset: Seq[Suoritus] <- (suoritusActor ? SuoritusHenkilotQuery(
+          PersonOidsWithAliases(r.personOidsForSamePerson)
+        )).mapTo[Seq[Suoritus]]
+        opiskelijat: Seq[Opiskelija] <- (opiskelijaActor ? OpiskelijaHenkilotQuery(
+          PersonOidsWithAliases(r.personOidsForSamePerson)
+        )).mapTo[Seq[Opiskelija]]
+        hakemusGrantsPermission: Boolean <- hakemusGrantsPermission(
+          r.personOidsForSamePerson,
+          r.organisationOids
+        )
       } yield {
-        val organisationGrantsPermission = grantsPermission(suoritukset ++ opiskelijat, r.organisationOids)
+        val organisationGrantsPermission =
+          grantsPermission(suoritukset ++ opiskelijat, r.organisationOids)
         val result = organisationGrantsPermission || hakemusGrantsPermission
         if (hakemusGrantsPermission && !organisationGrantsPermission) {
           val targetToLog: String = if (r.personOidsForSamePerson.size > 10) {
@@ -73,9 +91,13 @@ class PermissionResource(suoritusActor: ActorRef,
     }
   }
 
-  def hakemusGrantsPermission(personOidsForSamePerson: Set[String], organisationOids: Set[String]): Future[Boolean] = {
+  def hakemusGrantsPermission(
+    personOidsForSamePerson: Set[String],
+    organisationOids: Set[String]
+  ): Future[Boolean] = {
     val hakemusPermissionsForPersonOids: Set[Future[Boolean]] = personOidsForSamePerson.map(o =>
-      (hakemusBasedPermissionCheckerActor.actor ? HasPermissionFromOrgs(organisationOids, o)).mapTo[Boolean]
+      (hakemusBasedPermissionCheckerActor.actor ? HasPermissionFromOrgs(organisationOids, o))
+        .mapTo[Boolean]
     )
     Future.sequence(hakemusPermissionsForPersonOids).map(_.contains(true))
   }
@@ -104,18 +126,26 @@ class PermissionResource(suoritusActor: ActorRef,
       BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))
     case t: AskTimeoutException =>
       logger.error(t, "permission check timed out")
-      GatewayTimeout(PermissionCheckResponse(errorMessage = Some("timeout occurred during permission check")))
+      GatewayTimeout(
+        PermissionCheckResponse(errorMessage = Some("timeout occurred during permission check"))
+      )
     case t: Throwable =>
       logger.error(t, "error occurred during permission check")
       InternalServerError(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
   }
 }
 
-case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisationOids: Set[String]) {
+case class PermissionCheckRequest(
+  personOidsForSamePerson: Set[String],
+  organisationOids: Set[String]
+) {
   require(personOidsForSamePerson.nonEmpty, "Person oid list empty.")
   require(!personOidsForSamePerson.exists(_.isEmpty), "Blank person oid in oid list.")
   require(organisationOids.nonEmpty, "Organisation oid list empty.")
   require(!organisationOids.exists(_.isEmpty), "Blank organisation oid in organisation oid list.")
 }
 
-case class PermissionCheckResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
+case class PermissionCheckResponse(
+  accessAllowed: Option[Boolean] = None,
+  errorMessage: Option[String] = None
+)

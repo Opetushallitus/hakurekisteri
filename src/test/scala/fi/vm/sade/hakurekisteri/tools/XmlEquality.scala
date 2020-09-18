@@ -10,15 +10,15 @@ trait XmlEquality extends Explicitly {
 
     override def normalizedOrSame(b: Any): Any = b match {
       case e: Elem => normalized(e)
-      case a => a
+      case a       => a
     }
 
     def trimTextZappingEmpty(node: Node): Seq[Node] =
       node match {
         case Text(text) if (text.trim.isEmpty) => Nil
-        case Text(text) => List(Text(text.trim))
+        case Text(text)                        => List(Text(text.trim))
         case Elem(pre, lab, md, scp, children @ _*) =>
-          Elem(pre, lab, md, scp, false, (children.flatMap(trimTextZappingEmpty)):_*)
+          Elem(pre, lab, md, scp, false, (children.flatMap(trimTextZappingEmpty)): _*)
         case _ => List(node)
       }
 
@@ -36,7 +36,7 @@ trait XmlEquality extends Explicitly {
               case _ => ele :: acc
             }
           }
-        Elem(pre, lab, md, scp, false, (mergedTextNodes.flatMap(trimTextZappingEmpty)):_*)
+        Elem(pre, lab, md, scp, false, (mergedTextNodes.flatMap(trimTextZappingEmpty)): _*)
     }
 
     override def normalizedCanHandle(b: Any): Boolean = b.isInstanceOf[Elem]

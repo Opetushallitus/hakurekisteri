@@ -15,27 +15,37 @@ import scala.concurrent.Await
 class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
-  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, valintaTulosActor, new MockConfig)))
+  val hakijat = system.actorOf(
+    Props(
+      new HakijaActor(
+        Hakupalvelu,
+        organisaatioActor,
+        koodistoActor,
+        valintaTulosActor,
+        new MockConfig
+      )
+    )
+  )
   addServlet(new HakijaResourceV3(hakijat), "/")
 
   test("fails with bad request if there is no query parameter") {
     get("/") {
-      status should be (400)
-      body should include ("pakolliset parametrit puuttuvat")
+      status should be(400)
+      body should include("pakolliset parametrit puuttuvat")
     }
   }
 
   test("fails with bad request if there is no organisaatio query parameter") {
     get("/?haku=dummy") {
-      status should be (400)
-      body should include ("pakolliset parametrit puuttuvat")
+      status should be(400)
+      body should include("pakolliset parametrit puuttuvat")
     }
   }
 
   test("fails with bad request if there is no haku query parameter") {
     get("/?organisaatio=dummy") {
-      status should be (400)
-      body should include ("pakolliset parametrit puuttuvat")
+      status should be(400)
+      body should include("pakolliset parametrit puuttuvat")
     }
   }
 
@@ -56,7 +66,9 @@ class HakijaResourceSpecV3 extends ScalatraFunSuite with HakeneetSupport with Lo
       organizationOid <- hakutoive.organizationOid
     } yield organizationOid
 
-    get(s"/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json&organisaatio=${tarjoajaOrganisaatioOidit.head}") {
+    get(
+      s"/?haku=1&hakuehto=Hyvaksytyt&tyyppi=Json&organisaatio=${tarjoajaOrganisaatioOidit.head}"
+    ) {
       body should include("\"sukunimi\":\"Hyvaksytty\"")
     }
   }

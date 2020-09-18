@@ -9,8 +9,6 @@ class ForkedSeq[A](forked: Seq[Future[A]]) {
 
 object ForkedSeq {
 
-  implicit def Seq2Forked[A](s:Seq[Future[A]]): ForkedSeq[A] = new ForkedSeq(s)
+  implicit def Seq2Forked[A](s: Seq[Future[A]]): ForkedSeq[A] = new ForkedSeq(s)
 
 }
-
-

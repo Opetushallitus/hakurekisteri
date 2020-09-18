@@ -21,10 +21,10 @@ trait YtlMockFixture extends TestSuiteMixin {
   this: TestSuite =>
   private val ytlMockServer = new YtlMockServer
 
-  def statusUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/status/$1"
-  def bulkUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/bulk"
-  def downloadUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/bulk/$1"
-  def fetchOneUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/student/$1"
+  def statusUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/status/$1"
+  def bulkUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/bulk"
+  def downloadUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/bulk/$1"
+  def fetchOneUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/student/$1"
   def username = ytlMockServer.username
   def password = ytlMockServer.password
   def ytlProperties = new OphProperties()
@@ -48,15 +48,16 @@ trait YtlMockFixture extends TestSuiteMixin {
   }
 }
 
-
 class YtlMockServlet extends HttpServlet {
-  val fakeProsesses: mutable.Map[String,Integer] = mutable.Map()
+  val fakeProsesses: mutable.Map[String, Integer] = mutable.Map()
   private var postFailureCounter: Int = 0
 
   override protected def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
     if (postFailureCounter > 0) {
       postFailureCounter = postFailureCounter - 1
-      throw new SocketException(s"Itse aiheutettu virhe, vielä $postFailureCounter virheellistä vastausta tulossa")
+      throw new SocketException(
+        s"Itse aiheutettu virhe, vielä $postFailureCounter virheellistä vastausta tulossa"
+      )
     }
     val fetchBulk = "/api/oph-transfer/bulk"
     val uri = req.getRequestURI
@@ -78,7 +79,10 @@ class YtlMockServlet extends HttpServlet {
 
     uri match {
       case fetchOne(hetu) =>
-        val json = scala.io.Source.fromFile(getClass.getResource("/ytl-student.json").getFile).getLines.mkString
+        val json = scala.io.Source
+          .fromFile(getClass.getResource("/ytl-student.json").getFile)
+          .getLines
+          .mkString
         resp.getWriter().print(s"$json\n")
       case pollBulk(uuid) =>
         val json = """{
@@ -111,14 +115,12 @@ class YtlMockServlet extends HttpServlet {
   }
 }
 
-
 class YtlMockServer {
 
   def freePort() = PortChecker.findFreeLocalPort
   val port = freePort()
   val username = "ytluser"
   val password = "ytlpassword"
-
 
   val server = new Server(port);
 
@@ -136,7 +138,7 @@ class YtlMockServer {
     server.setRequestLog(v)
     server.setHandler(context);
     servlet = new YtlMockServlet()
-    context.addServlet(new ServletHolder(servlet),"/*");
+    context.addServlet(new ServletHolder(servlet), "/*");
     server.start();
     while (!server.isRunning) {
       println("Waiting")
@@ -148,12 +150,12 @@ class YtlMockServer {
 
   def basicAuth(username: String, password: String, realm: String): ConstraintSecurityHandler = {
     val l = new HashLoginService();
-    l.putUser(username, Credential.getCredential(password), Array[String]{"user"});
+    l.putUser(username, Credential.getCredential(password), Array[String] { "user" });
     //l.setName(realm);
 
     val constraint = new Constraint();
     constraint.setName(Constraint.__BASIC_AUTH);
-    constraint.setRoles(Array[String]{"user"});
+    constraint.setRoles(Array[String] { "user" });
     constraint.setAuthenticate(true);
 
     val cm = new ConstraintMapping();

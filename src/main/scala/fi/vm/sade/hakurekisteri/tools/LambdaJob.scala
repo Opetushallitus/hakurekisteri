@@ -5,8 +5,6 @@ import org.quartz._
 import org.quartz.JobBuilder._
 import collection.JavaConverters._
 
-
-
 case class LambdaRunnable(l: LamdaFunction)
 
 object LambdaJob {
@@ -24,7 +22,7 @@ class LambdaJob extends Job {
   override def execute(context: JobExecutionContext): Unit = {
     context.getJobDetail().getJobDataMap().values().asScala.foreach {
       case l: LambdaRunnable => l.l()
-      case _ =>
+      case _                 =>
     }
   }
 

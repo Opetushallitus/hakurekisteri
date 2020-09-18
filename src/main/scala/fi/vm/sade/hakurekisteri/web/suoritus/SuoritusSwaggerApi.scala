@@ -17,11 +17,16 @@ trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResou
     .summary("näyttää kaikki suoritukset")
     .description("Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
-    .parameter(queryParam[Option[String]]("kausi").description("päättymisen kausi").allowableValues("S", "K"))
+    .parameter(
+      queryParam[Option[String]]("kausi").description("päättymisen kausi").allowableValues("S", "K")
+    )
     .parameter(queryParam[Option[String]]("vuosi").description("päättymisen vuosi"))
     .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
     .parameter(queryParam[Option[String]]("komo").description("koulutusmoduulin oid"))
-    .parameter(queryParam[Option[String]]("muokattuJalkeen").description("ISO aikaleima (esim. 2015-01-01T12:34:56.000+02:00) jonka jälkeen muokatut"))
+    .parameter(
+      queryParam[Option[String]]("muokattuJalkeen")
+        .description("ISO aikaleima (esim. 2015-01-01T12:34:56.000+02:00) jonka jälkeen muokatut")
+    )
     .tags("suoritukset")
 
   val create = apiOperation[Suoritus]("lisääSuoritus")
@@ -29,7 +34,7 @@ trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResou
     .parameter(bodyParam[Suoritus]("suoritus").description("uusi suoritus").required)
     .tags("suoritukset")
 
-  val update =  apiOperation[Suoritus]("päivitäSuoritus")
+  val update = apiOperation[Suoritus]("päivitäSuoritus")
     .summary("päivittää olemassa olevaa suoritusta ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("suorituksen uuid").required)
     .parameter(bodyParam[Suoritus]("suoritus").description("päivitettävä suoritus").required)
@@ -51,13 +56,27 @@ trait SuoritusSwaggerModel extends OldSwaggerSyntax {
 
   val suoritusFields = Seq(ModelField("suoritusTyyppi", null, DataType.String))
 
-  def suoritusModel = Model("Suoritus", "Suoritus", suoritusFields.map(t => (t.name, t)).toMap, discriminator = Some("suoritusTyyppi"))
-
-  val suoritusLahdeArvotFields = Seq(
-    ModelField("hasCompletedMandatoryExams", "Pakolliset kokeet suoritettu", DataType.String, required = false)
+  def suoritusModel = Model(
+    "Suoritus",
+    "Suoritus",
+    suoritusFields.map(t => (t.name, t)).toMap,
+    discriminator = Some("suoritusTyyppi")
   )
 
-  def suoritusLahdeArvotModel = Model("SuoritusLahdeArvot", "lähdejärjestelmän arvot", suoritusLahdeArvotFields.map(t => (t.name, t)).toMap)
+  val suoritusLahdeArvotFields = Seq(
+    ModelField(
+      "hasCompletedMandatoryExams",
+      "Pakolliset kokeet suoritettu",
+      DataType.String,
+      required = false
+    )
+  )
+
+  def suoritusLahdeArvotModel = Model(
+    "SuoritusLahdeArvot",
+    "lähdejärjestelmän arvot",
+    suoritusLahdeArvotFields.map(t => (t.name, t)).toMap
+  )
 
   val virallinenSuoritusFields = Seq(
     ModelField("id", "suorituksen uuid", DataType.String),
@@ -67,11 +86,28 @@ trait SuoritusSwaggerModel extends OldSwaggerSyntax {
     ModelField("henkiloOid", null, DataType.String),
     ModelField("valmistuminen", null, DataType.Date),
     ModelField("suoritusKieli", null, DataType.String),
-    ModelField("yksilollistaminen", null, DataType.String, None, AllowableValues(yksilollistaminen.values.map(v => v.toString).toList)),
+    ModelField(
+      "yksilollistaminen",
+      null,
+      DataType.String,
+      None,
+      AllowableValues(yksilollistaminen.values.map(v => v.toString).toList)
+    ),
     ModelField("vahvistettu", null, DataType.Boolean, Some("true"), required = false),
-    ModelField("lahdeArvot", "lähdejärjestelmästä saadut alkuperäiset arvot", DataType("SuoritusLahdeArvot"), required = false))
+    ModelField(
+      "lahdeArvot",
+      "lähdejärjestelmästä saadut alkuperäiset arvot",
+      DataType("SuoritusLahdeArvot"),
+      required = false
+    )
+  )
 
-  def virallinenSuoritusModel = Model("Suoritus", "Suoritus", virallinenSuoritusFields.map(t => (t.name, t)).toMap, Some("Suoritus"))
+  def virallinenSuoritusModel = Model(
+    "Suoritus",
+    "Suoritus",
+    virallinenSuoritusFields.map(t => (t.name, t)).toMap,
+    Some("Suoritus")
+  )
 
   val vapaamuotoinenSuoritusFields = Seq(
     ModelField("id", "suorituksen uuid", DataType.String, required = false),
@@ -80,11 +116,20 @@ trait SuoritusSwaggerModel extends OldSwaggerSyntax {
     ModelField("vuosi", null, DataType.Int),
     ModelField("tyyppi", null, DataType.String),
     ModelField("index", null, DataType.Int),
-    ModelField("vahvistettu", "onko suoritus vahvistettu, ei voida asettaa arvoon true vapaamuotoiselle suoritukselle", DataType.Boolean, Some("false"), required = false)
+    ModelField(
+      "vahvistettu",
+      "onko suoritus vahvistettu, ei voida asettaa arvoon true vapaamuotoiselle suoritukselle",
+      DataType.Boolean,
+      Some("false"),
+      required = false
+    )
   )
 
-  def vapaamuotoinenSuoritusModel = Model("VapaamuotoinenSuoritus", "VapaamuotoinenSuoritus", virallinenSuoritusFields.map(t => (t.name, t)).toMap, Some("Suoritus"))
+  def vapaamuotoinenSuoritusModel = Model(
+    "VapaamuotoinenSuoritus",
+    "VapaamuotoinenSuoritus",
+    virallinenSuoritusFields.map(t => (t.name, t)).toMap,
+    Some("Suoritus")
+  )
 
 }
-
-

@@ -13,7 +13,8 @@ trait IValintaperusteetService {
   def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]]
 }
 
-class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val system: ActorSystem) extends IValintaperusteetService {
+class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val system: ActorSystem)
+    extends IValintaperusteetService {
 
   private val logger = Logging.getLogger(system, this)
 
@@ -22,8 +23,17 @@ class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val sys
   override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] = {
     if (jonoOids.nonEmpty) {
       val batches: Seq[Set[String]] = jonoOids.grouped(MAX_VALINTATAPAJONOT_BATCH_SIZE).toSeq
-      logger.info(s"Getting jonotietos from valintaperusteet for jonos: $jonoOids in ${batches.size} batches")
-      Future.sequence(batches.map(oidBatch => restClient.postObject[Set[String], Seq[ValintatapajononTiedot]]("valintaperusteet.valintatapajonosByOids")(200, oidBatch)))
+      logger.info(
+        s"Getting jonotietos from valintaperusteet for jonos: $jonoOids in ${batches.size} batches"
+      )
+      Future
+        .sequence(
+          batches.map(oidBatch =>
+            restClient.postObject[Set[String], Seq[ValintatapajononTiedot]](
+              "valintaperusteet.valintatapajonosByOids"
+            )(200, oidBatch)
+          )
+        )
         .map(_.flatten.toSeq)
     } else {
       logger.info("Empty list of jonoOids provided for getValintatapajonot.")
@@ -34,5 +44,8 @@ class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val sys
 }
 
 class ValintaperusteetServiceMock extends IValintaperusteetService {
-  override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] = Future.successful(jonoOids.map(oid => ValintatapajononTiedot(oid, Some("valintatapajono_m"))).toSeq)
+  override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] =
+    Future.successful(
+      jonoOids.map(oid => ValintatapajononTiedot(oid, Some("valintatapajono_m"))).toSeq
+    )
 }

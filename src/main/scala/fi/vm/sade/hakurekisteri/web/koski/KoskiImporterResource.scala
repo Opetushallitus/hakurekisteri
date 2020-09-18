@@ -5,7 +5,12 @@ import akka.event.{Logging, LoggingAdapter}
 import org.scalatra.json.JacksonJsonSupport
 import fi.vm.sade.auditlog.{Audit, Changes, Target}
 import fi.vm.sade.hakurekisteri._
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiService, KoskiSuoritusHakuParams, KoskiUtil}
+import fi.vm.sade.hakurekisteri.integration.koski.{
+  IKoskiService,
+  KoskiService,
+  KoskiSuoritusHakuParams,
+  KoskiUtil
+}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
@@ -15,9 +20,11 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 
-class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
-                           (implicit val system: ActorSystem, sw: Swagger, val security: Security)
-  extends HakuJaValintarekisteriStack
+class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(implicit
+  val system: ActorSystem,
+  sw: Swagger,
+  val security: Security
+) extends HakuJaValintarekisteriStack
     with KoskiImporterSwaggerApi
     with HakurekisteriJsonSupport
     with FutureSupport
@@ -34,12 +41,14 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
 
   def checkAccessAndIntegrationStatus: User = {
     if (!KoskiUtil.koskiImporterResourceInUse) {
-      logger.warning("Manual Koski-integration has been disabled, but KoskiImporterResource was still called by user " + currentUser.get.username)
+      logger.warning(
+        "Manual Koski-integration has been disabled, but KoskiImporterResource was still called by user " + currentUser.get.username
+      )
       throw new RuntimeException(s"Manual Koski-integration is disabled by an env parameter!")
     }
     currentUser match {
       case Some(u) if u.isAdmin => u
-      case None => throw UserNotAuthorized(s"anonymous access not allowed")
+      case None                 => throw UserNotAuthorized(s"anonymous access not allowed")
     }
   }
 
@@ -49,15 +58,21 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
 
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       OppijanTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("oppijaOid", personOid)
         .setField("haeLukio", haeLukio.toString)
-        .setField("haeAmmatilliset", haeAmmatilliset.toString).build(),
-      Changes.EMPTY)
+        .setField("haeAmmatilliset", haeAmmatilliset.toString)
+        .build(),
+      Changes.EMPTY
+    )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotWithAliases(Set(personOid), KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
+      override val is: Future[_] = koskiService.updateHenkilotWithAliases(
+        Set(personOid),
+        KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset)
+      )
     }
   }
 
@@ -69,16 +84,24 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
     val maxOppijatPostSize: Int = ophConfig.integrations.koskiMaxOppijatPostSize
 
     if (personOids.size > maxOppijatPostSize) {
-      val msg = s"too many person oids: ${personOids.size} was greater than the allowed maximum ${maxOppijatPostSize}"
+      val msg =
+        s"too many person oids: ${personOids.size} was greater than the allowed maximum ${maxOppijatPostSize}"
       throw new IllegalArgumentException(msg)
     }
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       OppijoidenTietojenPaivitysKoskesta,
-      AuditUtil.targetFromParams(params)
-        .setField("oppijaOids", personOids.toString()).build(),
-      Changes.EMPTY)
+      AuditUtil
+        .targetFromParams(params)
+        .setField("oppijaOids", personOids.toString())
+        .build(),
+      Changes.EMPTY
+    )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotWithAliases(personOids, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
+      override val is: Future[_] = koskiService.updateHenkilotWithAliases(
+        personOids,
+        KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset)
+      )
     }
   }
 
@@ -88,15 +111,21 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
     val useBulk: Boolean = params.getAsOrElse("bulk", false)
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       HaunHakijoidenTietojenPaivitysKoskesta,
       new Target.Builder()
         .setField("hakuOid", hakuOid)
         .setField("haeLukio", haeLukio.toString)
-        .setField("haeAmmatilliset", haeAmmatilliset.toString).build(),
-      Changes.EMPTY)
+        .setField("haeAmmatilliset", haeAmmatilliset.toString)
+        .build(),
+      Changes.EMPTY
+    )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(hakuOid, KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset))
+      override val is: Future[_] = koskiService.updateHenkilotForHaku(
+        hakuOid,
+        KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset)
+      )
     }
   }
 

@@ -19,14 +19,15 @@ import collection.JavaConverters._
 
 trait FileAccess {
 
-  def fileName(groupUuid: String, uuid: String) = s"${now()}_${groupUuid}_${uuid}_student-results.zip"
+  def fileName(groupUuid: String, uuid: String) =
+    s"${now()}_${groupUuid}_${uuid}_student-results.zip"
 
   def now() = new SimpleDateFormat("dd-MM-yyyy_HH-mm").format(new java.util.Date())
 
   def read(uuid: String): Iterator[InputStream]
-  def write(groupUuid: String, uuid: String)(input:InputStream)
+  def write(groupUuid: String, uuid: String)(input: InputStream)
 
-  protected def closeInCaseOfFailure[T <: Closeable](ci:List[Try[T]]): List[T] = ci match {
+  protected def closeInCaseOfFailure[T <: Closeable](ci: List[Try[T]]): List[T] = ci match {
     case i if i.find(_.isFailure).isDefined => {
       i.filter(_.isSuccess).foreach(s => IOUtils.closeQuietly(s.get))
       throw i.find(_.isFailure).get.failed.get
@@ -37,10 +38,11 @@ trait FileAccess {
 
 object YtlFileSystem {
 
-  def apply(config: OphProperties): YtlFileSystem = config.getOrElse("ytl.s3.enabled", "false") match {
-    case p if "TRUE".equalsIgnoreCase(p) => new YtlS3FileSystem(config)
-    case _ => new YtlFileFileSystem(config)
-  }
+  def apply(config: OphProperties): YtlFileSystem =
+    config.getOrElse("ytl.s3.enabled", "false") match {
+      case p if "TRUE".equalsIgnoreCase(p) => new YtlS3FileSystem(config)
+      case _                               => new YtlFileFileSystem(config)
+    }
 }
 
 abstract class YtlFileSystem(config: OphProperties) extends FileAccess
@@ -52,22 +54,27 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
     Option(config.getOrElse("ytl.http.download.directory", null))
       .map(new File(_))
       .getOrElse {
-        logger.warn("Using OS temporary directory for YTL files since 'ytl.http.download.directory' configuration is missing!")
+        logger.warn(
+          "Using OS temporary directory for YTL files since 'ytl.http.download.directory' configuration is missing!"
+        )
         com.google.common.io.Files.createTempDir()
       }
 
   override def read(uuid: String): Iterator[InputStream] = {
     Try(Files.newDirectoryStream(directoryPath.toPath)) match {
       case Failure(f) => throw f;
-      case Success(s) => try {
-        closeInCaseOfFailure(s
-          .asScala
-          .filter(!_.toFile.isDirectory)
-          .filter(_.toString.contains(uuid))
-          .map(f => Try(new FileInputStream(f.toFile))).toList).iterator
-      } finally {
-        IOUtils.closeQuietly(s)
-      }
+      case Success(s) =>
+        try {
+          closeInCaseOfFailure(
+            s.asScala
+              .filter(!_.toFile.isDirectory)
+              .filter(_.toString.contains(uuid))
+              .map(f => Try(new FileInputStream(f.toFile)))
+              .toList
+          ).iterator
+        } finally {
+          IOUtils.closeQuietly(s)
+        }
     }
   }
 
@@ -77,7 +84,7 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
     new FileOutputStream(file)
   }
 
-  override def write(groupUuid: String, uuid: String)(input:InputStream) = {
+  override def write(groupUuid: String, uuid: String)(input: InputStream) = {
     val output = Try(getOutputStream(groupUuid, uuid)).toOption
     try {
       output.foreach(s => Try(IOUtils.copyLarge(input, s)))
@@ -88,13 +95,20 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
   }
 }
 
-class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends YtlFileSystem(config) {
+class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3)
+    extends YtlFileSystem(config) {
 
   def this(config: OphProperties) =
-    this(config, AmazonS3ClientBuilder.standard
-      .withRegion(Option(config.getOrElse("ytl.s3.region", null)).getOrElse(
-        throw new RuntimeException(s"S3 region configuration 'ytl.s3.region' is missing!")
-      )).build())
+    this(
+      config,
+      AmazonS3ClientBuilder.standard
+        .withRegion(
+          Option(config.getOrElse("ytl.s3.region", null)).getOrElse(
+            throw new RuntimeException(s"S3 region configuration 'ytl.s3.region' is missing!")
+          )
+        )
+        .build()
+    )
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
 
@@ -104,9 +118,15 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends
 
   override def read(uuid: String): Iterator[InputStream] = {
     Try(
-      closeInCaseOfFailure(s3client.listObjectsV2(bucket).getObjectSummaries.asScala
-        .map(_.getKey).filter(_.contains(uuid)).toList
-        .map(key => Try(s3client.getObject(bucket, key)))
+      closeInCaseOfFailure(
+        s3client
+          .listObjectsV2(bucket)
+          .getObjectSummaries
+          .asScala
+          .map(_.getKey)
+          .filter(_.contains(uuid))
+          .toList
+          .map(key => Try(s3client.getObject(bucket, key)))
       ).map(_.getObjectContent).iterator
     ) match {
       case Success(x) => x
@@ -118,18 +138,22 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3) extends
     try {
       s3client.putObject(bucket, fileName(groupUuid, uuid), input, null)
     } catch {
-      case t:Throwable => logAndThrowS3Exception(t)
+      case t: Throwable => logAndThrowS3Exception(t)
     } finally {
       IOUtils.closeQuietly(input)
     }
   }
 
-  private def logAndThrowS3Exception(t:Throwable) = {
+  private def logAndThrowS3Exception(t: Throwable) = {
     t match {
-      case e:AmazonServiceException => logger.error(
-        s"""Got error from Amazon s3. HTTP status code ${e.getStatusCode}, AWS Error Code ${e.getErrorCode},
-           error message ${e.getErrorMessage}, error type ${e.getErrorType}, request ID ${e.getRequestId}""", e)
-      case e:AmazonClientException => logger.error(s"""Unable to connect to Amazon s3. Got error message ${e.getMessage}""", e)
+      case e: AmazonServiceException =>
+        logger.error(
+          s"""Got error from Amazon s3. HTTP status code ${e.getStatusCode}, AWS Error Code ${e.getErrorCode},
+           error message ${e.getErrorMessage}, error type ${e.getErrorType}, request ID ${e.getRequestId}""",
+          e
+        )
+      case e: AmazonClientException =>
+        logger.error(s"""Unable to connect to Amazon s3. Got error message ${e.getMessage}""", e)
       case e => logger.error(s"""Got unexpected exception when connecting Amazon s3""", e)
     }
     throw t

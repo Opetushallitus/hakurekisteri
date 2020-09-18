@@ -8,6 +8,6 @@ object Kausi extends Enumeration {
   def fromKoodiUri(koodiUri: String): Kausi = koodiUri.toLowerCase match {
     case s if s == "kausi_s" || s.startsWith("kausi_s#") => Syksy
     case k if k == "kausi_k" || k.startsWith("kausi_k#") => Kevät
-    case _ => throw new IllegalArgumentException(s"unrecognised kausi uri $koodiUri")
+    case _                                               => throw new IllegalArgumentException(s"unrecognised kausi uri $koodiUri")
   }
 }

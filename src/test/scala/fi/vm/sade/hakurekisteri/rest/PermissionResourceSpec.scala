@@ -3,10 +3,18 @@ package fi.vm.sade.hakurekisteri.rest
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.PohjakoulutusOids
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusBasedPermissionCheckerActorRef, HasPermission, HasPermissionFromOrgs}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  HakemusBasedPermissionCheckerActorRef,
+  HasPermission,
+  HasPermissionFromOrgs
+}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{
+  SuoritusHenkilotQuery,
+  VirallinenSuoritus,
+  yksilollistaminen
+}
 import fi.vm.sade.hakurekisteri.web.permission.{PermissionCheckResponse, PermissionResource}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.joda.time.{DateTime, LocalDate}
@@ -28,17 +36,39 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
   val suoritusActor = system.actorOf(Props(new Actor {
     override def receive: Receive = {
-      case q: SuoritusHenkilotQuery if q.henkilot.henkiloOidsWithLinkedOids.contains("timeout") => Future.successful(Thread.sleep(2000)) pipeTo sender
-      case q: SuoritusHenkilotQuery if q.henkilot.henkiloOidsWithLinkedOids.contains("rikki") => Future.failed(new Exception("palvelu rikki")) pipeTo sender
-      case q: SuoritusHenkilotQuery => sender ! Seq(
-        VirallinenSuoritus(PohjakoulutusOids.perusopetus, "1.2.246.562.10.1", "VALMIS", new LocalDate(), "1.2.246.562.24.1", yksilollistaminen = yksilollistaminen.Ei, "FI", None, vahv = true, "1.2.246.562.24.10")
-      )
+      case q: SuoritusHenkilotQuery if q.henkilot.henkiloOidsWithLinkedOids.contains("timeout") =>
+        Future.successful(Thread.sleep(2000)) pipeTo sender
+      case q: SuoritusHenkilotQuery if q.henkilot.henkiloOidsWithLinkedOids.contains("rikki") =>
+        Future.failed(new Exception("palvelu rikki")) pipeTo sender
+      case q: SuoritusHenkilotQuery =>
+        sender ! Seq(
+          VirallinenSuoritus(
+            PohjakoulutusOids.perusopetus,
+            "1.2.246.562.10.1",
+            "VALMIS",
+            new LocalDate(),
+            "1.2.246.562.24.1",
+            yksilollistaminen = yksilollistaminen.Ei,
+            "FI",
+            None,
+            vahv = true,
+            "1.2.246.562.24.10"
+          )
+        )
     }
   }))
   val opiskelijaActor = system.actorOf(Props(new Actor {
-    override def receive: Actor.Receive = {
-      case q: OpiskelijaHenkilotQuery => sender ! Seq(
-        Opiskelija("1.2.246.562.10.2", "9", "9A", "1.2.246.562.24.1", new DateTime(), None, "1.2.246.562.24.10")
+    override def receive: Actor.Receive = { case q: OpiskelijaHenkilotQuery =>
+      sender ! Seq(
+        Opiskelija(
+          "1.2.246.562.10.2",
+          "9",
+          "9A",
+          "1.2.246.562.24.1",
+          new DateTime(),
+          None,
+          "1.2.246.562.24.10"
+        )
       )
     }
   }))
@@ -50,13 +80,21 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
   def mockHakemusBasedPermissionChecker(hasPermissionForOrgs: Boolean) = {
     new HakemusBasedPermissionCheckerActorRef(system.actorOf(Props(new Actor {
       override def receive: Receive = {
-        case _: HasPermission => sender ! true
+        case _: HasPermission         => sender ! true
         case _: HasPermissionFromOrgs => sender ! hasPermissionForOrgs
       }
     })))
   }
 
-  addServlet(new PermissionResource(suoritusActor, opiskelijaActor, hakemusBasedPermissionCheckerActor = mockPermissionChecker, Some(1.seconds)), "/")
+  addServlet(
+    new PermissionResource(
+      suoritusActor,
+      opiskelijaActor,
+      hakemusBasedPermissionCheckerActor = mockPermissionChecker,
+      Some(1.seconds)
+    ),
+    "/"
+  )
 
   test("should return http status 200") {
     val json =
@@ -66,7 +104,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
         |}""".stripMargin
 
     post("/", json) {
-      response.status should be (200)
+      response.status should be(200)
     }
   }
 
@@ -79,7 +117,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.accessAllowed should be (Some(true))
+      checkResponse.accessAllowed should be(Some(true))
     }
   }
 
@@ -92,7 +130,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.accessAllowed should be (Some(true))
+      checkResponse.accessAllowed should be(Some(true))
     }
   }
 
@@ -104,7 +142,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
         |}""".stripMargin
 
     post("/", json) {
-      response.status should be (500)
+      response.status should be(500)
     }
   }
 
@@ -117,7 +155,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.errorMessage should be (Some("palvelu rikki"))
+      checkResponse.errorMessage should be(Some("palvelu rikki"))
     }
   }
 
@@ -130,8 +168,10 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.errorMessage should be (Some("requirement failed: Blank person oid in oid list."))
-      response.status should be (400)
+      checkResponse.errorMessage should be(
+        Some("requirement failed: Blank person oid in oid list.")
+      )
+      response.status should be(400)
     }
   }
 
@@ -144,18 +184,26 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.errorMessage should be (Some("timeout occurred during permission check"))
+      checkResponse.errorMessage should be(Some("timeout occurred during permission check"))
     }
   }
 
   test("should return http 400 if cannot parse request object") {
     post("/", "") {
-      response.status should be (400)
+      response.status should be(400)
     }
   }
 
   test("should return true if matching suoritus found, despite no hakemus based permission") {
-    addServlet(new PermissionResource(suoritusActor, opiskelijaActor, hakemusBasedPermissionCheckerActor = noPermissionForOrgsMockPermissionChecker, Some(1.seconds)), "/noPermission/")
+    addServlet(
+      new PermissionResource(
+        suoritusActor,
+        opiskelijaActor,
+        hakemusBasedPermissionCheckerActor = noPermissionForOrgsMockPermissionChecker,
+        Some(1.seconds)
+      ),
+      "/noPermission/"
+    )
     val json =
       """{
         |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
@@ -164,7 +212,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/noPermission/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.accessAllowed should be (Some(true))
+      checkResponse.accessAllowed should be(Some(true))
     }
   }
 
@@ -177,11 +225,13 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/noPermission/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.accessAllowed should be (Some(true))
+      checkResponse.accessAllowed should be(Some(true))
     }
   }
 
-  test("should return false if no matching suoritus or opiskelija found and no hakemus based permission") {
+  test(
+    "should return false if no matching suoritus or opiskelija found and no hakemus based permission"
+  ) {
     val json =
       """{
         |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
@@ -190,7 +240,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
 
     post("/noPermission/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.accessAllowed should be (Some(false))
+      checkResponse.accessAllowed should be(Some(false))
     }
   }
 

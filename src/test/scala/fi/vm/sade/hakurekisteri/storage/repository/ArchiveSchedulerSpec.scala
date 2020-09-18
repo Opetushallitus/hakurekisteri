@@ -7,7 +7,13 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import support.{ArchiveScheduler, Archiver}
 
-class ArchiveSchedulerSpec extends FlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with MockitoSugar with Waiters {
+class ArchiveSchedulerSpec
+    extends FlatSpec
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with Matchers
+    with MockitoSugar
+    with Waiters {
 
   private val archiver: Archiver = mock[Archiver]
   private val archiveScheduler = new ArchiveScheduler(archiver)
@@ -22,7 +28,7 @@ class ArchiveSchedulerSpec extends FlatSpec with BeforeAndAfterEach with BeforeA
       intercept[RuntimeException] {
         archiveScheduler.start("invalid")
       }
-    expectedException.getMessage should include ("CronExpression 'invalid' is invalid")
+    expectedException.getMessage should include("CronExpression 'invalid' is invalid")
   }
 
   it should "don't invoke archive() if lock is not acquired" in {

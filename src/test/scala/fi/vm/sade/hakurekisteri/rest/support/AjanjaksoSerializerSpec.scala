@@ -10,7 +10,6 @@ import org.joda.time.DateTime._
 import com.github.nscala_time.time.Implicits._
 import org.json4s.JsonAST.{JValue, JString, JNothing}
 
-
 class AjanjaksoSerializerSpec extends FlatSpec with Matchers {
 
   protected implicit def jsonFormats: Formats = DefaultFormats + new AjanjaksoSerializer
@@ -20,14 +19,12 @@ class AjanjaksoSerializerSpec extends FlatSpec with Matchers {
   it should "serialize end date if it's defined" in {
     val ajanjakso = Ajanjakso(now, now + 1.day)
     val loppuField = toJValue(ajanjakso) \ "loppu"
-    loppuField should equal (JString(ajanjakso.loppu.toString))
+    loppuField should equal(JString(ajanjakso.loppu.toString))
   }
-
-
 
   it should "not serialize end date if it's defined" in {
     val ajanjakso = Ajanjakso(now, None)
-    toJValue(ajanjakso) \ "loppu" should be (JNothing)
+    toJValue(ajanjakso) \ "loppu" should be(JNothing)
   }
 
   def toJValue(ajanjakso: Ajanjakso): JValue = {

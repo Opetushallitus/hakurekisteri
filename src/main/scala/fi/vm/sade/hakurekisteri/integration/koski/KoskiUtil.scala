@@ -9,10 +9,15 @@ import scala.math.BigDecimal
 object KoskiUtil {
 
   val koski_integration_source = "koski"
-  var deadlineDate: LocalDate = new LocalDate(OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date"))
-  lazy val koskiImporterResourceInUse: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.use.koski.importer.resource").toBoolean
-  lazy val updateKkHaut: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.kkHaut").toBoolean
-  lazy val updateToisenAsteenHaut: Boolean = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.toisenAsteenHaut").toBoolean
+  var deadlineDate: LocalDate = new LocalDate(
+    OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date")
+  )
+  lazy val koskiImporterResourceInUse: Boolean =
+    OphUrlProperties.getProperty("suoritusrekisteri.use.koski.importer.resource").toBoolean
+  lazy val updateKkHaut: Boolean =
+    OphUrlProperties.getProperty("suoritusrekisteri.koski.update.kkHaut").toBoolean
+  lazy val updateToisenAsteenHaut: Boolean =
+    OphUrlProperties.getProperty("suoritusrekisteri.koski.update.toisenAsteenHaut").toBoolean
 
   def isAfterArvosanatWithNelosiaDeadlineDate(): Boolean = {
     // Neloset halutaan tallentaa suoritusrekisteriin kaksi viikkoa ennen deadline-päivämäärää
@@ -35,7 +40,8 @@ object KoskiUtil {
   val valinnaiset = Set("KO") ++ valinnaisetkielet
 
   val kielet = Set("A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33")
-  val oppiaineet = Set( "HI", "MU", "BI", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
+  val oppiaineet =
+    Set("HI", "MU", "BI", "KT", "FI", "KO", "KE", "YH", "TE", "KS", "FY", "GE", "LI", "KU", "MA")
   val eivalinnaiset = kielet ++ oppiaineet ++ Set("AI")
   val peruskoulunaineet = kielet ++ oppiaineet ++ Set("AI")
   val lukioaineet = peruskoulunaineet ++ Set("PS") //lukio has psychology as a mandatory subject
@@ -46,13 +52,29 @@ object KoskiUtil {
   val peruskouluaineetRegex = kieletRegex ++ oppiaineetRegex ++ Set("AI".r)
 
   val peruskoulunArvosanat = Set[String]("4", "5", "6", "7", "8", "9", "10")
-  val aidinkieli = Map("AI1" -> "FI", "AI2" -> "SV", "AI3" -> "SE", "AI4" -> "RI", "AI5" -> "VK", "AI6" -> "XX", "AI7" -> "FI_2", "AI8" -> "SV_2", "AI9" -> "FI_SE", "AI10" -> "XX", "AI11" -> "FI_VK", "AI12" -> "SV_VK", "AIAI" -> "XX")
+  val aidinkieli = Map(
+    "AI1" -> "FI",
+    "AI2" -> "SV",
+    "AI3" -> "SE",
+    "AI4" -> "RI",
+    "AI5" -> "VK",
+    "AI6" -> "XX",
+    "AI7" -> "FI_2",
+    "AI8" -> "SV_2",
+    "AI9" -> "FI_SE",
+    "AI10" -> "XX",
+    "AI11" -> "FI_VK",
+    "AI12" -> "SV_VK",
+    "AIAI" -> "XX"
+  )
 
   val ZERO = BigDecimal("0")
 
   val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 
-  val eiHalututAlle30opValmaTilat: Seq[String] = Seq("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu", "valmistunut")
+  val eiHalututAlle30opValmaTilat: Seq[String] =
+    Seq("eronnut", "erotettu", "katsotaaneronneeksi", "mitatoity", "peruutettu", "valmistunut")
 
-  val eronneeseenRinnastettavatKoskiTilat = Set("eronnut", "erotettu", "katsotaaneronneeksi" ,"mitatoity", "peruutettu")
+  val eronneeseenRinnastettavatKoskiTilat =
+    Set("eronnut", "erotettu", "katsotaaneronneeksi", "mitatoity", "peruutettu")
 }

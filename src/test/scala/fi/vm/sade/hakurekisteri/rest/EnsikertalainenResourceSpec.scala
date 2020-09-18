@@ -3,12 +3,21 @@ package fi.vm.sade.hakurekisteri.rest
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{
+  Ensikertalainen,
+  EnsikertalainenActor,
+  KkVastaanotto,
+  Testihaku
+}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse, TarjontaActorRef}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActorRef, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
+  EnsimmainenVastaanotto,
+  ValintarekisteriActorRef,
+  ValintarekisteriQuery
+}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusHenkilotQuery
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusHenkilotQuery
@@ -33,6 +42,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   val vastaanottohetki = new DateTime(2015, 1, 1, 0, 0, 0, 0)
   val hakemusServiceMock = mock[IHakemusService]
 
+  // format: off
   addServlet(new EnsikertalainenResource(ensikertalainenActor = system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {

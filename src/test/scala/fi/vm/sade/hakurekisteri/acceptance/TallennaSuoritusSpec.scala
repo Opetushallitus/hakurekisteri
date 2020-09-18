@@ -12,7 +12,9 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
 
-  info("Koulun virkailijana tallennan kouluni oppilaiden tutkintosuoritukset jotta niitä voi hyödyntää haussa ja valinnassa")
+  info(
+    "Koulun virkailijana tallennan kouluni oppilaiden tutkintosuoritukset jotta niitä voi hyödyntää haussa ja valinnassa"
+  )
 
   feature("Suorituksen tallentaminen") {
     scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
@@ -68,13 +70,21 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
         </ROWSET>
 
       When("Haetaan koulun suorituksia")
-        val haetut =
-          hae(suoritukset
-            koululle koulu.id)
+      val haetut =
+        hae(
+          suoritukset
+            koululle koulu.id
+        )
 
       Then("Molemmille löytyvät peruskoulun keskeneräiset suoritukset arvioidulla valmistumisella")
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", s"04.06.${new LocalDate().year().get}", Mikko.oid).asInstanceOf[Suoritus])
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", s"04.06.${new LocalDate().year().get}", Matti.oid).asInstanceOf[Suoritus])
+      haetut should contain(
+        Peruskoulu(koulu.id, "KESKEN", s"04.06.${new LocalDate().year().get}", Mikko.oid)
+          .asInstanceOf[Suoritus]
+      )
+      haetut should contain(
+        Peruskoulu(koulu.id, "KESKEN", s"04.06.${new LocalDate().year().get}", Matti.oid)
+          .asInstanceOf[Suoritus]
+      )
 
     }
 
@@ -132,12 +142,18 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
 
       When("Haetaan koulun suorituksia")
       val haetut =
-        hae(opiskelijat
-          koululle koulu.id)
+        hae(
+          opiskelijat
+            koululle koulu.id
+        )
 
       Then("Molemmille löytyvät opiskelijatiedot")
-      haetut should contain (Opiskelija(koulu.id, "9", "9A", Mikko.oid, "01.01.2014", None, source = "Test"))
-      haetut should contain (Opiskelija(koulu.id, "9", "9A", Matti.oid, "01.01.2014", None, source = "Test"))
+      haetut should contain(
+        Opiskelija(koulu.id, "9", "9A", Mikko.oid, "01.01.2014", None, source = "Test")
+      )
+      haetut should contain(
+        Opiskelija(koulu.id, "9", "9A", Matti.oid, "01.01.2014", None, source = "Test")
+      )
 
     }
 
@@ -174,10 +190,11 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
       create(suoritus3)
 
       Then("löytyy kannasta  tallennettu suoritus")
-      allSuoritukset should (contain(suoritus.asInstanceOf[Suoritus])  and contain(suoritus2.asInstanceOf[Suoritus]))
+      allSuoritukset should (contain(suoritus.asInstanceOf[Suoritus]) and contain(
+        suoritus2.asInstanceOf[Suoritus]
+      ))
     }
 
   }
-
 
 }

@@ -24,10 +24,20 @@ object OppijatPostSize {
   def maxOppijatPostSize: Int = 5000
 }
 
-class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusService, val ensikertalaisuus: ActorRef, val oppijaNumeroRekisteri: IOppijaNumeroRekisteri)
-                    (implicit val system: ActorSystem, sw: Swagger, val security: Security)
-    extends HakuJaValintarekisteriStack with OppijaFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport
-    with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {
+class OppijaResource(
+  val rekisterit: Registers,
+  val hakemusService: IHakemusService,
+  val ensikertalaisuus: ActorRef,
+  val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
+)(implicit val system: ActorSystem, sw: Swagger, val security: Security)
+    extends HakuJaValintarekisteriStack
+    with OppijaFetcher
+    with OppijaSwaggerApi
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -42,7 +52,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
   def getUser: User = {
     currentUser match {
       case Some(u) => u
-      case None => throw UserNotAuthorized(s"anonymous access not allowed")
+      case None    => throw UserNotAuthorized(s"anonymous access not allowed")
     }
   }
 
@@ -58,12 +68,16 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
       hakukohde = params.get("hakukohde").flatMap(_.blankOption)
     )
 
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       ResourceRead,
-      AuditUtil.targetFromParams(params)
+      AuditUtil
+        .targetFromParams(params)
         .setField("resource", "OppijaResource")
-        .setField("summary", query.result.summary).build(),
-      Changes.EMPTY)
+        .setField("summary", query.result.summary)
+        .build(),
+      Changes.EMPTY
+    )
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -82,10 +96,16 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     val personOid = params("oid")
     val hakuOid = params.get("haku")
 
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       ResourceRead,
-      new Target.Builder().setField("resource", "OppijaResource").setField("summary", read.result.summary).setField("oppijaOid", params("oid")).build(),
-      new Changes.Builder().build())
+      new Target.Builder()
+        .setField("resource", "OppijaResource")
+        .setField("summary", read.result.summary)
+        .setField("oppijaOid", params("oid"))
+        .build(),
+      new Changes.Builder().build()
+    )
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -104,7 +124,8 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     val ensikertalaisuudet = params.getOrElse("ensikertalaisuudet", "true").toBoolean
     val henkilot = parse(request.body).extract[Set[String]]
     if (henkilot.size > OppijatPostSize.maxOppijatPostSize) {
-      val msg = s"too many person oids: ${henkilot.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
+      val msg =
+        s"too many person oids: ${henkilot.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
       throw new IllegalArgumentException(msg)
     }
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) {
@@ -115,12 +136,16 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
     if (ensikertalaisuudet && hakuOid.getOrElse("").isEmpty) {
       BadRequest(body = Map("reason" -> "Haku has to be defined if ensikertalaisuudet is true"))
     } else {
-      audit.log(auditUser,
+      audit.log(
+        auditUser,
         ResourceRead,
-        AuditUtil.targetFromParams(params)
+        AuditUtil
+          .targetFromParams(params)
           .setField("resource", "OppijaResource")
-          .setField("summary", post.result.summary).build(),
-        new Changes.Builder().build())
+          .setField("summary", post.result.summary)
+          .build(),
+        new Changes.Builder().build()
+      )
 
       new AsyncResult() {
         override implicit def timeout: Duration = 500.seconds
@@ -135,11 +160,8 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: IHakemusServ
   }
 
   incident {
-    case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, t.getMessage))
-    case t: NoSuchElementException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: HakuNotFoundException    => (id) => NotFound(IncidentReport(id, t.getMessage))
+    case t: NoSuchElementException   => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }
-
-
-

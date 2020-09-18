@@ -7,7 +7,11 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest, ParametritActorRef}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{
+  HakuParams,
+  KierrosRequest,
+  ParametritActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
@@ -17,9 +21,18 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
-
-class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, parametrit: ParametritActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
-  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
+class HakuActor(
+  koskiService: IKoskiService,
+  tarjonta: TarjontaActorRef,
+  parametrit: ParametritActorRef,
+  ytlIntegration: YtlIntegration,
+  config: Config
+) extends Actor
+    with ActorLogging {
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+    config.integrations.asyncOperationThreadPoolSize,
+    getClass.getSimpleName
+  )
 
   var storedHakus: Seq[Haku] = Seq()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours
@@ -32,12 +45,14 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
 
   def getHaku(q: GetHaku): Future[Haku] = Future {
     storedHakus.find(_.oid == q.oid) match {
-      case None => throw HakuNotFoundException(s"no stored haku found with oid ${q.oid}")
+      case None    => throw HakuNotFoundException(s"no stored haku found with oid ${q.oid}")
       case Some(h) => h
     }
   }
 
-  log.info(s"starting haku actor $self (hakuRefreshTime: $hakuRefreshTime, hakemusRefreshTime: $hakemusRefreshTime)")
+  log.info(
+    s"starting haku actor $self (hakuRefreshTime: $hakuRefreshTime, hakemusRefreshTime: $hakemusRefreshTime)"
+  )
 
   override def receive: Actor.Receive = {
     case Update =>
@@ -51,13 +66,14 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
     case sq: Seq[_] =>
-      storedHakus = sq.collect{ case h: Haku => h}
+      storedHakus = sq.collect { case h: Haku => h }
       val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
       val ytlHakus = activeHakus.filter(_.kkHaku)
       val activeYhteisHakus: Seq[Haku] = activeHakus.filter(_.hakutapaUri.startsWith("hakutapa_01"))
       val activeKKYhteisHakus = activeYhteisHakus.filter(_.kkHaku)
       val active2AsteYhteisHakus = activeYhteisHakus.filter(_.toisenAsteenHaku)
-      val ytlHakuOidsWithNames = ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
+      val ytlHakuOidsWithNames =
+        ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
       val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
       val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
       val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
@@ -94,8 +110,8 @@ class HakuActor(koskiService: IKoskiService, tarjonta: TarjontaActorRef, paramet
 
     import scala.concurrent.duration._
     implicit val to: Timeout = 2.minutes
-    (parametrit.actor ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover {
-      case _ => InFuture
+    (parametrit.actor ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover { case _ =>
+      InFuture
     }
   }
 
@@ -119,17 +135,19 @@ case class GetHaku(oid: String)
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
 case class Haku(
-                 nimi: Kieliversiot,
-                 oid: String, aika:
-                 Ajanjakso, kausi: String,
-                 vuosi: Int,
-                 koulutuksenAlkamiskausi: Option[String],
-                 koulutuksenAlkamisvuosi: Option[Int],
-                 kkHaku: Boolean,
-                 toisenAsteenHaku: Boolean,
-                 viimeinenHakuaikaPaattyy: Option[DateTime],
-                 kohdejoukkoUri: Option[String],
-                 hakutapaUri: String) {
+  nimi: Kieliversiot,
+  oid: String,
+  aika: Ajanjakso,
+  kausi: String,
+  vuosi: Int,
+  koulutuksenAlkamiskausi: Option[String],
+  koulutuksenAlkamisvuosi: Option[Int],
+  kkHaku: Boolean,
+  toisenAsteenHaku: Boolean,
+  viimeinenHakuaikaPaattyy: Option[DateTime],
+  kohdejoukkoUri: Option[String],
+  hakutapaUri: String
+) {
   val isActive: Boolean = aika.isCurrently
 }
 
@@ -137,7 +155,12 @@ object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
     val ajanjakso = Ajanjakso(findStart(haku), loppu)
     Haku(
-      Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)), haku.oid.get,
+      Kieliversiot(
+        haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption),
+        haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption),
+        haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)
+      ),
+      haku.oid.get,
       ajanjakso,
       haku.hakukausiUri,
       haku.hakukausiVuosi,
@@ -166,5 +189,7 @@ class FutureList[A](futures: Seq[Future[A]]) {
 }
 
 object FutureList {
-  implicit def futures2FutureList[A](futures: Seq[Future[A]]): FutureList[A] = new FutureList(futures)
+  implicit def futures2FutureList[A](futures: Seq[Future[A]]): FutureList[A] = new FutureList(
+    futures
+  )
 }

@@ -12,8 +12,11 @@ import scala.collection.JavaConverters._
 
 class LocalDevProxyingServlet(proxyTarget: String) extends ProxyServlet.Transparent with Logging {
   override def init(config: ServletConfig): Unit = {
-    val initParameters = EnumerationUtils.toList(config.getInitParameterNames).asScala.
-      map(name => s"$name == '${config.getInitParameter(name)}'").mkString(", ")
+    val initParameters = EnumerationUtils
+      .toList(config.getInitParameterNames)
+      .asScala
+      .map(name => s"$name == '${config.getInitParameter(name)}'")
+      .mkString(", ")
     logger.info(s"Initialising for path $proxyTarget with config $initParameters")
     super.init(config)
   }

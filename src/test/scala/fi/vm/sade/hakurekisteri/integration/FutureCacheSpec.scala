@@ -11,8 +11,9 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
   val cacheFactory = MockCacheFactory.get
 
-  def newCache(ttl: Long = 10.seconds.toMillis) = cacheFactory.getInstance[String, String](ttl, this.getClass, classOf[String], "moi")
-    .asInstanceOf[InMemoryFutureCache[String,String]]
+  def newCache(ttl: Long = 10.seconds.toMillis) = cacheFactory
+    .getInstance[String, String](ttl, this.getClass, classOf[String], "moi")
+    .asInstanceOf[InMemoryFutureCache[String, String]]
 
   behavior of "FutureCache"
 
@@ -25,7 +26,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
     cache + (cacheKey, cacheEntryValue)
 
-    cache.getCache(cacheKey) should be (cacheEntryValue)
+    cache.getCache(cacheKey) should be(cacheEntryValue)
   }
 
   it should "remove an entry from cache" in {
@@ -33,11 +34,11 @@ class FutureCacheSpec extends FlatSpec with Matchers {
 
     Await.result(cache + (cacheKey, cacheEntryValue), 1.second)
 
-    cache.getCache.size should be (1)
+    cache.getCache.size should be(1)
 
     cache - cacheKey
 
-    cache.getCache.size should be (0)
+    cache.getCache.size should be(0)
   }
 
   it should "return the size of the cache" in {
@@ -46,7 +47,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
     cache + (cacheKey, cacheEntryValue)
     cache + ("foo2", cacheEntryValue + "2")
 
-    cache.size should be (2)
+    cache.size should be(2)
   }
 
   it should "tell if cache contains a key" in {
@@ -68,7 +69,7 @@ class FutureCacheSpec extends FlatSpec with Matchers {
   it should "not populate cache with empty value" in {
     val cache = newCache()
 
-    an [NullPointerException] should be thrownBy {
+    an[NullPointerException] should be thrownBy {
       Await.result(cache.get("lol", _ => Future.successful(None)), 1.second) should be(None)
     }
   }

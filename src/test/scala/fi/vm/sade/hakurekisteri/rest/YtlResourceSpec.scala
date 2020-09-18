@@ -17,26 +17,44 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.{ExecutionContext, Future}
 
 @RunWith(classOf[JUnitRunner])
-class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMockFixture with MockFactory {
+class YtlResourceSpec
+    extends ScalatraFunSuite
+    with DispatchSupport
+    with YtlMockFixture
+    with MockFactory {
   implicit val system = ActorSystem()
   implicit val clientEc = ExecutorUtil.createExecutor(1, "ytl-resource-test-pool")
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
   val hakemusService = stub[IHakemusService]
   val fileSystem = YtlFileSystem(ytlProperties)
-  val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
+  val ytlHttpFetch = new YtlHttpFetch(ytlProperties, fileSystem)
   val config: Config = new MockConfig
 
   val successfulYtlKokelasPersister: KokelasPersister = mock[KokelasPersister]
-  (successfulYtlKokelasPersister.persistSingle(_: KokelasWithPersonAliases)(_: ExecutionContext)).expects(*, *).returns(Future.unit)
+  (successfulYtlKokelasPersister
+    .persistSingle(_: KokelasWithPersonAliases)(_: ExecutionContext))
+    .expects(*, *)
+    .returns(Future.unit)
 
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, hakemusService, MockOppijaNumeroRekisteri,
-    successfulYtlKokelasPersister, config)
+  val ytlIntegration = new YtlIntegration(
+    ytlProperties,
+    ytlHttpFetch,
+    hakemusService,
+    MockOppijaNumeroRekisteri,
+    successfulYtlKokelasPersister,
+    config
+  )
   val someKkHaku = "kkhaku"
   ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
-  val answers = HakemusAnswers(henkilotiedot= Some(HakemusHenkilotiedot(Henkilotunnus=Some("050996-9574"))))
-  val hakemusWithPersonOidEnding9574 = Future.successful(Seq(FullHakemus("",Some("050996-9574"),someKkHaku,Some(answers),Some("ACTIVE"),Seq(),Seq())))
+  val answers =
+    HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("050996-9574"))))
+  val hakemusWithPersonOidEnding9574 = Future.successful(
+    Seq(
+      FullHakemus("", Some("050996-9574"), someKkHaku, Some(answers), Some("ACTIVE"), Seq(), Seq())
+    )
+  )
 
   addServlet(new YtlResource(ytlIntegration), "/*")
 
@@ -44,11 +62,11 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with YtlMock
 
   test("should launch YTL fetch") {
     post("/http_request") {
-      status should be (202)
+      status should be(202)
     }
-    (hakemusService.hakemuksetForPerson _) when(*) returns(hakemusWithPersonOidEnding9574)
+    (hakemusService.hakemuksetForPerson _) when (*) returns (hakemusWithPersonOidEnding9574)
     get("/http_request/050996-9574") {
-      status should be (202)
+      status should be(202)
     }
   }
 }

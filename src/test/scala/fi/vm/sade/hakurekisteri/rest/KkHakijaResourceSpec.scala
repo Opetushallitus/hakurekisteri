@@ -23,16 +23,36 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with Waiters with LocalhostProperties {
+class KkHakijaResourceSpec
+    extends ScalatraFunSuite
+    with HakeneetSupport
+    with MockitoSugar
+    with DispatchSupport
+    with Waiters
+    with LocalhostProperties {
   private implicit val swagger: Swagger = new HakurekisteriSwagger
   private implicit val security: TestSecurity = new TestSecurity
 
   private val endPoint = mock[Endpoint]
-  private val hakuappClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
-  private val ataruClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/lomake-editori"), aClient = Some(new CapturingAsyncHttpClient(endPoint)))
-  private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(system.actorOf(Props(new MockedOrganisaatioActor())))
+  private val hakuappClient = new VirkailijaRestClient(
+    ServiceConfig(serviceUrl = "http://localhost/haku-app"),
+    aClient = Some(new CapturingAsyncHttpClient(endPoint))
+  )
+  private val ataruClient = new VirkailijaRestClient(
+    ServiceConfig(serviceUrl = "http://localhost/lomake-editori"),
+    aClient = Some(new CapturingAsyncHttpClient(endPoint))
+  )
+  private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
+    system.actorOf(Props(new MockedOrganisaatioActor()))
+  )
   private val tarjontaMock = new TarjontaActorRef(mock[ActorRef])
-  private val hakemusService = new HakemusService(hakuappClient, ataruClient, tarjontaMock, organisaatioMock, MockOppijaNumeroRekisteri)
+  private val hakemusService = new HakemusService(
+    hakuappClient,
+    ataruClient,
+    tarjontaMock,
+    organisaatioMock,
+    MockOppijaNumeroRekisteri
+  )
   private val hakuMock = mock[ActorRef]
   private val suoritusMock = mock[ActorRef]
   private val valintaTulosMock = new ValintaTulosActorRef(mock[ActorRef])
@@ -40,7 +60,18 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   private val koodistoMock = new KoodistoActorRef(mock[ActorRef])
   private val valintaperusteetMock = new ValintaperusteetServiceMock
 
-  val service = new KkHakijaService(hakemusService, mock[Hakupalvelu], tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock, valintaRekisteri, valintaperusteetMock, Timeout(1.minute))
+  val service = new KkHakijaService(
+    hakemusService,
+    mock[Hakupalvelu],
+    tarjontaMock,
+    hakuMock,
+    koodistoMock,
+    suoritusMock,
+    valintaTulosMock,
+    valintaRekisteri,
+    valintaperusteetMock,
+    Timeout(1.minute)
+  )
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")
 
@@ -56,13 +87,13 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     Thread.sleep(2000)
 
     get("/?hakukohde=1.11.1") {
-      status should be (200)
+      status should be(200)
     }
   }
 
   test("should return 400 Bad Request if no parameters given") {
     get("/") {
-      status should be (400)
+      status should be(400)
     }
   }
 

@@ -5,6 +5,6 @@ object TicketValidator {
 
   def isValidSt(st: String): Boolean = st match {
     case validSt() => true
-    case _ => false
+    case _         => false
   }
 }

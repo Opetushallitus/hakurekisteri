@@ -13,7 +13,11 @@ import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetSer
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActorRef
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, Siirtotiedostojono, SiirtotiedostojonoResource}
+import fi.vm.sade.hakurekisteri.web.jonotus.{
+  AsiakirjaResource,
+  Siirtotiedostojono,
+  SiirtotiedostojonoResource
+}
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
 import javax.servlet.ServletContext
@@ -29,14 +33,21 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     val config = WebAppConfig.getConfig(context)
     implicit val system = config.productionServerConfig.system
 
-    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
+    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+      config.integrations.asyncOperationThreadPoolSize,
+      getClass.getSimpleName
+    )
     implicit val security = config.productionServerConfig.security
 
     val anyActorRef = system.deadLetters
-    val kkHakijaService = new KkHakijaService(hakemusService = new HakemusServiceMock(),
+    val kkHakijaService = new KkHakijaService(
+      hakemusService = new HakemusServiceMock(),
       hakupalvelu = new Hakupalvelu() {
         override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
-        override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] = Future.successful(Seq())
+        override def getHakukohdeOids(
+          hakukohderyhma: String,
+          hakuOid: String
+        ): Future[Seq[String]] = Future.successful(Seq())
       },
       tarjonta = new TarjontaActorRef(anyActorRef),
       haut = anyActorRef,
@@ -45,18 +56,26 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       valintaTulos = new ValintaTulosActorRef(anyActorRef),
       valintaRekisteri = new ValintarekisteriActorRef(anyActorRef),
       valintaperusteetService = new ValintaperusteetServiceMock,
-      Timeout(1, TimeUnit.MINUTES))
+      Timeout(1, TimeUnit.MINUTES)
+    )
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")
-    context.mount(new SiirtotiedostojonoResource(jono), "/mocks/suoritusrekisteri/siirtotiedostojono")
+    context.mount(
+      new SiirtotiedostojonoResource(jono),
+      "/mocks/suoritusrekisteri/siirtotiedostojono"
+    )
     context.mount(new OrganizationProxyServlet(system, config), "/organisaatio-service")
-    context.mount(new OppijanumerorekisteriProxyServlet(system, config), "/oppijanumerorekisteri-service")
+    context.mount(
+      new OppijanumerorekisteriProxyServlet(system, config),
+      "/oppijanumerorekisteri-service"
+    )
     context.mount(new KoodistoProxyServlet(system, config), "/koodisto-service")
     context.mount(new LocalizationMockServlet(system, config), "/lokalisointi")
     context.mount(new CasMockServlet(system, config), "/cas")
   }
 
-  class OrganizationProxyServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) {
+  class OrganizationProxyServlet(system: ActorSystem, config: Config)
+      extends OPHProxyServlet(system, config) {
     get("/rest/organisaatio/v2/ryhmat") {
       new AsyncResult() {
         override val is = Future.successful(OrganisaatioMock.ryhmat())
@@ -76,7 +95,9 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class OppijanumerorekisteriProxyServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) with HakurekisteriJsonSupport {
+  class OppijanumerorekisteriProxyServlet(system: ActorSystem, config: Config)
+      extends OPHProxyServlet(system, config)
+      with HakurekisteriJsonSupport {
     get("/cas/prequel") {
       contentType = "text/plain"
       "ok"
@@ -101,26 +122,31 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       }
     }
 
-    def henkilotByOidList(oidList: List[String]) = Future.successful(HenkiloMock.henkilotByHenkiloOidList(oidList))
+    def henkilotByOidList(oidList: List[String]) =
+      Future.successful(HenkiloMock.henkilotByHenkiloOidList(oidList))
     def henkiloByOid(oid: String) = Future.successful(HenkiloMock.getHenkiloByOid(oid))
     def henkiloByQparam(hetu: String) = Future.successful(HenkiloMock.getHenkiloByQParam(hetu))
   }
 
-  class KoodistoProxyServlet(system: ActorSystem, config: Config)(implicit ec: ExecutionContext) extends OPHProxyServlet(system, config) with HakurekisteriJsonSupport {
+  class KoodistoProxyServlet(system: ActorSystem, config: Config)(implicit ec: ExecutionContext)
+      extends OPHProxyServlet(system, config)
+      with HakurekisteriJsonSupport {
     get("""/rest/json/(.*)""".r) {
       new AsyncResult() {
         val path = multiParams("captures").head
         override val is = koodi(path).map(compact(_))
       }
     }
-    val koodit: Map[String, JValue] = Extraction.extract[Map[String, JValue]](parse(KoodistoMock.getKoodisto()))
+    val koodit: Map[String, JValue] =
+      Extraction.extract[Map[String, JValue]](parse(KoodistoMock.getKoodisto()))
 
     def koodi(path: String) = {
       Future.successful(koodit(path.replaceAll("/$", "")))
     }
   }
 
-  class LocalizationMockServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) {
+  class LocalizationMockServlet(system: ActorSystem, config: Config)
+      extends OPHProxyServlet(system, config) {
     get("/cxf/rest/v1/localisation") {
       getClass.getResourceAsStream("/proxy-mockdata/localization.json")
     }
@@ -130,7 +156,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     }
   }
 
-  class CasMockServlet(system: ActorSystem, config: Config) extends OPHProxyServlet(system, config) {
+  class CasMockServlet(system: ActorSystem, config: Config)
+      extends OPHProxyServlet(system, config) {
     get("/myroles") {
       getClass.getResourceAsStream("/proxy-mockdata/cas-myroles.json")
     }

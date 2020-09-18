@@ -110,8 +110,7 @@ object LoggerForAudit extends Logger {
   }
 }
 
-class AuditUtil {
-}
+class AuditUtil {}
 
 object AuditUtil {
   private val logger = LoggerFactory.getLogger(classOf[Audit])

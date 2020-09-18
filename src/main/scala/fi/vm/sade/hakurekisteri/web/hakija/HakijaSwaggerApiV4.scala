@@ -2,12 +2,20 @@ package fi.vm.sade.hakurekisteri.web.hakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV4
-import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.web.rest.support.{
+  ApiFormat,
+  IncidentReportSwaggerModel,
+  ModelResponseMessage,
+  OldSwaggerSyntax
+}
 import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
-trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
+trait HakijaSwaggerApiV4
+    extends SwaggerSupport
+    with IncidentReportSwaggerModel
+    with OldSwaggerSyntax {
 
   val hakutoiveFields = Seq(
     ModelField("hakujno", null, DataType.Int),
@@ -23,9 +31,10 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("lasnaolo", null, DataType.String, required = false),
     ModelField("terveys", null, DataType.String, required = false),
     ModelField("aiempiperuminen", null, DataType.Boolean, required = false),
-    ModelField("kaksoistutkinto", null, DataType.Boolean, required = false))
+    ModelField("kaksoistutkinto", null, DataType.Boolean, required = false)
+  )
 
-  registerModel(Model("XMLHakutoive", "Hakutoive", hakutoiveFields.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("XMLHakutoive", "Hakutoive", hakutoiveFields.map { t => (t.name, t) }.toMap))
 
   val hakemusFields = Seq(
     ModelField("vuosi", null, DataType.String),
@@ -43,9 +52,14 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("lisapistekoulutus", null, DataType.String, required = false),
     ModelField("yleinenkoulumenestys", null, DataType("double"), required = false),
     ModelField("painotettavataineet", null, DataType("double"), required = false),
-    ModelField("hakutoiveet", null, ContainerDataType("List", Some(ValueDataType("XMLHakutoive", None, Some("XMLHakutoive"))))))
+    ModelField(
+      "hakutoiveet",
+      null,
+      ContainerDataType("List", Some(ValueDataType("XMLHakutoive", None, Some("XMLHakutoive"))))
+    )
+  )
 
-  registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map { t => (t.name, t) }.toMap))
 
   val hakijaFieldsV4 = Seq(
     ModelField("hetu", null, DataType.String),
@@ -69,7 +83,12 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("huoltajanpuhelinnumero", null, DataType.String, required = false),
     ModelField("huoltajansahkoposti", null, DataType.String, required = false),
     ModelField("hakemus", null, ValueDataType("XMLHakemus", None, Some("XMLHakemus"))),
-    ModelField("lisakysymykset", null, ValueDataType("JSONLisakysymys", None, Some("JSONLisakysymys"))))
+    ModelField(
+      "lisakysymykset",
+      null,
+      ValueDataType("JSONLisakysymys", None, Some("JSONLisakysymys"))
+    )
+  )
 
   val lisakysymysVastausFields = Seq(
     ModelField("vastausid", null, DataType.String),
@@ -79,32 +98,70 @@ trait HakijaSwaggerApiV4 extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("kysymysid", null, DataType.String),
     ModelField("kysymystyyppi", null, DataType.String),
     ModelField("kysymysteksti", null, DataType.String),
-    ModelField("vastaukset", null, ValueDataType("JSONLisakysymysVastaus", None, Some("JSONLisakysymysVastaus")))
+    ModelField(
+      "vastaukset",
+      null,
+      ValueDataType("JSONLisakysymysVastaus", None, Some("JSONLisakysymysVastaus"))
+    )
   )
 
   val hakijatFieldsV4 = Seq(
-    ModelField("hakijat", null, ContainerDataType("List", Some(ValueDataType("JSONHakijaV4", None, Some("JSONHakijaV4")))))
+    ModelField(
+      "hakijat",
+      null,
+      ContainerDataType("List", Some(ValueDataType("JSONHakijaV4", None, Some("JSONHakijaV4"))))
+    )
   )
 
-  registerModel(Model("JSONHakijatV4", "Hakijat", hakijatFieldsV4.map{ t => (t.name, t) }.toMap))
-  registerModel(Model("JSONHakijaV4", "Hakija", hakijaFieldsV4.map{ t => (t.name, t) }.toMap))
-  registerModel(Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map{ t => (t.name, t) }.toMap))
-  registerModel(Model("JSONLisakysymysVastaus", "LisakysymysVastaus", lisakysymysVastausFields.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijatV4", "Hakijat", hakijatFieldsV4.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijaV4", "Hakija", hakijaFieldsV4.map { t => (t.name, t) }.toMap))
+  registerModel(
+    Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map { t => (t.name, t) }.toMap)
+  )
+  registerModel(
+    Model(
+      "JSONLisakysymysVastaus",
+      "LisakysymysVastaus",
+      lisakysymysVastausFields.map { t => (t.name, t) }.toMap
+    )
+  )
 
   val queryV2: OperationBuilder = apiOperation[JSONHakijatV4]("haeHakijat")
     .summary("näyttää kaikki hakijat")
-    .description("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
+    .description(
+      "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
+    )
     .parameter(queryParam[Option[String]]("haku").description("haun oid").required)
-    .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
+    .parameter(
+      queryParam[Option[String]]("organisaatio")
+        .description("koulutuksen tarjoajan tai sen yläorganisaation oid")
+        .optional
+    )
     .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
-    .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
-    .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.Excel, ApiFormat.Json).required)
-    .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
+    .parameter(
+      queryParam[String]("hakuehto")
+        .description("hakuehto")
+        .allowableValues(Hakuehto.values.toList)
+        .required
+    )
+    .parameter(
+      queryParam[String]("tyyppi")
+        .description("tietotyyppi")
+        .allowableValues(ApiFormat.Excel, ApiFormat.Json)
+        .required
+    )
+    .parameter(
+      queryParam[Option[Boolean]]("tiedosto")
+        .description("palautetaanko vastaus tiedostona")
+        .optional
+    )
     .produces("application/json", "application/octet-stream")
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "internal server error"))
-    .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
+    .responseMessage(
+      ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header")
+    )
     .tags("hakijat")
 
 }

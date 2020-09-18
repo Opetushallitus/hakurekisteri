@@ -23,17 +23,17 @@ import scala.language.implicitConversions
 import scala.util.Try
 import scala.util.matching.Regex
 
-
 trait DispatchSupport {
   def forUrl(url: String) = ERMatcher(Some(url), Set(), Set())
   def forPattern(url: String) = ERPatternMatcher(url.r, Set(), Set())
 
   def forUrl(url: String, body: String) = ERMatcher(Some(url), Set(body), Set())
 
-  implicit def matcherToValue[T](m:Matcher[T]):T = MockitoHamcrest.argThat(m)
+  implicit def matcherToValue[T](m: Matcher[T]): T = MockitoHamcrest.argThat(m)
 }
 
-case class BaseStatus(code: Int, text: String, req: Request) extends HttpResponseStatus(req.getUri) {
+case class BaseStatus(code: Int, text: String, req: Request)
+    extends HttpResponseStatus(req.getUri) {
   override def getProtocolText: String = ""
 
   override def getProtocolMinorVersion: Int = 1
@@ -77,7 +77,8 @@ class BodyString(request: Request, body: String = "") extends HttpResponseBodyPa
   override def length(): Int = getBodyPartBytes.length
 }
 
-class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBodyPart]) extends Response {
+class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBodyPart])
+    extends Response {
   import scala.collection.JavaConverters._
 
   val status = Option(s)
@@ -93,11 +94,13 @@ class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBo
 
   override def getCookies: util.List[Cookie] = {
     (for (
-      header: Map.Entry[String, String] <- headers.get.entries.asScala if header.getKey.equalsIgnoreCase("Set-Cookie")
+      header: Map.Entry[String, String] <- headers.get.entries.asScala
+      if header.getKey.equalsIgnoreCase("Set-Cookie")
     ) yield ClientCookieDecoder.STRICT.decode(header.getValue)).asJava
   }
 
-  override def isRedirected: Boolean = (status.get.getStatusCode >= 300) && (status.get.getStatusCode <= 399)
+  override def isRedirected: Boolean =
+    (status.get.getStatusCode >= 300) && (status.get.getStatusCode <= 399)
 
   override def getHeaders: HttpHeaders = headers.getOrElse(EmptyHttpHeaders.INSTANCE)
 
@@ -117,11 +120,12 @@ class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBo
 
   override def getResponseBody: String = bodyString
 
-  def getResponseBodyExcerpt(maxLength: Int): String = if (bodyString.length <= maxLength) bodyString else bodyString.substring(0, maxLength)
+  def getResponseBodyExcerpt(maxLength: Int): String =
+    if (bodyString.length <= maxLength) bodyString else bodyString.substring(0, maxLength)
 
   def getResponseBody(charset: String): String = new String(getResponseBodyAsBytes, charset)
 
-  def getResponseBodyExcerpt(maxLength: Int, charset: String): String =  {
+  def getResponseBodyExcerpt(maxLength: Int, charset: String): String = {
     val body = getResponseBody(charset)
     if (body.length <= maxLength) body else body.substring(0, maxLength)
   }
@@ -130,7 +134,7 @@ class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBo
 
   override def getResponseBodyAsByteBuffer: ByteBuffer = ByteBuffer.wrap(bodyBytes)
 
-  override def getResponseBodyAsBytes: Array[Byte] =  bodyBytes
+  override def getResponseBodyAsBytes: Array[Byte] = bodyBytes
 
   override def getStatusText: String = status.get.getStatusText
 
@@ -143,68 +147,85 @@ class BaseResponse(s: HttpResponseStatus, h: HttpHeaders, bs: Seq[HttpResponseBo
   override def getLocalAddress: SocketAddress = ???
 }
 
-case class EndpointRequest(url: String, body: Option[String], headers: List[(String, String)], cookies: Set[Cookie])
+case class EndpointRequest(
+  url: String,
+  body: Option[String],
+  headers: List[(String, String)],
+  cookies: Set[Cookie]
+)
 
-abstract class EndpointMatching  extends BaseMatcher[EndpointRequest] {
-  val headers:Seq[(String, String)]
+abstract class EndpointMatching extends BaseMatcher[EndpointRequest] {
+  val headers: Seq[(String, String)]
   val bodyParts: Set[String]
   val cookies: Set[Cookie]
   val urlString: String
 
   override def describeTo(description: Description): Unit = {
-    val matchedHeaders  = headers.headOption.map((_) => "following headers: " + headers.mkString(", ")).getOrElse("any headers")
-    val matchedCookies = if (cookies.isEmpty) "any cookies" else s"following cookies: ${cookies.mkString(", ")}"
+    val matchedHeaders = headers.headOption
+      .map((_) => "following headers: " + headers.mkString(", "))
+      .getOrElse("any headers")
+    val matchedCookies =
+      if (cookies.isEmpty) "any cookies" else s"following cookies: ${cookies.mkString(", ")}"
     description.appendText(s"request with $urlString and $matchedHeaders and $matchedCookies")
   }
 
-  def matchesUrl(rUrl:String): Boolean
+  def matchesUrl(rUrl: String): Boolean
 
   override def matches(item: scala.Any): Boolean = item match {
     case EndpointRequest(rUrl, body, rHeaders, rCookies) =>
       val urlMatches = matchesUrl(rUrl)
       val headersMatch = headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true)
       val bodyPartsMatch = !bodyParts.exists(!body.getOrElse("").contains(_))
-      val cookiesMatch = cookies.map(expectedCookie =>
-        rCookies.exists(cookieMatches(expectedCookie)))
-        .reduceOption(_ && _).getOrElse(true)
+      val cookiesMatch = cookies
+        .map(expectedCookie => rCookies.exists(cookieMatches(expectedCookie)))
+        .reduceOption(_ && _)
+        .getOrElse(true)
       urlMatches &&
-        headersMatch &&
-        bodyPartsMatch &&
-        cookiesMatch
+      headersMatch &&
+      bodyPartsMatch &&
+      cookiesMatch
 
     case _ => false
   }
-
 
   private def cookieMatches(expectedCookie: Cookie): Cookie => Boolean = { c =>
     c.name() == expectedCookie.name() &&
-      (c.value() == expectedCookie.value())
+    (c.value() == expectedCookie.value())
   }
 }
 
-case class ERMatcher(url: Option[String], bodyParts: Set[String], cookies: Set[Cookie], headers: (String, String)*) extends EndpointMatching {
+case class ERMatcher(
+  url: Option[String],
+  bodyParts: Set[String],
+  cookies: Set[Cookie],
+  headers: (String, String)*
+) extends EndpointMatching {
   val urlString: String = url.map("url: " + _).getOrElse("any url")
-  def matchesUrl(rUrl:String) = url.map(_ == rUrl).getOrElse(true)
+  def matchesUrl(rUrl: String) = url.map(_ == rUrl).getOrElse(true)
 
-  def withHeader(header: (String,String))  = ERMatcher(url,bodyParts, cookies, (header +: headers):_*)
+  def withHeader(header: (String, String)) =
+    ERMatcher(url, bodyParts, cookies, (header +: headers): _*)
 
-  def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, cookies, headers:_*)
+  def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, cookies, headers: _*)
 
-  def withCookie(cookieName: String, cookieValue: String) = ERMatcher(url, bodyParts, cookies + new DefaultCookie(cookieName, cookieValue), headers:_*)
+  def withCookie(cookieName: String, cookieValue: String) =
+    ERMatcher(url, bodyParts, cookies + new DefaultCookie(cookieName, cookieValue), headers: _*)
 
 }
 
-
-case class ERPatternMatcher(url: Regex, bodyParts: Set[String], cookies: Set[Cookie], headers: (String, String)*) extends EndpointMatching {
+case class ERPatternMatcher(
+  url: Regex,
+  bodyParts: Set[String],
+  cookies: Set[Cookie],
+  headers: (String, String)*
+) extends EndpointMatching {
   val urlString: String = s"url: $url"
-  def matchesUrl(rUrl:String) = rUrl match {
+  def matchesUrl(rUrl: String) = rUrl match {
     case url() => true
-    case _ => false
+    case _     => false
   }
 
-
 }
-
 
 trait Endpoint {
   def request(er: EndpointRequest): (Int, List[(String, String)], String)
@@ -216,23 +237,28 @@ trait FutureEndpoint {
 
 }
 
-
 class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
-  def prepareResponse(status: HttpResponseStatus, headers: HttpHeaders, bodyParts: util.List[HttpResponseBodyPart]): Response = {
+  def prepareResponse(
+    status: HttpResponseStatus,
+    headers: HttpHeaders,
+    bodyParts: util.List[HttpResponseBodyPart]
+  ): Response = {
     import scala.collection.JavaConverters._
     new BaseResponse(status, headers, bodyParts.asScala)
   }
 
   def close(): Unit = {}
 
-
-  override def executeRequest[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = FutureListenableFuture(executeScala(request, handler))
+  override def executeRequest[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] =
+    FutureListenableFuture(executeScala(request, handler))
 
   def execute[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = {
     FutureListenableFuture(executeScala(request, handler))
   }
 
-  def handle[T](handler: AsyncHandler[T], request: Request)(response: Option[(Int, List[(String, String)], String)]) =  {
+  def handle[T](handler: AsyncHandler[T], request: Request)(
+    response: Option[(Int, List[(String, String)], String)]
+  ) = {
     val (status, headers, body) = response.getOrElse(404, List(), "Not found")
     handler.onStatusReceived(BaseStatus(status, "", request))
     handler.onHeadersReceived(new BaseHeaders(request, headers))
@@ -248,11 +274,12 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
   def executeRequest[T](request: Request): Option[(Int, List[(String, String)], String)] = {
     import scala.collection.JavaConverters._
 
-    val foo: Set[(String, String)] = for (
-      entry: Map.Entry[String, String] <- request.getHeaders.asScala.toSet
-    ) yield entry.getKey -> entry.getValue
+    val foo: Set[(String, String)] =
+      for (entry: Map.Entry[String, String] <- request.getHeaders.asScala.toSet)
+        yield entry.getKey -> entry.getValue
 
-    val reqBody = Option(request.getStringData).orElse(Option(request.getByteData).map(new String(_)))
+    val reqBody =
+      Option(request.getStringData).orElse(Option(request.getByteData).map(new String(_)))
 
     val er = EndpointRequest(request.getUrl, reqBody, foo.toList, request.getCookies.asScala.toSet)
 
@@ -261,7 +288,8 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
 
   override def isClosed: Boolean = ???
 
-  override def setSignatureCalculator(signatureCalculator: SignatureCalculator): AsyncHttpClient = ???
+  override def setSignatureCalculator(signatureCalculator: SignatureCalculator): AsyncHttpClient =
+    ???
 
   override def prepare(method: String, url: String): BoundRequestBuilder = ???
 
@@ -287,7 +315,10 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
 
   override def prepareRequest(requestBuilder: RequestBuilder): BoundRequestBuilder = ???
 
-  override def executeRequest[T](requestBuilder: RequestBuilder, handler: AsyncHandler[T]): ListenableFuture[T] = ???
+  override def executeRequest[T](
+    requestBuilder: RequestBuilder,
+    handler: AsyncHandler[T]
+  ): ListenableFuture[T] = ???
 
   override def executeRequest(request: Request): ListenableFuture[Response] = ???
 
@@ -300,7 +331,7 @@ class CapturingAsyncHttpClient(endpoint: Endpoint) extends AsyncHttpClient {
   override def getConfig: AsyncHttpClientConfig = new DefaultAsyncHttpClientConfig.Builder().build()
 }
 
-case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture[T]{
+case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture[T] {
   override def get(timeout: Long, unit: TimeUnit): T = Await.result(future, Duration(timeout, unit))
 
   override def get(): T = Await.result(future, Duration.Inf)
@@ -312,9 +343,7 @@ case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture
   override def cancel(mayInterruptIfRunning: Boolean): Boolean = false
 
   override def addListener(listener: Runnable, exec: Executor): ListenableFuture[T] = {
-    future.onComplete(
-      _ => listener.run()
-    )(ExecutionContext.fromExecutor(exec))
+    future.onComplete(_ => listener.run())(ExecutionContext.fromExecutor(exec))
     this
   }
 
@@ -333,8 +362,10 @@ case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture
   override def toCompletableFuture: CompletableFuture[T] = ???
 }
 
-
-class DelayingAsyncHttpClient(endpoint: Endpoint, delay: FiniteDuration)(implicit val ec: ExecutionContext, scheduler: Scheduler) extends CapturingAsyncHttpClient(endpoint) {
+class DelayingAsyncHttpClient(endpoint: Endpoint, delay: FiniteDuration)(implicit
+  val ec: ExecutionContext,
+  scheduler: Scheduler
+) extends CapturingAsyncHttpClient(endpoint) {
 
   println(s"provider with $delay initialized")
 
@@ -342,7 +373,5 @@ class DelayingAsyncHttpClient(endpoint: Endpoint, delay: FiniteDuration)(implici
     import akka.pattern.after
     after(delay, scheduler)(super.executeScala(request, handler))
 
-
   }
 }
-

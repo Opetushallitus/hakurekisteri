@@ -15,11 +15,17 @@ import scala.compat.Platform
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class RestrictionsResource(parameterActor: ParametritActorRef)
-                         (implicit val sw: Swagger, system: ActorSystem, val security: Security)
-  extends HakuJaValintarekisteriStack
-  with FutureSupport with HakurekisteriJsonSupport with RestrictionsSwaggerApi with SecuritySupport with JacksonJsonSupport with QueryLogging{
-
+class RestrictionsResource(parameterActor: ParametritActorRef)(implicit
+  val sw: Swagger,
+  system: ActorSystem,
+  val security: Security
+) extends HakuJaValintarekisteriStack
+    with FutureSupport
+    with HakurekisteriJsonSupport
+    with RestrictionsSwaggerApi
+    with SecuritySupport
+    with JacksonJsonSupport
+    with QueryLogging {
 
   //override protected def applicationDescription: String = "Ohjausparametrirajoitteiden hakemisen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -36,7 +42,8 @@ class RestrictionsResource(parameterActor: ParametritActorRef)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
-      private val q = (parameterActor.actor ? IsRestrictionActive (restriction))(60.seconds).mapTo[Boolean]
+      private val q =
+        (parameterActor.actor ? IsRestrictionActive(restriction))(60.seconds).mapTo[Boolean]
       logQuery(Map("restriction" -> restriction), t0, q)
       override val is = q
     }

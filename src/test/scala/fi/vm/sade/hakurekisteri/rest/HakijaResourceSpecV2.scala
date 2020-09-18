@@ -15,27 +15,37 @@ import scala.concurrent.Await
 class HakijaResourceSpecV2 extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
-  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, valintaTulosActor, new MockConfig)))
+  val hakijat = system.actorOf(
+    Props(
+      new HakijaActor(
+        Hakupalvelu,
+        organisaatioActor,
+        koodistoActor,
+        valintaTulosActor,
+        new MockConfig
+      )
+    )
+  )
   addServlet(new HakijaResourceV2(hakijat), "/")
 
   test("fails with bad request if there is no query parameter") {
     get("/") {
-      status should be (400)
-      body should include ("pakolliset parametrit puuttuvat")
+      status should be(400)
+      body should include("pakolliset parametrit puuttuvat")
     }
   }
 
   test("fails with bad request if there is no organisaatio query parameter") {
     get("/?haku=dummy") {
-      status should be (400)
-      body should include ("pakolliset parametrit puuttuvat")
+      status should be(400)
+      body should include("pakolliset parametrit puuttuvat")
     }
   }
 
   test("fails with bad request if there is no haku query parameter") {
     get("/?organisaatio=dummy") {
-      status should be (400)
-      body should include ("pakolliset parametrit puuttuvat")
+      status should be(400)
+      body should include("pakolliset parametrit puuttuvat")
     }
   }
 

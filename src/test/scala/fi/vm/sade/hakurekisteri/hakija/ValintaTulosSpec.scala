@@ -13,7 +13,11 @@ class ValintaTulosSpec extends FlatSpec with Matchers {
     def casMap[T: ClassTag: TypeTag](value: T) = {
       val m = runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(value)
-      typeOf[T].members.collect{ case m: MethodSymbol if m.isCaseAccessor => m }.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
+      typeOf[T].members
+        .collect { case m: MethodSymbol if m.isCaseAccessor => m }
+        .map(im.reflectMethod)
+        .map((m) => m.symbol.name.toString -> m())
+        .toMap
     }
 
     import org.json4s.jackson.Serialization.read

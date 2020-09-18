@@ -20,24 +20,27 @@ class ArchiveScheduler(archiver: Archiver) {
       quartzScheduler.start()
     }
 
-    quartzScheduler.scheduleJob(lambdaJob(archive()),
-      newTrigger().startNow().withSchedule(cronSchedule(archiveCronExpression)).build());
+    quartzScheduler.scheduleJob(
+      lambdaJob(archive()),
+      newTrigger().startNow().withSchedule(cronSchedule(archiveCronExpression)).build()
+    );
     logger.info(s"Scheduled archive jobs (cron expression=$archiveCronExpression)")
   }
 
-  def archive(): () => Unit = { () => {
+  def archive(): () => Unit = { () =>
+    {
       if (archiver.acquireLockForArchiving()) {
         logger.info("Archive lock acquired, archiving...")
         try {
           archiver.archive()
-        }
-        finally {
+        } finally {
           archiver.clearLockForArchiving()
           logger.info("Archive lock released.")
         }
-      }
-      else {
-        logger.info("Did not acquire archive lock, most probably some other instance is right now archiving")
+      } else {
+        logger.info(
+          "Did not acquire archive lock, most probably some other instance is right now archiving"
+        )
       }
     }
   }

@@ -23,7 +23,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(implicit system: ActorSystem) {
+class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(implicit
+  system: ActorSystem
+) {
   private implicit val defaultTimeout: Timeout = 45.minutes
   private implicit val formats = HakurekisteriJsonSupport.format
   private val poolSize = 4
@@ -35,47 +37,53 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
 
   private def eradicateAllShortUrlsToQuery(q: QueryAndFormat): Unit = {
     import scala.collection.JavaConverters._
-    shortIds.entrySet().asScala.filter(_.getValue.equals(q)).map(_.getKey)
+    shortIds
+      .entrySet()
+      .asScala
+      .filter(_.getValue.equals(q))
+      .map(_.getKey)
       .foreach(shortIds.remove)
   }
 
   private type cacheKeyType = QueryAndFormat
   private type cacheValueType = Either[Exception, Array[Byte]]
-  private val asiakirjat = CacheBuilder.newBuilder()
+  private val asiakirjat = CacheBuilder
+    .newBuilder()
     .maximumSize(1000)
     .expireAfterWrite(1, TimeUnit.HOURS)
     .removalListener(new RemovalListener[cacheKeyType, cacheValueType]() {
-      override def onRemoval(notification: RemovalNotification[cacheKeyType, cacheValueType]): Unit =
+      override def onRemoval(
+        notification: RemovalNotification[cacheKeyType, cacheValueType]
+      ): Unit =
         eradicateAllShortUrlsToQuery(notification.getKey)
     })
-    .build[cacheKeyType, cacheValueType](
-      new CacheLoader[cacheKeyType, cacheValueType] {
-        override def load(q: cacheKeyType): cacheValueType = {
-          Try(q.query match {
-            case query:KkHakijaQuery =>
-              kkQueryToAsiakirja(q.format, query)
-            case query:HakijaQuery =>
-              queryToAsiakirja(q.format, query)
-            case _ =>
-              logger.error(s"Unknown 'asiakirja' requested with query ${q.query}")
-              throw new RuntimeException("No content to store!")
-          }) match {
-            case Success(content) =>
-              if(content.length == 0) {
-                logger.error("Created asiakirja had no content")
-                Left(new EmptyAsiakirjaException())
-              } else {
-                Right(content)
-              }
-            case Failure(fail: Exception) =>
-              logger.error("Error creating asiakirja: ", fail)
-              Left(fail)
-            case Failure(t: Throwable) =>
-              logger.error("Error creating asiakirja: ", t)
-              Left(new RuntimeException(t))
-          }
+    .build[cacheKeyType, cacheValueType](new CacheLoader[cacheKeyType, cacheValueType] {
+      override def load(q: cacheKeyType): cacheValueType = {
+        Try(q.query match {
+          case query: KkHakijaQuery =>
+            kkQueryToAsiakirja(q.format, query)
+          case query: HakijaQuery =>
+            queryToAsiakirja(q.format, query)
+          case _ =>
+            logger.error(s"Unknown 'asiakirja' requested with query ${q.query}")
+            throw new RuntimeException("No content to store!")
+        }) match {
+          case Success(content) =>
+            if (content.length == 0) {
+              logger.error("Created asiakirja had no content")
+              Left(new EmptyAsiakirjaException())
+            } else {
+              Right(content)
+            }
+          case Failure(fail: Exception) =>
+            logger.error("Error creating asiakirja: ", fail)
+            Left(fail)
+          case Failure(t: Throwable) =>
+            logger.error("Error creating asiakirja: ", t)
+            Left(new RuntimeException(t))
         }
-      })
+      }
+    })
 
   private val charset: Charset = Charset.forName("UTF-8")
 
@@ -110,7 +118,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
               IOUtils.write(write(hakijat), bytes, charset)
               bytes.toByteArray
             case ApiFormat.Excel =>
-              if(query.version == 2) {
+              if (query.version == 2) {
                 ExcelUtilV2.write(bytes, hakijat)
               } else {
                 ExcelUtilV3.write(bytes, hakijat)
@@ -138,7 +146,6 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
     }
   }
 
-
   def kkQueryToAsiakirja(format: ApiFormat, query: KkHakijaQuery): Array[Byte] = {
     val hakijat = Await.result(kkHakija.getKkHakijat(query, query.version), defaultTimeout.duration)
     if (hakijat.isEmpty) {
@@ -149,18 +156,19 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         case ApiFormat.Json =>
           IOUtils.write(write(hakijat), bytes, charset)
           bytes.toByteArray
-        case ApiFormat.Excel => query.version match {
-          case 1 =>
-            KkExcelUtil.write(bytes, hakijat)
-          case 2 =>
-            KkExcelUtilV2.write(bytes, hakijat)
-          case 3 =>
-            KkExcelUtilV3.write(bytes, hakijat)
-          case 4 =>
-            KkExcelUtilV4.write(bytes, hakijat)
-          case _ =>
-            throw new RuntimeException("Unknown version number requested")
-        }
+        case ApiFormat.Excel =>
+          query.version match {
+            case 1 =>
+              KkExcelUtil.write(bytes, hakijat)
+            case 2 =>
+              KkExcelUtilV2.write(bytes, hakijat)
+            case 3 =>
+              KkExcelUtilV3.write(bytes, hakijat)
+            case 4 =>
+              KkExcelUtilV4.write(bytes, hakijat)
+            case _ =>
+              throw new RuntimeException("Unknown version number requested")
+          }
           bytes.toByteArray
       }
     }
@@ -175,7 +183,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
         // prevent multiple threads from starting same job <= case where user retries multiple times
         val isMissing = asiakirjat.getIfPresent(q) == null
         val firstInProcessor = isMissing && inprogress.addIfAbsent(q)
-        if(firstInProcessor) {
+        if (firstInProcessor) {
           try {
             asiakirjat.get(q)
             logger.info(s"Asiakirja created for id ${queryToShortId(q)}")
@@ -209,6 +217,7 @@ class Siirtotiedostojono(hakijaActor: ActorRef, kkHakija: KkHakijaService)(impli
   }
 
   def isExistingAsiakirja(q: QueryAndFormat): Boolean = asiakirjat.getIfPresent(q) != null
-  def positionInQueue(q: QueryAndFormat): Option[Int] = Some(jobs.indexOf(q)).filter(_ != -1).map(_ + 1)
+  def positionInQueue(q: QueryAndFormat): Option[Int] =
+    Some(jobs.indexOf(q)).filter(_ != -1).map(_ + 1)
   def isInProgress(q: QueryAndFormat): Boolean = inprogress.contains(q)
 }

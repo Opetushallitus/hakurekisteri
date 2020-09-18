@@ -19,8 +19,14 @@ import org.scalatra._
 
 class EmptyAsiakirjaException extends RuntimeException()
 case class LocalizedMessage(message: String, parameter: Option[String] = None)
-class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, val security: Security)
-  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with SecuritySupport with DownloadSupport with HakijaResourceSupport {
+class AsiakirjaResource(jono: Siirtotiedostojono)(implicit
+  system: ActorSystem,
+  val security: Security
+) extends HakuJaValintarekisteriStack
+    with HakurekisteriJsonSupport
+    with SecuritySupport
+    with DownloadSupport
+    with HakijaResourceSupport {
 
   override protected implicit def jsonFormats: Formats = HakurekisteriJsonSupport.format
 
@@ -32,19 +38,21 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
     val isStatusCheck = params.get("status").exists(parseBoolean)
     toEvent() match {
       case NotAuthorized() =>
-        halt(status = 401, body=s"User is not document owner or authorized!")
+        halt(status = 401, body = s"User is not document owner or authorized!")
       case AsiakirjaNotFound() =>
-        halt(status = 404, body=s"Resource not found!")
+        halt(status = 404, body = s"Resource not found!")
       case Asiakirja(format, bytes) =>
-        if(isStatusCheck) {
+        if (isStatusCheck) {
           Ok()
         } else {
           getContentType(format) match {
             case Left(ctype) => {
-              audit.log(auditUser,
+              audit.log(
+                auditUser,
                 AsiakirjaLuku,
                 AuditUtil.targetFromParams(params).build(),
-                new Changes.Builder().build())
+                new Changes.Builder().build()
+              )
 
               contentType = ctype
               setContentDisposition(format, response, "hakijat")
@@ -57,7 +65,7 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
 
         }
       case AsiakirjaWithExceptions(exception) =>
-        if(isStatusCheck) {
+        if (isStatusCheck) {
           exceptionToNoContentResponse(exception)
         } else {
           NotFound(exception.toString)
@@ -67,19 +75,32 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
   def exceptionToNoContentResponse(exception: Exception): ActionResult = {
     exception match {
       case t: TimeoutException =>
-        InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.aikakatkaisu")))
+        InternalServerError(body =
+          write(LocalizedMessage("suoritusrekisteri.poikkeus.aikakatkaisu"))
+        )
       case e: ExecutionException =>
         e.getCause match {
           case p: PreconditionFailedException =>
             val KoodistoUrl = ".*koodisto-service/rest/json/relaatio/rinnasteinen/([^,]*).*".r
             p.message match {
               case KoodistoUrl(koodi) =>
-                InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.koodisto", Some(koodi))))
+                InternalServerError(body =
+                  write(LocalizedMessage("suoritusrekisteri.poikkeus.koodisto", Some(koodi)))
+                )
               case _ =>
-                InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.taustapalveluvirhe", Some(p.message))))
+                InternalServerError(body =
+                  write(
+                    LocalizedMessage(
+                      "suoritusrekisteri.poikkeus.taustapalveluvirhe",
+                      Some(p.message)
+                    )
+                  )
+                )
             }
           case _ =>
-            InternalServerError(body = write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon")))
+            InternalServerError(body =
+              write(LocalizedMessage("suoritusrekisteri.poikkeus.tuntematon"))
+            )
         }
       case e: EmptyAsiakirjaException =>
         NoContent()
@@ -95,7 +116,7 @@ class AsiakirjaResource(jono: Siirtotiedostojono)(implicit system: ActorSystem, 
           case Some(id) =>
             jono.getAsiakirjaWithId(id) match {
               case Some((format, status, Some(owner))) =>
-                if(owner.username.equals(user.username)) {
+                if (owner.username.equals(user.username)) {
 
                   status match {
                     case Left(exception) =>

@@ -8,12 +8,22 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
-import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3, HakijaResourceV4}
+import fi.vm.sade.hakurekisteri.web.hakija.{
+  HakijaResource,
+  HakijaResourceV2,
+  HakijaResourceV3,
+  HakijaResourceV4
+}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3, KkHakijaResourceV4}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{
+  KkHakijaResource,
+  KkHakijaResourceV2,
+  KkHakijaResourceV3,
+  KkHakijaResourceV4
+}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
@@ -61,77 +71,156 @@ class ScalatraBootstrap extends LifeCycle {
 
     val archiveScheduler = new ArchiveScheduler(journals.archiver)
 
-    archiveScheduler.start(config.properties.getOrElse("suoritusrekisteri.db.archiveCronJob", "suoritusrekisteri.db.archiveCronJob property missing"))
+    archiveScheduler.start(
+      config.properties.getOrElse(
+        "suoritusrekisteri.db.archiveCronJob",
+        "suoritusrekisteri.db.archiveCronJob property missing"
+      )
+    )
 
     var integrations: Integrations = null
     val personAliasesProvider = new PersonAliasesProvider {
-      override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = integrations.oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
+      override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] =
+        integrations.oppijaNumeroRekisteri.enrichWithAliases(henkiloOids)
     }
 
-    val registers = new BareRegisters(system, journals, journals.database, personAliasesProvider, config)
+    val registers =
+      new BareRegisters(system, journals, journals.database, personAliasesProvider, config)
 
     integrations = Integrations(registers, system, config)
 
-    val authorizedRegisters = new AuthorizedRegisters(registers, system, config, integrations.hakemusBasedPermissionChecker)
+    val authorizedRegisters =
+      new AuthorizedRegisters(registers, system, config, integrations.hakemusBasedPermissionChecker)
 
     config.productionServerConfig = new ProductionServerConfig(integrations, system, security)
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
     context.setInitParameter(org.scalatra.EnvironmentKey, "production")
-    if("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
+    if ("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
       context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
     }
 
     val servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
 
-    mountServlets(context)(servlets:_*)
+    mountServlets(context)(servlets: _*)
 
     logger.info(s"Scalatra init... done")
   }
 
   //noinspection ScalaStyle
-  private def initServlets(config: Config,
-                           registers: BareRegisters,
-                           authorizedRegisters: AuthorizedRegisters,
-                           integrations: Integrations,
-                           koosteet: BaseKoosteet)(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
+  private def initServlets(
+    config: Config,
+    registers: BareRegisters,
+    authorizedRegisters: AuthorizedRegisters,
+    integrations: Integrations,
+    koosteet: BaseKoosteet
+  )(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
     ("/rest/v1/komo", "komo") -> new GuiServlet,
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
-    ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(suoritusActor = registers.suoritusRekisteri, opiskelijaActor = registers.opiskelijaRekisteri, hakemusBasedPermissionCheckerActor = integrations.hakemusBasedPermissionChecker),
-    ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp(java.lang.Boolean.valueOf(config.properties.getOrElse("suoritusrekisteri.swagger.https", "false"))),
-    ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.suoritusRekisteri),
-    ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
-    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(integrations.haut, integrations.hakemusService),
+    ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(
+      suoritusActor = registers.suoritusRekisteri,
+      opiskelijaActor = registers.opiskelijaRekisteri,
+      hakemusBasedPermissionCheckerActor = integrations.hakemusBasedPermissionChecker
+    ),
+    ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp(
+      java.lang.Boolean
+        .valueOf(config.properties.getOrElse("suoritusrekisteri.swagger.https", "false"))
+    ),
+    ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new ArvosanaResource(
+      authorizedRegisters.arvosanaRekisteri,
+      authorizedRegisters.suoritusRekisteri
+    ),
+    ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(
+      koosteet.ensikertalainen,
+      integrations.hakemusService
+    ),
+    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(
+      integrations.haut,
+      integrations.hakemusService
+    ),
     ("/asiakirja", "asiakirja") -> new AsiakirjaResource(koosteet.siirtotiedostojono),
-    ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(koosteet.siirtotiedostojono),
+    ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(
+      koosteet.siirtotiedostojono
+    ),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
     ("/rest/v2/hakijat", "rest/v2/hakijat") -> new HakijaResourceV2(koosteet.hakijat),
     ("/rest/v3/hakijat", "rest/v3/hakijat") -> new HakijaResourceV3(koosteet.hakijat),
     ("/rest/v4/hakijat", "rest/v4/hakijat") -> new HakijaResourceV4(koosteet.hakijat),
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(koosteet.kkHakijaService),
-    ("/rest/v2/kkhakijat", "rest/v2/kkhakijat") -> new KkHakijaResourceV2(koosteet.kkHakijaService, config),
-    ("/rest/v3/kkhakijat", "rest/v3/kkhakijat") -> new KkHakijaResourceV3(koosteet.kkHakijaService, config),
-    ("/rest/v4/kkhakijat", "rest/v4/kkhakijat") -> new KkHakijaResourceV4(koosteet.kkHakijaService, config),
-    ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new OpiskelijaResource(authorizedRegisters.opiskelijaRekisteri),
-    ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemusService, koosteet.ensikertalainen, integrations.oppijaNumeroRekisteri),
-    ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new OpiskeluoikeusResource(authorizedRegisters.opiskeluoikeusRekisteri),
-    ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new SuoritusResource(authorizedRegisters.suoritusRekisteri, integrations.parametrit, integrations.koodisto),
-    ("/rest/v1/virta/henkilot", "rest/v1/virta/henkilot") -> new VirtaSuoritusResource(integrations.virtaResource, integrations.hakemusBasedPermissionChecker, integrations.oppijaNumeroRekisteri),
-    ("/rest/v1/rajoitukset", "rest/v1/rajoitukset") -> new RestrictionsResource(integrations.parametrit),
-    ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters, integrations.hakemusService, koosteet.ensikertalainen, integrations.oppijaNumeroRekisteri),
-    ("/rest/v1/tyhjalisatiedollisetarvosanat", "rest/v1/tyhjalisatiedollisetarvosanat") -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri),
-    ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
-    ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue), // Continuous Virta queue processing
+    ("/rest/v2/kkhakijat", "rest/v2/kkhakijat") -> new KkHakijaResourceV2(
+      koosteet.kkHakijaService,
+      config
+    ),
+    ("/rest/v3/kkhakijat", "rest/v3/kkhakijat") -> new KkHakijaResourceV3(
+      koosteet.kkHakijaService,
+      config
+    ),
+    ("/rest/v4/kkhakijat", "rest/v4/kkhakijat") -> new KkHakijaResourceV4(
+      koosteet.kkHakijaService,
+      config
+    ),
+    ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new OpiskelijaResource(
+      authorizedRegisters.opiskelijaRekisteri
+    ),
+    ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(
+      authorizedRegisters,
+      integrations.hakemusService,
+      koosteet.ensikertalainen,
+      integrations.oppijaNumeroRekisteri
+    ),
+    ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new OpiskeluoikeusResource(
+      authorizedRegisters.opiskeluoikeusRekisteri
+    ),
+    ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new SuoritusResource(
+      authorizedRegisters.suoritusRekisteri,
+      integrations.parametrit,
+      integrations.koodisto
+    ),
+    ("/rest/v1/virta/henkilot", "rest/v1/virta/henkilot") -> new VirtaSuoritusResource(
+      integrations.virtaResource,
+      integrations.hakemusBasedPermissionChecker,
+      integrations.oppijaNumeroRekisteri
+    ),
+    ("/rest/v1/rajoitukset", "rest/v1/rajoitukset") -> new RestrictionsResource(
+      integrations.parametrit
+    ),
+    ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(
+      authorizedRegisters,
+      integrations.hakemusService,
+      koosteet.ensikertalainen,
+      integrations.oppijaNumeroRekisteri
+    ),
+    (
+      "/rest/v1/tyhjalisatiedollisetarvosanat",
+      "rest/v1/tyhjalisatiedollisetarvosanat"
+    ) -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri),
+    ("/schemas", "schema") -> new SchemaServlet(
+      Perustiedot,
+      PerustiedotKoodisto,
+      Arvosanat,
+      ArvosanatKoodisto
+    ),
+    ("/virta", "virta") -> new VirtaResource(
+      koosteet.virtaQueue
+    ), // Continuous Virta queue processing
     ("/ytl", "ytl") -> new YtlResource(integrations.ytlIntegration),
-    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system, config),
+    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(
+      integrations.proxies.vastaanottotiedot,
+      system,
+      config
+    ),
     ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet,
-    ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(integrations.koskiService, config)
+    ("/rest/v1/koskiimporter", "koski-importer") -> new KoskiImporterResource(
+      integrations.koskiService,
+      config
+    )
   )
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) {
     implicit val sc = context
-    for (((path, name), servlet) <- servlets) context.mount(handler = servlet, urlPattern = path, name = name, loadOnStartup = 1)
+    for (((path, name), servlet) <- servlets)
+      context.mount(handler = servlet, urlPattern = path, name = name, loadOnStartup = 1)
   }
 
   override def destroy(context: ServletContext) {
@@ -145,7 +234,8 @@ class ScalatraBootstrap extends LifeCycle {
 
 object WebAppConfig {
   def getConfig(context: ServletContext): Config = {
-    Option(context.getAttribute("hakurekisteri.config").asInstanceOf[Config]).getOrElse(Config.globalConfig)
+    Option(context.getAttribute("hakurekisteri.config").asInstanceOf[Config])
+      .getOrElse(Config.globalConfig)
   }
 }
 
@@ -156,7 +246,11 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     initWebApplicationContext(context)
 
     val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
-    security.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC), true, "/*")
+    security.addMappingForUrlPatterns(
+      java.util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC),
+      true,
+      "/*"
+    )
     security.setAsyncSupported(true)
   }
 
@@ -167,7 +261,8 @@ object OPHSecurity extends ContextLoader with LifeCycle {
 
   override def createWebApplicationContext(sc: ServletContext): WebApplicationContext = {
     val config = WebAppConfig.getConfig(sc)
-    OPHConfig(config.ophConfDir,
+    OPHConfig(
+      config.ophConfDir,
       config.propertyLocations,
       "cas_mode" -> "front",
       "cas_key" -> "suoritusrekisteri",
@@ -178,13 +273,16 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   }
 }
 
-case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, String)*) extends XmlWebApplicationContext {
-  val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
+case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props: (String, String)*)
+    extends XmlWebApplicationContext {
+  val localProperties = (new java.util.Properties /: Map(props: _*)) {
+    case (newProperties, (k, v)) => newProperties.put(k, v); newProperties
+  }
   setConfigLocation("file:" + confDir + "/security-context-backend.xml")
 
-  val resources: Seq[FileSystemResource] = for (
-    fileName <- propertyFiles.reverse
-  ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
+  val resources: Seq[FileSystemResource] =
+    for (fileName <- propertyFiles.reverse)
+      yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
 
   val placeholder = Bean[PropertySourcesPlaceholderConfigurer](
     "localOverride" -> true,
@@ -205,7 +303,9 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   }
 }
 
-class FrontPropertiesServlet(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with JacksonJsonSupport {
+class FrontPropertiesServlet(implicit val system: ActorSystem)
+    extends HakuJaValintarekisteriStack
+    with JacksonJsonSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   override protected implicit def jsonFormats: Formats = DefaultFormats

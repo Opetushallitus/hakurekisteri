@@ -15,5 +15,6 @@ object HakurekisteriTables {
   val arvosanaTable = TableQuery[ArvosanaTable]
   val importBatchTable = TableQuery[ImportBatchTable]
 
-  val allTables = Seq(suoritusTable, opiskelijaTable, opiskeluoikeusTable, arvosanaTable, importBatchTable)
+  val allTables =
+    Seq(suoritusTable, opiskelijaTable, opiskeluoikeusTable, arvosanaTable, importBatchTable)
 }

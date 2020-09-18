@@ -45,7 +45,7 @@ object SharedTestJetty extends Logging {
     }
   }
 
-  def restart() :Unit = {
+  def restart(): Unit = {
     logger.info("Restarting...")
     if (jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
@@ -64,21 +64,33 @@ object SharedTestJetty extends Logging {
   def port: Int = jetty.port
 }
 
-class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Config = Config.globalConfig) {
+class SureTestJetty(
+  val port: Int = PortChecker.findFreeLocalPort,
+  config: Config = Config.globalConfig
+) {
   val root: File = ProjectRootFinder.findProjectRoot()
 
   val suoritusrekisteriApp = new WebAppContext()
   suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
-  suoritusrekisteriApp.setBaseResource(new ResourceCollection(Array(root + "/src/main/resources/webapp", root + "/target/classes/webapp")))
+  suoritusrekisteriApp.setBaseResource(
+    new ResourceCollection(
+      Array(root + "/src/main/resources/webapp", root + "/target/classes/webapp")
+    )
+  )
   suoritusrekisteriApp.setContextPath("/suoritusrekisteri")
   suoritusrekisteriApp.setInitParameter(org.scalatra.EnvironmentKey, "production")
   suoritusrekisteriApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
 
   val mockApp = new WebAppContext()
   mockApp.setAttribute("hakurekisteri.config", config)
-  mockApp.setBaseResource(new ResourceCollection(Array(root + "/src/test/resources/front-mock-files")))
+  mockApp.setBaseResource(
+    new ResourceCollection(Array(root + "/src/test/resources/front-mock-files"))
+  )
   mockApp.setContextPath("/")
-  mockApp.setInitParameter(org.scalatra.servlet.ScalatraListener.LifeCycleKey, "SuoritusrekisteriMocksBootstrap")
+  mockApp.setInitParameter(
+    org.scalatra.servlet.ScalatraListener.LifeCycleKey,
+    "SuoritusrekisteriMocksBootstrap"
+  )
 
   val devOnrPath: String = System.getProperty("sure.local.development.onr")
   if (StringUtils.isNotBlank(devOnrPath)) {

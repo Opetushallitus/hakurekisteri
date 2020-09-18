@@ -5,14 +5,20 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.scalatest.concurrent.Waiters
 import org.scalatest.{FlatSpec, Matchers}
 
-class PersonOidsWithAliasesSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with Waiters {
+class PersonOidsWithAliasesSpec
+    extends FlatSpec
+    with Matchers
+    with FutureWaiting
+    with SpecsLikeMockito
+    with Waiters {
 
   private val henkiloOids = Set("1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4")
   private val aliases = Map(
     "1.1.1.1" -> Set("1.1.1.1", "9.9.9.9"),
     "2.2.2.2" -> Set("2.2.2.2"),
     "3.3.3.3" -> Set("3.3.3.3"),
-    "4.4.4.4" -> Set("4.4.4.4"))
+    "4.4.4.4" -> Set("4.4.4.4")
+  )
   private val withFourOids = PersonOidsWithAliases(henkiloOids, aliases)
 
   behavior of "PersonOidsWithAliases"

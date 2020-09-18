@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.tools
 
-
 import java.io.{InputStream, Reader}
 import java.net.URL
 
@@ -73,7 +72,7 @@ object XmlHelpers {
             r.appendChild(c.toJdkNode(doc))
           }
           r
-        case Text(text) => doc.createTextNode(text)
+        case Text(text)       => doc.createTextNode(text)
         case Comment(comment) => doc.createComment(comment)
         // not sure
         case a: Atom[_] => doc.createTextNode(a.data.toString)
@@ -98,8 +97,8 @@ object XmlHelpers {
   class DomExtras(n: org.w3c.dom.Node) {
     def toScala: Node = n match {
       case d: org.w3c.dom.Document => d.getDocumentElement.toScala
-      case e: org.w3c.dom.Element => convertElement(e)
-      case t: org.w3c.dom.Text => Text(t.getWholeText)
+      case e: org.w3c.dom.Element  => convertElement(e)
+      case t: org.w3c.dom.Text     => Text(t.getWholeText)
     }
 
     def printDom(doc: org.w3c.dom.Document): Unit = {
@@ -113,14 +112,15 @@ object XmlHelpers {
       var attributes: MetaData = Null
       val attribs = e.getAttributes
       val dchildren = e.getChildNodes
-      for (
-        i <- 0 until attribs.getLength
-      ) Option(attribs.item(i)).collect { case a: org.w3c.dom.Attr => Attribute(None, a.getName, Text(a.getValue), Null)}.foreach((a) => attributes = attributes.copy(a))
-      val children = for (
-        i <- 0 until dchildren.getLength
-      ) yield dchildren.item(i).toScala
+      for (i <- 0 until attribs.getLength)
+        Option(attribs.item(i))
+          .collect { case a: org.w3c.dom.Attr =>
+            Attribute(None, a.getName, Text(a.getValue), Null)
+          }
+          .foreach((a) => attributes = attributes.copy(a))
+      val children = for (i <- 0 until dchildren.getLength) yield dchildren.item(i).toScala
 
-      Elem(null, e.getTagName, attributes, TopScope, minimizeEmpty = true, children:_*)
+      Elem(null, e.getTagName, attributes, TopScope, minimizeEmpty = true, children: _*)
     }
   }
 

@@ -25,11 +25,26 @@ class ArvosanaEmptyLisatietoSpec extends ScalatraFunSuite {
     implicit val security = new TestSecurity
     val mockConfig: MockConfig = new MockConfig
 
-    val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
+    val arvosanaJournal =
+      new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
     (0 until 10).foreach((i) => {
-      arvosanaJournal.addModification(Updated(Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", if (i % 2 == 0) None else Some(""), valinnainen = false, None, "Test", Map()).identify(UUID.randomUUID())))
+      arvosanaJournal.addModification(
+        Updated(
+          Arvosana(
+            UUID.randomUUID(),
+            Arvio410("10"),
+            "AI",
+            if (i % 2 == 0) None else Some(""),
+            valinnainen = false,
+            None,
+            "Test",
+            Map()
+          ).identify(UUID.randomUUID())
+        )
+      )
     })
-    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig)))
+    val arvosanaRekisteri =
+      system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1, mockConfig)))
     val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
     implicit val swagger = new HakurekisteriSwagger
 

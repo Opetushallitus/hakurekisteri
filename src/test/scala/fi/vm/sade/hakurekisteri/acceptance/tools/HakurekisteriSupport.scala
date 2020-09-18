@@ -8,7 +8,10 @@ import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.github.nscala_time.time.TypeImports.LocalDate
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.integration.henkilo.{MockPersonAliasesProvider, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  MockPersonAliasesProvider,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit.{MockParameterActor, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.koodisto.MockedKoodistoActor
@@ -36,7 +39,6 @@ import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.xml.{Elem, Node, NodeSeq}
 
-
 object kausi extends Enumeration {
   type Kausi = Value
   val Keväällä, Syksyllä = Value
@@ -46,7 +48,11 @@ object kausi extends Enumeration {
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.kausi._
 
-trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach with HakurekisteriJsonSupport with HttpComponentsClient {
+trait HakurekisteriContainer
+    extends ScalatraFeatureSpec
+    with BeforeAndAfterEach
+    with HakurekisteriJsonSupport
+    with HttpComponentsClient {
   override protected implicit def jsonFormats = super.jsonFormats ++ List(new SuoritusDeserializer)
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
@@ -55,22 +61,48 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
   var suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable] = _
   private val mockConfig: MockConfig = new MockConfig
 
-
   override def beforeAll(): Unit = {
     system = ActorSystem()
     database = Database.forURL(ItPostgres.getEndpointURL)
 
-    suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
-    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = mockConfig)
-    val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))))))
-    val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig))))))
-    val koodistoActor =  new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
-    val parameterActor = new ParametritActorRef(system.actorOf(Props(new MockParameterActor(config = mockConfig)(system))))
+    suoritusJournal =
+      new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](
+      TableQuery[OpiskelijaTable],
+      config = mockConfig
+    )
+    val guardedSuoritusRekisteri = system.actorOf(
+      Props(
+        new FakeAuthorizer(
+          system.actorOf(
+            Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))
+          )
+        )
+      )
+    )
+    val guardedOpiskelijaRekisteri = system.actorOf(
+      Props(
+        new FakeAuthorizer(
+          system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig)))
+        )
+      )
+    )
+    val koodistoActor = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
+    val parameterActor = new ParametritActorRef(
+      system.actorOf(Props(new MockParameterActor(config = mockConfig)(system)))
+    )
 
-    val personOidsAliasFetcher: Set[String] => Future[PersonOidsWithAliases]= oids => Future.successful(PersonOidsWithAliases.apply(henkiloOids = oids))
-    val suoritusQueryMaker: Map[String, String] => fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus] = p => fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(p)
-    addServlet(new SuoritusResource(guardedSuoritusRekisteri, parameterActor, koodistoActor)
-      with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus], "/rest/v1/suoritukset")
+    val personOidsAliasFetcher: Set[String] => Future[PersonOidsWithAliases] = oids =>
+      Future.successful(PersonOidsWithAliases.apply(henkiloOids = oids))
+    val suoritusQueryMaker
+      : Map[String, String] => fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus] = p =>
+      fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(p)
+    addServlet(
+      new SuoritusResource(guardedSuoritusRekisteri, parameterActor, koodistoActor)
+        with SuoritusSwaggerApi
+        with HakurekisteriCrudCommands[Suoritus],
+      "/rest/v1/suoritukset"
+    )
     addServlet(new OpiskelijaResource(guardedOpiskelijaRekisteri), "/rest/v1/opiskelijat")
     super.beforeAll()
   }
@@ -89,8 +121,8 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
   }
 
   object db {
-    def is(token:Any) = token match {
-      case e:EmptyWord => has()
+    def is(token: Any) = token match {
+      case e: EmptyWord => has()
     }
 
     def has(suoritukset: Suoritus*) = {
@@ -102,41 +134,38 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
     hae(suoritukset)
   }
 
-  def create (suoritus: Suoritus){
+  def create(suoritus: Suoritus) {
     val json = write(suoritus)
-    post("/rest/v1/suoritukset", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
-    }
+    post("/rest/v1/suoritukset", json, Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
-  def create (opiskelija: Opiskelija){
+  def create(opiskelija: Opiskelija) {
     val json = write(opiskelija)
-    post("/rest/v1/opiskelijat", json, Map("Content-Type" -> "application/json; charset=utf-8"))  {
-    }
+    post("/rest/v1/opiskelijat", json, Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
-  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear)
-  val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
-  val suoritus2 =  Peruskoulu("1.2.5", "KESKEN", kevatJuhla, "1.2.3")
-  val suoritus3 =  Peruskoulu("1.2.5", "KESKEN",  kevatJuhla, "1.2.6")
+  val kevatJuhla = new MonthDay(6, 4).toLocalDate(DateTime.now.getYear)
+  val suoritus = Peruskoulu("1.2.3", "KESKEN", kevatJuhla, "1.2.4")
+  val suoritus2 = Peruskoulu("1.2.5", "KESKEN", kevatJuhla, "1.2.3")
+  val suoritus3 = Peruskoulu("1.2.5", "KESKEN", kevatJuhla, "1.2.6")
 
-  def hae[T: Manifest](query:ResourceQuery[T]):Seq[T] = {
+  def hae[T: Manifest](query: ResourceQuery[T]): Seq[T] = {
     query.find
   }
 
   trait ResourceQuery[T] {
-    def arvot:Map[String,String]
-    def resourcePath:String
+    def arvot: Map[String, String]
+    def resourcePath: String
 
+    def find[R: Manifest]: Seq[R] = {
 
-    def find[R: Manifest]:Seq[R] = {
-
-      get(resourcePath,arvot) {
+      get(resourcePath, arvot) {
         parse(body)
       }.extract[Seq[R]]
     }
   }
 
-  case class OpiskelijaQuery(arvot:Map[String,String]) extends ResourceQuery[Opiskelija] {
+  case class OpiskelijaQuery(arvot: Map[String, String]) extends ResourceQuery[Opiskelija] {
     def resourcePath: String = "/rest/v1/opiskelijat"
 
     def koululle(oid: String): OpiskelijaQuery = {
@@ -144,8 +173,8 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
     }
   }
 
-  case class SuoritusQuery(arvot:Map[String, String]) extends ResourceQuery[Suoritus]{
-    def vuodelta(vuosi:Int): SuoritusQuery = {
+  case class SuoritusQuery(arvot: Map[String, String]) extends ResourceQuery[Suoritus] {
+    def vuodelta(vuosi: Int): SuoritusQuery = {
       new SuoritusQuery(arvot + ("vuosi" -> vuosi.toString))
     }
 
@@ -153,7 +182,7 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
       new SuoritusQuery(arvot + ("myontaja" -> oid))
     }
 
-    def getKausiCode(kausi:Kausi):String = kausi match {
+    def getKausiCode(kausi: Kausi): String = kausi match {
       case Kevät => "K"
       case Syksy => "S"
     }
@@ -172,28 +201,28 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
   val suoritukset = SuoritusQuery(Map())
   val opiskelijat = OpiskelijaQuery(Map())
 
-  case class Valmistuja(oid:String, vuosi:String, kausi: Kausi) {
+  case class Valmistuja(oid: String, vuosi: String, kausi: Kausi) {
     val date: LocalDate =
       kausi match {
-        case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt)
-        case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt)
+        case Kevät => new MonthDay(6, 4).toLocalDate(vuosi.toInt)
+        case Syksy => new MonthDay(12, 21).toLocalDate(vuosi.toInt)
       }
 
-    def koulusta(koulu:String) {
+    def koulusta(koulu: String) {
       suoritusJournal.addModification(Updated(Peruskoulu(koulu, "KESKEN", date, oid).identify))
     }
   }
 
   trait Henkilo {
-    def oid:String
+    def oid: String
     def hetu: String
 
-    def valmistuu(kausi:Kausi, vuosi:Int) = {
+    def valmistuu(kausi: Kausi, vuosi: Int) = {
       new Valmistuja(oid, "" + vuosi, kausi)
     }
   }
 
-  object Mikko extends Henkilo{
+  object Mikko extends Henkilo {
     val hetu: String = "291093-9159"
     def oid: String = "1.2.3"
   }
@@ -203,71 +232,75 @@ trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach
     def oid: String = "1.2.4"
   }
 
-  def beBefore(s:String) =
+  def beBefore(s: String) =
     new Matcher[LocalDate] {
       def apply(left: LocalDate): MatchResult = {
         val pattern = DateTimeFormat.forPattern("dd.MM.yyyy")
         MatchResult(
           left < pattern.parseLocalDate(s),
           left.toString(pattern) + " was not before " + s,
-          left.toString(pattern) + " was before " +s
+          left.toString(pattern) + " was before " + s
         )
       }
     }
 
   object koulu {
     val koodi = "05536"
-    val id ="1.2.3"
+    val id = "1.2.3"
 
-    implicit def nodeSeq2String(seq:NodeSeq) : String = {
+    implicit def nodeSeq2String(seq: NodeSeq): String = {
       seq.text
     }
 
     object oppilaitosRekisteri {
-      def findOrg(koulukoodi: String): String   = koulukoodi match {
+      def findOrg(koulukoodi: String): String = koulukoodi match {
         case "05536" => "1.2.3"
       }
     }
 
     object henkiloRekisteri {
-      def find(hetu:String) = hetu match {
-        case  Mikko.hetu => Mikko.oid
-        case  Matti.hetu => Matti.oid
+      def find(hetu: String) = hetu match {
+        case Mikko.hetu => Mikko.oid
+        case Matti.hetu => Matti.oid
       }
     }
 
-    def parseSuoritukset(rowset: Node):Seq[Suoritus]  =  {
+    def parseSuoritukset(rowset: Node): Seq[Suoritus] = {
       rowset \ "ROW" map ((row) =>
         Peruskoulu(
-          oppilaitos = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
+          oppilaitos = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU"),
           tila = "KESKEN",
           valmistuminen = kevatJuhla,
-          henkiloOid = henkiloRekisteri.find(row \ "HETU")) )
+          henkiloOid = henkiloRekisteri.find(row \ "HETU")
+        )
+      )
     }
 
-    def lahettaa(kaavake:Elem){
+    def lahettaa(kaavake: Elem) {
       parseSuoritukset(kaavake) foreach create
       parseOpiskelijat(kaavake) foreach create
     }
 
     def getStartDate(vuosi: String, kausi: String): DateTime = kausi match {
-      case "S" => new MonthDay(1, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
-      case "K" => new MonthDay(8, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
+      case "S"     => new MonthDay(1, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
+      case "K"     => new MonthDay(8, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
       case default => throw new RuntimeException("unknown kausi")
     }
 
-    def parseOpiskelijat(rowset: Node):Seq[Opiskelija] = rowset \ "ROW" map ((row) =>
+    def parseOpiskelijat(rowset: Node): Seq[Opiskelija] = rowset \ "ROW" map ((row) =>
       Opiskelija(
-        oppilaitosOid = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
+        oppilaitosOid = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU"),
         luokkataso = row \ "LUOKKATASO",
         luokka = row \ "LUOKKA",
         henkiloOid = henkiloRekisteri.find(row \ "HETU"),
-        alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"), source = "Test")
+        alkuPaiva = getStartDate(row \ "VUOSI", row \ "KAUSI"),
+        source = "Test"
       )
+    )
   }
   val dateformat = new SimpleDateFormat("dd.MM.yyyy")
 
-  implicit def string2Date(s:String):Date = {
+  implicit def string2Date(s: String): Date = {
     dateformat.parse(s)
   }
 

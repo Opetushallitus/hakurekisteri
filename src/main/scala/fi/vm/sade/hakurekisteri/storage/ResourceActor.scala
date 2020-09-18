@@ -13,8 +13,13 @@ import fi.vm.sade.hakurekisteri.storage.repository.Repository
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest](config: Config) extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
-  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(config.integrations.asyncOperationThreadPoolSize, getClass.getSimpleName)
+abstract class ResourceActor[T <: Resource[I, T]: Manifest, I: Manifest](config: Config)
+    extends Actor
+    with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
+  implicit val executionContext: ExecutionContext = ExecutorUtil.createExecutor(
+    config.integrations.asyncOperationThreadPoolSize,
+    getClass.getSimpleName
+  )
 
   private def operationOrFailure(operation: () => Any) = {
     val t = Try(operation())
@@ -50,16 +55,24 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest](confi
 
     case InsertResource(resource: T, personOidsWithAliases: PersonOidsWithAliases) =>
       if (personOidsWithAliases.henkiloOids.size > 1) {
-        sender ! Failure(new IllegalArgumentException(s"Got ${personOidsWithAliases.henkiloOids.size} person aliases " +
-          s"for inserting a single resource $resource . This would make the deduplication query unneccessarily heavy."))
+        sender ! Failure(
+          new IllegalArgumentException(
+            s"Got ${personOidsWithAliases.henkiloOids.size} person aliases " +
+              s"for inserting a single resource $resource . This would make the deduplication query unneccessarily heavy."
+          )
+        )
       } else {
         sender ! operationOrFailure(() => insert(resource, personOidsWithAliases))
       }
 
     case UpsertResource(resource: T, personOidsWithAliases: PersonOidsWithAliases) =>
       if (personOidsWithAliases.henkiloOids.size > 1) {
-        sender ! Failure(new IllegalArgumentException(s"Got ${personOidsWithAliases.henkiloOids.size} person aliases " +
-          s"for inserting a single resource $resource . This would make the deduplication query unneccessarily heavy."))
+        sender ! Failure(
+          new IllegalArgumentException(
+            s"Got ${personOidsWithAliases.henkiloOids.size} person aliases " +
+              s"for inserting a single resource $resource . This would make the deduplication query unneccessarily heavy."
+          )
+        )
       } else {
         save(resource, personOidsWithAliases) pipeTo sender
       }
@@ -70,6 +83,12 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest](confi
 }
 
 case class DeleteResource[I](id: I, source: String)
-case class InsertResource[I, T <: Resource[I, T]](resource: T, personOidsWithAliases: PersonOidsWithAliases)
-case class UpsertResource[I, T <: Resource[I, T]](resource: T, personOidsWithAliases: PersonOidsWithAliases)
+case class InsertResource[I, T <: Resource[I, T]](
+  resource: T,
+  personOidsWithAliases: PersonOidsWithAliases
+)
+case class UpsertResource[I, T <: Resource[I, T]](
+  resource: T,
+  personOidsWithAliases: PersonOidsWithAliases
+)
 case class LogMessage(message: String, level: Logging.LogLevel)

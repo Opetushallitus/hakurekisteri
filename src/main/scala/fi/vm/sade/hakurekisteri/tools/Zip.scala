@@ -22,11 +22,13 @@ object Zip {
   }
 
   def toInputStreams(z: ZipInputStream): Iterator[InputStream] = {
-    Iterator.continually(Try(z.getNextEntry()).getOrElse(null))
+    Iterator
+      .continually(Try(z.getNextEntry()).getOrElse(null))
       .takeWhile(_ != null)
       .map(_ => z)
   }
 
-  def toInputStreams(zs: Iterator[ZipInputStream]): Iterator[InputStream] = zs.toList.toIterator.flatMap(toInputStreams)
+  def toInputStreams(zs: Iterator[ZipInputStream]): Iterator[InputStream] =
+    zs.toList.toIterator.flatMap(toInputStreams)
 
 }

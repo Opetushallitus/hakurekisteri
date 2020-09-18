@@ -5,12 +5,22 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaQuery, OpiskelijaTable}
+import fi.vm.sade.hakurekisteri.opiskelija.{
+  Opiskelija,
+  OpiskelijaJDBCActor,
+  OpiskelijaQuery,
+  OpiskelijaTable
+}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaResource, OpiskelijaSwaggerApi}
-import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger, TestSecurity}
+import fi.vm.sade.hakurekisteri.web.rest.support.{
+  HakurekisteriCrudCommands,
+  HakurekisteriResource,
+  HakurekisteriSwagger,
+  TestSecurity
+}
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
 import org.scalatest.BeforeAndAfterEach
@@ -20,7 +30,6 @@ import slick.lifted.TableQuery
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.implicitConversions
-
 
 class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   val now = new DateTime()
@@ -34,8 +43,17 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
 
   override def beforeAll(): Unit = {
     database = Database.forURL(ItPostgres.getEndpointURL)
-    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable], config = mockConfig)
-    val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig))))))
+    val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](
+      TableQuery[OpiskelijaTable],
+      config = mockConfig
+    )
+    val guardedOpiskelijaRekisteri = system.actorOf(
+      Props(
+        new FakeAuthorizer(
+          system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1, mockConfig)))
+        )
+      )
+    )
     //addServlet(new HakurekisteriResource[Opiskelija](guardedOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija], "/*") //fixme
     addServlet(new OpiskelijaResource(guardedOpiskelijaRekisteri), "/*")
 
@@ -62,7 +80,8 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   }
 
   test("send opiskelija with invalid loppuPaiva should return 400") {
-    val json = "{\"oppilaitosOid\":\"1.10.1\",\"luokkataso\":\"9\",\"luokka\":\"9A\",\"henkiloOid\":\"1.24.1\",\"alkuPaiva\":\"2015-01-01T00:00:00.000Z\",\"loppuPaiva\":\"2014-12-31T00:00:00.000Z\"}"
+    val json =
+      "{\"oppilaitosOid\":\"1.10.1\",\"luokkataso\":\"9\",\"luokka\":\"9A\",\"henkiloOid\":\"1.24.1\",\"alkuPaiva\":\"2015-01-01T00:00:00.000Z\",\"loppuPaiva\":\"2014-12-31T00:00:00.000Z\"}"
     post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
       status should be(400)
       body should include("loppuPaiva must be after alkuPaiva")

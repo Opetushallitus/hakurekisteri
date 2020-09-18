@@ -6,10 +6,13 @@ import org.scalatra.{ScalatraBase, ScalatraServlet}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import javax.servlet.ServletConfig
 
-
-class ResourcesApp(forceHttps: Boolean)(implicit val swagger: Swagger) extends ScalatraServlet with HakurekisteriJsonSupport with JacksonSwaggerBase {
+class ResourcesApp(forceHttps: Boolean)(implicit val swagger: Swagger)
+    extends ScalatraServlet
+    with HakurekisteriJsonSupport
+    with JacksonSwaggerBase {
   val hakurekisteriFormats = super[HakurekisteriJsonSupport].jsonFormats
-  override implicit val jsonFormats: Formats = super[JacksonSwaggerBase].jsonFormats ++ hakurekisteriFormats.customSerializers
+  override implicit val jsonFormats: Formats =
+    super[JacksonSwaggerBase].jsonFormats ++ hakurekisteriFormats.customSerializers
 
   override def init(config: ServletConfig): Unit = {
     super.init(config)
@@ -17,32 +20,46 @@ class ResourcesApp(forceHttps: Boolean)(implicit val swagger: Swagger) extends S
   }
 }
 
-class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(
-  title = "Haku- ja valintarekisteri",
-  description = "rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
-  termsOfServiceUrl = "https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/",
-  contact = "verkkotoimitus_opintopolku@oph.fi",
-  license = "EUPL 1.1 or latest approved by the European Commission" ,
-  licenseUrl = "http://www.osor.eu/eupl/")
-)
+class HakurekisteriSwagger
+    extends Swagger(
+      Swagger.SpecVersion,
+      "1",
+      ApiInfo(
+        title = "Haku- ja valintarekisteri",
+        description = "rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
+        termsOfServiceUrl = "https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/",
+        contact = "verkkotoimitus_opintopolku@oph.fi",
+        license = "EUPL 1.1 or latest approved by the European Commission",
+        licenseUrl = "http://www.osor.eu/eupl/"
+      )
+    )
 
-class ModelResponseMessage(override val code: Int,
-                           override val message: String,
-                           override val responseModel: Option[String])
-  extends ResponseMessage(code, message, responseModel)
+class ModelResponseMessage(
+  override val code: Int,
+  override val message: String,
+  override val responseModel: Option[String]
+) extends ResponseMessage(code, message, responseModel)
 
 object ModelResponseMessage {
-  def apply(code: Int, message: String, responseModel: Option[String] = Some("IncidentReport")): ModelResponseMessage = {
+  def apply(
+    code: Int,
+    message: String,
+    responseModel: Option[String] = Some("IncidentReport")
+  ): ModelResponseMessage = {
     new ModelResponseMessage(code, message, responseModel)
   }
 }
 
 trait IncidentReportSwaggerModel extends OldSwaggerSyntax {
 
-  def incidentReportModel = Model("IncidentReport", "IncidentReport", Seq(
-    ModelField("incidentId", "virheen tunniste, UUID", DataType.String),
-    ModelField("message", "viesti", DataType.String),
-    ModelField("timestamp", "ajanhetki", DataType.Date)
-  ).map{ t => (t.name, t)}.toMap)
+  def incidentReportModel = Model(
+    "IncidentReport",
+    "IncidentReport",
+    Seq(
+      ModelField("incidentId", "virheen tunniste, UUID", DataType.String),
+      ModelField("message", "viesti", DataType.String),
+      ModelField("timestamp", "ajanhetki", DataType.Date)
+    ).map { t => (t.name, t) }.toMap
+  )
 
 }

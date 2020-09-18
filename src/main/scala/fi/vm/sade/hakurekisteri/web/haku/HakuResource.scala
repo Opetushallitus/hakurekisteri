@@ -16,8 +16,15 @@ import org.scalatra.swagger.Swagger
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
-class HakuResource(hakuActor: ActorRef, hakemusService: IHakemusService)(implicit system: ActorSystem, sw: Swagger, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport  {
+class HakuResource(hakuActor: ActorRef, hakemusService: IHakemusService)(implicit
+  system: ActorSystem,
+  sw: Swagger,
+  val security: Security
+) extends HakuJaValintarekisteriStack
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -36,15 +43,16 @@ class HakuResource(hakuActor: ActorRef, hakemusService: IHakemusService)(implici
   }
 
   post("/:hakuOid/hakemukset") {
-    audit.log(auditUser,
+    audit.log(
+      auditUser,
       ReprocessHaunHakemukset,
       AuditUtil.targetFromParams(params).build(),
-      Changes.EMPTY)
+      Changes.EMPTY
+    )
     hakemusService.reprocessHaunHakemukset(params("hakuOid"))
   }
 
-  incident {
-    case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "backend service timed out"))
+  incident { case t: AskTimeoutException =>
+    (id) => InternalServerError(IncidentReport(id, "backend service timed out"))
   }
 }
-

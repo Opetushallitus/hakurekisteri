@@ -24,9 +24,9 @@ trait QueryLogging { this: HakuJaValintarekisteriStack =>
 
       val message = s"Query $queryStr took $requestDurationMillis ms, result ${result(t)}"
       requestDurationMillis match {
-        case reallySlow if requestDurationMillis > 10000  => logger.warning(message)
-        case slow if requestDurationMillis > 200 => logger.info(message)
-        case normal => logger.debug(message)
+        case reallySlow if requestDurationMillis > 10000 => logger.warning(message)
+        case slow if requestDurationMillis > 200         => logger.info(message)
+        case normal                                      => logger.debug(message)
       }
     })
   }

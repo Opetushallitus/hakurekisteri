@@ -13,12 +13,12 @@ case class ProgressInputStream(l: Int => Unit)(i: InputStream) extends FilterInp
     i
   }
 
-  override def read(b:Array[Byte]): Int = {
+  override def read(b: Array[Byte]): Int = {
     super.read(b) // call-through
   }
 
-  override def read(b:Array[Byte],off:Int,len:Int): Int = {
-    val i = super.read(b,off,len)
+  override def read(b: Array[Byte], off: Int, len: Int): Int = {
+    val i = super.read(b, off, len)
     bytesRead += i
     l(bytesRead)
     i

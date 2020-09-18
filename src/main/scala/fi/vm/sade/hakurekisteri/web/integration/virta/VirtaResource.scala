@@ -13,15 +13,21 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 object Status extends Enumeration {
   type Status = Value
   val OK, TIMEOUT, FAILURE = Value
 }
 
-class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val security: Security, sw: Swagger)
-  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport
-    with FutureSupport with SecuritySupport with VirtaSwaggerApi {
+class VirtaResource(virtaQueue: ActorRef)(implicit
+  system: ActorSystem,
+  val security: Security,
+  sw: Swagger
+) extends HakuJaValintarekisteriStack
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with VirtaSwaggerApi {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -37,33 +43,36 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
     contentType = formats("json")
   }
 
-  def virtaStatus: Future[VirtaStatus] = (virtaQueue ? VirtaHealth)(120.seconds).mapTo[VirtaStatus].recover {
-    case e: AskTimeoutException => VirtaStatus(queueLength = 0, status = Status.TIMEOUT)
-    case e: Throwable => VirtaStatus(queueLength = 0, status = Status.FAILURE)
-  }
+  def virtaStatus: Future[VirtaStatus] =
+    (virtaQueue ? VirtaHealth)(120.seconds).mapTo[VirtaStatus].recover {
+      case e: AskTimeoutException => VirtaStatus(queueLength = 0, status = Status.TIMEOUT)
+      case e: Throwable           => VirtaStatus(queueLength = 0, status = Status.FAILURE)
+    }
 
   def hasAccess: Boolean = currentUser.exists(_.isAdmin)
 
   get("/process", operation(process)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
-    else new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+    else
+      new AsyncResult() {
+        override implicit def timeout: Duration = 120.seconds
 
-      virtaQueue ! StartVirtaProcessing
+        virtaQueue ! StartVirtaProcessing
 
-      override val is = virtaStatus
-    }
+        override val is = virtaStatus
+      }
   }
 
   get("/cancel") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
-    else new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+    else
+      new AsyncResult() {
+        override implicit def timeout: Duration = 120.seconds
 
-      virtaQueue ! CancelSchedule
+        virtaQueue ! CancelSchedule
 
-      override val is = virtaStatus
-    }
+        override val is = virtaStatus
+      }
   }
 
   //Raikasta yhden oppijan tiedot Virrasta
@@ -94,14 +103,15 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
 
   get("/status", operation(statusQuery)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
-    else new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+    else
+      new AsyncResult() {
+        override implicit def timeout: Duration = 120.seconds
 
-      override val is = virtaStatus
-    }
+        override val is = virtaStatus
+      }
   }
 
-  incident {
-    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, t.message))
+  incident { case t: UserNotAuthorized =>
+    (id) => Forbidden(IncidentReport(id, t.message))
   }
 }

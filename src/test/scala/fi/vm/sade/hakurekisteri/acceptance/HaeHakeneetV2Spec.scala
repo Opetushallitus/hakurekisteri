@@ -25,13 +25,19 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
-      val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None, 2)),
-        Timeout(60 seconds).duration).asInstanceOf[JSONHakijat]
+      val hakijat: JSONHakijat = Await
+        .result(
+          testHakijaResource.get(
+            HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None, 2)
+          ),
+          Timeout(60 seconds).duration
+        )
+        .asInstanceOf[JSONHakijat]
 
       Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")
-      hakijat.hakijat.size should equal (1)
+      hakijat.hakijat.size should equal(1)
       hakijat.hakijat.foreach((hakija) => {
-        hakija.hakemus.hakutoiveet.head.opetuspiste should equal (OpetuspisteX.toimipistekoodi)
+        hakija.hakemus.hakutoiveet.head.opetuspiste should equal(OpetuspisteX.toimipistekoodi)
       })
     }
 
@@ -40,11 +46,15 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Kaikki hakeneet'")
-      val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 2)),
-        Timeout(60 seconds).duration).asInstanceOf[JSONHakijat]
+      val hakijat: JSONHakijat = Await
+        .result(
+          testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 2)),
+          Timeout(60 seconds).duration
+        )
+        .asInstanceOf[JSONHakijat]
 
       Then("saan siirtotiedoston, jossa on kaksi hakijaa")
-      hakijat.hakijat.size should equal (2)
+      hakijat.hakijat.size should equal(2)
     }
 
     scenario("Hyväksytyt hakijat") {
@@ -52,11 +62,15 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Hyväksytyt hakijat'")
-      val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None, 2)),
-        Timeout(60 seconds).duration).asInstanceOf[JSONHakijat]
+      val hakijat: JSONHakijat = Await
+        .result(
+          testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None, 2)),
+          Timeout(60 seconds).duration
+        )
+        .asInstanceOf[JSONHakijat]
 
       Then("saan siirtotiedoston, jossa on vain hyväksytyt hakijat")
-      hakijat.hakijat.size should equal (1)
+      hakijat.hakijat.size should equal(1)
     }
 
     scenario("Paikan vastaanottaneet hakijat") {
@@ -64,38 +78,54 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Paikan vastaanottaneet'")
-      val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None, 2)),
-        Timeout(60 seconds).duration).asInstanceOf[JSONHakijat]
+      val hakijat: JSONHakijat = Await
+        .result(
+          testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None, 2)),
+          Timeout(60 seconds).duration
+        )
+        .asInstanceOf[JSONHakijat]
 
       Then("saan siirtotiedoston, jossa on vain paikan vastaanottaneet hakijat")
-      hakijat.hakijat.size should equal (1)
+      hakijat.hakijat.size should equal(1)
     }
 
     scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
-      Given("Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä")
+      Given(
+        "Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä"
+      )
       Hakupalvelu has FullHakemus1
 
-
       When("haen kaikki hakeneet")
-      val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 2)),
-        Timeout(60 seconds).duration).asInstanceOf[JSONHakijat]
+      val hakijat: JSONHakijat = Await
+        .result(
+          testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 2)),
+          Timeout(60 seconds).duration
+        )
+        .asInstanceOf[JSONHakijat]
 
       Then("saan siirtotiedoston, jossa on vaaditut arvot")
       hakijat.hakijat.size should equal(1)
       hakijat.hakijat.head.hakemus.hakutoiveet.head.aiempiperuminen should equal(Some(true))
       hakijat.hakijat.head.hakemus.hakutoiveet.head.terveys should equal(Some(true))
-      hakijat.hakijat.head.hakemus.hakutoiveet.head.harkinnanvaraisuusperuste should equal(Some("2"))
+      hakijat.hakijat.head.hakemus.hakutoiveet.head.harkinnanvaraisuusperuste should equal(
+        Some("2")
+      )
       hakijat.hakijat.head.hakemus.hakutoiveet.head.kaksoistutkinto should equal(Some(true))
     }
 
-
     scenario("Vain tietyn hakukohteen tiedot") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
-      Hakupalvelu has(FullHakemus1, FullHakemus2, FullHakemus4)
+      Hakupalvelu has (FullHakemus1, FullHakemus2, FullHakemus4)
 
       When("rajaan muodostusta valitsemalla haun X, opetuspisteeseen X ja Koulutuskoodin X")
-      val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(Some("1.1"), Some(OpetuspisteX.oid), Some("000"), Hakuehto.Kaikki, None, 2)),
-        Timeout(60 seconds).duration).asInstanceOf[JSONHakijat]
+      val hakijat: JSONHakijat = Await
+        .result(
+          testHakijaResource.get(
+            HakijaQuery(Some("1.1"), Some(OpetuspisteX.oid), Some("000"), Hakuehto.Kaikki, None, 2)
+          ),
+          Timeout(60 seconds).duration
+        )
+        .asInstanceOf[JSONHakijat]
 
       Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")
       hakijat.hakijat.size should equal(1)
@@ -106,39 +136,41 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       Then("saan siirtotiedoston, ja hakijan lisäkysymysvastaukset on listattu")
       hakijat.hakijat.size should equal(1)
       hakijat.hakijat.foreach((hakija) => {
-        hakija.lisakysymykset.foreach((lisakysymys) => lisakysymys.kysymysid match {
-          case "miksi_ammatilliseen" => {
-            lisakysymys.kysymysteksti should equal("Miksi haet erityisoppilaitokseen?")
-            lisakysymys.kysymystyyppi should equal("ThemeTextQuestion")
-            lisakysymys.vastaukset.foreach((vastaus) => {
-              vastaus.vastausteksti should equal("Siksi ammatilliseen")
-            })
+        hakija.lisakysymykset.foreach((lisakysymys) =>
+          lisakysymys.kysymysid match {
+            case "miksi_ammatilliseen" => {
+              lisakysymys.kysymysteksti should equal("Miksi haet erityisoppilaitokseen?")
+              lisakysymys.kysymystyyppi should equal("ThemeTextQuestion")
+              lisakysymys.vastaukset.foreach((vastaus) => {
+                vastaus.vastausteksti should equal("Siksi ammatilliseen")
+              })
+            }
+            case "lisakysymys3" => {
+              lisakysymys.kysymysteksti should equal("Tekstikysymys")
+              lisakysymys.kysymystyyppi should equal("ThemeTextQuestion")
+              lisakysymys.vastaukset.foreach((vastaus) => {
+                vastaus.vastausteksti should equal("Tekstikysymys")
+              })
+            }
+            case "lisakysymys2" => {
+              lisakysymys.kysymysteksti should equal("Checkbox kysymys")
+              lisakysymys.kysymystyyppi should equal("ThemeCheckBoxQuestion")
+              lisakysymys.vastaukset.foreach((vastaus) => {
+                vastaus.vastausid should equal(Some("option_1"))
+                vastaus.vastausteksti should equal("Ei2")
+              })
+            }
+            case "lisakysymys1" => {
+              lisakysymys.kysymysteksti should equal("Radiobutton kysymys")
+              lisakysymys.kysymystyyppi should equal("ThemeRadioButtonQuestion")
+              lisakysymys.vastaukset.foreach((vastaus) => {
+                vastaus.vastausid should equal(Some("option_0"))
+                vastaus.vastausteksti should equal("Kyllä1")
+              })
+            }
+            case _ =>
           }
-          case "lisakysymys3" => {
-            lisakysymys.kysymysteksti should equal("Tekstikysymys")
-            lisakysymys.kysymystyyppi should equal("ThemeTextQuestion")
-            lisakysymys.vastaukset.foreach((vastaus) => {
-              vastaus.vastausteksti should equal("Tekstikysymys")
-            })
-          }
-          case "lisakysymys2" => {
-            lisakysymys.kysymysteksti should equal("Checkbox kysymys")
-            lisakysymys.kysymystyyppi should equal("ThemeCheckBoxQuestion")
-            lisakysymys.vastaukset.foreach((vastaus) => {
-              vastaus.vastausid should equal(Some("option_1"))
-              vastaus.vastausteksti should equal("Ei2")
-            })
-          }
-          case "lisakysymys1" => {
-            lisakysymys.kysymysteksti should equal("Radiobutton kysymys")
-            lisakysymys.kysymystyyppi should equal("ThemeRadioButtonQuestion")
-            lisakysymys.vastaukset.foreach((vastaus) => {
-              vastaus.vastausid should equal(Some("option_0"))
-              vastaus.vastausteksti should equal("Kyllä1")
-            })
-          }
-          case _ =>
-        })
+        )
       })
     }
   }

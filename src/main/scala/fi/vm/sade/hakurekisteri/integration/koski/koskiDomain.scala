@@ -10,33 +10,34 @@ import scala.math.BigDecimal
 case class MuuttuneetOppijatResponse(result: Seq[String], mayHaveMore: Boolean, nextCursor: String)
 
 case class KoskiHenkiloContainer(
-                                  henkilö: KoskiHenkilo,
-                                  opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
-                                )
+  henkilö: KoskiHenkilo,
+  opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
+)
 
 case class KoskiHenkilo(
-                         oid: Option[String],
-                         hetu: Option[String],
-                         syntymäaika: Option[String],
-                         etunimet: Option[String],
-                         kutsumanimi: Option[String],
-                         sukunimi: Option[String]) {
-}
+  oid: Option[String],
+  hetu: Option[String],
+  syntymäaika: Option[String],
+  etunimet: Option[String],
+  kutsumanimi: Option[String],
+  sukunimi: Option[String]
+) {}
 case class KoskiOpiskeluoikeus(
-                                oid: Option[String], //LUVA data does not have an OID
-                                oppilaitos: Option[KoskiOrganisaatio],
-                                tila: KoskiOpiskeluoikeusjakso,
-                                päättymispäivä: Option[String],
-                                lisätiedot: Option[KoskiLisatiedot],
-                                suoritukset: Seq[KoskiSuoritus],
-                                tyyppi: Option[KoskiKoodi],
-                                aikaleima: Option[String]) {
+  oid: Option[String], //LUVA data does not have an OID
+  oppilaitos: Option[KoskiOrganisaatio],
+  tila: KoskiOpiskeluoikeusjakso,
+  päättymispäivä: Option[String],
+  lisätiedot: Option[KoskiLisatiedot],
+  suoritukset: Seq[KoskiSuoritus],
+  tyyppi: Option[KoskiKoodi],
+  aikaleima: Option[String]
+) {
 
   def isStateContainingOpiskeluoikeus: Boolean =
     oppilaitos.isDefined && oppilaitos.get.oid.isDefined && tila.opiskeluoikeusjaksot.nonEmpty
 
   def isAikuistenPerusopetus: Boolean =
-    tyyppi.getOrElse(KoskiKoodi("","")).koodiarvo.contentEquals("aikuistenperusopetus")
+    tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
 }
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
@@ -48,12 +49,17 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
       .headOption
   }
   def determineSuoritusTila: String = {
-    KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila.find { koski2Sure =>
-      opiskeluoikeusjaksot.exists(_.tila.koodiarvo == koski2Sure._1)
-    }.getOrElse {
-      throw new IllegalArgumentException(s"Ei löytynyt mäppäystä Koski-tilasta Suren suorituksen tilaan:" +
-        s"$opiskeluoikeusjaksot (mäppäykset: ${KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila})")
-    }._2
+    KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila
+      .find { koski2Sure =>
+        opiskeluoikeusjaksot.exists(_.tila.koodiarvo == koski2Sure._1)
+      }
+      .getOrElse {
+        throw new IllegalArgumentException(
+          s"Ei löytynyt mäppäystä Koski-tilasta Suren suorituksen tilaan:" +
+            s"$opiskeluoikeusjaksot (mäppäykset: ${KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila})"
+        )
+      }
+      ._2
   }
 }
 
@@ -71,28 +77,29 @@ object KoskiOpiskeluoikeusjakso {
   )
 }
 
-case class KoskiTila(alku: String, tila:KoskiKoodi)
+case class KoskiTila(alku: String, tila: KoskiKoodi)
 
 case class KoskiOrganisaatio(oid: Option[String])
 
 case class KoskiSuoritus(
-                          luokka: Option[String],
-                          koulutusmoduuli: KoskiKoulutusmoduuli,
-                          tyyppi: Option[KoskiKoodi],
-                          kieli: Option[KoskiKieli],
-                          pakollinen: Option[Boolean],
-                          toimipiste: Option[KoskiOrganisaatio],
-                          vahvistus: Option[KoskiVahvistus],
-                          suorituskieli: Option[KoskiKieli],
-                          arviointi: Option[Seq[KoskiArviointi]],
-                          yksilöllistettyOppimäärä: Option[Boolean],
-                          osasuoritukset: Seq[KoskiOsasuoritus],
-                          ryhmä: Option[String],
-                          alkamispäivä: Option[String],
-                          //jääLuokalle is only used for peruskoulu
-                          jääLuokalle: Option[Boolean],
-                          tutkintonimike: Seq[KoskiKoodi] = Nil,
-                          tila: Option[KoskiKoodi] = None) {
+  luokka: Option[String],
+  koulutusmoduuli: KoskiKoulutusmoduuli,
+  tyyppi: Option[KoskiKoodi],
+  kieli: Option[KoskiKieli],
+  pakollinen: Option[Boolean],
+  toimipiste: Option[KoskiOrganisaatio],
+  vahvistus: Option[KoskiVahvistus],
+  suorituskieli: Option[KoskiKieli],
+  arviointi: Option[Seq[KoskiArviointi]],
+  yksilöllistettyOppimäärä: Option[Boolean],
+  osasuoritukset: Seq[KoskiOsasuoritus],
+  ryhmä: Option[String],
+  alkamispäivä: Option[String],
+  //jääLuokalle is only used for peruskoulu
+  jääLuokalle: Option[Boolean],
+  tutkintonimike: Seq[KoskiKoodi] = Nil,
+  tila: Option[KoskiKoodi] = None
+) {
 
   def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
     val sum = osasuoritukset
@@ -106,24 +113,26 @@ case class KoskiSuoritus(
   def getKomoOid(isAikuistenPerusOpetus: Boolean): String = {
     tyyppi match {
       case Some(k) =>
-        if(isAikuistenPerusOpetus && k.koodiarvo == "perusopetuksenoppiaineenoppimaara") {
+        if (isAikuistenPerusOpetus && k.koodiarvo == "perusopetuksenoppiaineenoppimaara") {
           Oids.perusopetuksenOppiaineenOppimaaraOid
         } else {
           k.koodiarvo match {
-            case "perusopetuksenoppimaara" | "perusopetuksenoppiaineenoppimaara" | "aikuistenperusopetuksenoppimaara" => Oids.perusopetusKomoOid
+            case "perusopetuksenoppimaara" | "perusopetuksenoppiaineenoppimaara" |
+                "aikuistenperusopetuksenoppimaara" =>
+              Oids.perusopetusKomoOid
             case "perusopetuksenvuosiluokka" => Oids.perusopetusLuokkaKomoOid
-            case "valma" => Oids.valmaKomoOid
-            case "telma" => Oids.telmaKomoOid
-            case "luva" => Oids.lukioonvalmistavaKomoOid
-            case "perusopetuksenlisaopetus" => Oids.lisaopetusKomoOid
+            case "valma"                     => Oids.valmaKomoOid
+            case "telma"                     => Oids.telmaKomoOid
+            case "luva"                      => Oids.lukioonvalmistavaKomoOid
+            case "perusopetuksenlisaopetus"  => Oids.lisaopetusKomoOid
             case "ammatillinentutkinto" =>
               koulutusmoduuli.koulutustyyppi match {
                 case Some(KoskiKoodi("12", _)) => Oids.erikoisammattitutkintoKomoOid
                 case Some(KoskiKoodi("11", _)) => Oids.ammatillinentutkintoKomoOid
-                case _ => Oids.ammatillinenKomoOid
+                case _                         => Oids.ammatillinenKomoOid
               }
             case "lukionoppimaara" => Oids.lukioKomoOid
-            case _ => Oids.DUMMYOID
+            case _                 => Oids.DUMMYOID
           }
         }
       case _ => Oids.DUMMYOID
@@ -133,12 +142,15 @@ case class KoskiSuoritus(
   def getLuokkataso(isAikuistenPerusOpetus: Boolean): Option[String] = {
     tyyppi match {
       case Some(k) =>
-        if((isAikuistenPerusOpetus && k.koodiarvo == "perusopetuksenoppiaineenoppimaara")
-          || k.koodiarvo == "aikuistenperusopetuksenoppimaara") {
+        if (
+          (isAikuistenPerusOpetus && k.koodiarvo == "perusopetuksenoppiaineenoppimaara")
+          || k.koodiarvo == "aikuistenperusopetuksenoppimaara"
+        ) {
           Some(KoskiUtil.AIKUISTENPERUS_LUOKKAASTE)
         } else {
           k.koodiarvo match {
-            case "perusopetuksenoppimaara" | "perusopetuksenvuosiluokka" => koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo))
+            case "perusopetuksenoppimaara" | "perusopetuksenvuosiluokka" =>
+              koulutusmoduuli.tunniste.flatMap(k => Some(k.koodiarvo))
             case _ => None
           }
         }
@@ -148,16 +160,17 @@ case class KoskiSuoritus(
 }
 
 case class KoskiOsasuoritus(
-                             koulutusmoduuli: KoskiKoulutusmoduuli,
-                             tyyppi: KoskiKoodi,
-                             arviointi: Seq[KoskiArviointi],
-                             pakollinen: Option[Boolean],
-                             yksilöllistettyOppimäärä: Option[Boolean],
-                             osasuoritukset: Option[Seq[KoskiOsasuoritus]]
-                           ) {
+  koulutusmoduuli: KoskiKoulutusmoduuli,
+  tyyppi: KoskiKoodi,
+  arviointi: Seq[KoskiArviointi],
+  pakollinen: Option[Boolean],
+  yksilöllistettyOppimäärä: Option[Boolean],
+  osasuoritukset: Option[Seq[KoskiOsasuoritus]]
+) {
 
   def opintopisteidenMaara: BigDecimal = {
-    val laajuus: Option[KoskiValmaLaajuus] = koulutusmoduuli.laajuus.filter(_.yksikkö.koodiarvo == "2")
+    val laajuus: Option[KoskiValmaLaajuus] =
+      koulutusmoduuli.laajuus.filter(_.yksikkö.koodiarvo == "2")
     val arvo: Option[BigDecimal] = laajuus.flatMap(_.arvo)
     arvo.getOrElse(KoskiUtil.ZERO)
   }
@@ -179,18 +192,23 @@ case class KoskiOsasuoritus(
   }
 }
 
-case class KoskiArviointi(arvosana: KoskiKoodi, hyväksytty: Option[Boolean], päivä: Option[String]) {
+case class KoskiArviointi(
+  arvosana: KoskiKoodi,
+  hyväksytty: Option[Boolean],
+  päivä: Option[String]
+) {
   def isPKValue: Boolean = {
     KoskiUtil.peruskoulunArvosanat.contains(arvosana.koodiarvo)
   }
 }
 
-case class KoskiKoulutusmoduuli(tunniste: Option[KoskiKoodi],
-                                kieli: Option[KoskiKieli],
-                                koulutustyyppi:
-                                Option[KoskiKoodi],
-                                laajuus: Option[KoskiValmaLaajuus],
-                                pakollinen: Option[Boolean])
+case class KoskiKoulutusmoduuli(
+  tunniste: Option[KoskiKoodi],
+  kieli: Option[KoskiKieli],
+  koulutustyyppi: Option[KoskiKoodi],
+  laajuus: Option[KoskiValmaLaajuus],
+  pakollinen: Option[Boolean]
+)
 
 case class KoskiValmaLaajuus(arvo: Option[BigDecimal], yksikkö: KoskiKoodi)
 
@@ -214,12 +232,15 @@ case class KoskiVahvistus(päivä: String, myöntäjäOrganisaatio: KoskiOrganis
 case class KoskiKieli(koodiarvo: String, koodistoUri: String)
 
 case class KoskiLisatiedot(
-                            erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos], //legacy
-                            erityisenTuenPäätökset: Option[List[KoskiErityisenTuenPaatos]], //new format
-                            vuosiluokkiinSitoutumatonOpetus: Option[Boolean])
+  erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos], //legacy
+  erityisenTuenPäätökset: Option[List[KoskiErityisenTuenPaatos]], //new format
+  vuosiluokkiinSitoutumatonOpetus: Option[Boolean]
+)
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 
-case class KoskiSuoritusHakuParams(saveLukio: Boolean = false, saveAmmatillinen: Boolean = false, retryWaitMillis: Long = 10000)
-
-
+case class KoskiSuoritusHakuParams(
+  saveLukio: Boolean = false,
+  saveAmmatillinen: Boolean = false,
+  retryWaitMillis: Long = 10000
+)

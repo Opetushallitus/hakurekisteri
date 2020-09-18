@@ -16,9 +16,9 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
   behavior of "Scala validation"
 
   it should "use converter prior validation" in {
-    val extractor = (tr:TestResource) => tr.name
+    val extractor = (tr: TestResource) => tr.name
 
-    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
+    implicit val trv: Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
@@ -34,9 +34,9 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "result in success for empty list form validation" in {
-    val extractor = (tr:TestResource) => tr.name
+    val extractor = (tr: TestResource) => tr.name
 
-    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
+    implicit val trv: Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
@@ -45,60 +45,54 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
 
     val sv = TestValidator(mockValidator)
 
-    sv.validateData(tested).isSuccess should be (true)
+    sv.validateData(tested).isSuccess should be(true)
 
   }
 
   it should "result in failure for non empty list form validation" in {
-    val extractor = (tr:TestResource) => tr.name
+    val extractor = (tr: TestResource) => tr.name
 
-    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
+    implicit val trv: Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
 
-    when(mockValidator.validate(tested.name)).thenReturn(java.Arrays.asList[ValidationResult](TestValidationResult("failure")))
+    when(mockValidator.validate(tested.name))
+      .thenReturn(java.Arrays.asList[ValidationResult](TestValidationResult("failure")))
 
     val sv = TestValidator(mockValidator)
 
-    sv.validateData(tested).isFailure should be (true)
+    sv.validateData(tested).isFailure should be(true)
 
   }
 
   it should "return a non empty list containing failed rules in failure" in {
-    val extractor = (tr:TestResource) => tr.name
+    val extractor = (tr: TestResource) => tr.name
 
-    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
+    implicit val trv: Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
 
-    when(mockValidator.validate(tested.name)).thenReturn(java.Arrays.asList[ValidationResult](TestValidationResult("failure")))
+    when(mockValidator.validate(tested.name))
+      .thenReturn(java.Arrays.asList[ValidationResult](TestValidationResult("failure")))
 
     val sv = TestValidator(mockValidator)
 
-    sv.validateData(tested).swap.getOrElse(NonEmptyList("foo")).head should be ("failure")
+    sv.validateData(tested).swap.getOrElse(NonEmptyList("foo")).head should be("failure")
 
   }
-
-
-
-
-
 
 }
 
 case class TestValidator(validator: Validator) extends Validator with ScalaValidator {
 
-  def validate(v:AnyRef):java.List[ValidationResult] = validator.validate(v)
+  def validate(v: AnyRef): java.List[ValidationResult] = validator.validate(v)
 
 }
 
-case class TestValidationResult(rule:String, resource:AnyRef = None) extends ValidationResult {
+case class TestValidationResult(rule: String, resource: AnyRef = None) extends ValidationResult {
   override def getFailedRule: String = rule
 
   override def getResource: AnyRef = resource
 }
-
-
-

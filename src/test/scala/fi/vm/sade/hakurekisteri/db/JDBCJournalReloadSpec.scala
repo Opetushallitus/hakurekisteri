@@ -7,7 +7,10 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.integration.henkilo.{MockPersonAliasesProvider, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  MockPersonAliasesProvider,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -19,7 +22,6 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-
 class JDBCJournalReloadSpec extends ScalatraFunSuite {
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -29,8 +31,11 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
 
     val mockConfig: MockConfig = new MockConfig
 
-    val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
-    val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig)))
+    val suoritusJournal =
+      new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
+    val suoritusrekisteri = system.actorOf(
+      Props(new SuoritusJDBCActor(suoritusJournal, 1, MockPersonAliasesProvider, mockConfig))
+    )
 
     implicit val timeout: Timeout = 30.seconds
     val now = new LocalDate()
@@ -68,7 +73,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val suoritukset = createSystemAndInsertAndShutdown(henkilot)
     database.close()
 
-    suoritukset.size should be (henkilot.length)
+    suoritukset.size should be(henkilot.length)
   }
 
 }

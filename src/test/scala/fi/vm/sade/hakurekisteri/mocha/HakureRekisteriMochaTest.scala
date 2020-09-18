@@ -13,11 +13,13 @@ class HakureRekisteriMochaTest extends FlatSpec with CleanSharedTestJettyBeforeE
   private val totalMochaTestsMaxDuration: Duration = Duration(10, MINUTES)
 
   "Mocha tests" should "pass" in {
-    val pb = Seq("node_modules/mocha-headless-chrome/bin/start",
+    val pb = Seq(
+      "node_modules/mocha-headless-chrome/bin/start",
       "-t",
       totalMochaTestsMaxDuration.toMillis.toString,
       "-f",
-      "http://localhost:" + port + "/test/runner.html")
+      "http://localhost:" + port + "/test/runner.html"
+    )
     val res = pb.!
     res should be(0)
   }
