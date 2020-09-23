@@ -1,11 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
-import fi.vm.sade.hakurekisteri.{Config, Oids}
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
+import akka.actor.{Actor, ActorLogging, ActorSystem}
 import akka.pattern.{AskableActorRef, pipe}
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.haku.{
@@ -14,14 +9,18 @@ import fi.vm.sade.hakurekisteri.integration.haku.{
   RestHakuAika,
   RestHakuResult
 }
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
-import support.{TypedActorRef, TypedAskableActorRef}
+import support.TypedAskableActorRef
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 case class GetKomoQuery(oid: String)
-
-case class HakukohdeQuery(oid: String)
 
 case class TarjontaRestHakuResult(result: List[TarjontaRestHaku]) {
   def toRestHakuResult: RestHakuResult = RestHakuResult(result.map(_.toRestHaku))
@@ -83,12 +82,19 @@ case class Koulutus(
 case class HakukohdeOid(oid: String)
 
 @SerialVersionUID(1)
-case class Hakukohde(
+case class TarjontaHakukohde(
   oid: String,
   hakukohdeKoulutusOids: Seq[String],
   ulkoinenTunniste: Option[String],
   tarjoajaOids: Option[Set[String]]
-)
+) {
+  def toHakukohde: Hakukohde = Hakukohde(
+    oid = oid,
+    hakukohdeKoulutusOids = hakukohdeKoulutusOids,
+    ulkoinenTunniste = ulkoinenTunniste,
+    tarjoajaOids = tarjoajaOids
+  )
+}
 
 case class Hakukohteenkoulutus(
   komoOid: String,
@@ -221,7 +227,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   def getHakukohde(oid: String): Future[Option[Hakukohde]] = {
     val loader: String => Future[Option[Option[Hakukohde]]] = { hakukohdeOid =>
       val result = restClient
-        .readObject[TarjontaResultResponse[Option[Hakukohde]]](
+        .readObject[TarjontaResultResponse[Option[TarjontaHakukohde]]](
           "tarjonta-service.hakukohde",
           hakukohdeOid
         )(200, maxRetries)
@@ -236,7 +242,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
           Future.failed(
             HakukohdeNotFoundException(s"empty hakukohde returned from Tarjonta with $hakukohdeOid")
           )
-        case Some(result) => Future.successful(Option(result))
+        case Some(result) => Future.successful(Option(result.map(_.toHakukohde)))
       }
     }
     hakukohdeCache.get(oid, loader).map(_.get)
@@ -248,7 +254,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   def getHakukohteenKoulutuksetViaCache(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
     val loader: String => Future[Option[HakukohteenKoulutukset]] = hakukohdeOid => {
       restClient
-        .readObject[TarjontaResultResponse[Option[Hakukohde]]](
+        .readObject[TarjontaResultResponse[Option[TarjontaHakukohde]]](
           "tarjonta-service.hakukohde",
           hk.oid
         )(200, maxRetries)

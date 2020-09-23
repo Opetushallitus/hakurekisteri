@@ -3,8 +3,8 @@ package fi.vm.sade.hakurekisteri.integration
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory.RedisCacheInitializationException
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, MonadCache}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.Hakukohde
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
-import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohde
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito.{times, verify, when}
