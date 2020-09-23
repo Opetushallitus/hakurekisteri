@@ -27,15 +27,13 @@ class HakuAggregatorActor(
   implicit val timeout: Timeout = Timeout(60.seconds)
 
   override def receive: Receive = { case GetHautQuery =>
-    Future
-      .sequence(
-        List(
-          (tarjonta.actor ? GetHautQuery).map(asRestHakuResult),
-          (koutaInternal.actor ? GetHautQuery).map(asRestHakuResult)
-        )
-      )
-      .map(results => results.reduce((a, b) => a.copy(a.result ++ b.result))) pipeTo sender
+    getHaut pipeTo sender
   }
+
+  def getHaut: Future[RestHakuResult] = for {
+    tarjontaHaut <- (tarjonta.actor ? GetHautQuery).map(asRestHakuResult)
+    koutaInternalHaut <- (koutaInternal.actor ? GetHautQuery).map(asRestHakuResult)
+  } yield RestHakuResult(result = tarjontaHaut.result ++ koutaInternalHaut.result)
 
   def asRestHakuResult(result: Any): RestHakuResult = result match {
     case x: RestHakuResult => x
