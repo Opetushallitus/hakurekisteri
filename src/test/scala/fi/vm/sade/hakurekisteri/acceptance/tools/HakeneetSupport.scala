@@ -7,12 +7,13 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, _}
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, hakukohde}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, HakuActor, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeQuery
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, _}
+import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
@@ -909,15 +910,20 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   val koulutus1 =
     Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
   val ataruHakukohde1 =
-    Hakukohde("1.2.246.562.20.14800254899", Seq(), None, Some(Set("1.2.246.562.10.39920288212")))
-  val ataruHakukohde2 = Hakukohde(
+    hakukohde.Hakukohde(
+      "1.2.246.562.20.14800254899",
+      Seq(),
+      None,
+      Some(Set("1.2.246.562.10.39920288212"))
+    )
+  val ataruHakukohde2 = hakukohde.Hakukohde(
     "1.2.246.562.20.44085996724",
     Seq(),
     None,
     Some(Set("1.2.246.562.10.2014041814420657444022"))
   )
 
-  def getHakukohde(oid: String): Option[Hakukohde] = oid match {
+  def getHakukohde(oid: String): Option[hakukohde.Hakukohde] = oid match {
     case "1.2.246.562.20.14800254899" => Some(ataruHakukohde1)
     case "1.2.246.562.20.44085996724" => Some(ataruHakukohde2)
   }
@@ -927,6 +933,12 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       case oid: HakukohdeOid =>
         sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
       case q: HakukohdeQuery => sender ! getHakukohde(q.oid)
+    }
+  }
+
+  class MockedHakukohdeAggregatorActor extends Actor {
+    override def receive: Actor.Receive = { case q: HakukohdeQuery =>
+      sender ! getHakukohde(q.oid).get
     }
   }
 

@@ -12,7 +12,11 @@ import fi.vm.sade.hakurekisteri.integration.haku.{
   RestHakuAika,
   RestHakuResult
 }
-import fi.vm.sade.hakurekisteri.integration.tarjonta.GetHautQueryFailedException
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  GetHautQueryFailedException,
+  HakukohdeNotFoundException
+}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import org.joda.time.LocalDate
 import support.TypedAskableActorRef
@@ -27,7 +31,10 @@ class KoutaInternalActor(restClient: VirkailijaRestClient, config: Config)
     getClass.getSimpleName
   )
 
-  override def receive: Receive = { case GetHautQuery => getHaut pipeTo sender }
+  override def receive: Receive = {
+    case GetHautQuery      => getHaut pipeTo sender
+    case q: HakukohdeQuery => getHakukohde(q.oid) pipeTo sender
+  }
 
   def getHaut: Future[RestHakuResult] =
     restClient
@@ -38,6 +45,26 @@ class KoutaInternalActor(restClient: VirkailijaRestClient, config: Config)
         log.error(t, "error retrieving all hakus from kouta-internal")
         throw GetHautQueryFailedException("error retrieving all hakus from kouta-internal", t)
       }
+
+  def getHakukohde(hakukohdeOid: String): Future[Option[Hakukohde]] = {
+    restClient
+      .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200)
+      .flatMap(hakukohde => {
+        restClient
+          .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", hakukohde.toteutusOid)(200)
+          .map(toteutus => {
+            Some(
+              Hakukohde(
+                oid = hakukohde.oid,
+                hakukohdeKoulutusOids =
+                  toteutus.koulutusOid.fold[Seq[String]](Seq())(koulutusOid => Seq(koulutusOid)),
+                ulkoinenTunniste = None,
+                tarjoajaOids = toteutus.tarjoajat
+              )
+            )
+          })
+      })
+  }
 }
 
 case class KoutaInternalActorRef(actor: AskableActorRef) extends TypedAskableActorRef
@@ -81,3 +108,15 @@ case class KoutaInternalRestHaku(
     tila = tila
   )
 }
+
+case class KoutaInternalHakukohde(oid: String, toteutusOid: String) {
+  def toHakukohde(tarjoajaOids: Option[Set[String]]): Hakukohde =
+    Hakukohde(
+      oid = oid,
+      hakukohdeKoulutusOids = Seq(toteutusOid),
+      ulkoinenTunniste = None,
+      tarjoajaOids = tarjoajaOids
+    )
+}
+
+case class KoutaInternalToteutus(tarjoajat: Option[Set[String]], koulutusOid: Option[String])

@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   MockOppijaNumeroRekisteri,
   PersonOidsWithAliases
@@ -33,8 +34,8 @@ class HakemusServiceSpec
     ServiceConfig(serviceUrl = "http://localhost/lomake-editori"),
     aClient = Some(new CapturingAsyncHttpClient(endPoint))
   )
-  val tarjontaMock: TarjontaActorRef = new TarjontaActorRef(
-    system.actorOf(Props(new MockedTarjontaActor()))
+  val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
+    system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
   )
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
@@ -42,7 +43,7 @@ class HakemusServiceSpec
   val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
     pageSize = 10

@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{RestHaku, RestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
@@ -49,13 +50,16 @@ class KkHakijaServiceSpec
     aClient = Some(new CapturingAsyncHttpClient(endPoint))
   )
   private val tarjontaMock = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
+  private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
+    system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
+  )
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
   private val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri
   )
