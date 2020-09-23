@@ -12,6 +12,11 @@ import fi.vm.sade.hakurekisteri.integration.haku.{
   HakuAggregatorActorRef,
   MockHakuAggregatorActor
 }
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  HakukohdeAggregatorActor,
+  HakukohdeAggregatorActorRef,
+  MockHakukohdeAggregatorActor
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActor,
@@ -83,6 +88,7 @@ trait Integrations {
   val tarjonta: TarjontaActorRef
   val koutaInternal: KoutaInternalActorRef
   val hakuAggregator: HakuAggregatorActorRef
+  val hakukohdeAggregator: HakukohdeAggregatorActorRef
   val haut: ActorRef
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
@@ -150,6 +156,12 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
   override val hakuAggregator: HakuAggregatorActorRef = new HakuAggregatorActorRef(
     mockActor("hakuAggregator", new MockHakuAggregatorActor(tarjonta, koutaInternal, config))
+  )
+  override val hakukohdeAggregator: HakukohdeAggregatorActorRef = new HakukohdeAggregatorActorRef(
+    mockActor(
+      "hakukohdeAggregator",
+      new MockHakukohdeAggregatorActor(tarjonta, koutaInternal, config)
+    )
   )
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytlKokelasPersister = new YtlKokelasPersister(
@@ -336,6 +348,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       "hakuAggregator"
     )
   )
+  val hakukohdeAggregator: HakukohdeAggregatorActorRef = new HakukohdeAggregatorActorRef(
+    getSupervisedActorFor(
+      Props(new HakukohdeAggregatorActor(tarjonta, koutaInternal, config)),
+      "hakukohdeAggregator"
+    )
+  )
   val organisaatiot = new OrganisaatioActorRef(
     getSupervisedActorFor(
       Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)),
@@ -353,7 +371,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val hakemusService = new HakemusService(
     hakemusClient,
     ataruHakemusClient,
-    tarjonta,
+    hakukohdeAggregator,
     organisaatiot,
     oppijaNumeroRekisteri,
     config,

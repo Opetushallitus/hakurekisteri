@@ -3,29 +3,31 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import akka.actor.{ActorRef, ActorSystem, Scheduler}
+
+import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache, RedisCacheFactory}
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  Hakukohde,
+  HakukohdeAggregatorActorRef,
+  HakukohdeQuery
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   IOppijaNumeroRekisteri,
-  Kieli,
   LinkedHenkiloOids,
   PersonOidsWithAliases
 }
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
-import scala.collection.immutable
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -142,7 +144,7 @@ case class AtaruSearchParams(
 class HakemusService(
   hakuappRestClient: VirkailijaRestClient,
   ataruHakemusClient: VirkailijaRestClient,
-  tarjontaActor: TarjontaActorRef,
+  hakukohdeAggregatorActor: HakukohdeAggregatorActorRef,
   organisaatioActor: OrganisaatioActorRef,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
   config: Config,
@@ -185,18 +187,15 @@ class HakemusService(
     henkilot: Map[String, Henkilo]
   ): Future[List[AtaruHakemus]] = {
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
-      hakukohde <- (tarjontaActor.actor ? HakukohdeQuery(hakukohdeOid))
-        .mapTo[Option[Hakukohde]]
-        .flatMap {
-          case Some(h) => Future.successful(h)
-          case None =>
-            Future.failed(new RuntimeException(s"Could not find hakukohde $hakukohdeOid"))
-        }
+      hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
+        .mapTo[Hakukohde]
       tarjoajaOid <- hakukohde.tarjoajaOids.flatMap(_.headOption) match {
         case Some(oid) => Future.successful(oid)
         case None =>
           Future.failed(
-            new RuntimeException(s"Could not find tarjoaja for hakukohde ${hakukohde.oid}")
+            new RuntimeException(
+              s"Could not find tarjoaja for hakukohde ${hakukohde.oid}"
+            )
           )
       }
     } yield tarjoajaOid
