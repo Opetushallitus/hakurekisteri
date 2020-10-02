@@ -50,7 +50,6 @@ class KkHakijaServiceSpec
     ServiceConfig(serviceUrl = "http://localhost/lomake-editori"),
     aClient = Some(new CapturingAsyncHttpClient(endPoint))
   )
-  private val tarjontaMock = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
   private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
     system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
   )
@@ -155,7 +154,7 @@ class KkHakijaServiceSpec
   private val service = new KkHakijaService(
     hakemusService,
     Hakupalvelu,
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     hakuMock,
     koodistoMock,
     suoritusMock,
@@ -623,7 +622,7 @@ class KkHakijaServiceSpec
     val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
       hakemusService,
       Hakupalvelu,
-      tarjontaMock,
+      hakukohdeAggregatorMock,
       hakuMock,
       koodistoMock,
       suoritusMock,

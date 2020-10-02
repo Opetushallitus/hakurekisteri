@@ -6,7 +6,11 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohdeOid,
+  HakukohteenKoulutukset,
+  TarjontaActorRef
+}
 import support.TypedActorRef
 
 import scala.concurrent.duration.DurationInt
@@ -24,9 +28,39 @@ class HakukohdeAggregatorActor(
   )
   implicit val timeout: Timeout = Timeout(60.seconds)
 
-  override def receive: Receive = { case q: HakukohdeQuery =>
-    getHakukohde(q) pipeTo sender
+  override def receive: Receive = {
+    case q: HakukohdeQuery =>
+      getHakukohde(q) pipeTo sender
+    case q: HakukohteenKoulutuksetQuery =>
+      getHakukohteenKoulutukset(q) pipeTo sender
   }
+
+  private def getHakukohteenKoulutukset(
+    q: HakukohteenKoulutuksetQuery
+  ): Future[HakukohteenKoulutukset] = for {
+    koulutukset <- getTarjontaHakukohteenKoulutukset(q)
+      .flatMap { tarjontaHakukohteenKoulutukset =>
+        {
+          getKoutaInternalHakukohteenKoulutukset(q)
+            .map(koutaInternalHakukohteenKoulutukset =>
+              tarjontaHakukohteenKoulutukset.copy(
+                koulutukset =
+                  tarjontaHakukohteenKoulutukset.koulutukset ++ koutaInternalHakukohteenKoulutukset.koulutukset
+              )
+            )
+        }
+      }
+      .recoverWith { case _ =>
+        getKoutaInternalHakukohteenKoulutukset(q)
+      }
+  } yield koulutukset
+
+  private def getKoutaInternalHakukohteenKoulutukset(q: HakukohteenKoulutuksetQuery) =
+    (koutaInternal.actor ? q).mapTo[HakukohteenKoulutukset]
+
+  private def getTarjontaHakukohteenKoulutukset(q: HakukohteenKoulutuksetQuery) =
+    (tarjonta.actor ? HakukohdeOid(q.hakukohdeOid))
+      .mapTo[HakukohteenKoulutukset]
 
   private def getHakukohde(q: HakukohdeQuery): Future[Hakukohde] = hakukohdeQuery(q, tarjonta.actor)
     .recoverWith[Option[Hakukohde]] { case _ =>
