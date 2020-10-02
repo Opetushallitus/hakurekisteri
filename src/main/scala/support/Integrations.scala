@@ -148,7 +148,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     mockActor("tarjonta", new MockTarjontaActor(config)(system))
   )
   override val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(
-    mockActor("koutaInternal", new MockKoutaInternalActor(config))
+    mockActor("koutaInternal", new MockKoutaInternalActor(koodisto, config))
   )
   override val hakuAggregator: HakuAggregatorActorRef = new HakuAggregatorActorRef(
     mockActor("hakuAggregator", new MockHakuAggregatorActor(tarjonta, koutaInternal, config))
@@ -300,9 +300,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       "tarjonta"
     )
   )
+  val koodisto = new KoodistoActorRef(
+    system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
+  )
   val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(
     getSupervisedActorFor(
-      Props(new KoutaInternalActor(koutaInternalClient, config)),
+      Props(new KoutaInternalActor(koodisto, koutaInternalClient, config)),
       "koutaInternal"
     )
   )
@@ -353,9 +356,6 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     )
   val koosteService = new KoosteService(koosteClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
-  val koodisto = new KoodistoActorRef(
-    system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
-  )
   val parametrit = new ParametritActorRef(
     system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit")
   )

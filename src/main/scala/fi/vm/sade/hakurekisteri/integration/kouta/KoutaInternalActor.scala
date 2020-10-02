@@ -5,6 +5,7 @@ import java.time.{Instant, ZoneId}
 
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.{AskableActorRef, pipe}
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.haku.{
   GetHautQuery,
@@ -12,28 +13,77 @@ import fi.vm.sade.hakurekisteri.integration.haku.{
   RestHakuAika,
   RestHakuResult
 }
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  Hakukohde,
+  HakukohdeQuery,
+  HakukohteenKoulutuksetQuery
+}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   GetHautQueryFailedException,
-  HakukohdeNotFoundException
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus
 }
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import org.joda.time.LocalDate
 import support.TypedAskableActorRef
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class KoutaInternalActor(restClient: VirkailijaRestClient, config: Config)
-    extends Actor
+class KoutaInternalActor(
+  koodistoActorRef: KoodistoActorRef,
+  restClient: VirkailijaRestClient,
+  config: Config
+) extends Actor
     with ActorLogging {
+  implicit val defaultTimeout: Timeout = 120.seconds
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
     config.integrations.asyncOperationThreadPoolSize,
     getClass.getSimpleName
   )
 
   override def receive: Receive = {
-    case GetHautQuery      => getHaut pipeTo sender
-    case q: HakukohdeQuery => getHakukohde(q.oid) pipeTo sender
+    case GetHautQuery                   => getHaut pipeTo sender
+    case q: HakukohdeQuery              => getHakukohde(q.oid) pipeTo sender
+    case q: HakukohteenKoulutuksetQuery => getHakukohteenKoulutukset(q.hakukohdeOid) pipeTo sender
+  }
+
+  private def substring(s: String, before: String) = s.substring(0, s.indexOf(before))
+
+  private def getKoodistoUri(koulutus: KoutaInternalKoulutus): String =
+    substring(koulutus.koulutusKoodiUri, "_")
+
+  private def getKoodiUri(koulutus: KoutaInternalKoulutus): String =
+    substring(koulutus.koulutusKoodiUri, "#")
+
+  def getHakukohteenKoulutukset(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
+    for {
+      hakukohde <- getHakukohdeFromKoutaInternal(hakukohdeOid)
+      toteutus <- getToteutusFromKoutaInternal(hakukohde.toteutusOid)
+      koulutus <- getKoulutusFromKoutaInternal(toteutus.koulutusOid)
+      koodi <- getKoodi(koulutus)
+    } yield HakukohteenKoulutukset(
+      hakukohdeOid = hakukohdeOid,
+      ulkoinenTunniste =
+        Some("FIXME: NEEDS SPECIFICATION HOW TO DEFINE FOR HAKUKOHDE IN KOUTA-INTERNAL"),
+      koulutukset = Seq(
+        Hakukohteenkoulutus(
+          komoOid = koulutus.oid,
+          tkKoulutuskoodi = koodi.koodiArvo,
+          kkKoulutusId = None,
+          koulutuksenAlkamiskausi = None,
+          koulutuksenAlkamisvuosi = None,
+          koulutuksenAlkamisPvms = None
+        )
+      )
+    )
+
+  private def getKoodi(koulutus: KoutaInternalKoulutus): Future[Koodi] = {
+    (koodistoActorRef.actor ? GetKoodi(
+      koodistoUri = getKoodistoUri(koulutus),
+      koodiUri = getKoodiUri(koulutus)
+    )).mapTo[Option[Koodi]].map(_.get)
   }
 
   def getHaut: Future[RestHakuResult] =
@@ -46,30 +96,36 @@ class KoutaInternalActor(restClient: VirkailijaRestClient, config: Config)
         throw GetHautQueryFailedException("error retrieving all hakus from kouta-internal", t)
       }
 
-  def getHakukohde(hakukohdeOid: String): Future[Option[Hakukohde]] = {
-    restClient
-      .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200)
+  def getHakukohde(hakukohdeOid: String): Future[Option[Hakukohde]] =
+    getHakukohdeFromKoutaInternal(hakukohdeOid)
       .flatMap(hakukohde => {
-        restClient
-          .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", hakukohde.toteutusOid)(200)
+        getToteutusFromKoutaInternal(hakukohde.toteutusOid)
           .map(toteutus => {
             Some(
               Hakukohde(
                 oid = hakukohde.oid,
-                hakukohdeKoulutusOids =
-                  toteutus.koulutusOid.fold[Seq[String]](Seq())(koulutusOid => Seq(koulutusOid)),
+                hakukohdeKoulutusOids = Seq(toteutus.koulutusOid),
                 ulkoinenTunniste = None,
                 tarjoajaOids = toteutus.tarjoajat
               )
             )
           })
       })
-  }
+
+  private def getKoulutusFromKoutaInternal(koulutusOid: String) =
+    restClient.readObject[KoutaInternalKoulutus]("kouta-internal.koulutus", koulutusOid)(200)
+
+  private def getHakukohdeFromKoutaInternal(hakukohdeOid: String) = restClient
+    .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200)
+
+  private def getToteutusFromKoutaInternal(toteutusOid: String) = restClient
+    .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200)
 }
 
 case class KoutaInternalActorRef(actor: AskableActorRef) extends TypedAskableActorRef
 
-class MockKoutaInternalActor(config: Config) extends KoutaInternalActor(null, config)
+class MockKoutaInternalActor(koodistoActorRef: KoodistoActorRef, config: Config)
+    extends KoutaInternalActor(koodistoActorRef, null, config)
 
 case class KoutaInternalRestHakuAika(alkaa: String, paattyy: Option[String]) {
   def toRestHakuAika: RestHakuAika = {
@@ -109,6 +165,8 @@ case class KoutaInternalRestHaku(
   )
 }
 
+case class KoutaInternalKoulutus(oid: String, koulutusKoodiUri: String)
+
 case class KoutaInternalHakukohde(oid: String, toteutusOid: String) {
   def toHakukohde(tarjoajaOids: Option[Set[String]]): Hakukohde =
     Hakukohde(
@@ -119,4 +177,4 @@ case class KoutaInternalHakukohde(oid: String, toteutusOid: String) {
     )
 }
 
-case class KoutaInternalToteutus(tarjoajat: Option[Set[String]], koulutusOid: Option[String])
+case class KoutaInternalToteutus(tarjoajat: Option[Set[String]], koulutusOid: String)

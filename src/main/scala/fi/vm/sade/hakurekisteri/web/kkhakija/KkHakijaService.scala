@@ -18,6 +18,10 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   _
 }
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  HakukohdeAggregatorActorRef,
+  HakukohteenKoulutuksetQuery
+}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodi,
   GetRinnasteinenKoodiArvoQuery,
@@ -200,7 +204,7 @@ object KkHakijaParamMissingException extends Exception
 class KkHakijaService(
   hakemusService: IHakemusService,
   hakupalvelu: Hakupalvelu,
-  tarjonta: TarjontaActorRef,
+  hakukohdeAggregator: HakukohdeAggregatorActorRef,
   haut: ActorRef,
   koodisto: KoodistoActorRef,
   suoritukset: ActorRef,
@@ -595,9 +599,9 @@ class KkHakijaService(
       val preferenceEligibilities = hakemus.preferenceEligibilities
       val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
       for {
-        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(
-          hakukohdeOid
-        )).mapTo[HakukohteenKoulutukset]
+        hakukohteenkoulutukset: HakukohteenKoulutukset <-
+          (hakukohdeAggregator.actor ? HakukohteenKoulutuksetQuery(hakukohdeOid))
+            .mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
         jononTyyppi: Option[String] <- jononTyyppiForHakemusF(
           sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
@@ -657,9 +661,9 @@ class KkHakijaService(
         hakukohdeOid <- toive.koulutusId.fold[Future[String]](
           Future.failed(new RuntimeException("No hakukohde OID"))
         )(Future.successful)
-        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(
-          hakukohdeOid
-        )).mapTo[HakukohteenKoulutukset]
+        hakukohteenkoulutukset: HakukohteenKoulutukset <-
+          (hakukohdeAggregator.actor ? HakukohteenKoulutuksetQuery(hakukohdeOid))
+            .mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemus.oid, koodisto)
         jononTyyppi: Option[String] <- jononTyyppiForHakemusF(
           sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
