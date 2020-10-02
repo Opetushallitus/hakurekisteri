@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Hakija, _}
 import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, hakukohde}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, HakuActor, Kieliversiot}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeQuery
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{HakukohdeQuery, HakukohteenKoulutuksetQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
@@ -931,15 +931,22 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   class MockedTarjontaActor extends Actor {
     override def receive: Actor.Receive = {
       case oid: HakukohdeOid =>
-        sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
+        sender ! getHakukohteenKoulutukset(oid.oid)
       case q: HakukohdeQuery => sender ! getHakukohde(q.oid)
     }
   }
 
   class MockedHakukohdeAggregatorActor extends Actor {
-    override def receive: Actor.Receive = { case q: HakukohdeQuery =>
-      sender ! getHakukohde(q.oid).get
+    override def receive: Actor.Receive = {
+      case q: HakukohdeQuery =>
+        sender ! getHakukohde(q.oid).get
+      case q: HakukohteenKoulutuksetQuery =>
+        sender ! getHakukohteenKoulutukset(q.hakukohdeOid)
     }
+  }
+
+  private def getHakukohteenKoulutukset(hakukohdeOid: String) = {
+    HakukohteenKoulutukset(hakukohdeOid, Some("joku tunniste"), Seq(koulutus1))
   }
 
   class MockedKoodistoActor extends Actor {

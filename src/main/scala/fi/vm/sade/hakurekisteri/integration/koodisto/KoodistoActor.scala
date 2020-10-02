@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.koodisto
 import java.util.concurrent.ExecutionException
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.pattern.pipe
+import akka.pattern.{AskableActorRef, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.{
@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.{
   PreconditionFailedException,
   VirkailijaRestClient
 }
-import support.TypedActorRef
+import support.{TypedActorRef, TypedAskableActorRef}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -151,7 +151,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 }
 
-case class KoodistoActorRef(actor: ActorRef) extends TypedActorRef
+case class KoodistoActorRef(actor: AskableActorRef) extends TypedAskableActorRef
 
 class MockKoodistoActor extends Actor {
   override def receive: Actor.Receive = { case q: GetKoodistoKoodiArvot =>

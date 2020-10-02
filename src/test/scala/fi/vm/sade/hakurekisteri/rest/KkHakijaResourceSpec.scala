@@ -46,7 +46,6 @@ class KkHakijaResourceSpec
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
-  private val tarjontaMock = new TarjontaActorRef(mock[ActorRef])
   private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(mock[ActorRef])
   private val hakemusService = new HakemusService(
     hakuappClient,
@@ -65,7 +64,7 @@ class KkHakijaResourceSpec
   val service = new KkHakijaService(
     hakemusService,
     mock[Hakupalvelu],
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     hakuMock,
     koodistoMock,
     suoritusMock,
