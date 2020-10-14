@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.{
   KierrosRequest,
   ParametritActorRef
 }
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.GetHautQueryFailedException
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlIntegration
 import org.joda.time.ReadableInstant
 

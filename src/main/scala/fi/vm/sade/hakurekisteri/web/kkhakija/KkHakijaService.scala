@@ -7,7 +7,7 @@ import java.util.{Calendar, Date}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto._
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
   FullHakemus,
@@ -28,7 +28,11 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   Koodi,
   KoodistoActorRef
 }
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
   IValintaperusteetService,
   ValintatapajononTiedot
