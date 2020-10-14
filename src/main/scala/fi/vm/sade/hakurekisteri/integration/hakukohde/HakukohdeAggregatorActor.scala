@@ -48,6 +48,9 @@ class HakukohdeAggregatorActor(
                   tarjontaHakukohteenKoulutukset.koulutukset ++ koutaInternalHakukohteenKoulutukset.koulutukset
               )
             )
+            .recover { case _ =>
+              tarjontaHakukohteenKoulutukset
+            }
         }
       }
       .recoverWith { case _ =>
