@@ -12,7 +12,11 @@ import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRe
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
