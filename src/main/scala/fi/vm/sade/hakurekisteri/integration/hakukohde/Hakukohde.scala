@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.hakukohde
 
-@SerialVersionUID(1L)
+@SerialVersionUID(2L)
 case class Hakukohde(
   oid: String,
   hakukohdeKoulutusOids: Seq[String],
