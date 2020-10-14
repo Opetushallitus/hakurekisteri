@@ -6,18 +6,23 @@ import java.util.concurrent.TimeUnit.MINUTES
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.hakija.{Hakija, _}
-import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, hakukohde}
+import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaActor, HakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, HakuActor, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.hakukohde
 import fi.vm.sade.hakurekisteri.integration.hakukohde.{HakukohdeQuery, HakukohteenKoulutuksetQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohdeOid,
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
-import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig, SpecsLikeMockito}
+import fi.vm.sade.hakurekisteri.{MockConfig, SpecsLikeMockito}
 import org.joda.time.DateTime
 import org.scalatest.Suite
 import org.scalatra.swagger.Swagger
