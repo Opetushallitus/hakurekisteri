@@ -6,10 +6,16 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.{RestHaku, RestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
@@ -47,14 +53,16 @@ class KkHakijaServiceSpec
     ServiceConfig(serviceUrl = "http://localhost/lomake-editori"),
     aClient = Some(new CapturingAsyncHttpClient(endPoint))
   )
-  private val tarjontaMock = new TarjontaActorRef(system.actorOf(Props(new MockedTarjontaActor())))
+  private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
+    system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
+  )
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
   private val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri
   )
@@ -135,7 +143,7 @@ class KkHakijaServiceSpec
   private val service = new KkHakijaService(
     hakemusService,
     Hakupalvelu,
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     hakuMock,
     koodistoMock,
     suoritusMock,
@@ -592,7 +600,7 @@ class KkHakijaServiceSpec
     val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
       hakemusService,
       Hakupalvelu,
-      tarjontaMock,
+      hakukohdeAggregatorMock,
       hakuMock,
       koodistoMock,
       suoritusMock,

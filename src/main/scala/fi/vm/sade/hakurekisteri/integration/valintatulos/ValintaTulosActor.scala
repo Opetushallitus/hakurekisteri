@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
+import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ExecutionException
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Status}
@@ -101,9 +102,15 @@ class ValintaTulosActor(
       log.error(t, "Failed to update valintatulos")
   }
 
-  private def is404(t: Throwable): Boolean = t match {
-    case PreconditionFailedException(_, 404) => true
-    case _                                   => false
+  private def is404(t: Throwable): Boolean = {
+    def _is404(t2: Throwable): Boolean = t2 match {
+      case PreconditionFailedException(_, 404) => true
+      case _                                   => false
+    }
+    t match {
+      case t: InvocationTargetException => _is404(t.getCause)
+      case _                            => _is404(t)
+    }
   }
 
   private def hakemuksenTulos(hakuOid: String, hakemusOid: String): Future[SijoitteluTulos] = {
