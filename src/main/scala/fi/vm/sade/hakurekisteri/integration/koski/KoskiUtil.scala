@@ -1,5 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
+import java.sql.Date
+import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
+
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
@@ -12,6 +16,16 @@ object KoskiUtil {
   var deadlineDate: LocalDate = new LocalDate(
     OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date")
   )
+
+  //format "2020-06-01T00:00:00+02:00"
+  lazy val koskiFetchStartTime: String =
+    OphUrlProperties.getProperty("suoritusrekisteri.koski.start.timestamp") match {
+      case s: String if !s.isEmpty => s
+      case _ =>
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+          .format(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
+    }
+
   lazy val koskiImporterResourceInUse: Boolean =
     OphUrlProperties.getProperty("suoritusrekisteri.use.koski.importer.resource").toBoolean
   lazy val updateKkHaut: Boolean =
