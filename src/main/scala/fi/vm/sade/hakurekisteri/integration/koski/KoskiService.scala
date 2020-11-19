@@ -80,10 +80,12 @@ class KoskiService(
     } else {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
         val timestamp: Option[String] =
-          if (!cursor.isDefined)
-            //Some(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(360))))
-            Some("2020-05-25T00:00:00+02:00")
-          else None
+          if (cursor.isEmpty) {
+            logger.info(
+              s"Fetching changes from Koski starting from ${KoskiUtil.koskiFetchStartTime}"
+            )
+            Some(KoskiUtil.koskiFetchStartTime)
+          } else None
         val params = SearchParamsWithCursor(timestamp, cursor)
         fetchChangedOppijas(params).onComplete {
           case Success(response: MuuttuneetOppijatResponse) =>

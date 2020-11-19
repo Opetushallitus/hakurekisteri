@@ -111,6 +111,7 @@ suoritusrekisteri.ohjausparametrit-service.max-connection-queue-ms={{ suoritusre
 suoritusrekisteri.valinta-tulos-service.max-connections={{ suoritusrekisteri_valintatulosservice_max_connections | default('50')}}
 suoritusrekisteri.valinta-tulos-service.max-connection-queue-ms={{ suoritusrekisteri_valintatulosservice_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.koski.deadline.date={{ suoritusrekisteri_koski_deadline_date | default('2019-06-03') }}
+suoritusrekisteri.koski.start.timestamp={{ suoritusrekisteri_koski_start_timestamp | default('') }}
 suoritusrekisteri.koski.max-connections={{ suoritusrekisteri_koski_max_connections | default('50')}}
 suoritusrekisteri.koski.max-connection-queue-ms={{ suoritusrekisteri_koski_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.koski.max.oppijat.post.size={{ suoritusrekisteri_koski_max_oppijat_post_size | default('5000') }}
