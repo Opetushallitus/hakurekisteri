@@ -61,6 +61,7 @@ cas.user-search-filter=(|(mail\={0})(uid\={0}))
 cas.service.ataru=https\://${host.virkailija}/lomake-editori/auth/cas
 cas.service.pistesyotto-service=https\://${host.virkailija}/valintapiste-service/auth/cas
 cas.service.haku-service=https://${host.virkailija}/haku-app
+cas.service.kouta-internal=https://${host.virkailija}/kouta-internal
 cas.service.koodisto-service=https://${host.virkailija}/koodisto-service
 cas.service.ohjausparametrit-service=https://${host.virkailija}/ohjausparametrit-service
 cas.service.organisaatio-service=https\://${host.virkailija}/organisaatio-service
