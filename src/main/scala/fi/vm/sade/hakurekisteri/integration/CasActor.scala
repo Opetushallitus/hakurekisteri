@@ -118,6 +118,7 @@ class CasActor(
 
   private def tryServiceTicket(retry: Int): Future[String] = {
     getTgtUrl.flatMap(tgtUrl => {
+      log.info("CAS-SERVICE: " + s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}")
       val proxyReq: Req = dispatch.url(tgtUrl) <<
         s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}" <:<
         Map(
