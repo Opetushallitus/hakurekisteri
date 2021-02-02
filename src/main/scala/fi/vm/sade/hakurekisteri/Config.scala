@@ -1,19 +1,17 @@
 package fi.vm.sade.hakurekisteri
 
-import java.io.InputStream
-import java.nio.file.{Files, Path, Paths}
-import java.util.Properties
-
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
-import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 import support.{Integrations, SureDbLoggingConfig}
 
+import java.io.InputStream
+import java.nio.file.{Files, Path, Paths}
+import java.util.Properties
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
@@ -251,9 +249,6 @@ abstract class Config {
   val propertyLocations = Seq("common.properties")
   val importBatchProcessingInitialDelay = 20.minutes
 
-  // by default the service urls point to QA
-  val hostQa = "virkailija.testiopintopolku.fi"
-
   lazy val resources = propertyLocations.map(ophConfDir.resolve(_))
 
   log.info(s"lazy loading properties from paths $resources")
@@ -271,10 +266,10 @@ abstract class Config {
     loadProperties(propertyFiles)
   }
 
-  val integrations = new IntegrationConfig(hostQa, properties)
+  val integrations = new IntegrationConfig(properties)
   val email: EmailConfig = new EmailConfig(properties)
 
-  OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
+  OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "http://localhost"))
 
   val tiedonsiirtoStorageDir = properties.getOrElse(
     "suoritusrekisteri.tiedonsiirto.storage.dir",
@@ -329,47 +324,49 @@ abstract class Config {
   var productionServerConfig: ProductionServerConfig = null
 }
 
-class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
-  val casUrlQa = s"https://$hostQa/cas"
-  val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
-  val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
-  val ataruUrlQa = s"https://$hostQa/lomake-editori"
-  val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
-  val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
-  val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
-  val koskiServiceUrlQa = s"https://$hostQa/koski"
+class IntegrationConfig(properties: Map[String, String]) {
+  val url = properties.getOrElse("host.ilb", "http://localhost")
 
-  val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
-  val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
-  val koutaInternalUrlQa = s"https://$hostQa/kouta-internal"
-  val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
-  val valintaperusteetServiceUrlQa = s"https://$hostQa/valintaperusteet-service"
+  val casUrlEnv = url + "/cas"
+  val organisaatioServiceUrlEnv = url + "/organisaatio-service"
+  val hakuappServiceUrlEnv = url + "/haku-app"
+  val ataruUrlEnv = url + "/lomake-editori"
+  val koodistoServiceUrlEnv = url + "/koodisto-service"
+  val parameterServiceUrlEnv = url + "/ohjausparametrit-service"
+  val valintaTulosServiceUrlEnv = url + "/valinta-tulos-service"
+  val koskiServiceUrlEnv = url + "/koski"
+
+  val sijoitteluServiceUrlEnv = url + "/sijoittelu-service"
+  val tarjontaServiceUrlEnv = url + "/tarjonta-service"
+  val koutaInternalUrlEnv = url + "/kouta-internal"
+  val oppijaNumeroRekisteriServiceUrlEnv = url + "/oppijanumerorekisteri-service"
+  val valintaperusteetServiceUrlEnv = url + "/valintaperusteet-service"
 
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
   val virtaJarjestelmaTest = ""
   val virtaTunnusTest = ""
   val virtaAvainTest = "salaisuus"
 
-  val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
+  val casUrl = Some(properties.getOrElse("web.url.cas", casUrlEnv))
   val tarjontaServiceUrl =
-    properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
-  val koutaInternalUrl = properties.getOrElse("cas.service.kouta-internal", koutaInternalUrlQa)
+    properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlEnv)
+  val koutaInternalUrl = properties.getOrElse("cas.service.kouta-internal", koutaInternalUrlEnv)
   val koosteServiceUrl = properties("cas.service.valintalaskentakoostepalvelu")
-  val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
-  val ataruUrl = properties.getOrElse("cas.service.ataru", ataruUrlQa)
+  val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlEnv)
+  val ataruUrl = properties.getOrElse("cas.service.ataru", ataruUrlEnv)
   val koodistoServiceUrl =
-    properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
+    properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlEnv)
   val parameterServiceUrl =
-    properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
+    properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlEnv)
   val organisaatioServiceUrl =
-    properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
+    properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlEnv)
   val valintaTulosServiceUrl =
-    properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
+    properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlEnv)
   val oppijaNumeroRekisteriUrl = properties.getOrElse(
     "cas.service.oppijanumerorekisteri-service",
-    oppijaNumeroRekisteriServiceUrlQa
+    oppijaNumeroRekisteriServiceUrlEnv
   )
-  val koskiServiceUrl = properties.getOrElse("cas.service.koski-service", koskiServiceUrlQa)
+  val koskiServiceUrl = properties.getOrElse("cas.service.koski-service", koskiServiceUrlEnv)
   val maxApplications =
     properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl =
@@ -379,7 +376,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
   val valintaperusteetServiceUrl =
-    properties.getOrElse("cas.service.valintaperusteet-service", valintaperusteetServiceUrlQa)
+    properties.getOrElse("cas.service.valintaperusteet-service", valintaperusteetServiceUrlEnv)
 
   val hakuappPageSize: Int =
     properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
