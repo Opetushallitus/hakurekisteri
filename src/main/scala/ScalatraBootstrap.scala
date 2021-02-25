@@ -5,25 +5,16 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.valpas.ValpasIntergration
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
-import fi.vm.sade.hakurekisteri.web.hakija.{
-  HakijaResource,
-  HakijaResourceV2,
-  HakijaResourceV3,
-  HakijaResourceV4
-}
+import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3, HakijaResourceV4}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{
-  KkHakijaResource,
-  KkHakijaResourceV2,
-  KkHakijaResourceV3,
-  KkHakijaResourceV4
-}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3, KkHakijaResourceV4}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
@@ -34,6 +25,7 @@ import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.restrictions.RestrictionsResource
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
+import fi.vm.sade.hakurekisteri.web.valpas.ValpasServlet
 import fi.vm.sade.hakurekisteri.{Config, ProductionServerConfig}
 import gui.GuiServlet
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
@@ -117,6 +109,7 @@ class ScalatraBootstrap extends LifeCycle {
     koosteet: BaseKoosteet
   )(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
     ("/rest/v1/komo", "komo") -> new GuiServlet,
+    ("/rest/v1/valpas", "valpas") -> new ValpasServlet(integrations.valpasIntegration),
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(
       suoritusActor = registers.suoritusRekisteri,

@@ -9,43 +9,16 @@ import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  KoodistoActor,
-  KoodistoActorRef,
-  MockKoodistoActor
-}
-import fi.vm.sade.hakurekisteri.integration.kooste.{
-  IKoosteService,
-  KoosteService,
-  KoosteServiceMock
-}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef, MockKoodistoActor}
+import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
 import fi.vm.sade.hakurekisteri.integration.koski._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{
-  HttpOrganisaatioActor,
-  MockOrganisaatioActor,
-  OrganisaatioActorRef
-}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{
-  HttpParameterActor,
-  MockParameterActor,
-  ParametritActorRef
-}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  MockTarjontaActor,
-  TarjontaActor,
-  TarjontaActorRef
-}
-import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
-  IValintaperusteetService,
-  ValintaperusteetService,
-  ValintaperusteetServiceMock
-}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
-  ValintarekisteriActor,
-  ValintarekisteriActorRef,
-  ValintarekisteriQuery
-}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor, ParametritActorRef}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{IValintaperusteetService, ValintaperusteetService, ValintaperusteetServiceMock}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriActorRef, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosActor, ValintaTulosActorRef}
+import fi.vm.sade.hakurekisteri.integration.valpas.ValpasIntergration
 import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
@@ -57,9 +30,8 @@ import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlRerunPolicy
-
 import scala.concurrent.duration._
-import scala.util.{Failure, Try}
+import scala.util.{Try}
 
 trait Integrations {
   val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef
@@ -74,6 +46,7 @@ trait Integrations {
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
   val ytlIntegration: YtlIntegration
+  val valpasIntegration: ValpasIntergration
   val ytlHttp: YtlHttpFetch
   val parametrit: ParametritActorRef
   val valintaTulos: ValintaTulosActorRef
@@ -148,6 +121,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     ytlKokelasPersister,
     config
   )
+
   val haut: ActorRef = system.actorOf(
     Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
     "haut"
@@ -158,6 +132,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val proxies = new MockProxies
   override val hakemusClient = null
+  override val valpasIntegration = new ValpasIntergration(hakemusService)
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
@@ -323,6 +298,9 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     ytlKokelasPersister,
     config
   )
+
+  override val valpasIntegration = new ValpasIntergration(hakemusService)
+
   val haut: ActorRef = system.actorOf(
     Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
     "haut"
