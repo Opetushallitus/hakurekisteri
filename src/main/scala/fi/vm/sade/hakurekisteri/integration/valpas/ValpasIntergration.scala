@@ -42,8 +42,8 @@ object ValpasHakemusTila extends Enumeration {
 }
 
 case class ValpasHakutoive(
-  hakukohdeNimi: Option[String], // TODO
-  koulutusNimi: Option[String], // TODO
+  hakukohdeNimi: Map[String, String], // TODO
+  koulutusNimi: Map[String, String], // TODO
   pisteet: Option[BigDecimal],
   vastaanottotieto: Option[String], // Vastaanottotila.Vastaanottotila
   valintatila: Option[String], // Valintatila.Valintatila
@@ -66,7 +66,7 @@ case class ValpasHakemus(
   oppijaOid: String,
   hakemusOid: String,
   hakuOid: String,
-  hakuNimi: Option[String],
+  hakuNimi: Map[String, String],
   email: String,
   matkapuhelin: String,
   osoite: String,
@@ -91,18 +91,26 @@ object ValpasHakemus {
 
       val key = (hakemus.oid, hakukohdeOid)
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
-      val koulutus: HakukohteenKoulutukset = oidToKoulutus(hakukohdeOid)
-      // hakutapa, hakutyyppi
+      val nimi = hakukohde.hakukohteenNimet
+      val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
+      val knimi = koulutus.koulutusohjelma.tekstis
+
       ValpasHakutoive(
-        koulutusNimi = None, // TODO
-        hakukohdeNimi = None, // TODO
+        koulutusNimi = Map("fi" -> knimi.get("kieli_fi"),
+          "sv" -> knimi.get("kieli_sv"),
+          "en" -> knimi.get("kieli_en"))
+          .flatMap(kv => kv._2.map(k => (kv._1, k))),
+        hakukohdeNimi = Map("fi" -> nimi.get("kieli_fi"),
+          "sv" -> nimi.get("kieli_sv"),
+          "en" -> nimi.get("kieli_en"))
+          .flatMap(kv => kv._2.map(k => (kv._1, k))),
         pisteet = tulos.flatMap(t => t.pisteet.get(key)),
         ilmoittautumistila = tulos.flatMap(t => t.ilmoittautumistila.get(key).map(_.toString)),
         valintatila = tulos.flatMap(t => t.valintatila.get(key).map(_.toString)),
         vastaanottotieto = tulos.flatMap(t => t.vastaanottotila.get(key).map(_.toString)),
         hakutoivenumero = c.preferenceNumber,
         hakukohdeOid = hakukohdeOid,
-        hakukohdeKoulutuskoodi = koulutus.koulutukset.head.tkKoulutuskoodi,
+        hakukohdeKoulutuskoodi = koulutus.tkKoulutuskoodi,
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä
         // mahdollinen kielitaidon arviointi
@@ -128,6 +136,7 @@ object ValpasHakemus {
           a.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
         val hakuOid = a.applicationSystemId
         val haku: Haku = oidToHaku(hakuOid)
+        val nimi = haku.nimi
 
         ValpasHakemus(
           hakutapa = haku.hakutapaUri,
@@ -138,7 +147,8 @@ object ValpasHakemus {
           muokattu = "", // TODO
           oppijaOid = a.personOid.get,
           hakemusOid = a.oid,
-          hakuNimi = None, // TODO
+          hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en)
+            .flatMap(kv => kv._2.map(k => (kv._1, k))),
           hakuOid = a.applicationSystemId,
           matkapuhelin = a.matkapuhelin, // TODO
           osoite = s"${a.lahiosoite}, ${a.postinumero} ${a.postitoimipaikka}",
@@ -151,16 +161,18 @@ object ValpasHakemus {
           h.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
         val hakuOid = h.applicationSystemId
         val haku = oidToHaku(hakuOid)
+        val nimi = haku.nimi
+
         ValpasHakemus(
           hakutapa = haku.hakutapaUri,
-          hakutyyppi = "",
+          hakutyyppi = haku.hakutyyppiUri,
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
           muokattu = "", // TODO
           oppijaOid = h.personOid.get,
           hakemusOid = h.oid,
-          hakuNimi = None, // TODO
+          hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en).flatMap(kv => kv._2.map(k => (kv._1, k))),
           matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,

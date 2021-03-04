@@ -56,7 +56,8 @@ case class Koulutus(
   kandidaatinKoulutuskoodi: Option[TarjontaKoodi],
   koulutuksenAlkamiskausi: Option[TarjontaKoodi],
   koulutuksenAlkamisvuosi: Option[Int],
-  koulutuksenAlkamisPvms: Option[Set[Long]]
+  koulutuksenAlkamisPvms: Option[Set[Long]],
+  koulutusohjelma: Koulutusohjelma
 )
 
 case class HakukohdeOid(oid: String)
@@ -64,18 +65,20 @@ case class HakukohdeOid(oid: String)
 @SerialVersionUID(1)
 case class Hakukohde(
   oid: String,
+  hakukohteenNimet: Map[String,String],
   hakukohdeKoulutusOids: Seq[String],
   ulkoinenTunniste: Option[String],
   tarjoajaOids: Option[Set[String]]
 )
-
+case class Koulutusohjelma(tekstis: Map[String, String])
 case class Hakukohteenkoulutus(
   komoOid: String,
   tkKoulutuskoodi: String,
   kkKoulutusId: Option[String],
   koulutuksenAlkamiskausi: Option[TarjontaKoodi],
   koulutuksenAlkamisvuosi: Option[Int],
-  koulutuksenAlkamisPvms: Option[Set[Long]]
+  koulutuksenAlkamisPvms: Option[Set[Long]],
+  koulutusohjelma: Koulutusohjelma
 )
 
 case class HakukohteenKoulutukset(
@@ -173,7 +176,8 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                 kkKoulutusId,
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,
-                k.koulutuksenAlkamisPvms
+                k.koulutuksenAlkamisPvms,
+                k.koulutusohjelma
               )
             )
             k.kandidaatinKoulutuskoodi
@@ -185,7 +189,8 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                     kkKoulutusId,
                     k.koulutuksenAlkamiskausi,
                     k.koulutuksenAlkamisvuosi,
-                    k.koulutuksenAlkamisPvms
+                    k.koulutuksenAlkamisPvms,
+                    k.koulutusohjelma
                   )
                 )
               )
