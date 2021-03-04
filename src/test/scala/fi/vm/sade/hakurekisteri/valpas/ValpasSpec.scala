@@ -115,7 +115,8 @@ class ValpasSpec
                 kkKoulutusId,
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,
-                k.koulutuksenAlkamisPvms
+                k.koulutuksenAlkamisPvms,
+                k.koulutusohjelma
               )
             }
             oid match {
