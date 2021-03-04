@@ -8,15 +8,52 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemusDto, AtaruResponse, FullHakemus, HakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemusDto,
+  AtaruResponse,
+  FullHakemus,
+  HakemusService
+}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloViite, IOppijaNumeroRekisteri, Kieli, OppijaNumeroRekisteri}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  HenkiloViite,
+  IOppijaNumeroRekisteri,
+  Kieli,
+  OppijaNumeroRekisteri
+}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, HttpOrganisaatioActor, Organisaatio, OrganisaatioActorRef, OrganisaatioResponse}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeOid, HakukohdeQuery, HakukohteenKoulutukset, Hakukohteenkoulutus, Koulutus, RestHaku, TarjontaActorRef, TarjontaResultResponse}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{HakemuksenValintatulos, SijoitteluTulos, ValintaTulos, ValintaTulosActorRef, Valintatila}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{
+  ChildOids,
+  HttpOrganisaatioActor,
+  Organisaatio,
+  OrganisaatioActorRef,
+  OrganisaatioResponse
+}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  Hakukohde,
+  HakukohdeOid,
+  HakukohdeQuery,
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  Koulutus,
+  RestHaku,
+  TarjontaActorRef,
+  TarjontaResultResponse
+}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{
+  HakemuksenValintatulos,
+  SijoitteluTulos,
+  ValintaTulos,
+  ValintaTulosActorRef,
+  Valintatila
+}
 import fi.vm.sade.hakurekisteri.integration.valpas.{ValpasHakemus, ValpasIntergration, ValpasQuery}
-import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, OphUrlProperties, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{
+  ActorSystemSupport,
+  OphUrlProperties,
+  VirkailijaRestClient
+}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.{DefaultFormats, Formats}

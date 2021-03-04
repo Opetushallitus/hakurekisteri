@@ -35,7 +35,7 @@ case class RestHaku(
   kohdejoukkoUri: Option[String],
   kohdejoukonTarkenne: Option[String],
   tila: String,
-  hakutyyppiUri: String,
+  hakutyyppiUri: String
 ) {
   def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
 }
