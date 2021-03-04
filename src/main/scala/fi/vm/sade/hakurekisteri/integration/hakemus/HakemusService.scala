@@ -126,11 +126,13 @@ trait IHakemusService {
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
-case class AtaruSearchParams(hakijaOids: Option[List[String]],
-                             hakukohdeOids: Option[List[String]],
-                             hakuOid: Option[String],
-                             organizationOid: Option[String],
-                             modifiedAfter: Option[String])
+case class AtaruSearchParams(
+  hakijaOids: Option[List[String]],
+  hakukohdeOids: Option[List[String]],
+  hakuOid: Option[String],
+  organizationOid: Option[String],
+  modifiedAfter: Option[String]
+)
 
 class HakemusService(
   hakuappRestClient: VirkailijaRestClient,
@@ -334,10 +336,12 @@ class HakemusService(
 
   def personOidstoMasterOids(personOids: Set[String]): Future[Map[String, String]] = {
     def personOidToMasterOidLookup(oids: LinkedHenkiloOids) =
-      personOids.map(oid => (oid, oids.oidToMasterOid.getOrElse(oid,oid))).toMap
+      personOids.map(oid => (oid, oids.oidToMasterOid.getOrElse(oid, oid))).toMap
 
     for {
-      linkedHenkiloOids: LinkedHenkiloOids <- oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(personOids)
+      linkedHenkiloOids: LinkedHenkiloOids <- oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(
+        personOids
+      )
     } yield personOidToMasterOidLookup(linkedHenkiloOids)
   }
 
