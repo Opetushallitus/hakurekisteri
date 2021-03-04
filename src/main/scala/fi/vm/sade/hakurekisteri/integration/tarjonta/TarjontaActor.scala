@@ -34,7 +34,8 @@ case class RestHaku(
   koulutuksenAlkamisVuosi: Option[Int],
   kohdejoukkoUri: Option[String],
   kohdejoukonTarkenne: Option[String],
-  tila: String
+  tila: String,
+  hakutyyppiUri: String,
 ) {
   def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
 }
@@ -280,8 +281,9 @@ class MockTarjontaActor(config: Config)(implicit val system: ActorSystem)
             koulutuksenAlkamiskausiUri = Some("kausi_s#1"),
             koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),
             kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
-            None,
-            tila = "JULKAISTU"
+            kohdejoukonTarkenne = None,
+            tila = "JULKAISTU",
+            hakutyyppiUri = "hakutyyppi_01#1"
           )
         )
       )

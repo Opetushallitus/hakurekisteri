@@ -152,7 +152,8 @@ class HakijaSpec extends FlatSpec with Matchers {
     false,
     None,
     None,
-    "hakutapa_01#1"
+    "hakutapa_01#1",
+    "hakutyyppi_01#1"
   )
 
   val tq1 = ThemeQuestion(

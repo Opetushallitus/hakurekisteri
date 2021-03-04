@@ -70,7 +70,8 @@ class KkHakijaServiceSpec
     Some(2015),
     Some("haunkohdejoukko_12#1"),
     None,
-    "JULKAISTU"
+    "JULKAISTU",
+    "hakutyyppi_01#1"
   )
   private val kausiKoodiS = TarjontaKoodi(Some("S"))
   private val koulutus2 =

@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.valpas
 
 import java.util.concurrent.Executors
 
+import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
@@ -11,6 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
   HakukohdeOid,
@@ -55,6 +57,8 @@ case class ValpasHakutoive(
 ) {}
 
 case class ValpasHakemus(
+  hakutapa: String,
+  hakutyyppi: String,
   huoltajanNimi: Option[String],
   huoltajanPuhelinnumero: Option[String],
   huoltajanSahkoposti: Option[String],
@@ -73,7 +77,8 @@ object ValpasHakemus {
     hakemus: HakijaHakemus,
     tulos: Option[SijoitteluTulos],
     oidToHakukohde: Map[String, Hakukohde],
-    oidToKoulutus: Map[String, HakukohteenKoulutukset]
+    oidToKoulutus: Map[String, HakukohteenKoulutukset],
+    oidToHaku: Map[String, Haku]
   ): ValpasHakemus = {
     def hakutoiveToValpasHakutoive(c: HakutoiveDTO): ValpasHakutoive = {
       val hakukohdeOid = c.koulutusId match {
@@ -118,11 +123,15 @@ object ValpasHakemus {
     }
 
     hakemus match {
-      case a: AtaruHakemus =>
+      case a: AtaruHakemus => {
         val hakutoiveet: Option[List[ValpasHakutoive]] =
           a.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
+        val hakuOid = a.applicationSystemId
+        val haku: Haku = oidToHaku(hakuOid)
 
         ValpasHakemus(
+          hakutapa = haku.hakutapaUri,
+          hakutyyppi = haku.hakutyyppiUri,
           huoltajanNimi = None,
           huoltajanPuhelinnumero = None,
           huoltajanSahkoposti = None,
@@ -136,11 +145,15 @@ object ValpasHakemus {
           email = a.email,
           hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
         )
+      }
       case h: FullHakemus => {
         val hakutoiveet: Option[List[ValpasHakutoive]] =
           h.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
-
+        val hakuOid = h.applicationSystemId
+        val haku = oidToHaku(hakuOid)
         ValpasHakemus(
+          hakutapa = haku.hakutapaUri,
+          hakutyyppi = "",
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
@@ -172,6 +185,7 @@ case class ValpasQuery(oppijanumerot: Set[String])
 
 class ValpasIntergration(
   tarjontaActor: TarjontaActorRef,
+  hakuActor: ActorRef,
   valintaTulos: ValintaTulosActorRef,
   hakemusService: IHakemusService
 ) {
@@ -185,6 +199,7 @@ class ValpasIntergration(
   ): Future[Seq[ValpasHakemus]] = {
     val hakukohdeOids: Set[String] =
       hakemukset.flatMap(_.hakutoiveet.getOrElse(Seq.empty)).flatMap(h => h.koulutusId).toSet
+    val hakuOids: Set[String] = hakemukset.map(_.applicationSystemId).toSet
     def hakemusToValintatulosQuery(h: HakijaHakemus): HakemuksenValintatulos =
       HakemuksenValintatulos(h.applicationSystemId, h.oid)
 
@@ -215,13 +230,24 @@ class ValpasIntergration(
       )
       .map(_.map(h => (h.hakukohdeOid, h)).toMap)
 
+    val haut: Future[Map[String, Haku]] = Future
+      .sequence(hakuOids.map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku]))
+      .map(_.map(h => (h.oid, h)).toMap)
+
     for {
       valintatulokset: Map[String, SijoitteluTulos] <- valintarekisteri
       oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
+      oidToHaku: Map[String, Haku] <- haut
     } yield {
       hakemukset.map(h =>
-        ValpasHakemus.fromFetchedResources(h, h.personOid.flatMap(valintatulokset.get), oidToHakukohde, oidToKoulutus)
+        ValpasHakemus.fromFetchedResources(
+          h,
+          h.personOid.flatMap(valintatulokset.get),
+          oidToHakukohde,
+          oidToKoulutus,
+          oidToHaku
+        )
       )
     }
   }

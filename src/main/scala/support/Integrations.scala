@@ -160,7 +160,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val proxies = new MockProxies
   override val hakemusClient = null
-  override val valpasIntegration = new ValpasIntergration(tarjonta, valintaTulos, hakemusService)
+  override val valpasIntegration = new ValpasIntergration(tarjonta, haut, valintaTulos, hakemusService)
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
@@ -338,7 +338,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     )
   )
 
-  override val valpasIntegration = new ValpasIntergration(tarjonta, valintaTulos, hakemusService)
+  override val valpasIntegration = new ValpasIntergration(tarjonta, haut, valintaTulos, hakemusService)
 
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
