@@ -171,7 +171,8 @@ class ValintaTulosActorWithRedisSpec
                         None,
                         None,
                         None,
-                        ""
+                        "",
+                        "hakutyyppi_01#1"
                       )
                     )(DateTime.now().plusDays(1).toInstant)
                   )
@@ -272,7 +273,8 @@ class ValintaTulosActorWithRedisSpec
               None,
               None,
               None,
-              ""
+              "",
+              "hakutyyppi_01#1"
             )
           )(DateTime.now().plusDays(1).toInstant)
         )
@@ -364,6 +366,7 @@ class ValintaTulosActorWithRedisSpec
               None,
               None,
               None,
+              "",
               ""
             )
           )(DateTime.now().plusDays(1).toInstant)

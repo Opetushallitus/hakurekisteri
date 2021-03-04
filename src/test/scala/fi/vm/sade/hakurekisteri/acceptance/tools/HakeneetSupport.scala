@@ -855,7 +855,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       toisenAsteenHaku = false,
       None,
       None,
-      "hakutapa_01#1"
+      "hakutapa_01#1",
+      "hakutyyppi_01#1"
     )
 
     private val kansalaisuuskoodit = Map("246" -> "FIN")

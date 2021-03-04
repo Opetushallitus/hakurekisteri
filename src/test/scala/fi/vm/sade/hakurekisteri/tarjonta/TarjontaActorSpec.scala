@@ -29,8 +29,9 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     koulutuksenAlkamiskausiUri = Some("kausi_s#1"),
     koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),
     kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
-    None,
-    tila = "LUONNOS"
+    kohdejoukonTarkenne = None,
+    tila = "LUONNOS",
+    "hakutyyppi_01#1"
   )
 
   test("luonnos is not included") {

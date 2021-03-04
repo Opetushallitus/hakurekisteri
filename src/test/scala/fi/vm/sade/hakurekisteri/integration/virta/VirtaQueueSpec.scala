@@ -39,7 +39,8 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
         false,
         None,
         None,
-        "hakutapa_01#1"
+        "hakutapa_01#1",
+        "hakutyyppi_01#1"
       )
     }
 

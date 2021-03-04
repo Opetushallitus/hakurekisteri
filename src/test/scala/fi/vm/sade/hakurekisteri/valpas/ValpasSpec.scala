@@ -6,51 +6,17 @@ import akka.actor.{Actor, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
+import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.hakemus.{
-  AtaruHakemusDto,
-  AtaruResponse,
-  FullHakemus,
-  HakemusService
-}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{
-  Henkilo,
-  HenkiloViite,
-  IOppijaNumeroRekisteri,
-  Kieli,
-  OppijaNumeroRekisteri
-}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemusDto, AtaruResponse, FullHakemus, HakemusService}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloViite, IOppijaNumeroRekisteri, Kieli, OppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{
-  ChildOids,
-  HttpOrganisaatioActor,
-  Organisaatio,
-  OrganisaatioActorRef,
-  OrganisaatioResponse
-}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  Hakukohde,
-  HakukohdeOid,
-  HakukohdeQuery,
-  HakukohteenKoulutukset,
-  Hakukohteenkoulutus,
-  Koulutus,
-  TarjontaActorRef,
-  TarjontaResultResponse
-}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  HakemuksenValintatulos,
-  SijoitteluTulos,
-  ValintaTulos,
-  ValintaTulosActorRef,
-  Valintatila
-}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, HttpOrganisaatioActor, Organisaatio, OrganisaatioActorRef, OrganisaatioResponse}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeOid, HakukohdeQuery, HakukohteenKoulutukset, Hakukohteenkoulutus, Koulutus, RestHaku, TarjontaActorRef, TarjontaResultResponse}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{HakemuksenValintatulos, SijoitteluTulos, ValintaTulos, ValintaTulosActorRef, Valintatila}
 import fi.vm.sade.hakurekisteri.integration.valpas.{ValpasHakemus, ValpasIntergration, ValpasQuery}
-import fi.vm.sade.hakurekisteri.integration.{
-  ActorSystemSupport,
-  OphUrlProperties,
-  VirkailijaRestClient
-}
+import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, OphUrlProperties, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.{DefaultFormats, Formats}
@@ -78,7 +44,7 @@ class ValpasSpec
 
   behavior of "Valpas Resource"
 
-  ignore should "handle combining Ataru and HakuApp hakemukset with valintatulokset" in {
+  it should "handle combining Ataru and HakuApp hakemukset with valintatulokset" in {
     withSystem { system =>
       val ataruHakemukset: AtaruResponse = parse(
         SuoritusMock.getResourceJson("/mock-data/hakemus/hakemus-valpas-ataru.json")
@@ -91,7 +57,16 @@ class ValpasSpec
       val onrClient: VirkailijaRestClient = mockPostOnrClient(Seq(oppijaOid))
       val oppijaNumeroRekisteri: IOppijaNumeroRekisteri =
         new OppijaNumeroRekisteri(onrClient, system, Config.mockDevConfig)
-
+      val haku = system.actorOf(Props(new Actor {
+        override def receive: Actor.Receive = {
+          case GetHaku(oid) => {
+            val haku = resource[TarjontaResultResponse[Option[RestHaku]]](
+              s"/mock-data/tarjonta/haku_$oid.json"
+            ).result.get
+            sender ! Haku(haku)(InFuture)
+          }
+        }
+      }))
       val tarjonta = TarjontaActorRef(system.actorOf(Props(new Actor {
         override def receive: Actor.Receive = {
           case HakukohdeOid(oid) =>
@@ -150,6 +125,7 @@ class ValpasSpec
 
       val v: Future[Seq[ValpasHakemus]] = new ValpasIntergration(
         tarjonta,
+        haku,
         ValintaTulosActorRef(system.actorOf(Props(new Actor {
           override def receive: Actor.Receive = { case HakemuksenValintatulos(hakuOid, _) =>
             sender !
