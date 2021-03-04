@@ -55,19 +55,21 @@ case class ValpasHakutoive(
 ) {}
 
 case class ValpasHakemus(
+  huoltajanNimi: Option[String],
+  huoltajanPuhelinnumero: Option[String],
+  huoltajanSahkoposti: Option[String],
   muokattu: String,
   oppijaOid: String,
   hakemusOid: String,
   hakuOid: String,
-  hakuNimi: String,
+  hakuNimi: Option[String],
   email: String,
   matkapuhelin: String,
   osoite: String,
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
 object ValpasHakemus {
-
-  def apply(
+  def fromFetchedResources(
     hakemus: HakijaHakemus,
     tulos: Option[SijoitteluTulos],
     oidToHakukohde: Map[String, Hakukohde],
@@ -85,6 +87,7 @@ object ValpasHakemus {
       val key = (hakemus.oid, hakukohdeOid)
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
       val koulutus: HakukohteenKoulutukset = oidToKoulutus(hakukohdeOid)
+      // hakutapa, hakutyyppi
       ValpasHakutoive(
         koulutusNimi = None, // TODO
         hakukohdeNimi = None, // TODO
@@ -120,11 +123,14 @@ object ValpasHakemus {
           a.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
 
         ValpasHakemus(
+          huoltajanNimi = None,
+          huoltajanPuhelinnumero = None,
+          huoltajanSahkoposti = None,
           muokattu = "", // TODO
           oppijaOid = a.personOid.get,
           hakemusOid = a.oid,
+          hakuNimi = None, // TODO
           hakuOid = a.applicationSystemId,
-          hakuNimi = "", // TODO
           matkapuhelin = a.matkapuhelin, // TODO
           osoite = s"${a.lahiosoite}, ${a.postinumero} ${a.postitoimipaikka}",
           email = a.email,
@@ -135,19 +141,17 @@ object ValpasHakemus {
           h.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
 
         ValpasHakemus(
-          hakutoiveet = hakutoiveet.getOrElse(Seq.empty),
+          huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
+          huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
+          huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
           muokattu = "", // TODO
           oppijaOid = h.personOid.get,
           hakemusOid = h.oid,
-          hakuNimi = "", // TODO
-          matkapuhelin = h.answers
-            .flatMap(a => a.henkilotiedot)
-            .flatMap(h => h.matkapuhelinnumero1.orElse(h.matkapuhelinnumero2))
-            .get,
+          hakuNimi = None, // TODO
+          matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
-          email = h.answers.flatMap(a => a.henkilotiedot).flatMap(h => h.Sähköposti).get,
-          osoite = h.answers
-            .flatMap(a => a.henkilotiedot)
+          email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
+          osoite = h.henkilotiedot
             .flatMap(a =>
               (a.lahiosoite, a.Postinumero, a.Postitoimipaikka) match {
                 case (Some(lahiosoite), Some(postinumero), Some(postitoimipaikka)) =>
@@ -156,7 +160,8 @@ object ValpasHakemus {
                   None
               }
             )
-            .get
+            .get,
+          hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
         )
       }
     }
@@ -216,7 +221,7 @@ class ValpasIntergration(
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
     } yield {
       hakemukset.map(h =>
-        ValpasHakemus(h, h.personOid.flatMap(valintatulokset.get), oidToHakukohde, oidToKoulutus)
+        ValpasHakemus.fromFetchedResources(h, h.personOid.flatMap(valintatulokset.get), oidToHakukohde, oidToKoulutus)
       )
     }
   }
