@@ -913,9 +913,23 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   val kausiKoodiK = TarjontaKoodi(Some("K"))
   val koulutus1 =
-    Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None, Koulutusohjelma(Map.empty))
+    Hakukohteenkoulutus(
+      "1.5.6",
+      "123456",
+      Some("AABB5tga"),
+      Some(kausiKoodiK),
+      Some(2015),
+      None,
+      Koulutusohjelma(Map.empty)
+    )
   val ataruHakukohde1 =
-    Hakukohde("1.2.246.562.20.14800254899", Map.empty, Seq(), None, Some(Set("1.2.246.562.10.39920288212")))
+    Hakukohde(
+      "1.2.246.562.20.14800254899",
+      Map.empty,
+      Seq(),
+      None,
+      Some(Set("1.2.246.562.10.39920288212"))
+    )
   val ataruHakukohde2 = Hakukohde(
     "1.2.246.562.20.44085996724",
     Map.empty,

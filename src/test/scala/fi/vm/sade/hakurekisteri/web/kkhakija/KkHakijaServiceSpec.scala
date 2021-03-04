@@ -75,7 +75,15 @@ class KkHakijaServiceSpec
   )
   private val kausiKoodiS = TarjontaKoodi(Some("S"))
   private val koulutus2 =
-    Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None, Koulutusohjelma(Map.empty))
+    Hakukohteenkoulutus(
+      "1.5.6",
+      "123457",
+      Some("asdfASDF4"),
+      Some(kausiKoodiS),
+      Some(2015),
+      None,
+      Koulutusohjelma(Map.empty)
+    )
   private val suoritus1 = VirallinenSuoritus(
     YoTutkinto.yotutkinto,
     YoTutkinto.YTL,
@@ -302,7 +310,15 @@ class KkHakijaServiceSpec
     "should convert ilmoittautumiset into sequence in syksy haku but koulutus start season in next year syksy"
   ) {
     val koulutusSyksy =
-      Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None, Koulutusohjelma(Map.empty))
+      Hakukohteenkoulutus(
+        "1.5.6",
+        "123456",
+        Some("AABB5tga"),
+        Some(kausiKoodiS),
+        Some(2016),
+        None,
+        Koulutusohjelma(Map.empty)
+      )
     val hakukohteenKoulutukset: HakukohteenKoulutukset =
       HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
 
