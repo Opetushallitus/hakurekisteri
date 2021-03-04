@@ -65,7 +65,7 @@ case class HakukohdeOid(oid: String)
 @SerialVersionUID(1)
 case class Hakukohde(
   oid: String,
-  hakukohteenNimet: Map[String,String],
+  hakukohteenNimet: Map[String, String],
   hakukohdeKoulutusOids: Seq[String],
   ulkoinenTunniste: Option[String],
   tarjoajaOids: Option[Set[String]]

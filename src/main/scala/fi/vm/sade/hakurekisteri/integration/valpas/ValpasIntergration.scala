@@ -96,13 +96,17 @@ object ValpasHakemus {
       val knimi = koulutus.koulutusohjelma.tekstis
 
       ValpasHakutoive(
-        koulutusNimi = Map("fi" -> knimi.get("kieli_fi"),
+        koulutusNimi = Map(
+          "fi" -> knimi.get("kieli_fi"),
           "sv" -> knimi.get("kieli_sv"),
-          "en" -> knimi.get("kieli_en"))
+          "en" -> knimi.get("kieli_en")
+        )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
-        hakukohdeNimi = Map("fi" -> nimi.get("kieli_fi"),
+        hakukohdeNimi = Map(
+          "fi" -> nimi.get("kieli_fi"),
           "sv" -> nimi.get("kieli_sv"),
-          "en" -> nimi.get("kieli_en"))
+          "en" -> nimi.get("kieli_en")
+        )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         pisteet = tulos.flatMap(t => t.pisteet.get(key)),
         ilmoittautumistila = tulos.flatMap(t => t.ilmoittautumistila.get(key).map(_.toString)),
@@ -172,7 +176,9 @@ object ValpasHakemus {
           muokattu = "", // TODO
           oppijaOid = h.personOid.get,
           hakemusOid = h.oid,
-          hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en).flatMap(kv => kv._2.map(k => (kv._1, k))),
+          hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en).flatMap(kv =>
+            kv._2.map(k => (kv._1, k))
+          ),
           matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
