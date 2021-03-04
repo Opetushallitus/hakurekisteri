@@ -1,0 +1,398 @@
+{
+  "accessRights": {},
+  "result": {
+    "modified": 1588839887391,
+    "modifiedBy": "1.2.246.562.24.76190325629",
+    "oid": "1.2.246.562.17.98887607319",
+    "version": 14,
+    "koulutuskoodi": {
+      "uri": "koulutus_631101",
+      "versio": 12,
+      "arvo": "631101",
+      "nimi": "Tradenomi, talous, hallinto ja markkinointi"
+    },
+    "koulutusaste": {
+      "uri": "koulutusasteoph2002_62",
+      "versio": 1,
+      "arvo": "62",
+      "nimi": "Ammattikorkeakoulututkinto"
+    },
+    "koulutusala": {
+      "uri": "koulutusalaoph2002_3",
+      "versio": 1,
+      "arvo": "3",
+      "nimi": "Yhteiskuntatieteiden, liiketalouden ja hallinnon ala"
+    },
+    "opintoala": {
+      "uri": "opintoalaoph2002_301",
+      "versio": 1,
+      "arvo": "301",
+      "nimi": "Liiketalous ja kauppa"
+    },
+    "tutkinto": {
+      "uri": "tutkinto_311",
+      "versio": 2,
+      "arvo": "311",
+      "nimi": "Liiketalouden ammattikorkeakoulututkinto"
+    },
+    "eqf": {
+      "uri": "eqf_6",
+      "versio": 1,
+      "arvo": "6",
+      "nimi": "Taso 6"
+    },
+    "nqf": {
+      "uri": "",
+      "versio": -1,
+      "arvo": "",
+      "nimi": ""
+    },
+    "opintojenLaajuusyksikko": {
+      "uri": "opintojenlaajuusyksikko_2",
+      "versio": 1,
+      "arvo": "2",
+      "nimi": "opintopistettä"
+    },
+    "koulutustyyppi": {
+      "uri": "koulutustyyppi_3",
+      "versio": 2,
+      "arvo": "3",
+      "nimi": "Korkeakoulutus"
+    },
+    "ohjelmas": {
+      "versio": 1,
+      "uris": {}
+    },
+    "toteutustyyppi": "KORKEAKOULUTUS",
+    "moduulityyppi": "KORKEAKOULUTUS",
+    "komoOid": "1.2.246.562.13.602466461810",
+    "komotoOid": "1.2.246.562.17.98887607319",
+    "organisaatio": {
+      "oid": "1.2.246.562.10.98212669513",
+      "nimi": "Laurea-ammattikorkeakoulu, Laurea Lohja",
+      "nimet": []
+    },
+    "koulutusohjelma": {
+      "versio": 1,
+      "tekstis": {
+        "kieli_fi": "Tradenomi (AMK), liiketalous, monimuotototeutus, verkko-opetus",
+        "kieli_sv": "",
+        "kieli_en": ""
+      }
+    },
+    "tunniste": "",
+    "tila": "JULKAISTU",
+    "koulutusmoduuliTyyppi": "TUTKINTO",
+    "kuvausKomo": {
+      "JATKOOPINTO_MAHDOLLISUUDET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>AMK-tutkinnon suorittamisen jälkeen tradenomina voit hakeutua suorittamaan ylempää AMK-tutkintoa kahden vuoden työkokemuksen jälkeen. Ylempi AMK-tutkinto tuottaa saman kelpoisuuden julkiseen virkaan kuin yliopistoissa ja muissa tiedekorkeakouluissa suoritettu ylempi korkeakoulututkinto. Ylemmän AMK-tutkinnon (YAMK) suorittaminen kestää 1- 1,5 vuotta päätoimisina opintoina. Laurean liiketalouden YAMK-koulutuksissa voit opiskella esimerkiksi oikeusmuotoilua, tulevaisuuden johtamista ja asiakaslähtöistä palveluliiketoimintaa tai tulevaisuuden innovatiivisia digitaalisia palveluita.</p> <p>Tutustu Laurean<a href=\"https://www.laurea.fi/koulutus/\"> Ylempi AMK-koulutuksiin.</a></p> <p>AMK-tutkinnon suorittanut tradenomi voi hakeutua jatkamaan opintojaan maisteritasolle myös yliopistoissa tai muissa korkeakouluissa. Hakijalta voidaan tuolloin edellyttää täydentäviä opintoja.</p> <p>Ammattikorkeakouluissa on myös eripituista täydennyskoulutusta. Uutta osaamista on myös mahdollista hankkia avoimen ammattikorkeakoulun tai yliopiston opinnoissa.</p>"
+        }
+      },
+      "KOULUTUKSEN_RAKENNE": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Liiketalouden koulutuksen laajuus on 210 opintopistettä. Tutkinnon suorittaminen kestää keskimäärin 3,5 vuotta riippuen aiemmasta osaamisesta ja henkilökohtaisesta suunnitelmasta. Yksi opintopiste vastaa kansainvälisen ECTS-mitoituksen mukaan 26,7 tuntia keskiverto-opiskelijan tekemää työtä.</p> <p>Opinnot sisältävät 150 op pakollista tradenomin ydinosaamista. Työharjoittelu 30 op ja opinnäytetyö 15 op kuuluvat pakolliseen ydinosaamiseen. Tämän lisäksi tutkintoon kuuluu 60 op täydentäviä (vapaasti valittavia) opintoja, joilla voit syventää tai laajentaa osaamistasi. Täydentäviä opintoja opiskelija voi valita myös muilta koulutusaloilta. Huomioithan, että oikeustradenomikoulutuksessa toinen harjoittelu suoritetaan oikeudellista osaamista vaativassa kohteessa (ks ”muuta huomioitavaa taulukko”).</p> <p>Moduuleille on määritelty osaamistavoitteet. Käytännössä opintopisteitä kertyy suorittaessasi moduuliin kuuluvia opintojaksoja tai tehdessäsi vastaavaa osaamista kehittäviä projekteja. Opintosuorituksen voit saada myös aiemman osaamisesi perusteella hyväksiluvulla, osaamisen näytöllä tai työn opinnollistamisen kautta.</p> <h3><b>Päivä-, monimuoto- ja verkko-opiskelumahdollisuus</b></h3> <p>Laureassa voit opiskella opintosi monipuolisesti. Ydinosaamisen opinnot on tarkoitettu opiskella siinä toteutustavassa, johon olet valittu opiskelijaksi. Täydentävän osaamisen opinnoissa valittavissasi on koko laaja Laurean täydentävien opintotarjonta. Jos olet valinnut oikeustradenomin hakukohteeksi, täydentävät opinnot koostuvat ainoastaan oikeustradenomiopinnoista.</p> <h3><b>Opintojen toteutus vaihtelee kampuksittain syksyllä 2020</b></h3> <p>Huomioithan alla olevassa taulukossa kampusten erilaiset opintojen toteutustavat. Taulukon alla toteutustapojen tarkempi määrittely. Lähiopetuspäivät päivitetään haun alkuun mennessä.</p> <table> <tbody> <tr> <td valign=\"top\" width=\"211\"> <p><b>Kampus</b></p> </td> <td valign=\"top\" width=\"154\"> <p><b>Toteutustapa</b></p> </td> <td valign=\"top\" width=\"292\"> <p><b>Muuta huomioitavaa</b></p> </td> </tr> <tr> <td valign=\"top\" width=\"211\"> <p><b><a href=\"https://www.laurea.fi/laurea/kampukset/hyvinkaa\">Hyvinkää, Liiketalous</a></b></p> </td> <td valign=\"top\" width=\"154\"> <p>Päiväopiskelu<br /> ma-pe</p> <p>Opinnot alkavat infotilaisuudella ti 18.8.2020 klo 9-11. Tilaisuuteen voi osallistua etänä tai kampuksella. Intensiiviviikko kampuksella pidetään ma-pe 24.-28.8.2020 klo 8-16.</p> </td> <td valign=\"top\" width=\"292\"> <p>Tutkinnosta suurin osa opiskellaan yritysprojekteissa</p> </td> </tr> <tr> <td valign=\"top\" width=\"211\"> <p><b><a href=\"https://www.laurea.fi/laurea/kampukset/hyvinkaa\">Hyvinkää, Liiketalous/ Oikeustradenomi</a></b></p> </td> <td valign=\"top\" width=\"154\"> <p>Monimuoto-opiskelu.<br />Lähiopetuspäivät maanantaisin ja tiistaisin.</p> <p>Opinnot alkavat infotilaisuudella ti 18.8.2020 klo 9-11. Tilaisuuteen voi osallistua etänä tai kampuksella. Intensiiviviikko kampuksella pidetään ma-pe 24.-28.8.2020 klo 8-16.</p> </td> <td valign=\"top\" width=\"292\"> <p>Ydinosaaminen pääosin yritysprojekteissa. Täydentävät 60op koostuu oikeudellisista opinnoista, joista osa verkossa. Opinnäytetyö oikeudellisesta osaamisesta ja harjoittelu 2 oikeudellista osaamista vaativissa työtehtävissä.</p> </td> </tr> <tr> <td valign=\"top\" width=\"211\"> <p><b><a href=\"https://www.laurea.fi/laurea/kampukset/leppavaara\">Leppävaara, Liiketalous</a></b></p> </td> <td valign=\"top\" width=\"154\"> <p>Päiväopiskelu<br /> ma-pe</p> </td> <td valign=\"top\" width=\"292\"> <p>Lähi-, projekti- ja verkko-opiskelua.</p> </td> </tr> <tr> <td valign=\"top\" width=\"211\"> <p><b><a href=\"https://www.laurea.fi/laurea/kampukset/lohja\">Lohja, Liiketalous</a></b></p> </td> <td valign=\"top\" width=\"154\"> <p>Verkko-toteutus<br />Aina lukukauden alussa yksi lähipäivä. Syksyn 2020 lähipäivä on 17.8.</p> </td> <td valign=\"top\" width=\"292\"> <p>Tutkinto opiskellaan verkossa.</p> </td> </tr> <tr> <td valign=\"top\" width=\"211\"> <p><b><a href=\"https://www.laurea.fi/opiskelu-ja-hakeminen/tietoa-opintonsa-aloittavalle/otaniemi\">Otaniemi, Liiketalous</a></b></p> </td> <td valign=\"top\" width=\"154\"> <p>Monimuoto-opiskelu<br /> Pääsääntöisesti to - pe, noin kerran kuukaudessa.</p> </td> <td valign=\"top\" width=\"292\"> <p>Tutkinto opiskellaan lähi- ja verkko-opintoina.</p> </td> </tr> <tr> <td valign=\"top\" width=\"211\"> <p><b><a href=\"https://www.laurea.fi/laurea/kampukset/tikkurila\">Tikkurila, liiketalous</a></b></p> </td> <td valign=\"top\" width=\"154\"> <p>Päiväopiskelu<br /> ma-pe</p> </td> <td valign=\"top\" width=\"292\"> <p>Tutkinnosta suurin osa opiskellaan yritysprojekteissa.</p> </td> </tr> </tbody> </table> <p><br /><b>Päiväopiskeluun</b> osallistuminen edellyttää opiskelijalta mahdollisuutta olla läsnä kampuksella lähiopetuksessa ja -ohjauksessa arkisin päiväaikaan. Kampuksella opiskelun lisäksi päivätoteutuksissa hyödynnetään verkko-opiskelua. Opiskeluun kuuluu oppimistehtäviä sekä tiimeissä tehtäviä yritysprojekteja.</p> <p><b>Monimuoto-opiskelu</b> sisältää sekä lähi- että verkko-opetusta. Ainakin osa lähiopetuksesta vaatii paikallaoloa. Monimuoto-opiskelu sopii työn ohessa opiskelevalle. </p> <p><b>Verkko-opinnoissa </b>opiskellaan opinnot kokonaan verkossa. Verkko-opiskelu edellyttää yleisesti opiskelijalta enemmän itseohjautuvuutta ja sopii erityisesti niille, jotka käyvät opiskelun ohella töissä. Myös verkko-opiskeluun kuuluu opiskelua tiimeissä ja yritysprojekteissa.</p> <h3><b>Joustavat opintojen suoritusmahdollisuudet</b></h3> <p>Osaamista voit kerryttää Laureassa joustavasti. Voit muun muassa opiskella:</p> <ul> <li>ammatillisia tavoitteitasi tukevia täydentävän osaamisen opintoja Laurean eri kampuksilta</li> <li>muiden alojen opintoja täydentävinä opintoina</li> <li>englanninkielisiä opintoja Laurean englanninkielisen koulutuksen tarjonnasta</li> <li>opintoja Laurean laajassa kansainvälisessä korkeakouluverkostossa (kansainvälinen vaihto)</li> <li>opintoja tutkintoosi mm. Haaga-Helian ja Metropolian kanssa sovitusta yhteisestä tarjonnasta</li> <li>verkko- ja monimuoto-opintoja, jotka tuovat opintoihisi ajallista joustavuutta</li> <li>opintoja 21 ammattikorkeakoulun yhteisestä campusonline.fi -tarjonnasta</li> <li>yritysten kehitysprojekteissa</li> </ul> <p>Tutustu opiskelutapoihin <a href=\"https://www.laurea.fi/koulutus/uudelle-opiskelijalle/opiskelutavat/\">Laurean verkkosivuilla,</a> sekä <a href=\"https://www.laurea.fi/laurea/kampukset/\">kampusten omilla internet-sivuilla.</a></p> <h3><b>Tutkinnon vertailtavuus Suomessa ja kansainvälisesti</b></h3> <p>Ammattikorkeakoulututkinto on alempi korkeakoulututkinto. Ammattikorkeakouluista annetun valtioneuvoston asetuksen mukaan tavoitteena on, että tutkinnon suorittaneella on:</p> <p>1) laaja-alaiset käytännölliset perustiedot ja –taidot sekä teoreettiset perusteet toimia työelämässä oman alansa asiantuntijatehtävissä<br /> 2) valmiudet seurata ja edistää oman ammattialansa kehittymistä<br /> 3) edellytykset oman ammattitaidon kehittämiseen ja elinikäiseen oppimiseen<br /> 4) riittävä viestintä- ja kielitaito oman alansa tehtäviin sekä kansainväliseen toimintaan ja yhteistyöhön.<br /> (Valtioneuvoston asetus ammattikorkeakouluista annetun valtioneuvoston asetuksen muuttamisesta, muutos astuu voimaan 1.1.2014)</p> <p>Tutkinnon taso vastaa kansallisen tutkintojen viitekehyksen (National Qualifications Framework, NQF) mukaista tasoa 6 ja eurooppalaisen viitekehyksen (European Qualifications Framework, EQF) tasoa 6. Tutkinnon sisällöissä on huomioitu valtakunnallisesti määritellyt yleiset työelämävalmiudet, joita on Laureassa täsmennetty.</p> <p>Opintojakson osaamistavoitteet on kuvattu arviointiasteikon (1-5) tasolle 3, hyvä osaaminen</p>"
+        }
+      },
+      "TAVOITTEET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Laurean liiketalouden koulutuksesta valmistuneella tradenomeilla on hyvät työllistymisnäkymät. Liiketalouden tradenomikoulutus Laureassa antaa valmiudet laaja-alaiseen osaamiseen liiketalouden eri osa-alueilla. Voit räätälöidä opintojasi oman mielenkiintosi mukaan juuri sinulle sopivaan suuntaan.</p> <p>Tradenomit sijoittuvat yrityksissä ja julkishallinnon organisaatioissa kotimaisiin ja kansainvälisiin asiantuntijatehtäviin, joissa vaaditaan kykyä suunnitella, organisoida, toteuttaa ja johtaa. Tradenomin tutkinto antaa erinomaiset valmiudet muuttuvaan työelämään ja myös oman yritystoiminnan aloittamiseen sekä kehittämiseen. Liiketalouden tradenomina vaikutat yritysten ja yhteisöjen tulokselliseen toimintaan.</p> <p><strong>Laurean liiketalouden tradenomina osaat:</strong></p> <ul> <li>kehittää liiketoimintaa palvelumuotoilun menetelmin</li> <li>myydä ja markkinoida tuotteita ja palveluita</li> <li>työskennellä tiimeissä ja projekteissa</li> <li>toimia muuttuvassa liiketoimintaympäristössä</li> <li>yrityselämän digitaaliset taidot</li> <li>hyödyntää digitalisaation mahdollisuuksia liiketoiminnassa</li> <li>rakentaa ammatillista verkostoasi jo opintojen aikana</li> <li>tunnistaa sinulle ominaisimmat työskentelytyylit</li> </ul>"
+        }
+      },
+      "PATEVYYS": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      }
+    },
+    "kuvausKomoto": {
+      "TUTKIMUKSEN_PAINOPISTEET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Laurean strategiset tutkimusalueet ovat palveluliiketoiminta, terveys ja yhteiskunnallinen eheys sekä yhtenäinen turvallisuus. Tutkimus- ja kehittämistoimintaa tehdään laajassa kansainvälisessä yhteistyöverkostossa.</p> <p>Lue lisää <a href=\"https://www.laurea.fi/tki/\">tutkimus-, kehittämis- ja innovaatiotoiminnastamme.</a></p>"
+        }
+      },
+      "PAAAINEEN_VALINTA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Laurean liiketaloudessa voit valita suuntautumisen (täydentävät opinnot) noin 1,5 vuoden perusopintojen jälkeen. Suuntautumisvaihtoehtoja ovat:</p> <ul> <li>Asiakaslähtöinen ja digitaalinen liiketoiminta</li> <li>Henkilöstöjohtaminen</li> <li>Oikeudellinen osaaminen</li> <li>Projektijohtaminen</li> <li>Taloushallinto ja rahoitus</li> <li>Työympäristöjohtaminen</li> <li>Yrittäjyys</li> </ul> <p>Voit halutessasi myös yhdistellä vapaasti eri suuntautumisvaihtoehtojen opintoja tai valita opintoja muilta koulutusaloilta.</p>"
+        }
+      },
+      "SIJOITTUMINEN_TYOELAMAAN": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Tradenomikoulutuksen tavoitteena on kouluttaa liiketalouden ja projektityöskentelyn osaajia kansallisiin ja kansainvälisiin työelämän tarpeisiin. Tradenomit sijoittuvat liiketalouden asiantuntijoina tehtäviin, jotka vaativat kykyä suunnitella, organisoida, toteuttaa ja johtaa. Valmistuttuasi voit perustaa oman yrityksen tai työskennellä yrityksen tai muun yhteisön palveluksessa asiantuntija- tai esimiestehtävissä. Oikeudellisen osaamisen ns. oikeustradenomin opinnot suoritettuaan opiskelijalla on valmiudet suuntautua juridiikan asiantuntemusta vaativiin oikeushallinnon, kuntien, järjestöjen ja yksityisen sektorin työtehtäviin.</p> <p>Laureasta valmistuvat työllistyvät erittäin hyvin.</p> <p><b>Tehtävänimikkeitä:</b></p> <table width=\"659\"> <tbody> <tr> <td valign=\"top\" width=\"321\"><br /> <ul> <li>Avainasiakaspäällikkö</li> <li>Controller</li> <li>Digitaalisen liiketoiminnan kehittäjä</li> <li>Digitaalisen liiketoiminnan päällikkö</li> <li>Digimarkkinoinnin asiantuntija</li> <li>Digitaalisen markkinoinnin sisällöntuottaja</li> <li>Henkilöstöasiantuntija</li> <li>Henkilöstöpäällikkö</li> <li>Henkilöstösuunnittelija</li> <li>Kansainvälisten asioiden hoitaja</li> <li>Kirjanpitäjä</li> <li>Käräjäoikeuden sihteeri</li> <li>Markkinointiassistentti</li> <li>Markkinointipäällikkö</li> <li>Markkinointisihteeri</li> <li>Markkinointisuunnittelija</li> <li>Myyntineuvottelija</li> <li>Myyntipäällikkö</li> <li>Ostaja</li> <li>Ostopäällikkö</li> <li>Ostosihteeri</li> </ul> </td> <td valign=\"top\" width=\"321\"><br /> <ul> <li>Palkanlaskija</li> <li>Palveluneuvoja</li> <li>Palvelumuotoilija</li> <li>Pankkitoimihenkilö</li> <li>Projektipäällikkö</li> <li>Reskontranhoitaja</li> <li>Some-markkinoija</li> <li>Sosiaalisen median asiantuntija</li> <li>Sosiaalisen median päällikkö</li> <li>Talousassistentti</li> <li>Talouspäällikkö</li> <li>Tapahtumapäällikkö</li> <li>Tiimiesimies</li> <li>Tuontipäällikkö</li> <li>Ulosottomies</li> <li>Verosihteeri</li> <li>Vientipäällikkö</li> <li>Vientisihteeri</li> <li>Viestintäassistentti</li> <li>Viestintäpäällikkö</li> <li>Web-analytiikan asiantuntija</li> <li>Yrittäjä</li> </ul> </td> </tr> </tbody> </table>"
+        }
+      },
+      "LOPPUKOEVAATIMUKSET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Tutkintoon sisältyy 15 opintopisteen laajuinen opinnäytetyö, jossa osoitat olevasi oman alasi asiantuntija. Opinnäytetyö voi olla työelämän kehittämisprojekti tai osa ammattikorkeakoulun tutkimus- ja kehittämistoimintaa. Opinnäytetyössä korostuu yhteistyö eri organisaatioiden kanssa.</p>"
+        }
+      },
+      "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Laurean kehittämispohjaisen oppimisen toimintamalliin (Learning by Developing, LbD) kuuluu tiivis yhteistyö alueen yritysten ja muiden organisaatioiden kanssa. Laurea tekee yhteistyötä myös eri korkeakoulujen kanssa sekä Suomessa että kansainvälisesti. Laurea, Haaga-Helia ammattikorkeakoulu ja Metropolia ammattikorkeakoulu tarjoavat opiskelijoilleen myös yhteisiä opintoja.</p> <p>Laurean kaikkien liiketalouden kampusten koulutuksissa tehdään runsaasti yritysyhteistyötä (noin 300-400 yritysprojektia vuosittain). Hyvinkään ja Tikkurilan kampusten projektimuotoisissa toteutuksissa (P2P) lähes koko tutkinto opiskellaan yritysprojekteissa. Myös Lohjan kampuksella on iso osa opinnoista mahdollisuus tehdä projekteissa.</p> <p>Laurea tarjoaa mahdollisuuden kansainväliseen opiskelijavaihtoon noin 250 yhteistyökorkeakoulussa.</p> <p>Yhteistyökorkeakouluja voi tarkastella <a href=\"https://saas.solenovo.fi/solemove/disp/_/en/public/nop/nop/possabroad?client=1023278\">SoleMOVE-järjestelmässä.</a></p>"
+        }
+      },
+      "KANSAINVALISTYMINEN": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Työelämässä tarvitaan kansainvälistä ja monikulttuurista osaamista osana ammatillista asiantuntijuutta, sijoittuipa töihin Suomeen tai ulkomaille. Henkilökohtaiseen oppimissuunnitelmaasi voit sisällyttää muun muassa:<br /> • opintoja tai harjoittelua ulkomailla (useita kuukausia tai lyhyitä intensiivijaksoja) <br /> • opintoja vieraalla kielellä kansainvälisessä opiskelijaryhmässä Suomessa <br /> • kieliopintoja<br /> • kulttuurien välisen viestinnän opintoja<br /> • kansainvälisessä yhteistyössä toteutettuja hankkeita<br /> • tuutorina toimimista kansainvälisille opiskelijoille</p> <p>Kaikissa opetussuunnitelmissa on osana ydinosaamismoduuleja lukukauden kestävä Liikkuvuusikkuna/Mobility window, jonka aikana erityisesti suositellaan vaihto-opiskelua tai harjoittelua ulkomailla. Tämän lukukauden aikana myös opinnot Laureassa toteutetaan englannin kielellä, yhdessä kansainvälisten opiskelijoiden kanssa. Opintoja englanniksi sisältyy siis kaikkien opintoihin.</p> <p>Lue lisää <a href=\"https://www.laurea.fi/koulutus/opiskelijana-laureassa/kansainvalisyys-opinnoissa\">kansainvälisyydestä opinnoissa Laureassa.</a></p>"
+        }
+      },
+      "LISATIETOA_OPETUSKIELISTA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Laurea-ammattikorkeakoulun opetuskielet ovat suomi ja englanti. Opintoja voidaan toteuttaa myös muilla kielillä.</p>"
+        }
+      },
+      "SISALTO": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<h3><b>Tutkinnossa on mahdollista opiskella monin eri tavoin</b></h3> <p>Laureassa tutkinto koostuu ydinosaamisen (perusopinnot) ja täydentävän osaamisen (suuntautumisopinnot) opinnoista. Perusopinnot antavat pohjan tutkinnolle ja ovat kaikille liiketalouden opiskelijoille pakollisia. Perusopinnoissa opiskellaan monipuolisesti liiketalouden eri osa-alueita kuten asiakaslähtöistä liiketoimintaa, markkinointia, palvelumuotoilua ja taloushallintoa. Harjoittelu, opinnäytetyö sekä kielistä ruotsi ja englanti luetaan myös perusopintoihin. Opintoja voit tehdä opintojaksoilla, yritysprojekteissa, oman työn opinnollistamalla tai hyväksilukemalla aikaisempaa osaamistasi.</p> <h3><b>Ydinosaaminen antaa pohjan tutkinnolle</b></h3> <p>Liiketalouden koulutuksessa pakollisia ydinosaamisen opintoja (150 op) ovat:</p> <ul> <li>Liiketoiminta- ja yrittäjyysosaaminen (30 op). Sisältö mm: Liiketoiminnan perusteet, yritysjuridiikka, ruotsi</li> <li>Liiketoiminta- ja yrittäjyysosaamisen kehittäminen (30 op). Sisältö mm: Asiakaslähtöinen liiketoiminta, taloushallinnon perusteet, johtaminen ja englanti</li> <li>Service Business (Palveluliiketoiminta) (30 op). Sisältö mm: Palvelumuotoilu, digitaalinen palveluliiketoiminta</li> <li>Ammatillinen asiantuntija työyhteisössä eli harjoittelut 1 ja 2 (30 op)</li> <li>Kehittämisosaaja ja työelämän uudistaja sisältäen opinnäytetyön, ura-ohjausopintoa sekä projektinhallintaa ja viestintää (30 op)</li> </ul> <p>Moduulien, opintojaksojen ja projektien kuvauksissa on määritelty tarkemmin osaamisen kehittymisen tavoitteet.</p> <h3><b>Täydentävällä osaamisella rakennat itsellesi erityisosaamista</b></h3> <p>Tradenomitutkintoon kuuluvaa täydentävää osaamista (60 op) voi valita opintoihisi Laurean eri kampuksilta ja koulutuksista. Tuemme valintojasi uraohjauksella, jolloin sinulla on mahdollisuus suunnitella ja käydä opintovalintojasi läpi oman henkilökohtaisen ohjaajasi kanssa. Näin jokainen opiskelija voi rakentaa oman urasuunnitelmaa tukevan henkilökohtaisen opintosuunnitelman.</p> <table> <tbody> <tr> <td valign=\"top\" width=\"321\"> <p><b> Laurean liiketalouden koulutuksessa voit syventyä seuraavilla liiketalouden osa-alueilla:</b></p> </td> <td valign=\"top\" width=\"321\"> <p><b>Sisältö:</b></p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Asiakaslähtöinen ja digitaalinen liiketoiminta</p> </td> <td valign=\"top\" width=\"321\"> <p>Brändi, markkinointi, digitaalinen markkinointi ja myynti</p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Henkilöstöjohtaminen</p> </td> <td valign=\"top\" width=\"321\"> <p>Johtamisen ja esimiestyön kehittäminen, itsensä johtaminen, henkilöstöjohtamisen lainsäädäntöä</p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Oikeudellinen osaaminen</p> </td> <td valign=\"top\" width=\"321\"> <p>Julkis- ja yksitysoikeuteen liittyviä opintoja.</p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Projektijohtaminen</p> </td> <td valign=\"top\" width=\"321\"> <p>Opiskelu toteutetaan toimimalla yritysprojekteissa sekä projektitiimin jäsenenä että projektipäällikkönä.</p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Taloushallinto ja rahoitus</p> </td> <td valign=\"top\" width=\"321\"> <p>Yritysrahoitus, sijoitustoiminta, kirjanpito, palkanlaskenta, talousohjaus/Management Accounting ja talouden tietojärjestelmät.</p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Työympäristöjohtaminen.</p> </td> <td valign=\"top\" width=\"321\"> <p>Toimitilapalvelujen tuottaminen, hankintalainsäädäntö, kiinteistöjen hallinta.</p> </td> </tr> <tr> <td valign=\"top\" width=\"321\"> <p>Yrittäjyys</p> </td> <td valign=\"top\" width=\"321\"> <p>Valmiudet opiskelijan oman yrityksen kehittämiseen sekä yrittäjämäisen asenteen kehittämiseen suunnattuja opintoja.</p> </td> </tr> </tbody> </table> <p> </p>"
+        }
+      },
+      "MAKSULLISUUS": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      }
+    },
+    "suunniteltuKestoArvo": "3,5",
+    "suunniteltuKestoTyyppi": {
+      "uri": "suunniteltukesto_01",
+      "versio": 1,
+      "arvo": "01",
+      "nimi": "vuotta"
+    },
+    "koulutuksenAlkamiskausi": {
+      "uri": "kausi_s",
+      "versio": 1,
+      "arvo": "S",
+      "nimi": "Syksy"
+    },
+    "koulutuksenAlkamisvuosi": 2020,
+    "koulutuksenAlkamisPvms": [],
+    "opetuskielis": {
+      "versio": 1,
+      "meta": {
+        "kieli_fi": {
+          "uri": "kieli_fi",
+          "versio": 1,
+          "arvo": "FI",
+          "nimi": "suomi"
+        }
+      },
+      "uris": {
+        "kieli_fi": 1
+      }
+    },
+    "opetusmuodos": {
+      "versio": 1,
+      "meta": {
+        "opetusmuotokk_4": {
+          "uri": "opetusmuotokk_4",
+          "versio": 1,
+          "arvo": "4",
+          "nimi": "Verkko-opiskelu"
+        }
+      },
+      "uris": {
+        "opetusmuotokk_4": 1
+      }
+    },
+    "opetusAikas": {
+      "versio": 1,
+      "meta": {
+        "opetusaikakk_3": {
+          "uri": "opetusaikakk_3",
+          "versio": 1,
+          "arvo": "3",
+          "nimi": "Viikonloppuopetus"
+        },
+        "opetusaikakk_2": {
+          "uri": "opetusaikakk_2",
+          "versio": 1,
+          "arvo": "2",
+          "nimi": "Iltaopetus"
+        },
+        "opetusaikakk_1": {
+          "uri": "opetusaikakk_1",
+          "versio": 1,
+          "arvo": "1",
+          "nimi": "Päiväopetus"
+        }
+      },
+      "uris": {
+        "opetusaikakk_3": 1,
+        "opetusaikakk_2": 1,
+        "opetusaikakk_1": 1
+      }
+    },
+    "opetusPaikkas": {
+      "versio": 1,
+      "meta": {
+        "opetuspaikkakk_2": {
+          "uri": "opetuspaikkakk_2",
+          "versio": 1,
+          "arvo": "2",
+          "nimi": "Etäopetus"
+        }
+      },
+      "uris": {
+        "opetuspaikkakk_2": 1
+      }
+    },
+    "opintojenLaajuusarvo": {
+      "uri": "opintojenlaajuus_210",
+      "versio": 1,
+      "arvo": "210",
+      "nimi": "210"
+    },
+    "opetusJarjestajat": [],
+    "opetusTarjoajat": [
+      "1.2.246.562.10.98212669513"
+    ],
+    "ammattinimikkeet": {
+      "versio": 1,
+      "uris": {}
+    },
+    "aihees": {
+      "versio": 1,
+      "meta": {
+        "aiheet_31": {
+          "uri": "aiheet_31",
+          "versio": 1,
+          "arvo": " 31",
+          "nimi": "Johtaminen"
+        },
+        "aiheet_33": {
+          "uri": "aiheet_33",
+          "versio": 1,
+          "arvo": " 33",
+          "nimi": "Liiketalous ja kauppa"
+        },
+        "aiheet_34": {
+          "uri": "aiheet_34",
+          "versio": 1,
+          "arvo": " 34",
+          "nimi": "Markkinointi"
+        },
+        "aiheet_35": {
+          "uri": "aiheet_35",
+          "versio": 1,
+          "arvo": " 35",
+          "nimi": "Myynti"
+        },
+        "aiheet_37": {
+          "uri": "aiheet_37",
+          "versio": 1,
+          "arvo": " 37",
+          "nimi": "Yrittäminen"
+        }
+      },
+      "uris": {
+        "aiheet_31": 1,
+        "aiheet_33": 1,
+        "aiheet_34": 1,
+        "aiheet_35": 1,
+        "aiheet_37": 1
+      }
+    },
+    "parents": [],
+    "children": [],
+    "hintaString": "",
+    "opintojenMaksullisuus": false,
+    "isAvoimenYliopistonKoulutus": false,
+    "oppiaineet": [
+      {
+        "oppiaine": "palvelumuotoilu",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "liiketalous",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "yrityslabra",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "projektijohtaminen",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "markkinointi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "digitaalinen markkinointi ja myynti",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "verkko-opiskelu",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "projekti",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "verkko-opetus",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "tradenomi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "yrittäjyys",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "henkilöstöjohtaminen",
+        "kieliKoodi": "kieli_fi"
+      }
+    ],
+    "extraParams": {},
+    "sisaltyyKoulutuksiin": [],
+    "yhteyshenkilos": [
+      {
+        "nimi": "Laurean Hakijapalvelut",
+        "sahkoposti": "hakijapalvelut@laurea.fi",
+        "puhelin": "09 8868 7293",
+        "kielet": [],
+        "henkiloTyyppi": "YHTEYSHENKILO"
+      }
+    ],
+    "pohjakoulutusvaatimukset": {
+      "versio": 1,
+      "uris": {}
+    },
+    "tutkintonimikes": {
+      "versio": 1,
+      "meta": {
+        "tutkintonimikekk_311": {
+          "uri": "tutkintonimikekk_311",
+          "versio": 2,
+          "arvo": "311",
+          "nimi": "Tradenomi"
+        }
+      },
+      "uris": {
+        "tutkintonimikekk_311": 2
+      }
+    },
+    "opintojenRakenneKuvas": {},
+    "koulutuksenTunnisteOid": "1.2.246.562.13.253971094610",
+    "johtaaTutkintoon": true
+  },
+  "status": "OK"
+}

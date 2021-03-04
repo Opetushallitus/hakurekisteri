@@ -9,14 +9,42 @@ import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoActor, KoodistoActorRef, MockKoodistoActor}
-import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService, KoosteServiceMock}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  KoodistoActor,
+  KoodistoActorRef,
+  MockKoodistoActor
+}
+import fi.vm.sade.hakurekisteri.integration.kooste.{
+  IKoosteService,
+  KoosteService,
+  KoosteServiceMock
+}
 import fi.vm.sade.hakurekisteri.integration.koski._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor, ParametritActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor, TarjontaActorRef}
-import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{IValintaperusteetService, ValintaperusteetService, ValintaperusteetServiceMock}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriActorRef, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{
+  HttpOrganisaatioActor,
+  MockOrganisaatioActor,
+  OrganisaatioActorRef
+}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{
+  HttpParameterActor,
+  MockParameterActor,
+  ParametritActorRef
+}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  MockTarjontaActor,
+  TarjontaActor,
+  TarjontaActorRef
+}
+import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
+  IValintaperusteetService,
+  ValintaperusteetService,
+  ValintaperusteetServiceMock
+}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
+  ValintarekisteriActor,
+  ValintarekisteriActorRef,
+  ValintarekisteriQuery
+}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosActor, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.valpas.ValpasIntergration
 import fi.vm.sade.hakurekisteri.integration.virta._
@@ -132,7 +160,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val proxies = new MockProxies
   override val hakemusClient = null
-  override val valpasIntegration = new ValpasIntergration(hakemusService)
+  override val valpasIntegration = new ValpasIntergration(tarjonta, valintaTulos, hakemusService)
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
@@ -299,18 +327,19 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config
   )
 
-  override val valpasIntegration = new ValpasIntergration(hakemusService)
-
   val haut: ActorRef = system.actorOf(
     Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
     "haut"
   )
-  val valintaTulos = new ValintaTulosActorRef(
+  val valintaTulos: ValintaTulosActorRef = ValintaTulosActorRef(
     getSupervisedActorFor(
       Props(new ValintaTulosActor(haut, valintatulosClient, config, cacheFactory)),
       "valintaTulos"
     )
   )
+
+  override val valpasIntegration = new ValpasIntergration(tarjonta, valintaTulos, hakemusService)
+
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion =
