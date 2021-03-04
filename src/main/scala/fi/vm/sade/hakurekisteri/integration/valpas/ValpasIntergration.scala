@@ -43,9 +43,9 @@ case class ValpasHakutoive(
   hakukohdeNimi: Option[String], // TODO
   koulutusNimi: Option[String], // TODO
   pisteet: Option[BigDecimal],
-  vastaanottotieto: Option[Vastaanottotila.Vastaanottotila],
-  valintatila: Option[Valintatila.Valintatila],
-  ilmoittautumistila: Option[Ilmoittautumistila.Ilmoittautumistila],
+  vastaanottotieto: Option[String], // Vastaanottotila.Vastaanottotila
+  valintatila: Option[String], // Valintatila.Valintatila
+  ilmoittautumistila: Option[String], //Ilmoittautumistila.Ilmoittautumistila
   hakutoivenumero: Int,
   hakukohdeOid: String,
   hakukohdeKoulutuskoodi: String,
@@ -89,9 +89,9 @@ object ValpasHakemus {
         koulutusNimi = None, // TODO
         hakukohdeNimi = None, // TODO
         pisteet = tulos.flatMap(t => t.pisteet.get(key)),
-        ilmoittautumistila = tulos.flatMap(t => t.ilmoittautumistila.get(key)),
-        valintatila = tulos.flatMap(t => t.valintatila.get(key)),
-        vastaanottotieto = tulos.flatMap(t => t.vastaanottotila.get(key)),
+        ilmoittautumistila = tulos.flatMap(t => t.ilmoittautumistila.get(key).map(_.toString)),
+        valintatila = tulos.flatMap(t => t.valintatila.get(key).map(_.toString)),
+        vastaanottotieto = tulos.flatMap(t => t.vastaanottotila.get(key).map(_.toString)),
         hakutoivenumero = c.preferenceNumber,
         hakukohdeOid = hakukohdeOid,
         hakukohdeKoulutuskoodi = koulutus.koulutukset.head.tkKoulutuskoodi,
