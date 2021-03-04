@@ -1,0 +1,39 @@
+{
+  "1.2.246.562.24.82344311114": {
+    "oidHenkilo": "1.2.246.562.24.82344311114",
+    "hetu": "021119A9944",
+    "kaikkiHetut": [],
+    "passivoitu": false,
+    "etunimet": "Natalia Testi",
+    "kutsumanimi": "Natalia",
+    "sukunimi": "Koljonen-Testi",
+    "aidinkieli": {
+      "kieliKoodi": "fi",
+      "kieliTyyppi": "suomi"
+    },
+    "asiointiKieli": null,
+    "kansalaisuus": [
+      {
+        "kansalaisuusKoodi": "246"
+      }
+    ],
+    "kasittelijaOid": "1.2.246.562.24.66631583590",
+    "syntymaaika": "2019-11-02",
+    "sukupuoli": "2",
+    "kotikunta": null,
+    "oppijanumero": "1.2.246.562.24.82344311114",
+    "turvakielto": false,
+    "eiSuomalaistaHetua": false,
+    "yksiloity": false,
+    "yksiloityVTJ": true,
+    "yksilointiYritetty": true,
+    "duplicate": false,
+    "created": 1584876999408,
+    "modified": 1586837416970,
+    "vtjsynced": 1584877031319,
+    "yhteystiedotRyhma": [],
+    "yksilointivirheet": [],
+    "kielisyys": [],
+    "henkiloTyyppi": "OPPIJA"
+  }
+}

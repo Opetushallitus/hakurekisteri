@@ -1,0 +1,186 @@
+{
+  "metadata": {
+    "data": {
+      "KANSAINVALISET_KOULUTUSOHJELMAT": {},
+      "YLEISKUVAUS": {
+        "kieli_fi#1": "<p>Tampereen ammattikorkeakoulu on 10 000 opiskelijan yhteisö, jonka vaikutus näkyy etenkin Pirkanmaalla. Toimilupansa mukaisesti TAMK antaa ammattikorkeakoulutusta yhdeksällä koulutusalalla. Koulutus painottuu erityisesti tekniikkaan, hyvinvointipalveluihin, liiketalouteen ja kulttuuriin. Pääkampus sijaitsee Tampereella, mutta maakunnan alueella on kolme koulutuksen tukikohtaa, joista yksi on Ikaalinen.</p> <p><strong>IT-tuki</strong></p> <p>Käytössäsi on koko TAMKin Helpdesk.</p> <p><strong>Kirjasto</strong></p> <p>Tampereen yliopiston kirjasto on avoin tiedekirjasto, joka tukee palveluillaan opiskelua, opetusta ja tutkimusta Tampereen yliopistossa ja Tampereen ammattikorkeakoulussa. Tietoa kirjaston aukioloajoista ja palveluista löydät <a href=\"https://www.tuni.fi/fi/kirjasto\">kirjaston www-sivuilta</a>.</p> <p><strong>Ikaalisten kaupungin palvelut</strong></p> <p>Tietoa Ikaalisten kaupungin palveluista löydät sivuilta: www.ikaalinen.fi</p> <div style=\"\"> </div>"
+      },
+      "KIELIOPINNOT": {},
+      "TERVEYDENHUOLTOPALVELUT": {},
+      "TEHTAVANIMIKE": {},
+      "SAHKOPOSTIOSOITE": {},
+      "RAHOITUS": {},
+      "AIEMMIN_HANKITTU_OSAAMINEN": {},
+      "sosiaalinenmedia_7#1": {
+        "kieli_fi#1": "https://www.youtube.com/channel/UCxBIgFuh45T19yY1kgUUyLw"
+      },
+      "sosiaalinenmedia_5#1": {},
+      "sosiaalinenmedia_6#1": {
+        "kieli_fi#1": "https://www.instagram.com/tamk_uas/"
+      },
+      "OPISKELIJALIIKKUVUUS": {},
+      "VAKUUTUKSET": {},
+      "OPISKELIJA_JARJESTOT": {},
+      "VALINTAMENETTELY": {},
+      "sosiaalinenmedia_3#1": {
+        "kieli_fi#1": "https://www.linkedin.com/company/tamk"
+      },
+      "sosiaalinenmedia_4#1": {
+        "kieli_fi#1": "https://twitter.com/TAMK_UAS"
+      },
+      "sosiaalinenmedia_1#1": {
+        "kieli_fi#1": "https://www.facebook.com/tampereenamk"
+      },
+      "VASTUUHENKILOT": {},
+      "KUSTANNUKSET": {},
+      "OPPIMISYMPARISTO": {},
+      "sosiaalinenmedia_2#1": {},
+      "PUHELINNUMERO": {},
+      "NIMI": {},
+      "OPISKELIJALIIKUNTA": {},
+      "VUOSIKELLO": {},
+      "OPISKELIJARUOKAILU": {},
+      "VAPAA_AIKA": {},
+      "ESTEETOMYYS": {},
+      "TIETOA_ASUMISESTA": {},
+      "TYOHARJOITTELU": {}
+    },
+    "nimi": {},
+    "hakutoimistoEctsNimi": {},
+    "hakutoimistoEctsEmail": {},
+    "hakutoimistoEctsPuhelin": {},
+    "hakutoimistoEctsTehtavanimike": {},
+    "yhteystiedot": [
+      {
+        "osoiteTyyppi": "kaynti",
+        "kieli": "kieli_fi#1",
+        "postinumeroUri": "posti_33520",
+        "yhteystietoOid": "1.2.246.562.5.51718733176",
+        "id": "3935045",
+        "postitoimipaikka": "TAMPERE",
+        "osoite": "Kuntokatu 3"
+      },
+      {
+        "osoiteTyyppi": "posti",
+        "kieli": "kieli_fi#1",
+        "postinumeroUri": "posti_33520",
+        "yhteystietoOid": "1.2.246.562.5.14318786812",
+        "id": "3935046",
+        "postitoimipaikka": "TAMPERE",
+        "osoite": "Kuntokatu 3"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "yhteystietoOid": "14641755671090.9344136473353146",
+        "id": "3935047",
+        "email": "hakijapalvelut.tamk@tuni.fi"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "www": "http://www.tuni.fi",
+        "yhteystietoOid": "14641755671090.15872368764020683",
+        "id": "3935048"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "numero": "02 9452 0444",
+        "tyyppi": "puhelin",
+        "yhteystietoOid": "1.2.246.562.5.44388912352",
+        "id": "3935049"
+      }
+    ],
+    "hakutoimistonNimi": {
+      "kieli_fi#1": "TAMK Hakijapalvelut"
+    },
+    "luontiPvm": 1464175567109,
+    "muokkausPvm": 1464123600000
+  },
+  "parentOidPath": "|1.2.246.562.10.00000000001|1.2.246.562.10.41209513476|1.2.246.562.10.64291752455|",
+  "nimi": {
+    "fi": "Tampereen ammattikorkeakoulu, TAMK Ikaalinen",
+    "en": "Tampere University of Applied Sciences, TAMK Ikaalinen"
+  },
+  "oid": "1.2.246.562.10.60554652846",
+  "alkuPvm": "2016-05-25",
+  "parentOid": "1.2.246.562.10.64291752455",
+  "postiosoite": {
+    "postinumeroUri": "posti_39500",
+    "osoiteTyyppi": "posti",
+    "yhteystietoOid": "1.2.246.562.5.55827665518",
+    "postitoimipaikka": "IKAALINEN",
+    "osoite": "Eino Salmelaisen katu 20, 39500 Ikaalinen"
+  },
+  "kuvaus2": {},
+  "tyypit": [
+    "Toimipiste"
+  ],
+  "opetuspisteenJarjNro": "26",
+  "yhteystietoArvos": [],
+  "yhteystiedot": [
+    {
+      "osoiteTyyppi": "kaynti",
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_39500",
+      "yhteystietoOid": "1.2.246.562.5.52084744136",
+      "id": "3935054",
+      "postitoimipaikka": "IKAALINEN",
+      "osoite": "Eino Salmelaisen katu 20, 39500 Ikaalinen"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "numero": "0294 520 444",
+      "tyyppi": "puhelin",
+      "yhteystietoOid": "1.2.246.562.5.48974027772",
+      "id": "3935056"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "www": "http://www.tuni.fi",
+      "yhteystietoOid": "14641755671990.7528691816365892",
+      "id": "3935052"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "yhteystietoOid": "14652862871770.4841257682762473",
+      "id": "3935055",
+      "email": "hakijapalvelut.tamk@tuni.fi"
+    },
+    {
+      "osoiteTyyppi": "posti",
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_39500",
+      "yhteystietoOid": "1.2.246.562.5.55827665518",
+      "id": "3935053",
+      "postitoimipaikka": "IKAALINEN",
+      "osoite": "Eino Salmelaisen katu 20, 39500 Ikaalinen"
+    }
+  ],
+  "nimet": [
+    {
+      "nimi": {
+        "fi": "Tampereen ammattikorkeakoulu, TAMK Ikaalinen",
+        "en": "Tampere University of Applied Sciences, TAMK Ikaalinen"
+      },
+      "alkuPvm": "2016-05-25",
+      "version": 0
+    }
+  ],
+  "ryhmatyypit": [],
+  "kayttoryhmat": [],
+  "toimipistekoodi": "0263026",
+  "kotipaikkaUri": "kunta_143",
+  "kieletUris": [
+    "oppilaitoksenopetuskieli_1#1"
+  ],
+  "vuosiluokat": [],
+  "maaUri": "maatjavaltiot1_fin",
+  "kayntiosoite": {
+    "postinumeroUri": "posti_39500",
+    "osoiteTyyppi": "kaynti",
+    "yhteystietoOid": "1.2.246.562.5.52084744136",
+    "postitoimipaikka": "IKAALINEN",
+    "osoite": "Eino Salmelaisen katu 20, 39500 Ikaalinen"
+  },
+  "version": 38,
+  "status": "AKTIIVINEN"
+}

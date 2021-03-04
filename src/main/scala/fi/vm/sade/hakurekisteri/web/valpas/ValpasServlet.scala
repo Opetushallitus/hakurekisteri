@@ -14,41 +14,50 @@ import scala.concurrent.{Future}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-
 trait ValpasSwaggerApi extends SwaggerSupport {
 
-  val fetchValpasDataForPersons: SwaggerSupportSyntax.OperationBuilder = apiOperation[Any]("fetchValpasDataForPersons")
-    .summary("Hakijoille Valpas-tiedot")
-    .description("Palauttaa hakijoiden oppijanumeroille Valpas-tiedot")
-    .parameter(bodyParam[Seq[String]]("hakijaOids").description("hakijoiden oppijanumerot").required)
-    .tags("Valpas-resource")
+  val fetchValpasDataForPersons: SwaggerSupportSyntax.OperationBuilder =
+    apiOperation[Seq[ValpasHakemus]]("fetchValpasDataForPersons")
+      .summary("Hakijoille Valpas-tiedot")
+      .description("Palauttaa hakijoiden oppijanumeroille Valpas-tiedot")
+      .parameter(
+        bodyParam[Seq[String]]("hakijaOids").description("hakijoiden oppijanumerot").required
+      )
+      .tags("Valpas-resource")
 
 }
 
-
-class ValpasServlet(valpasIntergration: ValpasIntergration)(
-  implicit val sw: Swagger, val system: ActorSystem, val security: Security
-) extends HakuJaValintarekisteriStack with JacksonJsonSupport with SecuritySupport with ValpasSwaggerApi with FutureSupport {
+class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
+  val sw: Swagger,
+  val system: ActorSystem,
+  val security: Security
+) extends HakuJaValintarekisteriStack
+    with JacksonJsonSupport
+    with SecuritySupport
+    with ValpasSwaggerApi
+    with FutureSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected def applicationDescription: String = "Valpas-Resource"
   override protected implicit def jsonFormats: Formats = DefaultFormats
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
-  def shouldBeAdmin = if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
+  def shouldBeAdmin(): Unit =
+    if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
 
   before() {
     contentType = formats("json")
   }
 
   post("/", operation(fetchValpasDataForPersons)) {
+    // shouldBeAdmin()
     val personOids = parse(request.body).extract[Set[String]]
-
 
     new AsyncResult() {
       override implicit def timeout: Duration = 360.seconds
 
-      override val is: Future[Seq[ValpasHakemus]] = valpasIntergration.fetch(ValpasQuery(personOids))
+      override val is: Future[Seq[ValpasHakemus]] =
+        valpasIntergration.fetch(ValpasQuery(personOids))
     }
   }
 
