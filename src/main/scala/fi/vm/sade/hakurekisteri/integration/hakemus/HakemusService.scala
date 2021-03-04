@@ -542,17 +542,19 @@ class HakemusService(
           AtaruSearchParams(None, None, None, None, Some(formattedDate))
         )
       } yield hakuappApplications.toList ::: ataruApplications
-      allApplications.flatMap(aa => fetchPersonAliases(aa.filter(h => h.applicationSystemId.length != 35))).onComplete {
-        case Success((hakemukset, personOidsWithAliases)) =>
-          Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
-            case Failure(e) => logger.error(e, "Exception in trigger!")
-            case _          =>
-          }
-          processModifiedHakemukset(lastChecked, refreshFrequency)
-        case Failure(t) =>
-          logger.error(t, "Fetching modified hakemukset failed, retrying")
-          processModifiedHakemukset(modifiedAfter, refreshFrequency)
-      }
+      allApplications
+        .flatMap(aa => fetchPersonAliases(aa.filter(h => h.applicationSystemId.length != 35)))
+        .onComplete {
+          case Success((hakemukset, personOidsWithAliases)) =>
+            Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
+              case Failure(e) => logger.error(e, "Exception in trigger!")
+              case _          =>
+            }
+            processModifiedHakemukset(lastChecked, refreshFrequency)
+          case Failure(t) =>
+            logger.error(t, "Fetching modified hakemukset failed, retrying")
+            processModifiedHakemukset(modifiedAfter, refreshFrequency)
+        }
     })
   }
 
