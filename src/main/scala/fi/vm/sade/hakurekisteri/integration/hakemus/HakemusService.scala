@@ -528,7 +528,7 @@ class HakemusService(
   }
 
   def processModifiedHakemukset(
-    modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
+    modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(4)),
     refreshFrequency: FiniteDuration = 1.minute
   )(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
