@@ -534,6 +534,10 @@ class HakemusService(
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
+      logger.info(
+        "processModifiedHakemukset : Fetching modified hakemukses from haku-app and ataru, " +
+          s"modified since $formattedDate"
+      )
       val allApplications: Future[List[HakijaHakemus]] = for {
         hakuappApplications: Seq[FullHakemus] <- fetchHakemuksetChunked(
           params = SearchParams(updatedAfter = formattedDate)
@@ -543,9 +547,19 @@ class HakemusService(
         )
       } yield hakuappApplications.toList ::: ataruApplications
       allApplications
-        .flatMap(aa => fetchPersonAliases(aa.filter(h => h.applicationSystemId.length != 35)))
+        .flatMap(aa => {
+          logger.info(
+            s"processModifiedHakemukset : found ${aa.size} unfiltered hakemukses. " +
+              "Removing kouta-hakemukses and fetching aliases."
+          )
+          fetchPersonAliases(aa.filter(h => h.applicationSystemId.length != 35))
+        })
         .onComplete {
           case Success((hakemukset, personOidsWithAliases)) =>
+            logger.info(
+              s"processModifiedHakemukset : Successfully fetched aliases for " +
+                s"${hakemukset.size} hakemukses with formattedDate $formattedDate."
+            )
             Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
               case Failure(e) => logger.error(e, "Exception in trigger!")
               case _          =>
