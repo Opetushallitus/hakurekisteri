@@ -130,7 +130,7 @@ class HakemusService(
   tarjontaActor: TarjontaActorRef,
   organisaatioActor: OrganisaatioActorRef,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-  pageSize: Int = 200,
+  pageSize: Int = 400,
   maxOidsChunkSize: Int = 150
 )(implicit val system: ActorSystem)
     extends IHakemusService {
@@ -292,17 +292,26 @@ class HakemusService(
       params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date => Map("modifiedAfter" -> date))
     def page(offset: Option[String]): Future[(List[HakijaHakemus], Option[String])] = {
       for {
-        ataruResponse <- ataruHakemusClient.postObjectWithCodes[Map[String, Any], AtaruResponse](
-          uriKey = "ataru.applications",
-          acceptedResponseCodes = List(200),
-          maxRetries = 2,
-          resource = offset.fold(p)(o => p + ("offset" -> o)),
-          basicAuth = false
-        )
+        ataruResponse <- ataruHakemusClient
+          .postObjectWithCodes[Map[String, Any], AtaruResponse](
+            uriKey = "ataru.applications",
+            acceptedResponseCodes = List(200),
+            maxRetries = 2,
+            resource = offset.fold(p)(o => p + ("offset" -> o)),
+            basicAuth = false
+          )
+          .map(ar =>
+            ar.copy(applications = ar.applications.filter(h => h.applicationSystemId.length != 35))
+          )
         ataruHenkilot <- oppijaNumeroRekisteri.getByOids(
-          ataruResponse.applications.map(_.personOid).toSet
+          ataruResponse.applications
+            .map(_.personOid)
+            .toSet
         )
-        ataruHakemukset <- enrichAtaruHakemukset(ataruResponse.applications, ataruHenkilot)
+        ataruHakemukset <- enrichAtaruHakemukset(
+          ataruResponse.applications,
+          ataruHenkilot
+        )
       } yield (
         params.organizationOid.fold(ataruHakemukset)(oid =>
           ataruHakemukset.filter(hasAppliedToOrganization(_, oid))
@@ -528,7 +537,7 @@ class HakemusService(
   }
 
   def processModifiedHakemukset(
-    modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(4)),
+    modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(5)),
     refreshFrequency: FiniteDuration = 1.minute
   )(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
@@ -549,10 +558,9 @@ class HakemusService(
       allApplications
         .flatMap(aa => {
           logger.info(
-            s"processModifiedHakemukset : found ${aa.size} unfiltered hakemukses. " +
-              "Removing kouta-hakemukses and fetching aliases."
+            s"processModifiedHakemukset : found ${aa.size} hakemukses. Fetching aliases."
           )
-          fetchPersonAliases(aa.filter(h => h.applicationSystemId.length != 35))
+          fetchPersonAliases(aa)
         })
         .onComplete {
           case Success((hakemukset, personOidsWithAliases)) =>
