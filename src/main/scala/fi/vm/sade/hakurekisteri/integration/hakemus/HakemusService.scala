@@ -569,12 +569,14 @@ class HakemusService(
                 s"${hakemukset.size} hakemukses with formattedDate $formattedDate."
             )
             Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
-              case Failure(e) => logger.error(e, "Exception in trigger!")
-              case _          =>
+              case Failure(e) =>
+                logger.error(e, "processModifiedHakemukset : Exception in trigger!")
+              case _ =>
             }
             processModifiedHakemukset(lastChecked, refreshFrequency)
           case Failure(t) =>
-            logger.error(t, "Fetching modified hakemukset failed, retrying")
+            logger
+              .error(t, "processModifiedHakemukset : Fetching modified hakemukset failed, retrying")
             processModifiedHakemukset(modifiedAfter, refreshFrequency)
         }
     })
