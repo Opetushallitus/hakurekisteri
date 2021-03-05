@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuActor}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
   HakukohdeOid,
@@ -22,15 +22,14 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   HakemuksenValintatulos,
-  Ilmoittautumistila,
   SijoitteluTulos,
-  ValintaTulosActorRef,
-  Valintatila,
-  Vastaanottotila
+  ValintaTulosActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.valpas
+import org.scalatra.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 
+import scala.annotation.meta.field
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration._
 
@@ -42,11 +41,23 @@ object ValpasHakemusTila extends Enumeration {
 }
 
 case class ValpasHakutoive(
-  hakukohdeNimi: Map[String, String], // TODO
-  koulutusNimi: Map[String, String], // TODO
+  hakukohdeNimi: Map[String, String],
+  koulutusNimi: Map[String, String],
   pisteet: Option[BigDecimal],
+  @(ApiModelProperty @field)(
+    allowableValues =
+      "KESKEN,VASTAANOTTANUT_SITOVASTI,EI_VASTAANOTETTU_MAARA_AIKANA,PERUNUT,PERUUTETTU,OTTANUT_VASTAAN_TOISEN_PAIKAN,EHDOLLISESTI_VASTAANOTTANUT"
+  )
   vastaanottotieto: Option[String], // Vastaanottotila.Vastaanottotila
+  @(ApiModelProperty @field)(
+    allowableValues =
+      "HYVAKSYTTY,HARKINNANVARAISESTI_HYVAKSYTTY,VARASIJALTA_HYVAKSYTTY,VARALLA,PERUUTETTU,PERUNUT,HYLATTY,PERUUNTUNUT,KESKEN"
+  )
   valintatila: Option[String], // Valintatila.Valintatila
+  @(ApiModelProperty @field)(
+    allowableValues =
+      "EI_TEHTY,LASNA_KOKO_LUKUVUOSI,POISSA_KOKO_LUKUVUOSI,EI_ILMOITTAUTUNUT,LASNA_SYKSY,POISSA_SYKSY,LASNA,POISSA"
+  )
   ilmoittautumistila: Option[String], //Ilmoittautumistila.Ilmoittautumistila
   hakutoivenumero: Int,
   hakukohdeOid: String,
