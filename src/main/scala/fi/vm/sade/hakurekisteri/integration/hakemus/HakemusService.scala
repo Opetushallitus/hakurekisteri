@@ -300,9 +300,6 @@ class HakemusService(
             resource = offset.fold(p)(o => p + ("offset" -> o)),
             basicAuth = false
           )
-          .map(ar =>
-            ar.copy(applications = ar.applications.filter(h => h.applicationSystemId.length != 35))
-          )
         ataruHenkilot <- oppijaNumeroRekisteri.getByOids(
           ataruResponse.applications
             .map(_.personOid)
