@@ -130,7 +130,7 @@ class HakemusService(
   tarjontaActor: TarjontaActorRef,
   organisaatioActor: OrganisaatioActorRef,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
-  pageSize: Int = 200,
+  pageSize: Int = 400,
   maxOidsChunkSize: Int = 150
 )(implicit val system: ActorSystem)
     extends IHakemusService {
@@ -292,17 +292,26 @@ class HakemusService(
       params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date => Map("modifiedAfter" -> date))
     def page(offset: Option[String]): Future[(List[HakijaHakemus], Option[String])] = {
       for {
-        ataruResponse <- ataruHakemusClient.postObjectWithCodes[Map[String, Any], AtaruResponse](
-          uriKey = "ataru.applications",
-          acceptedResponseCodes = List(200),
-          maxRetries = 2,
-          resource = offset.fold(p)(o => p + ("offset" -> o)),
-          basicAuth = false
-        )
+        ataruResponse <- ataruHakemusClient
+          .postObjectWithCodes[Map[String, Any], AtaruResponse](
+            uriKey = "ataru.applications",
+            acceptedResponseCodes = List(200),
+            maxRetries = 2,
+            resource = offset.fold(p)(o => p + ("offset" -> o)),
+            basicAuth = false
+          )
+          .map(ar =>
+            ar.copy(applications = ar.applications.filter(h => h.applicationSystemId.length != 35))
+          )
         ataruHenkilot <- oppijaNumeroRekisteri.getByOids(
-          ataruResponse.applications.map(_.personOid).toSet
+          ataruResponse.applications
+            .map(_.personOid)
+            .toSet
         )
-        ataruHakemukset <- enrichAtaruHakemukset(ataruResponse.applications, ataruHenkilot)
+        ataruHakemukset <- enrichAtaruHakemukset(
+          ataruResponse.applications,
+          ataruHenkilot
+        )
       } yield (
         params.organizationOid.fold(ataruHakemukset)(oid =>
           ataruHakemukset.filter(hasAppliedToOrganization(_, oid))
@@ -528,12 +537,16 @@ class HakemusService(
   }
 
   def processModifiedHakemukset(
-    modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
+    modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(5)),
     refreshFrequency: FiniteDuration = 1.minute
   )(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
+      logger.info(
+        "processModifiedHakemukset : Fetching modified hakemukses from haku-app and ataru, " +
+          s"modified since $formattedDate"
+      )
       val allApplications: Future[List[HakijaHakemus]] = for {
         hakuappApplications: Seq[FullHakemus] <- fetchHakemuksetChunked(
           params = SearchParams(updatedAfter = formattedDate)
@@ -542,17 +555,30 @@ class HakemusService(
           AtaruSearchParams(None, None, None, None, Some(formattedDate))
         )
       } yield hakuappApplications.toList ::: ataruApplications
-      allApplications.flatMap(fetchPersonAliases).onComplete {
-        case Success((hakemukset, personOidsWithAliases)) =>
-          Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
-            case Failure(e) => logger.error(e, "Exception in trigger!")
-            case _          =>
-          }
-          processModifiedHakemukset(lastChecked, refreshFrequency)
-        case Failure(t) =>
-          logger.error(t, "Fetching modified hakemukset failed, retrying")
-          processModifiedHakemukset(modifiedAfter, refreshFrequency)
-      }
+      allApplications
+        .flatMap(aa => {
+          logger.info(
+            s"processModifiedHakemukset : found ${aa.size} hakemukses. Fetching aliases."
+          )
+          fetchPersonAliases(aa)
+        })
+        .onComplete {
+          case Success((hakemukset, personOidsWithAliases)) =>
+            logger.info(
+              s"processModifiedHakemukset : Successfully fetched aliases for " +
+                s"${hakemukset.size} hakemukses with formattedDate $formattedDate."
+            )
+            Try(triggerHakemukset(hakemukset, personOidsWithAliases)) match {
+              case Failure(e) =>
+                logger.error(e, "processModifiedHakemukset : Exception in trigger!")
+              case _ =>
+            }
+            processModifiedHakemukset(lastChecked, refreshFrequency)
+          case Failure(t) =>
+            logger
+              .error(t, "processModifiedHakemukset : Fetching modified hakemukset failed, retrying")
+            processModifiedHakemukset(modifiedAfter, refreshFrequency)
+        }
     })
   }
 
