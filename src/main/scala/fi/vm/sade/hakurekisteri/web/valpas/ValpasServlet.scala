@@ -1,16 +1,17 @@
 package fi.vm.sade.hakurekisteri.web.valpas
 
 import akka.actor.ActorSystem
+import akka.actor.Status.Success
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.valpas.{ValpasHakemus, ValpasIntergration, ValpasQuery}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.{AsyncResult, FutureSupport}
+import org.scalatra.{ActionResult, AsyncResult, BadRequest, FutureSupport, InternalServerError}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport, SwaggerSupportSyntax}
 
-import scala.concurrent.{Future}
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
@@ -52,12 +53,15 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
   post("/", operation(fetchValpasDataForPersons)) {
     // shouldBeAdmin()
     val personOids = parse(request.body).extract[Set[String]]
+    val f: Future[Any] = valpasIntergration.fetch(ValpasQuery(personOids)).recoverWith {
+      case t: Throwable =>
+        Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
+    }
 
     new AsyncResult() {
       override implicit def timeout: Duration = 360.seconds
 
-      override val is: Future[Seq[ValpasHakemus]] =
-        valpasIntergration.fetch(ValpasQuery(personOids))
+      override val is: Future[Any] = f
     }
   }
 
