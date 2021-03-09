@@ -13,6 +13,11 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   IHakemusService
 }
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetKoodistoKoodiArvot,
+  KoodistoActorRef,
+  KoodistoKoodiArvot
+}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
   HakukohdeOid,
@@ -45,19 +50,22 @@ case class ValpasHakutoive(
   koulutusNimi: Map[String, String],
   pisteet: Option[BigDecimal],
   @(ApiModelProperty @field)(
-    description = "KESKEN,VASTAANOTTANUT_SITOVASTI,EI_VASTAANOTETTU_MAARA_AIKANA,PERUNUT,PERUUTETTU,OTTANUT_VASTAAN_TOISEN_PAIKAN,EHDOLLISESTI_VASTAANOTTANUT",
+    description =
+      "KESKEN,VASTAANOTTANUT_SITOVASTI,EI_VASTAANOTETTU_MAARA_AIKANA,PERUNUT,PERUUTETTU,OTTANUT_VASTAAN_TOISEN_PAIKAN,EHDOLLISESTI_VASTAANOTTANUT",
     allowableValues =
       "KESKEN,VASTAANOTTANUT_SITOVASTI,EI_VASTAANOTETTU_MAARA_AIKANA,PERUNUT,PERUUTETTU,OTTANUT_VASTAAN_TOISEN_PAIKAN,EHDOLLISESTI_VASTAANOTTANUT"
   )
   vastaanottotieto: Option[String], // Vastaanottotila.Vastaanottotila
   @(ApiModelProperty @field)(
-    description = "HYVAKSYTTY,HARKINNANVARAISESTI_HYVAKSYTTY,VARASIJALTA_HYVAKSYTTY,VARALLA,PERUUTETTU,PERUNUT,HYLATTY,PERUUNTUNUT,KESKEN",
+    description =
+      "HYVAKSYTTY,HARKINNANVARAISESTI_HYVAKSYTTY,VARASIJALTA_HYVAKSYTTY,VARALLA,PERUUTETTU,PERUNUT,HYLATTY,PERUUNTUNUT,KESKEN",
     allowableValues =
       "HYVAKSYTTY,HARKINNANVARAISESTI_HYVAKSYTTY,VARASIJALTA_HYVAKSYTTY,VARALLA,PERUUTETTU,PERUNUT,HYLATTY,PERUUNTUNUT,KESKEN"
   )
   valintatila: Option[String], // Valintatila.Valintatila
   @(ApiModelProperty @field)(
-    description = "EI_TEHTY,LASNA_KOKO_LUKUVUOSI,POISSA_KOKO_LUKUVUOSI,EI_ILMOITTAUTUNUT,LASNA_SYKSY,POISSA_SYKSY,LASNA,POISSA",
+    description =
+      "EI_TEHTY,LASNA_KOKO_LUKUVUOSI,POISSA_KOKO_LUKUVUOSI,EI_ILMOITTAUTUNUT,LASNA_SYKSY,POISSA_SYKSY,LASNA,POISSA",
     allowableValues =
       "EI_TEHTY,LASNA_KOKO_LUKUVUOSI,POISSA_KOKO_LUKUVUOSI,EI_ILMOITTAUTUNUT,LASNA_SYKSY,POISSA_SYKSY,LASNA,POISSA"
   )
@@ -69,10 +77,15 @@ case class ValpasHakutoive(
   koulutusOid: Option[String],
   harkinnanvaraisuus: Option[String]
 ) {}
-
+case class ValpasKoodi(
+  koodiarvo: String,
+  nimi: Map[String, String],
+  koodistoUri: String,
+  koodistoVersio: Int
+)
 case class ValpasHakemus(
-  hakutapa: String,
-  hakutyyppi: String,
+  hakutapa: ValpasKoodi,
+  hakutyyppi: ValpasKoodi,
   huoltajanNimi: Option[String],
   huoltajanPuhelinnumero: Option[String],
   huoltajanSahkoposti: Option[String],
@@ -92,8 +105,21 @@ object ValpasHakemus {
     tulos: Option[SijoitteluTulos],
     oidToHakukohde: Map[String, Hakukohde],
     oidToKoulutus: Map[String, HakukohteenKoulutukset],
-    oidToHaku: Map[String, Haku]
+    oidToHaku: Map[String, Haku],
+    hakutapa: KoodistoKoodiArvot,
+    hakutyyppi: KoodistoKoodiArvot
   ): ValpasHakemus = {
+    def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
+      val Array(koodi, versio) = uri.split("#")
+      val Array(_, arvo) = koodi.split("_")
+      ValpasKoodi(
+        koodiarvo = arvo,
+        nimi = koodisto.arvoToNimi(koodi),
+        koodistoUri = koodi,
+        koodistoVersio = versio.toInt
+      )
+    }
+
     def hakutoiveToValpasHakutoive(c: HakutoiveDTO): ValpasHakutoive = {
       val hakukohdeOid = c.koulutusId match {
         case Some(oid) => oid
@@ -157,8 +183,8 @@ object ValpasHakemus {
         val nimi = haku.nimi
 
         ValpasHakemus(
-          hakutapa = haku.hakutapaUri,
-          hakutyyppi = haku.hakutyyppiUri,
+          hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
+          hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
           huoltajanNimi = None,
           huoltajanPuhelinnumero = None,
           huoltajanSahkoposti = None,
@@ -182,8 +208,8 @@ object ValpasHakemus {
         val nimi = haku.nimi
 
         ValpasHakemus(
-          hakutapa = haku.hakutapaUri,
-          hakutyyppi = haku.hakutyyppiUri,
+          hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
+          hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
@@ -216,6 +242,7 @@ object ValpasHakemus {
 case class ValpasQuery(oppijanumerot: Set[String])
 
 class ValpasIntergration(
+  koodistoActor: KoodistoActorRef,
   tarjontaActor: TarjontaActorRef,
   hakuActor: ActorRef,
   valintaTulos: ValintaTulosActorRef,
@@ -266,11 +293,19 @@ class ValpasIntergration(
       .sequence(hakuOids.map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku]))
       .map(_.map(h => (h.oid, h)).toMap)
 
+    // (koodistoActor.actor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
+    val hakutapa =
+      (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutapa")).mapTo[KoodistoKoodiArvot]
+    val hakutyyppi =
+      (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutyyppi")).mapTo[KoodistoKoodiArvot]
+
     for {
       valintatulokset: Map[String, SijoitteluTulos] <- valintarekisteri
       oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
       oidToHaku: Map[String, Haku] <- haut
+      hakutapa: KoodistoKoodiArvot <- hakutapa
+      hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
     } yield {
       hakemukset.map(h =>
         ValpasHakemus.fromFetchedResources(
@@ -278,7 +313,9 @@ class ValpasIntergration(
           h.personOid.flatMap(valintatulokset.get),
           oidToHakukohde,
           oidToKoulutus,
-          oidToHaku
+          oidToHaku,
+          hakutapa,
+          hakutyyppi
         )
       )
     }

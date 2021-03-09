@@ -22,6 +22,13 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Kieli,
   OppijaNumeroRekisteri
 }
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetKoodi,
+  GetKoodistoKoodiArvot,
+  Koodi,
+  KoodistoActorRef,
+  KoodistoKoodiArvot
+}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{
   ChildOids,
@@ -104,6 +111,23 @@ class ValpasSpec
           }
         }
       }))
+
+      val koodisto = KoodistoActorRef(system.actorOf(Props(new Actor {
+        override def receive: Actor.Receive = { case GetKoodistoKoodiArvot(koodistoUri) =>
+          val koodit = resource[Seq[Koodi]](
+            s"/mock-data/koodisto/koodisto_$koodistoUri.json"
+          )
+          def koodiToName(k: Koodi): (String, Map[String, String]) = {
+            (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
+          }
+          sender ! KoodistoKoodiArvot(
+            koodistoUri,
+            koodit.map(_.koodiArvo),
+            koodit.map(koodiToName).toMap
+          )
+        }
+      })))
+
       val tarjonta = TarjontaActorRef(system.actorOf(Props(new Actor {
         override def receive: Actor.Receive = {
           case HakukohdeOid(oid) =>
@@ -162,6 +186,7 @@ class ValpasSpec
       )(system)
 
       val v: Future[Seq[ValpasHakemus]] = new ValpasIntergration(
+        koodisto,
         tarjonta,
         haku,
         ValintaTulosActorRef(system.actorOf(Props(new Actor {
