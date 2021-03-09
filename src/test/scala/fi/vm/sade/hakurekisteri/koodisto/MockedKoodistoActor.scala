@@ -38,12 +38,14 @@ class MockedKoodistoActor extends Actor {
             "PS",
             "TE",
             "YH"
-          )
+          ),
+          Map.empty
         )
       case "kieli" =>
         sender ! KoodistoKoodiArvot(
           koodistoUri = "kieli",
-          arvot = Seq("FI", "SV", "EN")
+          arvot = Seq("FI", "SV", "EN"),
+          Map.empty
         )
     }
   }

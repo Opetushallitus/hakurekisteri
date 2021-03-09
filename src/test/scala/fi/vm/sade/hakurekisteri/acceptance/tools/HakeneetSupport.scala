@@ -994,12 +994,14 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
                 "PS",
                 "TE",
                 "YH"
-              )
+              ),
+              Map.empty
             )
           case "kieli" =>
             sender ! KoodistoKoodiArvot(
               koodistoUri = "kieli",
-              arvot = Seq("FI", "SV", "EN")
+              arvot = Seq("FI", "SV", "EN"),
+              Map.empty
             )
         }
     }

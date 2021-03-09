@@ -1,0 +1,170 @@
+[
+  {
+    "koodiUri": "hakutapa_01",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutapa_01",
+    "version": 0,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutapa",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "01",
+    "paivitysPvm": "2013-10-28",
+    "paivittajaOid": null,
+    "voimassaAlkuPvm": "2000-01-01",
+    "voimassaLoppuPvm": null,
+    "tila": "LUONNOS",
+    "metadata": [
+      {
+        "nimi": "Yhteishaku",
+        "kuvaus": "Yhteishaku",
+        "lyhytNimi": "YH",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      },
+      {
+        "nimi": "Gemensam ansökan",
+        "kuvaus": "Gemensam ansökan",
+        "lyhytNimi": "GA",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "SV"
+      }
+    ]
+  },
+  {
+    "koodiUri": "hakutapa_04",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutapa_04",
+    "version": 0,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutapa",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "04",
+    "paivitysPvm": "2021-01-21",
+    "paivittajaOid": "1.2.246.562.24.77925329174",
+    "voimassaAlkuPvm": "2021-01-20",
+    "voimassaLoppuPvm": null,
+    "tila": "LUONNOS",
+    "metadata": [
+      {
+        "nimi": "Joustava haku",
+        "kuvaus": "Uusi tarjonta (kouta), korkeakouluilla käytössä oleva hakutapa",
+        "lyhytNimi": null,
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      }
+    ]
+  },
+  {
+    "koodiUri": "hakutapa_02",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutapa_02",
+    "version": 0,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutapa",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "02",
+    "paivitysPvm": "2013-10-28",
+    "paivittajaOid": null,
+    "voimassaAlkuPvm": "2000-01-01",
+    "voimassaLoppuPvm": null,
+    "tila": "LUONNOS",
+    "metadata": [
+      {
+        "nimi": "Separata antagningar",
+        "kuvaus": "Separata antagningar",
+        "lyhytNimi": "SA",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "SV"
+      },
+      {
+        "nimi": "Erillishaku",
+        "kuvaus": "Erillishaku",
+        "lyhytNimi": "EH",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      }
+    ]
+  },
+  {
+    "koodiUri": "hakutapa_03",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutapa_03",
+    "version": 0,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutapa",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "03",
+    "paivitysPvm": "2013-10-28",
+    "paivittajaOid": null,
+    "voimassaAlkuPvm": "2000-01-01",
+    "voimassaLoppuPvm": null,
+    "tila": "LUONNOS",
+    "metadata": [
+      {
+        "nimi": "Jatkuva haku",
+        "kuvaus": "Jatkuva haku",
+        "lyhytNimi": "JH",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      },
+      {
+        "nimi": "Fortgående ansökan",
+        "kuvaus": "Fortgående ansökan",
+        "lyhytNimi": "FA",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "SV"
+      }
+    ]
+  }
+]
