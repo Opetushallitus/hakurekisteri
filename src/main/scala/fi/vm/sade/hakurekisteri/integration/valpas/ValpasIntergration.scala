@@ -293,7 +293,6 @@ class ValpasIntergration(
       .sequence(hakuOids.map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku]))
       .map(_.map(h => (h.oid, h)).toMap)
 
-    // (koodistoActor.actor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
     val hakutapa =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutapa")).mapTo[KoodistoKoodiArvot]
     val hakutyyppi =
@@ -333,7 +332,10 @@ class ValpasIntergration(
         hakemukset: Seq[HakijaHakemus] <- hakemusService.hakemuksetForPersons(
           masterOids.values.toSet
         )
-        valpasHakemukset <- fetchValintarekisteriAndTarjonta(hakemukset)
+        valpasHakemukset <- hakemukset.isEmpty match {
+          case true  => Future.successful(Seq.empty)
+          case false => fetchValintarekisteriAndTarjonta(hakemukset)
+        }
       } yield {
         valpasHakemukset
       }).recoverWith { case e: Exception =>
