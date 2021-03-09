@@ -53,10 +53,10 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
   post("/", operation(fetchValpasDataForPersons)) {
     // shouldBeAdmin()
     val personOids = parse(request.body).extract[Set[String]]
-    val f: Future[Any] = valpasIntergration.fetch(ValpasQuery(personOids)).recoverWith {
-      case t: Throwable =>
+    val f: Future[Any] =
+      valpasIntergration.fetch(ValpasQuery(personOids)).recoverWith { case t: Throwable =>
         Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
-    }
+      }
 
     new AsyncResult() {
       override implicit def timeout: Duration = 360.seconds
