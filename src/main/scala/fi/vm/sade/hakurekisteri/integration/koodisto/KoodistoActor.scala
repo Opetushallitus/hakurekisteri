@@ -93,7 +93,12 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
       restClient
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
         .map(koodit =>
-          KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo), koodit.map(koodiToName).toMap, koodit.map(koodiToLyhytName).toMap)
+          KoodistoKoodiArvot(
+            koodistoUri,
+            koodit.map(_.koodiArvo),
+            koodit.map(koodiToName).toMap,
+            koodit.map(koodiToLyhytName).toMap
+          )
         )
         .map(Some(_))
     }
