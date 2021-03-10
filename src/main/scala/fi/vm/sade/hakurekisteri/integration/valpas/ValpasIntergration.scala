@@ -142,15 +142,15 @@ object ValpasHakemus {
       ValpasHakutoive(
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         koulutusNimi = Map(
-          "fi" -> knimi.get("kieli_fi"),
-          "sv" -> knimi.get("kieli_sv"),
-          "en" -> knimi.get("kieli_en")
+          "fi" -> knimi.get("kieli_fi").filter(_.isEmpty),
+          "sv" -> knimi.get("kieli_sv").filter(_.isEmpty),
+          "en" -> knimi.get("kieli_en").filter(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         hakukohdeNimi = Map(
-          "fi" -> nimi.get("kieli_fi"),
-          "sv" -> nimi.get("kieli_sv"),
-          "en" -> nimi.get("kieli_en")
+          "fi" -> nimi.get("kieli_fi").filter(_.isEmpty),
+          "sv" -> nimi.get("kieli_sv").filter(_.isEmpty),
+          "en" -> nimi.get("kieli_en").filter(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         pisteet = tulos.flatMap(t => t.pisteet.get(key)),
