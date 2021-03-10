@@ -332,11 +332,12 @@ class ValpasIntergration(
         hakemukset: Seq[HakijaHakemus] <- hakemusService.hakemuksetForPersons(
           masterOids.values.toSet
         )
-        valpasHakemukset <- if (hakemukset.isEmpty) {
-          Future.successful(Seq.empty)
-        } else {
-          fetchValintarekisteriAndTarjonta(hakemukset)
-        }
+        valpasHakemukset <-
+          if (hakemukset.isEmpty) {
+            Future.successful(Seq.empty)
+          } else {
+            fetchValintarekisteriAndTarjonta(hakemukset)
+          }
       } yield {
         valpasHakemukset
       }).recoverWith { case e: Exception =>
