@@ -46,6 +46,7 @@ object ValpasHakemusTila extends Enumeration {
 }
 
 case class ValpasHakutoive(
+  alinValintaPistemaara: Option[Int],
   hakukohdeNimi: Map[String, String],
   koulutusNimi: Map[String, String],
   pisteet: Option[BigDecimal],
@@ -139,6 +140,7 @@ object ValpasHakemus {
       val knimi = koulutus.koulutusohjelma.tekstis
 
       ValpasHakutoive(
+        alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         koulutusNimi = Map(
           "fi" -> knimi.get("kieli_fi"),
           "sv" -> knimi.get("kieli_sv"),
@@ -163,7 +165,6 @@ object ValpasHakemus {
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä
         // mahdollinen kielitaidon arviointi
         // mahdollinen lisänäyttö
-        // yhteispistemäärä
         // alimman hakukohteeseen hyväksytyn pistemäärä
         hakukohdeOrganisaatio = c.organizationOid match {
           case Some(oid) => oid
