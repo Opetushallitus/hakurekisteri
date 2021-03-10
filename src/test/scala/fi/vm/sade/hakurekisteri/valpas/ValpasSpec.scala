@@ -120,10 +120,14 @@ class ValpasSpec
           def koodiToName(k: Koodi): (String, Map[String, String]) = {
             (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
           }
+          def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
+            (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
+          }
           sender ! KoodistoKoodiArvot(
             koodistoUri,
             koodit.map(_.koodiArvo),
-            koodit.map(koodiToName).toMap
+            koodit.map(koodiToName).toMap,
+            koodit.map(koodiToLyhytName).toMap
           )
         }
       })))

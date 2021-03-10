@@ -962,7 +962,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             q.koodiUri.split("_").last.split("#").head.toUpperCase,
             q.koodiUri,
             Koodisto(q.koodistoUri),
-            Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))
+            Seq(KoodiMetadata(q.koodiUri.capitalize, "FI", "FIN"))
           )
         )
       case q: GetKoodistoKoodiArvot =>
@@ -1000,12 +1000,14 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
                 "TE",
                 "YH"
               ),
+              Map.empty,
               Map.empty
             )
           case "kieli" =>
             sender ! KoodistoKoodiArvot(
               koodistoUri = "kieli",
               arvot = Seq("FI", "SV", "EN"),
+              Map.empty,
               Map.empty
             )
         }
@@ -1026,7 +1028,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None
           ),
           ValintaTulosHakutoive(
             "1.11.1",
@@ -1035,7 +1038,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None
           )
         )
       ),
@@ -1049,7 +1053,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None
           ),
           ValintaTulosHakutoive(
             "1.11.2",
@@ -1058,7 +1063,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None
           )
         )
       ),
@@ -1072,7 +1078,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None
           )
         )
       )
