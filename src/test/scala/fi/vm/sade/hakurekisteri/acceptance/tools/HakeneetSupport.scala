@@ -928,14 +928,16 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       Map.empty,
       Seq(),
       None,
-      Some(Set("1.2.246.562.10.39920288212"))
+      Some(Set("1.2.246.562.10.39920288212")),
+      None
     )
   val ataruHakukohde2 = Hakukohde(
     "1.2.246.562.20.44085996724",
     Map.empty,
     Seq(),
     None,
-    Some(Set("1.2.246.562.10.2014041814420657444022"))
+    Some(Set("1.2.246.562.10.2014041814420657444022")),
+    None
   )
 
   def getHakukohde(oid: String): Option[Hakukohde] = oid match {

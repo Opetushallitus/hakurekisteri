@@ -68,7 +68,8 @@ case class Hakukohde(
   hakukohteenNimet: Map[String, String],
   hakukohdeKoulutusOids: Seq[String],
   ulkoinenTunniste: Option[String],
-  tarjoajaOids: Option[Set[String]]
+  tarjoajaOids: Option[Set[String]],
+  alinValintaPistemaara: Option[Int]
 )
 case class Koulutusohjelma(tekstis: Map[String, String])
 case class Hakukohteenkoulutus(
