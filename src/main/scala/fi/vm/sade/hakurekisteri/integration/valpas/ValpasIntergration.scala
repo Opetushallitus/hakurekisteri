@@ -73,6 +73,7 @@ case class ValpasHakutoive(
   hakutoivenumero: Int,
   hakukohdeOid: String,
   hakukohdeKoulutuskoodi: String,
+  varasijanumero: Option[Int],
   hakukohdeOrganisaatio: String,
   koulutusOid: Option[String],
   harkinnanvaraisuus: Option[String]
@@ -155,13 +156,13 @@ object ValpasHakemus {
         hakutoivenumero = c.preferenceNumber,
         hakukohdeOid = hakukohdeOid,
         hakukohdeKoulutuskoodi = koulutus.tkKoulutuskoodi,
+        varasijanumero = tulos.flatMap(t => t.varasijanumero.get(key).flatten),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä
         // mahdollinen kielitaidon arviointi
         // mahdollinen lisänäyttö
         // yhteispistemäärä
         // alimman hakukohteeseen hyväksytyn pistemäärä
-        // varasijanumero, jos varalla // TODO
         hakukohdeOrganisaatio = c.organizationOid match {
           case Some(oid) => oid
           case None =>
