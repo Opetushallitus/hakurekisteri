@@ -81,6 +81,7 @@ case class ValpasHakutoive(
 case class ValpasKoodi(
   koodiarvo: String,
   nimi: Map[String, String],
+  lyhytNimi: Map[String, String],
   koodistoUri: String,
   koodistoVersio: Int
 )
@@ -116,6 +117,7 @@ object ValpasHakemus {
       ValpasKoodi(
         koodiarvo = arvo,
         nimi = koodisto.arvoToNimi(koodi),
+        lyhytNimi = koodisto.arvoToLyhytNimi(koodi),
         koodistoUri = koodi,
         koodistoVersio = versio.toInt
       )

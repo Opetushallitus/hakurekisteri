@@ -122,7 +122,8 @@ class KkHakijaServiceSpec
                 Vastaanottotila.KESKEN,
                 HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
                 None,
-                "1.2.jonoOid"
+                "1.2.jonoOid",
+                None
               )
             )
           )
@@ -276,6 +277,7 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(
@@ -296,6 +298,7 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_SYKSY),
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset = Await.result(
@@ -328,6 +331,7 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset = Await.result(
