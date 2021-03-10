@@ -332,9 +332,10 @@ class ValpasIntergration(
         hakemukset: Seq[HakijaHakemus] <- hakemusService.hakemuksetForPersons(
           masterOids.values.toSet
         )
-        valpasHakemukset <- hakemukset.isEmpty match {
-          case true  => Future.successful(Seq.empty)
-          case false => fetchValintarekisteriAndTarjonta(hakemukset)
+        valpasHakemukset <- if (hakemukset.isEmpty) {
+          Future.successful(Seq.empty)
+        } else {
+          fetchValintarekisteriAndTarjonta(hakemukset)
         }
       } yield {
         valpasHakemukset
