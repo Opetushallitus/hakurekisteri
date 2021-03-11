@@ -125,11 +125,11 @@ object ValpasHakemus {
     }
 
     def hakutoiveToValpasHakutoive(c: HakutoiveDTO): ValpasHakutoive = {
-      val hakukohdeOid = c.koulutusId match {
+      val hakukohdeOid = c.koulutusId.filterNot(_.isEmpty) match {
         case Some(oid) => oid
         case None =>
           throw new RuntimeException(
-            s"Hakemukselle ${hakemus.oid} ei ole hakutoiveen OID-tunnistetta!"
+            s"Hakijalla ${hakemus.personOid.get} ei ole hakutoiveen OID-tunnistetta hakemuksella ${hakemus.oid}!"
           )
       }
 
