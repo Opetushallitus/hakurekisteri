@@ -260,8 +260,8 @@ class ValpasIntergration(
     hakemukset: Seq[HakijaHakemus]
   ): Future[Seq[ValpasHakemus]] = {
     val hakukohdeOids: Set[String] =
-      hakemukset.flatMap(_.hakutoiveet.getOrElse(Seq.empty)).flatMap(h => h.koulutusId).toSet
-    val hakuOids: Set[String] = hakemukset.map(_.applicationSystemId).toSet
+      hakemukset.flatMap(_.hakutoiveet.getOrElse(Seq.empty)).flatMap(h => h.koulutusId).toSet.filterNot(_.isEmpty)
+    val hakuOids: Set[String] = hakemukset.map(_.applicationSystemId).toSet.filterNot(_.isEmpty)
     def hakemusToValintatulosQuery(h: HakijaHakemus): HakemuksenValintatulos =
       HakemuksenValintatulos(h.applicationSystemId, h.oid)
 
