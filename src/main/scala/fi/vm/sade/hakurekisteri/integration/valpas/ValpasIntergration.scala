@@ -357,8 +357,10 @@ class ValpasIntergration(
                   )
                 )
               } else {
-                Future.successful(s.map { case Success(value) =>
-                  value
+                Future.successful(s.flatMap {
+                  case Success(value) =>
+                    Some(value)
+                  case _ => None
                 })
               }
             })
