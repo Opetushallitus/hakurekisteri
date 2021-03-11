@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory
 import scala.annotation.meta.field
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 object ValpasHakemusTila extends Enumeration {
   type ValpasHakemusTila = Value
@@ -258,7 +259,7 @@ class ValpasIntergration(
 
   def fetchValintarekisteriAndTarjonta(
     hakemukset: Seq[HakijaHakemus]
-  ): Future[Seq[ValpasHakemus]] = {
+  ): Future[Seq[Try[ValpasHakemus]]] = {
     val hakukohdeOids: Set[String] =
       hakemukset
         .flatMap(_.hakutoiveet.getOrElse(Seq.empty))
@@ -314,14 +315,16 @@ class ValpasIntergration(
       hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
     } yield {
       hakemukset.map(h =>
-        ValpasHakemus.fromFetchedResources(
-          h,
-          h.personOid.flatMap(valintatulokset.get),
-          oidToHakukohde,
-          oidToKoulutus,
-          oidToHaku,
-          hakutapa,
-          hakutyyppi
+        Try(
+          ValpasHakemus.fromFetchedResources(
+            h,
+            h.personOid.flatMap(valintatulokset.get),
+            oidToHakukohde,
+            oidToKoulutus,
+            oidToHaku,
+            hakutapa,
+            hakutyyppi
+          )
         )
       )
     }
@@ -343,11 +346,24 @@ class ValpasIntergration(
           if (hakemukset.isEmpty) {
             Future.successful(Seq.empty)
           } else {
-            fetchValintarekisteriAndTarjonta(hakemukset)
+            fetchValintarekisteriAndTarjonta(hakemukset).flatMap(s => {
+              if (s.exists(_.isFailure)) {
+                Future.failed(
+                  new RuntimeException(
+                    s.flatMap {
+                      case Failure(x) => Some(x.getMessage)
+                      case _          => None
+                    }.mkString(", ")
+                  )
+                )
+              } else {
+                Future.successful(s.map { case Success(value) =>
+                  value
+                })
+              }
+            })
           }
-      } yield {
-        valpasHakemukset
-      }).recoverWith { case e: Exception =>
+      } yield valpasHakemukset).recoverWith { case e: Exception =>
         logger.error(s"Failed to fetch Valpas-tiedot:", e)
         Future.failed(e)
       }
