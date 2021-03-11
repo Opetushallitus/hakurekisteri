@@ -99,7 +99,7 @@ case class ValpasHakemus(
   hakuNimi: Map[String, String],
   email: String,
   matkapuhelin: String,
-  osoite: String,
+  osoite: Option[String],
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
 object ValpasHakemus {
@@ -199,7 +199,7 @@ object ValpasHakemus {
             .flatMap(kv => kv._2.map(k => (kv._1, k))),
           hakuOid = a.applicationSystemId,
           matkapuhelin = a.matkapuhelin, // TODO
-          osoite = s"${a.lahiosoite}, ${a.postinumero} ${a.postitoimipaikka}",
+          osoite = Some(s"${a.lahiosoite}, ${a.postinumero} ${a.postitoimipaikka}"),
           email = a.email,
           hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
         )
@@ -234,8 +234,7 @@ object ValpasHakemus {
                 case _ =>
                   None
               }
-            )
-            .get,
+            ),
           hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
         )
       }
