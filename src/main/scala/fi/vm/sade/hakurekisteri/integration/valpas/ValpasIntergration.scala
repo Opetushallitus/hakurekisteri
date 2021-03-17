@@ -100,7 +100,9 @@ case class ValpasHakemus(
   hakuNimi: Map[String, String],
   email: String,
   matkapuhelin: String,
-  osoite: Option[String],
+  postinumero: String,
+  lahiosoite: String,
+  postitoimipaikka: String,
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
 object ValpasHakemus {
@@ -200,7 +202,9 @@ object ValpasHakemus {
             .flatMap(kv => kv._2.map(k => (kv._1, k))),
           hakuOid = a.applicationSystemId,
           matkapuhelin = a.matkapuhelin, // TODO
-          osoite = Some(s"${a.lahiosoite}, ${a.postinumero} ${a.postitoimipaikka}"),
+          postinumero = a.postinumero,
+          lahiosoite = a.lahiosoite,
+          postitoimipaikka = a.postitoimipaikka.getOrElse(""),
           email = a.email,
           hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
         )
@@ -227,15 +231,9 @@ object ValpasHakemus {
           matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
-          osoite = h.henkilotiedot
-            .flatMap(a =>
-              (a.lahiosoite, a.Postinumero, a.Postitoimipaikka) match {
-                case (Some(lahiosoite), Some(postinumero), Some(postitoimipaikka)) =>
-                  Some(s"${lahiosoite}, ${postinumero} ${postitoimipaikka}")
-                case _ =>
-                  None
-              }
-            ),
+          postinumero = h.henkilotiedot.flatMap(_.Postinumero).getOrElse(""),
+          lahiosoite = h.henkilotiedot.flatMap(_.lahiosoite).getOrElse(""),
+          postitoimipaikka = h.henkilotiedot.flatMap(_.Postitoimipaikka).getOrElse(""),
           hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
         )
       }
