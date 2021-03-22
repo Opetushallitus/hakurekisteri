@@ -130,7 +130,7 @@ object ValpasHakemus {
       val Array(koodi, versio) = uri.split("#")
       val Array(_, arvo) = koodi.split("_")
       ValpasKoodi(
-        koodiarvo = arvo,
+        koodiarvo = koodisto.koodistoUri,
         nimi = koodisto.arvoToNimi(koodi),
         lyhytNimi = koodisto.arvoToLyhytNimi(koodi),
         koodistoUri = koodi,
