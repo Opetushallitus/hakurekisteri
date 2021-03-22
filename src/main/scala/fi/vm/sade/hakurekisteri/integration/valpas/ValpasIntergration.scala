@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.valpas
 
+import java.time.ZoneId
+import java.util.TimeZone
 import java.util.concurrent.Executors
 
 import akka.actor.ActorRef
@@ -31,6 +33,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   ValintaTulosActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.valpas
+import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 
@@ -38,6 +41,7 @@ import scala.annotation.meta.field
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 object ValpasHakemusTila extends Enumeration {
   type ValpasHakemusTila = Value
@@ -93,7 +97,10 @@ case class ValpasHakemus(
   huoltajanNimi: Option[String],
   huoltajanPuhelinnumero: Option[String],
   huoltajanSahkoposti: Option[String],
-  muokattu: String,
+  @(ApiModelProperty @field)(
+    description = "dd.MM.yyyy HH:mm"
+  )
+  haunAlkamispaivamaara: String,
   oppijaOid: String,
   hakemusOid: String,
   hakuOid: String,
@@ -106,6 +113,10 @@ case class ValpasHakemus(
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
 object ValpasHakemus {
+  private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
+  private val Formatter = DateTimeFormat.forPattern("dd.MM.yyyy HH:mm").withZone(HelsinkiTimeZone)
+  def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
+
   def fromFetchedResources(
     hakemus: HakijaHakemus,
     tulos: Option[SijoitteluTulos],
@@ -195,7 +206,7 @@ object ValpasHakemus {
           huoltajanNimi = None,
           huoltajanPuhelinnumero = None,
           huoltajanSahkoposti = None,
-          muokattu = "", // TODO
+          haunAlkamispaivamaara = formatHakuAlkamispaivamaara(haku.aika.alku),
           oppijaOid = a.personOid.get,
           hakemusOid = a.oid,
           hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en)
@@ -222,7 +233,7 @@ object ValpasHakemus {
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
-          muokattu = "", // TODO
+          haunAlkamispaivamaara = formatHakuAlkamispaivamaara(haku.aika.alku),
           oppijaOid = h.personOid.get,
           hakemusOid = h.oid,
           hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en).flatMap(kv =>
