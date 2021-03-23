@@ -98,7 +98,7 @@ case class ValpasHakemus(
   huoltajanPuhelinnumero: Option[String],
   huoltajanSahkoposti: Option[String],
   @(ApiModelProperty @field)(
-    description = "dd.MM.yyyy HH:mm"
+    description = "yyyy-MM-dd'T'HH:mm:ss"
   )
   haunAlkamispaivamaara: String,
   oppijaOid: String,
@@ -114,7 +114,7 @@ case class ValpasHakemus(
 ) {}
 object ValpasHakemus {
   private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
-  private val Formatter = DateTimeFormat.forPattern("dd.MM.yyyy HH:mm").withZone(HelsinkiTimeZone)
+  private val Formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
 
   def fromFetchedResources(
