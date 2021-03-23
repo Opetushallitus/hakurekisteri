@@ -155,18 +155,18 @@ object ValpasHakemus {
       val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
       val knimi = koulutus.koulutusohjelma.tekstis
 
-      ValpasHakutoive(
+      val h = ValpasHakutoive(
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         koulutusNimi = Map(
-          "fi" -> knimi.get("kieli_fi").filter(_.isEmpty),
-          "sv" -> knimi.get("kieli_sv").filter(_.isEmpty),
-          "en" -> knimi.get("kieli_en").filter(_.isEmpty)
+          "fi" -> knimi.get("kieli_fi").filterNot(_.isEmpty),
+          "sv" -> knimi.get("kieli_sv").filterNot(_.isEmpty),
+          "en" -> knimi.get("kieli_en").filterNot(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         hakukohdeNimi = Map(
-          "fi" -> nimi.get("kieli_fi").filter(_.isEmpty),
-          "sv" -> nimi.get("kieli_sv").filter(_.isEmpty),
-          "en" -> nimi.get("kieli_en").filter(_.isEmpty)
+          "fi" -> nimi.get("kieli_fi").filterNot(_.isEmpty),
+          "sv" -> nimi.get("kieli_sv").filterNot(_.isEmpty),
+          "en" -> nimi.get("kieli_en").filterNot(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         pisteet = tulos.flatMap(t => t.pisteet.get(key)),
@@ -192,6 +192,7 @@ object ValpasHakemus {
         koulutusOid = hakukohde.hakukohdeKoulutusOids.headOption,
         harkinnanvaraisuus = c.discretionaryFollowUp
       )
+      h
     }
 
     hakemus match {
