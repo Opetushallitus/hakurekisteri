@@ -130,13 +130,14 @@ object ValpasHakemus {
     def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
       val Array(koodi, versio) = uri.split("#")
       val Array(_, arvo) = koodi.split("_")
-      ValpasKoodi(
-        koodiarvo = koodisto.koodistoUri,
+      val k = ValpasKoodi(
+        koodiarvo = arvo,
         nimi = koodisto.arvoToNimi(koodi),
         lyhytNimi = koodisto.arvoToLyhytNimi(koodi),
-        koodistoUri = koodi,
+        koodistoUri = koodisto.koodistoUri,
         koodistoVersio = versio.toInt
       )
+      k
     }
 
     def hakutoiveToValpasHakutoive(c: HakutoiveDTO): ValpasHakutoive = {
