@@ -114,7 +114,8 @@ case class ValpasHakemus(
 ) {}
 object ValpasHakemus {
   private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
-  private val Formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
+  private val Formatter =
+    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
 
   def fromFetchedResources(
