@@ -498,6 +498,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
   }
   val valintalaskentaConfig = new ServiceConfig(
+    casUrl = casUrl,
     serviceUrl = valintalaskentaServiceUrl,
     user = serviceUser,
     password = servicePassword,
