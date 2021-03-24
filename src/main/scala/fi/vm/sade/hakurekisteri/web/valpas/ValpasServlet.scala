@@ -51,7 +51,7 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
   }
 
   post("/", operation(fetchValpasDataForPersons)) {
-    // shouldBeAdmin()
+    shouldBeAdmin()
     val personOids = parse(request.body).extract[Set[String]]
     val f: Future[Any] =
       valpasIntergration.fetch(ValpasQuery(personOids)).recoverWith { case t: Throwable =>
