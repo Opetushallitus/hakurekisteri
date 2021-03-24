@@ -197,10 +197,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   system.registerOnTermination(() => {
     restEc.shutdown()
     vtsEc.shutdown()
+    laskentaEc.shutdown()
     vrEc.shutdown()
     virtaEc.shutdown()
     restEc.awaitTermination(3, TimeUnit.SECONDS)
     vtsEc.awaitTermination(3, TimeUnit.SECONDS)
+    laskentaEc.awaitTermination(3, TimeUnit.SECONDS)
     vrEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaResourceEc.awaitTermination(3, TimeUnit.SECONDS)
