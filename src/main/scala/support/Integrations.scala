@@ -81,6 +81,7 @@ trait Integrations {
   val valintarekisteri: ValintarekisteriActorRef
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
+  val valintalaskentaClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
   val koskiService: IKoskiService
   val valintaperusteetService: IValintaperusteetService
@@ -160,8 +161,16 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val proxies = new MockProxies
   override val hakemusClient = null
+  override val valintalaskentaClient = null
   override val valpasIntegration =
-    new ValpasIntergration(koodisto, tarjonta, haut, valintaTulos, hakemusService)
+    new ValpasIntergration(
+      valintalaskentaClient,
+      koodisto,
+      tarjonta,
+      haut,
+      valintaTulos,
+      hakemusService
+    )
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
@@ -217,6 +226,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient =
     new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
+  val valintalaskentaClient =
+    new VirkailijaRestClient(config.integrations.valintalaskentaConfig, None)(vtsEc, system)
   private val valintarekisteriClient =
     new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
   private val koskiClient =
@@ -340,7 +351,14 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
 
   override val valpasIntegration =
-    new ValpasIntergration(koodisto, tarjonta, haut, valintaTulos, hakemusService)
+    new ValpasIntergration(
+      valintalaskentaClient,
+      koodisto,
+      tarjonta,
+      haut,
+      valintaTulos,
+      hakemusService
+    )
 
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,

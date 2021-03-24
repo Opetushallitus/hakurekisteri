@@ -1,0 +1,1698 @@
+[
+  {
+    "hakuOid": "1.2.246.562.29.70000333388",
+    "hakemusOid": "1.2.246.562.11.00000000000000446632",
+    "hakijaOid": "1.2.246.562.24.82344311114",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1612430001560,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.12060097362",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1557304293969-9077028686457633668",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15573042944076440813322343459437",
+                "valintakoeTunniste": "luonnonvara_osio_2_kirjoitelma_k2019",
+                "nimi": "Luonnonvara-alan viestinnän osio 2: kirjoitelma 0-10 p., väh. 3,5 p",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1557304294405-5105959324182410931",
+                "valintakoeTunniste": "luonnonvara_matematiikka_k2019",
+                "nimi": "Luonnonvara-alan valintakoe",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15573042944065039927797739742529",
+                "valintakoeTunniste": "luonnonvara_osio_1_motivaatio_k2019",
+                "nimi": "Luonnonvara-alan viestinnän osio 1: motivaatio 0-10 p. väh. 3,5p",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.743491195410",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1543492269749-8249029491899027644",
+            "valinnanVaiheJarjestysluku": 0,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1543492270064-2123949095096578879",
+                "valintakoeTunniste": "2019-59eaf70a-2e1e-339a-83af-ba913c383461",
+                "nimi": "Teht 15",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270066-8420660952092546049",
+                "valintakoeTunniste": "2019-db987aef-dc1d-05d4-8dc5-f1804d6ce421",
+                "nimi": "Teht 17",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700776069099851596774021",
+                "valintakoeTunniste": "2019-58aab512-a55d-30d6-24e7-d1290dbead99",
+                "nimi": "Teht 13",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700741664927011480620406",
+                "valintakoeTunniste": "2019-a06d5e3c-7162-422b-438c-cc03013add85",
+                "nimi": "Teht 10",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270056-2131782194368165932",
+                "valintakoeTunniste": "2019-3e3324c2-4de3-c95b-fc9b-c9c9f2f02dd2",
+                "nimi": "Teht 01A",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270070-363304438215074617",
+                "valintakoeTunniste": "2019-b628b1cf-88d8-8eb5-aebf-e6421790f51b",
+                "nimi": "Teht 05",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270078-6960237777915867349",
+                "valintakoeTunniste": "2019-ff5a93c9-429c-9756-4391-da619922f981",
+                "nimi": "Vastaajakoodi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270063-960329583004057580",
+                "valintakoeTunniste": "2019-fa77f0d0-b88f-adbe-cf5f-e3399582aa2b",
+                "nimi": "Teht 14",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700756839355504781659097",
+                "valintakoeTunniste": "2019-d8ccadde-f2f1-0eba-32e9-25299acf2409",
+                "nimi": "Teht 11",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700594037713696812793419",
+                "valintakoeTunniste": "2019-0761f2fb-024f-608c-38b5-600bf6a63ca0",
+                "nimi": "Teht 01B",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270076-4372810143655109402",
+                "valintakoeTunniste": "2019-9e832db0-4122-83f5-b625-331a049856a0",
+                "nimi": "Teht 12",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270071-2241652873530307302",
+                "valintakoeTunniste": "2019-6e6efcbf-5259-9f1a-6912-adf1fb53206e",
+                "nimi": "Teht 06",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270080534685812913418628",
+                "valintakoeTunniste": "2019-1837a881-ecbe-0bd5-f6d6-d300544c02a5",
+                "nimi": "Teht 19",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700733733723464012301303",
+                "valintakoeTunniste": "2019-8842be91-78b4-0af1-d24c-22faa1dabebf",
+                "nimi": "Teht 08",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270069589660558561405244",
+                "valintakoeTunniste": "2019-0fa48bee-8e17-3560-a341-be4371b9f306",
+                "nimi": "Teht 04",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1557915026168-4929841430506408249",
+                "valintakoeTunniste": "2019-06c19612-ab73-e545-925f-9185e5045cb1",
+                "nimi": "1: Kielitaito suomi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700671124321725243748018",
+                "valintakoeTunniste": "2019-44497e37-44f1-6e4a-1344-af16a3ba9b53",
+                "nimi": "Teht 18",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700627382502413608994821",
+                "valintakoeTunniste": "2019-b7455907-bd9e-e8cf-2c1c-28d735504b21",
+                "nimi": "Teht 02",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270079-12099227345349855",
+                "valintakoeTunniste": "2019-ca8da2d2-adc5-533e-8064-72f527cbff2f",
+                "nimi": "Teht 09",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270065-6901903308534746362",
+                "valintakoeTunniste": "2019-ed3ffeca-53ca-37d0-2766-c95f2a7667c2",
+                "nimi": "Teht 16",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15579149746988830136901649950730",
+                "valintakoeTunniste": "2019-241f2a48-807a-6dff-1333-f95118b4b6ed",
+                "nimi": "1: IB/EB/RP/vanhaYO-pisteet",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15434922700602203769013004709735",
+                "valintakoeTunniste": "2019-cf6a5242-33f8-57aa-4007-e866733ccf0b",
+                "nimi": "Teht 01C",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270072-9083923160733137051",
+                "valintakoeTunniste": "2019-7164dee1-9b8d-ea56-41ae-8ac1ae18c575",
+                "nimi": "Teht 07",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1543492270068-8764221656838242510",
+                "valintakoeTunniste": "2019-97db9e6c-7d7f-ee38-8426-4dedd059139c",
+                "nimi": "Teht 03",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.652840958110",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1547803305543-2993830019731861055",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1547803306097-4650242719478052596",
+                "valintakoeTunniste": "luonnonvara_osio_2_kirjoitelma_k2019",
+                "nimi": "Luonnonvara-alan viestinnän osio 2: kirjoitelma 0-10 p., väh. 3,5 p",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552294154631-8165889933966423694",
+                "valintakoeTunniste": "amk_kielikoe_2019_suomi",
+                "nimi": "Suomen kielen koe",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": false
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1547803306098-2924276019636754490",
+                "valintakoeTunniste": "luonnonvara_matematiikka_k2019",
+                "nimi": "Luonnonvara-alan valintakoe",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1547803306100-5347760063341930749",
+                "valintakoeTunniste": "luonnonvara_osio_1_motivaatio_k2019",
+                "nimi": "Luonnonvara-alan viestinnän osio 1: motivaatio 0-10 p. väh. 3,5p",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.19277070181",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "15529904362138966393205872054191",
+            "valinnanVaiheJarjestysluku": 0,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15529904362855822417525728940775",
+                "valintakoeTunniste": "2019-59eaf70a-2e1e-339a-83af-ba913c383461",
+                "nimi": "Teht 15",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362868864326899043371758",
+                "valintakoeTunniste": "2019-db987aef-dc1d-05d4-8dc5-f1804d6ce421",
+                "nimi": "Teht 17",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436292-3863897543888340609",
+                "valintakoeTunniste": "2019-58aab512-a55d-30d6-24e7-d1290dbead99",
+                "nimi": "Teht 13",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436290686454848155182352",
+                "valintakoeTunniste": "2019-a06d5e3c-7162-422b-438c-cc03013add85",
+                "nimi": "Teht 10",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362815813588901525792476",
+                "valintakoeTunniste": "2019-3e3324c2-4de3-c95b-fc9b-c9c9f2f02dd2",
+                "nimi": "Teht 01A",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436288-5378594120951836033",
+                "valintakoeTunniste": "2019-b628b1cf-88d8-8eb5-aebf-e6421790f51b",
+                "nimi": "Teht 05",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362937029807827925517073",
+                "valintakoeTunniste": "2019-ff5a93c9-429c-9756-4391-da619922f981",
+                "nimi": "Vastaajakoodi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436284-3893528576632518293",
+                "valintakoeTunniste": "2019-fa77f0d0-b88f-adbe-cf5f-e3399582aa2b",
+                "nimi": "Teht 14",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436291-1595293106596441445",
+                "valintakoeTunniste": "2019-d8ccadde-f2f1-0eba-32e9-25299acf2409",
+                "nimi": "Teht 11",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436282-3154476059751829107",
+                "valintakoeTunniste": "2019-0761f2fb-024f-608c-38b5-600bf6a63ca0",
+                "nimi": "Teht 01B",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362928345184097984844868",
+                "valintakoeTunniste": "2019-9e832db0-4122-83f5-b625-331a049856a0",
+                "nimi": "Teht 12",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362894382509628034261743",
+                "valintakoeTunniste": "2019-6e6efcbf-5259-9f1a-6912-adf1fb53206e",
+                "nimi": "Teht 06",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436294-7415899821024757585",
+                "valintakoeTunniste": "2019-1837a881-ecbe-0bd5-f6d6-d300544c02a5",
+                "nimi": "Teht 19",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436290-791946485349644926",
+                "valintakoeTunniste": "2019-8842be91-78b4-0af1-d24c-22faa1dabebf",
+                "nimi": "Teht 08",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436288475213040282031568",
+                "valintakoeTunniste": "2019-0fa48bee-8e17-3560-a341-be4371b9f306",
+                "nimi": "Teht 04",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1557915026123-890414787870485493",
+                "valintakoeTunniste": "2019-06c19612-ab73-e545-925f-9185e5045cb1",
+                "nimi": "1: Kielitaito suomi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362865452155230485303953",
+                "valintakoeTunniste": "2019-44497e37-44f1-6e4a-1344-af16a3ba9b53",
+                "nimi": "Teht 18",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362837680177102123723200",
+                "valintakoeTunniste": "2019-b7455907-bd9e-e8cf-2c1c-28d735504b21",
+                "nimi": "Teht 02",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362931860452639787527067",
+                "valintakoeTunniste": "2019-ca8da2d2-adc5-533e-8064-72f527cbff2f",
+                "nimi": "Teht 09",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436285-7071868350023882326",
+                "valintakoeTunniste": "2019-ed3ffeca-53ca-37d0-2766-c95f2a7667c2",
+                "nimi": "Teht 16",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15579149746537922506979172441013",
+                "valintakoeTunniste": "2019-241f2a48-807a-6dff-1333-f95118b4b6ed",
+                "nimi": "1: IB/EB/RP/vanhaYO-pisteet",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362834050927583895894789",
+                "valintakoeTunniste": "2019-cf6a5242-33f8-57aa-4007-e866733ccf0b",
+                "nimi": "Teht 01C",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1552990436289-8404311139250497321",
+                "valintakoeTunniste": "2019-7164dee1-9b8d-ea56-41ae-8ac1ae18c575",
+                "nimi": "Teht 07",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15529904362878111244004647195296",
+                "valintakoeTunniste": "2019-97db9e6c-7d7f-ee38-8426-4dedd059139c",
+                "nimi": "Teht 03",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakemusOid": "1.2.246.562.11.00000000000000457462",
+    "hakijaOid": "1.2.246.562.24.24754182124",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1596815318758,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.52984708066",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1584685439520-7783614786624275788",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1584685439680-7039022254713555358",
+                "valintakoeTunniste": "ab02486b-df0e-dc2f-fc59-c41e6f4e967f",
+                "nimi": "Valintakurssi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.31495434115",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1584618993370-7027127792362320435",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1584619542234118898675181817408",
+                "valintakoeTunniste": "ae627e88-ffc7-0c9c-b18a-e2246bc66581",
+                "nimi": "Valintakurssi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakemusOid": "1.2.246.562.11.00000000000000414107",
+    "hakijaOid": "1.2.246.562.24.47566989437",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1596816750394,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.77871331433",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1589351284671-4467268026903564944",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1589351378346957260041604194147",
+                "valintakoeTunniste": "hamkin-rakennusalan-tyokokemuspisteet-k2020",
+                "nimi": "Rkm monimuodon työkokemuspisteet",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          },
+          {
+            "valinnanVaiheOid": "15888594117982393322414737498327",
+            "valinnanVaiheJarjestysluku": 3,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15917040198812517117443495372467",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_suomi",
+                "nimi": "Kieli- ja viestintätaidot, suomi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15917042297644572213165370350063",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_matemaattiset",
+                "nimi": "Matemaattiset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704376524-4943107390491351467",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_luonnontieteelliset",
+                "nimi": "Matemaattis-luonnontieteelliset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704163877-1443755788868922532",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_paatoksenteko",
+                "nimi": "Päätöksentekotaidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704046748633374896909250908",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_englanti",
+                "nimi": "Kieli- ja viestintätaidot, englanti",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakemusOid": "1.2.246.562.11.00000000000000545944",
+    "hakijaOid": "1.2.246.562.24.48771154409",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1596816473753,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.734815931410",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1588859438117-3192441965380497752",
+            "valinnanVaiheJarjestysluku": 2,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1591704020765-7208864745060618144",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_suomi",
+                "nimi": "Kieli- ja viestintätaidot, suomi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15917042309142333345023204515897",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_matemaattiset",
+                "nimi": "Matemaattiset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15917043773354059024180843380200",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_luonnontieteelliset",
+                "nimi": "Matemaattis-luonnontieteelliset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704165480-8898406128335177142",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_paatoksenteko",
+                "nimi": "Päätöksentekotaidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704047870-4671213464966072441",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_englanti",
+                "nimi": "Kieli- ja viestintätaidot, englanti",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.49428200098",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1588859438716-7062524163457863091",
+            "valinnanVaiheJarjestysluku": 2,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1591704020499-5118950694856734610",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_suomi",
+                "nimi": "Kieli- ja viestintätaidot, suomi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704230576-2374077569208284629",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_matemaattiset",
+                "nimi": "Matemaattiset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15917043771331433966224870118906",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_luonnontieteelliset",
+                "nimi": "Matemaattis-luonnontieteelliset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704164916-4797064076820960833",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_paatoksenteko",
+                "nimi": "Päätöksentekotaidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704047576-3810390340244552870",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_englanti",
+                "nimi": "Kieli- ja viestintätaidot, englanti",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.88741880616",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1588859440926-8266912165381006945",
+            "valinnanVaiheJarjestysluku": 2,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15917040203886895958319870584694",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_suomi",
+                "nimi": "Kieli- ja viestintätaidot, suomi",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15917042304254743769703749574606",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_matemaattiset",
+                "nimi": "Matemaattiset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15917043770224794666648254754881",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_luonnontieteelliset",
+                "nimi": "Matemaattis-luonnontieteelliset taidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704164676-2902472251075668153",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_paatoksenteko",
+                "nimi": "Päätöksentekotaidot",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1591704047431-6371155250476903223",
+                "valintakoeTunniste": "AMK_valintakoe_k2020_2_kielijaviestinta_englanti",
+                "nimi": "Kieli- ja viestintätaidot, englanti",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": {
+                    "SV": "Deltog inte i urvalsprovet.",
+                    "FI": "Hakija ei ole osallistunut valintakokeen osioon / valintakokeeseen.",
+                    "EN": "Applicant did not participate in the entrance examination or part of the examination."
+                  },
+                  "laskentaTila": "HYLATTY",
+                  "laskentaTulos": null
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakemusOid": "1.2.246.562.11.00000000000000546217",
+    "hakijaOid": "1.2.246.562.24.60155185658",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1596808497816,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.32004472588",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "15797724895301981350477955039869",
+            "valinnanVaiheJarjestysluku": 4,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15798603725231195543421016775492",
+                "valintakoeTunniste": "2020-57e71966-d73c-446f-e776-91d944afe02d",
+                "nimi": "2VV: VV (osa-alue 5)",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1579860293383-6147845434096531693",
+                "valintakoeTunniste": "2020-2b5a3528-84b0-7b87-73a0-847ac1f99c3c",
+                "nimi": "2C: PiC (osa-alue 3)",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15798602342848910650701234628350",
+                "valintakoeTunniste": "2020-73de9b5c-4481-5b39-0b5a-9387640bdef6",
+                "nimi": "2A: PiA (osa-alue1)",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1579860268903-6781319454900620458",
+                "valintakoeTunniste": "2020-fea14d49-2961-4c13-f0af-9521c722169f",
+                "nimi": "2B: PiB (osa-alue 2)",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1579860316418944258136462246683",
+                "valintakoeTunniste": "2020-31ac97f9-dbdb-9a49-094c-417cbf3d1294",
+                "nimi": "2D: PiD (osa-alue 4)",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.66593343719",
+    "hakemusOid": "1.2.246.562.11.00000000000000304410",
+    "hakijaOid": "1.2.246.562.24.74029523882",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1587028879233,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.87181110328",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1565252400851-6192287994511279683",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15652525112442815800672356301155",
+                "valintakoeTunniste": "Valintakurssin pakollinen osio Huittinen S2019",
+                "nimi": "Valintakurssin pakollinen osio Huittinen S2019",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15652524692446738013629485883871",
+                "valintakoeTunniste": "Valintakurssi Huittinen S2019",
+                "nimi": "Valintakurssi Huittinen S2019",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.70000333388",
+    "hakemusOid": "1.2.246.562.11.00000000000000137006",
+    "hakijaOid": "1.2.246.562.24.74029523882",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1612439963961,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.40087925422",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1551429374312361689354383814757",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1551429375052-5002416287293468352",
+                "valintakoeTunniste": "Valintakurssi Huittinen ja Rauma K2019",
+                "nimi": "Valintakurssi Huittinen ja Rauma K2019",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15514293750534116848182720796227",
+                "valintakoeTunniste": "Valintakurssin pakollinen osio Huittinen ja Rauma K2019",
+                "nimi": "Valintakurssin pakollinen osio Huittinen ja Rauma K2019",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "hakukohdeOid": "1.2.246.562.20.203080322410",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "15514294618608985597892247913384",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "1551429462289-2883118902776015669",
+                "valintakoeTunniste": "Valintakurssi Huittinen ja Rauma K2019",
+                "nimi": "Valintakurssi Huittinen ja Rauma K2019",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "1551429462290-5583613690666347747",
+                "valintakoeTunniste": "Valintakurssin pakollinen osio Huittinen ja Rauma K2019",
+                "nimi": "Valintakurssin pakollinen osio Huittinen ja Rauma K2019",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "EI_OSALLISTU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakemusOid": "1.2.246.562.11.00000000000000406572",
+    "hakijaOid": "1.2.246.562.24.74029523882",
+    "etunimi": null,
+    "sukunimi": null,
+    "createdAt": 1596814084787,
+    "hakutoiveet": [
+      {
+        "hakukohdeOid": "1.2.246.562.20.12060097362",
+        "valinnanVaiheet": [
+          {
+            "valinnanVaiheOid": "1588588188629-8483167666402042302",
+            "valinnanVaiheJarjestysluku": 1,
+            "valintakokeet": [
+              {
+                "valintakoeOid": "15885883344466007938595994975465",
+                "valintakoeTunniste": "Valintakurssin pakollinen osio Huittinen ja Rauma K2020",
+                "nimi": "Valintakurssin pakollinen osio Huittinen ja Rauma K2020",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": false,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              },
+              {
+                "valintakoeOid": "15885882382214437321793689679243",
+                "valintakoeTunniste": "Valintakurssi Huittinen ja Rauma K2020",
+                "nimi": "Valintakurssi Huittinen ja Rauma K2020",
+                "aktiivinen": true,
+                "osallistuminenTulos": {
+                  "osallistuminen": "OSALLISTUU",
+                  "kuvaus": null,
+                  "laskentaTila": "HYVAKSYTTAVISSA",
+                  "laskentaTulos": true
+                },
+                "lahetetaankoKoekutsut": true,
+                "kutsutaankoKaikki": null,
+                "kutsuttavienMaara": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

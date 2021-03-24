@@ -55,15 +55,17 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   ValintaTulosActorRef,
   Valintatila
 }
-import fi.vm.sade.hakurekisteri.integration.valpas.{ValpasHakemus, ValpasIntergration, ValpasQuery}
+import fi.vm.sade.hakurekisteri.integration.valpas.{
+  ValintalaskentaOsallistuminen,
+  ValpasHakemus,
+  ValpasIntergration,
+  ValpasQuery
+}
 import fi.vm.sade.hakurekisteri.integration.{
   ActorSystemSupport,
   OphUrlProperties,
   VirkailijaRestClient
 }
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import org.json4s.ext.EnumNameSerializer
-import org.json4s.{DefaultFormats, Formats}
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
@@ -97,7 +99,8 @@ class ValpasSpec
 
       val hakuAppHakemukset: Map[String, Seq[FullHakemus]] = Map()
       val hakuAppClient = mockPostHakuAppClient(Seq(oppijaOid))(hakuAppHakemukset)
-
+      val valintalaskentaClient: VirkailijaRestClient =
+        mockPostValintalaskentaClient(Seq(oppijaOid))
       val onrClient: VirkailijaRestClient = mockPostOnrClient(Seq(oppijaOid))
       val oppijaNumeroRekisteri: IOppijaNumeroRekisteri =
         new OppijaNumeroRekisteri(onrClient, system, Config.mockDevConfig)
@@ -190,6 +193,7 @@ class ValpasSpec
       )(system)
 
       val v: Future[Seq[ValpasHakemus]] = new ValpasIntergration(
+        valintalaskentaClient,
         koodisto,
         tarjonta,
         haku,
@@ -209,7 +213,24 @@ class ValpasSpec
       result.size should equal(1)
     }
   }
+  private def mockPostValintalaskentaClient(post: Seq[String]): VirkailijaRestClient = {
+    val valintalaskentaClient: VirkailijaRestClient = mock[VirkailijaRestClient]
 
+    Mockito
+      .when(
+        valintalaskentaClient.postObject[Set[String], Seq[ValintalaskentaOsallistuminen]](
+          "valintalaskenta-laskenta-service.bypersonoid"
+        )(200, post.toSet)
+      )
+      .thenReturn(
+        Future.successful(
+          resource[Seq[ValintalaskentaOsallistuminen]](
+            "/mock-data/valintalaskenta/valintalaskenta.json"
+          )
+        )
+      )
+    valintalaskentaClient
+  }
   private def mockPostOnrClient(post: Seq[String]): VirkailijaRestClient = {
     val orgs =
       Seq("1.2.246.562.10.98212669513", "1.2.246.562.10.60554652846", "1.2.246.562.10.83878914437")
