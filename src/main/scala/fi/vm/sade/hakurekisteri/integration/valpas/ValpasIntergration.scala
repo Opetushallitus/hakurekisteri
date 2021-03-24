@@ -32,7 +32,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   SijoitteluTulos,
   ValintaTulosActorRef
 }
-import fi.vm.sade.hakurekisteri.integration.valpas
+import fi.vm.sade.hakurekisteri.integration.{JsonExtractor, VirkailijaRestClient, valpas}
 import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
@@ -49,8 +49,18 @@ object ValpasHakemusTila extends Enumeration {
   val AKTIIVINEN: valpas.ValpasHakemusTila.Value = Value("AKTIIVINEN")
   val PUUTTEELLINEN: valpas.ValpasHakemusTila.Value = Value("PUUTTEELLINEN")
 }
-
+case class Valintakoe(
+  osallistuminen: String,
+  laskentatila: String,
+  valintakoeOid: String,
+  valintakoeTunniste: String,
+  nimi: String,
+  valinnanVaiheOid: String,
+  valinnanVaiheJarjestysluku: Int,
+  arvo: Option[String]
+) {}
 case class ValpasHakutoive(
+  valintakoe: Seq[Valintakoe],
   alinValintaPistemaara: Option[Int],
   hakukohdeNimi: Map[String, String],
   koulutusNimi: Map[String, String],
@@ -119,6 +129,7 @@ object ValpasHakemus {
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
 
   def fromFetchedResources(
+    osallistumiset: Seq[ValintalaskentaOsallistuminen],
     hakemus: HakijaHakemus,
     tulos: Option[SijoitteluTulos],
     oidToHakukohde: Map[String, Hakukohde],
@@ -141,6 +152,7 @@ object ValpasHakemus {
     }
 
     def hakutoiveToValpasHakutoive(c: HakutoiveDTO): ValpasHakutoive = {
+
       val hakukohdeOid = c.koulutusId.filterNot(_.isEmpty) match {
         case Some(oid) => oid
         case None =>
@@ -148,6 +160,33 @@ object ValpasHakemus {
             s"Hakijalla ${hakemus.personOid.get} ei ole hakutoiveen OID-tunnistetta hakemuksella ${hakemus.oid}!"
           )
       }
+      def hkToVk(hk: ValintalaskentaHakutoive): Seq[Valintakoe] = {
+        val vks = hk.valinnanVaiheet.flatMap(vv =>
+          vv.valintakokeet.flatMap(vk =>
+            if (vk.aktiivinen)
+              Some(
+                Valintakoe(
+                  osallistuminen = vk.osallistuminenTulos.osallistuminen,
+                  laskentatila = vk.osallistuminenTulos.laskentaTila,
+                  valintakoeOid = vk.valintakoeOid,
+                  valintakoeTunniste = vk.valintakoeTunniste,
+                  nimi = vk.nimi,
+                  valinnanVaiheOid = vv.valinnanVaiheOid,
+                  valinnanVaiheJarjestysluku = vv.valinnanVaiheJarjestysluku,
+                  arvo = None
+                )
+              )
+            else None
+          )
+        )
+
+        vks
+      }
+      val valintakoe: Seq[Valintakoe] =
+        osallistumiset
+          .flatMap(_.hakutoiveet)
+          .filter(hk => hakukohdeOid.equals(hk.hakukohdeOid))
+          .flatMap(hkToVk)
 
       val key = (hakemus.oid, hakukohdeOid)
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
@@ -156,6 +195,7 @@ object ValpasHakemus {
       val knimi = koulutus.koulutusohjelma.tekstis
 
       val h = ValpasHakutoive(
+        valintakoe = valintakoe,
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         koulutusNimi = Map(
           "fi" -> knimi.get("kieli_fi").filterNot(_.isEmpty),
@@ -256,8 +296,33 @@ object ValpasHakemus {
 }
 
 case class ValpasQuery(oppijanumerot: Set[String])
+case class Osallistuminen(osallistuminen: String, laskentaTila: String) {}
+case class ValintalaskentaValintakoe(
+  valintakoeOid: String,
+  valintakoeTunniste: String,
+  aktiivinen: Boolean,
+  nimi: String,
+  osallistuminenTulos: Osallistuminen
+) {}
+case class ValintalaskentaValinnanVaihe(
+  valinnanVaiheOid: String,
+  valinnanVaiheJarjestysluku: Int,
+  valintakokeet: Seq[ValintalaskentaValintakoe]
+) {}
+case class ValintalaskentaHakutoive(
+  hakukohdeOid: String,
+  valinnanVaiheet: Seq[ValintalaskentaValinnanVaihe]
+) {}
+case class ValintalaskentaOsallistuminen(
+  hakuOid: String,
+  hakijaOid: String,
+  hakemusOid: String,
+  createdAt: Long,
+  hakutoiveet: Seq[ValintalaskentaHakutoive]
+) {}
 
 class ValpasIntergration(
+  valintalaskentaClient: VirkailijaRestClient,
   koodistoActor: KoodistoActorRef,
   tarjontaActor: TarjontaActorRef,
   hakuActor: ActorRef,
@@ -270,7 +335,8 @@ class ValpasIntergration(
   private val logger = LoggerFactory.getLogger(getClass)
 
   def fetchValintarekisteriAndTarjonta(
-    hakemukset: Seq[HakijaHakemus]
+    hakemukset: Seq[HakijaHakemus],
+    osallistumisetFuture: Future[Seq[ValintalaskentaOsallistuminen]]
   ): Future[Seq[Try[ValpasHakemus]]] = {
     val hakukohdeOids: Set[String] =
       hakemukset
@@ -325,10 +391,14 @@ class ValpasIntergration(
       oidToHaku: Map[String, Haku] <- haut
       hakutapa: KoodistoKoodiArvot <- hakutapa
       hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
+      osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- osallistumisetFuture.map(
+        _.groupBy(_.hakemusOid)
+      )
     } yield {
       hakemukset.map(h =>
         Try(
           ValpasHakemus.fromFetchedResources(
+            osallistumiset.getOrElse(h.oid, Seq.empty),
             h,
             h.personOid.flatMap(valintatulokset.get),
             oidToHakukohde,
@@ -341,24 +411,34 @@ class ValpasIntergration(
       )
     }
   }
+  def fetchOsallistumiset(oids: Set[String]): Future[Seq[ValintalaskentaOsallistuminen]] = {
+    valintalaskentaClient
+      .postObject[Set[String], Seq[ValintalaskentaOsallistuminen]](
+        "valintalaskenta-laskenta-service.bypersonoid"
+      )(
+        200,
+        oids
+      )
+  }
 
   def fetch(query: ValpasQuery): Future[Seq[ValpasHakemus]] = {
     if (query.oppijanumerot.isEmpty) {
       Future.successful(Seq())
     } else {
-
+      val masterOids: Future[Map[String, String]] =
+        hakemusService.personOidstoMasterOids(query.oppijanumerot)
+      val hakemuksetFuture = masterOids.flatMap(masterOids =>
+        hakemusService.hakemuksetForPersons(masterOids.values.toSet)
+      )
+      val osallistumisetFuture =
+        masterOids.flatMap(masterOids => fetchOsallistumiset(masterOids.values.toSet))
       (for {
-        masterOids: Map[String, String] <- hakemusService.personOidstoMasterOids(
-          query.oppijanumerot
-        )
-        hakemukset: Seq[HakijaHakemus] <- hakemusService.hakemuksetForPersons(
-          masterOids.values.toSet
-        )
+        hakemukset: Seq[HakijaHakemus] <- hakemuksetFuture
         valpasHakemukset <-
           if (hakemukset.isEmpty) {
             Future.successful(Seq.empty)
           } else {
-            fetchValintarekisteriAndTarjonta(hakemukset).flatMap(s => {
+            fetchValintarekisteriAndTarjonta(hakemukset, osallistumisetFuture).flatMap(s => {
               if (s.exists(_.isFailure)) {
                 Future.failed(
                   new RuntimeException(
