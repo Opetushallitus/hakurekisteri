@@ -232,8 +232,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val valintalaskentaClient =
     new VirkailijaRestClient(
       config.integrations.valintalaskentaConfig,
-      None,
-      serviceUrlSuffix = "j_spring_cas_security_proxyreceptor"
+      None
     )(laskentaEc, system)
   private val valintarekisteriClient =
     new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
