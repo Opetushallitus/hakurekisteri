@@ -187,6 +187,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   private val logger = LoggerFactory.getLogger(getClass)
   logger.info(s"Initializing BaseIntegrations started...")
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
+  val laskentaEc = ExecutorUtil.createExecutor(10, "valintalaskenta-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
   val virtaEc = ExecutorUtil.createExecutor(1, "virta-client-pool")
@@ -227,7 +228,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   private val valintatulosClient =
     new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
   val valintalaskentaClient =
-    new VirkailijaRestClient(config.integrations.valintalaskentaConfig, None)(vtsEc, system)
+    new VirkailijaRestClient(config.integrations.valintalaskentaConfig, None)(laskentaEc, system)
   private val valintarekisteriClient =
     new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
   private val koskiClient =
