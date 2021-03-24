@@ -499,6 +499,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   }
   val valintalaskentaConfig = new ServiceConfig(
     serviceUrl = valintalaskentaServiceUrl,
+    user = serviceUser,
+    password = servicePassword,
     properties = properties,
     maxSimultaneousConnections = findMandatoryPropertyValue(
       "suoritusrekisteri.valintalaskenta-service.max-connections"
