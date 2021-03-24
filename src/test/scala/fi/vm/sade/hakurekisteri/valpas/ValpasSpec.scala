@@ -219,7 +219,7 @@ class ValpasSpec
     Mockito
       .when(
         valintalaskentaClient.postObject[Set[String], Seq[ValintalaskentaOsallistuminen]](
-          "valintalaskenta-laskenta-service.bypersonoid"
+          "valintalaskenta-service.bypersonoid"
         )(200, post.toSet)
       )
       .thenReturn(

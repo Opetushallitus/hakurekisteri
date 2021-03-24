@@ -501,10 +501,10 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     serviceUrl = valintalaskentaServiceUrl,
     properties = properties,
     maxSimultaneousConnections = findMandatoryPropertyValue(
-      "suoritusrekisteri.valintalaskenta-laskenta-service.max-connections"
+      "suoritusrekisteri.valintalaskenta-service.max-connections"
     ).toInt,
     maxConnectionQueueMs = findMandatoryPropertyValue(
-      "suoritusrekisteri.valintalaskenta-laskenta-service.max-connection-queue-ms"
+      "suoritusrekisteri.valintalaskenta-service.max-connection-queue-ms"
     ).toInt
   ) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
