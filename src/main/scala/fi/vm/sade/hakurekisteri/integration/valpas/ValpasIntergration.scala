@@ -414,7 +414,7 @@ class ValpasIntergration(
   def fetchOsallistumiset(oids: Set[String]): Future[Seq[ValintalaskentaOsallistuminen]] = {
     valintalaskentaClient
       .postObject[Set[String], Seq[ValintalaskentaOsallistuminen]](
-        "valintalaskenta-laskenta-service.bypersonoid"
+        "valintalaskenta-service.bypersonoid"
       )(
         200,
         oids
