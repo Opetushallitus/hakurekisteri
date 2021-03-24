@@ -68,6 +68,7 @@ cas.service.suoritusrekisteri=https://${host.virkailija}/suoritusrekisteri
 cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
 cas.service.valintalaskentakoostepalvelu=https://${host.virkailija}/valintalaskentakoostepalvelu
 cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-service
+cas.service.valintalaskenta-service=https://${host.virkailija}/valintalaskenta-laskenta-service
 cas.service.oppijanumerorekisteri-service=https://${host.virkailija}/oppijanumerorekisteri-service
 cas.service.valintaperusteet-service=https://${host.virkailija}/valintaperusteet-service
 log4j.properties.file=${user.home.conf}/log4j.properties
