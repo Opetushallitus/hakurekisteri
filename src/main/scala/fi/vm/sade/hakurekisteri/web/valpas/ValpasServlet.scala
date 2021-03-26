@@ -55,6 +55,7 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
     val personOids = parse(request.body).extract[Set[String]]
     val f: Future[Any] =
       valpasIntergration.fetch(ValpasQuery(personOids)).recoverWith { case t: Throwable =>
+        logger.error(s"Valpas fetch failed: ${t.getMessage}")
         Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
       }
 
