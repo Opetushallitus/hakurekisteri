@@ -32,7 +32,12 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   SijoitteluTulos,
   ValintaTulosActorRef
 }
-import fi.vm.sade.hakurekisteri.integration.{JsonExtractor, VirkailijaRestClient, valpas}
+import fi.vm.sade.hakurekisteri.integration.{
+  JsonExtractor,
+  OphUrlProperties,
+  VirkailijaRestClient,
+  valpas
+}
 import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
@@ -102,6 +107,7 @@ case class ValpasKoodi(
   koodistoVersio: Int
 )
 case class ValpasHakemus(
+  hakemusUrl: String,
   hakutapa: ValpasKoodi,
   hakutyyppi: ValpasKoodi,
   huoltajanNimi: Option[String],
@@ -246,6 +252,7 @@ object ValpasHakemus {
         val nimi = haku.nimi
 
         ValpasHakemus(
+          hakemusUrl = OphUrlProperties.url("ataru.hakemus", a.oid),
           hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
           hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
           huoltajanNimi = None,
@@ -273,6 +280,7 @@ object ValpasHakemus {
         val nimi = haku.nimi
 
         ValpasHakemus(
+          hakemusUrl = OphUrlProperties.url("haku-app.hakemus", h.oid),
           hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
           hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
