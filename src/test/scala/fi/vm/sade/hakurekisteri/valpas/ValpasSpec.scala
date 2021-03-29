@@ -147,7 +147,7 @@ class ValpasSpec
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,
                 k.koulutuksenAlkamisPvms,
-                k.koulutusohjelma
+                Some(k.koulutusohjelma)
               )
             }
             oid match {

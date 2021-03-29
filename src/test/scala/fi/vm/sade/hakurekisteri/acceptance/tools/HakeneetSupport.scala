@@ -920,7 +920,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       Some(kausiKoodiK),
       Some(2015),
       None,
-      Koulutusohjelma(Map.empty)
+      Some(Koulutusohjelma(Map.empty))
     )
   val ataruHakukohde1 =
     Hakukohde(
