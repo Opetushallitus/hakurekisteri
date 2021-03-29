@@ -151,15 +151,10 @@ object ValpasHakemus {
       k
     }
 
-    def hakutoiveToValpasHakutoive(c: HakutoiveDTO): ValpasHakutoive = {
-
-      val hakukohdeOid = c.koulutusId.filterNot(_.isEmpty) match {
-        case Some(oid) => oid
-        case None =>
-          throw new RuntimeException(
-            s"Hakijalla ${hakemus.personOid.get} ei ole hakutoiveen OID-tunnistetta hakemuksella ${hakemus.oid}!"
-          )
-      }
+    def hakutoiveWithOidToValpasHakutoive(
+      hakukohdeOid: String,
+      c: HakutoiveDTO
+    ): ValpasHakutoive = {
       def hkToVk(hk: ValintalaskentaHakutoive): Seq[Valintakoe] = {
         val vks = hk.valinnanVaiheet.flatMap(vv =>
           vv.valintakokeet.flatMap(vk =>
@@ -194,7 +189,7 @@ object ValpasHakemus {
       val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
       val knimi = koulutus.koulutusohjelma.tekstis
 
-      val h = ValpasHakutoive(
+      ValpasHakutoive(
         valintakoe = valintakoe,
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         koulutusNimi = Map(
@@ -232,13 +227,20 @@ object ValpasHakemus {
         koulutusOid = hakukohde.hakukohdeKoulutusOids.headOption,
         harkinnanvaraisuus = c.discretionaryFollowUp
       )
-      h
+    }
+
+    def hakutoiveToValpasHakutoive(c: HakutoiveDTO): Option[ValpasHakutoive] = {
+      c.koulutusId.filterNot(_.isEmpty) match {
+        case Some(hakukohdeOid) =>
+          Some(hakutoiveWithOidToValpasHakutoive(hakukohdeOid, c))
+        case _ => None
+      }
     }
 
     hakemus match {
       case a: AtaruHakemus => {
         val hakutoiveet: Option[List[ValpasHakutoive]] =
-          a.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
+          a.hakutoiveet.map(h => h.flatMap(hakutoiveToValpasHakutoive))
         val hakuOid = a.applicationSystemId
         val haku: Haku = oidToHaku(hakuOid)
         val nimi = haku.nimi
@@ -265,7 +267,7 @@ object ValpasHakemus {
       }
       case h: FullHakemus => {
         val hakutoiveet: Option[List[ValpasHakutoive]] =
-          h.hakutoiveet.map(h => h.map(hakutoiveToValpasHakutoive))
+          h.hakutoiveet.map(h => h.flatMap(hakutoiveToValpasHakutoive))
         val hakuOid = h.applicationSystemId
         val haku = oidToHaku(hakuOid)
         val nimi = haku.nimi
