@@ -25,6 +25,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohdeOid,
   HakukohdeQuery,
   HakukohteenKoulutukset,
+  Koulutusohjelma,
   TarjontaActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
@@ -193,7 +194,7 @@ object ValpasHakemus {
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
       val nimi = hakukohde.hakukohteenNimet
       val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
-      val knimi = koulutus.koulutusohjelma.tekstis
+      val knimi = koulutus.koulutusohjelma.getOrElse(Koulutusohjelma(Map.empty)).tekstis
 
       ValpasHakutoive(
         valintakoe = valintakoe,

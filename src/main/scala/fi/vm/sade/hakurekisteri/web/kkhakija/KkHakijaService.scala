@@ -643,7 +643,8 @@ class KkHakijaService(
                 koulutus.copy(
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
-                  koulutuksenAlkamisPvms = None
+                  koulutuksenAlkamisPvms = None,
+                  koulutusohjelma = None
                 )
               ),
             liitteet = attachmentToLiite(hakemus.attachmentRequests)
@@ -711,7 +712,8 @@ class KkHakijaService(
                   koulutus.copy(
                     koulutuksenAlkamiskausi = None,
                     koulutuksenAlkamisvuosi = None,
-                    koulutuksenAlkamisPvms = None
+                    koulutuksenAlkamisPvms = None,
+                    koulutusohjelma = None
                   )
                 ),
               liitteet = None
