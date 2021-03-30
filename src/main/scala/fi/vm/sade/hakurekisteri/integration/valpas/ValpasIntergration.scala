@@ -363,7 +363,11 @@ class ValpasIntergration(
         .filterNot(_.isEmpty)
     val hakuOids: Set[String] = hakemukset.map(_.applicationSystemId).toSet.filterNot(_.isEmpty)
     val organisaatioOids =
-      hakemukset.flatMap(_.hakutoiveet.getOrElse(List.empty)).flatMap(_.organizationOid).toSet
+      hakemukset
+        .flatMap(_.hakutoiveet.getOrElse(List.empty))
+        .flatMap(_.organizationOid)
+        .toSet
+        .filterNot(_.isEmpty)
     def hakemusToValintatulosQuery(h: HakijaHakemus): HakemuksenValintatulos =
       HakemuksenValintatulos(h.applicationSystemId, h.oid)
 
