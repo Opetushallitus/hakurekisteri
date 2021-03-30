@@ -97,6 +97,19 @@ class KoskiDataHandler(
       return false
     }
 
+    if (
+      suoritus.tyyppi.exists(_.koodiarvo == "valma")
+      && !suoritus.opintopisteitaVahintaan(30)
+      && opiskeluoikeus.tila.opiskeluoikeusjaksot
+        .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+    ) {
+      logger.info(
+        s"Filtteröitiin henkilöltä $henkiloOid valma-suoritus, joka sisälsi alle 30 osp ja " +
+          s"kuului eronneeseen rinnastettaviin tiloihin."
+      )
+      return false
+    }
+
     true
   }
 
