@@ -135,6 +135,16 @@ class ValpasSpec
         }
       })))
 
+      val organisaatiot = OrganisaatioActorRef(system.actorOf(Props(new Actor {
+        override def receive: Actor.Receive = { case oid: String =>
+          sender ! Some(
+            resource[Organisaatio](
+              s"/mock-data/organisaatio/organisaatio_$oid.json"
+            )
+          )
+        }
+      })))
+
       val tarjonta = TarjontaActorRef(system.actorOf(Props(new Actor {
         override def receive: Actor.Receive = {
           case HakukohdeOid(oid) =>
@@ -194,6 +204,7 @@ class ValpasSpec
 
       val v: Future[Seq[ValpasHakemus]] = new ValpasIntergration(
         valintalaskentaClient,
+        organisaatiot,
         koodisto,
         tarjonta,
         haku,

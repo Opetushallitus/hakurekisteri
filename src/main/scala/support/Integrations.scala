@@ -165,6 +165,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val valpasIntegration =
     new ValpasIntergration(
       valintalaskentaClient,
+      organisaatiot,
       koodisto,
       tarjonta,
       haut,
@@ -359,6 +360,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val valpasIntegration =
     new ValpasIntergration(
       valintalaskentaClient,
+      organisaatiot,
       koodisto,
       tarjonta,
       haut,
