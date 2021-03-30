@@ -20,6 +20,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActorRef,
   KoodistoKoodiArvot
 }
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
   HakukohdeOid,
@@ -68,6 +69,7 @@ case class Valintakoe(
 case class ValpasHakutoive(
   valintakoe: Seq[Valintakoe],
   alinValintaPistemaara: Option[Int],
+  organisaatioNimi: Map[String, String],
   hakukohdeNimi: Map[String, String],
   koulutusNimi: Map[String, String],
   pisteet: Option[BigDecimal],
@@ -141,6 +143,7 @@ object ValpasHakemus {
     tulos: Option[SijoitteluTulos],
     oidToHakukohde: Map[String, Hakukohde],
     oidToKoulutus: Map[String, HakukohteenKoulutukset],
+    oidToOrganisaatio: Map[String, Organisaatio],
     oidToHaku: Map[String, Haku],
     hakutapa: KoodistoKoodiArvot,
     hakutyyppi: KoodistoKoodiArvot
@@ -195,10 +198,12 @@ object ValpasHakemus {
       val nimi = hakukohde.hakukohteenNimet
       val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
       val knimi = koulutus.koulutusohjelma.getOrElse(Koulutusohjelma(Map.empty)).tekstis
-
+      val organisaatio: Option[Organisaatio] = c.organizationOid.flatMap(oidToOrganisaatio.get)
+      val organisaatioNimi = organisaatio.map(_.nimi).getOrElse(Map.empty).filterNot(_._2.isEmpty)
       ValpasHakutoive(
         valintakoe = valintakoe,
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
+        organisaatioNimi = organisaatioNimi,
         koulutusNimi = Map(
           "fi" -> knimi.get("kieli_fi").filterNot(_.isEmpty),
           "sv" -> knimi.get("kieli_sv").filterNot(_.isEmpty),
@@ -334,6 +339,7 @@ case class ValintalaskentaOsallistuminen(
 
 class ValpasIntergration(
   valintalaskentaClient: VirkailijaRestClient,
+  organisaatioActor: OrganisaatioActorRef,
   koodistoActor: KoodistoActorRef,
   tarjontaActor: TarjontaActorRef,
   hakuActor: ActorRef,
@@ -356,6 +362,8 @@ class ValpasIntergration(
         .toSet
         .filterNot(_.isEmpty)
     val hakuOids: Set[String] = hakemukset.map(_.applicationSystemId).toSet.filterNot(_.isEmpty)
+    val organisaatioOids =
+      hakemukset.flatMap(_.hakutoiveet.getOrElse(List.empty)).flatMap(_.organizationOid).toSet
     def hakemusToValintatulosQuery(h: HakijaHakemus): HakemuksenValintatulos =
       HakemuksenValintatulos(h.applicationSystemId, h.oid)
 
@@ -386,6 +394,15 @@ class ValpasIntergration(
       )
       .map(_.map(h => (h.hakukohdeOid, h)).toMap)
 
+    val organisaatiot: Future[Map[String, Organisaatio]] = Future
+      .sequence(
+        organisaatioOids.toSeq.map(oid =>
+          (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]
+        )
+      )
+      .map(s => s.flatten)
+      .map(s => s.map(q => (q.oid, q)).toMap)
+
     val haut: Future[Map[String, Haku]] = Future
       .sequence(hakuOids.map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku]))
       .map(_.map(h => (h.oid, h)).toMap)
@@ -402,6 +419,7 @@ class ValpasIntergration(
       oidToHaku: Map[String, Haku] <- haut
       hakutapa: KoodistoKoodiArvot <- hakutapa
       hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
+      oidToOrganisaatio <- organisaatiot
       osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- osallistumisetFuture.map(
         _.groupBy(_.hakemusOid)
       )
@@ -414,6 +432,7 @@ class ValpasIntergration(
             h.personOid.flatMap(valintatulokset.get),
             oidToHakukohde,
             oidToKoulutus,
+            oidToOrganisaatio,
             oidToHaku,
             hakutapa,
             hakutyyppi
