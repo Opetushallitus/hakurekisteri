@@ -482,9 +482,11 @@ class ValpasIntergration(
     } else {
       val masterOids: Future[Map[String, String]] =
         hakemusService.personOidstoMasterOids(query.oppijanumerot)
-      val hakemuksetFuture = masterOids.flatMap(masterOids =>
-        hakemusService.hakemuksetForPersons(masterOids.values.toSet)
-      )
+
+      val hakemuksetFuture = masterOids
+        .flatMap(masterOids => hakemusService.hakemuksetForPersons(masterOids.values.toSet))
+        .map(_.filter(_.stateValid))
+
       val osallistumisetFuture =
         masterOids.flatMap(masterOids => fetchOsallistumiset(masterOids.values.toSet))
       (for {
