@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, Haku, HakuRequest}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   KoodistoActorRef,
@@ -132,7 +132,7 @@ case class ValpasHakemus(
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
 
-case class ValpasQuery(oppijanumerot: Set[String])
+case class ValpasQuery(oppijanumerot: Set[String], ainoastaanAktiivisetHaut: Boolean)
 case class Osallistuminen(osallistuminen: String, laskentaTila: String) {}
 case class ValintalaskentaValintakoe(
   valintakoeOid: String,
@@ -489,8 +489,23 @@ class ValpasIntergration(
 
       val osallistumisetFuture =
         masterOids.flatMap(masterOids => fetchOsallistumiset(masterOids.values.toSet))
+
+      type IncludeHakemus = HakijaHakemus => Boolean
+
+      val includeHakemusFromHakuQuery: Future[IncludeHakemus] =
+        if (query.ainoastaanAktiivisetHaut) {
+          (hakuActor ? HakuRequest)
+            .mapTo[AllHaut]
+            .map(allHaut =>
+              hakemus => allHaut.haut.exists(_.oid.equals(hakemus.applicationSystemId))
+            )
+        } else {
+          Future.successful(_ => true)
+        }
+
       (for {
-        hakemukset: Seq[HakijaHakemus] <- hakemuksetFuture
+        includeHakemus: IncludeHakemus <- includeHakemusFromHakuQuery
+        hakemukset: Seq[HakijaHakemus] <- hakemuksetFuture.map(_.filter(includeHakemus))
         valpasHakemukset <-
           if (hakemukset.isEmpty) {
             Future.successful(Seq.empty)

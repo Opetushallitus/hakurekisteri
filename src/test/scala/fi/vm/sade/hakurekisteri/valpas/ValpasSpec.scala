@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   FullHakemus,
   HakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, Haku, HakuRequest}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   HenkiloViite,
@@ -105,11 +105,14 @@ class ValpasSpec
       val oppijaNumeroRekisteri: IOppijaNumeroRekisteri =
         new OppijaNumeroRekisteri(onrClient, system, Config.mockDevConfig)
       val haku = system.actorOf(Props(new Actor {
+        val haku = resource[TarjontaResultResponse[Option[RestHaku]]](
+          s"/mock-data/tarjonta/haku_1.2.246.562.29.36339915997.json"
+        ).result.get
+
         override def receive: Actor.Receive = {
-          case GetHaku(oid) => {
-            val haku = resource[TarjontaResultResponse[Option[RestHaku]]](
-              s"/mock-data/tarjonta/haku_$oid.json"
-            ).result.get
+          case HakuRequest =>
+            sender ! AllHaut(Seq(Haku(haku)(InFuture)))
+          case GetHaku(_) => {
             sender ! Haku(haku)(InFuture)
           }
         }
@@ -218,7 +221,7 @@ class ValpasSpec
           }
         }))),
         hakemusService
-      ).fetch(ValpasQuery(Set(oppijaOid)))
+      ).fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true))
 
       val result = run(v)
       result.size should equal(1)

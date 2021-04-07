@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.valpas
 
 import akka.actor.ActorSystem
-import akka.actor.Status.Success
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.valpas.{ValpasHakemus, ValpasIntergration, ValpasQuery}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -14,6 +13,7 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport, SwaggerSupp
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.{Success, Try}
 
 trait ValpasSwaggerApi extends SwaggerSupport {
 
@@ -23,6 +23,13 @@ trait ValpasSwaggerApi extends SwaggerSupport {
       .description("Palauttaa hakijoiden oppijanumeroille Valpas-tiedot")
       .parameter(
         bodyParam[Seq[String]]("hakijaOids").description("hakijoiden oppijanumerot").required
+      )
+      .parameter(
+        queryParam[Option[Boolean]]("ainoastaanAktiivisetHaut")
+          .description(
+            "Palautetaanko ainoastaan aktiiviset haut. Palauttaa oletusarvoisesti kaikki haut."
+          )
+          .optional
       )
       .tags("Valpas-resource")
 
@@ -52,11 +59,21 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
 
   post("/", operation(fetchValpasDataForPersons)) {
     shouldBeAdmin()
+    val ainoastaanAktiivisetHaut: Boolean =
+      Try(Option(params("ainoastaanAktiivisetHaut")).map(_.toBoolean)) match {
+        case Success(Some(aktiiviset)) => aktiiviset
+        case _                         => false
+      }
+    if (ainoastaanAktiivisetHaut) {
+      logger.error("Palautetaan ainoastaan aktiiviset haut!")
+    }
+
     val personOids = parse(request.body).extract[Set[String]]
     val f: Future[Any] =
-      valpasIntergration.fetch(ValpasQuery(personOids)).recoverWith { case t: Throwable =>
-        logger.error(s"Valpas fetch failed: ${t.getMessage}")
-        Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
+      valpasIntergration.fetch(ValpasQuery(personOids, ainoastaanAktiivisetHaut)).recoverWith {
+        case t: Throwable =>
+          logger.error(s"Valpas fetch failed: ${t.getMessage}")
+          Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
       }
 
     new AsyncResult() {
