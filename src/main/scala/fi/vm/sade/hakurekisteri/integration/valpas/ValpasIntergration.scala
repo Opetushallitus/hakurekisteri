@@ -131,7 +131,47 @@ case class ValpasHakemus(
   postitoimipaikka: String,
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
-object ValpasHakemus {
+
+case class ValpasQuery(oppijanumerot: Set[String])
+case class Osallistuminen(osallistuminen: String, laskentaTila: String) {}
+case class ValintalaskentaValintakoe(
+  valintakoeOid: String,
+  valintakoeTunniste: String,
+  aktiivinen: Boolean,
+  nimi: String,
+  osallistuminenTulos: Osallistuminen
+) {}
+case class ValintalaskentaValinnanVaihe(
+  valinnanVaiheOid: String,
+  valinnanVaiheJarjestysluku: Int,
+  valintakokeet: Seq[ValintalaskentaValintakoe]
+) {}
+case class ValintalaskentaHakutoive(
+  hakukohdeOid: String,
+  valinnanVaiheet: Seq[ValintalaskentaValinnanVaihe]
+) {}
+case class ValintalaskentaOsallistuminen(
+  hakuOid: String,
+  hakijaOid: String,
+  hakemusOid: String,
+  createdAt: Long,
+  hakutoiveet: Seq[ValintalaskentaHakutoive]
+) {}
+
+class ValpasIntergration(
+  valintalaskentaClient: VirkailijaRestClient,
+  organisaatioActor: OrganisaatioActorRef,
+  koodistoActor: KoodistoActorRef,
+  tarjontaActor: TarjontaActorRef,
+  hakuActor: ActorRef,
+  valintaTulos: ValintaTulosActorRef,
+  hakemusService: IHakemusService
+) {
+  implicit val ec: ExecutionContextExecutorService =
+    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
+  implicit val defaultTimeout: Timeout = 120.seconds
+  private val logger = LoggerFactory.getLogger(getClass)
+
   private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
   private val Formatter =
     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
@@ -148,6 +188,13 @@ object ValpasHakemus {
     hakutapa: KoodistoKoodiArvot,
     hakutyyppi: KoodistoKoodiArvot
   ): ValpasHakemus = {
+    def logSijoittelunTulos(): String = {
+      tulos match {
+        case Some(t) =>
+          s"sijoittelun tulos avaimilla ${(t.ilmoittautumistila.keySet ++ t.valintatila.keySet ++ t.vastaanottotila.keySet ++ t.pisteet.keySet ++ t.valintatapajono.keySet ++ t.varasijanumero.keySet).toString()}"
+        case None => "ei sijoittelun tulosta"
+      }
+    }
     def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
       val Array(koodi, versio) = uri.split("#")
       val Array(_, arvo) = koodi.split("_")
@@ -245,18 +292,27 @@ object ValpasHakemus {
       c.koulutusId.filterNot(_.isEmpty) match {
         case Some(hakukohdeOid) =>
           Some(hakutoiveWithOidToValpasHakutoive(hakukohdeOid, c))
-        case _ => None
+        case _ =>
+          logger.debug(
+            s"Haun ${hakemus.applicationSystemId} hakemukselle ${hakemus.oid} ei löydy hakutoiveen tunnistetta: ${c.koulutusId}"
+          )
+          None
       }
     }
 
     hakemus match {
       case a: AtaruHakemus => {
-        val hakutoiveet: Option[List[ValpasHakutoive]] =
-          a.hakutoiveet.map(h => h.flatMap(hakutoiveToValpasHakutoive))
+        val hakutoiveet: List[ValpasHakutoive] =
+          a.hakutoiveet
+            .map(h => h.flatMap(hakutoiveToValpasHakutoive))
+            .getOrElse(List.empty)
         val hakuOid = a.applicationSystemId
         val haku: Haku = oidToHaku(hakuOid)
         val nimi = haku.nimi
-
+        logger.debug(
+          s"Luodaan Atarun ValpasHakemus ${a.oid} hakutoiveilla ${hakutoiveet
+            .map(_.hakukohdeOid)} ja sijoittelun tuloksilla ${logSijoittelunTulos()}"
+        )
         ValpasHakemus(
           hakemusUrl = OphUrlProperties.url("ataru.hakemus", a.oid),
           hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
@@ -275,16 +331,22 @@ object ValpasHakemus {
           lahiosoite = a.lahiosoite,
           postitoimipaikka = a.postitoimipaikka.getOrElse(""),
           email = a.email,
-          hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
+          hakutoiveet = hakutoiveet
         )
       }
       case h: FullHakemus => {
-        val hakutoiveet: Option[List[ValpasHakutoive]] =
-          h.hakutoiveet.map(h => h.flatMap(hakutoiveToValpasHakutoive))
+        val hakutoiveet: List[ValpasHakutoive] =
+          h.hakutoiveet
+            .map(h => h.flatMap(hakutoiveToValpasHakutoive))
+            .getOrElse(List.empty)
         val hakuOid = h.applicationSystemId
         val haku = oidToHaku(hakuOid)
         val nimi = haku.nimi
 
+        logger.debug(
+          s"Luodaan Haku-App:n ValpasHakemus ${h.oid} hakutoiveilla ${hakutoiveet
+            .map(_.hakukohdeOid)} ja sijoittelun tuloksilla ${logSijoittelunTulos()}"
+        )
         ValpasHakemus(
           hakemusUrl = OphUrlProperties.url("haku-app.hakemus", h.oid),
           hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
@@ -304,52 +366,11 @@ object ValpasHakemus {
           postinumero = h.henkilotiedot.flatMap(_.Postinumero).getOrElse(""),
           lahiosoite = h.henkilotiedot.flatMap(_.lahiosoite).getOrElse(""),
           postitoimipaikka = h.henkilotiedot.flatMap(_.Postitoimipaikka).getOrElse(""),
-          hakutoiveet = hakutoiveet.getOrElse(Seq.empty)
+          hakutoiveet = hakutoiveet
         )
       }
     }
   }
-}
-
-case class ValpasQuery(oppijanumerot: Set[String])
-case class Osallistuminen(osallistuminen: String, laskentaTila: String) {}
-case class ValintalaskentaValintakoe(
-  valintakoeOid: String,
-  valintakoeTunniste: String,
-  aktiivinen: Boolean,
-  nimi: String,
-  osallistuminenTulos: Osallistuminen
-) {}
-case class ValintalaskentaValinnanVaihe(
-  valinnanVaiheOid: String,
-  valinnanVaiheJarjestysluku: Int,
-  valintakokeet: Seq[ValintalaskentaValintakoe]
-) {}
-case class ValintalaskentaHakutoive(
-  hakukohdeOid: String,
-  valinnanVaiheet: Seq[ValintalaskentaValinnanVaihe]
-) {}
-case class ValintalaskentaOsallistuminen(
-  hakuOid: String,
-  hakijaOid: String,
-  hakemusOid: String,
-  createdAt: Long,
-  hakutoiveet: Seq[ValintalaskentaHakutoive]
-) {}
-
-class ValpasIntergration(
-  valintalaskentaClient: VirkailijaRestClient,
-  organisaatioActor: OrganisaatioActorRef,
-  koodistoActor: KoodistoActorRef,
-  tarjontaActor: TarjontaActorRef,
-  hakuActor: ActorRef,
-  valintaTulos: ValintaTulosActorRef,
-  hakemusService: IHakemusService
-) {
-  implicit val ec: ExecutionContextExecutorService =
-    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
-  implicit val defaultTimeout: Timeout = 120.seconds
-  private val logger = LoggerFactory.getLogger(getClass)
 
   def fetchValintarekisteriAndTarjonta(
     hakemukset: Seq[HakijaHakemus],
@@ -430,7 +451,7 @@ class ValpasIntergration(
     } yield {
       hakemukset.map(h =>
         Try(
-          ValpasHakemus.fromFetchedResources(
+          fromFetchedResources(
             osallistumiset.getOrElse(h.oid, Seq.empty),
             h,
             h.personOid.flatMap(valintatulokset.get),
