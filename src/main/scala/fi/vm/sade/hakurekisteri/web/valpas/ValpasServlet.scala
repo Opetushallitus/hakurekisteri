@@ -65,7 +65,7 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
         case _                         => false
       }
     if (ainoastaanAktiivisetHaut) {
-      logger.error("Palautetaan ainoastaan aktiiviset haut!")
+      logger.debug("Palautetaan ainoastaan aktiiviset haut!")
     }
 
     val personOids = parse(request.body).extract[Set[String]]

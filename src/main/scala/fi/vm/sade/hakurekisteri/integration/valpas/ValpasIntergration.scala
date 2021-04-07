@@ -1,7 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.valpas
 
-import java.time.ZoneId
-import java.util.TimeZone
 import java.util.concurrent.Executors
 
 import akka.actor.ActorRef
