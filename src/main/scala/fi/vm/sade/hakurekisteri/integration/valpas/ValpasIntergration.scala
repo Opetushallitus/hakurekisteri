@@ -108,7 +108,7 @@ case class ValpasKoodi(
   koodistoVersio: Int
 )
 case class ValpasHakemus(
-                          aktiivinenHaku: Boolean,
+  aktiivinenHaku: Boolean,
   hakemusUrl: String,
   hakutapa: ValpasKoodi,
   hakutyyppi: ValpasKoodi,
@@ -498,7 +498,8 @@ class ValpasIntergration(
           (hakuActor ? HakuRequest)
             .mapTo[AllHaut]
             .map(allHaut =>
-              hakemus => allHaut.haut.filter(_.isActive).exists(_.oid.equals(hakemus.applicationSystemId))
+              hakemus =>
+                allHaut.haut.filter(_.isActive).exists(_.oid.equals(hakemus.applicationSystemId))
             )
         } else {
           Future.successful(_ => true)
