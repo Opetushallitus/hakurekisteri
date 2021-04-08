@@ -108,6 +108,7 @@ case class ValpasKoodi(
   koodistoVersio: Int
 )
 case class ValpasHakemus(
+                          aktiivinenHaku: Boolean,
   hakemusUrl: String,
   hakutapa: ValpasKoodi,
   hakutyyppi: ValpasKoodi,
@@ -312,6 +313,7 @@ class ValpasIntergration(
             .map(_.hakukohdeOid)} ja sijoittelun tuloksilla ${logSijoittelunTulos()}"
         )
         ValpasHakemus(
+          aktiivinenHaku = haku.isActive,
           hakemusUrl = OphUrlProperties.url("ataru.hakemus", a.oid),
           hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
           hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
@@ -346,6 +348,7 @@ class ValpasIntergration(
             .map(_.hakukohdeOid)} ja sijoittelun tuloksilla ${logSijoittelunTulos()}"
         )
         ValpasHakemus(
+          aktiivinenHaku = haku.isActive,
           hakemusUrl = OphUrlProperties.url("haku-app.hakemus", h.oid),
           hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
           hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
@@ -495,7 +498,7 @@ class ValpasIntergration(
           (hakuActor ? HakuRequest)
             .mapTo[AllHaut]
             .map(allHaut =>
-              hakemus => allHaut.haut.exists(_.oid.equals(hakemus.applicationSystemId))
+              hakemus => allHaut.haut.filter(_.isActive).exists(_.oid.equals(hakemus.applicationSystemId))
             )
         } else {
           Future.successful(_ => true)
