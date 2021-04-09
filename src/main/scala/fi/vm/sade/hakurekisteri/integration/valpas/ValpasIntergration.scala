@@ -283,7 +283,7 @@ class ValpasIntergration(
             )
         },
         koulutusOid = hakukohde.hakukohdeKoulutusOids.headOption,
-        harkinnanvaraisuus = c.discretionaryFollowUp
+        harkinnanvaraisuus = c.discretionaryFollowUp.filterNot(_.isEmpty)
       )
     }
 
@@ -374,6 +374,7 @@ class ValpasIntergration(
   }
 
   def fetchValintarekisteriAndTarjonta(
+    oidToHaku: Map[String, Haku],
     hakemukset: Seq[HakijaHakemus],
     osallistumisetFuture: Future[Seq[ValintalaskentaOsallistuminen]]
   ): Future[Seq[Try[ValpasHakemus]]] = {
@@ -429,10 +430,6 @@ class ValpasIntergration(
       .map(s => s.flatten)
       .map(s => s.map(q => (q.oid, q)).toMap)
 
-    val haut: Future[Map[String, Haku]] = Future
-      .sequence(hakuOids.map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku]))
-      .map(_.map(h => (h.oid, h)).toMap)
-
     val hakutapa =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutapa")).mapTo[KoodistoKoodiArvot]
     val hakutyyppi =
@@ -442,7 +439,6 @@ class ValpasIntergration(
       valintatulokset: Map[String, SijoitteluTulos] <- valintarekisteri
       oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
-      oidToHaku: Map[String, Haku] <- haut
       hakutapa: KoodistoKoodiArvot <- hakutapa
       hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
       oidToOrganisaatio <- organisaatiot
@@ -491,28 +487,29 @@ class ValpasIntergration(
       val osallistumisetFuture =
         masterOids.flatMap(masterOids => fetchOsallistumiset(masterOids.values.toSet))
 
-      type IncludeHakemus = HakijaHakemus => Boolean
-
-      val includeHakemusFromHakuQuery: Future[IncludeHakemus] =
-        if (query.ainoastaanAktiivisetHaut) {
-          (hakuActor ? HakuRequest)
-            .mapTo[AllHaut]
-            .map(allHaut =>
-              hakemus =>
-                allHaut.haut.filter(_.isActive).exists(_.oid.equals(hakemus.applicationSystemId))
-            )
-        } else {
-          Future.successful(_ => true)
-        }
+      def excludeHakemusInHaku(haku: Haku): Boolean = {
+        haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
+      }
 
       (for {
-        includeHakemus: IncludeHakemus <- includeHakemusFromHakuQuery
-        hakemukset: Seq[HakijaHakemus] <- hakemuksetFuture.map(_.filter(includeHakemus))
+        allHakemukset: Seq[HakijaHakemus] <- hakemuksetFuture
+        haut: Map[String, Haku] <- Future
+          .sequence(
+            allHakemukset
+              .map(_.applicationSystemId)
+              .map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku])
+          )
+          .map(_.map(h => (h.oid, h)).toMap)
+        hakemukset <- Future.successful(
+          allHakemukset.filterNot(hakemus =>
+            excludeHakemusInHaku(haut(hakemus.applicationSystemId))
+          )
+        )
         valpasHakemukset <-
           if (hakemukset.isEmpty) {
             Future.successful(Seq.empty)
           } else {
-            fetchValintarekisteriAndTarjonta(hakemukset, osallistumisetFuture).flatMap(s => {
+            fetchValintarekisteriAndTarjonta(haut, hakemukset, osallistumisetFuture).flatMap(s => {
               if (s.exists(_.isFailure)) {
                 Future.failed(
                   new RuntimeException(
