@@ -624,6 +624,7 @@ case class HakemusBuilder(
             LISAKOULUTUS_KANSANOPISTO = None,
             LISAKOULUTUS_MAAHANMUUTTO = None,
             LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
+            LISAKOULUTUS_VALMA = None,
             luokkataso = None,
             lahtoluokka = None,
             perusopetuksen_kieli = None,
