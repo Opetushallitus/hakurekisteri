@@ -399,7 +399,7 @@ class ValpasIntergration(
         hakemukset.map(h =>
           (valintaTulos.actor ? hakemusToValintatulosQuery(h))
             .mapTo[SijoitteluTulos]
-            .map(s => (h.personOid.get, s))
+            .map(s => (h.oid, s))
         )
       )
       .map(_.toMap)
@@ -451,7 +451,7 @@ class ValpasIntergration(
           fromFetchedResources(
             osallistumiset.getOrElse(h.oid, Seq.empty),
             h,
-            h.personOid.flatMap(valintatulokset.get),
+            valintatulokset.get(h.oid),
             oidToHakukohde,
             oidToKoulutus,
             oidToOrganisaatio,
