@@ -52,7 +52,16 @@ class YtlResourceSpec
     HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("050996-9574"))))
   val hakemusWithPersonOidEnding9574 = Future.successful(
     Seq(
-      FullHakemus("", Some("050996-9574"), someKkHaku, Some(answers), Some("ACTIVE"), Seq(), Seq(), 1615219923688L)
+      FullHakemus(
+        "",
+        Some("050996-9574"),
+        someKkHaku,
+        Some(answers),
+        Some("ACTIVE"),
+        Seq(),
+        Seq(),
+        1615219923688L
+      )
     )
   )
 
