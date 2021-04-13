@@ -119,6 +119,7 @@ case class ValpasHakemus(
     description = "yyyy-MM-dd'T'HH:mm:ss"
   )
   haunAlkamispaivamaara: String,
+  hakemuksenMuokkauksenAikaleima: Option[String],
   oppijaOid: String,
   hakemusOid: String,
   hakuOid: String,
@@ -321,6 +322,7 @@ class ValpasIntergration(
           huoltajanPuhelinnumero = None,
           huoltajanSahkoposti = None,
           haunAlkamispaivamaara = formatHakuAlkamispaivamaara(haku.aika.alku),
+          hakemuksenMuokkauksenAikaleima = Some(a.createdTime),
           oppijaOid = a.personOid.get,
           hakemusOid = a.oid,
           hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en)
@@ -356,6 +358,7 @@ class ValpasIntergration(
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
           haunAlkamispaivamaara = formatHakuAlkamispaivamaara(haku.aika.alku),
+          hakemuksenMuokkauksenAikaleima = Some(Formatter.print(h.received)),
           oppijaOid = h.personOid.get,
           hakemusOid = h.oid,
           hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en).flatMap(kv =>

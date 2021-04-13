@@ -97,6 +97,7 @@ class HakemusServiceSpec
       "ataruOid",
       personOid,
       "",
+      "",
       kieli = asiointiKieliFromHakemus,
       List(),
       "",
@@ -238,7 +239,7 @@ class HakemusServiceSpec
     )
 
     trigger.f(
-      FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil),
+      FullHakemus("oid", Some("hakijaOid"), "hakuOid", answers, None, Nil, Nil, 1615219923688L),
       PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid")))
     )
     trigger.f(
@@ -246,6 +247,7 @@ class HakemusServiceSpec
         "ataruOid",
         Some("ataruHakijaOid"),
         "hakuOid",
+        "",
         None,
         ataruHenkilo,
         "fi",
@@ -267,7 +269,7 @@ class HakemusServiceSpec
     )
     triggerCounter should equal(2)
     trigger.f(
-      FullHakemus("oid", None, "hakuOid", answers, None, Nil),
+      FullHakemus("oid", None, "hakuOid", answers, None, Nil, Nil, 1615219923688L),
       PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid")))
     )
     trigger.f(
@@ -275,6 +277,7 @@ class HakemusServiceSpec
         "ataruOid",
         None,
         "hakuOid",
+        "",
         None,
         ataruHenkilo,
         "en",

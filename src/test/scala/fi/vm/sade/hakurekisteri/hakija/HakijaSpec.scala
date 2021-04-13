@@ -138,7 +138,8 @@ class HakijaSpec extends FlatSpec with Matchers {
         ),
         state = Some("ACTIVE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = 1615219923688L
       )
 
   val haku = Haku(

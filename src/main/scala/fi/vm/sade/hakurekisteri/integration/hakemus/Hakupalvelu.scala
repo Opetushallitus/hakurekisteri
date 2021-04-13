@@ -1000,7 +1000,8 @@ case class FullHakemus(
   answers: Option[HakemusAnswers],
   state: Option[String],
   preferenceEligibilities: Seq[PreferenceEligibility],
-  attachmentRequests: Seq[HakemusAttachmentRequest] = Seq()
+  attachmentRequests: Seq[HakemusAttachmentRequest] = Seq(),
+  received: Long
 ) extends Resource[String, FullHakemus]
     with Identified[String]
     with HakijaHakemus {
@@ -1084,6 +1085,7 @@ case class AtaruHakemusDto(
   oid: String,
   personOid: String,
   applicationSystemId: String,
+  createdTime: String,
   kieli: String,
   hakukohteet: List[String],
   email: String,
@@ -1104,6 +1106,7 @@ case class AtaruHakemusDto(
 case class AtaruHakemus(
   oid: String,
   personOid: Option[String],
+  createdTime: String,
   applicationSystemId: String,
   hakutoiveet: Option[List[HakutoiveDTO]],
   henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,

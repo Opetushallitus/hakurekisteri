@@ -140,7 +140,9 @@ class YtlIntegrationSpec
               activeHakuOid,
               Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(ssn))))),
               Some("ACTIVE"),
-              Seq()
+              Seq(),
+              Seq(),
+              1615219923688L
             )
           )
         )

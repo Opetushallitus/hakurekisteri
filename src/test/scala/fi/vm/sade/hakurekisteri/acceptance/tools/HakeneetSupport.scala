@@ -243,7 +243,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
               Address("Vastaanottaja", "Tie 1", "00100", "Helsinki")
             )
           )
-        )
+        ),
+        received = 1615219923688L
       )
   object FullHakemus2
       extends FullHakemus(
@@ -355,7 +356,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("INCOMPLETE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = 1615219923688L
       )
   object FullHakemus3
       extends FullHakemus(
@@ -481,7 +483,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
               Address("Vastaanottajan kanslia", "Tie 1", "00100", "Helsinki")
             )
           )
-        )
+        ),
+        received = 1615219923688L
       )
 
   object FullHakemus4
@@ -603,7 +606,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("INCOMPLETE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = 1615219923688L
       )
 
   object FullHakemus5
@@ -715,7 +719,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         state = Some("ACTIVE"),
         preferenceEligibilities =
           Seq(PreferenceEligibility("1.11.5", "NOT_CHECKED", Some("UNKNOWN"), Some("NOT_CHECKED"))),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = 1615219923688L
       )
 
   object SynteettinenHakemus
@@ -764,7 +769,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("ACTIVE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = 1615219923688L
       )
 
   object VanhentuneenHaunHakemus
@@ -813,7 +819,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("ACTIVE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = 1615219923688L
       )
 
   object notEmpty
