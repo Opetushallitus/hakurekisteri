@@ -142,7 +142,7 @@ class YtlIntegrationSpec
               Some("ACTIVE"),
               Seq(),
               Seq(),
-              1615219923688L
+              Some(1615219923688L)
             )
           )
         )

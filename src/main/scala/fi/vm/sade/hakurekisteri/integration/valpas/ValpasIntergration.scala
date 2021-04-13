@@ -358,7 +358,7 @@ class ValpasIntergration(
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
           haunAlkamispaivamaara = formatHakuAlkamispaivamaara(haku.aika.alku),
-          hakemuksenMuokkauksenAikaleima = Some(Formatter.print(h.received)),
+          hakemuksenMuokkauksenAikaleima = h.received.map(Formatter.print),
           oppijaOid = h.personOid.get,
           hakemusOid = h.oid,
           hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en).flatMap(kv =>
