@@ -277,7 +277,8 @@ object AkkaHakupalvelu {
       "LISAKOULUTUS_AMMATTISTARTTI" -> tausta.LISAKOULUTUS_AMMATTISTARTTI,
       "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
       "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO,
-      "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO
+      "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO,
+      "LISAKOULUTUS_VALMA" -> tausta.LISAKOULUTUS_VALMA
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
@@ -867,6 +868,7 @@ case class Koulutustausta(
   LISAKOULUTUS_KANSANOPISTO: Option[String],
   LISAKOULUTUS_MAAHANMUUTTO: Option[String],
   LISAKOULUTUS_MAAHANMUUTTO_LUKIO: Option[String],
+  LISAKOULUTUS_VALMA: Option[String],
   luokkataso: Option[String],
   lahtoluokka: Option[String],
   perusopetuksen_kieli: Option[String],
@@ -894,6 +896,7 @@ case class Koulutustausta(
 
 object Koulutustausta {
   def apply(): Koulutustausta = Koulutustausta(
+    None,
     None,
     None,
     None,

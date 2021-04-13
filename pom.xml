@@ -1612,6 +1612,7 @@
                     <systemProperties>
                         <postgresRunningOnPort>${postgresRunningOnPort}</postgresRunningOnPort>
                     </systemProperties>
+                    <stdout>I</stdout>
                 </configuration>
                 <executions>
                     <execution>
