@@ -223,12 +223,13 @@ class EnsikertalainenActor(
             Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)),
             _,
             _,
+            _,
             _
           )
           if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") &&
             koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined =>
         (personOid, Some(koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt))
-      case FullHakemus(_, Some(personOid), _, _, _, _, _) =>
+      case FullHakemus(_, Some(personOid), _, _, _, _, _, _) =>
         (personOid, None)
       case h: AtaruHakemus =>
         (h.henkilo.oidHenkilo, h.korkeakoulututkintoVuosi)
