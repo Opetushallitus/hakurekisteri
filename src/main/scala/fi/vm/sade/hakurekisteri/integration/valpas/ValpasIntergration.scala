@@ -94,7 +94,7 @@ case class ValpasHakutoive(
   ilmoittautumistila: Option[String], //Ilmoittautumistila.Ilmoittautumistila
   hakutoivenumero: Int,
   hakukohdeOid: String,
-  hakukohdeKoulutuskoodi: String,
+  hakukohdeKoulutuskoodi: ValpasKoodi,
   varasijanumero: Option[Int],
   hakukohdeOrganisaatio: String,
   koulutusOid: Option[String],
@@ -186,7 +186,8 @@ class ValpasIntergration(
     oidToOrganisaatio: Map[String, Organisaatio],
     oidToHaku: Map[String, Haku],
     hakutapa: KoodistoKoodiArvot,
-    hakutyyppi: KoodistoKoodiArvot
+    hakutyyppi: KoodistoKoodiArvot,
+    koulutusKoodit: KoodistoKoodiArvot
   ): ValpasHakemus = {
     def logSijoittelunTulos(): String = {
       tulos match {
@@ -207,7 +208,8 @@ class ValpasIntergration(
       )
       k
     }
-
+    def koulutusKoodiToValpasKoodi(kk: String): ValpasKoodi =
+      uriToValpasKoodi(s"koulutus_$kk#1", koulutusKoodit)
     def hakutoiveWithOidToValpasHakutoive(
       hakukohdeOid: String,
       c: HakutoiveDTO
@@ -247,6 +249,7 @@ class ValpasIntergration(
       val knimi = koulutus.koulutusohjelma.getOrElse(Koulutusohjelma(Map.empty)).tekstis
       val organisaatio: Option[Organisaatio] = c.organizationOid.flatMap(oidToOrganisaatio.get)
       val organisaatioNimi = organisaatio.map(_.nimi).getOrElse(Map.empty).filterNot(_._2.isEmpty)
+
       ValpasHakutoive(
         valintakoe = valintakoe,
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
@@ -269,7 +272,7 @@ class ValpasIntergration(
         vastaanottotieto = tulos.flatMap(t => t.vastaanottotila.get(key).map(_.toString)),
         hakutoivenumero = c.preferenceNumber,
         hakukohdeOid = hakukohdeOid,
-        hakukohdeKoulutuskoodi = koulutus.tkKoulutuskoodi,
+        hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(koulutus.tkKoulutuskoodi),
         varasijanumero = tulos.flatMap(t => t.varasijanumero.get(key).flatten),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä
@@ -437,6 +440,8 @@ class ValpasIntergration(
       (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutapa")).mapTo[KoodistoKoodiArvot]
     val hakutyyppi =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutyyppi")).mapTo[KoodistoKoodiArvot]
+    val koulutus =
+      (koodistoActor.actor ? GetKoodistoKoodiArvot("koulutus")).mapTo[KoodistoKoodiArvot]
 
     for {
       valintatulokset: Map[String, SijoitteluTulos] <- valintarekisteri
@@ -444,6 +449,7 @@ class ValpasIntergration(
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
       hakutapa: KoodistoKoodiArvot <- hakutapa
       hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
+      koulutus: KoodistoKoodiArvot <- koulutus
       oidToOrganisaatio <- organisaatiot
       osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- osallistumisetFuture.map(
         _.groupBy(_.hakemusOid)
@@ -460,7 +466,8 @@ class ValpasIntergration(
             oidToOrganisaatio,
             oidToHaku,
             hakutapa,
-            hakutyyppi
+            hakutyyppi,
+            koulutus
           )
         )
       )
