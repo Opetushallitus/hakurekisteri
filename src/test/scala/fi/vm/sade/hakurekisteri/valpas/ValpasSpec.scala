@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.valpas
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
-
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
@@ -36,6 +35,11 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{
   Organisaatio,
   OrganisaatioActorRef,
   OrganisaatioResponse
+}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
+  PistesyottoService,
+  Pistetieto,
+  PistetietoWrapper
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
@@ -96,7 +100,8 @@ class ValpasSpec
         SuoritusMock.getResourceJson("/mock-data/hakemus/hakemus-valpas-ataru.json")
       ).extract[AtaruResponse]
       val ataruClient = mockPostAtaruClient(Seq(oppijaOid))(ataruHakemukset)
-
+      val pisteClient: VirkailijaRestClient =
+        mockPostPistesyottoClient(Seq("1.2.246.562.11.00000000000000446632"))
       val hakuAppHakemukset: Map[String, Seq[FullHakemus]] = Map()
       val hakuAppClient = mockPostHakuAppClient(Seq(oppijaOid))(hakuAppHakemukset)
       val valintalaskentaClient: VirkailijaRestClient =
@@ -206,6 +211,7 @@ class ValpasSpec
       )(system)
 
       val v: Future[Seq[ValpasHakemus]] = new ValpasIntergration(
+        new PistesyottoService(pisteClient),
         valintalaskentaClient,
         organisaatiot,
         koodisto,
@@ -226,6 +232,35 @@ class ValpasSpec
       val result = run(v)
       result.size should equal(1)
     }
+  }
+  private def mockPostPistesyottoClient(post: Seq[String]): VirkailijaRestClient = {
+    val client: VirkailijaRestClient = mock[VirkailijaRestClient]
+
+    Mockito
+      .when(
+        client.postObject[Seq[String], Seq[PistetietoWrapper]](
+          "pistesyotto-service.hakemuksen.pisteet"
+        )(200, post)
+      )
+      .thenReturn(
+        Future.successful(
+          post.map(o =>
+            PistetietoWrapper(
+              hakemusOID = o,
+              pisteet = Seq(
+                Pistetieto(
+                  aikaleima = "",
+                  tunniste = "luonnonvara_osio_1_motivaatio_k2019",
+                  arvo = "Jep",
+                  osallistuminen = "OSALLISTUU"
+                )
+              )
+            )
+          )
+        )
+      )
+
+    client
   }
   private def mockPostValintalaskentaClient(post: Seq[String]): VirkailijaRestClient = {
     val valintalaskentaClient: VirkailijaRestClient = mock[VirkailijaRestClient]

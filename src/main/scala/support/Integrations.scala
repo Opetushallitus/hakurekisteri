@@ -1,7 +1,6 @@
 package support
 
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
@@ -30,6 +29,7 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.{
   MockParameterActor,
   ParametritActorRef
 }
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.PistesyottoService
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   MockTarjontaActor,
   TarjontaActor,
@@ -58,8 +58,9 @@ import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlRerunPolicy
+
 import scala.concurrent.duration._
-import scala.util.{Try}
+import scala.util.Try
 
 trait Integrations {
   val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef
@@ -85,6 +86,7 @@ trait Integrations {
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
   val koskiService: IKoskiService
   val valintaperusteetService: IValintaperusteetService
+  val pistesyottoService: PistesyottoService
 }
 
 object Integrations {
@@ -162,8 +164,10 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val proxies = new MockProxies
   override val hakemusClient = null
   override val valintalaskentaClient = null
+  override val pistesyottoService = null
   override val valpasIntegration =
     new ValpasIntergration(
+      pistesyottoService,
       valintalaskentaClient,
       organisaatiot,
       koodisto,
@@ -189,6 +193,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   logger.info(s"Initializing BaseIntegrations started...")
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
   val laskentaEc = ExecutorUtil.createExecutor(10, "valintalaskenta-client-pool")
+  val pisteEc = ExecutorUtil.createExecutor(10, "pistesyotto-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
   val virtaEc = ExecutorUtil.createExecutor(1, "virta-client-pool")
@@ -199,11 +204,13 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     restEc.shutdown()
     vtsEc.shutdown()
     laskentaEc.shutdown()
+    pisteEc.shutdown()
     vrEc.shutdown()
     virtaEc.shutdown()
     restEc.awaitTermination(3, TimeUnit.SECONDS)
     vtsEc.awaitTermination(3, TimeUnit.SECONDS)
     laskentaEc.awaitTermination(3, TimeUnit.SECONDS)
+    pisteEc.awaitTermination(3, TimeUnit.SECONDS)
     vrEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaResourceEc.awaitTermination(3, TimeUnit.SECONDS)
@@ -230,6 +237,11 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient =
     new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
+  private val pistesyottoClient =
+    new VirkailijaRestClient(
+      config.integrations.pistesyottoConfig,
+      None
+    )(pisteEc, system)
   val valintalaskentaClient =
     new VirkailijaRestClient(
       config.integrations.valintalaskentaConfig,
@@ -259,7 +271,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config.integrations.valintaperusteetServiceConfig,
     None
   )(restEc, system)
-
+  val pistesyottoService = new PistesyottoService(pistesyottoClient)
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
       Backoff.onStop(
@@ -359,6 +371,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val valpasIntegration =
     new ValpasIntergration(
+      pistesyottoService,
       valintalaskentaClient,
       organisaatiot,
       koodisto,

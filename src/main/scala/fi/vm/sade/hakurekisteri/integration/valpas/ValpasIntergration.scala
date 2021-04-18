@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.valpas
 
 import java.util.concurrent.Executors
-
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
@@ -19,6 +18,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoKoodiArvot
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, PistetietoWrapper}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
   HakukohdeOid,
@@ -38,7 +38,7 @@ import fi.vm.sade.hakurekisteri.integration.{
   VirkailijaRestClient,
   valpas
 }
-import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
+import org.joda.time.{DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 
@@ -159,6 +159,7 @@ case class ValintalaskentaOsallistuminen(
 ) {}
 
 class ValpasIntergration(
+  pistesyottoService: PistesyottoService,
   valintalaskentaClient: VirkailijaRestClient,
   organisaatioActor: OrganisaatioActorRef,
   koodistoActor: KoodistoActorRef,
@@ -178,6 +179,7 @@ class ValpasIntergration(
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
 
   def fromFetchedResources(
+    oidToPisteet: Map[String, Seq[PistetietoWrapper]],
     osallistumiset: Seq[ValintalaskentaOsallistuminen],
     hakemus: HakijaHakemus,
     tulos: Option[SijoitteluTulos],
@@ -214,7 +216,7 @@ class ValpasIntergration(
       hakukohdeOid: String,
       c: HakutoiveDTO
     ): ValpasHakutoive = {
-      def hkToVk(hk: ValintalaskentaHakutoive): Seq[Valintakoe] = {
+      def hkToVk(hk: ValintalaskentaHakutoive, pisteet: Seq[PistetietoWrapper]): Seq[Valintakoe] = {
         val vks = hk.valinnanVaiheet.flatMap(vv =>
           vv.valintakokeet.flatMap(vk =>
             if (vk.aktiivinen)
@@ -227,7 +229,10 @@ class ValpasIntergration(
                   nimi = vk.nimi,
                   valinnanVaiheOid = vv.valinnanVaiheOid,
                   valinnanVaiheJarjestysluku = vv.valinnanVaiheJarjestysluku,
-                  arvo = None
+                  arvo = pisteet
+                    .flatMap(_.pisteet)
+                    .find(_.tunniste.equals(vk.valintakoeTunniste))
+                    .map(_.arvo.toString)
                 )
               )
             else None
@@ -240,7 +245,7 @@ class ValpasIntergration(
         osallistumiset
           .flatMap(_.hakutoiveet)
           .filter(hk => hakukohdeOid.equals(hk.hakukohdeOid))
-          .flatMap(hkToVk)
+          .flatMap(hkToVk(_, oidToPisteet.getOrElse(hakemus.oid, Seq.empty)))
 
       val key = (hakemus.oid, hakukohdeOid)
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
@@ -443,7 +448,10 @@ class ValpasIntergration(
     val koulutus =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("koulutus")).mapTo[KoodistoKoodiArvot]
 
+    val pisteet: Future[Seq[PistetietoWrapper]] =
+      pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
     for {
+      oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- pisteet.map(_.groupBy(_.hakemusOID))
       valintatulokset: Map[String, SijoitteluTulos] <- valintarekisteri
       oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
@@ -458,6 +466,7 @@ class ValpasIntergration(
       hakemukset.map(h =>
         Try(
           fromFetchedResources(
+            oidToPisteet,
             osallistumiset.getOrElse(h.oid, Seq.empty),
             h,
             valintatulokset.get(h.oid),
