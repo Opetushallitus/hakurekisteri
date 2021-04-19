@@ -506,7 +506,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     casUrl = casUrl,
     user = serviceUser,
     password = servicePassword,
-    */
+     */
     properties = properties,
     maxSimultaneousConnections = findMandatoryPropertyValue(
       "suoritusrekisteri.pistesyotto-service.max-connections"
