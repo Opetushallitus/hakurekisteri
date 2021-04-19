@@ -501,10 +501,12 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
   }
   val pistesyottoConfig = new ServiceConfig(
-    casUrl = casUrl,
     serviceUrl = valintalaskentaServiceUrl,
+    /*
+    casUrl = casUrl,
     user = serviceUser,
     password = servicePassword,
+    */
     properties = properties,
     maxSimultaneousConnections = findMandatoryPropertyValue(
       "suoritusrekisteri.pistesyotto-service.max-connections"
@@ -517,11 +519,9 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   }
   val valintalaskentaConfig = new ServiceConfig(
     serviceUrl = pistesyottoServiceUrl,
-    /*
     casUrl = casUrl,
     user = serviceUser,
     password = servicePassword,
-     */
     properties = properties,
     maxSimultaneousConnections = findMandatoryPropertyValue(
       "suoritusrekisteri.valintalaskenta-service.max-connections"
