@@ -18,6 +18,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
+case class VirkailijanValintatulos(hakuOid: String, hakemusOid: String)
 case class HakemuksenValintatulos(hakuOid: String, hakemusOid: String)
 case class HaunValintatulos(hakuOid: String)
 
@@ -55,8 +56,11 @@ class ValintaTulosActor(
   }
 
   private def withQueue(haunValintatulosFetchQueue: Map[String, Vector[ActorRef]]): Receive = {
-    case HakemuksenValintatulos(hakuOid, hakemusOid) =>
+    case VirkailijanValintatulos(hakuOid, hakemusOid) =>
       hakemuksenTulos(hakuOid, hakemusOid) pipeTo sender
+
+    case HakemuksenValintatulos(hakuOid, hakemusOid) =>
+      hakemuksenTulos(hakuOid, hakemusOid).map(SijoitteluTulos(hakuOid, _)) pipeTo sender
 
     case HaunValintatulos(hakuOid) =>
       cache
@@ -106,7 +110,7 @@ class ValintaTulosActor(
     case _                                   => false
   }
 
-  private def hakemuksenTulos(hakuOid: String, hakemusOid: String): Future[SijoitteluTulos] = {
+  private def hakemuksenTulos(hakuOid: String, hakemusOid: String): Future[ValintaTulos] = {
     client
       .readObject[ValintaTulos]("valinta-tulos-service.hakemus", hakuOid, hakemusOid)(
         200,
@@ -117,7 +121,7 @@ class ValintaTulosActor(
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           ValintaTulos(hakemusOid, Seq())
       }
-      .map(SijoitteluTulos(hakuOid, _))
+
   }
 
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {

@@ -7,22 +7,15 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.hakemus.{
-  AtaruHakemusDto,
-  AtaruResponse,
-  FullHakemus,
-  HakemusService
-}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, Haku, HakuRequest}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   HenkiloViite,
   IOppijaNumeroRekisteri,
-  Kieli,
   OppijaNumeroRekisteri
 }
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetKoodi,
   GetKoodistoKoodiArvot,
   Koodi,
   KoodistoActorRef,
@@ -53,11 +46,9 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   TarjontaResultResponse
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  HakemuksenValintatulos,
-  SijoitteluTulos,
   ValintaTulos,
   ValintaTulosActorRef,
-  Valintatila
+  VirkailijanValintatulos
 }
 import fi.vm.sade.hakurekisteri.integration.valpas.{
   ValintalaskentaOsallistuminen,
@@ -218,11 +209,10 @@ class ValpasSpec
         tarjonta,
         haku,
         ValintaTulosActorRef(system.actorOf(Props(new Actor {
-          override def receive: Actor.Receive = { case HakemuksenValintatulos(hakuOid, _) =>
+          override def receive: Actor.Receive = { case _ =>
             sender !
-              SijoitteluTulos(
-                hakuOid,
-                resource[ValintaTulos](s"/mock-data/valintatulos/valintatulos-hakemus-valpas.json")
+              resource[ValintaTulos](
+                s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
               )
           }
         }))),

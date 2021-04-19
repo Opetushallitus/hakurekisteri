@@ -61,7 +61,20 @@ import Vastaanottotila.Vastaanottotila
 import Ilmoittautumistila.Ilmoittautumistila
 
 case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
-
+case class ValintaTulosJono(
+  oid: String,
+  nimi: String,
+  pisteet: Option[BigDecimal],
+  alinHyvaksyttyPistemaara: Option[BigDecimal],
+  valintatila: Valintatila,
+  julkaistavissa: Boolean,
+  valintatapajonoPrioriteetti: Option[Int],
+  ehdollisestiHyvaksyttavissa: Boolean,
+  varasijanumero: Option[Int],
+  eiVarasijatayttoa: Boolean,
+  varasijat: Option[Int],
+  varasijasaannotKaytossa: Boolean
+)
 case class ValintaTulosHakutoive(
   hakukohdeOid: String,
   tarjoajaOid: String,
@@ -70,7 +83,9 @@ case class ValintaTulosHakutoive(
   ilmoittautumistila: HakutoiveenIlmoittautumistila,
   pisteet: Option[BigDecimal],
   valintatapajonoOid: String,
-  varasijanumero: Option[Int]
+  varasijanumero: Option[Int],
+  julkaistavissa: Boolean,
+  jonokohtaisetTulostiedot: Seq[ValintaTulosJono]
 )
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
@@ -91,7 +106,7 @@ object SijoitteluTulos {
     new SijoitteluTulos(
       hakuOid,
       valintatulos.hakutoiveet.collect {
-        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _) =>
+        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
           (valintatulos.hakemusOid, oid) -> pisteet
       }.toMap,
       valintatulos.hakutoiveet
@@ -122,7 +137,7 @@ object SijoitteluTulos {
       valintatulokset
         .flatMap(valintatulos => {
           valintatulos.hakutoiveet.collect {
-            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _) =>
+            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
               (valintatulos.hakemusOid, oid) -> pisteet
           }
         })

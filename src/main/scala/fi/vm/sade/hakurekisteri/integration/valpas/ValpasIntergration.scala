@@ -30,7 +30,9 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   HakemuksenValintatulos,
   SijoitteluTulos,
-  ValintaTulosActorRef
+  ValintaTulos,
+  ValintaTulosActorRef,
+  ValintaTulosHakutoive
 }
 import fi.vm.sade.hakurekisteri.integration.{
   JsonExtractor,
@@ -66,6 +68,7 @@ case class Valintakoe(
 ) {}
 case class ValpasHakutoive(
   valintakoe: Seq[Valintakoe],
+  alinHyvaksyttyPistemaara: Option[String],
   alinValintaPistemaara: Option[Int],
   organisaatioNimi: Map[String, String],
   hakukohdeNimi: Map[String, String],
@@ -182,7 +185,7 @@ class ValpasIntergration(
     oidToPisteet: Map[String, Seq[PistetietoWrapper]],
     osallistumiset: Seq[ValintalaskentaOsallistuminen],
     hakemus: HakijaHakemus,
-    tulos: Option[SijoitteluTulos],
+    tulos: Option[ValintaTulos],
     oidToHakukohde: Map[String, Hakukohde],
     oidToKoulutus: Map[String, HakukohteenKoulutukset],
     oidToOrganisaatio: Map[String, Organisaatio],
@@ -191,13 +194,7 @@ class ValpasIntergration(
     hakutyyppi: KoodistoKoodiArvot,
     koulutusKoodit: KoodistoKoodiArvot
   ): ValpasHakemus = {
-    def logSijoittelunTulos(): String = {
-      tulos match {
-        case Some(t) =>
-          s"sijoittelun tulos avaimilla ${(t.ilmoittautumistila.keySet ++ t.valintatila.keySet ++ t.vastaanottotila.keySet ++ t.pisteet.keySet ++ t.valintatapajono.keySet ++ t.varasijanumero.keySet).toString()}"
-        case None => "ei sijoittelun tulosta"
-      }
-    }
+
     def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
       val Array(koodi, versio) = uri.split("#")
       val Array(_, arvo) = koodi.split("_")
@@ -254,9 +251,17 @@ class ValpasIntergration(
       val knimi = koulutus.koulutusohjelma.getOrElse(Koulutusohjelma(Map.empty)).tekstis
       val organisaatio: Option[Organisaatio] = c.organizationOid.flatMap(oidToOrganisaatio.get)
       val organisaatioNimi = organisaatio.map(_.nimi).getOrElse(Map.empty).filterNot(_._2.isEmpty)
+      val hakutoiveenTulos: Option[ValintaTulosHakutoive] = tulos.flatMap(
+        _.hakutoiveet.find(hk => hk.hakukohdeOid.equals(hakukohdeOid) && hk.julkaistavissa)
+      )
 
       ValpasHakutoive(
         valintakoe = valintakoe,
+        alinHyvaksyttyPistemaara = hakutoiveenTulos.flatMap(tulos =>
+          tulos.jonokohtaisetTulostiedot
+            .find(jono => jono.julkaistavissa && jono.oid.equals(tulos.valintatapajonoOid))
+            .map(_.alinHyvaksyttyPistemaara.toString())
+        ),
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         organisaatioNimi = organisaatioNimi,
         koulutusNimi = Map(
@@ -271,14 +276,14 @@ class ValpasIntergration(
           "en" -> nimi.get("kieli_en").filterNot(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
-        pisteet = tulos.flatMap(t => t.pisteet.get(key)),
-        ilmoittautumistila = tulos.flatMap(t => t.ilmoittautumistila.get(key).map(_.toString)),
-        valintatila = tulos.flatMap(t => t.valintatila.get(key).map(_.toString)),
-        vastaanottotieto = tulos.flatMap(t => t.vastaanottotila.get(key).map(_.toString)),
+        pisteet = hakutoiveenTulos.flatMap(_.pisteet),
+        ilmoittautumistila = hakutoiveenTulos.map(_.ilmoittautumistila.toString),
+        valintatila = hakutoiveenTulos.map(_.valintatila.toString),
+        vastaanottotieto = hakutoiveenTulos.map(_.vastaanottotila.toString),
         hakutoivenumero = c.preferenceNumber,
         hakukohdeOid = hakukohdeOid,
         hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(koulutus.tkKoulutuskoodi),
-        varasijanumero = tulos.flatMap(t => t.varasijanumero.get(key).flatten),
+        varasijanumero = hakutoiveenTulos.flatMap(_.varasijanumero),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä
         // mahdollinen kielitaidon arviointi
@@ -319,7 +324,7 @@ class ValpasIntergration(
         val nimi = haku.nimi
         logger.debug(
           s"Luodaan Atarun ValpasHakemus ${a.oid} hakutoiveilla ${hakutoiveet
-            .map(_.hakukohdeOid)} ja sijoittelun tuloksilla ${logSijoittelunTulos()}"
+            .map(_.hakukohdeOid)}"
         )
         ValpasHakemus(
           aktiivinenHaku = haku.isActive,
@@ -355,7 +360,7 @@ class ValpasIntergration(
 
         logger.debug(
           s"Luodaan Haku-App:n ValpasHakemus ${h.oid} hakutoiveilla ${hakutoiveet
-            .map(_.hakukohdeOid)} ja sijoittelun tuloksilla ${logSijoittelunTulos()}"
+            .map(_.hakukohdeOid)}"
         )
         ValpasHakemus(
           aktiivinenHaku = haku.isActive,
@@ -395,7 +400,6 @@ class ValpasIntergration(
         .flatMap(h => h.koulutusId)
         .toSet
         .filterNot(_.isEmpty)
-    val hakuOids: Set[String] = hakemukset.map(_.applicationSystemId).toSet.filterNot(_.isEmpty)
     val organisaatioOids =
       hakemukset
         .flatMap(_.hakutoiveet.getOrElse(List.empty))
@@ -405,11 +409,11 @@ class ValpasIntergration(
     def hakemusToValintatulosQuery(h: HakijaHakemus): HakemuksenValintatulos =
       HakemuksenValintatulos(h.applicationSystemId, h.oid)
 
-    val valintarekisteri: Future[Map[String, SijoitteluTulos]] = Future
+    val valintarekisteri: Future[Map[String, ValintaTulos]] = Future
       .sequence(
         hakemukset.map(h =>
           (valintaTulos.actor ? hakemusToValintatulosQuery(h))
-            .mapTo[SijoitteluTulos]
+            .mapTo[ValintaTulos]
             .map(s => (h.oid, s))
         )
       )
@@ -452,7 +456,7 @@ class ValpasIntergration(
       pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
     for {
       oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- pisteet.map(_.groupBy(_.hakemusOID))
-      valintatulokset: Map[String, SijoitteluTulos] <- valintarekisteri
+      valintatulokset: Map[String, ValintaTulos] <- valintarekisteri
       oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
       oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
       hakutapa: KoodistoKoodiArvot <- hakutapa

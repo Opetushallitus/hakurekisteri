@@ -1,0 +1,103 @@
+{
+  "hakuOid": "1.2.246.562.29.36339915997",
+  "hakemusOid": "1.2.246.562.11.00000000000000446632",
+  "hakijaOid": "1.2.246.562.24.82344311114",
+  "aikataulu": {},
+  "hakutoiveet": [
+    {
+      "hakukohdeOid": "1.2.246.562.20.12060097362",
+      "hakukohdeNimi": "Lukio",
+      "tarjoajaOid": "1.2.246.562.10.53528814972",
+      "tarjoajaNimi": "Pyhäjoen lukio",
+      "valintatapajonoOid": "",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {},
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "julkaistavissa": true,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": []
+    },
+    {
+      "hakukohdeOid": "1.2.246.562.20.743491195410",
+      "hakukohdeNimi": "Sähkö- ja automaatiotekniikan perustutkinto, pk",
+      "tarjoajaOid": "1.2.246.562.10.86728222554",
+      "tarjoajaNimi": "Raahen ammattiopisto",
+      "valintatapajonoOid": "",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {},
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "julkaistavissa": true,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": []
+    },
+    {
+      "hakukohdeOid": "1.2.246.562.20.652840958110",
+      "hakukohdeNimi": "Talotekniikan perustutkinto, pk",
+      "tarjoajaOid": "1.2.246.562.10.86728222554",
+      "tarjoajaNimi": "Raahen ammattiopisto",
+      "valintatapajonoOid": "",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {},
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "julkaistavissa": true,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": []
+    },
+    {
+      "hakukohdeOid": "1.2.246.562.5.873258668510",
+      "hakukohdeNimi": "Autoalan perustutkinto, pk",
+      "tarjoajaOid": "1.2.246.562.10.86728222554",
+      "tarjoajaNimi": "Raahen ammattiopisto",
+      "valintatapajonoOid": "",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {},
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "julkaistavissa": true,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": []
+    },
+    {
+      "hakukohdeOid": "1.2.246.562.5.10892050096",
+      "hakukohdeNimi": "Sosiaali- ja terveysalan perustutkinto, pk",
+      "tarjoajaOid": "1.2.246.562.10.61519013512",
+      "tarjoajaNimi": "Oulaisten ammattiopisto, sosiaali- ja terveysalan yksikkö",
+      "valintatapajonoOid": "",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {},
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "julkaistavissa": true,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": []
+    }
+  ]
+}

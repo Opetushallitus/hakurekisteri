@@ -123,7 +123,9 @@ class KkHakijaServiceSpec
                 HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
                 None,
                 "1.2.jonoOid",
-                None
+                None,
+                true,
+                Seq.empty
               )
             )
           )

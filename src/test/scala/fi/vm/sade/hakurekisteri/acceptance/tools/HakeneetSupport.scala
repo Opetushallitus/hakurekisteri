@@ -1038,7 +1038,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
             "",
-            None
+            None,
+            true,
+            Seq.empty
           ),
           ValintaTulosHakutoive(
             "1.11.1",
@@ -1048,7 +1050,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
             "",
-            None
+            None,
+            true,
+            Seq.empty
           )
         )
       ),
@@ -1063,7 +1067,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
             "",
-            None
+            None,
+            true,
+            Seq.empty
           ),
           ValintaTulosHakutoive(
             "1.11.2",
@@ -1073,7 +1079,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
             "",
-            None
+            None,
+            true,
+            Seq.empty
           )
         )
       ),
@@ -1088,7 +1096,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
             "",
-            None
+            None,
+            true,
+            Seq.empty
           )
         )
       )
