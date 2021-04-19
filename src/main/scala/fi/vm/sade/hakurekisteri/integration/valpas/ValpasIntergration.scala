@@ -4,13 +4,35 @@ import java.util.concurrent.Executors
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakijaHakemus, HakutoiveDTO, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemus,
+  FullHakemus,
+  HakijaHakemus,
+  HakutoiveDTO,
+  IHakemusService
+}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetKoodistoKoodiArvot,
+  KoodistoActorRef,
+  KoodistoKoodiArvot
+}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, PistetietoWrapper}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeOid, HakukohdeQuery, HakukohteenKoulutukset, Koulutusohjelma, TarjontaActorRef}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActorRef, ValintaTulosHakutoive, VirkailijanValintatulos}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  Hakukohde,
+  HakukohdeOid,
+  HakukohdeQuery,
+  HakukohteenKoulutukset,
+  Koulutusohjelma,
+  TarjontaActorRef
+}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{
+  ValintaTulos,
+  ValintaTulosActorRef,
+  ValintaTulosHakutoive,
+  VirkailijanValintatulos
+}
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, VirkailijaRestClient, valpas}
 import org.joda.time.{DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
