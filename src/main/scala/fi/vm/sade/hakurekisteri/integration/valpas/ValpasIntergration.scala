@@ -4,42 +4,14 @@ import java.util.concurrent.Executors
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{
-  AtaruHakemus,
-  FullHakemus,
-  HakijaHakemus,
-  HakutoiveDTO,
-  IHakemusService
-}
-import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, Haku, HakuRequest}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetKoodistoKoodiArvot,
-  KoodistoActorRef,
-  KoodistoKoodiArvot
-}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakijaHakemus, HakutoiveDTO, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, PistetietoWrapper}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  Hakukohde,
-  HakukohdeOid,
-  HakukohdeQuery,
-  HakukohteenKoulutukset,
-  Koulutusohjelma,
-  TarjontaActorRef
-}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  HakemuksenValintatulos,
-  SijoitteluTulos,
-  ValintaTulos,
-  ValintaTulosActorRef,
-  ValintaTulosHakutoive
-}
-import fi.vm.sade.hakurekisteri.integration.{
-  JsonExtractor,
-  OphUrlProperties,
-  VirkailijaRestClient,
-  valpas
-}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeOid, HakukohdeQuery, HakukohteenKoulutukset, Koulutusohjelma, TarjontaActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActorRef, ValintaTulosHakutoive, VirkailijanValintatulos}
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, VirkailijaRestClient, valpas}
 import org.joda.time.{DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
@@ -48,7 +20,7 @@ import scala.annotation.meta.field
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.format.{DateTimeFormat}
 
 object ValpasHakemusTila extends Enumeration {
   type ValpasHakemusTila = Value
@@ -244,7 +216,6 @@ class ValpasIntergration(
           .filter(hk => hakukohdeOid.equals(hk.hakukohdeOid))
           .flatMap(hkToVk(_, oidToPisteet.getOrElse(hakemus.oid, Seq.empty)))
 
-      val key = (hakemus.oid, hakukohdeOid)
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
       val nimi = hakukohde.hakukohteenNimet
       val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
@@ -406,8 +377,8 @@ class ValpasIntergration(
         .flatMap(_.organizationOid)
         .toSet
         .filterNot(_.isEmpty)
-    def hakemusToValintatulosQuery(h: HakijaHakemus): HakemuksenValintatulos =
-      HakemuksenValintatulos(h.applicationSystemId, h.oid)
+    def hakemusToValintatulosQuery(h: HakijaHakemus): VirkailijanValintatulos =
+      VirkailijanValintatulos(h.applicationSystemId, h.oid)
 
     val valintarekisteri: Future[Map[String, ValintaTulos]] = Future
       .sequence(
