@@ -239,7 +239,7 @@ class ValpasSpec
               hakemusOID = o,
               pisteet = Seq(
                 Pistetieto(
-                  aikaleima = "",
+                  aikaleima = None,
                   tunniste = "luonnonvara_osio_1_motivaatio_k2019",
                   arvo = "Jep",
                   osallistuminen = "OSALLISTUU"
