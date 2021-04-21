@@ -270,7 +270,7 @@ class ValpasIntergration(
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         pisteet = hakutoiveenTulos.flatMap(_.pisteet),
-        ilmoittautumistila = hakutoiveenTulos.map(_.ilmoittautumistila.toString),
+        ilmoittautumistila = hakutoiveenTulos.map(_.ilmoittautumistila.ilmoittautumistila.toString),
         valintatila = hakutoiveenTulos.map(_.valintatila.toString),
         vastaanottotieto = hakutoiveenTulos.map(_.vastaanottotila.toString),
         hakutoivenumero = c.preferenceNumber,
