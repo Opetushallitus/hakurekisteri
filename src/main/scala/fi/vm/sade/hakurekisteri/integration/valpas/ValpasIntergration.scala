@@ -253,7 +253,7 @@ class ValpasIntergration(
         alinHyvaksyttyPistemaara = hakutoiveenTulos.flatMap(tulos =>
           tulos.jonokohtaisetTulostiedot
             .find(jono => jono.julkaistavissa && jono.oid.equals(tulos.valintatapajonoOid))
-            .map(_.alinHyvaksyttyPistemaara.toString())
+            .flatMap(_.alinHyvaksyttyPistemaara.map(_.toString()))
         ),
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         organisaatioNimi = organisaatioNimi,
