@@ -225,6 +225,13 @@ class HakemusService(
           )
       }
 
+    def translateAtaruAttachments(hakemus: AtaruHakemusDto): Map[String, Option[Boolean]] =
+      hakemus.attachments.mapValues {
+        case "checked"     => Some(true)
+        case "not-checked" => Some(false)
+        case _             => None
+      }
+
     Future
       .sequence(
         ataruHakemusDtos
@@ -277,6 +284,7 @@ class HakemusService(
             markkinointilupa = hakemus.koulutusmarkkinointilupa,
             paymentObligations = translateAtaruMaksuvelvollisuus(hakemus),
             eligibilities = translateAtaruHakukelpoisuus(hakemus),
+            liitteetTarkastettu = translateAtaruAttachments(hakemus),
             kkPohjakoulutus = hakemus.kkPohjakoulutus,
             korkeakoulututkintoVuosi = hakemus.korkeakoulututkintoVuosi
           )

@@ -111,6 +111,7 @@ class HakemusServiceSpec
       false,
       Map(),
       Map(),
+      Map(),
       List(),
       None
     )
@@ -271,6 +272,7 @@ class HakemusServiceSpec
         true,
         Map.empty,
         Map.empty,
+        Map.empty,
         List.empty,
         None
       ),
@@ -299,6 +301,7 @@ class HakemusServiceSpec
         "asuinmaa",
         true,
         true,
+        Map.empty,
         Map.empty,
         Map.empty,
         List.empty,

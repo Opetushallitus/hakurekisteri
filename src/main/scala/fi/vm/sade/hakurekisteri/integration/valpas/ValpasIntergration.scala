@@ -61,6 +61,7 @@ case class Valintakoe(
   arvo: Option[String]
 ) {}
 case class ValpasHakutoive(
+  liitteetTarkastettu: Option[Boolean],
   valintakoe: Seq[Valintakoe],
   alinHyvaksyttyPistemaara: Option[String],
   alinValintaPistemaara: Option[Int],
@@ -204,6 +205,7 @@ class ValpasIntergration(
     def koulutusKoodiToValpasKoodi(kk: String): ValpasKoodi =
       uriToValpasKoodi(s"koulutus_$kk#1", koulutusKoodit)
     def hakutoiveWithOidToValpasHakutoive(
+      attachmentsChecked: Option[Boolean],
       hakukohdeOid: String,
       c: HakutoiveDTO
     ): ValpasHakutoive = {
@@ -249,6 +251,7 @@ class ValpasIntergration(
       )
 
       ValpasHakutoive(
+        liitteetTarkastettu = attachmentsChecked,
         valintakoe = valintakoe,
         alinHyvaksyttyPistemaara = hakutoiveenTulos.flatMap(tulos =>
           tulos.jonokohtaisetTulostiedot
@@ -294,10 +297,13 @@ class ValpasIntergration(
       )
     }
 
-    def hakutoiveToValpasHakutoive(c: HakutoiveDTO): Option[ValpasHakutoive] = {
+    def hakutoiveToValpasHakutoive(
+      attachmentsChecked: Option[Boolean],
+      c: HakutoiveDTO
+    ): Option[ValpasHakutoive] = {
       c.koulutusId.filterNot(_.isEmpty) match {
         case Some(hakukohdeOid) =>
-          Some(hakutoiveWithOidToValpasHakutoive(hakukohdeOid, c))
+          Some(hakutoiveWithOidToValpasHakutoive(attachmentsChecked, hakukohdeOid, c))
         case _ =>
           logger.debug(
             s"Haun ${hakemus.applicationSystemId} hakemukselle ${hakemus.oid} ei löydy hakutoiveen tunnistetta: ${c.koulutusId}"
@@ -310,7 +316,14 @@ class ValpasIntergration(
       case a: AtaruHakemus => {
         val hakutoiveet: List[ValpasHakutoive] =
           a.hakutoiveet
-            .map(h => h.flatMap(hakutoiveToValpasHakutoive))
+            .map(h =>
+              h.flatMap(hk =>
+                hakutoiveToValpasHakutoive(
+                  hk.koulutusId.flatMap(a.liitteetTarkastettu.get).flatten,
+                  hk
+                )
+              )
+            )
             .getOrElse(List.empty)
         val hakuOid = a.applicationSystemId
         val haku: Haku = oidToHaku(hakuOid)
@@ -345,7 +358,7 @@ class ValpasIntergration(
       case h: FullHakemus => {
         val hakutoiveet: List[ValpasHakutoive] =
           h.hakutoiveet
-            .map(h => h.flatMap(hakutoiveToValpasHakutoive))
+            .map(h => h.flatMap(hakutoiveToValpasHakutoive(None, _)))
             .getOrElse(List.empty)
         val hakuOid = h.applicationSystemId
         val haku = oidToHaku(hakuOid)
