@@ -15,6 +15,9 @@
       "eligibilities": {
         "1.2.246.562.20.14800254899": "eligible"
       },
+      "attachments": {
+        "1.2.246.562.20.14800254899": "checked"
+      },
       "asuinmaa": "Suomi",
       "email": "lslsl@ldldl.com",
       "matkapuhelin": "0123123",
@@ -42,6 +45,9 @@
       },
       "eligibilities": {
         "1.2.246.562.20.14800254899": "unreviewed"
+      },
+      "attachments": {
+        "1.2.246.562.20.14800254899": "checked"
       },
       "asuinmaa": "Suomi",
       "email": "lslsl@ldldl.com",
