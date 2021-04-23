@@ -13,6 +13,7 @@ object ReadRole {
 }
 
 object UnknownRole extends Role
+object ValpasReadRole extends Role
 
 object Roles {
   val subjects: PartialFunction[String, PartialFunction[String, (String) => Set[String]]] =
@@ -52,6 +53,7 @@ object Roles {
 
         case "READ_UPDATE" => roleFinder("WRITE", "READ")
         case "READ"        => roleFinder("READ")
+        case "VALPAS_READ" => Set(ValpasReadRole)
         case _             => Set(UnknownRole)
       }
     case _ => Set(UnknownRole)
@@ -69,6 +71,8 @@ trait User {
   def canDelete(resource: String) = !orgsFor("DELETE", resource).isEmpty
 
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
+
+  def hasRole(role: Role): Boolean
 
   def isAdmin: Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
 
@@ -105,6 +109,9 @@ case class OPHUser(
   override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect {
     case d: DefinedRole => d
   }
+
+  override def hasRole(role: Role): Boolean =
+    authorities.map(Roles(_).toList).flatten.exists(r => role.equals(r))
 }
 
 //case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser

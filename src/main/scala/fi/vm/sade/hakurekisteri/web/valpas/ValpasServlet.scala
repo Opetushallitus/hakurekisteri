@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.web.valpas
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.valpas.{ValpasHakemus, ValpasIntergration, ValpasQuery}
+import fi.vm.sade.hakurekisteri.rest.support.ValpasReadRole
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
 import org.json4s.{DefaultFormats, Formats}
@@ -50,15 +51,17 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
   override protected implicit def jsonFormats: Formats = DefaultFormats
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
-  def shouldBeAdmin(): Unit =
-    if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
+  def shouldBeAdminOrValpasRead(): Unit =
+    if (!currentUser.exists(user => user.isAdmin || user.hasRole(ValpasReadRole)))
+      throw UserNotAuthorized("not authorized")
 
   before() {
     contentType = formats("json")
   }
 
   post("/", operation(fetchValpasDataForPersons)) {
-    shouldBeAdmin()
+    shouldBeAdminOrValpasRead()
+
     val ainoastaanAktiivisetHaut: Boolean =
       Try(Option(params("ainoastaanAktiivisetHaut")).map(_.toBoolean)) match {
         case Success(Some(aktiiviset)) => aktiiviset

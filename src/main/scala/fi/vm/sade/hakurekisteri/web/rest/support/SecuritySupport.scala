@@ -2,11 +2,11 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 
 import java.net.InetAddress
 import java.security.Principal
-
 import javax.servlet.http.HttpServletRequest
-import fi.vm.sade.hakurekisteri.{Config, AuditUtil}
-import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, User}
+import fi.vm.sade.hakurekisteri.{AuditUtil, Config}
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, Role, User}
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
+
 import javax.servlet.http.HttpServletRequest
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.jasig.cas.client.authentication.AttributePrincipalImpl
@@ -97,4 +97,5 @@ object TestUser extends User {
     null,
     new AssertionImpl(new AttributePrincipalImpl("testprincipal"))
   )
+  override def hasRole(role: Role) = true
 }

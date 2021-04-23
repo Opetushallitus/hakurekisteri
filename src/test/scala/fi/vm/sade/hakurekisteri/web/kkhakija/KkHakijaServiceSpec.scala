@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetSer
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
-import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, Role, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
@@ -791,6 +791,7 @@ class KkHakijaServiceSpec
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
     override def casAuthenticationToken: CasAuthenticationToken =
       fi.vm.sade.hakurekisteri.web.rest.support.TestUser.casAuthenticationToken
+    override def hasRole(role: Role) = true
   }
 
   def seq2journal(s: Seq[FullHakemus]) = {

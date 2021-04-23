@@ -61,6 +61,7 @@ import fi.vm.sade.hakurekisteri.integration.{
   OphUrlProperties,
   VirkailijaRestClient
 }
+import fi.vm.sade.hakurekisteri.rest.support.{UnknownRole, ValpasReadRole}
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
