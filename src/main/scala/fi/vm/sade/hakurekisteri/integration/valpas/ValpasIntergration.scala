@@ -234,11 +234,23 @@ class ValpasIntergration(
 
         vks
       }
+
       val valintakoe: Seq[Valintakoe] =
         osallistumiset
           .flatMap(_.hakutoiveet)
           .filter(hk => hakukohdeOid.equals(hk.hakukohdeOid))
-          .flatMap(hkToVk(_, oidToPisteet.getOrElse(hakemus.oid, Seq.empty)))
+          .flatMap(vhk =>
+            hkToVk(
+              vhk,
+              tulos
+                .flatMap(
+                  _.hakutoiveet
+                    .find(thk => thk.julkaistavissa && thk.hakukohdeOid.equals(vhk.hakukohdeOid))
+                )
+                .flatMap(_ => oidToPisteet.get(hakemus.oid))
+                .getOrElse(Seq.empty)
+            )
+          )
 
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
       val nimi = hakukohde.hakukohteenNimet
