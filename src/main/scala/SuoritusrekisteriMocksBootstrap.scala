@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
@@ -49,7 +50,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
           hakuOid: String
         ): Future[Seq[String]] = Future.successful(Seq())
       },
-      tarjonta = new TarjontaActorRef(anyActorRef),
+      hakukohdeAggregator = new HakukohdeAggregatorActorRef(anyActorRef),
       haut = anyActorRef,
       koodisto = new KoodistoActorRef(anyActorRef),
       suoritukset = anyActorRef,

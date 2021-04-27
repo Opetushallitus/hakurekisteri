@@ -1,31 +1,36 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
-import fi.vm.sade.hakurekisteri.{Config, Oids}
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
-import akka.pattern.pipe
+import akka.actor.{Actor, ActorLogging, ActorSystem}
+import akka.pattern.{AskableActorRef, pipe}
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  GetHautQuery,
+  RestHaku,
+  RestHakuAika,
+  RestHakuResult
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.LocalDate
-import support.TypedActorRef
+import support.TypedAskableActorRef
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 case class GetKomoQuery(oid: String)
 
-case class HakukohdeQuery(oid: String)
-
-object GetHautQuery
-
-case class RestHakuResult(result: List[RestHaku])
+case class TarjontaRestHakuResult(result: List[TarjontaRestHaku]) {
+  def toRestHakuResult: RestHakuResult = RestHakuResult(result.map(_.toRestHaku))
+}
 
 case class GetHautQueryFailedException(m: String, cause: Throwable) extends Exception(m, cause)
 
-case class RestHaku(
+case class TarjontaRestHaku(
   oid: Option[String],
-  hakuaikas: List[RestHakuAika],
+  hakuaikas: List[TarjontaRestHakuAika],
   nimi: Map[String, String],
   hakukausiUri: String,
   hakutapaUri: String,
@@ -37,9 +42,25 @@ case class RestHaku(
   tila: String
 ) {
   def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
+
+  def toRestHaku: RestHaku = RestHaku(
+    oid = oid,
+    hakuaikas = hakuaikas.map(_.toRestHakuAika),
+    nimi = nimi,
+    hakukausiUri = hakukausiUri,
+    hakutapaUri = hakutapaUri,
+    hakukausiVuosi = hakukausiVuosi,
+    koulutuksenAlkamiskausiUri = koulutuksenAlkamiskausiUri,
+    koulutuksenAlkamisVuosi = koulutuksenAlkamisVuosi,
+    kohdejoukkoUri = kohdejoukkoUri,
+    kohdejoukonTarkenne = kohdejoukonTarkenne,
+    tila = tila
+  )
 }
 
-case class RestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
+case class TarjontaRestHakuAika(alkuPvm: Long, loppuPvm: Option[Long]) {
+  def toRestHakuAika: RestHakuAika = RestHakuAika(alkuPvm = alkuPvm, loppuPvm = loppuPvm)
+}
 
 case class TarjontaResultResponse[T](result: T)
 
@@ -61,12 +82,19 @@ case class Koulutus(
 case class HakukohdeOid(oid: String)
 
 @SerialVersionUID(1)
-case class Hakukohde(
+case class TarjontaHakukohde(
   oid: String,
   hakukohdeKoulutusOids: Seq[String],
   ulkoinenTunniste: Option[String],
   tarjoajaOids: Option[Set[String]]
-)
+) {
+  def toHakukohde: Hakukohde = Hakukohde(
+    oid = oid,
+    hakukohdeKoulutusOids = hakukohdeKoulutusOids,
+    ulkoinenTunniste = ulkoinenTunniste,
+    tarjoajaOids = tarjoajaOids
+  )
+}
 
 case class Hakukohteenkoulutus(
   komoOid: String,
@@ -142,13 +170,16 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     haku.tila == "JULKAISTU" || (haku.tila == "VALMIS" && haku.isJatkotutkintohaku)
   }
 
-  def getHaut: Future[RestHakuResult] = restClient
-    .readObject[RestHakuResult]("tarjonta-service.haku.findAll")(200)
-    .map(res => res.copy(res.result.filter(includeHaku)))
-    .recover { case t: Throwable =>
-      log.error(t, "error retrieving all hakus")
-      throw GetHautQueryFailedException("error retrieving all hakus", t)
-    }
+  def getHaut: Future[RestHakuResult] = {
+    restClient
+      .readObject[TarjontaRestHakuResult]("tarjonta-service.haku.findAll")(200)
+      .map(_.toRestHakuResult)
+      .map(res => res.copy(result = res.result.filter(includeHaku)))
+      .recover { case t: Throwable =>
+        log.error(t, "error retrieving all hakus")
+        throw GetHautQueryFailedException("error retrieving all hakus", t)
+      }
+  }
 
   def getKoulutus(oid: String): Future[Seq[Hakukohteenkoulutus]] = {
     val koulutus: Future[Option[Koulutus]] = restClient
@@ -196,7 +227,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   def getHakukohde(oid: String): Future[Option[Hakukohde]] = {
     val loader: String => Future[Option[Option[Hakukohde]]] = { hakukohdeOid =>
       val result = restClient
-        .readObject[TarjontaResultResponse[Option[Hakukohde]]](
+        .readObject[TarjontaResultResponse[Option[TarjontaHakukohde]]](
           "tarjonta-service.hakukohde",
           hakukohdeOid
         )(200, maxRetries)
@@ -211,7 +242,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
           Future.failed(
             HakukohdeNotFoundException(s"empty hakukohde returned from Tarjonta with $hakukohdeOid")
           )
-        case Some(result) => Future.successful(Option(result))
+        case Some(result) => Future.successful(Option(result.map(_.toHakukohde)))
       }
     }
     hakukohdeCache.get(oid, loader).map(_.get)
@@ -223,7 +254,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   def getHakukohteenKoulutuksetViaCache(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
     val loader: String => Future[Option[HakukohteenKoulutukset]] = hakukohdeOid => {
       restClient
-        .readObject[TarjontaResultResponse[Option[Hakukohde]]](
+        .readObject[TarjontaResultResponse[Option[TarjontaHakukohde]]](
           "tarjonta-service.hakukohde",
           hk.oid
         )(200, maxRetries)
@@ -291,4 +322,4 @@ class MockTarjontaActor(config: Config)(implicit val system: ActorSystem)
   }
 }
 
-case class TarjontaActorRef(actor: ActorRef) extends TypedActorRef
+case class TarjontaActorRef(actor: AskableActorRef) extends TypedAskableActorRef
