@@ -18,7 +18,11 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoKoodiArvot
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, PistetietoWrapper}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
+  PistesyottoService,
+  Pistetieto,
+  PistetietoWrapper
+}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohde,
   HakukohdeOid,
@@ -42,7 +46,7 @@ import scala.annotation.meta.field
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import org.joda.time.format.{DateTimeFormat}
+import org.joda.time.format.DateTimeFormat
 
 object ValpasHakemusTila extends Enumeration {
   type ValpasHakemusTila = Value
@@ -61,6 +65,9 @@ case class Valintakoe(
   arvo: Option[String]
 ) {}
 case class ValpasHakutoive(
+  paasykoe: Option[ValpasPistetieto],
+  kielikoe: Option[ValpasPistetieto],
+  lisanaytto: Option[ValpasPistetieto],
   liitteetTarkastettu: Option[Boolean],
   valintakoe: Seq[Valintakoe],
   alinHyvaksyttyPistemaara: Option[String],
@@ -129,7 +136,7 @@ case class ValpasHakemus(
   postitoimipaikka: String,
   hakutoiveet: Seq[ValpasHakutoive]
 ) {}
-
+case class ValpasPistetieto(tunniste: String, arvo: String, osallistuminen: String)
 case class ValpasQuery(oppijanumerot: Set[String], ainoastaanAktiivisetHaut: Boolean)
 case class Osallistuminen(osallistuminen: String, laskentaTila: String) {}
 case class ValintalaskentaValintakoe(
@@ -155,6 +162,21 @@ case class ValintalaskentaOsallistuminen(
   createdAt: Long,
   hakutoiveet: Seq[ValintalaskentaHakutoive]
 ) {}
+
+object ValintakoeTunnisteParser {
+  private def toValpasPistetieto(p: Pistetieto): ValpasPistetieto = {
+    ValpasPistetieto(p.tunniste, p.arvo.toString, p.osallistuminen)
+  }
+  def findPaasykoe(pistetiedot: Seq[Pistetieto]): Option[ValpasPistetieto] = {
+    pistetiedot.find(_.tunniste.contains("paasykoe")).map(toValpasPistetieto)
+  }
+  def findKielikoe(pistetiedot: Seq[Pistetieto]): Option[ValpasPistetieto] = {
+    pistetiedot.find(_.tunniste.contains("kielikoe")).map(toValpasPistetieto)
+  }
+  def findLisanaytto(pistetiedot: Seq[Pistetieto]): Option[ValpasPistetieto] = {
+    pistetiedot.find(_.tunniste.contains("lisanaytto")).map(toValpasPistetieto)
+  }
+}
 
 class ValpasIntergration(
   pistesyottoService: PistesyottoService,
@@ -209,7 +231,7 @@ class ValpasIntergration(
       hakukohdeOid: String,
       c: HakutoiveDTO
     ): ValpasHakutoive = {
-      def hkToVk(hk: ValintalaskentaHakutoive, pisteet: Seq[PistetietoWrapper]): Seq[Valintakoe] = {
+      def hkToVk(hk: ValintalaskentaHakutoive, pisteet: Seq[Pistetieto]): Seq[Valintakoe] = {
         val vks = hk.valinnanVaiheet.flatMap(vv =>
           vv.valintakokeet.flatMap(vk =>
             if (vk.aktiivinen)
@@ -223,7 +245,6 @@ class ValpasIntergration(
                   valinnanVaiheOid = vv.valinnanVaiheOid,
                   valinnanVaiheJarjestysluku = vv.valinnanVaiheJarjestysluku,
                   arvo = pisteet
-                    .flatMap(_.pisteet)
                     .find(_.tunniste.equals(vk.valintakoeTunniste))
                     .map(_.arvo.toString)
                 )
@@ -235,6 +256,17 @@ class ValpasIntergration(
         vks
       }
 
+      def julkaistuHakutoiveenTulos(): Option[ValintaTulosHakutoive] = {
+        tulos
+          .flatMap(
+            _.hakutoiveet
+              .find(thk => thk.julkaistavissa && thk.hakukohdeOid.equals(hakukohdeOid))
+          )
+      }
+      val hakemuksenPisteet: Seq[Pistetieto] = oidToPisteet
+        .getOrElse(hakemus.oid, Seq.empty)
+        .filter(_.hakemusOID.equals(hakemus.oid))
+        .flatMap(_.pisteet)
       val valintakoe: Seq[Valintakoe] =
         osallistumiset
           .flatMap(_.hakutoiveet)
@@ -242,15 +274,13 @@ class ValpasIntergration(
           .flatMap(vhk =>
             hkToVk(
               vhk,
-              tulos
-                .flatMap(
-                  _.hakutoiveet
-                    .find(thk => thk.julkaistavissa && thk.hakukohdeOid.equals(vhk.hakukohdeOid))
-                )
-                .flatMap(_ => oidToPisteet.get(hakemus.oid))
+              julkaistuHakutoiveenTulos()
+                .map(_ => hakemuksenPisteet)
                 .getOrElse(Seq.empty)
             )
           )
+      val hakukohteenJulkaistutPisteet: Seq[Pistetieto] =
+        valintakoe.flatMap(vk => hakemuksenPisteet.filter(_.tunniste.equals(vk.valintakoeTunniste)))
 
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
       val nimi = hakukohde.hakukohteenNimet
@@ -261,8 +291,10 @@ class ValpasIntergration(
       val hakutoiveenTulos: Option[ValintaTulosHakutoive] = tulos.flatMap(
         _.hakutoiveet.find(hk => hk.hakukohdeOid.equals(hakukohdeOid) && hk.julkaistavissa)
       )
-
       ValpasHakutoive(
+        paasykoe = ValintakoeTunnisteParser.findPaasykoe(hakukohteenJulkaistutPisteet),
+        kielikoe = ValintakoeTunnisteParser.findKielikoe(hakukohteenJulkaistutPisteet),
+        lisanaytto = ValintakoeTunnisteParser.findLisanaytto(hakukohteenJulkaistutPisteet),
         liitteetTarkastettu = attachmentsChecked,
         valintakoe = valintakoe,
         alinHyvaksyttyPistemaara = hakutoiveenTulos.flatMap(tulos =>

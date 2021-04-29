@@ -241,7 +241,7 @@ class ValpasSpec
               pisteet = Seq(
                 Pistetieto(
                   aikaleima = None,
-                  tunniste = "luonnonvara_osio_1_motivaatio_k2019",
+                  tunniste = "lisanaytto_luonnonvara_osio_1_motivaatio_k2019",
                   arvo = "Jep",
                   osallistuminen = "OSALLISTUU"
                 )
