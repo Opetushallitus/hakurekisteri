@@ -21,7 +21,9 @@ trait ValpasSwaggerApi extends SwaggerSupport {
   val fetchValpasDataForPersons: SwaggerSupportSyntax.OperationBuilder =
     apiOperation[Seq[ValpasHakemus]]("fetchValpasDataForPersons")
       .summary("Hakijoille Valpas-tiedot")
-      .description("Palauttaa hakijoiden oppijanumeroille Valpas-tiedot")
+      .description(
+        "Palauttaa hakijoiden oppijanumeroille Valpas-tiedot. Rajapintaa voi kutsua maksimissaan 3000 oppijanumerolla kerallaan."
+      )
       .parameter(
         bodyParam[Seq[String]]("hakijaOids").description("hakijoiden oppijanumerot").required
       )
@@ -72,12 +74,22 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
     }
 
     val personOids = parse(request.body).extract[Set[String]]
+    val tooManyPersonOidsAtOnce: Boolean = personOids.size > 3000
     val f: Future[Any] =
-      valpasIntergration.fetch(ValpasQuery(personOids, ainoastaanAktiivisetHaut)).recoverWith {
-        case t: Throwable =>
-          logger.error(s"Valpas fetch failed: ${t.getMessage}")
-          Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
-      }
+      if (tooManyPersonOidsAtOnce)
+        Future.successful(
+          InternalServerError(body =
+            Map(
+              "reason" -> s"Maximum of 3000 person OIDs allowed. API was called with ${personOids.size} person OIDs."
+            )
+          )
+        )
+      else
+        valpasIntergration.fetch(ValpasQuery(personOids, ainoastaanAktiivisetHaut)).recoverWith {
+          case t: Throwable =>
+            logger.error(s"Valpas fetch failed: ${t.getMessage}")
+            Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
+        }
 
     new AsyncResult() {
       override implicit def timeout: Duration = 360.seconds
