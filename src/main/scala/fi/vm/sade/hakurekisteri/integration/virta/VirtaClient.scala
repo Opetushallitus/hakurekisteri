@@ -198,10 +198,7 @@ class VirtaClient(
     opiskeluoikeudet
       .withFilter((oo: Node) => tallennettavatOpiskeluoikeustyypit.contains((oo \ "Tyyppi").text))
       .withFilter((oo: Node) =>
-        (oo \ "Tila")
-          .filter(t => tallennettavatOpiskeluoikeustilat.contains((t \ "Koodi").text))
-          .headOption
-          .isDefined
+        (oo \ "Tila").exists(t => tallennettavatOpiskeluoikeustilat.contains((t \ "Koodi").text))
       )
       .map((oo: Node) => {
         val avain = oo.map(_ \ "@avain")
