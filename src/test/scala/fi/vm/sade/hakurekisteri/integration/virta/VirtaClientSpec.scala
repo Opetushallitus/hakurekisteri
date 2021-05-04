@@ -37,6 +37,11 @@ object VirtaResults {
   val testResponse106 =
     scala.io.Source.fromURL(getClass.getResource("/virta/test-response-106.xml")).mkString
 
+  val testResponseOpiskeluoikeusFilter =
+    scala.io.Source
+      .fromURL(getClass.getResource("/virta/test-response-opiskeluoikeus-filter.xml"))
+      .mkString
+
 }
 
 class VirtaClientSpec
@@ -98,6 +103,12 @@ class VirtaClientSpec
       forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.106")
     )
   ).thenReturn((200, List(), VirtaResults.testResponse106))
+
+  when(
+    endPoint.request(
+      forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("040501A953L")
+    )
+  ).thenReturn((200, List(), VirtaResults.testResponseOpiskeluoikeusFilter))
 
   val virtaClient = new VirtaClient(aClient = Some(new CapturingAsyncHttpClient(endPoint)))
 
@@ -281,6 +292,18 @@ class VirtaClientSpec
             )
           ) should be(true)
       }
+    }
+  }
+
+  it should "return only opiskeluoikeudet which YPS needs" in {
+    virtaClient.setApiVersion(VirtaClient.version106)
+
+    val response: Future[Option[VirtaResult]] =
+      virtaClient.getOpiskelijanTiedot(hetu = Some("1040501A953L"), oppijanumero = "")
+
+    waitFuture(response) { (result: Option[VirtaResult]) =>
+      val opiskeluoikeudet: Seq[VirtaOpiskeluoikeus] = result.map(_.opiskeluoikeudet).get
+      opiskeluoikeudet.size should be(4)
     }
   }
 }
