@@ -14,7 +14,7 @@
     <properties>
         <scala.version>2.12.8</scala.version>
         <spring.version>4.3.21.RELEASE</spring.version>
-        <spring-security.version>4.2.10.RELEASE</spring-security.version>
+        <spring-security.version>5.2.9.RELEASE</spring-security.version>
         <scalatra.version>2.6.3</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>3.4.2</json4s.version>
@@ -1647,12 +1647,10 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>reference.conf</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>fi.vm.sade.hakurekisteri.SureStandaloneJetty</Main-Class>
                                     </manifestEntries>
