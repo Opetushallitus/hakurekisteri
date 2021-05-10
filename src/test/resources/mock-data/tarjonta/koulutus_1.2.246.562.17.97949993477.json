@@ -1,0 +1,368 @@
+{
+  "accessRights": {},
+  "result": {
+    "modified": 1572421727064,
+    "modifiedBy": "1.2.246.562.24.59476158184",
+    "oid": "1.2.246.562.17.97949993477",
+    "version": 9,
+    "koulutuskoodi": {
+      "uri": "koulutus_631101",
+      "versio": 12,
+      "arvo": "631101",
+      "nimi": "Tradenomi, talous, hallinto ja markkinointi"
+    },
+    "koulutusaste": {
+      "uri": "koulutusasteoph2002_62",
+      "versio": 1,
+      "arvo": "62",
+      "nimi": "Ammattikorkeakoulututkinto"
+    },
+    "koulutusala": {
+      "uri": "koulutusalaoph2002_3",
+      "versio": 1,
+      "arvo": "3",
+      "nimi": "Yhteiskuntatieteiden, liiketalouden ja hallinnon ala"
+    },
+    "opintoala": {
+      "uri": "opintoalaoph2002_301",
+      "versio": 1,
+      "arvo": "301",
+      "nimi": "Liiketalous ja kauppa"
+    },
+    "tutkinto": {
+      "uri": "tutkinto_311",
+      "versio": 2,
+      "arvo": "311",
+      "nimi": "Liiketalouden ammattikorkeakoulututkinto"
+    },
+    "eqf": {
+      "uri": "eqf_6",
+      "versio": 1,
+      "arvo": "6",
+      "nimi": "Taso 6"
+    },
+    "nqf": {
+      "uri": "",
+      "versio": -1,
+      "arvo": "",
+      "nimi": ""
+    },
+    "opintojenLaajuusyksikko": {
+      "uri": "opintojenlaajuusyksikko_2",
+      "versio": 1,
+      "arvo": "2",
+      "nimi": "opintopistettä"
+    },
+    "koulutustyyppi": {
+      "uri": "koulutustyyppi_3",
+      "versio": 2,
+      "arvo": "3",
+      "nimi": "Korkeakoulutus"
+    },
+    "ohjelmas": {
+      "versio": 1,
+      "uris": {}
+    },
+    "toteutustyyppi": "KORKEAKOULUTUS",
+    "moduulityyppi": "KORKEAKOULUTUS",
+    "komoOid": "1.2.246.562.13.91168542198",
+    "komotoOid": "1.2.246.562.17.97949993477",
+    "organisaatio": {
+      "oid": "1.2.246.562.10.60554652846",
+      "nimi": "Tampereen ammattikorkeakoulu, TAMK Ikaalinen",
+      "nimet": []
+    },
+    "koulutusohjelma": {
+      "versio": 1,
+      "tekstis": {
+        "kieli_sv": "",
+        "kieli_fi": "Tradenomi (AMK), Liiketalouden tutkinto-ohjelma, Ikaalinen",
+        "kieli_en": ""
+      }
+    },
+    "tunniste": "MLITAI",
+    "tila": "JULKAISTU",
+    "koulutusmoduuliTyyppi": "TUTKINTO",
+    "kuvausKomo": {
+      "JATKOOPINTO_MAHDOLLISUUDET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Sinulla on mahdollisuus opiskella ylempi ammattikorkeakoulututkinto, kun sinulle on kertynyt työkokemusta vähintään kaksi vuotta.</p>  <p>Alalla on mahdollista suorittaa myös yliopisto-opintoja esimerkiksi kauppa- ja hallintotieteissä.</p>"
+        }
+      },
+      "KOULUTUKSEN_RAKENNE": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Tradenomin tutkinnon laajuus on 210 opintopistettä. Tutkinnon suoritusaika on 3,5 vuotta. Tutkinto jakaantuu seuraaviin kokonaisuuksiin: perus- ja ammattiopinnot (150 op), vapaasti valittavat opinnot (15 op), harjoittelu (30 op) ja opinnäytetyö (15 op). Koulutus koostuu lähitapaamisista ja etäopiskelusta. Lähitapaamiset ovat noin kerran kuussa peräkkäisten arkipäivien ajan, sisältäen vapaaehtoisesti myös opiskelijoiden järjestämän iltaohjelman. </p>  <p>Koulutus aloitetaan perehtymällä liiketoiminnan perusteisiin: miten yritys toimii, miten sen talousasioita hoidetaan, miten yrityksessä viestitään ja markkinoidaan, kuinka se on organisoitu. Opit viestimään niin kirjallisesti kuin suullisestikin erilaisissa liike-elämän tilanteissa ja osaat käyttää tietokonetta ja -järjestelmiä niin opiskelussa kuin työtehtävienkin tekemisessä. Tiedonhankintataitosi kehittyvät ja osaat toimia hyvän työilmapiirin eteen. Innovatiiviset työmenetelmät tulevat tutuiksi työkaluiksi osana oman yritys- tai liiketoimintaidean kehittelyä. </p>  <p>Koulutus etenee liiketoimintaosaamisen syventämiseen ja erityisesti sen tuote- ja palveluosaamisen kehittämiseen. Omana osionaan perehdytään liiketoiminnan taloudellisiin menestystekijöihin sekä markkinoinnin mahdollisuuksiin ja menetelmiin. </p>  <p>Kolmantena vuonna on pk-yrityksen johtamiseen tai ulkopuolisella samantapaisissa tehtävissä toimimiseen valmistavien moduulien vuoro: voit kehittää osaamistasi oman yrityksesi tai liiketoimintaideasi tarpeiden mukaisesti esimerkiksi myyntityössä ja sen johtamisessa, yrityksen kansainvälistymisessä, talous- ja henkilöstöhallinnossa. Asiantuntijaksi kasvun sinetöit harjoitteluilla ja omaa osaamistasi profiloivalla opinnäytetyöllä.</p>  <p>Vapaasti valittavilla opinnoilla tarkoitetaan mitä tahansa korkeakoulutasoisia opintoja TAMKin tai muun suomalaisen tai ulkomaalaisen korkeakoulun tarjonnasta. Vapaasti valittavat opinnot antavat  mahdollisuuden opiskella sinua kiinnostavia aiheita myös muilta kuin liiketalouden aloilta. Voit suorittaa vapaasti valittavia opintoja haluaminasi ajankohtina.</p>  <p>30 opintopisteen laajuisen harjoittelun voit suorittaa omaa yritystäsi tai yritys-/liiketoimintaideaasi ohjatusti kehittäen tai osin tai kokonaan ulkopuolisessa yrityksessä työskentelemällä tiettyjä taitoja harjoittaaksesi. Harjoittelun ajankohta sovitetaan henkilökohtaiseen oppimissuunnitelmaasi.</p>"
+        }
+      },
+      "TAVOITTEET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Tutkinto-ohjelman tavoitteena on valmentaa sinut toimimaan vastuullisena yrittäjänä tai yrittäjähenkisenä ammattilaisena erityisesti pienessä tai keskisuuressa yrityksessä tai yhteisössä. Tarkoituksena on, että tunnet liiketoiminnan perusteet ja pystyt koko ajan lisää oppimalla ja tutkimalla tekemään perusteltuja päätöksiä kompleksisessa maaillmassa yrityksesi ja työyhteisösi tarpeisiin sopivasti. Osaat hyödyntää tiimien ja verkostojen potentiaalin, johtaa vastuullisesti ja saada aikaan merkityksellistä liiketoimintaa.</p> <p>Opintojen aikana opit ideoimaan, innovoimaan ja arvioimaan liiketoimintamahdollisuuksia. Pääset hinnoittelemaan, laskemaan kannattavuutta, markkinoimaan ja myymään mahdollisesti itse luomaasi tuotetta tai palvelua. Luot vision ja arvot sekä laadit strategioita niiden mukaisen toiminnan aikaansaamiseksi. Ymmärrät yrityksen tai työyhteisön taloudellisen, ekologisen ja eettisen vastuun merkityksen ja pystyt luomaan toimivan tiimin. Kehityt johtamisessa.</p> <p>Valmistut tradenomiksi, joka ymmärtää liiketoimintaa kokonaisuutena ja omaa hyvät käytännön taidot. Valmistuttuasi olet taitava tiimityöskentelijä, kehittämishenkinen ja tiedonhankintaitoinen yritystoiminnan moniosaaja. Kykenet oppimaan jatkuvasti lisää työssäsi ja olemaan arvokas työyhteisöllesi.</p>"
+        }
+      },
+      "PATEVYYS": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      }
+    },
+    "kuvausKomoto": {
+      "TUTKIMUKSEN_PAINOPISTEET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      },
+      "PAAAINEEN_VALINTA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Koulutus koostuu lukukauden mittaisista moduuleista, joilla on omat painopisteensä. Opintosuuntaa ei varsinaisesti valita, mutta viimeiset modulit painottavat taitoja, joita tarvitaan pk-yrityksen toiminnan johtamisessa: henkilöstön johtamista ja taloushallintoa, liiketoiminnan eri vaihtoehtojen analysointia ja kehittämistä tutkitun tiedon pohjalta.</p>"
+        }
+      },
+      "SIJOITTUMINEN_TYOELAMAAN": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Tradenomin koulutus on laaja-alainen. Liiketalouden tradenomeja työskentelee paljon markkinoinnin, viestinnän, myynnin, talous- ja henkilöstöhallinnon sekä kansainvälisen kaupan tehtävissä. Kun sinulla on riittävästi työkokemusta, sinulla on edellytykset toimia liiketoimintaosaamista vaativissa asiantuntija- ja esimiestehtävissä tai itsenäisenä yrittäjänä.</p> <p>Ammattinimikkeitä voivat olla esimerkiksi asiakkuussuunnittelija, asiakaspalveluvastaava, markkinointisuunnittelija, markkinointiassistentti, myyntineuvottelija, myyntipäällikkö, tiedottaja, matkailunevoja, ostaja, ostoassistentti, logistiikka-assistentti, talousassistentti, kirjanpitäjä, palkanlaskija, business controller, talouspäällikkö, palveluneuvoja, projektipäällikkö, yrittäjä, vientiassistentti, vientipäällikkö, vientimyyjä, tuontiassistentti tai isännöitsijä.</p>"
+        }
+      },
+      "LOPPUKOEVAATIMUKSET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opinnäytetyön avulla osoitat valmiutesi soveltaa itsenäisesti tietoja ja taitoja opintoihin liittyvässä käytännön asiantuntijatehtävässä. Opinnäytetyö on suunnittelu- tai kehittämisprojekti, jonka toimeksiantajana on oma tai ulkopuolinen yritys tai yhteisö. Opinnäytetyön aiheen hankit itse. Opinnäytetyön voit tehdä myös pari- tai ryhmätyönä ja se voi olla eri aloja yhdistävä, mutta aiheen tulee kuitenkin liittyä liiketalouden koulutukseen. Opinnäytetyön aiheena voi olla esimerkiksi brändin rakentaminen kuntosaliyritykselle, perehdyttämisopas messujärjestäjälle, suunnitelma kansainvälisen toiminnan käynnistämiseksi tai yritysmuodon valinta verotuksen näkökulmasta.</p>  <p>Tutustu liiketalouden opiskelijoiden tekemiin opinnäytetöihin <a href=\"https://www.theseus.fi/handle/10024/13\">Theseus.fi -sivustolla</a>.</p>"
+        }
+      },
+      "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Koulutusta suunnitellaan ja toteutetaan yhteistyössä seutukunnan elinkeinoelämän kanssa.<br /> <br /> TAMKin tutkinto-opiskelijana sinulla on mahdollisuus valita opintoja myös Tampereen yliopiston tarjonnasta henkilökohtaisen opintosuunnitelmasi mukaisesti. Tämän ristiinopiskelun kautta voit osallistua yliopiston opintojaksoille, yhteisiin projekteihin ja rakentaa näin yksilöllistä osaamistasi. Voit myös suorittaa opintoja muissa ammattikorkeakouluissa kansallisen opintotarjonnan kautta.</p>"
+        }
+      },
+      "KANSAINVALISTYMINEN": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>TAMKin opiskelijana voit suorittaa osan tutkinnostasi ulkomailla yhteistyökorkeakouluissamme, joita on yli 300 yhteensä yli 50 maassa. Voit myös hankkia itsellesi harjoittelupaikan mistä maasta tahansa. TAMKissa kansainvälisen ilmapiirin takaavat sadat ulkomaalaiset tutkinto- ja vaihto-opiskelijat eri puolilta maailmaa. Muita keinoja hankkia kieli- ja kulttuuriosaamista ovat kieliopinnot, ulkomaalaisten opiskelijoiden tuutorointi, ystäväperhetoiminta, englanninkieliset opintojaksot ja kansainväliset hankkeet ja projektit.</p>"
+        }
+      },
+      "LISATIETOA_OPETUSKIELISTA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opetuskieli on suomi. Englanninkielistä materiaalia käytetään monilla opintojaksoilla, ja joitain osuuksia saatetaan toteuttaa englanniksi.</p>"
+        }
+      },
+      "SISALTO": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p><strong>Ensimmäisen vuoden aikana </strong>otat haltuun liiketoiminnan osa-alueiden perusteet sekä opit luomaan ja kehittämään tuotteita ja palveluja. Opiskelu-, itsensäjohtamis-, tiimityö- ja vuorovaikutustaitosi vahvistuvat. Opit näkemään ja rakentamaan liiketoimintamahdollisuuksia. Saavutat virkamiehiltä vaadittavan taitotason ruotsin kielessä. <strong>Voit aloittaa oman yritys- tai projekti-ideasi kehittämisen</strong> tai hankkia työkokemusta harjoittelupaikassa.<br /> <br /> <strong>Toisena vuonna</strong> perehdyt tarkemmin vastuulliseen liiketoimintaan eli opit toimimaan niin yrityksen talous-, henkilöstö- kuin ekologistenkin menestystekijöiden parissa. Pystyt tutkimustaitojasi hyödyntäen tavoittamaan asiakkaat ja lanseeraamaan uuden tuotteen tai palvelun markkinoille. <strong>Samaan aikaan voit jatkaa oman yritys- tai projekti-ideasi parissa työskentelyä</strong> tai kerätä lisää osaamista harjoittelupaikassa.<br /> <br /> <strong>Kolmantena vuonna</strong> keskityt kehittymään lisää erityisesti yrittäjälle elintärkeissä taidoissa. Yrittäjän on osattava johtaa yritystään, joten opit toimimaan talouden tunnuslukujen perusteella, tehostamaan myyntiä ja huolehtimaan henkilöstöstä. Pystyt hyödyntämään verkostoja ja tutkittuun tietoon perustuen rakentamaan erilaisia skenaarioita yrityksen tulevaisuuden varalle. Osaat johtaa yrityksen suunnanmuutoksen tarpeen mukaan kohti kansainvälistä kasvua tai hallittua alasajoa.</p>  <p>Voit halutessasi valita syventäviin ammattiopintoihisi muita liiketalouden opintoja esimerkiksi verkkokurssitarjonnasta tai Mänttä-Vilppulan tai Virtojen toimipisteiden tarjonnasta.<br /> <br /> <strong>Viimeisen puolen vuoden aikana</strong> osoitat osaamisesi opinnäytetyöllä. Täydennät osaamisportfoliotasi vapaasti valittavilla opinnoilla ja joko omassa yrityksessäsi, projektisi parissa tai harjoittelupaikassa työskentelemällä.</p>"
+        }
+      },
+      "MAKSULLISUUS": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      }
+    },
+    "suunniteltuKestoArvo": "3,5",
+    "suunniteltuKestoTyyppi": {
+      "uri": "suunniteltukesto_01",
+      "versio": 1,
+      "arvo": "01",
+      "nimi": "vuotta"
+    },
+    "koulutuksenAlkamiskausi": {
+      "uri": "kausi_s",
+      "versio": 1,
+      "arvo": "S",
+      "nimi": "Syksy"
+    },
+    "koulutuksenAlkamisvuosi": 2020,
+    "koulutuksenAlkamisPvms": [],
+    "opetuskielis": {
+      "versio": 1,
+      "meta": {
+        "kieli_fi": {
+          "uri": "kieli_fi",
+          "versio": 1,
+          "arvo": "FI",
+          "nimi": "suomi"
+        }
+      },
+      "uris": {
+        "kieli_fi": 1
+      }
+    },
+    "opetusmuodos": {
+      "versio": 1,
+      "meta": {
+        "opetusmuotokk_3": {
+          "uri": "opetusmuotokk_3",
+          "versio": 1,
+          "arvo": "3",
+          "nimi": "Monimuoto-opetus"
+        }
+      },
+      "uris": {
+        "opetusmuotokk_3": 1
+      }
+    },
+    "opetusAikas": {
+      "versio": 1,
+      "meta": {
+        "opetusaikakk_3": {
+          "uri": "opetusaikakk_3",
+          "versio": 1,
+          "arvo": "3",
+          "nimi": "Viikonloppuopetus"
+        },
+        "opetusaikakk_2": {
+          "uri": "opetusaikakk_2",
+          "versio": 1,
+          "arvo": "2",
+          "nimi": "Iltaopetus"
+        }
+      },
+      "uris": {
+        "opetusaikakk_3": 1,
+        "opetusaikakk_2": 1
+      }
+    },
+    "opetusPaikkas": {
+      "versio": 1,
+      "meta": {
+        "opetuspaikkakk_1": {
+          "uri": "opetuspaikkakk_1",
+          "versio": 1,
+          "arvo": "1",
+          "nimi": "Lähiopetus"
+        }
+      },
+      "uris": {
+        "opetuspaikkakk_1": 1
+      }
+    },
+    "opintojenLaajuusarvo": {
+      "uri": "opintojenlaajuus_210",
+      "versio": 1,
+      "arvo": "210",
+      "nimi": "210"
+    },
+    "opetusJarjestajat": [],
+    "opetusTarjoajat": [
+      "1.2.246.562.10.60554652846"
+    ],
+    "ammattinimikkeet": {
+      "versio": 1,
+      "uris": {}
+    },
+    "aihees": {
+      "versio": 1,
+      "meta": {
+        "aiheet_33": {
+          "uri": "aiheet_33",
+          "versio": 1,
+          "arvo": " 33",
+          "nimi": "Liiketalous ja kauppa"
+        }
+      },
+      "uris": {
+        "aiheet_33": 1
+      }
+    },
+    "parents": [],
+    "children": [],
+    "hintaString": "",
+    "opintojenMaksullisuus": false,
+    "isAvoimenYliopistonKoulutus": false,
+    "oppiaineet": [
+      {
+        "oppiaine": "projektijohtaminen",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "tradenomi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "yrittäjyys",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "rahoitus",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "liiketoiminta",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "liiketalous",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "liiketoimintaosaaminen",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "markkinointi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "kansainvälinen kauppa",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "taloushallinto",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "laskentatoimi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "tamk-k2020",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "myynti",
+        "kieliKoodi": "kieli_fi"
+      }
+    ],
+    "extraParams": {},
+    "sisaltyyKoulutuksiin": [],
+    "yhteyshenkilos": [
+      {
+        "nimi": "Hanna Saraketo",
+        "titteli": "Lehtori, päävalmentaja",
+        "sahkoposti": "hanna.saraketo(at)tuni.fi",
+        "puhelin": "0500 513 635",
+        "kielet": [],
+        "henkiloTyyppi": "YHTEYSHENKILO"
+      }
+    ],
+    "pohjakoulutusvaatimukset": {
+      "versio": 1,
+      "uris": {}
+    },
+    "tutkintonimikes": {
+      "versio": 1,
+      "meta": {
+        "tutkintonimikekk_311": {
+          "uri": "tutkintonimikekk_311",
+          "versio": 2,
+          "arvo": "311",
+          "nimi": "Tradenomi"
+        }
+      },
+      "uris": {
+        "tutkintonimikekk_311": 2
+      }
+    },
+    "opintojenRakenneKuvas": {},
+    "koulutuksenTunnisteOid": "1.2.246.562.13.42524887801",
+    "johtaaTutkintoon": true
+  },
+  "status": "OK"
+}

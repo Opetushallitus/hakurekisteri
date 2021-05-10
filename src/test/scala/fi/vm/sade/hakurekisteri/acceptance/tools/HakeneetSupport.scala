@@ -243,7 +243,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
               Address("Vastaanottaja", "Tie 1", "00100", "Helsinki")
             )
           )
-        )
+        ),
+        received = Some(1615219923688L)
       )
   object FullHakemus2
       extends FullHakemus(
@@ -355,7 +356,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("INCOMPLETE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = Some(1615219923688L)
       )
   object FullHakemus3
       extends FullHakemus(
@@ -481,7 +483,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
               Address("Vastaanottajan kanslia", "Tie 1", "00100", "Helsinki")
             )
           )
-        )
+        ),
+        received = Some(1615219923688L)
       )
 
   object FullHakemus4
@@ -603,7 +606,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("INCOMPLETE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = Some(1615219923688L)
       )
 
   object FullHakemus5
@@ -715,7 +719,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         state = Some("ACTIVE"),
         preferenceEligibilities =
           Seq(PreferenceEligibility("1.11.5", "NOT_CHECKED", Some("UNKNOWN"), Some("NOT_CHECKED"))),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = Some(1615219923688L)
       )
 
   object SynteettinenHakemus
@@ -764,7 +769,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("ACTIVE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = Some(1615219923688L)
       )
 
   object VanhentuneenHaunHakemus
@@ -813,7 +819,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         ),
         state = Some("ACTIVE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = Some(1615219923688L)
       )
 
   object notEmpty
@@ -855,7 +862,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       toisenAsteenHaku = false,
       None,
       None,
-      "hakutapa_01#1"
+      "hakutapa_01#1",
+      "hakutyyppi_01#1"
     )
 
     private val kansalaisuuskoodit = Map("246" -> "FIN")
@@ -912,14 +920,31 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   val kausiKoodiK = TarjontaKoodi(Some("K"))
   val koulutus1 =
-    Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
+    Hakukohteenkoulutus(
+      "1.5.6",
+      "123456",
+      Some("AABB5tga"),
+      Some(kausiKoodiK),
+      Some(2015),
+      None,
+      Some(Koulutusohjelma(Map.empty))
+    )
   val ataruHakukohde1 =
-    Hakukohde("1.2.246.562.20.14800254899", Seq(), None, Some(Set("1.2.246.562.10.39920288212")))
+    Hakukohde(
+      "1.2.246.562.20.14800254899",
+      Map.empty,
+      Seq(),
+      None,
+      Some(Set("1.2.246.562.10.39920288212")),
+      None
+    )
   val ataruHakukohde2 = Hakukohde(
     "1.2.246.562.20.44085996724",
+    Map.empty,
     Seq(),
     None,
-    Some(Set("1.2.246.562.10.2014041814420657444022"))
+    Some(Set("1.2.246.562.10.2014041814420657444022")),
+    None
   )
 
   def getHakukohde(oid: String): Option[Hakukohde] = oid match {
@@ -946,7 +971,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             q.koodiUri.split("_").last.split("#").head.toUpperCase,
             q.koodiUri,
             Koodisto(q.koodistoUri),
-            Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))
+            Seq(KoodiMetadata(q.koodiUri.capitalize, "FI", "FIN"))
           )
         )
       case q: GetKoodistoKoodiArvot =>
@@ -983,12 +1008,16 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
                 "PS",
                 "TE",
                 "YH"
-              )
+              ),
+              Map.empty,
+              Map.empty
             )
           case "kieli" =>
             sender ! KoodistoKoodiArvot(
               koodistoUri = "kieli",
-              arvot = Seq("FI", "SV", "EN")
+              arvot = Seq("FI", "SV", "EN"),
+              Map.empty,
+              Map.empty
             )
         }
     }
@@ -1008,7 +1037,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None,
+            true,
+            Seq.empty
           ),
           ValintaTulosHakutoive(
             "1.11.1",
@@ -1017,7 +1049,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None,
+            true,
+            Seq.empty
           )
         )
       ),
@@ -1031,7 +1066,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None,
+            true,
+            Seq.empty
           ),
           ValintaTulosHakutoive(
             "1.11.2",
@@ -1040,7 +1078,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.KESKEN,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None,
+            true,
+            Seq.empty
           )
         )
       ),
@@ -1054,7 +1095,10 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             Vastaanottotila.VASTAANOTTANUT,
             HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None,
-            ""
+            "",
+            None,
+            true,
+            Seq.empty
           )
         )
       )

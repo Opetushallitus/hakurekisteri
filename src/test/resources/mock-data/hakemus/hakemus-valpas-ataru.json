@@ -1,0 +1,45 @@
+{
+  "applications": [
+    {
+      "paymentObligations": {
+        "1.2.246.562.20.12060097362": "not-obligated",
+        "1.2.246.562.20.652840958110": "not-obligated",
+        "1.2.246.562.20.743491195410": "not-obligated"
+      },
+      "asuinmaa": "246",
+      "applicationSystemId": "1.2.246.562.29.36339915997",
+      "email": "hakija-1199390@oph.fi",
+      "korkeakoulututkintoVuosi": null,
+      "valintatuloksenJulkaisulupa": true,
+      "postitoimipaikka": "HELSINKI",
+      "hakukohteet": [
+        "1.2.246.562.20.12060097362",
+        "1.2.246.562.20.743491195410",
+        "1.2.246.562.20.652840958110"
+      ],
+      "eligibilities": {
+        "1.2.246.562.20.12060097362": "eligible",
+        "1.2.246.562.20.652840958110": "eligible",
+        "1.2.246.562.20.743491195410": "eligible"
+      },
+      "attachments": {
+        "1.2.246.562.20.12060097362": "checked",
+        "1.2.246.562.20.652840958110": "not-checked",
+        "1.2.246.562.20.743491195410": "suprise"
+      },
+      "koulutusmarkkinointilupa": true,
+      "kieli": "fi",
+      "postinumero": "00100",
+      "oid": "1.2.246.562.11.00000000000000446632",
+      "matkapuhelin": "050 00000000",
+      "kotikunta": "091",
+      "kkPohjakoulutus": [
+        "am"
+      ],
+      "createdTime": "yyyyMMddHHmm",
+      "personOid": "1.2.246.562.24.82344311114",
+      "sahkoisenAsioinninLupa": true,
+      "lahiosoite": "Umpilampi 660"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "hakuOid": "1.2.246.562.29.36339915997",
+  "hakemusOid": "1.2.246.562.11.00000000000000446632",
+  "hakijaOid": "1.2.246.562.24.82344311114",
+  "aikataulu": {
+    "vastaanottoEnd": "2020-07-22T12:00:00Z",
+    "vastaanottoBufferDays": 7
+  },
+  "hakutoiveet": [
+    {
+      "hakukohdeOid": "1.2.246.562.20.12060097362",
+      "hakukohdeNimi": "Tradenomi (AMK), Liiketalous, verkkototeutus, Huittinen",
+      "tarjoajaOid": "1.2.246.562.10.83878914437",
+      "tarjoajaNimi": "Satakunnan ammattikorkeakoulu, SAMK Kuninkaisten kampus, Huittinen",
+      "valintatapajonoOid": "1588588478051-1852824338757979552",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {
+          "loppu": "2020-09-20T20:59:59Z"
+        },
+        "ilmoittautumistapa": {
+          "nimi": {
+            "fi": "Oili",
+            "sv": "Oili",
+            "en": "Oili"
+          },
+          "url": "/oili/"
+        },
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "viimeisinHakemuksenTilanMuutos": "2020-08-07T18:21:39Z",
+      "julkaistavissa": false,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": [
+        {
+          "oid": "1588588478051-1852824338757979552",
+          "nimi": "Ensikertalaiset koepisteet",
+          "valintatila": "KESKEN",
+          "julkaistavissa": false,
+          "valintatapajonoPrioriteetti": 0,
+          "ehdollisestiHyvaksyttavissa": false,
+          "eiVarasijatayttoa": true,
+          "varasijasaannotKaytossa": false
+        },
+        {
+          "oid": "1588589206974-4608825820882289217",
+          "nimi": "Koepisteet",
+          "valintatila": "KESKEN",
+          "julkaistavissa": false,
+          "valintatapajonoPrioriteetti": 1,
+          "ehdollisestiHyvaksyttavissa": false,
+          "eiVarasijatayttoa": false,
+          "varasijasaannotKaytossa": false
+        }
+      ]
+    },
+    {
+      "hakukohdeOid": "1.2.246.562.20.743491195410",
+      "hakukohdeNimi": "Tradenomi (AMK), Liiketalous, monimuotototeutus, Ikaalinen",
+      "tarjoajaOid": "1.2.246.562.10.60554652846",
+      "tarjoajaNimi": "Tampereen ammattikorkeakoulu, TAMK Ikaalinen",
+      "valintatapajonoOid": "15881680741442621107847348362082",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {
+          "loppu": "2020-09-20T20:59:59Z"
+        },
+        "ilmoittautumistapa": {
+          "nimi": {
+            "fi": "Oili",
+            "sv": "Oili",
+            "en": "Oili"
+          },
+          "url": "/oili/"
+        },
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "viimeisinHakemuksenTilanMuutos": "2020-06-23T15:27:02Z",
+      "julkaistavissa": false,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": [
+        {
+          "oid": "15881680741442621107847348362082",
+          "nimi": "Varsinainen valinta",
+          "valintatila": "KESKEN",
+          "julkaistavissa": false,
+          "valintatapajonoPrioriteetti": 0,
+          "ehdollisestiHyvaksyttavissa": false,
+          "eiVarasijatayttoa": false,
+          "varasijasaannotKaytossa": false
+        }
+      ]
+    },
+    {
+      "hakukohdeOid": "1.2.246.562.20.652840958110",
+      "hakukohdeNimi": "Tradenomi (AMK), liiketalous, monimuotototeutus, verkko-opetus",
+      "tarjoajaOid": "1.2.246.562.10.98212669513",
+      "tarjoajaNimi": "Laurea-ammattikorkeakoulu, Laurea Lohja",
+      "valintatapajonoOid": "1583416594202-4342767156236968214",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {
+          "loppu": "2020-09-20T20:59:59Z"
+        },
+        "ilmoittautumistapa": {
+          "nimi": {
+            "fi": "Oili",
+            "sv": "Oili",
+            "en": "Oili"
+          },
+          "url": "/oili/"
+        },
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "viimeisinHakemuksenTilanMuutos": "2020-08-07T18:21:41Z",
+      "julkaistavissa": false,
+      "ehdollisestiHyvaksyttavissa": false,
+      "tilanKuvaukset": {},
+      "jonokohtaisetTulostiedot": [
+        {
+          "oid": "1583416594202-4342767156236968214",
+          "nimi": "Koepisteet",
+          "valintatila": "KESKEN",
+          "julkaistavissa": false,
+          "valintatapajonoPrioriteetti": 2,
+          "ehdollisestiHyvaksyttavissa": false,
+          "eiVarasijatayttoa": false,
+          "varasijasaannotKaytossa": false
+        }
+      ]
+    }
+  ]
+}

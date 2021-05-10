@@ -138,7 +138,8 @@ class HakijaSpec extends FlatSpec with Matchers {
         ),
         state = Some("ACTIVE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        received = Some(1615219923688L)
       )
 
   val haku = Haku(
@@ -153,7 +154,8 @@ class HakijaSpec extends FlatSpec with Matchers {
     false,
     None,
     None,
-    "hakutapa_01#1"
+    "hakutapa_01#1",
+    "hakutyyppi_01#1"
   )
 
   val tq1 = ThemeQuestion(

@@ -1,0 +1,137 @@
+[
+  {
+    "koodiUri": "hakutyyppi_02",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutyyppi_02",
+    "version": 2,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutyyppi",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "02",
+    "paivitysPvm": "2014-01-29",
+    "paivittajaOid": null,
+    "voimassaAlkuPvm": "2000-01-01",
+    "voimassaLoppuPvm": "2014-01-01",
+    "tila": "PASSIIVINEN",
+    "metadata": [
+      {
+        "nimi": "Täydennyshaku",
+        "kuvaus": "Täydennyshaku",
+        "lyhytNimi": "TH",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      },
+      {
+        "nimi": "Tilläggsansögan",
+        "kuvaus": "Tilläggsansögan",
+        "lyhytNimi": "TA",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "SV"
+      }
+    ]
+  },
+  {
+    "koodiUri": "hakutyyppi_03",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutyyppi_03",
+    "version": 0,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutyyppi",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "03",
+    "paivitysPvm": "2013-10-28",
+    "paivittajaOid": null,
+    "voimassaAlkuPvm": "2000-01-01",
+    "voimassaLoppuPvm": null,
+    "tila": "LUONNOS",
+    "metadata": [
+      {
+        "nimi": "Kompletteringansökan",
+        "kuvaus": "Kompletteringansökan",
+        "lyhytNimi": "KA",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "SV"
+      },
+      {
+        "nimi": "Lisähaku",
+        "kuvaus": "Lisähaku",
+        "lyhytNimi": "LH",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      }
+    ]
+  },
+  {
+    "koodiUri": "hakutyyppi_01",
+    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/hakutyyppi_01",
+    "version": 0,
+    "versio": 1,
+    "koodisto": {
+      "koodistoUri": "hakutyyppi",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1
+      ]
+    },
+    "koodiArvo": "01",
+    "paivitysPvm": "2013-10-28",
+    "paivittajaOid": null,
+    "voimassaAlkuPvm": "2000-01-01",
+    "voimassaLoppuPvm": null,
+    "tila": "LUONNOS",
+    "metadata": [
+      {
+        "nimi": "Varsinainen haku",
+        "kuvaus": "Varsinainen haku",
+        "lyhytNimi": "VH",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "FI"
+      },
+      {
+        "nimi": "Egentlig ansökan",
+        "kuvaus": "Egentlig ansökan",
+        "lyhytNimi": "EA",
+        "kayttoohje": null,
+        "kasite": null,
+        "sisaltaaMerkityksen": null,
+        "eiSisallaMerkitysta": null,
+        "huomioitavaKoodi": null,
+        "sisaltaaKoodiston": null,
+        "kieli": "SV"
+      }
+    ]
+  }
+]

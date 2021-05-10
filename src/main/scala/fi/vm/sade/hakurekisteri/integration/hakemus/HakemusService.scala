@@ -51,7 +51,7 @@ object Trigger {
       hakemus: HakijaHakemus,
       personOidsWithAliases: PersonOidsWithAliases
     ): Unit = hakemus match {
-      case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _)
+      case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _, _)
           if hakemus.hetu.isDefined =>
         f(personOid, hakemus.hetu.get, applicationSystemId, personOidsWithAliases)
       case h: AtaruHakemus if h.personOid.isDefined && h.hetu.isDefined =>
@@ -97,6 +97,8 @@ object ListFullSearchDto {
 
 trait IHakemusService {
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]]
+  def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]]
+  def personOidstoMasterOids(personOids: Set[String]): Future[Map[String, String]]
   def hakemuksetForHakukohde(
     hakukohdeOid: String,
     organisaatio: Option[String]
@@ -124,6 +126,14 @@ trait IHakemusService {
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
+case class AtaruSearchParams(
+  hakijaOids: Option[List[String]],
+  hakukohdeOids: Option[List[String]],
+  hakuOid: Option[String],
+  organizationOid: Option[String],
+  modifiedAfter: Option[String]
+)
+
 class HakemusService(
   hakuappRestClient: VirkailijaRestClient,
   ataruHakemusClient: VirkailijaRestClient,
@@ -142,14 +152,6 @@ class HakemusService(
     updatedAfter: String = null,
     start: Int = 0,
     rows: Int = pageSize
-  )
-
-  case class AtaruSearchParams(
-    hakijaOids: Option[List[String]],
-    hakukohdeOids: Option[List[String]],
-    hakuOid: Option[String],
-    organizationOid: Option[String],
-    modifiedAfter: Option[String]
   )
 
   private val logger = Logging.getLogger(system, this)
@@ -223,6 +225,13 @@ class HakemusService(
           )
       }
 
+    def translateAtaruAttachments(hakemus: AtaruHakemusDto): Map[String, Option[Boolean]] =
+      hakemus.attachments.mapValues {
+        case "checked"     => Some(true)
+        case "not-checked" => Some(false)
+        case _             => None
+      }
+
     Future
       .sequence(
         ataruHakemusDtos
@@ -259,6 +268,7 @@ class HakemusService(
             oid = hakemus.oid,
             personOid = Some(hakemus.personOid),
             applicationSystemId = hakemus.applicationSystemId,
+            createdTime = hakemus.createdTime,
             hakutoiveet = Some(hakutoiveet),
             henkilo = henkilot(hakemus.personOid),
             asiointiKieli = hakemus.kieli,
@@ -274,6 +284,7 @@ class HakemusService(
             markkinointilupa = hakemus.koulutusmarkkinointilupa,
             paymentObligations = translateAtaruMaksuvelvollisuus(hakemus),
             eligibilities = translateAtaruHakukelpoisuus(hakemus),
+            liitteetTarkastettu = translateAtaruAttachments(hakemus),
             kkPohjakoulutus = hakemus.kkPohjakoulutus,
             korkeakoulututkintoVuosi = hakemus.korkeakoulututkintoVuosi
           )
@@ -281,7 +292,7 @@ class HakemusService(
       )
   }
 
-  private def ataruhakemukset(params: AtaruSearchParams): Future[List[HakijaHakemus]] = {
+  private def ataruhakemukset(params: AtaruSearchParams): Future[List[AtaruHakemus]] = {
     val p = params.hakuOid.fold[Map[String, Any]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
       params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
         Map("hakukohdeOids" -> hakukohdeOids)
@@ -290,7 +301,7 @@ class HakemusService(
         Map("hakijaOids" -> hakijaOids)
       ) ++
       params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date => Map("modifiedAfter" -> date))
-    def page(offset: Option[String]): Future[(List[HakijaHakemus], Option[String])] = {
+    def page(offset: Option[String]): Future[(List[AtaruHakemus], Option[String])] = {
       for {
         ataruResponse <- ataruHakemusClient
           .postObjectWithCodes[Map[String, Any], AtaruResponse](
@@ -321,8 +332,8 @@ class HakemusService(
     }
     def allPages(
       offset: Option[String],
-      acc: Future[List[HakijaHakemus]]
-    ): Future[List[HakijaHakemus]] = page(offset).flatMap {
+      acc: Future[List[AtaruHakemus]]
+    ): Future[List[AtaruHakemus]] = page(offset).flatMap {
       case (applications, None)      => acc.map(_ ++ applications)
       case (applications, newOffset) => allPages(newOffset, acc.map(_ ++ applications))
     }
@@ -331,6 +342,36 @@ class HakemusService(
 
   private def hasAppliedToOrganization(hakemus: HakijaHakemus, organisaatio: String): Boolean =
     hakemus.hakutoiveet.exists(_.exists(_.organizationParentOids.contains(organisaatio)))
+
+  def personOidstoMasterOids(personOids: Set[String]): Future[Map[String, String]] = {
+    def personOidToMasterOidLookup(oids: LinkedHenkiloOids) =
+      personOids.map(oid => (oid, oids.oidToMasterOid.getOrElse(oid, oid))).toMap
+
+    for {
+      linkedHenkiloOids: LinkedHenkiloOids <- oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(
+        personOids
+      )
+    } yield personOidToMasterOidLookup(linkedHenkiloOids)
+  }
+
+  def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
+    for {
+      hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuappRestClient
+        .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(
+          200,
+          personOids
+        )
+      ataruHakemukset: Seq[HakijaHakemus] <- ataruhakemukset(
+        AtaruSearchParams(
+          hakijaOids = Some(personOids.toList),
+          hakukohdeOids = None,
+          hakuOid = None,
+          organizationOid = None,
+          modifiedAfter = None
+        )
+      )
+    } yield hakuappHakemukset.values.toList.flatten ++ ataruHakemukset
+  }
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
     for {
@@ -627,6 +668,9 @@ class HakemusService(
 
 class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForPerson(personOid: String) = Future.successful(Seq[FullHakemus]())
+  override def hakemuksetForPersons(personOids: Set[String]) = Future.successful(Seq[FullHakemus]())
+  override def personOidstoMasterOids(personOids: Set[String]) =
+    Future.successful(personOids.map(kv => (kv, kv)).toMap)
 
   override def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) =
     Future.successful(Seq[FullHakemus]())

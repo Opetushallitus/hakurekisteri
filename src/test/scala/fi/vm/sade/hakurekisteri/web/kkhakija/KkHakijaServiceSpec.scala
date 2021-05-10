@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetSer
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
-import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, Role, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
@@ -70,11 +70,20 @@ class KkHakijaServiceSpec
     Some(2015),
     Some("haunkohdejoukko_12#1"),
     None,
-    "JULKAISTU"
+    "JULKAISTU",
+    "hakutyyppi_01#1"
   )
   private val kausiKoodiS = TarjontaKoodi(Some("S"))
   private val koulutus2 =
-    Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
+    Hakukohteenkoulutus(
+      "1.5.6",
+      "123457",
+      Some("asdfASDF4"),
+      Some(kausiKoodiS),
+      Some(2015),
+      None,
+      Some(Koulutusohjelma(Map.empty))
+    )
   private val suoritus1 = VirallinenSuoritus(
     YoTutkinto.yotutkinto,
     YoTutkinto.YTL,
@@ -113,7 +122,10 @@ class KkHakijaServiceSpec
                 Vastaanottotila.KESKEN,
                 HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
                 None,
-                "1.2.jonoOid"
+                "1.2.jonoOid",
+                None,
+                true,
+                Seq.empty
               )
             )
           )
@@ -267,6 +279,7 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(
@@ -287,6 +300,7 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_SYKSY),
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset = Await.result(
@@ -301,7 +315,15 @@ class KkHakijaServiceSpec
     "should convert ilmoittautumiset into sequence in syksy haku but koulutus start season in next year syksy"
   ) {
     val koulutusSyksy =
-      Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)
+      Hakukohteenkoulutus(
+        "1.5.6",
+        "123456",
+        Some("AABB5tga"),
+        Some(kausiKoodiS),
+        Some(2016),
+        None,
+        Some(Koulutusohjelma(Map.empty))
+      )
     val hakukohteenKoulutukset: HakukohteenKoulutukset =
       HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
 
@@ -311,6 +333,7 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset = Await.result(
@@ -768,6 +791,7 @@ class KkHakijaServiceSpec
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
     override def casAuthenticationToken: CasAuthenticationToken =
       fi.vm.sade.hakurekisteri.web.rest.support.TestUser.casAuthenticationToken
+    override def hasRole(role: Role) = true
   }
 
   def seq2journal(s: Seq[FullHakemus]) = {

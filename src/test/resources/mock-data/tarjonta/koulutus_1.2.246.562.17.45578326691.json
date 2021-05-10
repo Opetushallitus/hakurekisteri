@@ -1,0 +1,389 @@
+{
+  "accessRights": {},
+  "result": {
+    "modified": 1587973355620,
+    "modifiedBy": "1.2.246.562.24.83087852722",
+    "oid": "1.2.246.562.17.45578326691",
+    "version": 12,
+    "koulutuskoodi": {
+      "uri": "koulutus_631101",
+      "versio": 12,
+      "arvo": "631101",
+      "nimi": "Tradenomi, talous, hallinto ja markkinointi"
+    },
+    "koulutusaste": {
+      "uri": "koulutusasteoph2002_62",
+      "versio": 1,
+      "arvo": "62",
+      "nimi": "Ammattikorkeakoulututkinto"
+    },
+    "koulutusala": {
+      "uri": "koulutusalaoph2002_3",
+      "versio": 1,
+      "arvo": "3",
+      "nimi": "Yhteiskuntatieteiden, liiketalouden ja hallinnon ala"
+    },
+    "opintoala": {
+      "uri": "opintoalaoph2002_301",
+      "versio": 1,
+      "arvo": "301",
+      "nimi": "Liiketalous ja kauppa"
+    },
+    "tutkinto": {
+      "uri": "tutkinto_311",
+      "versio": 2,
+      "arvo": "311",
+      "nimi": "Liiketalouden ammattikorkeakoulututkinto"
+    },
+    "eqf": {
+      "uri": "eqf_6",
+      "versio": 1,
+      "arvo": "6",
+      "nimi": "Taso 6"
+    },
+    "nqf": {
+      "uri": "",
+      "versio": -1,
+      "arvo": "",
+      "nimi": ""
+    },
+    "opintojenLaajuusyksikko": {
+      "uri": "opintojenlaajuusyksikko_2",
+      "versio": 1,
+      "arvo": "2",
+      "nimi": "opintopistettä"
+    },
+    "koulutustyyppi": {
+      "uri": "koulutustyyppi_3",
+      "versio": 2,
+      "arvo": "3",
+      "nimi": "Korkeakoulutus"
+    },
+    "ohjelmas": {
+      "versio": 1,
+      "uris": {}
+    },
+    "toteutustyyppi": "KORKEAKOULUTUS",
+    "moduulityyppi": "KORKEAKOULUTUS",
+    "komoOid": "1.2.246.562.13.465806533210",
+    "komotoOid": "1.2.246.562.17.45578326691",
+    "organisaatio": {
+      "oid": "1.2.246.562.10.83878914437",
+      "nimi": "Satakunnan ammattikorkeakoulu, SAMK Kuninkaisten kampus, Huittinen",
+      "nimet": []
+    },
+    "koulutusohjelma": {
+      "versio": 1,
+      "tekstis": {
+        "kieli_fi": "Tradenomi (AMK), Liiketalous, verkkototeutus, Huittinen",
+        "kieli_sv": "",
+        "kieli_en": ""
+      }
+    },
+    "tunniste": "",
+    "tila": "JULKAISTU",
+    "koulutusmoduuliTyyppi": "TUTKINTO",
+    "kuvausKomo": {
+      "JATKOOPINTO_MAHDOLLISUUDET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Tradenomi (AMK) -tutkinnon suorittanut voi jatkaa opintoja Tradenomi (ylempi AMK) -tutkintoon (90 op). Suuntautumisvaihtoehtoja ovat johtaminen ja oikeudellinen. Ylempi AMK -tutkinto rinnastetaan yliopistossa suoritettuun maisteritutkintoon.</p>"
+        }
+      },
+      "KOULUTUKSEN_RAKENNE": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opintojen rakenne on esitetty seuraavassa kuviossa.</p>"
+        }
+      },
+      "TAVOITTEET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<div> <p><span>Liiketalouden aikuiskoulutuksessa voit kehittää ammatillista osaamistasi, ja koulutuksen käytännönläheisyyden ansioista voit hyödyntää oppimaasi työelämässä. Liiketalouden ammattikorkeakoulututkinto tradenomi (AMK) rinnastetaan yliopiston kandidaattitutkintoon.</span><span> </span></p> </div> <div> <p><span>Tutkinnon laajuus on 210 opintopistettä</span><span>,</span><span> ja opintojen suunniteltu kesto noin 3 vuotta.</span><span> </span></p> </div> <div> <p><span>Opiskelu tapahtuu </span><span>kokonaan</span><span> verkko-opiskeluna. </span><span>Luentoihin ja tapaamisiin</span><span> osallistu</span><span>t</span><span>a</span><span>an</span><span> verkon kautta</span><span>, </span><span>oppimateriaali on verkossa </span><span>ja </span><span>opintojaksojen </span><span>tehtävät palautetaan verkkoon</span><span>. </span><span>Verkkol</span><span>uennot ovat </span><span>pääosin </span><span>perjantaisin ja/ tai lauantaisin </span><span>2–3 päivänä kuukaudess</span><span>a</span><span>.</span><span> </span></p> </div> <div> <p><span>Opinnoissa </span><span>voi suuntautua julkishallintoon, rahoitukseen, yritysjuridiikkaan sekä esimiestyöhön ja organisaation kehittämiseen. Saavutat opintojesi aikana laajan tietämyksen liiketoiminnan sekä julkishallinnon, rahoitusalan, yritysjuridiikan tai esimiestyön eri osa-alueista. Tiimi- ja vuorovaikutustaitosi kehittyvät, tietotekniset valmiutesi paranevat ja kielitaitosi vahvistuu.</span><span> </span></p> </div> <div> <p><span>(A)HOT - Hankitun osaamisen tunnustaminen</span><span> </span></p> </div> <div> <p><span>Hankitun osaamisen tunnistaminen ja tunnustaminen osaksi tulevaa tutkintoa (arkikielessä </span><span>AHOTointi</span><span>) on menettely, jolla opiskelija voi hyödyntää osaamista, jonka hän on hankkinut aikaisemmissa opinnoissaan tai nykyisten opintojen aikana tai muilla tavoin (esim. </span><span>työkokemuksella). Opiskelijan ei tarvitse uudestaan opiskella asioita/taitoja, jotka hänellä on jo hallussaan. </span><span>AHOT-menettely käynnistyy aina opiskelijan omasta aloitteesta. Tarkemmat tiedot ja ohjeet oppilaitoksestamme</span><span>.</span><span> </span></p> </div>"
+        }
+      },
+      "PATEVYYS": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      }
+    },
+    "kuvausKomoto": {
+      "TUTKIMUKSEN_PAINOPISTEET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      },
+      "PAAAINEEN_VALINTA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opiskelija voi valita jonkin seuraavista suuntautumisista:</p> <p>Julkishallinnon kehittäminen</p> <p>Rahoitus ja sijoittaminen</p> <p>Oikeustradenomi</p> <p>Esimiestyön kehittäminen</p> <p>Suuntautuminen valitaan ensimmäisen lukuvuoden aikana.</p> <p>Julkishallinnon kehittämiseen suuntautuneella opiskelijalla on valmiudet erilaisten organisaatioiden asiantuntija- ja esimiestehtävissä toimimiseen julkisella sektorilla (kunnat, kuntayhtymät, seurakunnat, alue- ja maakunnalliset julkisyhteisöt, julkiset liikelaitokset ja valtionhallinto). Opintoihin sisältyvän laajan liiketaloudellisen osaamisen ansiosta opiskelijalla on mahdollisuudet toimia myös yksityisen sektorin tehtävissä. Koulutuksen tarkoituksena on vastata erityisesti julkisyhteisöjen rekrytointitarpeeseen sekä täydennys- ja lisäkoulutukseen. Julkisen sektorin toiminnan ja säännösten tuntemisen lisäksi opiskelija voi syventyä julkiseen talouteen, johtamiseen tai oikeudellisiin kysymyksiin julkisessa hallinnossa. </p> <p>Rahoituksen ja sijoittamisen opintoihin sisältyy monipuolisia ja työelämän vaatimukset täyttäviä opintojaksoja. Laajan liiketalouden osaamisen lisäksi koulutus sisältää rahoituksen, sijoittamisen, taloushallinnon, juridiikan, markkinoinnin sekä henkilöstöhallinnon opintojaksoja. Rahoitustehtäviin suuntautuva ammattikorkeakoulututkinto antaa valmiudet työskennellä esim. pankeissa, vakuutusyhtiöissä tai yritysten ja julkisen sektorin rahoitustehtävissä. </p> <p>Suuntautuessaan oikeustradenomiksi opiskelija voi valmistuttuaan toimia monissa oikeudellista tietoa edellyttävissä työtehtävissä sekä yksityisellä että julkisella sektorilla. Yritystoiminnassa ja julkisessa hallinnossa tarvitaan liiketaloudellisen tietämyksen lisäksi juridista asiantuntemusta. Oikeuslaitoksen piirissä tradenomikoulutus on tarkoitettu mm. tuomioistuin-, syyttäjä- ja ulosottolaitoksen sekä oikeusaputoimen kansliahenkilökunnalle, kihlakunnan ulosottomiehille ja haastemiehille sekä edunvalvonnassa toimiville ja oikeushallinnon piirissä jo työskenteleville, jotka haluavat täydentää opintojaan ammattikorkeakoulututkinnoksi.</p> <p>Esimiestyön kehittämiseen suuntautuvat opinnot valmentavat yritystoiminnan suunnitteluun ja ohjaukseen, asiakassuhteiden hallintaan sekä liiketoimintaprosessien ja henkilöstön johtamiseen ja kehittämiseen. Opiskelija voi valmistuttuaan työskennellä yrityksen tai muun organisaation henkilöstöpäällikkönä, henkilöstöasioiden hoitajana tai henkilöstöassistenttina, erilaisissa projekteissa ja ennen kaikkea yrityksen kehittämisprojekteissa hyödyntäen digitaalista osaamista.</p> <div> <p><span>Suuntautumisvaihtoehdon ohella</span><span> opiskelija v</span><span>oi suorittaa opintokokonaisuuksia mm. seuraavista aihepiireistä</span><span>:</span><span> </span></p> </div> <ul> <li>Brändin rakentaminen</li> <li>Digitaalinen toimintaympäristö</li> <li>Esimiesosaaminen</li> <li>Eurooppaoikeus ja kansainvälistyminen</li> <li>Hallinnollinen osaaminen sosiaali- ja terveysalalla</li> <li>Projektit ja oman työn kehittäminen</li> <li>Verotus</li> </ul>"
+        }
+      },
+      "SIJOITTUMINEN_TYOELAMAAN": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Julkishallinnon kehittämisen opinnot antavat valmiuksia työskennellä asiantuntija- tai esimiestehtävissä esimerkiksi kunnissa, kuntayhtymissä, seurakunnissa, alue- ja maakunnallisissa julkisyhteisöissä, julkisissa liikelaitoksissa ja valtionhallinnossa.</p> <p>Rahoitus- ja sijoitustehtäviin suuntautuva ammattikorkeakoulututkinto antaa valmiuksia työskennellä asiantuntija- tai esimiestehtävissä esimerkiksi pankeissa, vakuutusyhtiöissä tai yritysten ja julkisen sektorin rahoitustehtävissä.</p> <p>Oikeustradenomin opinnot antavat valmiuksia työskennellä oikeudellista tietoa vaativissa asiantuntija- tai esimiestehtävissä yksityisellä ja julkisella sektorilla. Oikeustradenomiopinnot antavat valmiuksia erityisesti oikeushallinnon tehtäviin.</p> <p>Esimiestyön kehittämiseen suuntautuva ammattikorkeakoulututkinto antaa valmiuksia toimia monipuolisissa tehtävissä, esim. organisaation henkilöstöpäällikkönä, henkilöstöasioiden hoitajana tai henkilöstöassistenttina, erilaisissa projekteissa ja yrityksen kehittämisprojekteissa hyödyntäen digitaalista osaamista.</p> <p><br /><b>Tehtävänimikkeitä (mihin valmistuneet sijoittuvat)</b></p> <p>Julkishallinnossa tradenomit sijoittuvat erilaisiin korkeakoulututkintoa edellyttäviin tehtäviin, esimerkiksi hallintopäälliköksi, hallintosihteeriksi, asiantuntijaksi, henkilöstöasiainhoitajaksi, johdon assistentiksi, projektipäälliköksi, toimistopäälliköksi tai suunnittelijaksi.</p> <p>Rahoituksen tradenomiksi valmistuneet voivat toimia monipuolisissa tehtävissä esim. sijoitusneuvojan, sijoituspäällikön, rahoitusneuvojan, rahoituspäällikön, pankinjohtajan, talouspäällikön, vakuutusneuvojan, vakuutusvirkailijan, etuuskäsittelijän, talouspalvelusihteerin, toimitusjohtajan, palvelupäällikköön tehtävissä, esimerkiksi pankeissa, vakuutusyhtiöissä, Kelassa, Ely-keskuksissa, pk-yrityksissä, kunnissa tai valtion palveluksessa.</p> <p>Oikeustradenomien tehtävänimikkeitä ovat esimerkiksi haastemies, käräjäsihteeri tai oikeusapusihteeri. Oikeustradenomeja työskentelee myös esim. maistraattien holhoustoimen edunvalvonnassa, pankeissa, kunnissa, perintätoimistoissa tai laki- tai asianajotoimistojen erilaisissa oikeudellisissa tehtävissä.</p> <p>Esimiestyö ja työyhteisön kehittäjä voi työskennellä yrityksen tai muun organisaation henkilöstöpäällikkönä, henkilöstöasioiden hoitajana tai henkilöstöassistenttina, erilaisissa projekteissa ja ennen kaikkea yrityksen kehittämisprojekteissa hyödyntäen digiosaamista.</p> <p>Tehtävänimikkeitä</p> <ul> <li>Hallintosihteeri</li> <li>Hallintopäällikkö</li> <li>Henkilöstöpäällikkö</li> <li>Henkilöstöasioiden hoitaja</li> <li>Pankkitoimihenkilö</li> <li>Rahoitusasiantuntija</li> <li>Vakuutusvirkailija</li> <li>Suunnittelu- ja asiantuntijatehtävät</li> <li>Haastemies</li> <li>Käräjäsihteeri</li> <li>Oikeusapusihteeri</li> </ul>"
+        }
+      },
+      "LOPPUKOEVAATIMUKSET": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opinnäytetyössä opiskelija osoittaa, että hän osaa soveltaa tietojaan ja taitojaan ammattiopintoihin liittyvässä käytännön asiantuntijatehtävässä.</p> <p>Opintojen loppuvaiheessa, pääsääntöisesti kolmannen opiskeluvuoden syksyllä, opiskelija laatii 15 opintopisteen laajuisen opinnäytetyön, jonka tarkoituksena on yhdistää teoreettinen opiskelu ja harjoittelun aikana saatu käytännön kokemus toisiinsa ja helpottaa opiskelijan siirtymistä koulutusalansa työtehtäviin.</p> <p>Julkishallinnon kehittämisen opinnoissa opiskelijat tekevät opinnäytetyönsä pääsääntöisesti joko omille työnantajilleen julkishallinnossa, tai toimeksiantoina muille julkishallinnon organisaatioille. Opinnäytetöiden aiheet liittyvät tutkintoon kuuluvien opintojen aihepiiriin, ja niiden tavoitteena on sekä kehittää opiskelijan omaa ammatillista osaamista, että julkishallinnon organisaatioiden toimintatapoja.  </p> <p>Rahoituksen ja sijoittamisen opinnoissa opiskelijat tekevät opinnäytetyönsä pääsääntöisesti rahoitukseen tai sijoittamiseen liittyvästä aiheesta omille työnantajilleen tai muiden yritysten tai organisaatioiden toimeksiantoina.</p> <p>Esimiestyön kehittämisen opinnoissa tehdään opinnäytetyö pääsääntöisesti esimiestyöhön tai johtamiseen liittyvistä aihepiireistä.</p> <p>Oikeustradenomiopintojen opinnäytetyö tehdään oikeudellisesta aiheesta.</p>"
+        }
+      },
+      "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Rahoituksen ja sijoittamisen opinnoissa tehdään tiiviisti yhteistyötä pankkien, vakuutusyhtiöiden ja kuntien kanssa. Lisäksi tradenomin tutkinnon suorittamisen ohella opiskelijalla on mahdollisuus valmistautua sijoitusalan auktorisoidun tutkinnon suorittamiseen (APV1 ja APV2).</p> <p>Julkishallinnon kehittämisen opinnoissa opiskelijat tekevät työelämän kehittämiseen liittyviä tehtäviä sekä omille työnantajilleen julkishallinnossa, että toimeksiantoina muille julkishallinnon organisaatioille. Lisäksi yhteistyössä julkishallinnon organisaatioiden kanssa järjestetään ajankohtaisiin julkishallinnon aiheisiin liittyviä seminaareja. Julkishallinnon asiantuntijat käyvät myös opintojaksoilla pitämässä asiantuntijaluentoja.</p> <p>Oikeustradenomikoulutus toteutetaan yhteistyössä oikeusministeriön ja oikeushallinnon paikallisviranomaisten kanssa.</p> <p>Aikuisopiskelijoiden harjoittelu suoritetaan opiskelijoiden opintojen etenemisen mukaan. Harjoittelun tavoitteena on perehdyttää opiskelija ammattiopintojen (julkishallinto, rahoitus tai yritysjuridiikka) kannalta keskeisiin työtehtäviin ja tietojen, taitojen sekä osaamisen soveltamiseen. Harjoittelun voi suorittaa kotimaisessa tai ulkomaisessa yrityksessä, julkisyhteisössä tai muussa organisaatiossa. Yrittäjyys soveltuu myös harjoitteluksi.</p> <p>Jos opiskelijalla on riittävästi työuraa, voidaan harjoittelu lukea hyväksi opintoja. Koska harjoittelun tavoitteena on lisätä opiskelijan valmiuksia tulevaisuuden työelämän tarpeisiin, kannustetaan harjoittelun suorittamista opintojen aikana. Oikeustradenomin tutkintoa suoritettaessa vähintään puolet harjoittelusta on kuitenkin suoritettava uusissa oikeudellisissa työtehtävissä.</p>"
+        }
+      },
+      "KANSAINVALISTYMINEN": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opiskelijalla on mahdollisuus lähteä opiskeluvaihtoon opintojensa aikana. Opiskelu ulkomailla vahvistaa opiskelijan omaa ammatillista osaamista sekä ammattiopintoihin että kansainvälistymiseen liittyen. Usein määräaikainen opiskelu ulkomaisessa oppilaitoksessa kestää 1–2 lukukautta. Opiskelijavaihdossa suoritettavat opinnot suunnitellaan etukäteen. Koska opiskeluvaihdossa ulkomailla suoritetut opinnot luetaan osaksi kotimaista tutkintoa, ne eivät pidennä opiskeluaikaa. Opiskelu ulkomailla voi olla myös hyvä lisämeriitti työpaikkaa haettaessa. Kansainvälinen harjoittelu on myös mahdollista opintojen aikana. Harjoittelussa työskennellään omalla alalla ja omaa koulutusta vastaavissa työtehtävissä.</p>"
+        }
+      },
+      "LISATIETOA_OPETUSKIELISTA": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      },
+      "SISALTO": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": "<p>Opinnoissa hyödynnetään uusia verkko-oppimisen välineitä. Verkko-oppimisympäristöä käytetään ohjauksessa, osaamisen jakamisessa, yhteydenpidossa, tehtävien palautuksessa, palautteen annossa sekä materiaalin ja tehtävien jaossa. Opiskelija osallistuu opetukseen ja erilaisiin ohjaustilanteisiin verkon välityksellä.</p> <p>HILL-verkkoluentojärjestelmä mahdollistaa lähiopetukseen ja seminaareihin osallistumisen paikasta riippumatta sekä luentojen tallennuksen, jolloin luennot ovat saatavilla verkossa 24/7.</p> <p>Verkon välityksellä opiskelija voi nähdä luokan tapahtumat, keskustella kaikkien luennolle osallistujien kesken ja nähdä jaettavan materiaalin. Kaikki opintojaksot ovat suoritettavissa verkko-opintoina. Osa opintojaksoista toteutetaan ns. nonstop-periaatteella. Opiskella voi myös kesällä. Opinnot on suunniteltu niin, että ne voi suorittaa työssäkäynnin ohessa.</p> <p><b>Julkishallintoon</b> painottuvissa opinnoissa käsitellään liiketalouden keskeisten osa-alueiden lisäksi mm. julkisyhteisön toimintaa, julkisyhteisön organisaatioiden kehittämistä, julkisyhteisön taloutta, julkisoikeutta ja julkishallintoon läheisesti liittyvän juridiikan osa-alueita.</p> <p><b>Rahoitukseen</b> painottuvissa opinnoissa käsitellään liiketalouden keskeisten osa-alueiden lisäksi rahoitus- ja taloushallintoa, riskienhallintaa ja vakuutustoimintoja, rahoitusmarkkinoita ja sijoittamista, myyntiä ja markkinointia, henkilöstö- ja esimiestoimintaa sekä rahoitusalan juridiikkaa.</p> <p>Oikeusministeriön edellyttämien vaatimusten mukaisissa <b>oikeustradenomiopinnoissa</b> käsitellään liiketalouden keskeisten osa-alueiden lisäksi rikos-, prosessi-, siviili- ja julkisoikeutta.</p> <p><b>Esimiestyöhön ja organisaation kehittämiseen</b> suuntautuvissa opinnoissa käsitellään yritystoiminnan suunnitteluun ja ohjaukseen, asiakassuhteiden hallintaan sekä liiketoimintaprosessien ja henkilöstön johtamiseen ja kehittämiseen liittyviä asioita.</p> <p>Aiemmin hankittua osaamista voidaan hyväksilukea osaksi opintoja kolmella tavalla: korvaamalla, sisällyttämällä tai osaamisen näytöllä. Aikaisemmista korkeakouluopinnoista voi hakemuksesta saada korvaavuuksia tai niitä voidaan sisällyttää tutkintoon. Opiskelija voi joillakin opintojaksoilla osoittaa osaamisensa myös AHOT-tehtävillä tai muilla vaihtoehtoisilla suoritustavoilla. Aiemmin hankitun osaamisen huomioiminen mahdollistaa tutkinnon suorittamisen lyhyemmässä ajassa. <span><span>Useita opintojaksoja on mahdollisuus </span></span><span><span>myös </span></span><span><span>opinnollistaa</span></span><span><span>, eli suorittaa opintojaksoon liittyvät tehtävät omalla työpaikalla.</span></span></p> <p>Tavoitteena on hyödyntää aikaisempaa osaamista, jotta aikuisopiskelija voi keskittyä syventämään osaamistaan valitsemissaan ammattiopinnoissa. Opiskelija tutustuu opetussuunnitelmaan ja vertaa sitä aikaisempaan osaamiseensa, tekee sähköisen hakemuksen korvaavuuksista, sisällytyksistä tai osaamisen näytöstä ja laatii itselleen tutoropettajan avustuksella henkilökohtaisen opintosuunnitelman (HOPS).</p>"
+        }
+      },
+      "MAKSULLISUUS": {
+        "versio": 1,
+        "tekstis": {
+          "kieli_fi": ""
+        }
+      }
+    },
+    "suunniteltuKestoArvo": "3",
+    "suunniteltuKestoTyyppi": {
+      "uri": "suunniteltukesto_01",
+      "versio": 1,
+      "arvo": "01",
+      "nimi": "vuotta"
+    },
+    "koulutuksenAlkamiskausi": {
+      "uri": "kausi_s",
+      "versio": 1,
+      "arvo": "S",
+      "nimi": "Syksy"
+    },
+    "koulutuksenAlkamisvuosi": 2020,
+    "koulutuksenAlkamisPvms": [],
+    "opetuskielis": {
+      "versio": 1,
+      "meta": {
+        "kieli_fi": {
+          "uri": "kieli_fi",
+          "versio": 1,
+          "arvo": "FI",
+          "nimi": "suomi"
+        }
+      },
+      "uris": {
+        "kieli_fi": 1
+      }
+    },
+    "opetusmuodos": {
+      "versio": 1,
+      "meta": {
+        "opetusmuotokk_4": {
+          "uri": "opetusmuotokk_4",
+          "versio": 1,
+          "arvo": "4",
+          "nimi": "Verkko-opiskelu"
+        }
+      },
+      "uris": {
+        "opetusmuotokk_4": 1
+      }
+    },
+    "opetusAikas": {
+      "versio": 1,
+      "meta": {
+        "opetusaikakk_3": {
+          "uri": "opetusaikakk_3",
+          "versio": 1,
+          "arvo": "3",
+          "nimi": "Viikonloppuopetus"
+        },
+        "opetusaikakk_2": {
+          "uri": "opetusaikakk_2",
+          "versio": 1,
+          "arvo": "2",
+          "nimi": "Iltaopetus"
+        }
+      },
+      "uris": {
+        "opetusaikakk_3": 1,
+        "opetusaikakk_2": 1
+      }
+    },
+    "opetusPaikkas": {
+      "versio": 1,
+      "meta": {
+        "opetuspaikkakk_2": {
+          "uri": "opetuspaikkakk_2",
+          "versio": 1,
+          "arvo": "2",
+          "nimi": "Etäopetus"
+        }
+      },
+      "uris": {
+        "opetuspaikkakk_2": 1
+      }
+    },
+    "opintojenLaajuusarvo": {
+      "uri": "opintojenlaajuus_210",
+      "versio": 1,
+      "arvo": "210",
+      "nimi": "210"
+    },
+    "opetusJarjestajat": [],
+    "opetusTarjoajat": [
+      "1.2.246.562.10.83878914437"
+    ],
+    "ammattinimikkeet": {
+      "versio": 1,
+      "uris": {}
+    },
+    "aihees": {
+      "versio": 1,
+      "meta": {
+        "aiheet_30": {
+          "uri": "aiheet_30",
+          "versio": 1,
+          "arvo": " 30",
+          "nimi": "Muu yhteiskuntatieteiden, liiketalouden ja hallinnon alan koulutus"
+        },
+        "aiheet_33": {
+          "uri": "aiheet_33",
+          "versio": 1,
+          "arvo": " 33",
+          "nimi": "Liiketalous ja kauppa"
+        },
+        "aiheet_23": {
+          "uri": "aiheet_23",
+          "versio": 1,
+          "arvo": " 23",
+          "nimi": "Hallinto"
+        },
+        "aiheet_25": {
+          "uri": "aiheet_25",
+          "versio": 1,
+          "arvo": " 25",
+          "nimi": "Oikeustiede"
+        }
+      },
+      "uris": {
+        "aiheet_30": 1,
+        "aiheet_33": 1,
+        "aiheet_23": 1,
+        "aiheet_25": 1
+      }
+    },
+    "parents": [],
+    "children": [],
+    "hintaString": "",
+    "opintojenMaksullisuus": false,
+    "isAvoimenYliopistonKoulutus": false,
+    "oppiaineet": [
+      {
+        "oppiaine": "julkishallinto",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "oikeustradenomi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "online",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "verkko-opiskelu",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "sijoittaminen",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "verkko-opetus",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "tradenomi",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "etäopiskelu",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "rahoitus",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "liiketalous amk",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "oikeus",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "samk 2020",
+        "kieliKoodi": "kieli_fi"
+      },
+      {
+        "oppiaine": "esimiestyö",
+        "kieliKoodi": "kieli_fi"
+      }
+    ],
+    "extraParams": {},
+    "sisaltyyKoulutuksiin": [],
+    "yhteyshenkilos": [
+      {
+        "nimi": "Heidi Varpelaide",
+        "titteli": "Lehtori",
+        "sahkoposti": "heidi.varpelaide(a)samk.fi",
+        "puhelin": "044 710 6333",
+        "kielet": [],
+        "henkiloTyyppi": "YHTEYSHENKILO"
+      }
+    ],
+    "pohjakoulutusvaatimukset": {
+      "versio": 1,
+      "uris": {}
+    },
+    "tutkintonimikes": {
+      "versio": 1,
+      "meta": {
+        "tutkintonimikekk_311": {
+          "uri": "tutkintonimikekk_311",
+          "versio": 2,
+          "arvo": "311",
+          "nimi": "Tradenomi"
+        }
+      },
+      "uris": {
+        "tutkintonimikekk_311": 2
+      }
+    },
+    "opintojenRakenneKuvas": {},
+    "koulutuksenTunnisteOid": "1.2.246.562.13.54702910669",
+    "johtaaTutkintoon": true
+  },
+  "status": "OK"
+}

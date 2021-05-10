@@ -1,0 +1,173 @@
+{
+  "yhteishaunKoulukoodi": "0346",
+  "metadata": {
+    "data": {
+      "KANSAINVALISET_KOULUTUSOHJELMAT": {},
+      "YLEISKUVAUS": {},
+      "KIELIOPINNOT": {},
+      "TERVEYDENHUOLTOPALVELUT": {},
+      "TEHTAVANIMIKE": {},
+      "SAHKOPOSTIOSOITE": {},
+      "RAHOITUS": {},
+      "AIEMMIN_HANKITTU_OSAAMINEN": {},
+      "sosiaalinenmedia_7#1": {},
+      "sosiaalinenmedia_5#1": {},
+      "sosiaalinenmedia_6#1": {},
+      "OPISKELIJALIIKKUVUUS": {},
+      "VAKUUTUKSET": {},
+      "OPISKELIJA_JARJESTOT": {},
+      "VALINTAMENETTELY": {},
+      "sosiaalinenmedia_3#1": {},
+      "sosiaalinenmedia_4#1": {},
+      "sosiaalinenmedia_1#1": {},
+      "VASTUUHENKILOT": {},
+      "KUSTANNUKSET": {},
+      "OPPIMISYMPARISTO": {},
+      "sosiaalinenmedia_2#1": {},
+      "PUHELINNUMERO": {},
+      "NIMI": {},
+      "OPISKELIJALIIKUNTA": {},
+      "VUOSIKELLO": {},
+      "OPISKELIJARUOKAILU": {},
+      "VAPAA_AIKA": {},
+      "ESTEETOMYYS": {},
+      "TIETOA_ASUMISESTA": {},
+      "TYOHARJOITTELU": {}
+    },
+    "nimi": {},
+    "hakutoimistoEctsNimi": {},
+    "hakutoimistoEctsEmail": {},
+    "hakutoimistoEctsPuhelin": {},
+    "hakutoimistoEctsTehtavanimike": {},
+    "yhteystiedot": [
+      {
+        "kieli": "kieli_fi#1",
+        "numero": "09 8868 7293",
+        "tyyppi": "puhelin",
+        "yhteystietoOid": "1.2.246.562.5.61359927479",
+        "id": "3202437"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "www": "https://www.laurea.fi/koulutus/hakeminen/",
+        "yhteystietoOid": "14010929395710.028959086272903556",
+        "id": "3202438"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "yhteystietoOid": "14010929395710.2619575328779421",
+        "id": "3202439",
+        "email": "hakijapalvelut@laurea.fi"
+      },
+      {
+        "osoiteTyyppi": "posti",
+        "kieli": "kieli_fi#1",
+        "postinumeroUri": "posti_01300",
+        "yhteystietoOid": "1.2.246.562.5.65850106848",
+        "id": "3202440",
+        "postitoimipaikka": "VANTAA",
+        "osoite": "Ratatie 22"
+      },
+      {
+        "osoiteTyyppi": "kaynti",
+        "kieli": "kieli_fi#1",
+        "postinumeroUri": "posti_01300",
+        "yhteystietoOid": "1.2.246.562.5.57183127131",
+        "id": "3202441",
+        "postitoimipaikka": "VANTAA",
+        "osoite": "Ratatie 22"
+      }
+    ],
+    "hakutoimistonNimi": {
+      "kieli_fi#1": "Hakijapalvelut"
+    },
+    "luontiPvm": 1401092939571,
+    "muokkausPvm": 1401092939571
+  },
+  "parentOidPath": "|1.2.246.562.10.00000000001|1.2.246.562.10.98188511467|1.2.246.562.10.13803815193|",
+  "nimi": {
+    "fi": "Laurea-ammattikorkeakoulu, Laurea Lohja"
+  },
+  "oid": "1.2.246.562.10.98212669513",
+  "alkuPvm": "2000-08-01",
+  "parentOid": "1.2.246.562.10.13803815193",
+  "postiosoite": {
+    "postinumeroUri": "posti_08100",
+    "osoiteTyyppi": "posti",
+    "yhteystietoOid": "1.2.246.562.5.78864227489",
+    "postitoimipaikka": "LOHJA",
+    "osoite": "Vihdinkatu 1"
+  },
+  "kuvaus2": {},
+  "tyypit": [
+    "Toimipiste"
+  ],
+  "opetuspisteenJarjNro": "07",
+  "yhteystietoArvos": [],
+  "yhteystiedot": [
+    {
+      "osoiteTyyppi": "posti",
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_08100",
+      "yhteystietoOid": "1.2.246.562.5.78864227489",
+      "id": "3202445",
+      "postitoimipaikka": "LOHJA",
+      "osoite": "Vihdinkatu 1"
+    },
+    {
+      "osoiteTyyppi": "kaynti",
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_08100",
+      "yhteystietoOid": "1.2.246.562.5.203612503910",
+      "id": "3202444",
+      "postitoimipaikka": "LOHJA",
+      "osoite": "Vihdinkatu 1"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "numero": "09 8868 7800",
+      "tyyppi": "puhelin",
+      "yhteystietoOid": "1.2.246.562.5.73058356178",
+      "id": "3202446"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "yhteystietoOid": "1.2.246.562.5.70555939589",
+      "id": "3202447",
+      "email": "lohja.info@laurea.fi"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "www": "http://www.laurea.fi",
+      "yhteystietoOid": "1.2.246.562.5.71932456743",
+      "id": "3202448"
+    }
+  ],
+  "nimet": [
+    {
+      "nimi": {
+        "fi": "Laurea-ammattikorkeakoulu, Laurea Lohja"
+      },
+      "alkuPvm": "2000-08-01",
+      "version": 1
+    }
+  ],
+  "ryhmatyypit": [],
+  "kayttoryhmat": [],
+  "toimipistekoodi": "0262907",
+  "kotipaikkaUri": "kunta_444",
+  "kieletUris": [
+    "oppilaitoksenopetuskieli_1#1"
+  ],
+  "vuosiluokat": [],
+  "maaUri": "maatjavaltiot1_fin",
+  "kayntiosoite": {
+    "postinumeroUri": "posti_08100",
+    "osoiteTyyppi": "kaynti",
+    "yhteystietoOid": "1.2.246.562.5.203612503910",
+    "postitoimipaikka": "LOHJA",
+    "osoite": "Vihdinkatu 1"
+  },
+  "version": 15,
+  "status": "AKTIIVINEN"
+}

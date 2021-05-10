@@ -146,7 +146,8 @@ case class Haku(
   toisenAsteenHaku: Boolean,
   viimeinenHakuaikaPaattyy: Option[DateTime],
   kohdejoukkoUri: Option[String],
-  hakutapaUri: String
+  hakutapaUri: String,
+  hakutyyppiUri: String
 ) {
   val isActive: Boolean = aika.isCurrently
 }
@@ -170,7 +171,8 @@ object Haku {
       toisenAsteenHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")),
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
       kohdejoukkoUri = haku.kohdejoukkoUri,
-      hakutapaUri = haku.hakutapaUri
+      hakutapaUri = haku.hakutapaUri,
+      hakutyyppiUri = haku.hakutyyppiUri
     )
   }
 

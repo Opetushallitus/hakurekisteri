@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, User}
+import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, Role, User}
 import fi.vm.sade.hakurekisteri.web.rest.support.TestUser
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.joda.time.DateTime
@@ -29,6 +29,7 @@ class ResourceAuthorizerSpec extends ScalatraFunSuite {
     override def auditSession(): AuditSessionRequest = ???
     override def toString: String = ToStringBuilder.reflectionToString(this)
     override def casAuthenticationToken: CasAuthenticationToken = TestUser.casAuthenticationToken
+    override def hasRole(role: Role) = true
   }
   val testuserOrg = rekisterinpitajaUser.orgsFor("", "").head
   private val opiskeluoikeus: Opiskeluoikeus = {

@@ -1,0 +1,202 @@
+{
+  "accessRights": {},
+  "result": {
+    "modified": 1589372952219,
+    "modifiedBy": "1.2.246.562.24.39980777107",
+    "oid": "1.2.246.562.20.652840958110",
+    "version": 30,
+    "hakukohteenNimet": {
+      "kieli_sv": "",
+      "kieli_fi": "Tradenomi (AMK), liiketalous, monimuotototeutus, verkko-opetus",
+      "kieli_en": ""
+    },
+    "tarjoajaNimet": {
+      "fi": "Laurea-ammattikorkeakoulu, Laurea Lohja"
+    },
+    "koulutusmoduuliToteutusTarjoajatiedot": {
+      "1.2.246.562.17.98887607319": {
+        "tarjoajaOids": [
+          "1.2.246.562.10.98212669513"
+        ]
+      }
+    },
+    "tarjoajaOids": [
+      "1.2.246.562.10.98212669513"
+    ],
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakuaikaId": "26361065",
+    "hakukelpoisuusvaatimusUris": [
+      "pohjakoulutusvaatimuskorkeakoulut_100"
+    ],
+    "opintoOikeusUris": [],
+    "hakukohdeKoulutusOids": [
+      "1.2.246.562.17.98887607319"
+    ],
+    "koulutukset": [
+      {
+        "oid": "1.2.246.562.17.98887607319"
+      }
+    ],
+    "alinHyvaksyttavaKeskiarvo": 0,
+    "alinValintaPistemaara": 0,
+    "ylinValintapistemaara": 0,
+    "aloituspaikatLkm": 40,
+    "edellisenVuodenHakijatLkm": 0,
+    "valintojenAloituspaikatLkm": 0,
+    "tila": "JULKAISTU",
+    "ulkoinenTunniste": "HLD220SA",
+    "koulutusAsteTyyppi": "KORKEAKOULUTUS",
+    "toteutusTyyppi": "KORKEAKOULUTUS",
+    "koulutusmoduuliTyyppi": "TUTKINTO",
+    "lisatiedot": {
+      "kieli_fi": "<h1>Keväällä 2020 on kaksi erillistä korkeakoulujen yhteishakua</h1> <p>Näissä hauissa haetaan erillisillä hakulomakkeilla, joihin molempiin voi täyttää kuusi hakutoivetta. Koulutukset alkavat syksyllä 2020.</p> <p><b>Kevään 1. yhteishaussa</b> (8. - 22.1.2020) voit hakea englanninkielisiin koulutuksiimme.</p> <p><b>Kevään 2. yhteishaussa</b> (18.3. - 1.4.2020) voit hakea suomenkielisiin koulutuksiimme. <br /><b>Kevään 2. yhteishaussa tulee hakutoiveet  asettaa mieluisuusjärjestykseen</b>, koska voit tulla valituksi vain ylimpään hakutoiveeseen, johon pisteesi riittävät.</p> <p>Voit tulla valituksi näissä molemmissa yhteishauissa, mutta voit ottaa vastaan vain<a href=\"https://opintopolku.fi/wp/valintojen-tuki/yhteishaku/korkeakoulujen-yhteishaku/yhden-paikan-saannos/\">yhden tutkintoon johtavan opiskelupaikan</a> syksyllä 2020 alkavista koulutuksista.</p> <p> </p> <p>Lisää hakemisesta Laurean <a href=\"https://www.laurea.fi/koulutus/hakeminen/\">Hakijalle</a>-sivuilla ja <a href=\"https://www.laurea.fi/koulutus/hakeminen/\">ammattikorkeakouluun.fi</a>-sivustolla.</p>",
+      "kieli_sv": "",
+      "kieli_en": ""
+    },
+    "valintaperusteKuvaukset": {
+      "kieli_fi": "<h2>Valintaperustemuutokset kevään 2. yhteishaku 2020</h2> <h3> </h3> <p>AMK-valintakoe muuttuu yksivaiheisesta kaksivaiheiseksi. Kokeen sisältö ei muutu. Kokeen ensimmäinen vaihe järjestetään digitaalisena etäkokeena 4.6.2020. Koe järjestetään aamupäivällä ja iltapäivällä. Ne hakijat, jotka olivat alun perin hakulomakkeella valinneet koeajankohdaksi aamupäivän, tekevät 4.6. olevan kokeen aamupäivällä. Ne hakijat, jotka olivat alun perin hakulomakkeella valinneet koeajankohdaksi iltapäivän, tekevät 4.6. olevan kokeen iltapäivällä. Kokeen toinen vaihe järjestetään kampuksella lähikokeena 23.-25.6.2020. Lähikokeeseen lähetetään erikseen kutsu, josta käy ilmi hakijan koepaikka ja –aika. Kummankaan kokeen ajankohtaa hakija ei voi itse valita eikä sitä muuttaa.</p> <p>Kokeeseen liittyvät tarkemmat tiedot ovat<a href=\"https://www.ammattikorkeakouluun.fi/\"> ammattikorkeakouluun.fi –sivustolla</a>. Valintakokeen toiseen vaiheeseen kutsutaan ne hakijat, jotka ovat saaneet korkeimmat pisteet kokeen ensimmäisessä vaiheessa. Kokeeseen kutsutaan seuraavat määrät hakijoita.</p> <p>Laurea AMK kutsuu valintakokeen toiseen vaiheeseen hakijoita neljä kertaa aloituspaikkojen verran. Tässä hakukohteessa kutsutaan valintakokeen toiseen vaiheeseen;</p> <p>Tradenomi (AMK), liiketalous, monimuotototeutus, verkko-opetus, Lohja 112 hakijaa</p> <h2> </h2> <h2>Keväällä 2020 on kaksi erillistä korkeakoulujen yhteishakua</h2> <p>Näissä hauissa haetaan erillisillä hakulomakkeilla, joihin molempiin voi täyttää kuusi hakutoivetta. Koulutukset alkavat syksyllä 2020.</p> <p><b>Kevään 1. yhteishaussa</b> (8. - 22.1.2020) voit hakea englanninkielisiin koulutuksiimme.</p> <p><b>Kevään 2. yhteishaussa</b> (18.3. - 1.4.2020) voit hakea suomenkielisiin koulutuksiimme. <br /><b>Kevään 2. yhteishaussa tulee hakutoiveet  asettaa mieluisuusjärjestykseen</b>, koska voit tulla valituksi vain ylimpään hakutoiveeseen, johon pisteesi riittävät.</p> <p>Voit tulla valituksi näissä molemmissa yhteishauissa, mutta voit ottaa vastaan vain <a href=\"https://opintopolku.fi/wp/valintojen-tuki/yhteishaku/korkeakoulujen-yhteishaku/yhden-paikan-saannos/\">yhden tutkintoon johtavan opiskelupaikan</a> syksyllä 2020 alkavista koulutuksista.</p> <h2><b>Valintojen tulosten julkaisu kevään 2. yhteishaussa<br /></b></h2> <p>Todistusvalintojen tulokset julkaistaan ennen AMK-valintakoetta, viimeistään 27.5.2020.</p> <p>AMK-valintakokeen tulokset julkaistaan viimeistään 15.7.2020.</p> <p>Varasijoilta hyväksyminen päättyy 3.8.2020. klo 15.00</p> <p>Saat tiedon opiskelijavalinnasta sähköpostilla. Omaa tilannettaan voi myös seurata kirjautumalla <a href=\"https://opintopolku.fi/oma-opintopolku/\">OmaOpintopolku</a>-palveluun.</p> <h2>Opiskelupaikan vastaanottaminen</h2> <p>Opiskelupaikka tulee ottaa vastaan, lukuvuodelle ilmoittautua sekä toimittaa pyydetyt tutkintotodistusten tai työtodistusten kopiot kevään 2020 toisessa yhteishaussa 22.7.2020 klo 15.00 mennessä. Jos saat varasijalta opiskelupaikan, tulee nämä asiat tehdä 7 vuorokauden kuluessa valinnan tiedoksi saannista.</p> <h1>1. Opiskelijavalinta suomen- ja ruotsinkieliseen päivä- ja monimuotototeutukseen</h1> <h2><b>1.1 Hakukelpoisuus</b></h2> <p>Hakukelpoisuus ammattikorkeakouluopintoihin on määritelty valintaperustesuosituksen yleisessä osiossa (katso alempana kohta Hakukelpoisuusvaatimukset).</p> <h2><b>1.2 Tässä hakukohteessa käytössä olevat valintatavat</b></h2> <table> <tbody> <tr> <td> <p>TODISTUSVALINTA YLIOPPILASTUTKINNON PERUSTEELLA</p> <p>Tässä valintatavassa mukana ylioppilastutkinnon suorittaneet hakijat.</p> </td> <td> <p>8 aloituspaikkaa</p> <p>(joista vähintään 5 ensikertalaisille)</p> </td> </tr> <tr> <td> <p>TODISTUSVALINTA AMMATILLISEN PERUSTUTKINNON PERUSTEELLA</p> <p>Tässä valintatavassa mukana 1.8.2015 tai sen jälkeen ammatillisen perustutkinnon suorittaneet hakijat.</p> </td> <td> <p>4 aloituspaikkaa</p> <p>(joista vähintään 3 ensikertalaisille)</p> </td> </tr> <tr> <td> <p>AMK-VALINTAKOE</p> </td> <td> <p>28 aloituspaikkaa</p> <p>(joista vähintään 20 ensikertalaisille)</p> </td> </tr> <tr> <td> <p>Hakukohteessa yhteensä 40 aloituspaikkaa.</p> </td> <td> </td> </tr> </tbody> </table> <h1><b>2. Valintatavat</b></h1> <p>Ammattikorkeakoulu määrittelee hakukohteittain, mitkä alla olevista valintatavoista ovat käytössä kyseisessä hakukohteessa, sekä antaa valintatapakohtaiset aloituspaikat. Pohjakoulutuksesta riippuen hakijat ovat mukana valitsemissaan hakukohteissa käytössä olevissa valintatavoissa.</p> <p>Ammattikorkeakoulut ilmoittavat hakuohjeissa ja määrittelevät hakukohteittain, jos varasijalle jäävien hakijoiden määrää rajataan. Laurea-ammattikorkeakoulu ei rajaa varasijoille jäävien määrää.</p> <p>Jos tasapistetilanteissa olevien välillä ei saada eroa valintatavoissa ilmoitettujen kriteerien perusteella, ammattikorkeakoulu voi valita kaikki tasapistetilanteessa olevat hakijat tai ei valitse ketään tasapistetilanteessa olevia hakijoita tai järjestelmä voi arpoa valittavan/valittavat. Laurea-ammattikorkeakoulu käyttää arvontaa.</p> <p>Ammattikorkeakoulu voi perua hakijan opiskelupaikan, jos tutkintotodistuksia ei toimiteta ammattikorkeakoulun ilmoittamassa määräajassa tai jos hakija on antanut itsestään virheellisiä tietoja.</p> <p><b>Käytössä olevat valintatavat</b></p> <p>I. AMK-valintakoe</p> <p>II. Todistusvalinta</p> <p>Valintatapojen tarkemmat tiedot esitellään seuraavissa kohdissa.</p> <h2><b>2.1 AMK-valintakoe</b></h2> <p>AMK-valintakoe järjestetään kevään ja syksyn 2020 yhteishaussa. Valintakokeeseen ilmoittaudutaan yhteishaun hakulomakkeella. Hakija valitsee AMK-valintakokeen suorituspaikan ja suoritusajan hakulomakkeella ammattikorkeakoulujen ilmoittamista vaihtoehdoista. Hakija tekee AMK-valintakokeen yhdellä suorituskerralla riippumatta siitä, kuinka monta osiota kuuluu hänen valintakokeeseensa. AMK-valintakoe tehdään hakijan omalla kannettavalla tietokoneella.</p> <p>AMK-valintakoe muuttuu yksivaiheisesta kaksivaiheiseksi. Kokeen sisältö ei muutu. Kokeen ensimmäinen vaihe järjestetään digitaalisena etäkokeena 4.6.2020. Koe järjestetään aamupäivällä ja iltapäivällä. Ne hakijat, jotka olivat alun perin hakulomakkeella valinneet koeajankohdaksi aamupäivän, tekevät 4.6. olevan kokeen aamupäivällä. Ne hakijat, jotka olivat alun perin hakulomakkeella valinneet koeajankohdaksi iltapäivän, tekevät 4.6. olevan kokeen iltapäivällä. Kokeen toinen vaihe järjestetään kampuksella lähikokeena 23.-25.6.2020. Lähikokeeseen lähetetään erikseen kutsu, josta käy ilmi hakijan koepaikka ja –aika. Kummankaan kokeen ajankohtaa hakija ei voi itse valita eikä sitä muuttaa.</p> <p>Kokeeseen liittyvät tarkemmat tiedot ovat<a href=\"https://www.ammattikorkeakouluun.fi/\"> ammattikorkeakouluun.fi –sivustolla</a>. Valintakokeen toiseen vaiheeseen kutsutaan ne hakijat, jotka ovat saaneet korkeimmat pisteet kokeen ensimmäisessä vaiheessa. Kokeeseen kutsutaan seuraavat määrät hakijoita.</p> <p>Laurea AMK kutsuu valintakokeen toiseen vaiheeseen hakijoita neljä kertaa aloituspaikkojen verran. Tässä hakukohteessa kutsutaan valintakokeen toiseen vaiheeseen;</p> <p>Tradenomi (AMK), liiketalous, monimuotototeutus, verkko-opetus, Lohja 112 hakijaa</p> <h2><b>2.2 Todistusvalinta</b></h2> <p>Ammattikorkeakoulut valitsevat opiskelijoita ylioppilastutkinnon ja ammatillisen perustutkinnon perusteella tehtävällä todistusvalinnalla. Todistusvalinta ei ole käytössä kulttuurialalla Diakonia ammattikorkeakoulun tulkin koulutuksessa.</p> <p>Ammattikorkeakoulu voi itse määritellä todistusvalinnassa alimman pisterajan tai kynnysehdon hakukohteeseen.</p> <p>Laurea-ammattikorkeakoulu ei aseta alinta pisterajaa tai kynnysehtoa hakukohteilleen kevään 2020 2. yhteishaussa.</p> <h3><b>2.2.1 Ylioppilastutkinnon perusteella tehtävä todistusvalinta</b></h3> <p>Ylioppilastutkinnon perusteella tehtävässä todistusvalinnassa pisteytetään viisi ainetta. Äidinkieli, matematiikka ja vieras/toinen kotimainen kieli huomioidaan kaikilta nämä aineet kirjoittaneilta. Tämän lisäksi huomioidaan kaksi parasta pisteitä tuottavaa ainetta (reaaliaineet/vieras kieli).</p> <p>Reaaliaineissa huomioidaan vain vuonna 2006, ja sen jälkeen suoritetut ainereaalit.</p> <p><a href=\"https://www.ammattikorkeakouluun.fi/hakijalle/valintatavat/todistusvalinta/#yo-pisteytys\">Ylioppilastutkintotodistuksen pisteytysmalli</a></p> <p>(käytössä kaikilla koulutusaloilla, pl. kulttuuriala ja Diakonia-ammattikorkeakoulun tulkin koulutus)</p> <p>Enimmäispistemäärä 198 pistettä.</p> <p><b>Tasasijasäännöt</b></p> <p>Mikäli viiden aineen tuottama yhteispistemäärä on kahdella tai useammalla hakijalla sama, ratkaistaan hakijoiden paremmuusjärjestys seuraavien tasasijasääntöjen mukaan:</p> <p>1. Hakutoivejärjestys</p> <p>2. Yo-arvosanat:</p> <p>- I. Äidinkieli</p> <p>- II. Matematiikka</p> <p>- III. Vieras kieli/toinen kotimainen kieli</p> <p>Jos esimerkiksi kaksi hakijaa on saanut 100 pistettä ja molempien hakutoivejärjestys on sama, niin hakija, jonka äidinkielen arvosana tuottaa paremmat pisteet tulee valituksi. Jos molemmilla hakijoilla on äidinkielestä sama arvosana, siirrytään seuraavaan määriteltyyn aineeseen.</p> <h3><b>2.2.2 Ammatillisen perustutkinnon perusteella tehtävä todistusvalinta </b></h3> <p>Ammatillisen perustutkinnon perusteella tehtävässä todistusvalinnassa kaikilta hakijoilta lasketaan kolmen yhteisen tutkinnon osan arvosanojen ja tutkinnon painotetun keskiarvon tuottama yhteispistemäärä (enimmäispistemäärä 150 pistettä).</p> <p>Todistusvalinnassa huomioidaan ammatilliset perustutkinnot, joista hakija on valmistunut 1.8.2015 tai sen jälkeen.</p> <p><a href=\"https://www.ammattikorkeakouluun.fi/hakijalle/valintatavat/todistusvalinta/#ammatillinen-pisteytys\">Yhteiset tutkinnon osat (enimmäispistemäärä 60 pistettä) ja Tutkinnon painotettu keskiarvo (enimmäispistemäärä 90 pistettä)</a></p> <p><b>Tasasijasäännöt</b></p> <p>Mikäli kolmen yhteisen tutkinnon osan arvosanojen ja tutkinnon painotetun keskiarvon tuottama yhteispistemäärä on kahdella tai useammalla hakijalla sama, ratkaistaan hakijoiden paremmuusjärjestys seuraavien tasasijasääntöjen mukaan:</p> <p>1. Hakutoivejärjestys</p> <p>2. Tutkinnon painotettu keskiarvo</p> <p>3. Tutkinnon yhteisten osien arvosanat:</p> <p>- I. Viestintä- ja vuorovaikutusosaaminen</p> <p>- II. Matemaattis-luonnontieteellinen osaaminen</p> <p>- III. Yhteiskunta- ja työelämäosaaminen</p> <p>Jos esimerkiksi kaksi hakijaa on saanut 100 pistettä ja molempien hakutoivejärjestys on sama, niin hakija, jonka viestintä- ja vuorovaikutusosaamisen arvosana tuottaa paremmat pisteet tulee valituksi. Jos molemmilla hakijoilla on viestintä- ja vuorovaikutusosaamisesta sama pistemäärä, siirrytään matemaattis-luonnontieteellisen osaamisen arvosanaan.</p> <h3><b>2.2.3 Kansainvälisten ylioppilastutkintojen perusteella tehtävä todistusvalinta</b></h3> <p><a href=\"https://www.ammattikorkeakouluun.fi/hakijalle/valintatavat/todistusvalinta/#ib-eb-rp-pisteytys\">European Baccalaureate (EB)-tutkinnon pisteytysmalli</a></p> <p>Enimmäispistemäärä 198 pistettä.</p>"
+    },
+    "hakukelpoisuusVaatimusKuvaukset": {
+      "kieli_sv": "",
+      "kieli_fi": "<h1>1. Hakukelpoisuus ammattikorkeakoulututkintoon johtaviin opintoihin</h1> <h2><b>1.1 Yleinen hakukelpoisuus</b></h2> <p>Hakukelpoisuudesta ammattikorkeakouluihin on säädetty ammattikorkeakoululaissa 932/2014. Voit hakea ammattikorkeakoulututkintoon johtaviin opintoihin, jos olet suorittanut</p> <ul> <li>suomalaisen lukion oppimäärän ja/tai ylioppilastutkinnon</li> <li>International Baccalaureate -tutkinnon (IB)</li> <li>European Baccalaureate -tutkinnon (EB)</li> <li>Reifeprüfung (RP) tai Deutsche Internationale Abitur tutkinnon (DIA)</li> <li>120 opintoviikon tai 180 osaamispisteen laajuisen suomalaisen ammatillisen perustutkinnon tai sitä vastaavan aiemman vähintään 80 opintoviikon laajuisen suomalaisen ammatillisen tutkinnon suomalaisen opistoasteen tai ammatillisen korkea-asteen tutkinnon</li> <li>näyttötutkintona suoritetun suomalaisen ammatillisen perustutkinnon, ammattitutkinnon tai erikoisammattitutkinnon tai niitä vastaavan aikaisemman tutkinnon tai</li> <li>ulkomaisen koulutuksen, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluopintoihin.</li> </ul> <p><i>Huomaathan, että ammattikorkeakoulututkinto/korkeakoulututkinto ei anna yleistä hakukelpoisuutta ammattikorkeakouluopintoihin.</i></p> <p>Valintaperustesuosituksessa esitettävillä tutkintovaatimuksilla tarkoitetaan lähtökohtaisesti aina suomalaista tutkintoa, ellei asiasta toisin mainita.</p> <p>Korkeakoulututkinnolla ei voi hakea, ellei hakukohteen valintaperusteissa toisin mainita. Joihinkin hakukohteisiin ammattikorkeakoulut voivat vaatia tietyn tutkinnon tai muita todistuksia.</p> <p>Joihinkin ammattikorkeakouluihin haettaessa voidaan harkinnanvaraisesti todeta hakukelpoiseksi hakija, jolla ammattikorkeakoulu katsoo olevan riittävät tiedot ja taidot ammattikorkeakouluopintoja varten kyseiseen hakukohteeseen.</p> <p>Laurea-ammattikorkeakoulu ei käytä harkinnanvaraista valintaa.</p> <h2><b>1.2. Hakukelpoisuuden osoittaminen</b></h2> <h3><b>1.2.3 Suomalaisella tutkintotodistuksella hakevat</b></h3> <p>Suomalaisella tutkintotodistuksella hakevien ei tarvitse toimittaa todistusjäljennöstä, vaan todistukset tarkistetaan hyväksytyksi tulleilta.</p> <p>Poikkeuksena ovat <b>ennen vuotta 1990 suomalaisen ylioppilastutkinnon</b> suorittaneet, joiden on toimitettava todistuskopiot ennalta ilmoitettuna määräaikana korkeakoulujen hakijapalveluihin <b>8.4.2020 klo 15.00 mennessä</b>. Haussa käytetyn tutkinnon on oltava suoritettuna niin, että lopullisen tutkintotodistuksen kopio tai oppilaitoksen myöntämä väliaikainen todistus valmistumisesta on perillä korkeakoulussa opiskelijavalinnan tulosten julkaisemisen jälkeen 15.7.2020 klo 15.00 mennessä.</p> <p>Oppilaitoksen myöntämä väliaikainen todistus hakijan valmistumisesta hyväksytään hakukelpoisuuden osoittavana todistuksena, jos virallista tutkintotodistusta ei pystytä toimittamaan ennakkoon ilmoitettuun määräaikaan mennessä viranomaistoiminnasta tai siihen rinnastettavasta syystä.</p> <h3>1.2.4 Suomen ulkopuolella suoritetulla tutkinnolla hakevat</h3> <p>Osoittaakseen hakukelpoisuutensa <b>Suomen ulkopuolella suoritetulla tutkinnolla</b> hakevan on toimitettava <b>8.4.2020 klo 15.00 mennessä</b> kopio hakemuksensa perusteena olevasta lopullisesta tutkintotodistuksesta, tai oppilaitoksen myöntämä väliaikainen todistus valmistumisesta ylimpänä ammattikorkeakouluhakutoiveena olevan ammattikorkeakoulun hakijapalveluihin, joka tekee päätöksen hakukelpoisuudesta kaikkiin ammattikorkeakoulujen hakutoiveisiin.</p> <p>Jos tutkintotodistuksen tai oppilaitoksen myöntämän väliaikaisen todistuksen kieli ei ole suomi, ruotsi tai englanti, niin hakijan on lisäksi toimitettava <b>kopio virallisen kielenkääntäjän käännöksestä</b> <b> 8.4.2020 klo 15:00 mennessä</b>. Käännöksessä tulee olla kääntäjän allekirjoitus ja leima.</p> <p>Oppilaitoksen myöntämä väliaikainen todistus hakijan valmistumisesta hyväksytään hakukelpoisuuden osoittavana todistuksena, jos virallista tutkintotodistusta ei pystytä toimittamaan ennakkoon ilmoitettuun määräaikaan mennessä viranomaistoiminnasta tai siihen rinnastettavasta syystä.</p> <h3><b>1.2.5 IB-, EB- ja RP/DIA -tutkinnolla hakevat<br /></b></h3> <p>Osoittaakseen hakukelpoisuutensa <b>IB-, EB- ja RP/DIA -tutkinnon suorittaneet</b> toimittavat tutkintotodistuksen kopion <b>8.4.2020 klo 15.00 mennessä. </b></p> <p><b>Hakukautena valmistuvien</b> tulee toimittaa IB Predicted Grades tai vastaava dokumentti<b> 8.4.2020 klo 15.00 mennessä.</b> Hakukautena DIA- ja EB- tutkintoon valmistuvat toimittavat kopion lopullisesta todistuksestaan 15.7.2020 klo 15.00 mennessä. Hakukautena IB tutkintoon valmistuvat toimittavat lopullisten arvosanojen IB Transcript of Grades 15.7.2020 klo 15.00 mennessä.</p> <p>IB certificate ei anna hakukelpoisuutta.</p> <h3><b>1.2.6 Pakolaisasemassa oleva</b> tai <b>turvapaikanhakija </b></h3> <p>Pakolaisasemassa oleva* tai turvapaikanhakija voi hakea ja tulla valituksi koulutukseen aivan kuten kuka tahansa muukin hakukelpoinen Suomen tai muun maan kansalainen.</p> <p>Jos hakija on Suomessa pakolainen tai pakolaiseen rinnastettavassa asemassa ** tai turvapaikanhakija<b>,</b> eikä hän voi todistaa aikaisempaa tutkintoaan asiakirjoin, tulee hänen täyttää taustaselvityslomake, joka löytyy jokaisen ammattikorkeakoulun verkkosivuilta. Korkeakoulu voi kutsua hakijan valintakokeeseen tai lähettää hakemuksen tarvittaessa akateemiseen arviointiin. Hakukohteen korkeakoulu ratkaisee hakijalta pyytämänsä selvityksen perusteella, onko selvitys aikaisemmasta tutkinnosta riittävä.</p> <p>Hakijalla tulee olla statuksestaan kertova viranomaispäätös (turvapaikkapäätös tai oleskelulupa suojelun perusteella). Hakijan tulee toimittaa taustaselvityslomakkeen liitteenä kopio kyseisestä päätöksestä <b>kaikkien hakukohteiden korkeakoulujen hakijapalveluihin</b> <b>8.4.2020 klo 15.00 mennessä.</b> Korkeakoulujen yhteishaun asiakaspalveluryhmä suosittelee, että myös muukalaispassit, joissa on merkintä ”henkilöllisyys varmistamatta” hyväksytään, mutta AMK päättää kuitenkin itse, hyväksyykö ko. asiakirjan. Hakemukselle ei tule ladata arkaluontoisia liitteitä.</p> <p>Turvapaikkaa hakeva, joka ei ole vielä saanut päätöstä, voi statuksensa selvittämiseksi esittää esim. valintakoetilanteessa Migrin myöntämän kuvallisen henkilökortin ja hakukohteen vaatiessa myös Migrin maksullisen (20 €) vireilläolotodistuksen siitä, että hakija voi oleskella laillisesti Suomessa asiansa käsittelyn ajan ts. kunnes asia on lainvoimaisesti ratkaistu.</p> <p><b><i>*pakolaisasemassa oleva eli turvapaikka</i></b><i> = </i>Oleskelu kotimaan tai pysyvän asuinmaan ulkopuolella siitä syystä, että henkilöllä on perusteltu syy pelätä siellä vainoa. Vainon syyn tulee olla alkuperä, uskonto, kansallisuus, tiettyyn yhteiskunnalliseen ryhmään kuuluminen tai poliittinen mielipide. Lisäksi edellytetään, että henkilö on pelkonsa vuoksi haluton turvautumaan kyseisen valtion suojeluun.</p> <p>** pakolaiseen rinnastettavassa asemassa on toissijaista suojelua saava henkilö = henkilöä uhkaa kotimaassa tai pysyvässä asuinmaassa kuolemanrangaistus, teloitus, kidutus tai muu epäinhimillinen tai ihmisarvoa loukkaava kohtelu tai rangaistus. Lupa voidaan myöntää myös, jos henkilö ei voi palata kotimaahan tai pysyvään asuinmaahan joutumatta vakavaan henkilökohtaiseen vaaraan siellä vallitsevan aseellisen selkkauksen vuoksi.</p> <p>Asiakirjan väärentäminen tai väärinkäyttö voi johtaa rikosvastuuseen ja on poliisiviranomaiselle kuuluva asia.</p>",
+      "kieli_en": ""
+    },
+    "kaytetaanJarjestelmanValintaPalvelua": true,
+    "kaytetaanHaunPaattymisenAikaa": false,
+    "kaytetaanHakukohdekohtaistaHakuaikaa": false,
+    "hakukohteenLiitteet": [
+      {
+        "oid": "26459007",
+        "version": 22,
+        "kieliUri": "kieli_fi",
+        "kieliNimi": "suomi",
+        "liitteenNimi": "Tutkintotodistuskopioiden toimittaminen Laurea-ammattikorkeakouluun",
+        "jarjestys": 0,
+        "kaytetaanHakulomakkeella": false,
+        "liitteenKuvaukset": {
+          "kieli_fi": "<h3>Todistuskopiot tulee toimittaa 8.4.2020 klo 15.00 mennessä vain <b>jos haet jollain seuraavista tutkinnoista;</b></h3> <ul> <li>Suomessa suoritettu ylioppilastutkinto ennen vuotta 1990.</li> <li>Suomessa suoritettu ammatillinen perustutkinto, joka on suoritettu ajalla 1.8.2015 - 2016.</li> <li>Kansainvälinen ylioppilastutkinto (EB-, IB-, Reifeprüfung/DIA-tutkinnolla).</li> <li>Ulkomailla suoritettu tutkinto (jos todistuksen kieli ei ole suomi, ruotsi tai englanti, tulee sinun lähettää myös kopio virallisen kielenkääntäjän tekemästä käännöksestä).</li> </ul> <p><b><br />Toimita liitteet lisäämällä ne omalle hakulomakkeellesi. Tallenna liitteesi PDF/JPG/PNG-muodossa. </b>Nimeä tiedostot muotoon &quot;Sukunimi_Etunimi_dokumentti&quot;, esimerkiksi Meikäläinen_Maija_tutkintotodistus</p> <p>Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.<br /> <br /> Voit tarvittaessa lähettää liitteesi postitse. Jos lähetät liitteesi postitse, lähetä ne ylimpänä ammattikorkeakouluhakutoiveena olevan ammattikorkeakoulun hakijapalveluiden.<br /> Jos Laurea-ammattikorkeakoulu on ylin ammattikorkeakouluhakutoiveesi, postita liitteet osoitteeseen Hakijapalvelut, Ratatie 22, 01300 Vantaa. Mikäli posti toimittaa lähetyksen myöhässä, katsotaan liite myöhässä saapuneeksi, eikä liitettä oteta huomioon.</p>"
+        },
+        "toimitettavaMennessa": 1586347200000,
+        "sahkoinenToimitusOsoite": "Toimita liitteet lisäämällä ne omalle hakulomakkeellesi. Tallenna liitteesi PDF/JPG/PNG-muodossa."
+      }
+    ],
+    "yhteystiedot": [
+      {
+        "version": 0,
+        "lang": "kieli_fi",
+        "osoiterivi1": "Ratatie 22",
+        "postinumero": "posti_01300",
+        "postinumeroArvo": "01300",
+        "postitoimipaikka": "VANTAA",
+        "puhelinnumero": "09 8868 7293",
+        "sahkopostiosoite": "hakijapalvelut@laurea.fi",
+        "hakutoimistonNimi": "Hakijapalvelut",
+        "wwwOsoite": "https://www.laurea.fi/koulutus/hakeminen/",
+        "kayntiosoite": {
+          "version": 0,
+          "osoiterivi1": "Ratatie 22",
+          "postinumero": "posti_01300",
+          "postinumeroArvo": "01300",
+          "postitoimipaikka": "VANTAA"
+        },
+        "osoitemuoto": "SUOMALAINEN"
+      }
+    ],
+    "liitteidenToimitusOsoite": {
+      "version": 0,
+      "osoiterivi1": "Ratatie 22",
+      "postinumero": "posti_01300",
+      "postinumeroArvo": "01300",
+      "postitoimipaikka": "VANTAA"
+    },
+    "valintakokeet": [
+      {
+        "oid": "26459015",
+        "version": 22,
+        "kieliUri": "kieli_fi",
+        "kieliNimi": "suomi",
+        "valintakoeNimi": "AMK-valintakoe",
+        "valintakokeenKuvaus": {
+          "uri": "kieli_fi",
+          "nimi": "suomi",
+          "monikielisetNimet": [
+            {
+              "kieli": "FI",
+              "nimi": "suomi"
+            },
+            {
+              "kieli": "EN",
+              "nimi": "Finnish"
+            },
+            {
+              "kieli": "SV",
+              "nimi": "finska"
+            }
+          ],
+          "arvo": "FI",
+          "versio": 1,
+          "teksti": "<p>Hakukohde käyttää AMK-valintakoetta, joka on ammattikorkeakoulujen yhteinen digitaalinen valintakoe.</p> <h2>Ilmoittautuminen</h2> <p>Ilmoittaudut valintakokeeseen valitsemalla hakuaikana hakulomakkeella itsellesi sopivan ajan ja paikan tarjolla olevista vaihtoehdoista. Tarjolla olevat vaihtoehdot täyttyvät ilmoittautumisjärjestyksessä. Valinta on sitova eikä sitä voi muuttaa hakuajan jälkeen.</p> <p>AMK-valintakoe muuttuu yksivaiheisesta kaksivaiheiseksi. Kokeen sisältö ei muutu. Kokeen ensimmäinen vaihe järjestetään digitaalisena etäkokeena 4.6.2020. Koe järjestetään aamupäivällä ja iltapäivällä. Ne hakijat, jotka olivat alun perin hakulomakkeella valinneet koeajankohdaksi aamupäivän, tekevät 4.6. olevan kokeen aamupäivällä. Ne hakijat, jotka olivat alun perin hakulomakkeella valinneet koeajankohdaksi iltapäivän, tekevät 4.6. olevan kokeen iltapäivällä. Kokeen toinen vaihe järjestetään kampuksella lähikokeena 23.-25.6.2020. Lähikokeeseen lähetetään erikseen kutsu, josta käy ilmi hakijan koepaikka ja –aika. Kummankaan kokeen ajankohtaa hakija ei voi itse valita eikä sitä muuttaa.</p> <p>Kokeeseen liittyvät tarkemmat tiedot ovat<a href=\"https://www.ammattikorkeakouluun.fi/\"> ammattikorkeakouluun.fi –sivustolla</a>. Valintakokeen toiseen vaiheeseen kutsutaan ne hakijat, jotka ovat saaneet korkeimmat pisteet kokeen ensimmäisessä vaiheessa. Kokeeseen kutsutaan seuraavat määrät hakijoita.</p> <p>Laurea AMK kutsuu valintakokeen toiseen vaiheeseen hakijoita neljä kertaa aloituspaikkojen verran. Tässä hakukohteessa kutsutaan valintakokeen toiseen vaiheeseen;</p> <p>Tradenomi (AMK), liiketalous, monimuotototeutus, verkko-opetus, Lohja 112 hakijaa</p> <p> </p> <h2>Valintakokeeseen valmistautuminen</h2> <p>Valintakokeen teet omalla kannettavalla tietokoneellasi valvotusti ammattikorkeakoulun tiloissa. Tarvitset kokeessa vaatimukset täyttävän tietokoneen. Tutustu ennen koetta ohjeisiin sivulla <a href=\"https://www.ammattikorkeakouluun.fi/hakijalle/valintatavat/amk-valintakoe/\">www.ammattikorkeakouluun.fi.</a></p> <p>Jos tarvitset yksilöllisiä järjestelyjä kokeeseen, löydät ohjeet samalta sivustolta.</p> <h2>Todistusvalinta</h2> <p>Tässä hakukohteessa on käytössä myös todistusvalinta. Lue lisää kohdasta valintaperusteet.</p>"
+        },
+        "valintakoeAjankohtas": [],
+        "pisterajat": [],
+        "kuvaukset": {},
+        "lisanaytot": {}
+      }
+    ],
+    "kaksoisTutkinto": false,
+    "opetusKielet": [
+      "kieli_fi"
+    ],
+    "valintaPerusteKuvausKielet": [],
+    "soraKuvausKielet": [],
+    "painotettavatOppiaineet": [],
+    "hakuMenettelyKuvaukset": {},
+    "peruutusEhdotKuvaukset": {},
+    "ryhmaliitokset": [
+      {
+        "ryhmaOid": "1.2.246.562.28.85275878248"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.56585162458"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.42242925784"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.54010993050"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.19435604475"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.90067420555"
+      }
+    ],
+    "organisaatioRyhmaOids": [
+      "1.2.246.562.28.85275878248",
+      "1.2.246.562.28.56585162458",
+      "1.2.246.562.28.42242925784",
+      "1.2.246.562.28.54010993050",
+      "1.2.246.562.28.19435604475",
+      "1.2.246.562.28.90067420555"
+    ],
+    "ylioppilastutkintoAntaaHakukelpoisuuden": true,
+    "ensikertalaistenAloituspaikat": 28,
+    "pohjakoulutusliitteet": [
+      "pohjakoulutuskklomake_yokvsuomi",
+      "pohjakoulutuskklomake_muuulk",
+      "pohjakoulutuskklomake_yosuomi",
+      "pohjakoulutuskklomake_pohjakoulutusyoulkomainen"
+    ],
+    "josYoEiMuitaLiitepyyntoja": false,
+    "ataruLomakeAvain": "fb80a16d-9baa-4117-977d-f1d3b4faf35a",
+    "overridesHaunHakulomakeUrl": false,
+    "ohjeetUudelleOpiskelijalle": "https://www.laurea.fi/koulutus/uudelle-opiskelijalle/",
+    "yhdenPaikanSaanto": {
+      "voimassa": true,
+      "syy": "Korkeakouluhaku ilman kohdejoukon tarkennetta"
+    },
+    "ammatillinenPerustutkintoAlk2018": false
+  },
+  "status": "OK"
+}

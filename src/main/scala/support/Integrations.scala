@@ -1,7 +1,6 @@
 package support
 
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
@@ -30,6 +29,7 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.{
   MockParameterActor,
   ParametritActorRef
 }
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.PistesyottoService
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   MockTarjontaActor,
   TarjontaActor,
@@ -46,6 +46,7 @@ import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
   ValintarekisteriQuery
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosActor, ValintaTulosActorRef}
+import fi.vm.sade.hakurekisteri.integration.valpas.ValpasIntergration
 import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
@@ -59,7 +60,7 @@ import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlRerunPolicy
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 trait Integrations {
   val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef
@@ -74,15 +75,18 @@ trait Integrations {
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
   val ytlIntegration: YtlIntegration
+  val valpasIntegration: ValpasIntergration
   val ytlHttp: YtlHttpFetch
   val parametrit: ParametritActorRef
   val valintaTulos: ValintaTulosActorRef
   val valintarekisteri: ValintarekisteriActorRef
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
+  val valintalaskentaClient: VirkailijaRestClient
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
   val koskiService: IKoskiService
   val valintaperusteetService: IValintaperusteetService
+  val pistesyottoService: PistesyottoService
 }
 
 object Integrations {
@@ -148,6 +152,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     ytlKokelasPersister,
     config
   )
+
   val haut: ActorRef = system.actorOf(
     Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
     "haut"
@@ -158,6 +163,19 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   override val proxies = new MockProxies
   override val hakemusClient = null
+  override val valintalaskentaClient = null
+  override val pistesyottoService = null
+  override val valpasIntegration =
+    new ValpasIntergration(
+      pistesyottoService,
+      valintalaskentaClient,
+      organisaatiot,
+      koodisto,
+      tarjonta,
+      haut,
+      valintaTulos,
+      hakemusService
+    )
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 
@@ -174,6 +192,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   private val logger = LoggerFactory.getLogger(getClass)
   logger.info(s"Initializing BaseIntegrations started...")
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
+  val laskentaEc = ExecutorUtil.createExecutor(10, "valintalaskenta-client-pool")
+  val pisteEc = ExecutorUtil.createExecutor(10, "pistesyotto-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
   val virtaEc = ExecutorUtil.createExecutor(1, "virta-client-pool")
@@ -183,10 +203,14 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   system.registerOnTermination(() => {
     restEc.shutdown()
     vtsEc.shutdown()
+    laskentaEc.shutdown()
+    pisteEc.shutdown()
     vrEc.shutdown()
     virtaEc.shutdown()
     restEc.awaitTermination(3, TimeUnit.SECONDS)
     vtsEc.awaitTermination(3, TimeUnit.SECONDS)
+    laskentaEc.awaitTermination(3, TimeUnit.SECONDS)
+    pisteEc.awaitTermination(3, TimeUnit.SECONDS)
     vrEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaEc.awaitTermination(3, TimeUnit.SECONDS)
     virtaResourceEc.awaitTermination(3, TimeUnit.SECONDS)
@@ -213,6 +237,18 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient =
     new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
+  private val pistesyottoClient =
+    new VirkailijaRestClient(
+      config.integrations.pistesyottoConfig,
+      None,
+      jSessionName = "ring-session",
+      serviceUrlSuffix = "/auth/cas"
+    )(pisteEc, system)
+  val valintalaskentaClient =
+    new VirkailijaRestClient(
+      config.integrations.valintalaskentaConfig,
+      None
+    )(laskentaEc, system)
   private val valintarekisteriClient =
     new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
   private val koskiClient =
@@ -237,7 +273,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config.integrations.valintaperusteetServiceConfig,
     None
   )(restEc, system)
-
+  val pistesyottoService = new PistesyottoService(pistesyottoClient)
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
       Backoff.onStop(
@@ -323,16 +359,30 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     ytlKokelasPersister,
     config
   )
+
   val haut: ActorRef = system.actorOf(
     Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
     "haut"
   )
-  val valintaTulos = new ValintaTulosActorRef(
+  val valintaTulos: ValintaTulosActorRef = ValintaTulosActorRef(
     getSupervisedActorFor(
       Props(new ValintaTulosActor(haut, valintatulosClient, config, cacheFactory)),
       "valintaTulos"
     )
   )
+
+  override val valpasIntegration =
+    new ValpasIntergration(
+      pistesyottoService,
+      valintalaskentaClient,
+      organisaatiot,
+      koodisto,
+      tarjonta,
+      haut,
+      valintaTulos,
+      hakemusService
+    )
+
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion =

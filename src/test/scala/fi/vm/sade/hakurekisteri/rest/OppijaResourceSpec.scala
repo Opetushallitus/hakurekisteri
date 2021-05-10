@@ -137,7 +137,8 @@ class OppijaResourceSpec
         answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(henkilo))))),
         state = Some("INCOMPLETE"),
         preferenceEligibilities = Seq(),
-        attachmentRequests = Seq()
+        attachmentRequests = Seq(),
+        Some(1615219923688L)
       )
     })
     .toSeq

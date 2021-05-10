@@ -1,0 +1,230 @@
+{
+  "accessRights": {},
+  "result": {
+    "modified": 1592398610313,
+    "modifiedBy": "1.2.246.562.24.64596992150",
+    "oid": "1.2.246.562.20.743491195410",
+    "version": 96,
+    "hakukohteenNimet": {
+      "kieli_fi": "Tradenomi (AMK), Liiketalous, monimuotototeutus, Ikaalinen"
+    },
+    "tarjoajaNimet": {
+      "fi": "Tampereen ammattikorkeakoulu, TAMK Ikaalinen",
+      "en": "Tampere University of Applied Sciences, TAMK Ikaalinen"
+    },
+    "koulutusmoduuliToteutusTarjoajatiedot": {
+      "1.2.246.562.17.97949993477": {
+        "tarjoajaOids": [
+          "1.2.246.562.10.60554652846"
+        ]
+      }
+    },
+    "tarjoajaOids": [
+      "1.2.246.562.10.60554652846"
+    ],
+    "hakuOid": "1.2.246.562.29.36339915997",
+    "hakuaikaId": "26361065",
+    "hakukelpoisuusvaatimusUris": [
+      "pohjakoulutusvaatimuskorkeakoulut_100"
+    ],
+    "opintoOikeusUris": [],
+    "hakukohdeKoulutusOids": [
+      "1.2.246.562.17.97949993477"
+    ],
+    "koulutukset": [
+      {
+        "oid": "1.2.246.562.17.97949993477"
+      }
+    ],
+    "alinHyvaksyttavaKeskiarvo": 0,
+    "alinValintaPistemaara": 0,
+    "ylinValintapistemaara": 0,
+    "aloituspaikatLkm": 25,
+    "edellisenVuodenHakijatLkm": 0,
+    "valintojenAloituspaikatLkm": 0,
+    "tila": "JULKAISTU",
+    "ulkoinenTunniste": "20SALITAI",
+    "koulutusAsteTyyppi": "KORKEAKOULUTUS",
+    "toteutusTyyppi": "KORKEAKOULUTUS",
+    "koulutusmoduuliTyyppi": "TUTKINTO",
+    "lisatiedot": {
+      "kieli_fi": "<h3>Hakumenettely</h3><p><span style=\"color: rgb(68,68,68);\">Lisätietoja hakemisesta saat sivulta <a href=\"https://www.tuni.fi/fi/tule-opiskelemaan/yhteishaku/nain-haet-yhteishaussa\"><span style=\"color: rgb(54,110,170);\">Näin haet yhteishaussa</span></a>.</span></p><h3>Tulosten julkistaminen ja oikaisumenettely</h3><h3>Valinnan tulokset</h3>  <p>Opiskelijavalinnan tulokset julkaistaan <a href=\"http://opintopolku.fi/oma-opintopolku/\">Oma Opintopolku-palvelussa</a> <strong>viimeistään</strong> <strong>15.7.2020 </strong><i>(aiemmin vahvistetun aikataulun mukaan 8.7.2020)</i><strong>.</strong> Voit tarkistaa tilanteesi kirjautumalla palveluun esimerkiksi verkkopankkitunnuksillasi tai mobiilivarmenteella. Kaikille hakijoille lähetetään myös sähköinen tuloskirje. Jos tulet valituksi TAMKiin, saat lisäksi sähköpostilla tiedon ja toimintaohjeet. Opiskelupaikka on otettava vastaan viimeistään keskiviikkona <strong>22.7.2020 kello 15.00</strong> <i>(aiemmin vahvistetun aikataulun mukaan 15.7.2020)</i>.</p>  <p>Jos sinulla on kysyttävää valintakokeen tai ennakkotehtävän kokonaispisteistä ole ensin yhteydessä TAMKin hakijapalveluihin: hakijapalvelut.tamk(a)tuni.fi.</p>  <p><strong>Kun saat opiskelupaikan,</strong></p>  <ul>  <li>saat tiedon paikasta sähköpostitse siihen sähköpostiosoitteeseen, jonka olet ilmoittanut hakulomakkeella.</li>  <li>löydät omat valintatietosi myös Oma Opintopolusta</li>  <li>ota opiskelupaikka vastaan Oma Opintopolussa ja ilmoittaudu läsnä tai poissa olevaksi opiskelijaksi.</li>  <li>lähetä kopiot haussa käyttämistäsi todistuksista hakijapalveluihin saamiesi ohjeiden mukaisesti.</li>  <li>tutustu <a href=\"https://www.tuni.fi/opiskelijanopas/tamk-opiskelijan-opas/tervetuloa-tamkiin-uudet-opiskelijat\">uuden opiskelijan sivuihin</a>.</li> </ul>  <h3>Varasijavalinta</h3>  <p>Varasijalla olevia hyväksytään koulutukseen järjestyksessä sitä mukaa, kun paikkoja vapautuu. Etukäteen on mahdotonta tietää, kuinka monta hakijaa tullaan hyväksymään varasijalta. Paikkoja vapautuu esimerkiksi silloin, kun aiemmin hyväksytyt hakijat tulevat hyväksytyiksi ylempiin hakutoiveisiinsa tai eivät ota saamaansa opiskelupaikkaa vastaan. Jos tulet hyväksytyksi varasijalta saat tiedon sähköpostitse hakulomakkeella ilmoittamaasi osoitteeseen, joten muista seurata sähköpostiasi.</p>  <p><strong>Varasijavalinta päättyy viimeistään 3.8.2020 </strong><i>(aiemmin vahvistetun aikataulun mukaan 31.7.2020)</i><strong>.</strong> Varasijavalinta voidaan myös päättää hakukohdekohtaisesti ennen tätä, jos uusia opiskelijoita ei enää valita varasijoilta koulutukseen.</p>  <h3>Opiskelijavalinnan tulosten oikaisu</h3>  <p>Jos opiskelijavalinnassa ja valintaperusteiden soveltamisessa on mielestäsi tapahtunut virhe, voit vaatia siihen kirjallisesti oikaisua. Valintakokeen tai ennakkotehtävän kokonaispisteistä ole ensin yhteydessä TAMKin hakijapalveluihin: hakijapalvelut.tamk(a)tuni.fi.</p>  <p>Ellei asia tällöin selviä, tee kirjallinen oikaisupyyntö TAMKin tutkintolautakunnalle 14 vuorokauden kuluessa opiskelijavalinnan tuloksen julkistamisesta eli yhteishaussa viimeistään 29.7.2020 kello 15.00.</p>  <p>Lisätietoja <a href=\"https://www.tuni.fi/fi/tule-opiskelemaan/tulosten-julkistaminen\">tulosten julkaisusta ja oikaisumenettelystä</a>.</p>"
+    },
+    "valintaperusteKuvaukset": {
+      "kieli_fi": "<h3>Aloituspaikkamäärä</h3><p>Tutkinto-ohjelmaan valitaan 25 opiskelijaa. Ensikertalaisille varataan 50 % aloituspaikoista. Löydät lisätietoja ensikertalaiskiintiöstä Opintopolusta: <a href=\"https://opintopolku.fi/wp/valintojen-tuki/yhteishaku/korkeakoulujen-yhteishaku/ensikertalaiskiintio/\">Ensikertalaiskiintiö</a>.</p><h3>Valintaperusteet</h3><h3>Opiskelijavalinta</h3>  <p><span style=\"color: rgb(68,68,68);\">Opiskelijavalinta tehdään </span><strong><span style=\"color: rgb(68,68,68);\">valintakokeesta ja työkokemuksesta</span></strong><span style=\"color: rgb(68,68,68);\"> saatavien pisteiden perusteella seuraavasti:</span></p>  <table border=\"1\" cellpadding=\"1\" cellspacing=\"1\" style=\"width: 500.0px;\">  <tbody>   <tr>    <td>Valintakoe</td>    <td>70 pistettä</td>   </tr>   <tr>    <td>Työkokemus</td>    <td>30 pistettä</td>   </tr>   <tr>    <td>Yhteensä </td>    <td>100 pistettä</td>   </tr>  </tbody> </table>  <p>Valintakokeesta voi saada enintään 70 pistettä. Valintakokeesta on saatava vähintään 25 pistettä ja kaikki osiot on oltava suoritettuna hyväksytyksi, jotta voit tulla valituksi.</p>  <p><span style=\"color: rgb(68,68,68);\">Hakijat asetetaan tasapistetilanteessa paremmuusjärjestykseen seuraavin perustein:</span></p>  <ol>  <li><span style=\"color: rgb(68,68,68);\">valintakoepisteet</span></li>  <li><span style=\"color: rgb(68,68,68);\">työkokemuspisteet</span></li>  <li><span style=\"color: rgb(68,68,68);\">hakutoivejärjestys</span></li>  <li><span style=\"color: rgb(68,68,68);\">arvonta</span></li> </ol><h3>Työkokemus</h3><p>Työkokemuspisteitä laskettaessa otetaan huomioon vain 18-vuotiaana tai sen jälkeen hankittu työkokemus, joka on kertynyt kevään haussa viimeistään <strong>31.7.2020</strong>. Kaksi kuukautta yleistä (ei tarvitse olla alakohtaista) työkokemusta tuottaa yhden pisteen. Työkokemuksesta voi saada enintään 30 pistettä.</p>  <p>Pisteitä voi saada vain työkokemuksesta, josta on työnantajan antama työtodistus, ja joka tarkistetaan hyväksytyksi tulleilta. Työtodistuksesta tulee ilmetä mm. työsuhteen tarkka alkamis- ja päättymispäivä, työnantajan yhteystiedot, työtehtävät ja osa-aikatyön kohdalla työtunnit. Varusmiespalvelusta, naisten vapaaehtoista asepalvelusta, siviilipalvelusta tai hoitovapaata ei lasketa työkokemukseksi.</p>  <p>Yrittäjyys hyväksytään työkokemukseksi, jos siitä on todistus, joka osoittaa, että hakija on tai on ollut YEL tai MYEL- vakuutettu. (YEL= yrittäjäeläkevakuutus, MYEL=viljelijöiden, metsätilallisten, kalastajien ja poronhoitajien sekä heidän perheenjäsentensä työeläkevakuutus). Ulkomainen yrittäjyys todistetaan vastaavin virallisin dokumentein.</p>  <p>Hakijan tulee muuntaa osa-aikatyön tunnit kokoaikaiseksi niin, että 150 tuntia tai 20 vähintään 7 tunnin työpäivää vastaa yhtä kuukautta. Työkokemuksen ei tarvitse olla yhtäjaksoista eikä saman työnantajan palveluksessa hankittua. Rinnakkaisista työsuhteista voi saada työkokemuspisteitä vain päätoimista työskentelyä vastaavan määrän. Mikäli työtodistus on kirjoitettu muulla kielellä kuin suomi, ruotsi tai englanti, on hakijan toimitettava hakijapalveluihin alkuperäiskielisen todistuskopion lisäksi kopio virallisen kielenkääntäjän suomeksi, ruotsiksi tai englanniksi tekemästä käännöksestä, josta tulee käydä ilmi kääntäjän nimi, allekirjoitus ja leima.</p>"
+    },
+    "hakukelpoisuusVaatimusKuvaukset": {
+      "kieli_fi": "<p><span style=\"color: rgb(68,68,68);\">Tutkinto-ohjelmaan on yleinen hakukelpoisuus ammattikorkeakouluopintoihin. Lisätietoja sivulla </span><a href=\"https://www.tuni.fi/fi/tule-opiskelemaan/yhteishaku/hakukelpoisuus-amk-tutkintoon\"><span style=\"color: rgb(54,110,170);\">Hakukelpoisuus AMK-tutkintoon</span></a><span style=\"color: rgb(68,68,68);\">.</span></p>"
+    },
+    "kaytetaanJarjestelmanValintaPalvelua": true,
+    "kaytetaanHaunPaattymisenAikaa": false,
+    "kaytetaanHakukohdekohtaistaHakuaikaa": false,
+    "hakukohteenLiitteet": [
+      {
+        "oid": "30723267",
+        "version": 25,
+        "kieliUri": "kieli_fi",
+        "kieliNimi": "suomi",
+        "liitteenNimi": "Ennakkotehtävä",
+        "jarjestys": 0,
+        "kaytetaanHakulomakkeella": false,
+        "liitteenKuvaukset": {
+          "kieli_fi": "<p>Ennakkotehtävän ohjeet löytyvät <a href=\"https://sites.tuni.fi/valintakoemateriaali/tradenomi-amk-liiketalous-monimuotototeutukset-ennakkotehtavan-ohjeet/\">täältä</a>. Ennakkotehtävä on palautettava annettujen ohjeiden mukaisesti TAMKiin <strong>8.4.2020 kello 15.00 mennessä</strong>. Vain määräaikaan mennessä tulleet ennakkotehtävät huomioidaan. </p>"
+        },
+        "toimitettavaMennessa": 1586347200000,
+        "sahkoinenToimitusOsoite": "Toimita tehtävänannon ohjeiden mukaisesti"
+      },
+      {
+        "oid": "30723263",
+        "version": 25,
+        "kieliUri": "kieli_fi",
+        "kieliNimi": "suomi",
+        "liitteenNimi": "Hakemusliitteet",
+        "jarjestys": 1,
+        "kaytetaanHakulomakkeella": false,
+        "liitteenKuvaukset": {
+          "kieli_fi": "<p>Jos todistat hakukelpoisuutesi jollakin seuraavista, todistuskopioiden tulee olla ladattuna hakulomakkeelle <b>8.4.2020 kello 15.00 </b>mennessä:</p> <ul> <li>Kopio ennen vuotta 1990 suoritetusta ylioppilastutkinnosta</li> <li>Kopio ulkomaisesta tutkintotodistuksesta sekä kopio ulkomaisen tutkintotodistuksen virallisesta käännöksestä suomeksi, ruotsiksi tai englanniksi, jos todistusta ei ole kirjoitettu yhdellä näistä kielistä</li> <li>Kopio European Baccalaureate Diplomasta tai ennakkoarvio 2020 valmistuvasta tutkinnosta</li> <li>Kopio International Baccalaureate Diplomasta (IB Certificate ei riitä) tai ennakkoarvio (predicted grades tai vastaava) 2020 valmistuvasta tutkinnosta</li> <li>Kopio Reifeprüfung- tai DIA-todistuksesta tai ennakkoarvio 2020 valmistuvasta tutkinnosta</li> <li>Mahdollisesta pakolaisstatuksesta kertovan viranomaispäätöksen voi toimittaa postitse/henkilökohtaisesti TAMKin hakijapalveluihin 8.4.2020 kello 15.00 mennessä.</li> </ul> <p>Katso tarkemmat tiedot liitteiden toimittamisesta: <a href=\"https://www.tuni.fi/fi/tule-opiskelemaan/yhteishaku/liitteet-yhteishaussa\">Liitteet yhteishaussa</a>.</p>"
+        },
+        "toimitettavaMennessa": 1586347200000,
+        "sahkoinenToimitusOsoite": "Lataa liitteet yhteishaun hakemukselle."
+      },
+      {
+        "oid": "30723271",
+        "version": 25,
+        "kieliUri": "kieli_fi",
+        "kieliNimi": "suomi",
+        "liitteenNimi": "Opiskelemaan valittujen todistuskopiot",
+        "jarjestys": 2,
+        "kaytetaanHakulomakkeella": false,
+        "liitteenKuvaukset": {
+          "kieli_fi": "<p>Jos tulet valituksi TAMKiin, toimita haussa käyttämiesi koulutodistusten kopiot tai linkki Koski-palveluun annettujen ohjeiden mukaisesti viimeistään <b>15.7.2020 kello 15.00</b> tai hyväksymisilmoituksessa annettuun päivämäärään mennessä. Suomalaisesta ylioppilastutkinnosta ei tarvitse lähettää kopiota. Suomalaisesta ammatillisesta tutkinnosta sen sijaan tulee toimittaa todistuskopio.</p> <p>Opiskelijavalinta on ehdollinen, kunnes TAMK on tarkistanut valinnan perusteena olevat todistukset. Kopioiden lisäksi TAMK tarkistaa valituksi tulleiden alkuperäiset todistukset opintojen alkaessa. TAMK voi purkaa valinnan, jos et toimita todistuksia määräajassa tai jos olet antanut virheellisiä, valintaan vaikuttavia tietoja.</p> <p>Katso tarkemmat tiedot: <a href=\"https://www.tuni.fi/fi/tule-opiskelemaan/nain-otat-opiskelupaikan-vastaan\">Näin otat opiskelupaikan vastaan</a>.</p>"
+        },
+        "toimitettavaMennessa": 1594814400000,
+        "sahkoinenToimitusOsoite": "Lataa liitteet yhteishaun hakemukselle."
+      }
+    ],
+    "yhteystiedot": [
+      {
+        "version": 0,
+        "lang": "kieli_fi",
+        "osoiterivi1": "Kuntokatu 3",
+        "postinumero": "posti_33520",
+        "postinumeroArvo": "33520",
+        "postitoimipaikka": "TAMPERE",
+        "puhelinnumero": "02 9452 0444",
+        "sahkopostiosoite": "hakijapalvelut.tamk@tuni.fi",
+        "hakutoimistonNimi": "TAMK Hakijapalvelut",
+        "wwwOsoite": "http://www.tuni.fi",
+        "kayntiosoite": {
+          "version": 0,
+          "osoiterivi1": "Kuntokatu 3",
+          "postinumero": "posti_33520",
+          "postinumeroArvo": "33520",
+          "postitoimipaikka": "TAMPERE"
+        },
+        "osoitemuoto": "SUOMALAINEN"
+      }
+    ],
+    "liitteidenToimitusOsoite": {
+      "version": 0,
+      "osoiterivi1": "Kuntokatu 3",
+      "postinumero": "posti_33520",
+      "postinumeroArvo": "33520",
+      "postitoimipaikka": "TAMPERE"
+    },
+    "valintakokeet": [
+      {
+        "oid": "35131614",
+        "version": 10001,
+        "kieliUri": "kieli_fi",
+        "kieliNimi": "suomi",
+        "valintakoeNimi": "Valintakoe",
+        "valintakokeenKuvaus": {
+          "uri": "kieli_fi",
+          "nimi": "suomi",
+          "monikielisetNimet": [
+            {
+              "kieli": "FI",
+              "nimi": "suomi"
+            },
+            {
+              "kieli": "EN",
+              "nimi": "Finnish"
+            },
+            {
+              "kieli": "SV",
+              "nimi": "finska"
+            }
+          ],
+          "arvo": "FI",
+          "versio": 1,
+          "teksti": "<h3>Valintakoe</h3><p><i>Valintakoe tullaan järjestämään etäkokeena <strong>20.5.2020.</strong> Sähköinen koe sisältää ryhmähaastattelun ja kirjallisen ja matemaattisen osion. Tehtävä palautetaan Opintopolkuun kutsun ohjeiden mukaisesti. Sinulla tulee olla käytössäsi internetliittymä, tietokone, webkamera ja kuulokemikrofoni sähköistä koetta varten.  ​​​​Muut valintaperusteet pysyvät aikaisemmin päätetyn mukaisina. (päivitetty 30.4.2020)</i></p>  <p>______________________________________________________________________</p>  <p><i>Aiemmin päätettyä valintakokeesta:</i></p>  <p>Valintakoe pidetään <strong>20.5.2020</strong>. Valintakokeesta voit saada enimmillään 70 pistettä ja siitä on saatava vähintään 25 pistettä, jotta voit tulla valituksi koulutukseen. Sinun on osallistuttava valintakokeen kaikkiin osioihin. Mikäli jokin osio jää tekemättä, valintakokeesi hylätään. Valintakoe koostuu ryhmähaastattelusta, kirjallisesta ja matemaattisesta osioista. Valintakokeeseen ei ole ennakkomateriaalia. </p>  <p><strong>Valintakokeeseen kutsutaan paremmuusjärjestyksessä 60 hakijaa ennakkotehtävästä annettujen pisteiden perusteella. </strong>Kutsut lähetetään noin viikkoa ennen valintakoetta sähköpostitse. Muista tarkistaa myös roskopostikansiosi. Jos et saa kutsua tai viestiä, että ennakkotehtäväsi pisteet eivät ole riittäneet valintakokeeseen, ota yhteyttä TAMKin hakijapalveluihin.</p>  <p>Valintakoetulos on voimassa kyseisen haun ajan. </p>  <p><strong>Valintakoeyhteistyö </strong></p>  <p>TAMK ei ole mukana valtakunnallisessa valintakoeyhteistyössä. Valintakokeen tulos hyväksytään TAMKin liiketalouden tutkinto-ohjelmien monimuotototeutuksiin. Valintakoetulosta ei anneta muihin ammattikorkeakouluihin.</p><h3>Ennakkotehtävä</h3><p>Ennakkotehtävän ohjeet löytyvät <a href=\"https://sites.tuni.fi/valintakoemateriaali/tradenomi-amk-liiketalous-monimuotototeutukset-ennakkotehtavan-ohjeet/\">täältä</a>. Tehtävä on palautettava tehtävässä annettujen ohjeiden mukaisesti TAMKiin <strong>8.4.2020 kello 15.00 </strong>mennessä. Vain määräaikaan mennessä tulleet ennakkotehtävät huomioidaan. Ennakkotehtävästä voit saada enimmillään 40 pistettä ja siitä on saatava vähintään 1 piste, jotta sen on hyväksyttävästi suoritettu.</p><h3>Yksilölliset järjestelyt valintakokeessa</h3><p><span style=\"color: rgb(68,68,68);\">Opiskelijavalinnan yksilöllisillä järjestelyillä tarkoitetaan käytännön järjestelyjä valintakoetilanteessa. Tällaisia voivat olla esimerkiksi liikuntaesteiden poistaminen, rauhallinen koetila, laajempi kirjoitustila, lisäaika, apuvälineiden käyttö tai muu vastaava järjestely. Näillä järjestelyillä on tarkoitus huolehtia siitä, että yksilöllisiä järjestelyjä valintakoetilanteessa tarvitsevat hakijat ovat yhdenvertaisessa asemassa muiden hakijoiden kanssa.</span> <a href=\"https://www.tuni.fi/fi/tule-opiskelemaan/yhteishaku/yksilolliset-jarjestelyt-valintakokeessa\">Lisätietoja yksilöllisistä järjestelyistä ja niiden hakemisesta</a><span style=\"color: rgb(68,68,68);\">.</span></p>"
+        },
+        "valintakoeAjankohtas": [
+          {
+            "oid": "35131615",
+            "version": 0,
+            "kellonaikaKaytossa": false,
+            "lisatiedot": "",
+            "osoite": {
+              "version": 0,
+              "osoiterivi1": "Tarkka osoite ilmoitetaan myöhemmin",
+              "postinumero": "posti_39500",
+              "postinumeroArvo": "39500",
+              "postitoimipaikka": "IKAALINEN"
+            },
+            "alkaa": 1589922000000,
+            "loppuu": 1589922000000
+          }
+        ],
+        "pisterajat": [],
+        "kuvaukset": {},
+        "lisanaytot": {}
+      }
+    ],
+    "kaksoisTutkinto": false,
+    "opetusKielet": [
+      "kieli_fi"
+    ],
+    "valintaPerusteKuvausKielet": [],
+    "soraKuvausKielet": [],
+    "painotettavatOppiaineet": [],
+    "hakuMenettelyKuvaukset": {},
+    "peruutusEhdotKuvaukset": {},
+    "ryhmaliitokset": [
+      {
+        "ryhmaOid": "1.2.246.562.28.42242925784"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.90067420555"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.35631889116"
+      },
+      {
+        "ryhmaOid": "1.2.246.562.28.19435604475"
+      }
+    ],
+    "organisaatioRyhmaOids": [
+      "1.2.246.562.28.42242925784",
+      "1.2.246.562.28.90067420555",
+      "1.2.246.562.28.35631889116",
+      "1.2.246.562.28.19435604475"
+    ],
+    "ylioppilastutkintoAntaaHakukelpoisuuden": true,
+    "ensikertalaistenAloituspaikat": 13,
+    "pohjakoulutusliitteet": [
+      "pohjakoulutuskklomake_muuulk"
+    ],
+    "josYoEiMuitaLiitepyyntoja": false,
+    "ataruLomakeAvain": "fb80a16d-9baa-4117-977d-f1d3b4faf35a",
+    "overridesHaunHakulomakeUrl": false,
+    "ohjeetUudelleOpiskelijalle": "https://www.tuni.fi/opiskelijanopas/tamk-opiskelijan-opas/tervetuloa-tamkiin-uudet-opiskelijat",
+    "yhdenPaikanSaanto": {
+      "voimassa": true,
+      "syy": "Korkeakouluhaku ilman kohdejoukon tarkennetta"
+    },
+    "ammatillinenPerustutkintoAlk2018": false
+  },
+  "status": "OK"
+}

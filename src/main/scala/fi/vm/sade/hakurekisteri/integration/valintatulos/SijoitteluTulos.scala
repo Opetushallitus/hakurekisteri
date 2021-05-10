@@ -61,7 +61,20 @@ import Vastaanottotila.Vastaanottotila
 import Ilmoittautumistila.Ilmoittautumistila
 
 case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
-
+case class ValintaTulosJono(
+  oid: String,
+  nimi: String,
+  pisteet: Option[BigDecimal],
+  alinHyvaksyttyPistemaara: Option[BigDecimal],
+  valintatila: Valintatila,
+  julkaistavissa: Boolean,
+  valintatapajonoPrioriteetti: Option[Int],
+  ehdollisestiHyvaksyttavissa: Boolean,
+  varasijanumero: Option[Int],
+  eiVarasijatayttoa: Boolean,
+  varasijat: Option[Int],
+  varasijasaannotKaytossa: Boolean
+)
 case class ValintaTulosHakutoive(
   hakukohdeOid: String,
   tarjoajaOid: String,
@@ -69,7 +82,10 @@ case class ValintaTulosHakutoive(
   vastaanottotila: Vastaanottotila,
   ilmoittautumistila: HakutoiveenIlmoittautumistila,
   pisteet: Option[BigDecimal],
-  valintatapajonoOid: String
+  valintatapajonoOid: String,
+  varasijanumero: Option[Int],
+  julkaistavissa: Boolean,
+  jonokohtaisetTulostiedot: Seq[ValintaTulosJono]
 )
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
@@ -81,7 +97,8 @@ case class SijoitteluTulos(
   valintatila: Map[(String, String), Valintatila],
   vastaanottotila: Map[(String, String), Vastaanottotila],
   ilmoittautumistila: Map[(String, String), Ilmoittautumistila],
-  valintatapajono: Map[(String, String), String]
+  valintatapajono: Map[(String, String), String],
+  varasijanumero: Map[(String, String), Option[Int]]
 )
 
 object SijoitteluTulos {
@@ -89,7 +106,7 @@ object SijoitteluTulos {
     new SijoitteluTulos(
       hakuOid,
       valintatulos.hakutoiveet.collect {
-        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _) =>
+        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
           (valintatulos.hakemusOid, oid) -> pisteet
       }.toMap,
       valintatulos.hakutoiveet
@@ -106,6 +123,10 @@ object SijoitteluTulos {
       valintatulos.hakutoiveet
         .filter(h => h.valintatapajonoOid.nonEmpty)
         .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
+        .toMap,
+      valintatulos.hakutoiveet
+        .filter(h => h.valintatapajonoOid.nonEmpty)
+        .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.varasijanumero)
         .toMap
     )
   }
@@ -116,7 +137,7 @@ object SijoitteluTulos {
       valintatulokset
         .flatMap(valintatulos => {
           valintatulos.hakutoiveet.collect {
-            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _) =>
+            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
               (valintatulos.hakemusOid, oid) -> pisteet
           }
         })
@@ -148,7 +169,8 @@ object SijoitteluTulos {
             .filter(h => h.valintatapajonoOid.nonEmpty)
             .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
         })
-        .toMap
+        .toMap,
+      Map.empty
     )
   }
 }

@@ -87,12 +87,16 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
                 "PS",
                 "TE",
                 "YH"
-              )
+              ),
+              Map.empty,
+              Map.empty
             )
           case "kieli" =>
             sender ! KoodistoKoodiArvot(
               koodistoUri = "kieli",
-              arvot = Seq("FI", "SV", "EN")
+              arvot = Seq("FI", "SV", "EN"),
+              Map.empty,
+              Map.empty
             )
         }
       }

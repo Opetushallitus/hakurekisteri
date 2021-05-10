@@ -334,9 +334,12 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
   val ataruUrlQa = s"https://$hostQa/lomake-editori"
+  val valintapisteUrlQa = s"https://$hostQa/valintapiste-service"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
   val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
+  val valintalaskentaServiceUrlQa = s"https://$hostQa/valintalaskenta-laskenta-service"
+  val pistesyottoServiceUrlQa = s"https://$hostQa/valintapiste-service"
   val koskiServiceUrlQa = s"https://$hostQa/koski"
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
@@ -363,6 +366,10 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val valintaTulosServiceUrl =
     properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
+  val valintalaskentaServiceUrl =
+    properties.getOrElse("cas.service.valintalaskenta-service", valintalaskentaServiceUrlQa)
+  val pistesyottoServiceUrl =
+    properties.getOrElse("cas.service.pistesyotto-service", pistesyottoServiceUrlQa)
   val oppijaNumeroRekisteriUrl = properties.getOrElse(
     "cas.service.oppijanumerorekisteri-service",
     oppijaNumeroRekisteriServiceUrlQa
@@ -434,6 +441,21 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     maxConnectionQueueMs =
       findMandatoryPropertyValue("suoritusrekisteri.ataru.max-connection-queue-ms").toInt
   )
+  val pistesyottoConfig = new ServiceConfig(
+    casUrl = casUrl,
+    serviceUrl = pistesyottoServiceUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue(
+      "suoritusrekisteri.pistesyotto-service.max-connections"
+    ).toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue(
+      "suoritusrekisteri.pistesyotto-service.max-connection-queue-ms"
+    ).toInt
+  ) {
+    override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
+  }
   val koosteConfig = ServiceConfig(
     casUrl,
     koosteServiceUrl,
@@ -490,6 +512,21 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
       findMandatoryPropertyValue("suoritusrekisteri.valinta-tulos-service.max-connections").toInt,
     maxConnectionQueueMs = findMandatoryPropertyValue(
       "suoritusrekisteri.valinta-tulos-service.max-connection-queue-ms"
+    ).toInt
+  ) {
+    override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
+  }
+  val valintalaskentaConfig = new ServiceConfig(
+    serviceUrl = valintalaskentaServiceUrl,
+    casUrl = casUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue(
+      "suoritusrekisteri.valintalaskenta-service.max-connections"
+    ).toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue(
+      "suoritusrekisteri.valintalaskenta-service.max-connection-queue-ms"
     ).toInt
   ) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
