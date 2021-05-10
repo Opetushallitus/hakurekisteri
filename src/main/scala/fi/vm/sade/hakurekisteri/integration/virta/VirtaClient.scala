@@ -56,6 +56,7 @@ class VirtaClient(
   val maxRetries = config.httpClientMaxRetries
 
   val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "6", "7")
+  val tallennettavatOpiskeluoikeustilat = Seq("1", "3", "5")
 
   def getSoapOperationEnvelope(oppijanumero: String, hetu: Option[String] = None): Elem =
     <OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">
@@ -196,6 +197,9 @@ class VirtaClient(
       response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opiskeluoikeudet" \ "Opiskeluoikeus"
     opiskeluoikeudet
       .withFilter((oo: Node) => tallennettavatOpiskeluoikeustyypit.contains((oo \ "Tyyppi").text))
+      .withFilter((oo: Node) =>
+        (oo \ "Tila").exists(t => tallennettavatOpiskeluoikeustilat.contains((t \ "Koodi").text))
+      )
       .map((oo: Node) => {
         val avain = oo.map(_ \ "@avain")
         VirtaOpiskeluoikeus(
