@@ -209,7 +209,8 @@ class ValpasIntergration(
     oidToHaku: Map[String, Haku],
     hakutapa: KoodistoKoodiArvot,
     hakutyyppi: KoodistoKoodiArvot,
-    koulutusKoodit: KoodistoKoodiArvot
+    koulutusKoodit: KoodistoKoodiArvot,
+    postiKoodit: KoodistoKoodiArvot
   ): ValpasHakemus = {
 
     def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
@@ -391,7 +392,7 @@ class ValpasIntergration(
           hakuNimi = Map("fi" -> nimi.fi, "sv" -> nimi.sv, "en" -> nimi.en)
             .flatMap(kv => kv._2.map(k => (kv._1, k))),
           hakuOid = a.applicationSystemId,
-          matkapuhelin = a.matkapuhelin, // TODO
+          matkapuhelin = a.matkapuhelin,
           postinumero = a.postinumero,
           lahiosoite = a.lahiosoite,
           postitoimipaikka = a.postitoimipaikka.getOrElse(""),
@@ -432,7 +433,12 @@ class ValpasIntergration(
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
           postinumero = h.henkilotiedot.flatMap(_.Postinumero).getOrElse(""),
           lahiosoite = h.henkilotiedot.flatMap(_.lahiosoite).getOrElse(""),
-          postitoimipaikka = h.henkilotiedot.flatMap(_.Postitoimipaikka).getOrElse(""),
+          postitoimipaikka = h.henkilotiedot
+            .flatMap(_.Postinumero)
+            .flatMap(postinumero =>
+              postiKoodit.arvoToNimi.get(s"posti_$postinumero").flatMap(_.get("fi"))
+            )
+            .getOrElse(""),
           hakutoiveet = hakutoiveet
         )
       }
@@ -501,7 +507,8 @@ class ValpasIntergration(
       (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutyyppi")).mapTo[KoodistoKoodiArvot]
     val koulutus =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("koulutus")).mapTo[KoodistoKoodiArvot]
-
+    val posti =
+      (koodistoActor.actor ? GetKoodistoKoodiArvot("posti")).mapTo[KoodistoKoodiArvot]
     val pisteet: Future[Seq[PistetietoWrapper]] =
       pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
     for {
@@ -512,6 +519,7 @@ class ValpasIntergration(
       hakutapa: KoodistoKoodiArvot <- hakutapa
       hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
       koulutus: KoodistoKoodiArvot <- koulutus
+      posti: KoodistoKoodiArvot <- posti
       oidToOrganisaatio <- organisaatiot
       osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- osallistumisetFuture.map(
         _.groupBy(_.hakemusOid)
@@ -530,7 +538,8 @@ class ValpasIntergration(
             oidToHaku,
             hakutapa,
             hakutyyppi,
-            koulutus
+            koulutus,
+            posti
           )
         )
       )
