@@ -433,9 +433,11 @@ class ValpasIntergration(
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
           postinumero = h.henkilotiedot.flatMap(_.Postinumero).getOrElse(""),
           lahiosoite = h.henkilotiedot.flatMap(_.lahiosoite).getOrElse(""),
-          postitoimipaikka =
-            h.henkilotiedot.flatMap(ht =>
-              postiKoodit.arvoToNimi.get("posti_" + ht.Postinumero).flatMap(_.get("fi"))).getOrElse(""),
+          postitoimipaikka = h.henkilotiedot
+            .flatMap(ht =>
+              postiKoodit.arvoToNimi.get("posti_" + ht.Postinumero).flatMap(_.get("fi"))
+            )
+            .getOrElse(""),
           hakutoiveet = hakutoiveet
         )
       }
