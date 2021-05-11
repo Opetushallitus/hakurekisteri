@@ -7,6 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.Henkilo
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
@@ -543,6 +544,8 @@ object AkkaHakupalvelu {
           huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
           huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
           huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
+          oppivelvollisuusVoimassaAsti = None,
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti = None,
           lisakysymykset =
             getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid, haku.kohdejoukkoUri),
           liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
@@ -622,6 +625,8 @@ object AkkaHakupalvelu {
           huoltajannimi = "",
           huoltajanpuhelinnumero = "",
           huoltajansahkoposti = "",
+          oppivelvollisuusVoimassaAsti = None,
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti = None,
           lisakysymykset = Seq.empty,
           liitteet = Seq.empty,
           muukoulutus = None
@@ -852,7 +857,8 @@ case class HakemusHenkilotiedot(
   turvakielto: Option[String] = None,
   huoltajannimi: Option[String] = None,
   huoltajanpuhelinnumero: Option[String] = None,
-  huoltajansahkoposti: Option[String] = None
+  huoltajansahkoposti: Option[String] = None,
+  oppivelvollisuusVoimassaAsti: Option[String] = None,
 )
 
 case class Koulutustausta(
