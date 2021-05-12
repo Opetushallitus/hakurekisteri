@@ -858,7 +858,7 @@ case class HakemusHenkilotiedot(
   huoltajannimi: Option[String] = None,
   huoltajanpuhelinnumero: Option[String] = None,
   huoltajansahkoposti: Option[String] = None,
-  oppivelvollisuusVoimassaAsti: Option[String] = None,
+  oppivelvollisuusVoimassaAsti: Option[String] = None
 )
 
 case class Koulutustausta(

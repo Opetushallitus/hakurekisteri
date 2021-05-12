@@ -121,7 +121,8 @@ object JSONHakijaV5 {
       huoltajansahkoposti = hakija.henkilo.huoltajansahkoposti.blankOption,
       hakemus = hakemus,
       oppivelvollisuusVoimassaAsti = hakija.henkilo.oppivelvollisuusVoimassaAsti,
-      oikeusMaksuttomaanKoulutukseenVoimassaAsti = hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
+      oikeusMaksuttomaanKoulutukseenVoimassaAsti =
+        hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
       lisakysymykset = hakija.henkilo.lisakysymykset
     )
 
