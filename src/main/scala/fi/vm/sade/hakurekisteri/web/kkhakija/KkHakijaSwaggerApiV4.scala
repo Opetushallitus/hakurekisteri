@@ -123,7 +123,9 @@ trait KkHakijaSwaggerApiV4
         "List",
         Some(ValueDataType("HakukohteenKoulutus", None, Some("HakukohteenKoulutus")))
       )
-    )
+    ),
+    ModelField("hKelpoisuusMaksuvelvollisuus", null, DataType.String, required = false),
+    ModelField("lukuvuosimaksu", null, DataType.String, required = false)
   )
 
   val liiteFields: Seq[ModelField] = Seq(
