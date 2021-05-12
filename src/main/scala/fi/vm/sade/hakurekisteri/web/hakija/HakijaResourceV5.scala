@@ -20,20 +20,20 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 class HakijaResourceV5(hakijaActor: ActorRef)(implicit
-                                              system: ActorSystem,
-                                              sw: Swagger,
-                                              val security: Security,
-                                              val ct: ClassTag[JSONHakijatV5]
+  system: ActorSystem,
+  sw: Swagger,
+  val security: Security,
+  val ct: ClassTag[JSONHakijatV5]
 ) extends HakuJaValintarekisteriStack
-  with HakijaSwaggerApiV5
-  with HakurekisteriJsonSupport
-  with JacksonJsonSupport
-  with FutureSupport
-  with SecuritySupport
-  with ExcelSupport[JSONHakijatV5]
-  with DownloadSupport
-  with QueryLogging
-  with HakijaResourceSupport {
+    with HakijaSwaggerApiV5
+    with HakurekisteriJsonSupport
+    with JacksonJsonSupport
+    with FutureSupport
+    with SecuritySupport
+    with ExcelSupport[JSONHakijatV5]
+    with DownloadSupport
+    with QueryLogging
+    with HakijaResourceSupport {
   implicit val defaultTimeout: Timeout = 120.seconds
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -56,7 +56,7 @@ class HakijaResourceV5(hakijaActor: ActorRef)(implicit
     val thisResponse = response
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
       case result
-        if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+          if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
         setContentDisposition(tyyppi, thisResponse, "hakijat")
         Future.successful(result)
       case result =>
@@ -73,4 +73,3 @@ class HakijaResourceV5(hakijaActor: ActorRef)(implicit
       (id) => InternalServerError(IncidentReport(id, "back-end service timed out"))
   }
 }
-

@@ -62,9 +62,9 @@ object ExcelUtilV5 extends HakijatExcelWriterV3[JSONHakijatV5] {
   )
 
   private def getLisakysymysIdsAndQuestionsInOrder(
-                                                    hakijat: JSONHakijatV5,
-                                                    hakukohdeOid: String
-                                                  ): Seq[lisakysymysHeader] = {
+    hakijat: JSONHakijatV5,
+    hakukohdeOid: String
+  ): Seq[lisakysymysHeader] = {
     val raw: Seq[(String, String)] = hakijat.hakijat
       .flatMap(
         _.lisakysymykset

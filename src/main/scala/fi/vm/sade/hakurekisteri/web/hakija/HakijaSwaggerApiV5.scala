@@ -13,7 +13,7 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
 trait HakijaSwaggerApiV5
-  extends SwaggerSupport
+    extends SwaggerSupport
     with IncidentReportSwaggerModel
     with OldSwaggerSyntax {
 
@@ -82,8 +82,18 @@ trait HakijaSwaggerApiV5
     ModelField("huoltajannimi", null, DataType.String, required = false),
     ModelField("huoltajanpuhelinnumero", null, DataType.String, required = false),
     ModelField("huoltajansahkoposti", null, DataType.String, required = false),
-    ModelField("oppivelvollisuusVoimassaAsti", "Päivämäärä muotoa YYYY-MM-DD", DataType.String, required = false),
-    ModelField("oikeusMaksuttomaanKoulutukseenVoimassaAsti", "Päivämäärä muotoa YYYY-MM-DD", DataType.String, required = false),
+    ModelField(
+      "oppivelvollisuusVoimassaAsti",
+      "Päivämäärä muotoa YYYY-MM-DD",
+      DataType.String,
+      required = false
+    ),
+    ModelField(
+      "oikeusMaksuttomaanKoulutukseenVoimassaAsti",
+      "Päivämäärä muotoa YYYY-MM-DD",
+      DataType.String,
+      required = false
+    ),
     ModelField("hakemus", null, ValueDataType("XMLHakemus", None, Some("XMLHakemus"))),
     ModelField(
       "lisakysymykset",
@@ -167,4 +177,3 @@ trait HakijaSwaggerApiV5
     .tags("hakijat")
 
 }
-
