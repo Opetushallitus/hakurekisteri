@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, GetHakuOption, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   KoodistoActorRef,
@@ -569,8 +569,15 @@ class ValpasIntergration(
       val osallistumisetFuture =
         masterOids.flatMap(masterOids => fetchOsallistumiset(masterOids.values.toSet))
 
-      def excludeHakemusInHaku(haku: Haku): Boolean = {
-        haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
+      def excludeHakemusInHaku(haku: Option[Haku]): Boolean = {
+        haku match {
+          case Some(haku) => {
+            haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
+          }
+          case None =>
+            false
+        }
+
       }
 
       (for {
@@ -579,12 +586,13 @@ class ValpasIntergration(
           .sequence(
             allHakemukset
               .map(_.applicationSystemId)
-              .map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku])
+              .toSet[String]
+              .map(oid => (hakuActor ? GetHakuOption(oid)).mapTo[Option[Haku]])
           )
-          .map(_.map(h => (h.oid, h)).toMap)
+          .map(_.flatMap(h => h.map(j => (j.oid, j))).toMap)
         hakemukset <- Future.successful(
           allHakemukset.filterNot(hakemus =>
-            excludeHakemusInHaku(haut(hakemus.applicationSystemId))
+            excludeHakemusInHaku(haut.get(hakemus.applicationSystemId))
           )
         )
         valpasHakemukset <-
