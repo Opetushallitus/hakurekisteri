@@ -604,8 +604,10 @@ class ValpasIntergration(
                 Future.failed(
                   new RuntimeException(
                     s.flatMap {
-                      case Failure(x) => Some(x.getMessage)
-                      case _          => None
+                      case Failure(x) =>
+                        logger.error("Valpas fetch failed!", x)
+                        Some(x.getMessage)
+                      case _ => None
                     }.mkString(", ")
                   )
                 )
