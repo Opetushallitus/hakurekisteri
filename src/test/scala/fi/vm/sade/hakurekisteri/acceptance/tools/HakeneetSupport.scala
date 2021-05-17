@@ -870,7 +870,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
     def hakijat: Seq[Hakija] = {
       tehdytHakemukset.map(h =>
-        AkkaHakupalvelu.getHakija(h, haku, Map.empty, Option.empty, koosteData, kansalaisuuskoodit)
+        AkkaHakupalvelu.getHakija(h, haku, Map.empty, Option.empty, koosteData, kansalaisuuskoodit, Seq.empty)
       )
     }
 

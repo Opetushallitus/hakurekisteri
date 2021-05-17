@@ -54,6 +54,16 @@ class KoskiService(
     pageSize: Int = 5000
   )
 
+  override def fetchOppivelvollisuusTietos (oppijaOids: Seq[String]): Future[Seq[OppivelvollisuusTieto]] = {
+    logger.info(s"Haetaan oppivelvollisuustiedot koskesta")
+    virkailijaRestClient.postObjectWithCodes(
+      uriKey = "koski.sure.oppivelvollisuustieto",
+      Seq(200),
+      maxRetries = 2,
+      resource = oppijaOids,
+      basicAuth = true)
+  }
+
   private def fetchChangedOppijas(
     params: SearchParamsWithCursor
   ): Future[MuuttuneetOppijatResponse] = {

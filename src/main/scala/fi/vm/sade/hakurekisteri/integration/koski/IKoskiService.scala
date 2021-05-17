@@ -20,6 +20,8 @@ trait IKoskiService {
     params: KoskiSuoritusHakuParams
   ): Future[(Seq[String], Seq[String])]
 
+  def fetchOppivelvollisuusTietos(oppijaOids: Seq[String]): Future[Seq[OppivelvollisuusTieto]]
+
   def refreshChangedOppijasFromKoski(
     cursor: Option[String] = None,
     timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
@@ -43,6 +45,9 @@ class KoskiServiceMock extends IKoskiService {
     oppijaOids: Set[String],
     params: KoskiSuoritusHakuParams
   ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
+
+  override def fetchOppivelvollisuusTietos(oppijaOids: Seq[String]
+  ): Future[Seq[OppivelvollisuusTieto]] = Future.successful(Seq[OppivelvollisuusTieto]())
 
   override def refreshChangedOppijasFromKoski(
     cursor: Option[String] = None,

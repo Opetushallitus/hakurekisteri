@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakija, XMLHakemus, X
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.koski.OppivelvollisuusTieto
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
@@ -27,7 +28,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   object FullHakemus1
       extends FullHakemus(
         "1.25.1",
-        None,
+        Option("1.23.412.32"),
         "1.1",
         answers = Some(
           HakemusAnswers(
@@ -190,7 +191,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   )
 
   val toive = AkkaHakupalvelu
-    .getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), None, Map("246" -> "FIN"))
+    .getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), None, Map("246" -> "FIN"), Seq.empty)
     .hakemus
     .hakutoiveet
     .head
@@ -220,7 +221,8 @@ class HakijaSpec extends FlatSpec with Matchers {
       themeQuestions,
       Option.empty,
       None,
-      Map("246" -> "FIN")
+      Map("246" -> "FIN"),
+      Seq.empty
     )
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(
@@ -239,7 +241,8 @@ class HakijaSpec extends FlatSpec with Matchers {
       themeQuestions,
       Option.empty,
       None,
-      Map("246" -> "FIN")
+      Map("246" -> "FIN"),
+      Seq.empty
     )
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(
@@ -263,7 +266,8 @@ class HakijaSpec extends FlatSpec with Matchers {
       themeQuestions,
       Option.empty,
       nonExistentKoosteData,
-      Map("246" -> "FIN")
+      Map("246" -> "FIN"),
+      Seq.empty
     )
     val hakija2 = AkkaHakupalvelu.getHakija(
       FullHakemus1,
@@ -271,7 +275,8 @@ class HakijaSpec extends FlatSpec with Matchers {
       themeQuestions,
       Option.empty,
       emptyKoosteData,
-      Map("246" -> "FIN")
+      Map("246" -> "FIN"),
+      Seq.empty
     )
     val hakija3 = AkkaHakupalvelu.getHakija(
       FullHakemus1,
@@ -279,7 +284,8 @@ class HakijaSpec extends FlatSpec with Matchers {
       themeQuestions,
       Option.empty,
       koosteData,
-      Map("246" -> "FIN")
+      Map("246" -> "FIN"),
+      Seq.empty
     )
 
     def getPohjaKoulutus(hakija: Hakija): String = {
@@ -297,5 +303,23 @@ class HakijaSpec extends FlatSpec with Matchers {
     getPohjaKoulutus(hakija1) should be("7")
     getPohjaKoulutus(hakija2) should be("7")
     getPohjaKoulutus(hakija3) should be("1")
+  }
+
+  behavior of "OppivelvollisuusTieto"
+
+  it should "have OppivelvollisuusTieto (v5) fields" in {
+    val oppivelvollisuusVoimassaAsti = Option("2022-05-31")
+    val oikeusMaksuttomaanKoulutukseenVoimassaAsti = Option("2021-12-31")
+    val hakija = AkkaHakupalvelu.getHakija(
+      FullHakemus1,
+      haku,
+      themeQuestions,
+      Option.empty,
+      None,
+      Map("246" -> "FIN"),
+      Seq(OppivelvollisuusTieto(FullHakemus1.personOid.get, oppivelvollisuusVoimassaAsti, oikeusMaksuttomaanKoulutukseenVoimassaAsti))
+    )
+    hakija.henkilo.oppivelvollisuusVoimassaAsti.get should be(oppivelvollisuusVoimassaAsti.get)
+    hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti.get should be(oikeusMaksuttomaanKoulutukseenVoimassaAsti.get)
   }
 }
