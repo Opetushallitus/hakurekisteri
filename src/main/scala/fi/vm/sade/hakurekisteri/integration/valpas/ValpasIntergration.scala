@@ -575,7 +575,7 @@ class ValpasIntergration(
             haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
           }
           case None =>
-            false
+            true
         }
 
       }
