@@ -46,8 +46,9 @@ class BaseKoosteet(
     integrations.koosteService,
     integrations.haut,
     integrations.koodisto,
-    config
-  )
+    config,
+    integrations.koskiService
+  )(system)
   val hakijat = system.actorOf(
     Props(
       new HakijaActor(
@@ -57,8 +58,9 @@ class BaseKoosteet(
           integrations.koosteService,
           integrations.haut,
           integrations.koodisto,
-          config
-        ),
+          config,
+          integrations.koskiService
+        )(system),
         integrations.organisaatiot,
         integrations.koodisto,
         integrations.valintaTulos,
