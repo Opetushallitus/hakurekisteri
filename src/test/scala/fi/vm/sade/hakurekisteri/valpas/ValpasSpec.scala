@@ -218,8 +218,10 @@ class ValpasSpec
         ValintaTulosActorRef(system.actorOf(Props(new Actor {
           override def receive: Actor.Receive = { case _ =>
             sender !
-              resource[ValintaTulos](
-                s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
+              List(
+                resource[ValintaTulos](
+                  s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
+                )
               )
           }
         }))),

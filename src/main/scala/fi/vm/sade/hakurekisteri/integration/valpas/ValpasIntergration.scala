@@ -476,18 +476,13 @@ class ValpasIntergration(
         .flatMap(_.organizationOid)
         .toSet
         .filterNot(_.isEmpty)
-    def hakemusToValintatulosQuery(h: HakijaHakemus): VirkailijanValintatulos =
-      VirkailijanValintatulos(h.applicationSystemId, h.oid)
+    def hakemusToValintatulosQuery(h: Set[String]): VirkailijanValintatulos =
+      VirkailijanValintatulos(h)
 
-    val valintarekisteri: Future[Map[String, ValintaTulos]] = Future
-      .sequence(
-        hakemukset.map(h =>
-          (valintaTulos.actor ? hakemusToValintatulosQuery(h))
-            .mapTo[ValintaTulos]
-            .map(s => (h.oid, s))
-        )
-      )
-      .map(_.toMap)
+    val valintarekisteri: Future[Map[String, List[ValintaTulos]]] =
+      (valintaTulos.actor ? hakemusToValintatulosQuery(hakemukset.map(_.oid).toSet))
+        .mapTo[List[ValintaTulos]]
+        .map(_.groupBy(_.hakemusOid))
 
     val hakukohteet: Future[Map[String, Hakukohde]] = Future
       .sequence(
@@ -531,7 +526,7 @@ class ValpasIntergration(
         "pisteet",
         pisteet.map(_.groupBy(_.hakemusOID))
       )
-      valintatulokset: Map[String, ValintaTulos] <- SlowFutureLogger(
+      valintatulokset: Map[String, List[ValintaTulos]] <- SlowFutureLogger(
         "valintarekisteri",
         valintarekisteri
       )
@@ -556,7 +551,14 @@ class ValpasIntergration(
             oidToPisteet,
             osallistumiset.getOrElse(h.oid, Seq.empty),
             h,
-            valintatulokset.get(h.oid),
+            valintatulokset.get(h.oid) match {
+              case Some(tulokset) =>
+                if (tulokset.size > 1) {
+                  throw new RuntimeException("Multiple valintatulokset for single hakemus!")
+                }
+                tulokset.headOption
+              case None => None
+            },
             oidToHakukohde,
             oidToKoulutus,
             oidToOrganisaatio,

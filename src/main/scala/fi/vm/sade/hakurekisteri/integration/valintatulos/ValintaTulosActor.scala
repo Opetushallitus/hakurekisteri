@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-case class VirkailijanValintatulos(hakuOid: String, hakemusOid: String)
+case class VirkailijanValintatulos(hakemusOid: Set[String])
 case class HakemuksenValintatulos(hakuOid: String, hakemusOid: String)
 case class HaunValintatulos(hakuOid: String)
 
@@ -56,8 +56,8 @@ class ValintaTulosActor(
   }
 
   private def withQueue(haunValintatulosFetchQueue: Map[String, Vector[ActorRef]]): Receive = {
-    case VirkailijanValintatulos(hakuOid, hakemusOid) =>
-      hakemuksenTulos(hakuOid, hakemusOid) pipeTo sender
+    case VirkailijanValintatulos(hakemusOids) =>
+      hakemuksenTulos(hakemusOids) pipeTo sender
 
     case HakemuksenValintatulos(hakuOid, hakemusOid) =>
       hakemuksenTulos(hakuOid, hakemusOid).map(SijoitteluTulos(hakuOid, _)) pipeTo sender
@@ -123,7 +123,14 @@ class ValintaTulosActor(
       }
 
   }
+  private def hakemuksenTulos(hakemusOids: Set[String]): Future[List[ValintaTulos]] = {
+    client
+      .postObject[Set[String], List[ValintaTulos]]("valinta-tulos-service.hakemukset")(
+        200,
+        hakemusOids
+      )
 
+  }
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
     client
       .readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", hakuOid)(200, maxRetries)
