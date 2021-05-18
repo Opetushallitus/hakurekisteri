@@ -355,21 +355,23 @@ class HakemusService(
   }
 
   def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
-    for {
-      hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuappRestClient
-        .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(
-          200,
-          personOids
-        )
-      ataruHakemukset: Seq[HakijaHakemus] <- ataruhakemukset(
-        AtaruSearchParams(
-          hakijaOids = Some(personOids.toList),
-          hakukohdeOids = None,
-          hakuOid = None,
-          organizationOid = None,
-          modifiedAfter = None
-        )
+    val hakuAppCall = hakuappRestClient
+      .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(
+        200,
+        personOids
       )
+    val ataruCall = ataruhakemukset(
+      AtaruSearchParams(
+        hakijaOids = Some(personOids.toList),
+        hakukohdeOids = None,
+        hakuOid = None,
+        organizationOid = None,
+        modifiedAfter = None
+      )
+    )
+    for {
+      hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuAppCall
+      ataruHakemukset: Seq[HakijaHakemus] <- ataruCall
     } yield hakuappHakemukset.values.toList.flatten ++ ataruHakemukset
   }
 
