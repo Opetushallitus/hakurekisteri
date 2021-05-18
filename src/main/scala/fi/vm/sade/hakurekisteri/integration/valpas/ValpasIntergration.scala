@@ -163,6 +163,20 @@ case class ValintalaskentaOsallistuminen(
   hakutoiveet: Seq[ValintalaskentaHakutoive]
 ) {}
 
+object SlowFutureLogger {
+  private val logger = LoggerFactory.getLogger(getClass)
+
+  def apply[T](tag: String, future: Future[T])(implicit ec: ExecutionContext) = {
+    val start = System.currentTimeMillis()
+    future.onComplete({ case _ =>
+      val time = System.currentTimeMillis() - start
+      if (time > 80) {
+        logger.warn(s"Slow future $tag took ${time}ms")
+      }
+    })
+    future
+  }
+}
 object ValintakoeTunnisteParser {
   private def toValpasPistetieto(p: Pistetieto): ValpasPistetieto = {
     ValpasPistetieto(p.tunniste, p.arvo.toString, p.osallistuminen)
@@ -511,18 +525,29 @@ class ValpasIntergration(
       (koodistoActor.actor ? GetKoodistoKoodiArvot("posti")).mapTo[KoodistoKoodiArvot]
     val pisteet: Future[Seq[PistetietoWrapper]] =
       pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
+
     for {
-      oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- pisteet.map(_.groupBy(_.hakemusOID))
-      valintatulokset: Map[String, ValintaTulos] <- valintarekisteri
-      oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
-      oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
-      hakutapa: KoodistoKoodiArvot <- hakutapa
-      hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
-      koulutus: KoodistoKoodiArvot <- koulutus
-      posti: KoodistoKoodiArvot <- posti
-      oidToOrganisaatio <- organisaatiot
-      osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- osallistumisetFuture.map(
-        _.groupBy(_.hakemusOid)
+      oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- SlowFutureLogger(
+        "pisteet",
+        pisteet.map(_.groupBy(_.hakemusOID))
+      )
+      valintatulokset: Map[String, ValintaTulos] <- SlowFutureLogger(
+        "valintarekisteri",
+        valintarekisteri
+      )
+      oidToHakukohde: Map[String, Hakukohde] <- SlowFutureLogger("hakukohteet", hakukohteet)
+      oidToKoulutus: Map[String, HakukohteenKoulutukset] <- SlowFutureLogger(
+        "koulutukset",
+        koulutukset
+      )
+      hakutapa: KoodistoKoodiArvot <- SlowFutureLogger("hakutapa", hakutapa)
+      hakutyyppi: KoodistoKoodiArvot <- SlowFutureLogger("hakutyyppi", hakutyyppi)
+      koulutus: KoodistoKoodiArvot <- SlowFutureLogger("koulutus", koulutus)
+      posti: KoodistoKoodiArvot <- SlowFutureLogger("posti", posti)
+      oidToOrganisaatio <- SlowFutureLogger("organisaatio", organisaatiot)
+      osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- SlowFutureLogger(
+        "osallistumiset",
+        osallistumisetFuture.map(_.groupBy(_.hakemusOid))
       )
     } yield {
       hakemukset.map(h =>
@@ -581,15 +606,18 @@ class ValpasIntergration(
       }
 
       (for {
-        allHakemukset: Seq[HakijaHakemus] <- hakemuksetFuture
-        haut: Map[String, Haku] <- Future
-          .sequence(
-            allHakemukset
-              .map(_.applicationSystemId)
-              .toSet[String]
-              .map(oid => (hakuActor ? GetHakuOption(oid)).mapTo[Option[Haku]])
-          )
-          .map(_.flatMap(h => h.map(j => (j.oid, j))).toMap)
+        allHakemukset: Seq[HakijaHakemus] <- SlowFutureLogger("hakemukset", hakemuksetFuture)
+        haut: Map[String, Haku] <- SlowFutureLogger(
+          "haut",
+          Future
+            .sequence(
+              allHakemukset
+                .map(_.applicationSystemId)
+                .toSet[String]
+                .map(oid => (hakuActor ? GetHakuOption(oid)).mapTo[Option[Haku]])
+            )
+            .map(_.flatMap(h => h.map(j => (j.oid, j))).toMap)
+        )
         hakemukset <- Future.successful(
           allHakemukset.filterNot(hakemus =>
             excludeHakemusInHaku(haut.get(hakemus.applicationSystemId))
