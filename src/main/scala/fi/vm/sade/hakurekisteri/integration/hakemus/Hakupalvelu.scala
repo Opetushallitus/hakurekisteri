@@ -21,9 +21,10 @@ import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, 
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
 
+import java.util.concurrent.TimeUnit
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 trait Hakupalvelu {
@@ -85,13 +86,13 @@ class AkkaHakupalvelu(
     )
   }
 
-  private def getOppivelvollisuustiedot(hakijaHakemukset: Seq[HakijaHakemus]): Future[Seq[OppivelvollisuusTieto]] = {
+  private def getOppivelvollisuustiedot(hakijaHakemukset: Seq[HakijaHakemus]): Seq[OppivelvollisuusTieto] = {
     try {
       val hakijaOids = hakijaHakemukset.map(_.personOid).filter(_.isDefined).map(_.get).distinct
-      koskiService.fetchOppivelvollisuusTietos(hakijaOids)
+      Await.result(koskiService.fetchOppivelvollisuusTietos(hakijaOids), Duration(2L, TimeUnit.SECONDS))
     } catch {
-      case e: Throwable => logger.error("getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja : {}", e);
-      Future.successful(Seq[OppivelvollisuusTieto]())
+      case e: Throwable => logger.error(e, "getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja");
+      Seq[OppivelvollisuusTieto]()
     }
 
   }
@@ -155,7 +156,7 @@ class AkkaHakupalvelu(
             .map(_.filter(_.stateValid))
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
           maakoodit <- maatjavaltiot2To1(hakemukset)
-          oppivelvollisuusTiedot <- getOppivelvollisuustiedot(hakemukset)
+          oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset)
         } yield hakemukset
           .map { hakemus =>
             val koosteData: Option[Map[String, String]] =
@@ -186,7 +187,7 @@ class AkkaHakupalvelu(
             hakijaSuorituksetMap <- suorituksetByOppija
             (haku, lisakysymykset) <- hakuJaLisakysymykset
             maakoodit <- maakooditF
-            oppivelvollisuusTiedot <- getOppivelvollisuustiedot(hakemukset)
+            oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset)
           } yield {
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)

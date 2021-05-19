@@ -121,6 +121,7 @@ class HakijaActor(
         case 2 => JSONQuery(q) pipeTo sender
         case 3 => JSONQueryV3(q) pipeTo sender
         case 4 => JSONQueryV4(q) pipeTo sender
+        case 5 => JSONQueryV5(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
