@@ -8,7 +8,13 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
-import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, Haku, HakuRequest}
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  AllHaut,
+  GetHaku,
+  GetHakuOption,
+  Haku,
+  HakuRequest
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   HenkiloViite,
@@ -109,8 +115,8 @@ class ValpasSpec
         override def receive: Actor.Receive = {
           case HakuRequest =>
             sender ! AllHaut(Seq(Haku(haku)(InFuture)))
-          case GetHaku(_) => {
-            sender ! Haku(haku)(InFuture)
+          case GetHakuOption(_) => {
+            sender ! Some(Haku(haku)(InFuture))
           }
         }
       }))
@@ -212,8 +218,10 @@ class ValpasSpec
         ValintaTulosActorRef(system.actorOf(Props(new Actor {
           override def receive: Actor.Receive = { case _ =>
             sender !
-              resource[ValintaTulos](
-                s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
+              List(
+                resource[ValintaTulos](
+                  s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
+                )
               )
           }
         }))),

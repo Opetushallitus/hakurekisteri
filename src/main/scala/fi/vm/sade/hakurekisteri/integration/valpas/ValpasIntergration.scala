@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, GetHakuOption, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   KoodistoActorRef,
@@ -163,6 +163,20 @@ case class ValintalaskentaOsallistuminen(
   hakutoiveet: Seq[ValintalaskentaHakutoive]
 ) {}
 
+object SlowFutureLogger {
+  private val logger = LoggerFactory.getLogger(getClass)
+
+  def apply[T](tag: String, future: Future[T])(implicit ec: ExecutionContext) = {
+    val start = System.currentTimeMillis()
+    future.onComplete({ case _ =>
+      val time = System.currentTimeMillis() - start
+      if (time > 80) {
+        logger.warn(s"Slow future $tag took ${time}ms")
+      }
+    })
+    future
+  }
+}
 object ValintakoeTunnisteParser {
   private def toValpasPistetieto(p: Pistetieto): ValpasPistetieto = {
     ValpasPistetieto(p.tunniste, p.arvo.toString, p.osallistuminen)
@@ -462,18 +476,13 @@ class ValpasIntergration(
         .flatMap(_.organizationOid)
         .toSet
         .filterNot(_.isEmpty)
-    def hakemusToValintatulosQuery(h: HakijaHakemus): VirkailijanValintatulos =
-      VirkailijanValintatulos(h.applicationSystemId, h.oid)
+    def hakemusToValintatulosQuery(h: Set[String]): VirkailijanValintatulos =
+      VirkailijanValintatulos(h)
 
-    val valintarekisteri: Future[Map[String, ValintaTulos]] = Future
-      .sequence(
-        hakemukset.map(h =>
-          (valintaTulos.actor ? hakemusToValintatulosQuery(h))
-            .mapTo[ValintaTulos]
-            .map(s => (h.oid, s))
-        )
-      )
-      .map(_.toMap)
+    val valintarekisteri: Future[Map[String, List[ValintaTulos]]] =
+      (valintaTulos.actor ? hakemusToValintatulosQuery(hakemukset.map(_.oid).toSet))
+        .mapTo[List[ValintaTulos]]
+        .map(_.groupBy(_.hakemusOid))
 
     val hakukohteet: Future[Map[String, Hakukohde]] = Future
       .sequence(
@@ -511,18 +520,29 @@ class ValpasIntergration(
       (koodistoActor.actor ? GetKoodistoKoodiArvot("posti")).mapTo[KoodistoKoodiArvot]
     val pisteet: Future[Seq[PistetietoWrapper]] =
       pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
+
     for {
-      oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- pisteet.map(_.groupBy(_.hakemusOID))
-      valintatulokset: Map[String, ValintaTulos] <- valintarekisteri
-      oidToHakukohde: Map[String, Hakukohde] <- hakukohteet
-      oidToKoulutus: Map[String, HakukohteenKoulutukset] <- koulutukset
-      hakutapa: KoodistoKoodiArvot <- hakutapa
-      hakutyyppi: KoodistoKoodiArvot <- hakutyyppi
-      koulutus: KoodistoKoodiArvot <- koulutus
-      posti: KoodistoKoodiArvot <- posti
-      oidToOrganisaatio <- organisaatiot
-      osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- osallistumisetFuture.map(
-        _.groupBy(_.hakemusOid)
+      oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- SlowFutureLogger(
+        "pisteet",
+        pisteet.map(_.groupBy(_.hakemusOID))
+      )
+      valintatulokset: Map[String, List[ValintaTulos]] <- SlowFutureLogger(
+        "valintarekisteri",
+        valintarekisteri
+      )
+      oidToHakukohde: Map[String, Hakukohde] <- SlowFutureLogger("hakukohteet", hakukohteet)
+      oidToKoulutus: Map[String, HakukohteenKoulutukset] <- SlowFutureLogger(
+        "koulutukset",
+        koulutukset
+      )
+      hakutapa: KoodistoKoodiArvot <- SlowFutureLogger("hakutapa", hakutapa)
+      hakutyyppi: KoodistoKoodiArvot <- SlowFutureLogger("hakutyyppi", hakutyyppi)
+      koulutus: KoodistoKoodiArvot <- SlowFutureLogger("koulutus", koulutus)
+      posti: KoodistoKoodiArvot <- SlowFutureLogger("posti", posti)
+      oidToOrganisaatio <- SlowFutureLogger("organisaatio", organisaatiot)
+      osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- SlowFutureLogger(
+        "osallistumiset",
+        osallistumisetFuture.map(_.groupBy(_.hakemusOid))
       )
     } yield {
       hakemukset.map(h =>
@@ -531,7 +551,14 @@ class ValpasIntergration(
             oidToPisteet,
             osallistumiset.getOrElse(h.oid, Seq.empty),
             h,
-            valintatulokset.get(h.oid),
+            valintatulokset.get(h.oid) match {
+              case Some(tulokset) =>
+                if (tulokset.size > 1) {
+                  throw new RuntimeException("Multiple valintatulokset for single hakemus!")
+                }
+                tulokset.headOption
+              case None => None
+            },
             oidToHakukohde,
             oidToKoulutus,
             oidToOrganisaatio,
@@ -569,22 +596,33 @@ class ValpasIntergration(
       val osallistumisetFuture =
         masterOids.flatMap(masterOids => fetchOsallistumiset(masterOids.values.toSet))
 
-      def excludeHakemusInHaku(haku: Haku): Boolean = {
-        haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
+      def excludeHakemusInHaku(haku: Option[Haku]): Boolean = {
+        haku match {
+          case Some(haku) => {
+            haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
+          }
+          case None =>
+            true
+        }
+
       }
 
       (for {
-        allHakemukset: Seq[HakijaHakemus] <- hakemuksetFuture
-        haut: Map[String, Haku] <- Future
-          .sequence(
-            allHakemukset
-              .map(_.applicationSystemId)
-              .map(oid => (hakuActor ? GetHaku(oid)).mapTo[Haku])
-          )
-          .map(_.map(h => (h.oid, h)).toMap)
+        allHakemukset: Seq[HakijaHakemus] <- SlowFutureLogger("hakemukset", hakemuksetFuture)
+        haut: Map[String, Haku] <- SlowFutureLogger(
+          "haut",
+          Future
+            .sequence(
+              allHakemukset
+                .map(_.applicationSystemId)
+                .toSet[String]
+                .map(oid => (hakuActor ? GetHakuOption(oid)).mapTo[Option[Haku]])
+            )
+            .map(_.flatMap(h => h.map(j => (j.oid, j))).toMap)
+        )
         hakemukset <- Future.successful(
           allHakemukset.filterNot(hakemus =>
-            excludeHakemusInHaku(haut(hakemus.applicationSystemId))
+            excludeHakemusInHaku(haut.get(hakemus.applicationSystemId))
           )
         )
         valpasHakemukset <-
@@ -596,8 +634,10 @@ class ValpasIntergration(
                 Future.failed(
                   new RuntimeException(
                     s.flatMap {
-                      case Failure(x) => Some(x.getMessage)
-                      case _          => None
+                      case Failure(x) =>
+                        logger.error("Valpas fetch failed!", x)
+                        Some(x.getMessage)
+                      case _ => None
                     }.mkString(", ")
                   )
                 )

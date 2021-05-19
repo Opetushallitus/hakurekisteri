@@ -43,6 +43,10 @@ class HakuActor(
 
   import FutureList._
 
+  def getHakuOption(q: GetHakuOption): Future[Option[Haku]] = Future {
+    storedHakus.find(_.oid == q.oid)
+  }
+
   def getHaku(q: GetHaku): Future[Haku] = Future {
     storedHakus.find(_.oid == q.oid) match {
       case None    => throw HakuNotFoundException(s"no stored haku found with oid ${q.oid}")
@@ -62,6 +66,8 @@ class HakuActor(
     case HakuRequest => sender ! AllHaut(storedHakus)
 
     case q: GetHaku => getHaku(q) pipeTo sender
+
+    case q: GetHakuOption => getHakuOption(q) pipeTo sender
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
@@ -131,6 +137,8 @@ case class AllHaut(haut: Seq[Haku])
 case class HakuNotFoundException(m: String) extends Exception(m)
 
 case class GetHaku(oid: String)
+
+case class GetHakuOption(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
