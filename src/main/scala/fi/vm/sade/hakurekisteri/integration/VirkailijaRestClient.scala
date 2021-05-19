@@ -181,7 +181,12 @@ class VirkailijaRestClient(
   private def tryClient[A <: AnyRef: Manifest](
     url: String,
     basicAuth: Boolean = false
-  )(acceptedResponseCodes: Seq[Int], maxRetries: Int, retryCount: AtomicInteger): Future[A] =
+  )(
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int,
+    retryCount: AtomicInteger,
+    retryOnceOn502: Boolean = true
+  ): Future[A] =
     Client
       .request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes: _*))
       .recoverWith {
@@ -193,13 +198,29 @@ class VirkailijaRestClient(
               Client
                 .request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes: _*))
                 .recoverWith {
+                  case t: PreconditionFailedException
+                      if t.responseCode == 502 && retryOnceOn502 => {
+                    logger.warning(s"Retrying once because 502 bad gateway: $url")
+                    Future {
+                      Thread.sleep(100)
+                    }.flatMap(u =>
+                      tryClient(url, basicAuth)(
+                        acceptedResponseCodes,
+                        maxRetries,
+                        retryCount,
+                        false
+                      )
+                    )
+                  }
                   case t: Exception
                       if retryable(t) || (t.getCause != null && retryable(t.getCause)) =>
                     if (retryCount.getAndIncrement <= maxRetries) {
                       logger.warning(
                         s"Retrying request to $url due to $t, retry attempt #${retryCount.get - 1}"
                       )
-                      Future { Thread.sleep(1000) }.flatMap(u =>
+                      Future {
+                        Thread.sleep(1000)
+                      }.flatMap(u =>
                         tryClient(url, basicAuth)(acceptedResponseCodes, maxRetries, retryCount)
                       )
                     } else Future.failed(t)
