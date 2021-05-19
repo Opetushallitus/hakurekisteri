@@ -135,7 +135,7 @@ trait HakijaSwaggerApiV4
     .parameter(
       queryParam[Option[String]]("organisaatio")
         .description("koulutuksen tarjoajan tai sen yläorganisaation oid")
-        .optional
+        .required
     )
     .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
     .parameter(
