@@ -81,3 +81,14 @@ Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käyt
 * Hakemusten synkronoinnin voi pakottaa kutsumalla GET /suoritusrekisteri/rest/v1/haut/refresh/hakemukset
 (synkronointi ajetaan automaattisesti parin tunnin välein)
 
+## Formatointi
+
+Formatoinnin tarkistus Scala-koodille saa ajettua suorittamalla 
+
+`mvn spotless:check`
+
+Korjattua nämä saa ajamalla
+
+`mvn spotless:apply`
+
+Lisätietoa https://github.com/diffplug/spotless/tree/master/plugin-maven

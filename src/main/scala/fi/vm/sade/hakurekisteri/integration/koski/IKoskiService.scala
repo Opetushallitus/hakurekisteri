@@ -46,7 +46,8 @@ class KoskiServiceMock extends IKoskiService {
     params: KoskiSuoritusHakuParams
   ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
 
-  override def fetchOppivelvollisuusTietos(oppijaOids: Seq[String]
+  override def fetchOppivelvollisuusTietos(
+    oppijaOids: Seq[String]
   ): Future[Seq[OppivelvollisuusTieto]] = Future.successful(Seq[OppivelvollisuusTieto]())
 
   override def refreshChangedOppijasFromKoski(

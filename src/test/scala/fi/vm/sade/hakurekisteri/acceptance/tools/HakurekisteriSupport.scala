@@ -7,7 +7,10 @@ import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.github.nscala_time.time.TypeImports.LocalDate
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.integration.henkilo.{MockPersonAliasesProvider, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  MockPersonAliasesProvider,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit.{MockParameterActor, ParametritActorRef}
 import fi.vm.sade.hakurekisteri.koodisto.MockedKoodistoActor
