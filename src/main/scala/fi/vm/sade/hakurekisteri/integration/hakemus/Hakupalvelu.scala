@@ -73,6 +73,7 @@ class AkkaHakupalvelu(
     getClass.getSimpleName
   )
   private implicit val defaultTimeout: Timeout = 120.seconds
+  private val oppivelvollisuusTiedotTimeOut: Duration = Duration(10L, TimeUnit.SECONDS)
   private val acceptedResponseCode: Int = 200
   private val maxRetries: Int = 2
 
@@ -91,13 +92,18 @@ class AkkaHakupalvelu(
   }
 
   private def getOppivelvollisuustiedot(
-    hakijaHakemukset: Seq[HakijaHakemus]
+    hakijaHakemukset: Seq[HakijaHakemus],
+    version: Int
   ): Seq[OppivelvollisuusTieto] = {
+    // This data is used only for api version 5 and greater
+    if (version < 5) {
+      return Seq[OppivelvollisuusTieto]()
+    }
     try {
       val hakijaOids = hakijaHakemukset.map(_.personOid).filter(_.isDefined).map(_.get).distinct
       Await.result(
         koskiService.fetchOppivelvollisuusTietos(hakijaOids),
-        Duration(2L, TimeUnit.SECONDS)
+        oppivelvollisuusTiedotTimeOut
       )
     } catch {
       case e: Throwable =>
@@ -166,7 +172,7 @@ class AkkaHakupalvelu(
             .map(_.filter(_.stateValid))
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
           maakoodit <- maatjavaltiot2To1(hakemukset)
-          oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset)
+          oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
         } yield hakemukset
           .map { hakemus =>
             val koosteData: Option[Map[String, String]] =
@@ -205,7 +211,7 @@ class AkkaHakupalvelu(
             hakijaSuorituksetMap <- suorituksetByOppija
             (haku, lisakysymykset) <- hakuJaLisakysymykset
             maakoodit <- maakooditF
-            oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset)
+            oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
           } yield {
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)
