@@ -191,7 +191,15 @@ class HakijaSpec extends FlatSpec with Matchers {
   )
 
   val toive = AkkaHakupalvelu
-    .getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4"), None, Map("246" -> "FIN"), Seq.empty)
+    .getHakija(
+      FullHakemus1,
+      haku,
+      themeQuestions,
+      Option("1.2.3.4"),
+      None,
+      Map("246" -> "FIN"),
+      Seq.empty
+    )
     .hakemus
     .hakutoiveet
     .head
@@ -317,9 +325,17 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option.empty,
       None,
       Map("246" -> "FIN"),
-      Seq(OppivelvollisuusTieto(FullHakemus1.personOid.get, oppivelvollisuusVoimassaAsti, oikeusMaksuttomaanKoulutukseenVoimassaAsti))
+      Seq(
+        OppivelvollisuusTieto(
+          FullHakemus1.personOid.get,
+          oppivelvollisuusVoimassaAsti,
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti
+        )
+      )
     )
     hakija.henkilo.oppivelvollisuusVoimassaAsti.get should be(oppivelvollisuusVoimassaAsti.get)
-    hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti.get should be(oikeusMaksuttomaanKoulutukseenVoimassaAsti.get)
+    hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti.get should be(
+      oikeusMaksuttomaanKoulutukseenVoimassaAsti.get
+    )
   }
 }

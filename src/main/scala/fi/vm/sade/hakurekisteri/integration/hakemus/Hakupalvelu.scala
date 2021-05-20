@@ -10,7 +10,10 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.Henkilo
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetRinnasteinenKoodiArvoQuery,
+  KoodistoActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, OppivelvollisuusTieto}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -60,7 +63,8 @@ class AkkaHakupalvelu(
   koodisto: KoodistoActorRef,
   config: Config,
   koskiService: IKoskiService
-)(implicit val system: ActorSystem) extends Hakupalvelu {
+)(implicit val system: ActorSystem)
+    extends Hakupalvelu {
 
   private val logger = Logging.getLogger(system, this)
 
@@ -86,13 +90,19 @@ class AkkaHakupalvelu(
     )
   }
 
-  private def getOppivelvollisuustiedot(hakijaHakemukset: Seq[HakijaHakemus]): Seq[OppivelvollisuusTieto] = {
+  private def getOppivelvollisuustiedot(
+    hakijaHakemukset: Seq[HakijaHakemus]
+  ): Seq[OppivelvollisuusTieto] = {
     try {
       val hakijaOids = hakijaHakemukset.map(_.personOid).filter(_.isDefined).map(_.get).distinct
-      Await.result(koskiService.fetchOppivelvollisuusTietos(hakijaOids), Duration(2L, TimeUnit.SECONDS))
+      Await.result(
+        koskiService.fetchOppivelvollisuusTietos(hakijaOids),
+        Duration(2L, TimeUnit.SECONDS)
+      )
     } catch {
-      case e: Throwable => logger.error(e, "getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja");
-      Seq[OppivelvollisuusTieto]()
+      case e: Throwable =>
+        logger.error(e, "getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja");
+        Seq[OppivelvollisuusTieto]()
     }
 
   }
@@ -161,7 +171,15 @@ class AkkaHakupalvelu(
           .map { hakemus =>
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)
-            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData, maakoodit, oppivelvollisuusTiedot)
+            AkkaHakupalvelu.getHakija(
+              hakemus,
+              haku,
+              lisakysymykset,
+              None,
+              koosteData,
+              maakoodit,
+              oppivelvollisuusTiedot
+            )
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
@@ -523,7 +541,10 @@ object AkkaHakupalvelu {
         if (secondary.isEmpty) Some(List(primary)) else Some(List(primary, secondary))
       }
 
-      def getOppivelvollisuusTieto(field: (OppivelvollisuusTieto) => Option[String], hakijaOid: Option[String]): Option[String] = {
+      def getOppivelvollisuusTieto(
+        field: (OppivelvollisuusTieto) => Option[String],
+        hakijaOid: Option[String]
+      ): Option[String] = {
         oppivelvollisuusTiedot.find(_.oid == hakijaOid.getOrElse("")).map(field(_)).getOrElse(None)
       }
 
@@ -565,8 +586,10 @@ object AkkaHakupalvelu {
           huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
           huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
           huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-          oppivelvollisuusVoimassaAsti = getOppivelvollisuusTieto(_.oppivelvollisuusVoimassaAsti, h.personOid),
-          oikeusMaksuttomaanKoulutukseenVoimassaAsti = getOppivelvollisuusTieto(_.oikeusMaksuttomaanKoulutukseenVoimassaAsti, h.personOid),
+          oppivelvollisuusVoimassaAsti =
+            getOppivelvollisuusTieto(_.oppivelvollisuusVoimassaAsti, h.personOid),
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti =
+            getOppivelvollisuusTieto(_.oikeusMaksuttomaanKoulutukseenVoimassaAsti, h.personOid),
           lisakysymykset =
             getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid, haku.kohdejoukkoUri),
           liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
