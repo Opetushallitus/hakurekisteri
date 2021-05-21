@@ -123,7 +123,9 @@ trait KkHakijaSwaggerApiV4
         "List",
         Some(ValueDataType("HakukohteenKoulutus", None, Some("HakukohteenKoulutus")))
       )
-    )
+    ),
+    ModelField("hKelpoisuusMaksuvelvollisuus", null, DataType.String, required = false),
+    ModelField("lukuvuosimaksu", null, DataType.String, required = false)
   )
 
   val liiteFields: Seq[ModelField] = Seq(
@@ -208,13 +210,13 @@ trait KkHakijaSwaggerApiV4
     )
     .parameter(
       queryParam[String]("hakuehto")
-        .description("hakuehto")
+        .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
         .allowableValues(Hakuehto.values.toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
-        .description("tyyppi")
+        .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
         .allowableValues(ApiFormat.Json, ApiFormat.Excel)
     )
     .produces("application/json", "application/octet-stream")

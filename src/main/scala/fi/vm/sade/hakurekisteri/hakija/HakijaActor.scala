@@ -121,6 +121,7 @@ class HakijaActor(
         case 2 => JSONQuery(q) pipeTo sender
         case 3 => JSONQueryV3(q) pipeTo sender
         case 4 => JSONQueryV4(q) pipeTo sender
+        case 5 => JSONQueryV5(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
@@ -270,6 +271,10 @@ class HakijaActor(
     getXmlHakemus(hakija).map(data2JsonHakijaV4(hakija))
   }
 
+  def hakija2JSONHakijaV5(hakija: Hakija): Future[JSONHakijaV5] = {
+    getXmlHakemus(hakija).map(data2JsonHakijaV5(hakija))
+  }
+
   def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
     val hakutoiveet2 = hakemus.hakutoiveet.map(toive => toive.copy(koulutuksenKieli = None))
     val hakemus2 = hakemus.copy(osaaminen = None, hakutoiveet = hakutoiveet2)
@@ -282,6 +287,10 @@ class HakijaActor(
 
   def data2JsonHakijaV4(hakija: Hakija)(hakemus: XMLHakemus) = {
     JSONHakijaV4(hakija, hakemus)
+  }
+
+  def data2JsonHakijaV5(hakija: Hakija)(hakemus: XMLHakemus) = {
+    JSONHakijaV5(hakija, hakemus)
   }
 
   def data2JsonHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
@@ -301,6 +310,9 @@ class HakijaActor(
 
   def hakijat2JsonHakijatV4(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV4]] =
     hakijat.map(hakija2JSONHakijaV4).join
+
+  def hakijat2JsonHakijatV5(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV5]] =
+    hakijat.map(hakija2JSONHakijaV5).join
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
     hakijas
@@ -462,6 +474,8 @@ class HakijaActor(
         huoltajannimi = h.huoltajannimi,
         huoltajanpuhelinnumero = h.huoltajanpuhelinnumero,
         huoltajansahkoposti = h.huoltajansahkoposti,
+        oppivelvollisuusVoimassaAsti = h.oppivelvollisuusVoimassaAsti,
+        oikeusMaksuttomaanKoulutukseenVoimassaAsti = h.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
         lisakysymykset = h.lisakysymykset,
         liitteet = h.liitteet,
         muukoulutus = h.muukoulutus
@@ -492,6 +506,8 @@ class HakijaActor(
     getHakijat(q).flatMap(hakijat2JsonHakijatV3).map(JSONHakijat)
   def JSONQueryV4(q: HakijaQuery): Future[JSONHakijatV4] =
     getHakijat(q).flatMap(hakijat2JsonHakijatV4).map(JSONHakijatV4)
+  def JSONQueryV5(q: HakijaQuery): Future[JSONHakijatV5] =
+    getHakijat(q).flatMap(hakijat2JsonHakijatV5).map(JSONHakijatV5)
 
 }
 

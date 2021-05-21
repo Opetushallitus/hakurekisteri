@@ -29,6 +29,8 @@ case class Henkilo(
   huoltajanpuhelinnumero: String,
   huoltajansahkoposti: String,
   muukoulutus: Option[String],
+  oppivelvollisuusVoimassaAsti: Option[String],
+  oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String],
   lisakysymykset: Seq[Lisakysymys],
   liitteet: Seq[Liite]
 )

@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
-
 import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.github.nscala_time.time.TypeImports.LocalDate

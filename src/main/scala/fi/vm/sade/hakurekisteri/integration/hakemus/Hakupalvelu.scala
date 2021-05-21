@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.text.SimpleDateFormat
-
-import akka.actor.{ActorRef}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.Henkilo
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
@@ -14,6 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, OppivelvollisuusTieto}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
@@ -22,9 +24,10 @@ import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, 
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
 
+import java.util.concurrent.TimeUnit
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 trait Hakupalvelu {
@@ -58,14 +61,19 @@ class AkkaHakupalvelu(
   koosteService: IKoosteService,
   hakuActor: ActorRef,
   koodisto: KoodistoActorRef,
-  config: Config
-) extends Hakupalvelu {
+  config: Config,
+  koskiService: IKoskiService
+)(implicit val system: ActorSystem)
+    extends Hakupalvelu {
+
+  private val logger = Logging.getLogger(system, this)
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
     config.integrations.asyncOperationThreadPoolSize,
     getClass.getSimpleName
   )
   private implicit val defaultTimeout: Timeout = 120.seconds
+  private val oppivelvollisuusTiedotTimeOut: Duration = Duration(10L, TimeUnit.SECONDS)
   private val acceptedResponseCode: Int = 200
   private val maxRetries: Int = 2
 
@@ -81,6 +89,28 @@ class AkkaHakupalvelu(
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(kysymykset =>
       kysymykset ++ AkkaHakupalvelu.hardcodedLisakysymykset(kohdejoukkoUri)
     )
+  }
+
+  private def getOppivelvollisuustiedot(
+    hakijaHakemukset: Seq[HakijaHakemus],
+    version: Int
+  ): Seq[OppivelvollisuusTieto] = {
+    // This data is used only for api version 5 and greater
+    if (version < 5) {
+      return Seq[OppivelvollisuusTieto]()
+    }
+    try {
+      val hakijaOids = hakijaHakemukset.map(_.personOid).filter(_.isDefined).map(_.get).distinct
+      Await.result(
+        koskiService.fetchOppivelvollisuusTietos(hakijaOids),
+        oppivelvollisuusTiedotTimeOut
+      )
+    } catch {
+      case e: Throwable =>
+        logger.error(e, "getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja");
+        Seq[OppivelvollisuusTieto]()
+    }
+
   }
 
   override def getHakukohdeOids(hakukohderyhma: String, haku: String): Future[Seq[String]] = {
@@ -142,11 +172,20 @@ class AkkaHakupalvelu(
             .map(_.filter(_.stateValid))
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
           maakoodit <- maatjavaltiot2To1(hakemukset)
+          oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
         } yield hakemukset
           .map { hakemus =>
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)
-            AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None, koosteData, maakoodit)
+            AkkaHakupalvelu.getHakija(
+              hakemus,
+              haku,
+              lisakysymykset,
+              None,
+              koosteData,
+              maakoodit,
+              oppivelvollisuusTiedot
+            )
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
         for {
@@ -172,6 +211,7 @@ class AkkaHakupalvelu(
             hakijaSuorituksetMap <- suorituksetByOppija
             (haku, lisakysymykset) <- hakuJaLisakysymykset
             maakoodit <- maakooditF
+            oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
           } yield {
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)
@@ -181,7 +221,8 @@ class AkkaHakupalvelu(
               lisakysymykset,
               hakukohdekoodi.map(_ => hakukohdeOid),
               koosteData,
-              maakoodit
+              maakoodit,
+              oppivelvollisuusTiedot
             )
           })
         } yield hakijat.toSeq
@@ -426,13 +467,22 @@ object AkkaHakupalvelu {
     finalanswers
   }
 
+  private def getOppivelvollisuusTieto(
+    field: (OppivelvollisuusTieto) => Option[String],
+    hakijaOid: Option[String],
+    oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto]
+  ): Option[String] = {
+    oppivelvollisuusTiedot.find(_.oid == hakijaOid.getOrElse("")).map(field(_)).getOrElse(None)
+  }
+
   def getHakija(
     h: HakijaHakemus,
     haku: Haku,
     lisakysymykset: Map[String, ThemeQuestion],
     hakukohdeOid: Option[String],
     koosteData: Option[Map[String, String]],
-    maakoodit: Map[String, String]
+    maakoodit: Map[String, String],
+    oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto]
   ): Hakija = h match {
     case hakemus: FullHakemus =>
       def getOsaaminenOsaalue(key: String): Option[String] = {
@@ -543,6 +593,16 @@ object AkkaHakupalvelu {
           huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
           huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
           huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
+          oppivelvollisuusVoimassaAsti = getOppivelvollisuusTieto(
+            _.oppivelvollisuusVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti = getOppivelvollisuusTieto(
+            _.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
           lisakysymykset =
             getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid, haku.kohdejoukkoUri),
           liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
@@ -622,6 +682,16 @@ object AkkaHakupalvelu {
           huoltajannimi = "",
           huoltajanpuhelinnumero = "",
           huoltajansahkoposti = "",
+          oppivelvollisuusVoimassaAsti = getOppivelvollisuusTieto(
+            _.oppivelvollisuusVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti = getOppivelvollisuusTieto(
+            _.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
           lisakysymykset = Seq.empty,
           liitteet = Seq.empty,
           muukoulutus = None
@@ -852,7 +922,9 @@ case class HakemusHenkilotiedot(
   turvakielto: Option[String] = None,
   huoltajannimi: Option[String] = None,
   huoltajanpuhelinnumero: Option[String] = None,
-  huoltajansahkoposti: Option[String] = None
+  huoltajansahkoposti: Option[String] = None,
+  oppivelvollisuusVoimassaAsti: Option[String] = None,
+  oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String] = None
 )
 
 case class Koulutustausta(

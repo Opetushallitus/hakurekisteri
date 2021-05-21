@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
-import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV4
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV5
 import fi.vm.sade.hakurekisteri.web.rest.support.{
   ApiFormat,
   IncidentReportSwaggerModel,
@@ -12,7 +12,7 @@ import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
-trait HakijaSwaggerApiV4
+trait HakijaSwaggerApiV5
     extends SwaggerSupport
     with IncidentReportSwaggerModel
     with OldSwaggerSyntax {
@@ -61,7 +61,7 @@ trait HakijaSwaggerApiV4
 
   registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map { t => (t.name, t) }.toMap))
 
-  val hakijaFieldsV4 = Seq(
+  val hakijaFieldsV5 = Seq(
     ModelField("hetu", null, DataType.String),
     ModelField("oppijanumero", null, DataType.String),
     ModelField("sukunimi", null, DataType.String),
@@ -82,6 +82,18 @@ trait HakijaSwaggerApiV4
     ModelField("huoltajannimi", null, DataType.String, required = false),
     ModelField("huoltajanpuhelinnumero", null, DataType.String, required = false),
     ModelField("huoltajansahkoposti", null, DataType.String, required = false),
+    ModelField(
+      "oppivelvollisuusVoimassaAsti",
+      "Päivämäärä muotoa YYYY-MM-DD",
+      DataType.String,
+      required = false
+    ),
+    ModelField(
+      "oikeusMaksuttomaanKoulutukseenVoimassaAsti",
+      "Päivämäärä muotoa YYYY-MM-DD",
+      DataType.String,
+      required = false
+    ),
     ModelField("hakemus", null, ValueDataType("XMLHakemus", None, Some("XMLHakemus"))),
     ModelField(
       "lisakysymykset",
@@ -105,16 +117,16 @@ trait HakijaSwaggerApiV4
     )
   )
 
-  val hakijatFieldsV4 = Seq(
+  val hakijatFieldsV5 = Seq(
     ModelField(
       "hakijat",
       null,
-      ContainerDataType("List", Some(ValueDataType("JSONHakijaV4", None, Some("JSONHakijaV4"))))
+      ContainerDataType("List", Some(ValueDataType("JSONHakijaV5", None, Some("JSONHakijaV5"))))
     )
   )
 
-  registerModel(Model("JSONHakijatV4", "Hakijat", hakijatFieldsV4.map { t => (t.name, t) }.toMap))
-  registerModel(Model("JSONHakijaV4", "Hakija", hakijaFieldsV4.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijatV5", "Hakijat", hakijatFieldsV5.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijaV5", "Hakija", hakijaFieldsV5.map { t => (t.name, t) }.toMap))
   registerModel(
     Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map { t => (t.name, t) }.toMap)
   )
@@ -126,7 +138,7 @@ trait HakijaSwaggerApiV4
     )
   )
 
-  val queryV2: OperationBuilder = apiOperation[JSONHakijatV4]("haeHakijat")
+  val queryV2: OperationBuilder = apiOperation[JSONHakijatV5]("haeHakijat")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
