@@ -243,7 +243,7 @@ case class KoskiLisatiedot(
   kotiopetusjaksot: Option[List[Kotiopetusjakso]]
 )
 
-case class Kotiopetusjakso(alku: String, loppu: String)
+case class Kotiopetusjakso(alku: String, loppu: Option[String])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 
