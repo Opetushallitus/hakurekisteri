@@ -109,13 +109,13 @@ trait HakijaSwaggerApi
     .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
     .parameter(
       queryParam[String]("hakuehto")
-        .description("hakuehto")
+        .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
         .allowableValues(Hakuehto.values.toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
-        .description("tietotyyppi")
+        .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
         .allowableValues(ApiFormat.values.toList)
         .required
     )

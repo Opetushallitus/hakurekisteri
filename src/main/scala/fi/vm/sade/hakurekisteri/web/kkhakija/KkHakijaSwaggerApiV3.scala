@@ -209,13 +209,13 @@ trait KkHakijaSwaggerApiV3
     )
     .parameter(
       queryParam[String]("hakuehto")
-        .description("hakuehto")
+        .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
         .allowableValues(Hakuehto.values.toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
-        .description("tyyppi")
+        .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
         .allowableValues(ApiFormat.Json, ApiFormat.Excel)
     )
     .produces("application/json", "application/octet-stream")
