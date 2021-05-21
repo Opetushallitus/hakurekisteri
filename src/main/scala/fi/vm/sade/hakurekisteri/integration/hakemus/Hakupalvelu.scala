@@ -467,6 +467,14 @@ object AkkaHakupalvelu {
     finalanswers
   }
 
+  private def getOppivelvollisuusTieto(
+    field: (OppivelvollisuusTieto) => Option[String],
+    hakijaOid: Option[String],
+    oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto]
+  ): Option[String] = {
+    oppivelvollisuusTiedot.find(_.oid == hakijaOid.getOrElse("")).map(field(_)).getOrElse(None)
+  }
+
   def getHakija(
     h: HakijaHakemus,
     haku: Haku,
@@ -547,13 +555,6 @@ object AkkaHakupalvelu {
         if (secondary.isEmpty) Some(List(primary)) else Some(List(primary, secondary))
       }
 
-      def getOppivelvollisuusTieto(
-        field: (OppivelvollisuusTieto) => Option[String],
-        hakijaOid: Option[String]
-      ): Option[String] = {
-        oppivelvollisuusTiedot.find(_.oid == hakijaOid.getOrElse("")).map(field(_)).getOrElse(None)
-      }
-
       Hakija(
         Henkilo(
           lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
@@ -592,10 +593,16 @@ object AkkaHakupalvelu {
           huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
           huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
           huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-          oppivelvollisuusVoimassaAsti =
-            getOppivelvollisuusTieto(_.oppivelvollisuusVoimassaAsti, h.personOid),
-          oikeusMaksuttomaanKoulutukseenVoimassaAsti =
-            getOppivelvollisuusTieto(_.oikeusMaksuttomaanKoulutukseenVoimassaAsti, h.personOid),
+          oppivelvollisuusVoimassaAsti = getOppivelvollisuusTieto(
+            _.oppivelvollisuusVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti = getOppivelvollisuusTieto(
+            _.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
           lisakysymykset =
             getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid, haku.kohdejoukkoUri),
           liitteet = hakemus.attachmentRequests.map(a => attachmentRequestToLiite(a)),
@@ -675,8 +682,16 @@ object AkkaHakupalvelu {
           huoltajannimi = "",
           huoltajanpuhelinnumero = "",
           huoltajansahkoposti = "",
-          oppivelvollisuusVoimassaAsti = None,
-          oikeusMaksuttomaanKoulutukseenVoimassaAsti = None,
+          oppivelvollisuusVoimassaAsti = getOppivelvollisuusTieto(
+            _.oppivelvollisuusVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
+          oikeusMaksuttomaanKoulutukseenVoimassaAsti = getOppivelvollisuusTieto(
+            _.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
+            h.personOid,
+            oppivelvollisuusTiedot
+          ),
           lisakysymykset = Seq.empty,
           liitteet = Seq.empty,
           muukoulutus = None
@@ -908,7 +923,8 @@ case class HakemusHenkilotiedot(
   huoltajannimi: Option[String] = None,
   huoltajanpuhelinnumero: Option[String] = None,
   huoltajansahkoposti: Option[String] = None,
-  oppivelvollisuusVoimassaAsti: Option[String] = None
+  oppivelvollisuusVoimassaAsti: Option[String] = None,
+  oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String] = None
 )
 
 case class Koulutustausta(
