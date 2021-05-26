@@ -128,7 +128,7 @@ class SuoritusResourceWithOPHSpec
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-suoritus-resource")
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
 
     val parameterActor = new ParametritActorRef(
       system.actorOf(Props(new MockParameterActor(config = mockConfig)(system)))
@@ -198,7 +198,7 @@ class SuoritusResourceWithOPOSpec
 
   override def beforeAll(): Unit = {
     system = ActorSystem("test-suoritus-resource")
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
     val suoritusJournal =
       new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
     suoritusJournal.addModification(Updated(suoritus.identify))

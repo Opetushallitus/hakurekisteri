@@ -42,7 +42,7 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   private val mockConfig: MockConfig = new MockConfig
 
   override def beforeAll(): Unit = {
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
     val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](
       TableQuery[OpiskelijaTable],
       config = mockConfig

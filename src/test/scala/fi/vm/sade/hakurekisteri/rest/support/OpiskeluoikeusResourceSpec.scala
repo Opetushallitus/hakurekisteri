@@ -1,24 +1,16 @@
-package fi.vm.sade.hakurekisteri.rest
+package fi.vm.sade.hakurekisteri.rest.support
 
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.opiskelija.{
-  Opiskelija,
-  OpiskelijaJDBCActor,
-  OpiskelijaQuery,
-  OpiskelijaTable
-}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{
   Opiskeluoikeus,
   OpiskeluoikeusJDBCActor,
   OpiskeluoikeusTable
 }
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
@@ -50,7 +42,7 @@ class OpiskeluoikeusResourceSpec extends ScalatraFunSuite with BeforeAndAfterEac
   private val mockConfig: MockConfig = new MockConfig
 
   override def beforeAll(): Unit = {
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
 
     val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](
       TableQuery[OpiskeluoikeusTable],

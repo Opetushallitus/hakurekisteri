@@ -70,7 +70,7 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite with BeforeAndAfterEach {
 
   override def beforeAll(): Unit = {
     system = ActorSystem()
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
     arvosanaJournal =
       new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable], config = mockConfig)
     suoritusJournal =

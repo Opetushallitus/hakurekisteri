@@ -25,7 +25,7 @@ class DbArchiverSpec
     with MockitoSugar
     with Waiters {
 
-  private implicit val database = Database.forURL(ItPostgres.getEndpointURL)
+  private implicit val database = ItPostgres.getDatabase
   private implicit val system = ActorSystem("test-jdbc")
   private implicit val ec: ExecutionContext = system.dispatcher
   private implicit val timeout: Timeout = Timeout(2, TimeUnit.SECONDS)
