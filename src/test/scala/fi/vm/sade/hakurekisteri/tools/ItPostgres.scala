@@ -44,6 +44,7 @@ object ItPostgres extends Logging {
       )
     )
     tablesTruncate.foreach(tableToTruncate => runAwait(db.run(sqlu"truncate #$tableToTruncate")))
+    db.close()
   }
 
   def stop() {
