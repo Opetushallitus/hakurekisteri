@@ -36,9 +36,6 @@ object ItPostgres extends Logging {
 
   def reset(): Unit = {
     log.info("Resetting database tables ...")
-    container.execInContainer(
-      s"psql -h localhost -d suoritusrekisteri -p ${container.exposedPorts.head} -f database/reset.sql"
-    )
     val db = Database.forURL(container.jdbcUrl, container.username, container.password)
     val tablesTruncate = runAwait(
       db.run(
