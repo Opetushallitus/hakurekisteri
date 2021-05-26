@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusJDBCActor, SuoritusTable}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, ArvosanaSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.arvosana.ArvosanaResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._

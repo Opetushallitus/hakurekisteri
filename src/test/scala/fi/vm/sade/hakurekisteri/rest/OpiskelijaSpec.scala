@@ -5,22 +5,12 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.opiskelija.{
-  Opiskelija,
-  OpiskelijaJDBCActor,
-  OpiskelijaQuery,
-  OpiskelijaTable
-}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaResource, OpiskelijaSwaggerApi}
-import fi.vm.sade.hakurekisteri.web.rest.support.{
-  HakurekisteriCrudCommands,
-  HakurekisteriResource,
-  HakurekisteriSwagger,
-  TestSecurity
-}
+import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
 import org.scalatest.BeforeAndAfterEach
