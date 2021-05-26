@@ -445,13 +445,20 @@ class ValpasIntergration(
           matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
-          postinumero = h.henkilotiedot.flatMap(_.Postinumero).getOrElse(""),
-          lahiosoite = h.henkilotiedot.flatMap(_.lahiosoite).getOrElse(""),
+          postinumero = h.henkilotiedot
+            .flatMap(_.Postinumero)
+            .orElse(h.henkilotiedot.flatMap(_.postinumeroUlkomaa))
+            .getOrElse(""),
+          lahiosoite = h.henkilotiedot
+            .flatMap(_.lahiosoite)
+            .orElse(h.henkilotiedot.flatMap(_.osoiteUlkomaa))
+            .getOrElse(""),
           postitoimipaikka = h.henkilotiedot
             .flatMap(_.Postinumero)
             .flatMap(postinumero =>
               postiKoodit.arvoToNimi.get(s"posti_$postinumero").flatMap(_.get("fi"))
             )
+            .orElse(h.henkilotiedot.flatMap(_.kaupunkiUlkomaa))
             .getOrElse(""),
           hakutoiveet = hakutoiveet
         )
