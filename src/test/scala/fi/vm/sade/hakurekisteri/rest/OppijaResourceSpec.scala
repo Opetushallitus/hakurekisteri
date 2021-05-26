@@ -153,7 +153,7 @@ class OppijaResourceSpec
 
   override def beforeAll(): Unit = {
     system = ActorSystem("oppija-resource-test-system")
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
     valintarekisteri = TestActorRef(
       new TestingValintarekisteriActor(
         new VirkailijaRestClient(

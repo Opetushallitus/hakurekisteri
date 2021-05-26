@@ -32,7 +32,7 @@ class TableSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
   println(table.baseTableRow.tableName)
 
   override def beforeAll(): Unit = {
-    db = Database.forURL(ItPostgres.getEndpointURL)
+    db = ItPostgres.getDatabase
     try {
       Await.result(
         db.run(

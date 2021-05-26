@@ -21,7 +21,7 @@ import scala.language.implicitConversions
 class ArvosanaEmptyLisatietoSpec extends ScalatraFunSuite {
   test("query should return 200") {
     implicit val system = ActorSystem()
-    implicit val database = Database.forURL(ItPostgres.getEndpointURL)
+    implicit val database = ItPostgres.getDatabase
     implicit val security = new TestSecurity
     val mockConfig: MockConfig = new MockConfig
 

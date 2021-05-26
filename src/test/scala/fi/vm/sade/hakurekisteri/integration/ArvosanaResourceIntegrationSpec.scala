@@ -35,7 +35,11 @@ class ArvosanaResourceIntegrationSpec
 
   implicit val database
     : _root_.fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.backend.DatabaseDef =
-    Database.forURL(ItPostgres.getEndpointURL)
+    Database.forURL(
+      ItPostgres.getEndpointURL,
+      ItPostgres.container.username,
+      ItPostgres.container.password
+    )
 
   def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset", 201)
   def postArvosana(

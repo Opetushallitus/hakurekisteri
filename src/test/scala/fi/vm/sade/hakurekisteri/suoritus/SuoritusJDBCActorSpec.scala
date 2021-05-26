@@ -44,7 +44,7 @@ class SuoritusJDBCActorSpec
     vahv = false
   )
 
-  implicit val database = Database.forURL(ItPostgres.getEndpointURL)
+  implicit val database = ItPostgres.getDatabase
   implicit val system = ActorSystem("test-jdbc")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)

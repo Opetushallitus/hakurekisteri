@@ -62,7 +62,7 @@ trait HakurekisteriContainer
 
   override def beforeAll(): Unit = {
     system = ActorSystem()
-    database = Database.forURL(ItPostgres.getEndpointURL)
+    database = ItPostgres.getDatabase
 
     suoritusJournal =
       new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)

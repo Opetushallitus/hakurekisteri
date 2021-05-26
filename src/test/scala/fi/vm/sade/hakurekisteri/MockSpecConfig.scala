@@ -1,23 +1,21 @@
 package fi.vm.sade.hakurekisteri
 
-import java.nio.file.Paths
-
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.tools.ItPostgres
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import support.SureDbLoggingConfig
 
+import java.nio.file.Paths
 import scala.concurrent.duration._
 
-class MockConfig extends Config {
+class MockSpecConfig(container: PostgreSQLContainer) extends Config {
   def mockMode = true
   log.info("Using mock config")
-  val dbPort = ItPostgres.port
-  override val databaseUrl = ItPostgres.getEndpointURL
+  val dbPort = container.exposedPorts.head
+  override val databaseUrl = container.jdbcUrl
   override val databaseHost = "localhost"
   override val databasePort = dbPort.toString
-  override val postgresUser =
-    ItPostgres.container.username //properties.getOrElse("suoritusrekisteri.db.user", "postgres")
-  override val postgresPassword = ItPostgres.container.password
+  override val postgresUser = container.username
+  override val postgresPassword = container.password
   override val archiveNonCurrentAfterDays = "180"
   override val archiveBatchSize = "3"
 
