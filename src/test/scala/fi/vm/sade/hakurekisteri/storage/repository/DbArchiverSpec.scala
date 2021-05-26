@@ -12,7 +12,7 @@ import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.sql.SqlAction
-import support.{Archiver, DbJournals}
+import support.DbJournals
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}

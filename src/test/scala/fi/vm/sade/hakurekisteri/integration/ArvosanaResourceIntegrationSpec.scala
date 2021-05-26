@@ -33,13 +33,7 @@ class ArvosanaResourceIntegrationSpec
   val tyynenPeruskoulu =
     SuoritusMock.getSuoritusByHenkiloKomoTila(tyynenOid, peruskouluKomo, "KESKEN")
 
-  implicit val database
-    : _root_.fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.backend.DatabaseDef =
-    Database.forURL(
-      ItPostgres.getEndpointURL,
-      ItPostgres.container.username,
-      ItPostgres.container.password
-    )
+  implicit val database = ItPostgres.getDatabase
 
   def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset", 201)
   def postArvosana(

@@ -21,7 +21,7 @@ import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.scalatest.concurrent.{AsyncAssertions, Waiters}
+import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}

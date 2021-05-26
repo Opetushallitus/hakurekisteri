@@ -10,8 +10,6 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.concurrent.Future
-
 class HakijaSpec extends FlatSpec with Matchers {
 
   object OppilaitosX

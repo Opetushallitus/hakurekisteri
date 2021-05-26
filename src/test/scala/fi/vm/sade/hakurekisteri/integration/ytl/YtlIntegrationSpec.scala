@@ -4,7 +4,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipInputStream
 
-import akka.actor.Status.{Failure, Success}
+import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -18,12 +18,11 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HetuPersonOid
 }
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.{Config, MockConfig}
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.scalaproperties.OphProperties
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, LocalDateTime}
