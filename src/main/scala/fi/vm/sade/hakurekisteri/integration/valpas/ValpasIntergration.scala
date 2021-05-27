@@ -131,6 +131,7 @@ case class ValpasHakemus(
   hakuNimi: Map[String, String],
   email: String,
   matkapuhelin: String,
+  maa: String,
   postinumero: String,
   lahiosoite: String,
   postitoimipaikka: String,
@@ -407,6 +408,7 @@ class ValpasIntergration(
             .flatMap(kv => kv._2.map(k => (kv._1, k))),
           hakuOid = a.applicationSystemId,
           matkapuhelin = a.matkapuhelin,
+          maa = a.asuinmaa,
           postinumero = a.postinumero,
           lahiosoite = a.lahiosoite,
           postitoimipaikka = a.postitoimipaikka.getOrElse(""),
@@ -445,6 +447,7 @@ class ValpasIntergration(
           matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
+          maa = h.henkilotiedot.flatMap(_.asuinmaa).getOrElse(""),
           postinumero = h.henkilotiedot
             .flatMap(_.Postinumero)
             .orElse(h.henkilotiedot.flatMap(_.postinumeroUlkomaa))
