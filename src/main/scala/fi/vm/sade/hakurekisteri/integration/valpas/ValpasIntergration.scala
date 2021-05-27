@@ -131,7 +131,7 @@ case class ValpasHakemus(
   hakuNimi: Map[String, String],
   email: String,
   matkapuhelin: String,
-  maa: String,
+  maa: ValpasKoodi,
   postinumero: String,
   lahiosoite: String,
   postitoimipaikka: String,
@@ -225,6 +225,7 @@ class ValpasIntergration(
     hakutapa: KoodistoKoodiArvot,
     hakutyyppi: KoodistoKoodiArvot,
     koulutusKoodit: KoodistoKoodiArvot,
+    maaKoodit: KoodistoKoodiArvot,
     postiKoodit: KoodistoKoodiArvot
   ): ValpasHakemus = {
 
@@ -240,6 +241,8 @@ class ValpasIntergration(
       )
       k
     }
+    def maaKoodiToValpasKoodi(kk: String): ValpasKoodi =
+      uriToValpasKoodi(s"maatjavaltiot2_$kk#1", maaKoodit)
     def koulutusKoodiToValpasKoodi(kk: String): ValpasKoodi =
       uriToValpasKoodi(s"koulutus_$kk#1", koulutusKoodit)
     def hakutoiveWithOidToValpasHakutoive(
@@ -408,7 +411,7 @@ class ValpasIntergration(
             .flatMap(kv => kv._2.map(k => (kv._1, k))),
           hakuOid = a.applicationSystemId,
           matkapuhelin = a.matkapuhelin,
-          maa = a.asuinmaa,
+          maa = maaKoodiToValpasKoodi(a.asuinmaa),
           postinumero = a.postinumero,
           lahiosoite = a.lahiosoite,
           postitoimipaikka = a.postitoimipaikka.getOrElse(""),
@@ -447,7 +450,7 @@ class ValpasIntergration(
           matkapuhelin = h.henkilotiedot.flatMap(_.matkapuhelinnumero1).get,
           hakuOid = h.applicationSystemId,
           email = h.henkilotiedot.flatMap(h => h.Sähköposti).get,
-          maa = h.henkilotiedot.flatMap(_.asuinmaa).getOrElse(""),
+          maa = maaKoodiToValpasKoodi(h.henkilotiedot.flatMap(_.asuinmaa).getOrElse("")),
           postinumero = h.henkilotiedot
             .flatMap(_.Postinumero)
             .orElse(h.henkilotiedot.flatMap(_.postinumeroUlkomaa))
@@ -528,6 +531,8 @@ class ValpasIntergration(
       (koodistoActor.actor ? GetKoodistoKoodiArvot("koulutus")).mapTo[KoodistoKoodiArvot]
     val posti =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("posti")).mapTo[KoodistoKoodiArvot]
+    val maatjavaltiot2 =
+      (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2")).mapTo[KoodistoKoodiArvot]
     val pisteet: Future[Seq[PistetietoWrapper]] =
       pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
 
@@ -549,6 +554,7 @@ class ValpasIntergration(
       hakutyyppi: KoodistoKoodiArvot <- SlowFutureLogger("hakutyyppi", hakutyyppi)
       koulutus: KoodistoKoodiArvot <- SlowFutureLogger("koulutus", koulutus)
       posti: KoodistoKoodiArvot <- SlowFutureLogger("posti", posti)
+      maatjavaltiot2: KoodistoKoodiArvot <- SlowFutureLogger("maatjavaltiot2", maatjavaltiot2)
       oidToOrganisaatio <- SlowFutureLogger("organisaatio", organisaatiot)
       osallistumiset: Map[String, Seq[ValintalaskentaOsallistuminen]] <- SlowFutureLogger(
         "osallistumiset",
@@ -576,6 +582,7 @@ class ValpasIntergration(
             hakutapa,
             hakutyyppi,
             koulutus,
+            maatjavaltiot2,
             posti
           )
         )
