@@ -15,8 +15,11 @@ object ItPostgres extends Logging {
 
   val container: PostgreSQLContainer =
     PostgreSQLContainer.Def(databaseName = "suoritusrekisteri").createContainer()
+  container.configure { c =>
+    c.withPrivilegedMode(true)
+    c.withInitScript("database/init.sql")
+  }
   private val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
-  container.container.withInitScript("database/init.sql")
   container.start()
   var port: Int = getPortNumber()
   lazy val log: Logger = LoggerFactory.getLogger(getClass)
