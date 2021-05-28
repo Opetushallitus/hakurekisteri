@@ -353,14 +353,15 @@ class KoskiSuoritusArvosanaParser {
         getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
       val suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
       var suoritusTila: String = opiskeluoikeus.tila.determineSuoritusTila
-
       val lasnaDate = (suoritus.alkamispäivä, tilat.find(_.tila.koodiarvo == "lasna")) match {
         case (Some(a), _)     => parseLocalDate(a)
         case (None, Some(kt)) => parseLocalDate(kt.alku)
         case (_, _)           => valmistuminen.valmistumisPaiva
       }
       val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
-      val luokkataso: Option[String] = suoritus.getLuokkataso(opiskeluoikeus.isAikuistenPerusopetus)
+      val luokkataso: Option[String] =
+        if (opiskeluoikeus.isKotiopetuslainen) Some("kotiopetus9")
+        else suoritus.getLuokkataso(opiskeluoikeus.isAikuistenPerusopetus)
 
       val vuosiluokkiinSitomatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
         case Some(x) => {
@@ -614,7 +615,6 @@ class KoskiSuoritusArvosanaParser {
           Some(suoritus.koulutusmoduuli.tunniste.get.koodiarvo)
         case _ => None
       }
-
       if (komoOid != Oids.DUMMYOID && valmistuminen.vuosi > 1970) {
         val suoritus = SuoritusArvosanat(
           VirallinenSuoritus(
@@ -667,9 +667,14 @@ class KoskiSuoritusArvosanaParser {
     //Postprocessing
     result = postprocessPeruskouluData(result)
     result = postProcessPOOData(result) //POO as in peruskoulun oppiaineen oppimäärä
-
+    if (opiskeluoikeus.isKotiopetuslainen) {
+      result = result.filter(sa =>
+        sa.suoritus.tila.equals("VALMIS")
+          && sa.suoritus.valmistuminen.isBefore(KoskiUtil.deadlineDate)
+      )
+    }
     //todo this doens't have to be a sort of post-processing for the result list, could be done prior with koski data
-    if (isPerusopetus && !hasNinthGrade) {
+    if (isPerusopetus && !(hasNinthGrade || opiskeluoikeus.isKotiopetuslainen)) {
       Seq()
     } else {
       result
@@ -742,10 +747,14 @@ class KoskiSuoritusArvosanaParser {
       var useLasnaDate = suoritusArvosanat.lasnadate
 
       val isNinthGrade = result.exists(_.luokkataso.getOrElse("").startsWith("9"))
+      val isKotiopetus = result.exists(_.luokkataso.getOrElse("").equals("kotiopetus9"))
       val isPerusopetus = useSuoritus.komo.equals(Oids.perusopetusKomoOid)
 
-      if (isNinthGrade && isPerusopetus) {
-        useLuokka = result.find(_.luokkataso.getOrElse("").startsWith("9")).head.luokka
+      if ((isNinthGrade || isKotiopetus) && isPerusopetus) {
+        useLuokka = result
+          .find(_.luokkataso.getOrElse("").startsWith("9"))
+          .map(l => l.luokka)
+          .getOrElse("kotiopetus")
         useLuokkaAste = Some("9")
         useLasnaDate = result
           .find(_.suoritus match {

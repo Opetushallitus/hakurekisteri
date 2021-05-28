@@ -38,6 +38,11 @@ case class KoskiOpiskeluoikeus(
 
   def isAikuistenPerusopetus: Boolean =
     tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
+
+  def isKotiopetuslainen: Boolean =
+    lisätiedot.exists(lt =>
+      lt.kotiopetusjaksot.getOrElse(List.empty).exists(koj => koj.alku.nonEmpty)
+    )
 }
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
@@ -234,8 +239,11 @@ case class KoskiKieli(koodiarvo: String, koodistoUri: String)
 case class KoskiLisatiedot(
   erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos], //legacy
   erityisenTuenPäätökset: Option[List[KoskiErityisenTuenPaatos]], //new format
-  vuosiluokkiinSitoutumatonOpetus: Option[Boolean]
+  vuosiluokkiinSitoutumatonOpetus: Option[Boolean],
+  kotiopetusjaksot: Option[List[Kotiopetusjakso]]
 )
+
+case class Kotiopetusjakso(alku: String, loppu: Option[String])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 
