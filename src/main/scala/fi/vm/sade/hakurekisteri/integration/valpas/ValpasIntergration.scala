@@ -246,7 +246,7 @@ class ValpasIntergration(
       if (maaKoodit2.arvoToNimi.contains(s"maatjavaltiot2_$kk"))
         uriToValpasKoodi(s"maatjavaltiot2_$kk#1", maaKoodit2)
       else
-        uriToValpasKoodi(s"maatjavaltiot1_$kk#1", maaKoodit1)
+        uriToValpasKoodi(s"maatjavaltiot1_${kk.toLowerCase}#1", maaKoodit1)
     def koulutusKoodiToValpasKoodi(kk: String): ValpasKoodi =
       uriToValpasKoodi(s"koulutus_$kk#1", koulutusKoodit)
     def hakutoiveWithOidToValpasHakutoive(
