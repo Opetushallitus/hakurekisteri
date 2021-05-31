@@ -243,8 +243,9 @@ class ValpasIntergration(
       k
     }
     def maaKoodiToValpasKoodi(kk: String): ValpasKoodi =
-      if(maaKoodit2.arvoToNimi.contains(s"maatjavaltiot2_$kk"))
-      uriToValpasKoodi(s"maatjavaltiot2_$kk#1", maaKoodit2) else
+      if (maaKoodit2.arvoToNimi.contains(s"maatjavaltiot2_$kk"))
+        uriToValpasKoodi(s"maatjavaltiot2_$kk#1", maaKoodit2)
+      else
         uriToValpasKoodi(s"maatjavaltiot1_$kk#1", maaKoodit1)
     def koulutusKoodiToValpasKoodi(kk: String): ValpasKoodi =
       uriToValpasKoodi(s"koulutus_$kk#1", koulutusKoodit)
