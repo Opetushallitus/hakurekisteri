@@ -230,9 +230,8 @@ class ValpasIntergration(
     postiKoodit: KoodistoKoodiArvot
   ): ValpasHakemus = {
 
-    def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
+    def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot, arvo: String): ValpasKoodi = {
       val Array(koodi, versio) = uri.split("#")
-      val Array(_, arvo) = koodi.split("_")
       val k = ValpasKoodi(
         koodiarvo = arvo,
         nimi = koodisto.arvoToNimi(koodi),
@@ -242,13 +241,18 @@ class ValpasIntergration(
       )
       k
     }
-    def maaKoodiToValpasKoodi(kk: String): ValpasKoodi =
-      if (maaKoodit2.arvoToNimi.contains(s"maatjavaltiot2_$kk"))
-        uriToValpasKoodi(s"maatjavaltiot2_$kk#1", maaKoodit2)
+    def uriToValpasKoodiWithoutArvo(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
+      val Array(koodi, versio) = uri.split("#")
+      val Array(_, arvo) = uri.split("_")
+      uriToValpasKoodi(uri, koodisto, arvo.toUpperCase())
+    }
+    def maaKoodiToValpasKoodi(arvo: String): ValpasKoodi =
+      if (maaKoodit2.arvoToNimi.contains(s"maatjavaltiot2_${arvo.toLowerCase}"))
+        uriToValpasKoodi(s"maatjavaltiot2_${arvo.toLowerCase}#1", maaKoodit2, arvo)
       else
-        uriToValpasKoodi(s"maatjavaltiot1_${kk.toLowerCase}#1", maaKoodit1)
-    def koulutusKoodiToValpasKoodi(kk: String): ValpasKoodi =
-      uriToValpasKoodi(s"koulutus_$kk#1", koulutusKoodit)
+        uriToValpasKoodi(s"maatjavaltiot1_${arvo.toLowerCase}#1", maaKoodit1, arvo)
+    def koulutusKoodiToValpasKoodi(arvo: String): ValpasKoodi =
+      uriToValpasKoodi(s"koulutus_${arvo.toLowerCase}#1", koulutusKoodit, arvo)
     def hakutoiveWithOidToValpasHakutoive(
       attachmentsChecked: Option[Boolean],
       hakukohdeOid: String,
@@ -402,8 +406,8 @@ class ValpasIntergration(
         ValpasHakemus(
           aktiivinenHaku = haku.isActive,
           hakemusUrl = OphUrlProperties.url("ataru.hakemus", a.oid),
-          hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
-          hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
+          hakutapa = uriToValpasKoodiWithoutArvo(haku.hakutapaUri, hakutapa),
+          hakutyyppi = uriToValpasKoodiWithoutArvo(haku.hakutyyppiUri, hakutyyppi),
           huoltajanNimi = None,
           huoltajanPuhelinnumero = None,
           huoltajanSahkoposti = None,
@@ -439,8 +443,8 @@ class ValpasIntergration(
         ValpasHakemus(
           aktiivinenHaku = haku.isActive,
           hakemusUrl = OphUrlProperties.url("haku-app.hakemus", h.oid),
-          hakutapa = uriToValpasKoodi(haku.hakutapaUri, hakutapa),
-          hakutyyppi = uriToValpasKoodi(haku.hakutyyppiUri, hakutyyppi),
+          hakutapa = uriToValpasKoodiWithoutArvo(haku.hakutapaUri, hakutapa),
+          hakutyyppi = uriToValpasKoodiWithoutArvo(haku.hakutyyppiUri, hakutyyppi),
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),
