@@ -42,6 +42,7 @@ case class KoskiOpiskeluoikeus(
   def isKotiopetuslainen: Boolean =
     lisätiedot.exists(lt =>
       lt.kotiopetusjaksot.getOrElse(List.empty).exists(koj => koj.alku.nonEmpty)
+        || lt.kotiopetus.toList.exists(koj => koj.alku.nonEmpty)
     )
 }
 
@@ -240,7 +241,8 @@ case class KoskiLisatiedot(
   erityisenTuenPäätös: Option[KoskiErityisenTuenPaatos], //legacy
   erityisenTuenPäätökset: Option[List[KoskiErityisenTuenPaatos]], //new format
   vuosiluokkiinSitoutumatonOpetus: Option[Boolean],
-  kotiopetusjaksot: Option[List[Kotiopetusjakso]]
+  kotiopetusjaksot: Option[List[Kotiopetusjakso]],
+  kotiopetus: Option[Kotiopetusjakso] //Support for legacy Koski format
 )
 
 case class Kotiopetusjakso(alku: String, loppu: Option[String])
