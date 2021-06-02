@@ -235,7 +235,7 @@ class ValpasIntergration(
         koodiarvo = arvo,
         nimi = koodisto.uriToNimi(uri),
         lyhytNimi = koodisto.uriToLyhytNimi(uri),
-        koodistoUri = uri,
+        koodistoUri = koodisto.koodistoUri,
         koodistoVersio = koodisto.arvoToVersio(arvo)
       )
     }
