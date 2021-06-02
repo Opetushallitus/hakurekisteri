@@ -1081,7 +1081,8 @@ case class FullHakemus(
   received: Option[Long]
 ) extends Resource[String, FullHakemus]
     with Identified[String]
-    with HakijaHakemus {
+    with HakijaHakemus
+    with Serializable {
 
   // Resource stuff
   override def identify(identity: String): FullHakemus with Identified[String] = this
@@ -1204,7 +1205,8 @@ case class AtaruHakemus(
   liitteetTarkastettu: Map[String, Option[Boolean]],
   kkPohjakoulutus: List[String],
   korkeakoulututkintoVuosi: Option[Int]
-) extends HakijaHakemus {
+) extends HakijaHakemus
+    with Serializable {
 
   val hetu: Option[String] = henkilo.hetu
   val stateValid: Boolean = true

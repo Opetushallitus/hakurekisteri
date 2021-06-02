@@ -167,7 +167,7 @@ class HakemusService(
   case class AllHakemukset(
     hakuAppHakemukset: Seq[FullHakemus],
     ataruHakemukset: Seq[AtaruHakemus]
-  ) {}
+  ) extends Serializable {}
 
   private val hakemusCache =
     cacheFactory.getInstance[String, AllHakemukset](
