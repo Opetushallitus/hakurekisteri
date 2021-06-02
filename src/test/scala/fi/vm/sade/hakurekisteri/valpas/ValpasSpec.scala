@@ -8,65 +8,16 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
-import fi.vm.sade.hakurekisteri.integration.haku.{
-  AllHaut,
-  GetHaku,
-  GetHakuOption,
-  Haku,
-  HakuRequest
-}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{
-  Henkilo,
-  HenkiloViite,
-  IOppijaNumeroRekisteri,
-  OppijaNumeroRekisteri
-}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetKoodistoKoodiArvot,
-  Koodi,
-  KoodistoActorRef,
-  KoodistoKoodiArvot
-}
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, GetHakuOption, Haku, HakuRequest}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloViite, IOppijaNumeroRekisteri, OppijaNumeroRekisteri}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, Koodi, KoodistoActor, KoodistoActorRef, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{
-  ChildOids,
-  HttpOrganisaatioActor,
-  Organisaatio,
-  OrganisaatioActorRef,
-  OrganisaatioResponse
-}
-import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
-  PistesyottoService,
-  Pistetieto,
-  PistetietoWrapper
-}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  Hakukohde,
-  HakukohdeOid,
-  HakukohdeQuery,
-  HakukohteenKoulutukset,
-  Hakukohteenkoulutus,
-  Koulutus,
-  RestHaku,
-  TarjontaActorRef,
-  TarjontaResultResponse
-}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  ValintaTulos,
-  ValintaTulosActorRef,
-  VirkailijanValintatulos
-}
-import fi.vm.sade.hakurekisteri.integration.valpas.{
-  ValintalaskentaOsallistuminen,
-  ValpasHakemus,
-  ValpasIntergration,
-  ValpasQuery
-}
-import fi.vm.sade.hakurekisteri.integration.{
-  ActorSystemSupport,
-  OphUrlProperties,
-  VirkailijaRestClient
-}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, HttpOrganisaatioActor, Organisaatio, OrganisaatioActorRef, OrganisaatioResponse}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, Pistetieto, PistetietoWrapper}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeOid, HakukohdeQuery, HakukohteenKoulutukset, Hakukohteenkoulutus, Koulutus, RestHaku, TarjontaActorRef, TarjontaResultResponse}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActorRef, VirkailijanValintatulos}
+import fi.vm.sade.hakurekisteri.integration.valpas.{ValintalaskentaOsallistuminen, ValpasHakemus, ValpasIntergration, ValpasQuery}
+import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, OphUrlProperties, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{UnknownRole, ValpasReadRole}
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.Mockito
@@ -126,18 +77,8 @@ class ValpasSpec
           val koodit = resource[Seq[Koodi]](
             s"/mock-data/koodisto/koodisto_$koodistoUri.json"
           )
-          def koodiToName(k: Koodi): (String, Map[String, String]) = {
-            (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
-          }
-          def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
-            (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
-          }
-          sender ! KoodistoKoodiArvot(
-            koodistoUri,
-            koodit.map(_.koodiArvo),
-            koodit.map(koodiToName).toMap,
-            koodit.map(koodiToLyhytName).toMap
-          )
+          sender !
+            KoodistoActor.kooditToKoodisto(koodistoUri, koodit)
         }
       })))
 
@@ -229,6 +170,7 @@ class ValpasSpec
       ).fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true))
 
       val result = run(v)
+      result.head.hakutapa.koodiarvo should equal("01")
       result.size should equal(1)
     }
   }
