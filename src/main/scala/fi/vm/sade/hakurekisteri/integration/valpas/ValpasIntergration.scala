@@ -473,7 +473,10 @@ class ValpasIntergration(
           postitoimipaikka = h.henkilotiedot
             .flatMap(_.Postinumero)
             .flatMap(postinumero =>
-              postiKoodit.arvoToUri.get(postinumero).flatMap(postiKoodit.uriToNimi.get).flatMap(_.get("fi"))
+              postiKoodit.arvoToUri
+                .get(postinumero)
+                .flatMap(postiKoodit.uriToNimi.get)
+                .flatMap(_.get("fi"))
             )
             .orElse(h.henkilotiedot.flatMap(_.kaupunkiUlkomaa))
             .getOrElse(""),

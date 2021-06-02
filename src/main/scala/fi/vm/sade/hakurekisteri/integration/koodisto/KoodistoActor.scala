@@ -116,9 +116,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     val loader: String => Future[Option[KoodistoKoodiArvot]] = { uri =>
       restClient
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
-        .map(koodit =>
-          KoodistoActor.kooditToKoodisto(koodistoUri, koodit)
-        )
+        .map(koodit => KoodistoActor.kooditToKoodisto(koodistoUri, koodit))
         .map(Some(_))
     }
     koodiArvotCache.get(koodistoUri, loader).map(_.get)
