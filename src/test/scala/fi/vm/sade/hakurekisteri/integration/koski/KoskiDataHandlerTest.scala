@@ -4321,6 +4321,30 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("0")
   }
 
+  it should "save a valmis kotiopetuslainen with legacy kotiopetus format" +
+    " as valmis peruskoulun suoritus even without ysiluokka" in {
+      val json: String =
+        scala.io.Source.fromFile(jsonDir + "valmistunut_kotiopetuslainen_legacy.json").mkString
+      val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+      henkilo should not be null
+      henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+      KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+      Await.result(
+        koskiDatahandler.processHenkilonTiedotKoskesta(
+          henkilo,
+          PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+          KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+        ),
+        5.seconds
+      )
+
+      val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+      opiskelija.head should equal("1")
+      val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+      suoritukset.head should equal("1")
+    }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.komo.contentEquals(Oids.perusopetusKomoOid))
   }
