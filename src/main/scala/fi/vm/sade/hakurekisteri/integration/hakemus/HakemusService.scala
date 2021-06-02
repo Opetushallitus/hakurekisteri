@@ -21,7 +21,9 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
+import org.json4s.jackson.Serialization.write
+import org.json4s.jackson.Serialization.read
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -149,6 +151,8 @@ class HakemusService(
 )(implicit val system: ActorSystem)
     extends IHakemusService {
 
+  implicit val formats = HakurekisteriJsonSupport.format
+
   case class SearchParams(
     aoOids: Seq[String] = null,
     asId: String = null,
@@ -170,10 +174,10 @@ class HakemusService(
   ) extends Serializable {}
 
   private val hakemusCache =
-    cacheFactory.getInstance[String, AllHakemukset](
+    cacheFactory.getInstance[String, String](
       config.integrations.hakemusRefreshTimeHours.hours.toMillis,
       this.getClass,
-      classOf[AllHakemukset],
+      classOf[String],
       "hakuappOrAtaruHakemus"
     )
 
@@ -401,7 +405,7 @@ class HakemusService(
             case f: AtaruHakemus => Some(f)
             case _               => None
           }
-          hakemusCache + (personOid, AllHakemukset(f, a))
+          hakemusCache + (personOid, write(AllHakemukset(f, a)))
         case _ =>
         // dont care
       }
@@ -417,8 +421,11 @@ class HakemusService(
   def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
 
     val cachedHakemukset: Future[Set[Option[AllHakemukset]]] = hakemusCache match {
-      case redis: RedisCache[String, AllHakemukset] =>
-        Future.sequence(personOids.map(redis.get))
+      case redis: RedisCache[String, String] =>
+        def parse(s: Option[String]): Option[AllHakemukset] = {
+          s.map(read[AllHakemukset])
+        }
+        Future.sequence(personOids.map(oid => redis.get(oid).map(parse)))
       case _ =>
         Future.successful(Set.empty[Option[AllHakemukset]])
     }
