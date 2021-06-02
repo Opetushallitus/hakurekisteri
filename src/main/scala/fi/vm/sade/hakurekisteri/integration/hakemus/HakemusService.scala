@@ -167,10 +167,7 @@ class HakemusService(
   case class AllHakemukset(
     hakuAppHakemukset: Seq[FullHakemus],
     ataruHakemukset: Seq[AtaruHakemus]
-  ) {
-
-    def isEmpty: Boolean = hakuAppHakemukset.isEmpty && ataruHakemukset.isEmpty
-  }
+  ) {}
 
   private val hakemusCache =
     cacheFactory.getInstance[String, AllHakemukset](

@@ -134,6 +134,7 @@ case class CreateHenkilo(
   henkiloTyyppi: String
 )
 
+@SerialVersionUID(1)
 case class Henkilo(
   oidHenkilo: String,
   hetu: Option[String],
