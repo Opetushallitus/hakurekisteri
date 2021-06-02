@@ -3,7 +3,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
@@ -69,6 +69,7 @@ import fi.vm.sade.hakurekisteri.integration.{
   VirkailijaRestClient
 }
 import fi.vm.sade.hakurekisteri.rest.support.{UnknownRole, ValpasReadRole}
+import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
@@ -196,6 +197,10 @@ class ValpasSpec
           )
         ),
         oppijaNumeroRekisteri,
+        Config.mockDevConfig,
+        CacheFactory.apply(
+          new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false")
+        )(system),
         150
       )(system)
 

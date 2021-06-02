@@ -3,12 +3,13 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{ActorRef, ActorSystem, Scheduler}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache, RedisCacheFactory}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   IOppijaNumeroRekisteri,
@@ -16,6 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   LinkedHenkiloOids,
   PersonOidsWithAliases
 }
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
@@ -140,6 +142,8 @@ class HakemusService(
   tarjontaActor: TarjontaActorRef,
   organisaatioActor: OrganisaatioActorRef,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
+  config: Config,
+  cacheFactory: CacheFactory,
   pageSize: Int = 400,
   maxOidsChunkSize: Int = 150
 )(implicit val system: ActorSystem)
@@ -158,6 +162,23 @@ class HakemusService(
   logger.info(s"Using page size $pageSize when fetching modified applications from haku-app.")
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
+
+  @SerialVersionUID(1)
+  case class AllHakemukset(
+    hakuAppHakemukset: Seq[FullHakemus],
+    ataruHakemukset: Seq[AtaruHakemus]
+  ) {
+
+    def isEmpty: Boolean = hakuAppHakemukset.isEmpty && ataruHakemukset.isEmpty
+  }
+
+  private val hakemusCache =
+    cacheFactory.getInstance[String, AllHakemukset](
+      config.integrations.hakemusRefreshTimeHours.hours.toMillis,
+      this.getClass,
+      classOf[AllHakemukset],
+      "hakuappOrAtaruHakemus"
+    )
 
   def enrichAtaruHakemukset(
     ataruHakemusDtos: List[AtaruHakemusDto],
@@ -354,7 +375,9 @@ class HakemusService(
     } yield personOidToMasterOidLookup(linkedHenkiloOids)
   }
 
-  def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
+  def hakemuksetForPersonsFromHakuappAndAtaru(
+    personOids: Set[String]
+  ): Future[Seq[HakijaHakemus]] = {
     val hakuAppCall = hakuappRestClient
       .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(
         200,
@@ -369,10 +392,52 @@ class HakemusService(
         modifiedAfter = None
       )
     )
+
+    def updateCache(hakemukset: Seq[HakijaHakemus]): Seq[HakijaHakemus] = {
+      hakemukset.groupBy(_.personOid).foreach {
+        case (Some(personOid), allHakemukset) =>
+          val f: Seq[FullHakemus] = allHakemukset.flatMap {
+            case f: FullHakemus => Some(f)
+            case _              => None
+          }
+          val a: Seq[AtaruHakemus] = allHakemukset.flatMap {
+            case f: AtaruHakemus => Some(f)
+            case _               => None
+          }
+          hakemusCache + (personOid, AllHakemukset(f, a))
+        case _ =>
+        // dont care
+      }
+      hakemukset
+    }
+
     for {
       hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuAppCall
       ataruHakemukset: Seq[HakijaHakemus] <- ataruCall
-    } yield hakuappHakemukset.values.toList.flatten ++ ataruHakemukset
+    } yield updateCache(hakuappHakemukset.values.toList.flatten ++ ataruHakemukset)
+  }
+
+  def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
+
+    val cachedHakemukset: Future[Set[Option[AllHakemukset]]] = hakemusCache match {
+      case redis: RedisCache[String, AllHakemukset] =>
+        Future.sequence(personOids.map(redis.get))
+      case _ =>
+        Future.successful(Set.empty[Option[AllHakemukset]])
+    }
+
+    for {
+      cachedHakemukset: Set[Option[AllHakemukset]] <- cachedHakemukset
+      foundHakemukset: Seq[HakijaHakemus] <- Future.successful(
+        cachedHakemukset.toSeq.flatMap {
+          case Some(all) => all.ataruHakemukset ++ all.hakuAppHakemukset
+          case None      => Seq.empty
+        }
+      )
+      missedHakemukset <- hakemuksetForPersonsFromHakuappAndAtaru(
+        personOids -- foundHakemukset.flatMap(_.personOid).toSet
+      )
+    } yield foundHakemukset ++ missedHakemukset
   }
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {

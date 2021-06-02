@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
@@ -56,7 +57,9 @@ class KkHakijaServiceSpec
     ataruClient,
     tarjontaMock,
     organisaatioMock,
-    MockOppijaNumeroRekisteri
+    MockOppijaNumeroRekisteri,
+    Config.mockDevConfig,
+    MockCacheFactory.get()
   )
 
   private val haku1 = RestHaku(
