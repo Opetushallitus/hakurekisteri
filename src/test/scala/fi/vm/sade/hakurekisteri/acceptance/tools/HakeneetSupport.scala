@@ -977,6 +977,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         sender ! Some(
           Koodi(
             q.koodiUri.split("_").last.split("#").head.toUpperCase,
+            1,
             q.koodiUri,
             Koodisto(q.koodistoUri),
             Seq(KoodiMetadata(q.koodiUri.capitalize, "FI", "FIN"))
@@ -987,6 +988,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
           case "oppiaineetyleissivistava" =>
             sender ! KoodistoKoodiArvot(
               koodistoUri = "oppiaineetyleissivistava",
+              Map.empty,
               arvot = Seq(
                 "AI",
                 "A1",
@@ -1018,12 +1020,17 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
                 "YH"
               ),
               Map.empty,
+              Map.empty,
+              Map.empty,
               Map.empty
             )
           case "kieli" =>
             sender ! KoodistoKoodiArvot(
               koodistoUri = "kieli",
+              Map.empty,
               arvot = Seq("FI", "SV", "EN"),
+              Map.empty,
+              Map.empty,
               Map.empty,
               Map.empty
             )

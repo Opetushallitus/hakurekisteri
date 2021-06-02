@@ -35,9 +35,9 @@ class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar
   val cacheFactory = MockCacheFactory.get
 
   val mockRestClient = mock[VirkailijaRestClient]
-  val mockKoodi = Koodi(koodiArvo, koodiUri, Koodisto(koodisto), null)
+  val mockKoodi = Koodi(koodiArvo, 1, koodiUri, Koodisto(koodisto), null)
   val mockRinnasteinen =
-    Koodi(rinnasteinenArvo, rinnasteinenUri, Koodisto(rinnasteinenKoodisto), null)
+    Koodi(rinnasteinenArvo, 1, rinnasteinenUri, Koodisto(rinnasteinenKoodisto), null)
   val koodistoActor = TestActorRef(
     new KoodistoActor(mockRestClient, new MockConfig(), cacheFactory)
   ).underlyingActor

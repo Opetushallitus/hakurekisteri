@@ -229,30 +229,33 @@ class ValpasIntergration(
     maaKoodit2: KoodistoKoodiArvot,
     postiKoodit: KoodistoKoodiArvot
   ): ValpasHakemus = {
-
-    def uriToValpasKoodi(uri: String, koodisto: KoodistoKoodiArvot, arvo: String): ValpasKoodi = {
-      val Array(koodi, versio) = uri.split("#")
-      val k = ValpasKoodi(
+    def arvoToValpasKoodi(arvo: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
+      val uri = koodisto.arvoToUri(arvo)
+      ValpasKoodi(
         koodiarvo = arvo,
-        nimi = koodisto.arvoToNimi(koodi),
-        lyhytNimi = koodisto.arvoToLyhytNimi(koodi),
+        nimi = koodisto.uriToNimi(uri),
+        lyhytNimi = koodisto.uriToLyhytNimi(uri),
         koodistoUri = koodisto.koodistoUri,
-        koodistoVersio = versio.toInt
+        koodistoVersio = koodisto.arvoToVersio(arvo)
       )
-      k
     }
     def uriToValpasKoodiWithoutArvo(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
       val Array(koodi, versio) = uri.split("#")
-      val Array(_, arvo) = uri.split("_")
-      uriToValpasKoodi(uri, koodisto, arvo.toUpperCase())
+      ValpasKoodi(
+        koodiarvo = koodisto.uriToArvo(koodi),
+        nimi = koodisto.uriToNimi(koodi),
+        lyhytNimi = koodisto.uriToLyhytNimi(koodi),
+        koodistoUri = koodisto.koodistoUri,
+        koodistoVersio = versio.toInt
+      )
     }
     def maaKoodiToValpasKoodi(arvo: String): ValpasKoodi =
-      if (maaKoodit2.arvoToNimi.contains(s"maatjavaltiot2_${arvo.toLowerCase}"))
-        uriToValpasKoodi(s"maatjavaltiot2_${arvo.toLowerCase}#1", maaKoodit2, arvo)
+      if (maaKoodit2.arvoToUri.contains(arvo))
+        arvoToValpasKoodi(arvo, maaKoodit2)
       else
-        uriToValpasKoodi(s"maatjavaltiot1_${arvo.toLowerCase}#1", maaKoodit1, arvo)
+        arvoToValpasKoodi(arvo, maaKoodit1)
     def koulutusKoodiToValpasKoodi(arvo: String): ValpasKoodi =
-      uriToValpasKoodi(s"koulutus_${arvo.toLowerCase}#1", koulutusKoodit, arvo)
+      arvoToValpasKoodi(arvo, koulutusKoodit)
     def hakutoiveWithOidToValpasHakutoive(
       attachmentsChecked: Option[Boolean],
       hakukohdeOid: String,
@@ -470,7 +473,10 @@ class ValpasIntergration(
           postitoimipaikka = h.henkilotiedot
             .flatMap(_.Postinumero)
             .flatMap(postinumero =>
-              postiKoodit.arvoToNimi.get(s"posti_$postinumero").flatMap(_.get("fi"))
+              postiKoodit.arvoToUri
+                .get(postinumero)
+                .flatMap(postiKoodit.uriToNimi.get)
+                .flatMap(_.get("fi"))
             )
             .orElse(h.henkilotiedot.flatMap(_.kaupunkiUlkomaa))
             .getOrElse(""),

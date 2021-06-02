@@ -24,6 +24,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   Koodi,
+  KoodistoActor,
   KoodistoActorRef,
   KoodistoKoodiArvot
 }
@@ -126,18 +127,8 @@ class ValpasSpec
           val koodit = resource[Seq[Koodi]](
             s"/mock-data/koodisto/koodisto_$koodistoUri.json"
           )
-          def koodiToName(k: Koodi): (String, Map[String, String]) = {
-            (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
-          }
-          def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
-            (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
-          }
-          sender ! KoodistoKoodiArvot(
-            koodistoUri,
-            koodit.map(_.koodiArvo),
-            koodit.map(koodiToName).toMap,
-            koodit.map(koodiToLyhytName).toMap
-          )
+          sender !
+            KoodistoActor.kooditToKoodisto(koodistoUri, koodit)
         }
       })))
 
@@ -229,6 +220,7 @@ class ValpasSpec
       ).fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true))
 
       val result = run(v)
+      result.head.hakutapa.koodiarvo should equal("01")
       result.size should equal(1)
     }
   }

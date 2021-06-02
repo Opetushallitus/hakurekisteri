@@ -9,6 +9,7 @@ class MockedKoodistoActor extends Actor {
       case "oppiaineetyleissivistava" =>
         sender ! KoodistoKoodiArvot(
           koodistoUri = "oppiaineetyleissivistava",
+          Map.empty,
           arvot = Seq(
             "AI",
             "A1",
@@ -40,12 +41,17 @@ class MockedKoodistoActor extends Actor {
             "YH"
           ),
           Map.empty,
+          Map.empty,
+          Map.empty,
           Map.empty
         )
       case "kieli" =>
         sender ! KoodistoKoodiArvot(
           koodistoUri = "kieli",
+          Map.empty,
           arvot = Seq("FI", "SV", "EN"),
+          Map.empty,
+          Map.empty,
           Map.empty,
           Map.empty
         )

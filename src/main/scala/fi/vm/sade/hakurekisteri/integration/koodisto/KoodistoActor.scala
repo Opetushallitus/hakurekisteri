@@ -26,6 +26,7 @@ case class Koodisto(koodistoUri: String)
 case class KoodiMetadata(nimi: String, kieli: String, lyhytNimi: String)
 @SerialVersionUID(1) case class Koodi(
   koodiArvo: String,
+  versio: Int,
   koodiUri: String,
   koodisto: Koodisto,
   metadata: Seq[KoodiMetadata]
@@ -36,11 +37,34 @@ case class GetKoodi(koodistoUri: String, koodiUri: String)
 
 @SerialVersionUID(1) case class KoodistoKoodiArvot(
   koodistoUri: String,
+  arvoToVersio: Map[String, Int],
   arvot: Seq[String],
-  arvoToNimi: Map[String, Map[String, String]],
-  arvoToLyhytNimi: Map[String, Map[String, String]]
+  arvoToUri: Map[String, String],
+  uriToArvo: Map[String, String],
+  uriToNimi: Map[String, Map[String, String]],
+  uriToLyhytNimi: Map[String, Map[String, String]]
 )
 case class GetKoodistoKoodiArvot(koodistoUri: String)
+
+object KoodistoActor {
+  def koodiToName(k: Koodi): (String, Map[String, String]) = {
+    (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
+  }
+  def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
+    (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
+  }
+  def kooditToKoodisto(koodistoUri: String, koodit: Seq[Koodi]): KoodistoKoodiArvot =
+    KoodistoKoodiArvot(
+      koodistoUri,
+      koodit.map(koodi => (koodi.koodiArvo, koodi.versio)).toMap,
+      koodit.map(_.koodiArvo),
+      koodit.map(koodi => (koodi.koodiArvo, koodi.koodiUri)).toMap,
+      koodit.map(koodi => (koodi.koodiUri, koodi.koodiArvo)).toMap,
+      koodit.map(koodiToName).toMap,
+      koodit.map(koodiToLyhytName).toMap
+    )
+
+}
 
 class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFactory: CacheFactory)
     extends Actor
@@ -92,14 +116,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     val loader: String => Future[Option[KoodistoKoodiArvot]] = { uri =>
       restClient
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
-        .map(koodit =>
-          KoodistoKoodiArvot(
-            koodistoUri,
-            koodit.map(_.koodiArvo),
-            koodit.map(koodiToName).toMap,
-            koodit.map(koodiToLyhytName).toMap
-          )
-        )
+        .map(koodit => KoodistoActor.kooditToKoodisto(koodistoUri, koodit))
         .map(Some(_))
     }
     koodiArvotCache.get(koodistoUri, loader).map(_.get)
@@ -177,6 +194,7 @@ class MockKoodistoActor extends Actor {
       case "oppiaineetyleissivistava" =>
         sender ! KoodistoKoodiArvot(
           koodistoUri = "oppiaineetyleissivistava",
+          Map.empty,
           arvot = Seq(
             "AI",
             "A1",
@@ -208,12 +226,17 @@ class MockKoodistoActor extends Actor {
             "YH"
           ),
           Map.empty,
+          Map.empty,
+          Map.empty,
           Map.empty
         )
       case "kieli" =>
         sender ! KoodistoKoodiArvot(
           koodistoUri = "kieli",
+          Map.empty,
           arvot = Seq("FI", "SV", "EN"),
+          Map.empty,
+          Map.empty,
           Map.empty,
           Map.empty
         )
