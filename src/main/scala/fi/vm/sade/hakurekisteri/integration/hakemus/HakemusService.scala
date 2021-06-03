@@ -25,6 +25,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import org.json4s.jackson.Serialization.write
 import org.json4s.jackson.Serialization.read
 
+import scala.collection.immutable
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -150,8 +151,6 @@ class HakemusService(
   maxOidsChunkSize: Int = 150
 )(implicit val system: ActorSystem)
     extends IHakemusService {
-
-  implicit val formats = HakurekisteriJsonSupport.format
 
   case class SearchParams(
     aoOids: Seq[String] = null,
@@ -376,6 +375,8 @@ class HakemusService(
     } yield personOidToMasterOidLookup(linkedHenkiloOids)
   }
 
+  implicit val formats = HakurekisteriJsonSupport.format
+
   def hakemuksetForPersonsFromHakuappAndAtaru(
     personOids: Set[String]
   ): Future[Seq[HakijaHakemus]] = {
@@ -405,6 +406,7 @@ class HakemusService(
             case f: AtaruHakemus => Some(f)
             case _               => None
           }
+
           hakemusCache + (personOid, write(AllHakemukset(f, a)))
         case _ =>
         // dont care
@@ -412,10 +414,19 @@ class HakemusService(
       hakemukset
     }
 
-    for {
+    val fetchAllHakemukset: Future[List[HakijaHakemus]] = for {
       hakuappHakemukset: Map[String, Seq[FullHakemus]] <- hakuAppCall
       ataruHakemukset: Seq[HakijaHakemus] <- ataruCall
-    } yield updateCache(hakuappHakemukset.values.toList.flatten ++ ataruHakemukset)
+    } yield hakuappHakemukset.values.toList.flatten ++ ataruHakemukset
+
+    fetchAllHakemukset.onComplete {
+      case Success(all) =>
+        updateCache(all)
+      case _ =>
+      //
+    }
+
+    fetchAllHakemukset
   }
 
   def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
