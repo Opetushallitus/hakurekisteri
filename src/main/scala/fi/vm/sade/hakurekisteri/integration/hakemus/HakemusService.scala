@@ -22,8 +22,8 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisa
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, HakukohdeQuery, TarjontaActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
+import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
-import org.json4s.jackson.Serialization.read
 
 import scala.collection.immutable
 import scala.compat.Platform
@@ -434,7 +434,15 @@ class HakemusService(
     val cachedHakemukset: Future[Set[Option[AllHakemukset]]] = hakemusCache match {
       case redis: RedisCache[String, String] =>
         def parse(s: Option[String]): Option[AllHakemukset] = {
-          s.map(read[AllHakemukset])
+          s match {
+            case Some(value) =>
+              val v = JsonMethods.parse(value)
+              val fulls = (v \ "hakuAppHakemukset").extract[Seq[FullHakemus]]
+              val atarus = (v \ "ataruHakemukset").extract[Seq[AtaruHakemus]]
+              Some(AllHakemukset(fulls, atarus))
+            case None =>
+              None
+          }
         }
         Future.sequence(personOids.map(oid => redis.get(oid).map(parse)))
       case _ =>
@@ -449,9 +457,10 @@ class HakemusService(
           case None      => Seq.empty
         }
       )
-      missedHakemukset <- hakemuksetForPersonsFromHakuappAndAtaru(
-        personOids -- foundHakemukset.flatMap(_.personOid).toSet
-      )
+      missedHakemukset <- personOids.diff(foundHakemukset.flatMap(_.personOid).toSet) match {
+        case s if s.isEmpty => Future.successful(Seq.empty[HakijaHakemus])
+        case s              => hakemuksetForPersonsFromHakuappAndAtaru(s)
+      }
     } yield foundHakemukset ++ missedHakemukset
   }
 

@@ -3,10 +3,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache, RedisCacheFactory}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{
   AllHaut,
@@ -25,8 +25,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   Koodi,
   KoodistoActor,
-  KoodistoActorRef,
-  KoodistoKoodiArvot
+  KoodistoActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{
@@ -52,11 +51,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   TarjontaActorRef,
   TarjontaResultResponse
 }
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  ValintaTulos,
-  ValintaTulosActorRef,
-  VirkailijanValintatulos
-}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActorRef}
 import fi.vm.sade.hakurekisteri.integration.valpas.{
   ValintalaskentaOsallistuminen,
   ValpasHakemus,
@@ -68,10 +63,11 @@ import fi.vm.sade.hakurekisteri.integration.{
   OphUrlProperties,
   VirkailijaRestClient
 }
-import fi.vm.sade.hakurekisteri.rest.support.{UnknownRole, ValpasReadRole}
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
-import org.mockito.Mockito
+import org.mockito.{ArgumentCaptor, Mockito}
+import org.hamcrest.core._
+import org.mockito.ArgumentMatchers._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, _}
 
@@ -181,6 +177,15 @@ class ValpasSpec
             ).result
         }
       })))
+
+      val cacheFactory = mock[CacheFactory]
+      val redisCache = mock[RedisCache[String, String]]
+      Mockito.when(redisCache.get(anyString())).thenReturn(Future.successful(None))
+      val captureCacheSet = ArgumentCaptor.forClass(classOf[String])
+      Mockito.when(
+        cacheFactory.getInstance[String, String](any(), any(), any(), any())(any())
+      ) thenReturn redisCache
+
       val hakemusService = new HakemusService(
         hakuAppClient,
         ataruClient,
@@ -198,13 +203,11 @@ class ValpasSpec
         ),
         oppijaNumeroRekisteri,
         Config.mockDevConfig,
-        CacheFactory.apply(
-          new OphProperties().addDefault("suoritusrekisteri.cache.redis.enabled", "false")
-        )(system),
+        cacheFactory,
         150
       )(system)
 
-      val v: Future[Seq[ValpasHakemus]] = new ValpasIntergration(
+      val integration = new ValpasIntergration(
         new PistesyottoService(pisteClient),
         valintalaskentaClient,
         organisaatiot,
@@ -222,11 +225,26 @@ class ValpasSpec
           }
         }))),
         hakemusService
-      ).fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true))
+      )
+
+      val v: Future[Seq[ValpasHakemus]] =
+        integration.fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true))
 
       val result = run(v)
+      Mockito.verify(redisCache).+(anyString(), captureCacheSet.capture())
+
       result.head.hakutapa.koodiarvo should equal("01")
       result.size should equal(1)
+
+      Mockito.reset(redisCache)
+      Mockito
+        .when(redisCache.get(anyString()))
+        .thenReturn(Future.successful(Some(captureCacheSet.getValue)))
+
+      val result2 =
+        run(integration.fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true)))
+      result2.head.hakutapa.koodiarvo should equal("01")
+      result2.size should equal(1)
     }
   }
   private def mockPostPistesyottoClient(post: Seq[String]): VirkailijaRestClient = {
