@@ -26,6 +26,9 @@ object KoskiUtil {
           .format(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
     }
 
+  //Suoritukses that have been saved in the last 6 hours will not be removed even if they seem to be missing from Koski.
+  val koskiSuoritusRemovalCooldownHours = 6
+
   lazy val koskiImporterResourceInUse: Boolean =
     OphUrlProperties.getProperty("suoritusrekisteri.use.koski.importer.resource").toBoolean
   lazy val updateKkHaut: Boolean =
