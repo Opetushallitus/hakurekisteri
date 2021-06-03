@@ -124,10 +124,11 @@ class SuoritusJDBCActor(
   override val dbQuery: PartialFunction[Query[Suoritus], Either[Throwable, DBIOAction[Seq[
     Delta[Suoritus, UUID]
   ], Streaming[Delta[Suoritus, UUID]], All]]] = {
-    case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
-      Right(filter(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen).result)
+    case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen, muokattuEnnen) =>
+      Right(filter(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen, muokattuEnnen).result)
     case SuoritusQueryWithPersonAliases(q, henkilot) =>
-      val baseQuery = filter(None, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen)
+      val baseQuery =
+        filter(None, q.kausi, q.vuosi, q.myontaja, q.komo, q.muokattuJalkeen, q.muokattuEnnen)
       if (henkilot.henkiloOids.isEmpty) {
         Right(baseQuery.result)
       } else {
@@ -148,11 +149,13 @@ class SuoritusJDBCActor(
     vuosi: Option[String],
     myontaja: Option[String],
     komo: Option[String],
-    muokattuJalkeen: Option[DateTime]
+    muokattuJalkeen: Option[DateTime],
+    muokattuEnnen: Option[DateTime]
   ) = {
     all.filter(t =>
       matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
         matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t)
+        && matchMuokattuEnnen(muokattuEnnen)(t)
     )
   }
 
@@ -173,6 +176,12 @@ class SuoritusJDBCActor(
     muokattuJalkeen: Option[DateTime]
   )(s: SuoritusTable): Rep[Boolean] = {
     muokattuJalkeen.fold[Rep[Boolean]](true)(d => s.inserted.asColumnOf[DateTime] >= d)
+  }
+
+  private def matchMuokattuEnnen(
+    muokattuEnnen: Option[DateTime]
+  )(s: SuoritusTable): Rep[Boolean] = {
+    muokattuEnnen.fold[Rep[Boolean]](true)(d => s.inserted.asColumnOf[DateTime] < d)
   }
 
   private def matchKomo(komo: Option[String])(s: SuoritusTable): Rep[Boolean] =

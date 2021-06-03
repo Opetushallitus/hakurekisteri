@@ -11,7 +11,8 @@ case class SuoritusQuery(
   vuosi: Option[String] = None,
   myontaja: Option[String] = None,
   komo: Option[String] = None,
-  override val muokattuJalkeen: Option[DateTime] = None
+  override val muokattuJalkeen: Option[DateTime] = None,
+  muokattuEnnen: Option[DateTime] = None
 ) extends QueryWithPersonOid[Suoritus] {
   override def createQueryWithAliases(personOidsWithAliases: PersonOidsWithAliases) =
     SuoritusQueryWithPersonAliases(this, personOidsWithAliases)
@@ -25,7 +26,8 @@ object SuoritusQuery {
       params.get("vuosi"),
       params.get("myontaja"),
       params.get("komo"),
-      params.get("muokattuJalkeen").map(DateTime.parse)
+      params.get("muokattuJalkeen").map(DateTime.parse),
+      params.get("muokattuEnnen").map(DateTime.parse)
     )
   }
 }

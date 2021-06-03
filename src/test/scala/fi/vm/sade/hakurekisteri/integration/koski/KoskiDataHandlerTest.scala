@@ -1481,6 +1481,15 @@ class KoskiDataHandlerTest
       ),
       5.seconds
     )
+
+    //Fake that the suoritukses were actually saved yesterday
+    val yesterday = System.currentTimeMillis() - (1000 * 60 * 60 * 24)
+    run(
+      database.run(
+        sql"update suoritus set inserted = $yesterday where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+
     val opiskelijat1 = run(
       database.run(
         sql"select henkilo_oid from opiskelija where not deleted and current and henkilo_oid = $henkiloOid"
@@ -1516,6 +1525,13 @@ class KoskiDataHandlerTest
         new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
       ),
       5.seconds
+    )
+
+    //Fake that the suoritukses were actually saved yesterday
+    run(
+      database.run(
+        sql"update suoritus set inserted = $yesterday where henkilo_oid = $henkiloOid".as[String]
+      )
     )
 
     val opiskelijat2 = run(
@@ -1580,20 +1596,55 @@ class KoskiDataHandlerTest
     arvosanat3 should have length 4
   }
 
-  /*it should "store suoritus & set valmistumispäivä to deadline date if suoritus kesken" in {
-    val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+  it should "not delete opiskelija, suoritus and arvosanat not existing in koski anymore" +
+    "if the suoritus was only recently saved" in {
+      var json: String = scala.io.Source.fromFile(jsonDir + "koskidata_1pk_1amm.json").mkString
+      var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+      val henkiloOid: String = henkilo.henkilö.oid.get.toString
 
-    Await.result(koskiDatahandler.processHenkilonTiedotKoskesta(henkilo,PersonOidsWithAliases(henkilo.henkilö.oid.toSet), new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)), 5.seconds)
-    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
-    opiskelijat.size should equal(1)
-    val opiskelija = opiskelijat.head
-    val valmistuminen = run(database.run(sql"select valmistuminen from suoritus where henkilo_oid = $opiskelija".as[String]))
-    valmistuminen should have length 1
-    valmistuminen.head should equal(KoskiUtil.deadlineDate.toString())
-  }*/
+      henkilo should not be null
+      henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+      Await.result(
+        koskiDatahandler.processHenkilonTiedotKoskesta(
+          henkilo,
+          PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+          new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
+        ),
+        5.seconds
+      )
+      val suoritukset1 = run(
+        database.run(
+          sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid"
+            .as[String]
+        )
+      )
+      suoritukset1.size should equal(2)
+
+      json = scala.io.Source.fromFile(jsonDir + "koskidata_1amm.json").mkString
+      henkilo = parse(json).extract[KoskiHenkiloContainer]
+
+      henkilo should not be null
+      henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+      Await.result(
+        koskiDatahandler.processHenkilonTiedotKoskesta(
+          henkilo,
+          PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+          new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
+        ),
+        5.seconds
+      )
+
+      val suoritukset2 = run(
+        database.run(
+          sql"select resource_id from suoritus where not deleted and current and henkilo_oid = $henkiloOid"
+            .as[String]
+        )
+      )
+      suoritukset2.size should equal(3)
+
+    }
 
   it should "Not delete opiskelija, suoritus and arvosanat if source is not koski" in {
     var json: String = scala.io.Source.fromFile(jsonDir + "koskidata_1pk_1amm.json").mkString
@@ -1611,6 +1662,15 @@ class KoskiDataHandlerTest
       ),
       5.seconds
     )
+
+    //Fake that the suoritukses were actually saved yesterday
+    val yesterday = System.currentTimeMillis() - (1000 * 60 * 60 * 24)
+    run(
+      database.run(
+        sql"update suoritus set inserted = $yesterday where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+
     var opiskelijat1 = run(
       database.run(
         sql"select henkilo_oid from opiskelija where not deleted and current and henkilo_oid = $henkiloOid"
