@@ -579,6 +579,10 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     properties.getOrElse("suoritusrekisteri.refresh.time.hours.haku", "6").toInt
   val hakemusRefreshTimeHours =
     properties.getOrElse("suoritusrekisteri.refresh.time.hours.hakemus", "2").toInt
+  val valpasHakemusRefreshTimeHours =
+    properties.getOrElse("suoritusrekisteri.refresh.time.hours.valpas.hakemus", "24").toInt
+  val valpasValintatulosRefreshTimeHours =
+    properties.getOrElse("suoritusrekisteri.refresh.time.hours.valpas.valintatulos", "2").toInt
   val valintatulosRefreshTimeHours =
     properties.getOrElse("suoritusrekisteri.refresh.time.hours.valintatulos", "2").toInt
 

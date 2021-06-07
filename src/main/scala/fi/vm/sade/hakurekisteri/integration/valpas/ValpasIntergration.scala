@@ -506,9 +506,9 @@ class ValpasIntergration(
     def hakemusToValintatulosQuery(h: Set[String]): VirkailijanValintatulos =
       VirkailijanValintatulos(h)
 
-    val valintarekisteri: Future[Map[String, List[ValintaTulos]]] =
+    val valintarekisteri: Future[Map[String, Seq[ValintaTulos]]] =
       (valintaTulos.actor ? hakemusToValintatulosQuery(hakemukset.map(_.oid).toSet))
-        .mapTo[List[ValintaTulos]]
+        .mapTo[Seq[ValintaTulos]]
         .map(_.groupBy(_.hakemusOid))
 
     val hakukohteet: Future[Map[String, Hakukohde]] = Future
@@ -557,7 +557,7 @@ class ValpasIntergration(
         "pisteet",
         pisteet.map(_.groupBy(_.hakemusOID))
       )
-      valintatulokset: Map[String, List[ValintaTulos]] <- SlowFutureLogger(
+      valintatulokset: Map[String, Seq[ValintaTulos]] <- SlowFutureLogger(
         "valintarekisteri",
         valintarekisteri
       )
