@@ -1,17 +1,18 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.ExecutionException
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Status}
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, HakuRequest}
 import fi.vm.sade.hakurekisteri.integration.{
   ExecutorUtil,
   PreconditionFailedException,
   VirkailijaRestClient
 }
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.json4s.jackson.JsonMethods
 import support.TypedActorRef
 
 import scala.concurrent.duration._
@@ -44,6 +45,12 @@ class ValintaTulosActor(
     classOf[SijoitteluTulos],
     "sijoittelu-tulos"
   )
+  private val valintaCache = cacheFactory.getInstance[String, String](
+    cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis),
+    this.getClass,
+    classOf[String],
+    "valintatulos"
+  )
   private val cacheRefreshInterval = config.integrations.valintatulosRefreshTimeHours.hours
   private val cacheRefreshScheduler =
     context.system.scheduler.schedule(1.second, cacheRefreshInterval, hautActor, HakuRequest)
@@ -57,7 +64,7 @@ class ValintaTulosActor(
 
   private def withQueue(haunValintatulosFetchQueue: Map[String, Vector[ActorRef]]): Receive = {
     case VirkailijanValintatulos(hakemusOids) =>
-      hakemuksenTulos(hakemusOids) pipeTo sender
+      hakemuksenTulosCached(hakemusOids) pipeTo sender
 
     case HakemuksenValintatulos(hakuOid, hakemusOid) =>
       hakemuksenTulos(hakuOid, hakemusOid).map(SijoitteluTulos(hakuOid, _)) pipeTo sender
@@ -121,16 +128,45 @@ class ValintaTulosActor(
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           ValintaTulos(hakemusOid, Seq())
       }
-
   }
-  private def hakemuksenTulos(hakemusOids: Set[String]): Future[List[ValintaTulos]] = {
-    client
+
+  implicit val formats = HakurekisteriJsonSupport.format
+  private def hakemuksenTulosCached(hakemusOids: Set[String]): Future[Seq[ValintaTulos]] = {
+    val cachedValintatulokset: Future[Set[Option[ValintaTulos]]] = valintaCache match {
+      case redis: RedisCache[String, String] =>
+        def parse(s: Option[String]): Option[ValintaTulos] = {
+          s match {
+            case Some(value) =>
+              Some(JsonMethods.parse(value).extract[ValintaTulos])
+            case None =>
+              None
+          }
+        }
+        Future.sequence(hakemusOids.map(oid => redis.get(oid).map(parse)))
+      case _ =>
+        Future.successful(Set.empty[Option[ValintaTulos]])
+    }
+
+    def fetchForReal(oids: Set[String]) = client
       .postObject[Set[String], List[ValintaTulos]]("valinta-tulos-service.hakemukset")(
         200,
-        hakemusOids
+        oids
       )
 
+    for {
+      valintatulosCached: Set[Option[ValintaTulos]] <- cachedValintatulokset
+      foundValintatulokset: Seq[ValintaTulos] <- Future.successful(
+        valintatulosCached.toSeq.flatten
+      )
+      missedValintatulokset <- hakemusOids.diff(
+        foundValintatulokset.map(_.hakemusOid).toSet
+      ) match {
+        case s if s.isEmpty => Future.successful(Seq.empty[ValintaTulos])
+        case s              => fetchForReal(s)
+      }
+    } yield foundValintatulokset ++ missedValintatulokset
   }
+
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
     client
       .readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", hakuOid)(200, maxRetries)
