@@ -345,6 +345,7 @@ class KoskiSuoritusArvosanaParser {
     var result = Seq[SuoritusArvosanat]()
     val failedNinthGrade = isFailedNinthGrade(suoritukset)
     var lahdeArvot: Map[String, String] = Map[String, String]()
+    lahdeArvot += ("last modified" -> System.currentTimeMillis().toString)
     for {
       suoritus <- suoritukset
     } yield {
