@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.valpas
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
@@ -51,7 +51,11 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   TarjontaActorRef,
   TarjontaResultResponse
 }
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActorRef}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{
+  ValintaTulos,
+  ValintaTulosActor,
+  ValintaTulosActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.valpas.{
   ValintalaskentaOsallistuminen,
   ValpasHakemus,
@@ -87,7 +91,7 @@ class ValpasSpec
   private implicit val timeout: Timeout = Timeout(timeoutDuration)
 
   private val oppijaOid = "1.2.246.562.24.82344311114"
-
+  private val hakemusOid = "1.2.246.562.11.00000000000000446632"
   behavior of "Valpas Resource"
 
   it should "handle combining Ataru and HakuApp hakemukset with valintatulokset" in {
@@ -207,6 +211,22 @@ class ValpasSpec
         150
       )(system)
 
+      val tulosCacheFactory = mock[CacheFactory]
+      val tulosRedisCache = mock[RedisCache[String, String]]
+      Mockito.when(tulosRedisCache.get(anyString())).thenReturn(Future.successful(None))
+      val tulosCaptureCacheSet = ArgumentCaptor.forClass(classOf[String])
+      Mockito.when(
+        tulosCacheFactory.getInstance[String, String](any(), any(), any(), any())(any())
+      ) thenReturn tulosRedisCache
+
+      val valintatulosClient = mockPostTulosClient(Seq(hakemusOid))(
+        List(
+          resource[ValintaTulos](
+            s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
+          )
+        )
+      )
+
       val integration = new ValpasIntergration(
         new PistesyottoService(pisteClient),
         valintalaskentaClient,
@@ -214,16 +234,18 @@ class ValpasSpec
         koodisto,
         tarjonta,
         haku,
-        ValintaTulosActorRef(system.actorOf(Props(new Actor {
-          override def receive: Actor.Receive = { case _ =>
-            sender !
-              List(
-                resource[ValintaTulos](
-                  s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
-                )
+        ValintaTulosActorRef(
+          system.actorOf(
+            Props(
+              new ValintaTulosActor(
+                haku,
+                valintatulosClient,
+                Config.mockDevConfig,
+                tulosCacheFactory
               )
-          }
-        }))),
+            )
+          )
+        ),
         hakemusService
       )
 
@@ -232,6 +254,7 @@ class ValpasSpec
 
       val result = run(v)
       Mockito.verify(redisCache).+(anyString(), captureCacheSet.capture())
+      Mockito.verify(tulosRedisCache).+(anyString(), tulosCaptureCacheSet.capture())
 
       result.head.hakutapa.koodiarvo should equal("01")
       result.size should equal(1)
@@ -241,10 +264,16 @@ class ValpasSpec
         .when(redisCache.get(anyString()))
         .thenReturn(Future.successful(Some(captureCacheSet.getValue)))
 
+      Mockito.reset(tulosRedisCache)
+      Mockito
+        .when(tulosRedisCache.get(anyString()))
+        .thenReturn(Future.successful(Some(tulosCaptureCacheSet.getValue)))
+
       val result2 =
         run(integration.fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true)))
       result2.head.hakutapa.koodiarvo should equal("01")
       result2.size should equal(1)
+      result should equal(result2)
     }
   }
   private def mockPostPistesyottoClient(post: Seq[String]): VirkailijaRestClient = {
@@ -375,6 +404,20 @@ class ValpasSpec
       )
       .thenReturn(Future.successful(response))
     hakuAppClient
+  }
+  private def mockPostTulosClient(
+    post: Seq[String]
+  )(response: List[ValintaTulos]): VirkailijaRestClient = {
+    val client: VirkailijaRestClient = mock[VirkailijaRestClient]
+    Mockito
+      .when(
+        client
+          .postObject[Set[String], List[ValintaTulos]](
+            "valinta-tulos-service.hakemukset"
+          )(200, post.toSet)
+      )
+      .thenReturn(Future.successful(response))
+    client
   }
   private def mockPostAtaruClient(
     post: Seq[String]

@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.{
 }
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.json4s.jackson.JsonMethods
+import org.json4s.jackson.Serialization.write
 import support.TypedActorRef
 
 import scala.concurrent.duration._
@@ -153,6 +154,14 @@ class ValintaTulosActor(
         oids
       )
 
+    def saveFetched(saveTulokset: Seq[ValintaTulos]): Seq[ValintaTulos] = {
+      saveTulokset.foreach { tulos =>
+        valintaCache + (tulos.hakemusOid, write(tulos))
+      }
+
+      saveTulokset
+    }
+
     for {
       valintatulosCached: Set[Option[ValintaTulos]] <- cachedValintatulokset
       foundValintatulokset: Seq[ValintaTulos] <- Future.successful(
@@ -164,7 +173,7 @@ class ValintaTulosActor(
         case s if s.isEmpty => Future.successful(Seq.empty[ValintaTulos])
         case s              => fetchForReal(s)
       }
-    } yield foundValintatulokset ++ missedValintatulokset
+    } yield foundValintatulokset ++ saveFetched(missedValintatulokset)
   }
 
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
