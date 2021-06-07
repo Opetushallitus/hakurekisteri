@@ -174,7 +174,7 @@ class HakemusService(
 
   private val hakemusCache =
     cacheFactory.getInstance[String, String](
-      config.integrations.hakemusRefreshTimeHours.hours.toMillis,
+      config.integrations.valpasHakemusRefreshTimeHours.hours.toMillis,
       this.getClass,
       classOf[String],
       "hakuappOrAtaruHakemus"

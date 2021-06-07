@@ -47,7 +47,7 @@ class ValintaTulosActor(
     "sijoittelu-tulos"
   )
   private val valintaCache = cacheFactory.getInstance[String, String](
-    cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis),
+    cacheTime.getOrElse(config.integrations.valpasValintatulosRefreshTimeHours.hours.toMillis),
     this.getClass,
     classOf[String],
     "valintatulos"
