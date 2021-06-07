@@ -84,7 +84,9 @@ class KoskiService(
     timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
   )(implicit scheduler: Scheduler): Unit = {
     val endDateSuomiTime =
-      KoskiUtil.deadlineDate.toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(HelsinkiTimeZone))
+      KoskiUtil.deadlineDate
+        .plusDays(1)
+        .toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(HelsinkiTimeZone))
     if (endDateSuomiTime.isBeforeNow) {
       logger.info(
         "refreshChangedOppijasFromKoski : Cutoff date of {} reached, stopping.",
