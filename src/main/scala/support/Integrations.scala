@@ -314,6 +314,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     tarjonta,
     organisaatiot,
     oppijaNumeroRekisteri,
+    config,
+    cacheFactory,
     maxOidsChunkSize = config.properties
       .getOrElse("suoritusrekisteri.hakemusservice.max.oids.chunk.size", "150")
       .toInt

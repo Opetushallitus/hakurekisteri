@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{ActorRef, Props}
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -51,7 +52,9 @@ class KkHakijaResourceSpec
     ataruClient,
     tarjontaMock,
     organisaatioMock,
-    MockOppijaNumeroRekisteri
+    MockOppijaNumeroRekisteri,
+    Config.mockDevConfig,
+    MockCacheFactory.get()
   )
   private val hakuMock = mock[ActorRef]
   private val suoritusMock = mock[ActorRef]

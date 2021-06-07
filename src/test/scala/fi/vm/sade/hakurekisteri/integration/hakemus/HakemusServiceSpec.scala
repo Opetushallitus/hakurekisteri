@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import akka.actor.{ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.{Config, DefaultConfig, MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
@@ -45,6 +46,8 @@ class HakemusServiceSpec
     tarjontaMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
+    Config.mockDevConfig,
+    MockCacheFactory.get(),
     pageSize = 10
   )
 

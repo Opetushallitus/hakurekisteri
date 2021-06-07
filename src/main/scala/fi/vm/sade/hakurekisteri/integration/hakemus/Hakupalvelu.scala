@@ -1007,6 +1007,7 @@ object Koulutustausta {
   )
 }
 
+@SerialVersionUID(1)
 case class HakemusAnswers(
   henkilotiedot: Option[HakemusHenkilotiedot] = None,
   koulutustausta: Option[Koulutustausta] = None,
@@ -1015,6 +1016,7 @@ case class HakemusAnswers(
   osaaminen: Option[Map[String, String]] = None
 )
 
+@SerialVersionUID(1)
 case class HakemusAttachmentRequest(
   id: String,
   preferenceAoId: Option[String],
@@ -1034,6 +1036,7 @@ case class Address(recipient: String, streetAddress: String, postalCode: String,
 
 case class Translations(fi: String, sv: String, en: String)
 
+@SerialVersionUID(1)
 case class PreferenceEligibility(
   aoId: String,
   status: String,
@@ -1050,6 +1053,7 @@ sealed trait HakijaHakemus {
   def hakutoiveet: Option[List[HakutoiveDTO]]
 }
 
+@SerialVersionUID(1)
 case class HakutoiveDTO(
   preferenceNumber: Int,
   koulutusId: Option[String],
@@ -1065,6 +1069,7 @@ case class HakutoiveDTO(
   discretionaryFollowUp: Option[String]
 )
 
+@SerialVersionUID(1)
 case class FullHakemus(
   oid: String,
   personOid: Option[String],
@@ -1076,7 +1081,8 @@ case class FullHakemus(
   received: Option[Long]
 ) extends Resource[String, FullHakemus]
     with Identified[String]
-    with HakijaHakemus {
+    with HakijaHakemus
+    with Serializable {
 
   // Resource stuff
   override def identify(identity: String): FullHakemus with Identified[String] = this
@@ -1176,6 +1182,7 @@ case class AtaruHakemusDto(
   korkeakoulututkintoVuosi: Option[Int]
 )
 
+@SerialVersionUID(1)
 case class AtaruHakemus(
   oid: String,
   personOid: Option[String],
@@ -1198,7 +1205,8 @@ case class AtaruHakemus(
   liitteetTarkastettu: Map[String, Option[Boolean]],
   kkPohjakoulutus: List[String],
   korkeakoulututkintoVuosi: Option[Int]
-) extends HakijaHakemus {
+) extends HakijaHakemus
+    with Serializable {
 
   val hetu: Option[String] = henkilo.hetu
   val stateValid: Boolean = true
