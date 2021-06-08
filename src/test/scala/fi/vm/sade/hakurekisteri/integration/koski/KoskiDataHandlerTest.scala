@@ -1483,12 +1483,7 @@ class KoskiDataHandlerTest
     )
 
     //Fake that the suoritukses were actually saved yesterday
-    val yesterday = System.currentTimeMillis() - (1000 * 60 * 60 * 24)
-    run(
-      database.run(
-        sql"update suoritus set inserted = $yesterday where henkilo_oid = $henkiloOid".as[String]
-      )
-    )
+    fakeHenkilonSuorituksetSavedAt(henkiloOid)
 
     val opiskelijat1 = run(
       database.run(
@@ -1528,11 +1523,7 @@ class KoskiDataHandlerTest
     )
 
     //Fake that the suoritukses were actually saved yesterday
-    run(
-      database.run(
-        sql"update suoritus set inserted = $yesterday where henkilo_oid = $henkiloOid".as[String]
-      )
-    )
+    fakeHenkilonSuorituksetSavedAt(henkiloOid)
 
     val opiskelijat2 = run(
       database.run(
@@ -1664,12 +1655,7 @@ class KoskiDataHandlerTest
     )
 
     //Fake that the suoritukses were actually saved yesterday
-    val yesterday = System.currentTimeMillis() - (1000 * 60 * 60 * 24)
-    run(
-      database.run(
-        sql"update suoritus set inserted = $yesterday where henkilo_oid = $henkiloOid".as[String]
-      )
-    )
+    fakeHenkilonSuorituksetSavedAt(henkiloOid)
 
     var opiskelijat1 = run(
       database.run(
@@ -2196,7 +2182,10 @@ class KoskiDataHandlerTest
           .as[String]
       )
     )
-    suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
+    parse(suoritus.head)
+      .extract[Map[String, String]]
+      .getOrElse("vuosiluokkiin sitomaton opetus", "false")
+      .toBoolean should equal(true)
     val arvosanat = run(
       database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
     )
@@ -2236,7 +2225,11 @@ class KoskiDataHandlerTest
           .as[String]
       )
     )
-    suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
+
+    parse(suoritus.head)
+      .extract[Map[String, String]]
+      .getOrElse("vuosiluokkiin sitomaton opetus", "false")
+      .toBoolean should equal(true)
     val arvosanat = run(
       database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
     )
@@ -2396,7 +2389,10 @@ class KoskiDataHandlerTest
         sql"select lahde_arvot from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]
       )
     )
-    suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
+    parse(suoritus.head)
+      .extract[Map[String, String]]
+      .getOrElse("vuosiluokkiin sitomaton opetus", "false")
+      .toBoolean should equal(true)
     val arvosanat = run(
       database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
     )
@@ -2434,7 +2430,10 @@ class KoskiDataHandlerTest
         sql"select lahde_arvot from suoritus where komo = '1.2.246.562.13.62959769647'".as[String]
       )
     )
-    suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
+    parse(suoritus.head)
+      .extract[Map[String, String]]
+      .getOrElse("vuosiluokkiin sitomaton opetus", "false")
+      .toBoolean should equal(true)
     val arvosanat = run(
       database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
     )
@@ -3801,7 +3800,7 @@ class KoskiDataHandlerTest
     def verifyArvosanatVersion1UpdatedWithVersion2() = {
       val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
       opiskelijat.size should equal(1)
-      val suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
+      val suoritusTilat = run(database.run(sql"select tila from suoritus where current".as[String]))
       suoritusTilat should have length 1
       suoritusTilat.head should equal("VALMIS")
       val arvosana_TE_after = run(
@@ -4168,7 +4167,11 @@ class KoskiDataHandlerTest
           .as[String]
       )
     )
-    suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"false\"}")
+
+    parse(suoritus.head)
+      .extract[Map[String, String]]
+      .getOrElse("vuosiluokkiin sitomaton opetus", "true")
+      .toBoolean should equal(false)
 
     json = scala.io.Source.fromFile(jsonDir + "koskidata_suoritus_update_after.json").mkString
     henkilo = parse(json).extract[KoskiHenkiloContainer]
@@ -4190,7 +4193,10 @@ class KoskiDataHandlerTest
           .as[String]
       )
     )
-    suoritus.head should equal("{\"vuosiluokkiin sitomaton opetus\":\"true\"}")
+    parse(suoritus.head)
+      .extract[Map[String, String]]
+      .getOrElse("vuosiluokkiin sitomaton opetus", "false")
+      .toBoolean should equal(true)
   }
 
   it should "store henkilon suoritukset even when there are doubled luokkas in koskidata" in {
@@ -4433,6 +4439,20 @@ class KoskiDataHandlerTest
 
   def peruskouluB2KieletShouldNotBeValinnainen(arvosanat: Seq[SuoritusArvosanat]): Unit = {
     getPerusopetusB2Kielet(arvosanat).foreach(_.valinnainen shouldEqual false)
+  }
+
+  def fakeHenkilonSuorituksetSavedAt(
+    henkiloOid: String,
+    lastModified: Long = System.currentTimeMillis() - (1000 * 60 * 60 * 24)
+  ): Unit = {
+
+    val lahdeArvotString: String = "{\"last modified\":\"" + lastModified.toString + "\"}"
+    run(
+      database.run(
+        sql"update suoritus set lahde_arvot = $lahdeArvotString where henkilo_oid = $henkiloOid"
+          .as[String]
+      )
+    )
   }
 
   class TestSureActor extends Actor {

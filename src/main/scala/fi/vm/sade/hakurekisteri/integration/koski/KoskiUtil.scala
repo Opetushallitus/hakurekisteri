@@ -26,9 +26,6 @@ object KoskiUtil {
           .format(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
     }
 
-  //Suoritukses that have been saved in the last 6 hours will not be removed even if they seem to be missing from Koski.
-  val koskiSuoritusRemovalCooldownHours = 6
-
   lazy val koskiImporterResourceInUse: Boolean =
     OphUrlProperties.getProperty("suoritusrekisteri.use.koski.importer.resource").toBoolean
   lazy val updateKkHaut: Boolean =
@@ -39,6 +36,13 @@ object KoskiUtil {
   def isAfterArvosanatWithNelosiaDeadlineDate(): Boolean = {
     // Neloset halutaan tallentaa suoritusrekisteriin kaksi viikkoa ennen deadline-päivämäärää
     LocalDate.now().isAfter(deadlineDate.minusDays(14))
+  }
+
+  //Suoritukses that have been saved in the last 6 hours will not be removed even if they seem to be missing from Koski.
+  val koskiSuoritusRemovalCooldownHours = 6
+
+  def shouldSuoritusBeRemoved(lastmodified: Long): Boolean = {
+    lastmodified < System.currentTimeMillis() - (3600000 * koskiSuoritusRemovalCooldownHours)
   }
 
   def isAfterDeadlineDate(date: LocalDate = LocalDate.now()): Boolean = {
