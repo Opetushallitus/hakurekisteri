@@ -525,9 +525,6 @@ class KoskiDataHandler(
     personOidsWithAliases: PersonOidsWithAliases,
     params: KoskiSuoritusHakuParams
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
-    val removeOlderThan = Some(
-      new DateTime().minusHours(KoskiUtil.koskiSuoritusRemovalCooldownHours)
-    )
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
