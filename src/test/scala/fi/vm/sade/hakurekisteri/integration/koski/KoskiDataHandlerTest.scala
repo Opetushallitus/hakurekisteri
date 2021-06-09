@@ -4411,6 +4411,42 @@ class KoskiDataHandlerTest
       suoritukset.head should equal("1")
     }
 
+  it should "Save suoritus as keskeytynyt if it is vahvistettu after deadline and now is after deadline" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_vahvistus_4_6_2018_jälkeen.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val vp: LocalDate =
+      parseLocalDate(
+        henkilo.opiskeluoikeudet.head.suoritukset
+          .find(s => s.luokka.getOrElse("").equals("9C"))
+          .get
+          .vahvistus
+          .get
+          .päivä
+      )
+    KoskiUtil.deadlineDate = vp.minusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("1")
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+    val suoritustila = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritustila.head should equal("KESKEYTYNYT")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.komo.contentEquals(Oids.perusopetusKomoOid))
   }

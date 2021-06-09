@@ -350,6 +350,11 @@ class KoskiSuoritusArvosanaParser {
       suoritus <- suoritukset
     } yield {
       val isVahvistettu = suoritus.vahvistus.isDefined
+      val isAjoissaVahvistettu =
+        suoritus.vahvistus.exists(v => {
+          val valmistumispaiva = parseLocalDate(v.päivä)
+          !valmistumispaiva.isAfter(KoskiUtil.deadlineDate)
+        })
       val valmistuminen: Valmistuminen =
         getValmistuminen(suoritus.vahvistus, tilat.last.alku, opiskeluoikeus)
       val suorituskieli = suoritus.suorituskieli.getOrElse(KoskiKieli("FI", "kieli"))
@@ -545,10 +550,10 @@ class KoskiSuoritusArvosanaParser {
           } else if (
             (suoritusTila.equals("VALMIS") || suoritusTila.equals(
               "KESKEN"
-            )) && !isVahvistettu && !arvosanoissaNelosia && KoskiUtil.isAfterDeadlineDate()
+            )) && !isAjoissaVahvistettu && !arvosanoissaNelosia && KoskiUtil.isAfterDeadlineDate()
           ) {
             logger.info(
-              s"Perusopetuksen tilapäättely - henkilö $personOid: perusopetuksen suorituksella ei ole vahvistusta eikä nelosia ja deadline on ohitettu. Merkitään suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)"
+              s"Perusopetuksen tilapäättely - henkilö $personOid: perusopetuksen suorituksella ei ole ajoissa annettua vahvistusta eikä nelosia ja deadline on ohitettu. Merkitään suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)"
             )
             "KESKEYTYNYT"
           } else suoritusTila
