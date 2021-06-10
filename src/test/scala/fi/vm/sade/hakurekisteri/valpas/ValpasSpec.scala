@@ -253,10 +253,18 @@ class ValpasSpec
         integration.fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true))
 
       val result = run(v)
+      val versiot: Set[Int] =
+        result.head.hakutoiveet.map(_.hakukohdeKoulutuskoodi.koodistoVersio).toSet
+      versiot should equal(Set(12))
+
       Mockito.verify(redisCache).+(anyString(), captureCacheSet.capture())
       Mockito.verify(tulosRedisCache).+(anyString(), tulosCaptureCacheSet.capture())
 
       result.head.hakutapa.koodiarvo should equal("01")
+      result.head.hakutapa.nimi.get("fi") should equal(Some("Yhteishaku"))
+      result.head.hakutapa.lyhytNimi.get("fi") should equal(Some("YH"))
+      result.head.hakutapa.koodistoUri should equal("hakutapa")
+      result.head.hakutapa.koodistoVersio should equal(1)
       result.size should equal(1)
 
       Mockito.reset(redisCache)

@@ -53,16 +53,19 @@ object KoodistoActor {
   def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
     (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
   }
-  def kooditToKoodisto(koodistoUri: String, koodit: Seq[Koodi]): KoodistoKoodiArvot =
+  def kooditToKoodisto(koodistoUri: String, koodit: Seq[Koodi]): KoodistoKoodiArvot = {
+    val arvoToNewestKoodi: Map[String, Koodi] =
+      koodit.groupBy(_.koodiArvo).mapValues(_.maxBy(_.versio))
     KoodistoKoodiArvot(
       koodistoUri,
-      koodit.map(koodi => (koodi.koodiArvo, koodi.versio)).toMap,
-      koodit.map(_.koodiArvo),
-      koodit.map(koodi => (koodi.koodiArvo, koodi.koodiUri)).toMap,
-      koodit.map(koodi => (koodi.koodiUri, koodi.koodiArvo)).toMap,
-      koodit.map(koodiToName).toMap,
-      koodit.map(koodiToLyhytName).toMap
+      arvoToNewestKoodi.mapValues(_.versio),
+      arvoToNewestKoodi.keys.toSeq,
+      arvoToNewestKoodi.mapValues(_.koodiUri),
+      arvoToNewestKoodi.mapValues(_.koodiUri).map(_.swap),
+      arvoToNewestKoodi.values.map(koodiToName).toMap,
+      arvoToNewestKoodi.values.map(koodiToLyhytName).toMap
     )
+  }
 
 }
 
