@@ -22,7 +22,7 @@ case class GetRinnasteinenKoodiArvoQuery(
   arvo: String,
   rinnasteinenKoodistoUri: String
 )
-case class Koodisto(koodistoUri: String)
+case class Koodisto(koodistoUri: String, koodistoVersios: Seq[Int])
 case class KoodiMetadata(nimi: String, kieli: String, lyhytNimi: String)
 @SerialVersionUID(1) case class Koodi(
   koodiArvo: String,
@@ -55,10 +55,11 @@ object KoodistoActor {
   }
   def kooditToKoodisto(koodistoUri: String, koodit: Seq[Koodi]): KoodistoKoodiArvot = {
     val arvoToNewestKoodi: Map[String, Koodi] =
-      koodit.groupBy(_.koodiArvo).mapValues(_.maxBy(_.versio))
+      koodit.groupBy(_.koodiArvo).mapValues(_.maxBy(_.koodisto.koodistoVersios.max))
+
     KoodistoKoodiArvot(
       koodistoUri,
-      arvoToNewestKoodi.mapValues(_.versio),
+      arvoToNewestKoodi.mapValues(_.koodisto.koodistoVersios.max),
       arvoToNewestKoodi.keys.toSeq,
       arvoToNewestKoodi.mapValues(_.koodiUri),
       arvoToNewestKoodi.mapValues(_.koodiUri).map(_.swap),
@@ -110,13 +111,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
   }
 
   def getKoodistoKoodiArvot(koodistoUri: String): Future[KoodistoKoodiArvot] = {
-    def koodiToName(k: Koodi): (String, Map[String, String]) = {
-      (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
-    }
-    def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
-      (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
-    }
-    val loader: String => Future[Option[KoodistoKoodiArvot]] = { uri =>
+    val loader: String => Future[Option[KoodistoKoodiArvot]] = { _ =>
       restClient
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
         .map(koodit => KoodistoActor.kooditToKoodisto(koodistoUri, koodit))

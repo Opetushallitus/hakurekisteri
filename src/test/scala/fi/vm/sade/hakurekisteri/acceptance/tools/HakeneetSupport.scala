@@ -979,7 +979,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             q.koodiUri.split("_").last.split("#").head.toUpperCase,
             1,
             q.koodiUri,
-            Koodisto(q.koodistoUri),
+            Koodisto(q.koodistoUri, Seq(1)),
             Seq(KoodiMetadata(q.koodiUri.capitalize, "FI", "FIN"))
           )
         )
