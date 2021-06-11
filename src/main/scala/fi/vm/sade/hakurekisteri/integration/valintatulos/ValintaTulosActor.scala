@@ -7,7 +7,11 @@ import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, HakuRequest}
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{
+  ExecutorUtil,
+  PreconditionFailedException,
+  VirkailijaRestClient
+}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
