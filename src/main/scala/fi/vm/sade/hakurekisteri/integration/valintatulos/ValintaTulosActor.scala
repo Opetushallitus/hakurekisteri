@@ -2,15 +2,12 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.ExecutionException
 import akka.actor.{Actor, ActorLogging, ActorRef, Status}
+import akka.event.Logging
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, HakuRequest}
-import fi.vm.sade.hakurekisteri.integration.{
-  ExecutorUtil,
-  PreconditionFailedException,
-  VirkailijaRestClient
-}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, PreconditionFailedException, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
@@ -156,7 +153,13 @@ class ValintaTulosActor(
 
     def saveFetched(saveTulokset: Seq[ValintaTulos]): Seq[ValintaTulos] = {
       saveTulokset.foreach { tulos =>
-        valintaCache + (tulos.hakemusOid, write(tulos))
+        try {
+          val json: String = write(tulos)
+          valintaCache + (tulos.hakemusOid, json)
+        } catch {
+          case e: Exception =>
+            log.error(s"Couldn't store ${tulos.hakemusOid} valintatulos into Redis cache", e)
+        }
       }
 
       saveTulokset

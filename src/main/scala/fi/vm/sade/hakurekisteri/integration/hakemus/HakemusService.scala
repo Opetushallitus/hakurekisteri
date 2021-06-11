@@ -406,8 +406,13 @@ class HakemusService(
             case f: AtaruHakemus => Some(f)
             case _               => None
           }
-
-          hakemusCache + (personOid, write(AllHakemukset(f, a)))
+          try {
+            val json: String = write(AllHakemukset(f, a))
+            hakemusCache + (personOid, json)
+          } catch {
+            case e: Exception =>
+              logger.error(s"Couldn't store $personOid hakemus to Redis cache", e)
+          }
         case _ =>
         // dont care
       }
