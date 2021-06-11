@@ -51,7 +51,7 @@ class ValintaTulosActor(
     cacheTime.getOrElse(config.integrations.valpasValintatulosRefreshTimeHours.hours.toMillis),
     this.getClass,
     classOf[String],
-    "valintatulos"
+    "valpas-valintatulos"
   )
   private val cacheRefreshInterval = config.integrations.valintatulosRefreshTimeHours.hours
   private val cacheRefreshScheduler =

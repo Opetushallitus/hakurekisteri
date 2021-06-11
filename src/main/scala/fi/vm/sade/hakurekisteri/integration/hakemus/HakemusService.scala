@@ -177,7 +177,7 @@ class HakemusService(
       config.integrations.valpasHakemusRefreshTimeHours.hours.toMillis,
       this.getClass,
       classOf[String],
-      "hakuappOrAtaruHakemus"
+      "valpas-hakuappOrAtaruHakemus"
     )
 
   def enrichAtaruHakemukset(
