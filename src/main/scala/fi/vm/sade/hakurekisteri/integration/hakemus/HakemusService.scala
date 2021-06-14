@@ -223,35 +223,41 @@ class HakemusService(
     } yield parentOids
 
     def translateAtaruMaksuvelvollisuus(hakemus: AtaruHakemusDto): Map[String, String] =
-      hakemus.paymentObligations.mapValues {
-        case "obligated"     => "REQUIRED"
-        case "not-obligated" => "NOT_REQUIRED"
-        case "unreviewed"    => "NOT_CHECKED"
-        case s =>
-          throw new IllegalArgumentException(
-            s"Unknown maksuvelvollisuus state $s on application ${hakemus.oid}"
-          )
-      }
+      hakemus.paymentObligations
+        .mapValues {
+          case "obligated"     => "REQUIRED"
+          case "not-obligated" => "NOT_REQUIRED"
+          case "unreviewed"    => "NOT_CHECKED"
+          case s =>
+            throw new IllegalArgumentException(
+              s"Unknown maksuvelvollisuus state $s on application ${hakemus.oid}"
+            )
+        }
+        .map(identity)
 
     def translateAtaruHakukelpoisuus(hakemus: AtaruHakemusDto): Map[String, String] =
-      hakemus.eligibilities.mapValues {
-        case "eligible"                       => "ELIGIBLE"
-        case "uneligible"                     => "INELIGIBLE"
-        case "unreviewed"                     => "NOT_CHECKED"
-        case "conditionally-eligible"         => "CONDITIONALLY_ELIGIBLE"
-        case "automatically-checked-eligible" => "AUTOMATICALLY_CHECKED_ELIGIBLE"
-        case s =>
-          throw new IllegalArgumentException(
-            s"Unknown hakukelpoisuus state $s on application ${hakemus.oid}"
-          )
-      }
+      hakemus.eligibilities
+        .mapValues {
+          case "eligible"                       => "ELIGIBLE"
+          case "uneligible"                     => "INELIGIBLE"
+          case "unreviewed"                     => "NOT_CHECKED"
+          case "conditionally-eligible"         => "CONDITIONALLY_ELIGIBLE"
+          case "automatically-checked-eligible" => "AUTOMATICALLY_CHECKED_ELIGIBLE"
+          case s =>
+            throw new IllegalArgumentException(
+              s"Unknown hakukelpoisuus state $s on application ${hakemus.oid}"
+            )
+        }
+        .map(identity)
 
     def translateAtaruAttachments(hakemus: AtaruHakemusDto): Map[String, Option[Boolean]] =
-      hakemus.attachments.mapValues {
-        case "checked"     => Some(true)
-        case "not-checked" => Some(false)
-        case _             => None
-      }
+      hakemus.attachments
+        .mapValues {
+          case "checked"     => Some(true)
+          case "not-checked" => Some(false)
+          case _             => None
+        }
+        .map(identity)
 
     Future
       .sequence(

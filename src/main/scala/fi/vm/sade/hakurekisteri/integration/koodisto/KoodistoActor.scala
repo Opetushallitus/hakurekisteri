@@ -55,13 +55,13 @@ object KoodistoActor {
   }
   def kooditToKoodisto(koodistoUri: String, koodit: Seq[Koodi]): KoodistoKoodiArvot = {
     val arvoToNewestKoodi: Map[String, Koodi] =
-      koodit.groupBy(_.koodiArvo).mapValues(_.maxBy(_.koodisto.koodistoVersios.max))
+      koodit.groupBy(_.koodiArvo).mapValues(_.maxBy(_.koodisto.koodistoVersios.max)).map(identity)
 
     KoodistoKoodiArvot(
       koodistoUri,
-      arvoToNewestKoodi.mapValues(_.koodisto.koodistoVersios.max),
+      arvoToNewestKoodi.mapValues(_.koodisto.koodistoVersios.max).map(identity),
       arvoToNewestKoodi.keys.toSeq,
-      arvoToNewestKoodi.mapValues(_.koodiUri),
+      arvoToNewestKoodi.mapValues(_.koodiUri).map(identity),
       arvoToNewestKoodi.mapValues(_.koodiUri).map(_.swap),
       arvoToNewestKoodi.values.map(koodiToName).toMap,
       arvoToNewestKoodi.values.map(koodiToLyhytName).toMap
