@@ -404,10 +404,10 @@ class HakijaActor(
             matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
         )
     }
-    if (q.version == 2 || q.version == 3 || q.version == 4 || q.version == 5)
-      hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
-    else
+    if (q.version == 1)
       hakutoives
+    else
+      hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
   }
 
   def filterHakijatHakutoiveetByQuery(q: HakijaQuery)(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
