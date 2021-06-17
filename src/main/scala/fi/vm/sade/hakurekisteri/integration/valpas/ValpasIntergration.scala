@@ -171,7 +171,7 @@ object SlowFutureLogger {
     val start = System.currentTimeMillis()
     future.onComplete({ case _ =>
       val time = System.currentTimeMillis() - start
-      if (time > 80) {
+      if (time > 500) {
         logger.warn(s"Slow future $tag took ${time}ms")
       }
     })
