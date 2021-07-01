@@ -1078,7 +1078,8 @@ case class FullHakemus(
   state: Option[String],
   preferenceEligibilities: Seq[PreferenceEligibility],
   attachmentRequests: Seq[HakemusAttachmentRequest] = Seq(),
-  received: Option[Long]
+  received: Option[Long],
+  updated: Option[Long]
 ) extends Resource[String, FullHakemus]
     with Identified[String]
     with HakijaHakemus
