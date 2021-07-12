@@ -251,7 +251,8 @@ class HakemusServiceSpec
         None,
         Nil,
         Nil,
-        Some(1615219923688L)
+        Some(1615219923688L),
+        updated = None
       ),
       PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid")))
     )
@@ -283,7 +284,7 @@ class HakemusServiceSpec
     )
     triggerCounter should equal(2)
     trigger.f(
-      FullHakemus("oid", None, "hakuOid", answers, None, Nil, Nil, Some(1615219923688L)),
+      FullHakemus("oid", None, "hakuOid", answers, None, Nil, Nil, Some(1615219923688L), None),
       PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid")))
     )
     trigger.f(

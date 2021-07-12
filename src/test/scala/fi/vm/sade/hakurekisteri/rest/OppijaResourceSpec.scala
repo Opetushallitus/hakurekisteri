@@ -138,7 +138,8 @@ class OppijaResourceSpec
         state = Some("INCOMPLETE"),
         preferenceEligibilities = Seq(),
         attachmentRequests = Seq(),
-        Some(1615219923688L)
+        Some(1615219923688L),
+        None
       )
     })
     .toSeq

@@ -56,7 +56,7 @@ object Trigger {
       hakemus: HakijaHakemus,
       personOidsWithAliases: PersonOidsWithAliases
     ): Unit = hakemus match {
-      case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _, _)
+      case FullHakemus(_, Some(personOid), applicationSystemId, _, _, _, _, _, _)
           if hakemus.hetu.isDefined =>
         f(personOid, hakemus.hetu.get, applicationSystemId, personOidsWithAliases)
       case h: AtaruHakemus if h.personOid.isDefined && h.hetu.isDefined =>
