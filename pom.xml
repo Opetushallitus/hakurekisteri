@@ -14,7 +14,7 @@
     <properties>
         <scala.version>2.12.8</scala.version>
         <spring.version>4.3.21.RELEASE</spring.version>
-        <spring-security.version>4.2.10.RELEASE</spring-security.version>
+        <spring-security.version>5.2.9.RELEASE</spring-security.version>
         <scalatra.version>2.6.3</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>3.4.2</json4s.version>
@@ -279,7 +279,7 @@
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.1</version>
+            <version>2.3.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -540,7 +540,7 @@
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>openws</artifactId>
-            <version>1.4.2-1</version>
+            <version>1.5.4</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.opensaml</groupId>
@@ -551,7 +551,7 @@
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>xmltooling</artifactId>
-            <version>1.3.2-1</version>
+            <version>1.4.4</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -711,12 +711,12 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.5</version>
+            <version>2.7</version>
         </dependency>
         <dependency>
             <groupId>org.jasig.cas.client</groupId>
             <artifactId>cas-client-support-distributed-ehcache</artifactId>
-            <version>3.4.1</version>
+            <version>3.6.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -739,7 +739,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
-            <version>9.3.7.v20160115</version>
+            <version>9.3.26.v20190403</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -754,7 +754,7 @@
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-server</artifactId>
-            <version>9.3.7.v20160115</version>
+            <version>9.4.39.v20210325</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -1503,7 +1503,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.205</version>
+            <version>1.11.882</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -1685,12 +1685,10 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>reference.conf</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>fi.vm.sade.hakurekisteri.SureStandaloneJetty</Main-Class>
                                     </manifestEntries>
