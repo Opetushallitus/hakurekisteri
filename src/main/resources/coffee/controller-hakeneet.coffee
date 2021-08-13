@@ -390,7 +390,7 @@ app.controller "HakeneetCtrl", [
       cache: true
     ).then ((res) ->
       return [] if not res.data or res.data.length is 0
-      hakukohderyhmat = res.data.filter((r)->r.ryhmatyypit[0] == "hakukohde").map((r)->
+      hakukohderyhmat = res.data.filter((r)-> r.ryhmatyypit.some((tyyppi) -> tyyppi == "hakukohde" or tyyppi == "hakukohderyhma")).map((r)->
         oid: r.oid
         nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
       )
