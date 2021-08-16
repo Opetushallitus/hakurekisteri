@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MINUTES
-
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
@@ -17,6 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohdeOid,
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
+  Koulutusohjelma,
   TarjontaKoodi
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
@@ -876,7 +876,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       None,
       None,
       "hakutapa_01#1",
-      "hakutyyppi_01#1"
+      Some("hakutyyppi_01#1")
     )
 
     private val kansalaisuuskoodit = Map("246" -> "FIN")
@@ -952,15 +952,19 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
     )
   val ataruHakukohde1 = hakukohde.Hakukohde(
     "1.2.246.562.20.14800254899",
+    Map("fi" -> "Hakukohde Tulppaaniin 1.2.246.562.20.14800254899"),
     Seq(),
     None,
-    Some(Set("1.2.246.562.10.39920288212"))
+    Some(Set("1.2.246.562.10.39920288212")),
+    None
   )
   val ataruHakukohde2 = hakukohde.Hakukohde(
     "1.2.246.562.20.44085996724",
+    Map("fi" -> "Hakukohde Ruusulaan 1.2.246.562.20.44085996724"),
     Seq(),
     None,
-    Some(Set("1.2.246.562.10.2014041814420657444022"))
+    Some(Set("1.2.246.562.10.2014041814420657444022")),
+    None
   )
 
   def getHakukohde(oid: String): Option[hakukohde.Hakukohde] = oid match {

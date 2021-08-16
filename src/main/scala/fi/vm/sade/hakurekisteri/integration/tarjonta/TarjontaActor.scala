@@ -94,9 +94,11 @@ case class TarjontaHakukohde(
 ) {
   def toHakukohde: Hakukohde = Hakukohde(
     oid = oid,
+    hakukohteenNimet = hakukohteenNimet,
     hakukohdeKoulutusOids = hakukohdeKoulutusOids,
     ulkoinenTunniste = ulkoinenTunniste,
-    tarjoajaOids = tarjoajaOids
+    tarjoajaOids = tarjoajaOids,
+    alinValintaPistemaara = alinValintaPistemaara
   )
 }
 

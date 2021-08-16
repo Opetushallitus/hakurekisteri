@@ -11,7 +11,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, GetHakuOption, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHakuOption, Haku}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   KoodistoActorRef,
@@ -24,12 +25,11 @@ import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
   PistetietoWrapper
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  Hakukohde,
   HakukohdeOid,
-  HakukohdeQuery,
   HakukohteenKoulutukset,
   Koulutusohjelma,
-  TarjontaActorRef
+  TarjontaActorRef,
+  TarjontaHakukohde
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   ValintaTulos,
@@ -410,7 +410,8 @@ class ValpasIntergration(
           aktiivinenHaku = haku.isActive,
           hakemusUrl = OphUrlProperties.url("ataru.hakemus", a.oid),
           hakutapa = uriToValpasKoodiWithoutArvo(haku.hakutapaUri, hakutapa),
-          hakutyyppi = uriToValpasKoodiWithoutArvo(haku.hakutyyppiUri, hakutyyppi),
+          hakutyyppi =
+            haku.hakutyyppiUri.map(uriToValpasKoodiWithoutArvo(_, hakutyyppi)).getOrElse(null),
           huoltajanNimi = None,
           huoltajanPuhelinnumero = None,
           huoltajanSahkoposti = None,
@@ -447,7 +448,7 @@ class ValpasIntergration(
           aktiivinenHaku = haku.isActive,
           hakemusUrl = OphUrlProperties.url("haku-app.hakemus", h.oid),
           hakutapa = uriToValpasKoodiWithoutArvo(haku.hakutapaUri, hakutapa),
-          hakutyyppi = uriToValpasKoodiWithoutArvo(haku.hakutyyppiUri, hakutyyppi),
+          hakutyyppi = uriToValpasKoodiWithoutArvo(haku.hakutyyppiUri.get, hakutyyppi),
           huoltajanNimi = h.henkilotiedot.flatMap(_.huoltajannimi),
           huoltajanPuhelinnumero = h.henkilotiedot.flatMap(_.huoltajanpuhelinnumero),
           huoltajanSahkoposti = h.henkilotiedot.flatMap(_.huoltajansahkoposti),

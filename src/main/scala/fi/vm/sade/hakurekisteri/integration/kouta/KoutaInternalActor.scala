@@ -74,7 +74,8 @@ class KoutaInternalActor(
           kkKoulutusId = None,
           koulutuksenAlkamiskausi = None,
           koulutuksenAlkamisvuosi = None,
-          koulutuksenAlkamisPvms = None
+          koulutuksenAlkamisPvms = None,
+          koulutusohjelma = None
         )
       )
     )
@@ -106,7 +107,9 @@ class KoutaInternalActor(
                 oid = hakukohde.oid,
                 hakukohdeKoulutusOids = Seq(toteutus.koulutusOid),
                 ulkoinenTunniste = None,
-                tarjoajaOids = toteutus.tarjoajat
+                tarjoajaOids = toteutus.tarjoajat,
+                hakukohteenNimet = hakukohde.nimi,
+                alinValintaPistemaara = None
               )
             )
           })
@@ -167,13 +170,15 @@ case class KoutaInternalRestHaku(
 
 case class KoutaInternalKoulutus(oid: String, koulutusKoodiUri: String)
 
-case class KoutaInternalHakukohde(oid: String, toteutusOid: String) {
+case class KoutaInternalHakukohde(oid: String, toteutusOid: String, nimi: Map[String, String]) {
   def toHakukohde(tarjoajaOids: Option[Set[String]]): Hakukohde =
     Hakukohde(
       oid = oid,
+      hakukohteenNimet = nimi,
       hakukohdeKoulutusOids = Seq(toteutusOid),
       ulkoinenTunniste = None,
-      tarjoajaOids = tarjoajaOids
+      tarjoajaOids = tarjoajaOids,
+      alinValintaPistemaara = None
     )
 }
 

@@ -15,7 +15,10 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
-  TarjontaKoodi
+  Koulutusohjelma,
+  TarjontaKoodi,
+  TarjontaRestHaku,
+  TarjontaRestHakuAika
 }
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{Maksuntila, ValintarekisteriActorRef}
@@ -70,9 +73,9 @@ class KkHakijaServiceSpec
     MockCacheFactory.get()
   )
 
-  private val haku1 = RestHaku(
+  private val haku1 = TarjontaRestHaku(
     Some("1.2"),
-    List(RestHakuAika(1L, Some(2L))),
+    List(TarjontaRestHakuAika(1L, Some(2L))),
     Map("fi" -> "testihaku"),
     "kausi_s#1",
     "hakutapa_01#1",
@@ -108,7 +111,7 @@ class KkHakijaServiceSpec
     "1"
   )
 
-  private val hakuMock = system.actorOf(Props(new MockedHakuActor(haku1)))
+  private val hakuMock = system.actorOf(Props(new MockedHakuActor(haku1.toRestHaku)))
   private val suoritusMock = system.actorOf(Props(new MockedSuoritusActor(suoritus1)))
   private val personOidWithLukuvuosimaksu = "1.2.246.562.20.96296215716"
   private val paymentRequiredHakukohdeWithMaksettu = "1.2.246.562.20.49219384432"

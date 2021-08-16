@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaRestHaku
 import fi.vm.sade.hakurekisteri.tools.RicherString.stringToRicherString
 import org.joda.time.{DateTime, ReadableInstant}
 
@@ -17,7 +18,7 @@ case class Haku(
   viimeinenHakuaikaPaattyy: Option[DateTime],
   kohdejoukkoUri: Option[String],
   hakutapaUri: String,
-  hakutyyppiUri: String
+  hakutyyppiUri: Option[String]
 ) {
   val isActive: Boolean = aika.isCurrently
 }
@@ -42,7 +43,30 @@ object Haku {
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
       kohdejoukkoUri = haku.kohdejoukkoUri,
       hakutapaUri = haku.hakutapaUri,
-      hakutyyppiUri = haku.hakutyyppiUri
+      hakutyyppiUri = None
+    )
+  }
+
+  def apply(haku: TarjontaRestHaku)(loppu: ReadableInstant): Haku = {
+    val ajanjakso = Ajanjakso(findStart(haku.toRestHaku), loppu)
+    Haku(
+      Kieliversiot(
+        haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption),
+        haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption),
+        haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)
+      ),
+      haku.oid.get,
+      ajanjakso,
+      haku.hakukausiUri,
+      haku.hakukausiVuosi,
+      haku.koulutuksenAlkamiskausiUri,
+      haku.koulutuksenAlkamisVuosi,
+      kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
+      toisenAsteenHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")),
+      viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku.toRestHaku),
+      kohdejoukkoUri = haku.kohdejoukkoUri,
+      hakutapaUri = haku.hakutapaUri,
+      hakutyyppiUri = Some(haku.hakutyyppiUri)
     )
   }
 

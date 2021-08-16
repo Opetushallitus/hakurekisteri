@@ -155,7 +155,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     None,
     None,
     "hakutapa_01#1",
-    "hakutyyppi_01#1"
+    Some("hakutyyppi_01#1")
   )
 
   val tq1 = ThemeQuestion(
