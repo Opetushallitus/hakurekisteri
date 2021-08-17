@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
+import dispatch.Future
 import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
@@ -9,7 +10,10 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{RestHaku, RestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
-import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaServiceMock
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.{
+  HakukohderyhmaService,
+  HakukohderyhmaServiceMock
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
@@ -31,6 +35,7 @@ import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import fi.vm.sade.utils.slf4j.Logging
 import org.joda.time.LocalDate
+import org.mockito.{ArgumentMatchers, Mockito}
 import org.mockito.Mockito._
 import org.scalatest.Assertion
 import org.scalatest.concurrent.Waiters
@@ -120,7 +125,7 @@ class KkHakijaServiceSpec
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
   private val valintaperusteetMock = new ValintaperusteetServiceMock
-  private val hakukohderyhmaServiceMock = new HakukohderyhmaServiceMock();
+  private val hakukohderyhmaServiceMock = Mockito.mock(classOf[HakukohderyhmaService]);
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -177,6 +182,7 @@ class KkHakijaServiceSpec
   override def beforeEach() {
     super.beforeEach()
     reset(endPoint)
+    reset(hakukohderyhmaServiceMock)
   }
 
   test("should not return results if user not in hakukohde organization hierarchy") {
@@ -203,6 +209,78 @@ class KkHakijaServiceSpec
     )
 
     hakijat.size should be(0)
+  }
+
+  test(
+    "uses hakukohderyhmapalvelu to fetch hakukohteet when hakukohderyhma returns empty from tarjonta"
+  ) {
+    val hakupalveluMock = Mockito.mock(classOf[Hakupalvelu])
+    when(hakupalveluMock.getHakukohdeOids("1.2.246.562.28.001", "1.2.246.562.24.81468279424"))
+      .thenReturn(Future.successful(Seq()))
+    val serviceToTest = new KkHakijaService(
+      hakemusService,
+      hakupalveluMock,
+      hakukohderyhmaServiceMock,
+      hakukohdeAggregatorMock,
+      hakuMock,
+      koodistoMock,
+      suoritusMock,
+      valintaTulosMock,
+      valintaRekisteri,
+      valintaperusteetMock,
+      Timeout(1.minute)
+    )
+    try {
+      Await.result(
+        serviceToTest.getKkHakijat(
+          KkHakijaQuery(
+            None,
+            Some("1.2.246.562.24.81468279424"),
+            None,
+            None,
+            Some("1.2.246.562.28.001"),
+            Hakuehto.Kaikki,
+            4,
+            Some(testUser("test", "1.1"))
+          ),
+          version = 4
+        ),
+        15.seconds
+      )
+    } catch {
+      case e: Any => {}
+    }
+    verify(hakukohderyhmaServiceMock, times(1)).getHakukohteetOfHakukohderyhma(
+      ArgumentMatchers.eq("1.2.246.562.28.001")
+    )
+  }
+
+  test(
+    "does not use hakukohderyhmapalvelu to fetch hakukohteet when hakukohderyhma returns oids from tarjonta"
+  ) {
+    try {
+      Await.result(
+        service.getKkHakijat(
+          KkHakijaQuery(
+            None,
+            Some("1.2.246.562.24.81468279424"),
+            None,
+            None,
+            Some("1.2.246.562.28.001"),
+            Hakuehto.Kaikki,
+            4,
+            Some(testUser("test", "1.1"))
+          ),
+          version = 4
+        ),
+        15.seconds
+      )
+    } catch {
+      case e: Any => {}
+    }
+    verify(hakukohderyhmaServiceMock, never()).getHakukohteetOfHakukohderyhma(
+      ArgumentMatchers.any()
+    )
   }
 
   test("should return ataru hakijas") {
