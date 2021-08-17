@@ -322,8 +322,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config.integrations.valintaperusteetServiceConfig,
     None
   )(restEc, system)
-  private val hakukohderyhmaClient =
-    new VirkailijaRestClient(config.integrations.hakukohderyhmaPalveluConfig, None)(restEc, system)
+  private val hakukohderyhmaClient = new VirkailijaRestClient(
+    config.integrations.hakukohderyhmaPalveluConfig,
+    None,
+    jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas"
+  )(restEc, system)
   val pistesyottoService = new PistesyottoService(pistesyottoClient)
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
