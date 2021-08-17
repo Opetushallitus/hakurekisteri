@@ -347,6 +347,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val koutaInternalUrlQa = s"https://$hostQa/kouta-internal"
   val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
   val valintaperusteetServiceUrlQa = s"https://$hostQa/valintaperusteet-service"
+  val hakukohderyhmaPalveluUrlQA = s"https://$hostQa/hakukohderyhmapalvelu"
 
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
   val virtaJarjestelmaTest = ""
@@ -387,6 +388,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
   val valintaperusteetServiceUrl =
     properties.getOrElse("cas.service.valintaperusteet-service", valintaperusteetServiceUrlQa)
+  val hakukohderyhmaPalveluUrl =
+    properties.getOrElse("cas.service.hakukohderyhmapalvelu", hakukohderyhmaPalveluUrlQA)
 
   val hakuappPageSize: Int =
     properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
@@ -577,6 +580,19 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     ).toInt,
     maxConnectionQueueMs = findMandatoryPropertyValue(
       "suoritusrekisteri.valintaperusteet-service.max-connection-queue-ms"
+    ).toInt
+  )
+  val hakukohderyhmaPalveluConfig = ServiceConfig(
+    casUrl = casUrl,
+    serviceUrl = hakukohderyhmaPalveluUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue(
+      "suoritusrekisteri.hakukohderyhmapalvelu.max-connections"
+    ).toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue(
+      "suoritusrekisteri.hakukohderyhmapalvelu.max-connection-queue-ms"
     ).toInt
   )
 

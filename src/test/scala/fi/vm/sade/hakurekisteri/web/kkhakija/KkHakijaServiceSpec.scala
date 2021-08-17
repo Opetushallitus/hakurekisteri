@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{RestHaku, RestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
@@ -119,6 +120,7 @@ class KkHakijaServiceSpec
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
   private val valintaperusteetMock = new ValintaperusteetServiceMock
+  private val hakukohderyhmaServiceMock = new HakukohderyhmaServiceMock();
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -161,6 +163,7 @@ class KkHakijaServiceSpec
   private val service = new KkHakijaService(
     hakemusService,
     Hakupalvelu,
+    hakukohderyhmaServiceMock,
     hakukohdeAggregatorMock,
     hakuMock,
     koodistoMock,
@@ -629,6 +632,7 @@ class KkHakijaServiceSpec
     val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
       hakemusService,
       Hakupalvelu,
+      hakukohderyhmaServiceMock,
       hakukohdeAggregatorMock,
       hakuMock,
       koodistoMock,

@@ -17,6 +17,11 @@ import fi.vm.sade.hakurekisteri.integration.hakukohde.{
   HakukohdeAggregatorActorRef,
   MockHakukohdeAggregatorActor
 }
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.{
+  HakukohderyhmaService,
+  HakukohderyhmaServiceMock,
+  IHakukohderyhmaService
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActor,
@@ -105,6 +110,7 @@ trait Integrations {
   val koskiService: IKoskiService
   val valintaperusteetService: IValintaperusteetService
   val pistesyottoService: PistesyottoService
+  val hakukohderyhmaService: IHakukohderyhmaService
 }
 
 object Integrations {
@@ -136,6 +142,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
   override val valintaperusteetService = new ValintaperusteetServiceMock
+  override val hakukohderyhmaService = new HakukohderyhmaServiceMock
   override val koodisto: KoodistoActorRef = new KoodistoActorRef(
     mockActor("koodisto", new MockKoodistoActor())
   )
@@ -315,6 +322,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config.integrations.valintaperusteetServiceConfig,
     None
   )(restEc, system)
+  private val hakukohderyhmaClient =
+    new VirkailijaRestClient(config.integrations.hakukohderyhmaPalveluConfig, None)(restEc, system)
   val pistesyottoService = new PistesyottoService(pistesyottoClient)
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
@@ -394,6 +403,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     )
   val koosteService = new KoosteService(koosteClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
+  val hakukohderyhmaService = new HakukohderyhmaService(hakukohderyhmaClient)(system)
   val parametrit = new ParametritActorRef(
     system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit")
   )

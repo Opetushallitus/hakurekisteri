@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 import java.text.{ParseException, SimpleDateFormat}
 import java.time.Instant
 import java.util.{Calendar, Date}
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -22,6 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.hakukohde.{
   HakukohdeAggregatorActorRef,
   HakukohteenKoulutuksetQuery
 }
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.IHakukohderyhmaService
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodi,
   GetRinnasteinenKoodiArvoQuery,
@@ -208,6 +208,7 @@ object KkHakijaParamMissingException extends Exception
 class KkHakijaService(
   hakemusService: IHakemusService,
   hakupalvelu: Hakupalvelu,
+  hakukohderyhmaService: IHakukohderyhmaService,
   hakukohdeAggregator: HakukohdeAggregatorActorRef,
   haut: ActorRef,
   koodisto: KoodistoActorRef,
@@ -242,8 +243,7 @@ class KkHakijaService(
         case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _) =>
           hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
         case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _) =>
-          hakupalvelu
-            .getHakukohdeOids(hakukohderyhma, haku)
+          getHakukohdeOidsForHakukohdeRyhma(hakukohderyhma, haku)
             .flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
@@ -252,6 +252,21 @@ class KkHakijaService(
   }
 
   private val logger = LoggerFactory.getLogger(this.getClass)
+
+  private def getHakukohdeOidsForHakukohdeRyhma(
+    hakukohderyhma: String,
+    haku: String
+  ): Future[Seq[String]] = {
+    hakupalvelu
+      .getHakukohdeOids(hakukohderyhma, haku)
+      .flatMap(hakukohdeoids => {
+        if (hakukohdeoids.isEmpty) {
+          hakukohderyhmaService.getHakukohteetOfHakukohderyhma(hakukohderyhma)
+        } else {
+          Future.successful(hakukohdeoids)
+        }
+      })
+  }
 
   private def fullHakemukset2hakijat(hakemukset: Seq[HakijaHakemus], version: Int)(
     q: KkHakijaQuery
@@ -265,7 +280,7 @@ class KkHakijaService(
           .flatMap(haku =>
             if (haku.kkHaku) {
               q.hakukohderyhma
-                .map(hakupalvelu.getHakukohdeOids(_, haku.oid))
+                .map(getHakukohdeOidsForHakukohdeRyhma(_, haku.oid))
                 .getOrElse(Future.successful(Seq()))
                 .flatMap(hakukohdeOids => {
                   version match {
