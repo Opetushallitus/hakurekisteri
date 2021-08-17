@@ -73,6 +73,7 @@ cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-servic
 cas.service.valintalaskenta-service=https://${host.virkailija}/valintalaskenta-laskenta-service
 cas.service.oppijanumerorekisteri-service=https://${host.virkailija}/oppijanumerorekisteri-service
 cas.service.valintaperusteet-service=https://${host.virkailija}/valintaperusteet-service
+cas.service.hakukohderyhmapalvelu=https://${host.virkailija}/hakukohderyhmapalvelu
 log4j.properties.file=${user.home.conf}/log4j.properties
 suoritusrekisteri.cache.redis.enabled={{redis_suoritusrekisteri_enabled}}
 suoritusrekisteri.cache.redis.host={{redis_suoritusrekisteri_host}}
