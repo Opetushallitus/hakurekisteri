@@ -297,5 +297,5 @@ object Testihaku
       viimeinenHakuaikaPaattyy = Some(new DateTime().plusDays(1)),
       None,
       "hakutapa_01#1",
-      "hakutyyppi_01#1"
+      Some("hakutyyppi_01#1")
     )
