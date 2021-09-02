@@ -155,7 +155,7 @@ case class Haku(
   viimeinenHakuaikaPaattyy: Option[DateTime],
   kohdejoukkoUri: Option[String],
   hakutapaUri: String,
-  hakutyyppiUri: String
+  hakutyyppiUri: Option[String]
 ) {
   val isActive: Boolean = aika.isCurrently
 }
@@ -180,7 +180,7 @@ object Haku {
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
       kohdejoukkoUri = haku.kohdejoukkoUri,
       hakutapaUri = haku.hakutapaUri,
-      hakutyyppiUri = haku.hakutyyppiUri
+      hakutyyppiUri = Option(haku.hakutyyppiUri)
     )
   }
 
