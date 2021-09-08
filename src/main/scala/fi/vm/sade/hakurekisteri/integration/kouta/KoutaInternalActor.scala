@@ -25,7 +25,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohteenkoulutus
 }
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
-import org.joda.time.LocalDate
+import org.joda.time.{LocalDate, LocalDateTime}
 import support.TypedAskableActorRef
 
 import scala.concurrent.duration._
@@ -138,7 +138,22 @@ case class KoutaInternalRestHakuAika(alkaa: String, paattyy: Option[String]) {
       loppuPvm = paattyy.map(p => Instant.from(formatter.parse(p)).toEpochMilli)
     )
   }
+
+  def getHakukausiVuosi: Int = {
+    paattyy
+      .map(p => new LocalDateTime(p).getYear)
+      .getOrElse(new LocalDateTime(alkaa).getYear)
+  }
 }
+
+case class KoodiUri(koodiUri: String)
+
+case class KoulutuksenAlkamiskausi(
+  koulutuksenAlkamiskausi: Option[KoodiUri],
+  koulutuksenAlkamisvuosi: Option[String]
+)
+
+case class KoutaHakuMetadata(koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi])
 
 case class KoutaInternalRestHaku(
   oid: Option[String],
@@ -147,9 +162,8 @@ case class KoutaInternalRestHaku(
   hakutapaKoodiUri: String,
   kohdejoukkoKoodiUri: Option[String],
   hakuajat: List[KoutaInternalRestHakuAika],
-  alkamiskausiKoodiUri: Option[String],
-  alkamisvuosi: Option[String],
-  kohdejoukonTarkenneKoodiUri: Option[String]
+  kohdejoukonTarkenneKoodiUri: Option[String],
+  metadata: KoutaHakuMetadata
 ) {
   def toRestHaku: RestHaku = RestHaku(
     oid = oid,
@@ -157,11 +171,19 @@ case class KoutaInternalRestHaku(
     nimi = nimi.foldLeft(Map[String, String]())((acc, x) => {
       acc ++ Map(s"kieli_${x._1}" -> x._2)
     }),
-    hakukausiUri = alkamiskausiKoodiUri.orNull,
+    hakukausiUri = metadata.koulutuksenAlkamiskausi
+      .flatMap(_.koulutuksenAlkamiskausi.map(_.koodiUri))
+      .getOrElse("kausi_s#1"),
     hakutapaUri = hakutapaKoodiUri,
-    hakukausiVuosi = new LocalDate().getYear,
-    koulutuksenAlkamiskausiUri = alkamiskausiKoodiUri,
-    koulutuksenAlkamisVuosi = alkamisvuosi.map(_.toInt),
+    hakukausiVuosi = hakuajat
+      .sortBy(ha => ha.alkaa)
+      .headOption
+      .map(ha => ha.getHakukausiVuosi)
+      .getOrElse(new LocalDate().getYear),
+    koulutuksenAlkamiskausiUri =
+      metadata.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamiskausi.map(_.koodiUri)),
+    koulutuksenAlkamisVuosi =
+      metadata.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamisvuosi.map(_.toInt)),
     kohdejoukkoUri = kohdejoukkoKoodiUri,
     kohdejoukonTarkenne = kohdejoukonTarkenneKoodiUri,
     tila = tila
