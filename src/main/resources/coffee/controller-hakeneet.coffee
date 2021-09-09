@@ -403,9 +403,90 @@ app.controller "HakeneetCtrl", [
       R.filter(((hkr) ->
         hkr.nimi.toLowerCase().indexOf(nimi.toLowerCase()) != -1), $scope.hakukohderyhmat)
 
+      searchHakukohdeOld = ->
+      $http.get(window.url("tarjonta-service.hakukohde"),
+        params:
+          searchTerms: $scope.hakukohdenimi
+          hakuOid: (if $scope.haku then $scope.haku.oid else null)
+          organisationOid: (if $scope.organisaatio then $scope.organisaatio.oid else null)
 
+        cache: true
+      ).then ((res) ->
+        return []  if not res.data.result or res.data.result.tuloksia is 0
+        hakukohteet = res.data.result.tulokset.map((tarjoaja) ->
+          tarjoaja.tulokset.map (hakukohde) ->
+            oid: hakukohde.oid
+            nimi: ((if tarjoaja.nimi.fi then tarjoaja.nimi.fi else ((if tarjoaja.nimi.sv then tarjoaja.nimi.sv else tarjoaja.nimi.en)))) + ": " + ((if hakukohde.nimi.fi then hakukohde.nimi.fi else ((if hakukohde.nimi.sv then hakukohde.nimi.sv else hakukohde.nimi.en)))) + ": " + hakukohde.vuosi + " " + ((if hakukohde.kausi.fi then hakukohde.kausi.fi else ((if hakukohde.kausi.sv then hakukohde.kausi.sv else hakukohde.kausi.en))))
+
+        ).reduce((a, b) ->
+          a.concat b
+        )
+        hakukohteet.sort sortByNimi
+
+        hakukohteet
+      ), ->
+        []
 
     $scope.searchHakukohde = ->
+      tarjontaResults = $http.get(window.url("tarjonta-service.hakukohde"),
+        params:
+          searchTerms: $scope.hakukohdenimi
+          hakuOid: (if $scope.haku then $scope.haku.oid else null)
+          organisationOid: (if $scope.organisaatio then $scope.organisaatio.oid else null)
+
+        cache: true
+      ).then ((res) ->
+        console.log("Tarjonta result: ", res)
+        return []  if not res.data.result or res.data.result.tuloksia is 0
+        hakukohteet = res.data.result.tulokset.map((tarjoaja) ->
+          tarjoaja.tulokset.map (hakukohde) ->
+            oid: hakukohde.oid
+            nimi: ((if tarjoaja.nimi.fi then tarjoaja.nimi.fi else ((if tarjoaja.nimi.sv then tarjoaja.nimi.sv else tarjoaja.nimi.en)))) + ": " + ((if hakukohde.nimi.fi then hakukohde.nimi.fi else ((if hakukohde.nimi.sv then hakukohde.nimi.sv else hakukohde.nimi.en)))) + ": " + hakukohde.vuosi + " " + ((if hakukohde.kausi.fi then hakukohde.kausi.fi else ((if hakukohde.kausi.sv then hakukohde.kausi.sv else hakukohde.kausi.en))))
+
+        ).reduce((a, b) ->
+          a.concat b
+        )
+        hakukohteet.sort sortByNimi
+        console.log("Hakukohteet tarjonta ", hakukohteet)
+        hakukohteet
+      )
+
+      koutaResults = $http.get(window.url("kouta-internal.hakukohde.search"),
+        params:
+          q: $scope.hakukohdenimi
+          haku: (if $scope.haku then $scope.haku.oid else null)
+          tarjoaja: (if $scope.organisaatio then $scope.organisaatio.oid else null)
+
+        cache: true
+      ).then(((res) ->
+        rawResult = res.data
+        console.log("Kouta result raw: ", rawResult)
+        parsedResult = rawResult.map((hakukohde) ->
+          oid: hakukohde.oid
+          nimi: ((if hakukohde.organisaatioNimi.fi then hakukohde.organisaatioNimi.fi else ((if hakukohde.organisaatioNimi.sv then hakukohde.organisaatioNimi.sv else hakukohde.organisaatioNimi.en)))) + ": " + ((if hakukohde.nimi.fi then hakukohde.nimi.fi else ((if hakukohde.nimi.sv then hakukohde.nimi.sv else hakukohde.nimi.en))))
+        )
+        console.log("Kouta result parsed: ", parsedResult)
+        parsedResult
+      ),
+        -> console.log("Failed to get kouta hakukohtees")
+        [])
+
+      tarjontaResults.then((tarjontaHakukohtees) ->
+        koutaResults.then((koutaHakukohtees) ->
+          console.log("Combining results")
+          console.log("tarjonta: ", tarjontaHakukohtees)
+          console.log("kouta: ", koutaHakukohtees)
+          combined = [].concat(tarjontaHakukohtees).concat(koutaHakukohtees)
+          combined.sort sortByNimi
+          console.log("Combined results: ", combined)
+          combined
+        )
+      )
+
+
+
+
+    searchHakukohdeOld = ->
       $http.get(window.url("tarjonta-service.hakukohde"),
         params:
           searchTerms: $scope.hakukohdenimi
