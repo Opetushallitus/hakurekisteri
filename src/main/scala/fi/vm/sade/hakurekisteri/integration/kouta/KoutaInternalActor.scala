@@ -173,7 +173,7 @@ case class KoutaInternalRestHaku(
     }),
     hakukausiUri = metadata.koulutuksenAlkamiskausi
       .flatMap(_.koulutuksenAlkamiskausi.map(_.koodiUri))
-      .getOrElse("kausi_s#1"),
+      .getOrElse(""),
     hakutapaUri = hakutapaKoodiUri,
     hakukausiVuosi = hakuajat
       .sortBy(ha => ha.alkaa)

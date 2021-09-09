@@ -1468,7 +1468,10 @@ object KkHakijaUtil {
   ): Future[String] =
     kausiKoodi.split('#').headOption match {
       case None =>
-        throw new InvalidKausiException(s"invalid kausi koodi $kausiKoodi on hakemus $hakemusOid")
+        //This information is not neccessarily available for koutahakus
+        //throw new InvalidKausiException(s"invalid kausi koodi $kausiKoodi on hakemus $hakemusOid")
+        logger.warn(s"No hakukausi with koodi $kausiKoodi for hakemus $hakemusOid")
+        Future.successful("")
 
       case Some(k) =>
         (koodisto.actor ? GetKoodi("kausi", k)).mapTo[Option[Koodi]].map {
@@ -1510,11 +1513,18 @@ object KkHakijaUtil {
     koulutukset: Seq[Hakukohteenkoulutus]
   )(implicit timeout: Timeout, ec: ExecutionContext): Future[Seq[Lasnaolo]] = {
 
+    //FIXME; tätä tietoa ei nyt ole välttämättä samalla tavalla koutassa koulutuksilla
+    //ja parsinta suren päässä koulutuksille on puutteellista,
+    //joten päättely ei voi tällaisena toimia. Nyt ilmoittautumiset eivät näy oikein.
     koulutukset
       .find(koulutusHasValidFieldsForParsing)
       .map(parseKausiVuosiPair)
-      .map(kausiVuosiPairToLasnaoloSequenceFuture(_: (String, Int), t, hakemusOid, hakukohde))
-      .get
+      .map(
+        kausiVuosiPairToLasnaoloSequenceFuture(_: (String, Int), t, hakemusOid, hakukohde)
+      ) match {
+      case Some(s) => s
+      case None    => Future.successful(Seq.empty)
+    }
   }
 
   /**
