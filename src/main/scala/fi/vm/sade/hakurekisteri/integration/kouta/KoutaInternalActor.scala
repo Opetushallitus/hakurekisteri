@@ -65,8 +65,7 @@ class KoutaInternalActor(
       koodi <- getKoodi(koulutus)
     } yield HakukohteenKoulutukset(
       hakukohdeOid = hakukohdeOid,
-      ulkoinenTunniste =
-        Some("FIXME: NEEDS SPECIFICATION HOW TO DEFINE FOR HAKUKOHDE IN KOUTA-INTERNAL"),
+      ulkoinenTunniste = None,
       koulutukset = Seq(
         Hakukohteenkoulutus(
           komoOid = koulutus.oid,
