@@ -451,11 +451,14 @@ app.controller "HakeneetCtrl", [
         hakukohteet
       )
 
+      #Kouta-internalin hakukohderajapinta haluaa, että joko haku tai organisaatio on määritelty aina,
+      #joten käytetään oph-oidia jos kälistä ei ole valittu muuta
+      koutaTarjoaja = if $scope.organisaatio then $scope.organisaatio.oid else if not $scope.haku then "1.2.246.562.10.00000000001" else null
       koutaResults = $http.get(window.url("kouta-internal.hakukohde.search"),
         params:
           q: $scope.hakukohdenimi
           haku: (if $scope.haku then $scope.haku.oid else null)
-          tarjoaja: (if $scope.organisaatio then $scope.organisaatio.oid else null)
+          tarjoaja: koutaTarjoaja
 
         cache: true
       ).then(((res) ->
