@@ -11,6 +11,7 @@ $.ajaxSetup({headers: {callerIdHeaderName: callerIdHeaderValue}});
 
 plainUrls = undefined
 window.urls.load("suoritusrekisteri-web-oph.json", {overrides: "rest/v1/properties"}).then ->
+  $http.get(window.url("kouta-internal.auth.login")).then((res) -> console.log("Kouta login successful"))
   $http.get(window.url("cas.myroles"),
     cache: true
   ).success (myroles) ->
