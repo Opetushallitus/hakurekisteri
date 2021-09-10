@@ -33,6 +33,8 @@
     "tarjonta-service.hakukohde": "/tarjonta-service/rest/v1/hakukohde/search",
     "tarjonta-service.hakukohdeById": "/tarjonta-service/rest/v1/hakukohde/$1",
     "kouta-internal.hakukohde.search": "/kouta-internal/hakukohde/search",
+    "kouta-internal.hakuByOid": "/kouta-internal/haku/$1",
+    "kouta-internal.hakukohdeByOid": "/kouta-internal/hakukohde/$1",
     "kouta-internal.auth.login": "/kouta-internal/auth/login",
     "cas.myroles": "/cas/myroles",
     "suoritusrekisteri.jonotus": "/suoritusrekisteri/siirtotiedostojono",
