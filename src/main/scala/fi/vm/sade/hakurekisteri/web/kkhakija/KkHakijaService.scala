@@ -1468,8 +1468,6 @@ object KkHakijaUtil {
   ): Future[String] =
     kausiKoodi.split('#').headOption match {
       case None =>
-        //This information is not neccessarily available for koutahakus
-        //throw new InvalidKausiException(s"invalid kausi koodi $kausiKoodi on hakemus $hakemusOid")
         logger.warn(s"No hakukausi with koodi $kausiKoodi for hakemus $hakemusOid")
         Future.successful("")
 
@@ -1513,9 +1511,6 @@ object KkHakijaUtil {
     koulutukset: Seq[Hakukohteenkoulutus]
   )(implicit timeout: Timeout, ec: ExecutionContext): Future[Seq[Lasnaolo]] = {
 
-    //FIXME; tätä tietoa ei nyt ole välttämättä samalla tavalla koutassa koulutuksilla
-    //ja parsinta suren päässä koulutuksille on puutteellista,
-    //joten päättely ei voi tällaisena toimia. Nyt ilmoittautumiset eivät näy oikein.
     koulutukset
       .find(koulutusHasValidFieldsForParsing)
       .map(parseKausiVuosiPair)
