@@ -111,7 +111,7 @@ class KoutaInternalActor(
       koodi <- getKoodi(koulutus)
     } yield HakukohteenKoulutukset(
       hakukohdeOid = hakukohdeOid,
-      ulkoinenTunniste = None,
+      ulkoinenTunniste = hakukohde.externalId,
       koulutukset = Seq(
         Hakukohteenkoulutus(
           komoOid = koulutus.oid,
@@ -151,7 +151,7 @@ class KoutaInternalActor(
               Hakukohde(
                 oid = hakukohde.oid,
                 hakukohdeKoulutusOids = Seq(toteutus.koulutusOid),
-                ulkoinenTunniste = None,
+                ulkoinenTunniste = hakukohde.externalId,
                 tarjoajaOids = toteutus.tarjoajat,
                 hakukohteenNimet = hakukohde.nimi,
                 alinValintaPistemaara = None
@@ -258,14 +258,15 @@ case class KoutaInternalHakukohde(
   toteutusOid: String,
   nimi: Map[String, String],
   kaytetaanHaunAlkamiskautta: Option[Boolean],
-  hakuOid: String
+  hakuOid: String,
+  externalId: Option[String]
 ) {
   def toHakukohde(tarjoajaOids: Option[Set[String]]): Hakukohde =
     Hakukohde(
       oid = oid,
       hakukohteenNimet = nimi,
       hakukohdeKoulutusOids = Seq(toteutusOid),
-      ulkoinenTunniste = None,
+      ulkoinenTunniste = externalId,
       tarjoajaOids = tarjoajaOids,
       alinValintaPistemaara = None
     )
