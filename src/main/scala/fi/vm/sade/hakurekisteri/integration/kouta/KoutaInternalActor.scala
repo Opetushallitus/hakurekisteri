@@ -193,6 +193,16 @@ case class KoutaInternalRestHakuAika(alkaa: String, paattyy: Option[String]) {
       .map(p => new LocalDateTime(p).getYear)
       .getOrElse(new LocalDateTime(alkaa).getYear)
   }
+
+  def getHakukausiUri: String = {
+    paattyy
+      .map(p => new LocalDateTime(p).getMonthOfYear)
+      .getOrElse(new LocalDateTime(alkaa).getMonthOfYear)
+  } match {
+    case m if m >= 1 && m <= 7  => "kausi_k#1"
+    case m if m >= 8 && m <= 12 => "kausi_s#1"
+    case _                      => ""
+  }
 }
 
 case class KoodiUri(koodiUri: String)
@@ -220,8 +230,10 @@ case class KoutaInternalRestHaku(
     nimi = nimi.foldLeft(Map[String, String]())((acc, x) => {
       acc ++ Map(s"kieli_${x._1}" -> x._2)
     }),
-    hakukausiUri = metadata.koulutuksenAlkamiskausi
-      .flatMap(_.koulutuksenAlkamiskausi.map(_.koodiUri))
+    hakukausiUri = hakuajat
+      .sortBy(ha => ha.alkaa)
+      .headOption
+      .map(ha => ha.getHakukausiUri)
       .getOrElse(""),
     hakutapaUri = hakutapaKoodiUri,
     hakukausiVuosi = hakuajat
