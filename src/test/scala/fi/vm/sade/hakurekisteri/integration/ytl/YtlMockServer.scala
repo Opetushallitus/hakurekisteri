@@ -149,12 +149,7 @@ class YtlMockServer {
   def stop() = server.stop()
 
   def basicAuth(username: String, password: String, realm: String): ConstraintSecurityHandler = {
-    val l = new HashLoginService() {
-      val subject = new Subject
-      val principal = loadUserInfo(username)
-      subject.getPrincipals().add(principal)
-      _identityService.newUserIdentity(subject, principal, Array[String] { "user" })
-    }
+    val l = new HashLoginService()
     //l.login(username, Credential.getCredential(password), Array[String] { "user" });
     //l.setName(realm);
 
