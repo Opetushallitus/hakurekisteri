@@ -128,7 +128,6 @@ class YtlMockServer {
 
   def start(): Unit = {
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-    context.setSecurityHandler(basicAuth(username, password, "Private!"));
     context.setContextPath("/");
     val v: RequestLog = new RequestLog {
       def log(var1: org.eclipse.jetty.server.Request, var2: org.eclipse.jetty.server.Response) = {
@@ -147,29 +146,6 @@ class YtlMockServer {
   }
 
   def stop() = server.stop()
-
-  def basicAuth(username: String, password: String, realm: String): ConstraintSecurityHandler = {
-    val l = new HashLoginService()
-    //l.login(username, Credential.getCredential(password), Array[String] { "user" });
-    //l.setName(realm);
-
-    val constraint = new Constraint();
-    constraint.setName(Constraint.__BASIC_AUTH);
-    constraint.setRoles(Array[String] { "user" });
-    constraint.setAuthenticate(true);
-
-    val cm = new ConstraintMapping();
-    cm.setConstraint(constraint);
-    cm.setPathSpec("/*");
-
-    val csh = new ConstraintSecurityHandler();
-    csh.setAuthenticator(new BasicAuthenticator());
-    csh.setRealmName("myrealm");
-    csh.addConstraintMapping(cm);
-    csh.setLoginService(l);
-
-    csh
-  }
 
   def makePostFail(times: Int): Unit = {
     servlet.makePostFail(times)
