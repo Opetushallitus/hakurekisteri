@@ -1,19 +1,24 @@
 package fi.vm.sade.hakurekisteri.valpas
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, Props}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Config, MockDevConfig}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
-import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache, RedisCacheFactory}
+import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{
   AllHaut,
-  GetHaku,
   GetHakuOption,
   Haku,
-  HakuRequest
+  HakuRequest,
+  RestHaku
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  HakukohdeAggregatorActorRef,
+  HakukohdeQuery,
+  MockHakukohdeAggregatorActor
 }
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
@@ -27,6 +32,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActor,
   KoodistoActorRef
 }
+import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActorRef, MockKoutaInternalActor}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{
   ChildOids,
@@ -41,14 +47,12 @@ import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
   PistetietoWrapper
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  Hakukohde,
   HakukohdeOid,
-  HakukohdeQuery,
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
   Koulutus,
-  RestHaku,
   TarjontaActorRef,
+  TarjontaHakukohde,
   TarjontaResultResponse
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
@@ -67,10 +71,8 @@ import fi.vm.sade.hakurekisteri.integration.{
   OphUrlProperties,
   VirkailijaRestClient
 }
-import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.{ArgumentCaptor, Mockito}
-import org.hamcrest.core._
 import org.mockito.ArgumentMatchers._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, _}
@@ -176,11 +178,25 @@ class ValpasSpec
                 sender ! HakukohteenKoulutukset(oid, None, Seq(kToHk(koulutus)))
             }
           case HakukohdeQuery(oid) =>
-            sender ! resource[TarjontaResultResponse[Option[Hakukohde]]](
+            sender ! resource[TarjontaResultResponse[Option[TarjontaHakukohde]]](
               s"/mock-data/tarjonta/hakukohde_$oid.json"
-            ).result
+            ).result.map(_.toHakukohde)
         }
       })))
+
+      val koutaInternal = new KoutaInternalActorRef(
+        system.actorOf(Props(new Actor {
+          override def receive: Actor.Receive = { case oid: String =>
+            sender ! Some("")
+          }
+        }))
+      )
+
+      val mockAggregator = new HakukohdeAggregatorActorRef(
+        system.actorOf(
+          Props(new MockHakukohdeAggregatorActor(tarjonta, koutaInternal, Config.mockDevConfig))
+        )
+      )
 
       val cacheFactory = mock[CacheFactory]
       val redisCache = mock[RedisCache[String, String]]
@@ -193,7 +209,7 @@ class ValpasSpec
       val hakemusService = new HakemusService(
         hakuAppClient,
         ataruClient,
-        tarjonta,
+        mockAggregator,
         OrganisaatioActorRef(
           system.actorOf(
             Props(

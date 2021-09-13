@@ -1,11 +1,12 @@
 import java.util.concurrent.TimeUnit
-
 import _root_.akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaServiceMock
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
@@ -20,6 +21,7 @@ import fi.vm.sade.hakurekisteri.web.jonotus.{
 }
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
+
 import javax.servlet.ServletContext
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{Extraction, _}
@@ -49,7 +51,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
           hakuOid: String
         ): Future[Seq[String]] = Future.successful(Seq())
       },
-      tarjonta = new TarjontaActorRef(anyActorRef),
+      hakukohderyhmaService = new HakukohderyhmaServiceMock(),
+      hakukohdeAggregator = new HakukohdeAggregatorActorRef(anyActorRef),
       haut = anyActorRef,
       koodisto = new KoodistoActorRef(anyActorRef),
       suoritukset = anyActorRef,

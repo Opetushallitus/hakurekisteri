@@ -2,21 +2,27 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MINUTES
-
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.hakija.{Hakija, _}
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaActor, HakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{ListHakemus, _}
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, HakuActor, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.hakukohde
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{HakukohdeQuery, HakukohteenKoulutuksetQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Hakukohde, _}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohdeOid,
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  Koulutusohjelma,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
-import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig, SpecsLikeMockito}
+import fi.vm.sade.hakurekisteri.{MockConfig, SpecsLikeMockito}
 import org.joda.time.DateTime
 import org.scalatest.Suite
 import org.scalatra.swagger.Swagger
@@ -944,25 +950,24 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       None,
       Some(Koulutusohjelma(Map.empty))
     )
-  val ataruHakukohde1 =
-    Hakukohde(
-      "1.2.246.562.20.14800254899",
-      Map.empty,
-      Seq(),
-      None,
-      Some(Set("1.2.246.562.10.39920288212")),
-      None
-    )
-  val ataruHakukohde2 = Hakukohde(
+  val ataruHakukohde1 = hakukohde.Hakukohde(
+    "1.2.246.562.20.14800254899",
+    Map("fi" -> "Hakukohde Tulppaaniin 1.2.246.562.20.14800254899"),
+    Seq(),
+    None,
+    Some(Set("1.2.246.562.10.39920288212")),
+    None
+  )
+  val ataruHakukohde2 = hakukohde.Hakukohde(
     "1.2.246.562.20.44085996724",
-    Map.empty,
+    Map("fi" -> "Hakukohde Ruusulaan 1.2.246.562.20.44085996724"),
     Seq(),
     None,
     Some(Set("1.2.246.562.10.2014041814420657444022")),
     None
   )
 
-  def getHakukohde(oid: String): Option[Hakukohde] = oid match {
+  def getHakukohde(oid: String): Option[hakukohde.Hakukohde] = oid match {
     case "1.2.246.562.20.14800254899" => Some(ataruHakukohde1)
     case "1.2.246.562.20.44085996724" => Some(ataruHakukohde2)
   }
@@ -970,9 +975,22 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   class MockedTarjontaActor extends Actor {
     override def receive: Actor.Receive = {
       case oid: HakukohdeOid =>
-        sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
+        sender ! getHakukohteenKoulutukset(oid.oid)
       case q: HakukohdeQuery => sender ! getHakukohde(q.oid)
     }
+  }
+
+  class MockedHakukohdeAggregatorActor extends Actor {
+    override def receive: Actor.Receive = {
+      case q: HakukohdeQuery =>
+        sender ! getHakukohde(q.oid).get
+      case q: HakukohteenKoulutuksetQuery =>
+        sender ! getHakukohteenKoulutukset(q.hakukohdeOid)
+    }
+  }
+
+  private def getHakukohteenKoulutukset(hakukohdeOid: String) = {
+    HakukohteenKoulutukset(hakukohdeOid, Some("joku tunniste"), Seq(koulutus1))
   }
 
   class MockedKoodistoActor extends Actor {

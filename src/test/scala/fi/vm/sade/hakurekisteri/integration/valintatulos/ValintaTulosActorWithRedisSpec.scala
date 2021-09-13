@@ -1,15 +1,20 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.locks.ReentrantLock
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
-import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, RestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  AllHaut,
+  Haku,
+  HakuRequest,
+  RestHaku,
+  RestHakuAika
+}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaRestHaku, TarjontaRestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.KESKEN
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
@@ -155,10 +160,10 @@ class ValintaTulosActorWithRedisSpec
                 sender ! AllHaut(
                   Seq(
                     Haku(
-                      RestHaku(
+                      TarjontaRestHaku(
                         Some("1.2.246.562.29.90697286252"),
                         List(
-                          RestHakuAika(
+                          TarjontaRestHakuAika(
                             DateTime.now().minusDays(1).getMillis,
                             None
                           )
@@ -257,10 +262,10 @@ class ValintaTulosActorWithRedisSpec
       valintaTulosActor ! AllHaut(
         Seq(
           Haku(
-            RestHaku(
+            TarjontaRestHaku(
               Some("1.2.246.562.29.90697286253"),
               List(
-                RestHakuAika(
+                TarjontaRestHakuAika(
                   DateTime.now().minusDays(1).getMillis,
                   None
                 )
@@ -350,10 +355,10 @@ class ValintaTulosActorWithRedisSpec
       valintaTulosActor ! AllHaut(
         Seq(
           Haku(
-            RestHaku(
+            TarjontaRestHaku(
               Some("1.2.246.562.29.90697286253"),
               List(
-                RestHakuAika(
+                TarjontaRestHakuAika(
                   DateTime.now().minusDays(1).getMillis,
                   None
                 )

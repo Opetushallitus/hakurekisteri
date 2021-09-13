@@ -6,6 +6,8 @@ import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaService
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
@@ -46,11 +48,11 @@ class KkHakijaResourceSpec
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
-  private val tarjontaMock = new TarjontaActorRef(mock[ActorRef])
+  private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(mock[ActorRef])
   private val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
-    tarjontaMock,
+    hakukohdeAggregatorMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
     Config.mockDevConfig,
@@ -66,7 +68,8 @@ class KkHakijaResourceSpec
   val service = new KkHakijaService(
     hakemusService,
     mock[Hakupalvelu],
-    tarjontaMock,
+    mock[HakukohderyhmaService],
+    hakukohdeAggregatorMock,
     hakuMock,
     koodistoMock,
     suoritusMock,

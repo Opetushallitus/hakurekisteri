@@ -3,11 +3,10 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 import java.text.{ParseException, SimpleDateFormat}
 import java.time.Instant
 import java.util.{Calendar, Date}
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto._
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
   FullHakemus,
@@ -18,13 +17,22 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   _
 }
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  HakukohdeAggregatorActorRef,
+  HakukohteenKoulutuksetQuery
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.IHakukohderyhmaService
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodi,
   GetRinnasteinenKoodiArvoQuery,
   Koodi,
   KoodistoActorRef
 }
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
   IValintaperusteetService,
   ValintatapajononTiedot
@@ -200,7 +208,8 @@ object KkHakijaParamMissingException extends Exception
 class KkHakijaService(
   hakemusService: IHakemusService,
   hakupalvelu: Hakupalvelu,
-  tarjonta: TarjontaActorRef,
+  hakukohderyhmaService: IHakukohderyhmaService,
+  hakukohdeAggregator: HakukohdeAggregatorActorRef,
   haut: ActorRef,
   koodisto: KoodistoActorRef,
   suoritukset: ActorRef,
@@ -234,8 +243,7 @@ class KkHakijaService(
         case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _) =>
           hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
         case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _) =>
-          hakupalvelu
-            .getHakukohdeOids(hakukohderyhma, haku)
+          getHakukohdeOidsForHakukohdeRyhma(hakukohderyhma, haku)
             .flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
       };
@@ -244,6 +252,21 @@ class KkHakijaService(
   }
 
   private val logger = LoggerFactory.getLogger(this.getClass)
+
+  private def getHakukohdeOidsForHakukohdeRyhma(
+    hakukohderyhma: String,
+    haku: String
+  ): Future[Seq[String]] = {
+    hakupalvelu
+      .getHakukohdeOids(hakukohderyhma, haku)
+      .flatMap(hakukohdeoids => {
+        if (hakukohdeoids.isEmpty) {
+          hakukohderyhmaService.getHakukohteetOfHakukohderyhma(hakukohderyhma)
+        } else {
+          Future.successful(hakukohdeoids)
+        }
+      })
+  }
 
   private def fullHakemukset2hakijat(hakemukset: Seq[HakijaHakemus], version: Int)(
     q: KkHakijaQuery
@@ -257,7 +280,7 @@ class KkHakijaService(
           .flatMap(haku =>
             if (haku.kkHaku) {
               q.hakukohderyhma
-                .map(hakupalvelu.getHakukohdeOids(_, haku.oid))
+                .map(getHakukohdeOidsForHakukohdeRyhma(_, haku.oid))
                 .getOrElse(Future.successful(Seq()))
                 .flatMap(hakukohdeOids => {
                   version match {
@@ -595,9 +618,9 @@ class KkHakijaService(
       val preferenceEligibilities = hakemus.preferenceEligibilities
       val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
       for {
-        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(
-          hakukohdeOid
-        )).mapTo[HakukohteenKoulutukset]
+        hakukohteenkoulutukset: HakukohteenKoulutukset <-
+          (hakukohdeAggregator.actor ? HakukohteenKoulutuksetQuery(hakukohdeOid))
+            .mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
         jononTyyppi: Option[String] <- jononTyyppiForHakemusF(
           sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
@@ -658,9 +681,9 @@ class KkHakijaService(
         hakukohdeOid <- toive.koulutusId.fold[Future[String]](
           Future.failed(new RuntimeException("No hakukohde OID"))
         )(Future.successful)
-        hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta.actor ? HakukohdeOid(
-          hakukohdeOid
-        )).mapTo[HakukohteenKoulutukset]
+        hakukohteenkoulutukset: HakukohteenKoulutukset <-
+          (hakukohdeAggregator.actor ? HakukohteenKoulutuksetQuery(hakukohdeOid))
+            .mapTo[HakukohteenKoulutukset]
         kausi: String <- getKausi(haku.kausi, hakemus.oid, koodisto)
         jononTyyppi: Option[String] <- jononTyyppiForHakemusF(
           sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
@@ -1445,7 +1468,8 @@ object KkHakijaUtil {
   ): Future[String] =
     kausiKoodi.split('#').headOption match {
       case None =>
-        throw new InvalidKausiException(s"invalid kausi koodi $kausiKoodi on hakemus $hakemusOid")
+        logger.warn(s"No hakukausi with koodi $kausiKoodi for hakemus $hakemusOid")
+        Future.successful("")
 
       case Some(k) =>
         (koodisto.actor ? GetKoodi("kausi", k)).mapTo[Option[Koodi]].map {
@@ -1490,8 +1514,12 @@ object KkHakijaUtil {
     koulutukset
       .find(koulutusHasValidFieldsForParsing)
       .map(parseKausiVuosiPair)
-      .map(kausiVuosiPairToLasnaoloSequenceFuture(_: (String, Int), t, hakemusOid, hakukohde))
-      .get
+      .map(
+        kausiVuosiPairToLasnaoloSequenceFuture(_: (String, Int), t, hakemusOid, hakukohde)
+      ) match {
+      case Some(s) => s
+      case None    => Future.successful(Seq.empty)
+    }
   }
 
   /**

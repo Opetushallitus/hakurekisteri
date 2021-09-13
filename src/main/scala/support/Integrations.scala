@@ -2,11 +2,26 @@ package support
 
 import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.pattern.{Backoff, BackoffSupervisor}
+import akka.pattern.{AskableActorRef, Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  HakuActor,
+  HakuAggregatorActor,
+  HakuAggregatorActorRef,
+  MockHakuAggregatorActor
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  HakukohdeAggregatorActor,
+  HakukohdeAggregatorActorRef,
+  MockHakukohdeAggregatorActor
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.{
+  HakukohderyhmaService,
+  HakukohderyhmaServiceMock,
+  IHakukohderyhmaService
+}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActor,
@@ -19,6 +34,11 @@ import fi.vm.sade.hakurekisteri.integration.kooste.{
   KoosteServiceMock
 }
 import fi.vm.sade.hakurekisteri.integration.koski._
+import fi.vm.sade.hakurekisteri.integration.kouta.{
+  KoutaInternalActor,
+  KoutaInternalActorRef,
+  MockKoutaInternalActor
+}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{
   HttpOrganisaatioActor,
   MockOrganisaatioActor,
@@ -71,6 +91,9 @@ trait Integrations {
   val hakemusService: IHakemusService
   val koosteService: IKoosteService
   val tarjonta: TarjontaActorRef
+  val koutaInternal: KoutaInternalActorRef
+  val hakuAggregator: HakuAggregatorActorRef
+  val hakukohdeAggregator: HakukohdeAggregatorActorRef
   val haut: ActorRef
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
@@ -87,6 +110,7 @@ trait Integrations {
   val koskiService: IKoskiService
   val valintaperusteetService: IValintaperusteetService
   val pistesyottoService: PistesyottoService
+  val hakukohderyhmaService: IHakukohderyhmaService
 }
 
 object Integrations {
@@ -118,6 +142,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
   override val valintaperusteetService = new ValintaperusteetServiceMock
+  override val hakukohderyhmaService = new HakukohderyhmaServiceMock
   override val koodisto: KoodistoActorRef = new KoodistoActorRef(
     mockActor("koodisto", new MockKoodistoActor())
   )
@@ -132,6 +157,18 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
   override val tarjonta: TarjontaActorRef = new TarjontaActorRef(
     mockActor("tarjonta", new MockTarjontaActor(config)(system))
+  )
+  override val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(
+    mockActor("koutaInternal", new MockKoutaInternalActor(koodisto, config))
+  )
+  override val hakuAggregator: HakuAggregatorActorRef = new HakuAggregatorActorRef(
+    mockActor("hakuAggregator", new MockHakuAggregatorActor(tarjonta, koutaInternal, config))
+  )
+  override val hakukohdeAggregator: HakukohdeAggregatorActorRef = new HakukohdeAggregatorActorRef(
+    mockActor(
+      "hakukohdeAggregator",
+      new MockHakukohdeAggregatorActor(tarjonta, koutaInternal, config)
+    )
   )
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytlKokelasPersister = new YtlKokelasPersister(
@@ -154,7 +191,9 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
 
   val haut: ActorRef = system.actorOf(
-    Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
+    Props(
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, config)
+    ),
     "haut"
   )
   val valintaTulos: ValintaTulosActorRef = new ValintaTulosActorRef(
@@ -219,6 +258,16 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   private val tarjontaClient =
     new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(restEc, system)
+  private val koutaInternalClient =
+    new VirkailijaRestClient(
+      config.integrations.koutaInternalConfig,
+      None,
+      jSessionName = "session",
+      serviceUrlSuffix = "/auth/login"
+    )(
+      restEc,
+      system
+    )
   private val organisaatioClient =
     new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(restEc, system)
   private val koodistoClient =
@@ -273,6 +322,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config.integrations.valintaperusteetServiceConfig,
     None
   )(restEc, system)
+  private val hakukohderyhmaClient = new VirkailijaRestClient(
+    config.integrations.hakukohderyhmaPalveluConfig,
+    None,
+    jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas"
+  )(restEc, system)
   val pistesyottoService = new PistesyottoService(pistesyottoClient)
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
@@ -294,6 +349,27 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       "tarjonta"
     )
   )
+  val koodisto = new KoodistoActorRef(
+    system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
+  )
+  val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(
+    getSupervisedActorFor(
+      Props(new KoutaInternalActor(koodisto, koutaInternalClient, config)),
+      "koutaInternal"
+    )
+  )
+  val hakuAggregator: HakuAggregatorActorRef = new HakuAggregatorActorRef(
+    getSupervisedActorFor(
+      Props(new HakuAggregatorActor(tarjonta, koutaInternal, config)),
+      "hakuAggregator"
+    )
+  )
+  val hakukohdeAggregator: HakukohdeAggregatorActorRef = new HakukohdeAggregatorActorRef(
+    getSupervisedActorFor(
+      Props(new HakukohdeAggregatorActor(tarjonta, koutaInternal, config)),
+      "hakukohdeAggregator"
+    )
+  )
   val organisaatiot = new OrganisaatioActorRef(
     getSupervisedActorFor(
       Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)),
@@ -311,7 +387,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val hakemusService = new HakemusService(
     hakemusClient,
     ataruHakemusClient,
-    tarjonta,
+    hakukohdeAggregator,
     organisaatiot,
     oppijaNumeroRekisteri,
     config,
@@ -331,9 +407,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     )
   val koosteService = new KoosteService(koosteClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
-  val koodisto = new KoodistoActorRef(
-    system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
-  )
+  val hakukohderyhmaService = new HakukohderyhmaService(hakukohderyhmaClient)(system)
   val parametrit = new ParametritActorRef(
     system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit")
   )
@@ -363,7 +437,9 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
 
   val haut: ActorRef = system.actorOf(
-    Props(new HakuActor(koskiService, tarjonta, parametrit, ytlIntegration, config)),
+    Props(
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, config)
+    ),
     "haut"
   )
   val valintaTulos: ValintaTulosActorRef = ValintaTulosActorRef(
@@ -492,4 +568,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
 trait TypedActorRef {
   val actor: ActorRef
+}
+
+trait TypedAskableActorRef {
+  val actor: AskableActorRef
 }

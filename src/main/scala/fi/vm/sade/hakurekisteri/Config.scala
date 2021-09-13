@@ -252,7 +252,7 @@ abstract class Config {
   val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA
-  val hostQa = "testi.virkailija.opintopolku.fi"
+  val hostQa = "virkailija.testiopintopolku.fi"
 
   lazy val resources = propertyLocations.map(ophConfDir.resolve(_))
 
@@ -344,8 +344,10 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
+  val koutaInternalUrlQa = s"https://$hostQa/kouta-internal"
   val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
   val valintaperusteetServiceUrlQa = s"https://$hostQa/valintaperusteet-service"
+  val hakukohderyhmaPalveluUrlQA = s"https://$hostQa/hakukohderyhmapalvelu"
 
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
   val virtaJarjestelmaTest = ""
@@ -355,6 +357,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
   val tarjontaServiceUrl =
     properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
+  val koutaInternalUrl = properties.getOrElse("cas.service.kouta-internal", koutaInternalUrlQa)
   val koosteServiceUrl = properties("cas.service.valintalaskentakoostepalvelu")
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
   val ataruUrl = properties.getOrElse("cas.service.ataru", ataruUrlQa)
@@ -385,6 +388,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
   val valintaperusteetServiceUrl =
     properties.getOrElse("cas.service.valintaperusteet-service", valintaperusteetServiceUrlQa)
+  val hakukohderyhmaPalveluUrl =
+    properties.getOrElse("cas.service.hakukohderyhmapalvelu", hakukohderyhmaPalveluUrlQA)
 
   val hakuappPageSize: Int =
     properties.getOrElse("suoritusrekisteri.haku-app.pagesize", "200").toInt
@@ -477,6 +482,17 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     maxConnectionQueueMs =
       findMandatoryPropertyValue("suoritusrekisteri.tarjonta-service.max-connection-queue-ms").toInt
   )
+  val koutaInternalConfig = ServiceConfig(
+    casUrl,
+    serviceUrl = koutaInternalUrl,
+    serviceUser,
+    servicePassword,
+    properties = properties,
+    maxSimultaneousConnections =
+      findMandatoryPropertyValue("suoritusrekisteri.kouta-internal.max-connections").toInt,
+    maxConnectionQueueMs =
+      findMandatoryPropertyValue("suoritusrekisteri.kouta-internal.max-connection-queue-ms").toInt
+  )
   val koodistoConfig = ServiceConfig(
     serviceUrl = koodistoServiceUrl,
     properties = properties,
@@ -564,6 +580,19 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     ).toInt,
     maxConnectionQueueMs = findMandatoryPropertyValue(
       "suoritusrekisteri.valintaperusteet-service.max-connection-queue-ms"
+    ).toInt
+  )
+  val hakukohderyhmaPalveluConfig = ServiceConfig(
+    casUrl = casUrl,
+    serviceUrl = hakukohderyhmaPalveluUrl,
+    user = serviceUser,
+    password = servicePassword,
+    properties = properties,
+    maxSimultaneousConnections = findMandatoryPropertyValue(
+      "suoritusrekisteri.hakukohderyhmapalvelu.max-connections"
+    ).toInt,
+    maxConnectionQueueMs = findMandatoryPropertyValue(
+      "suoritusrekisteri.hakukohderyhmapalvelu.max-connection-queue-ms"
     ).toInt
   )
 

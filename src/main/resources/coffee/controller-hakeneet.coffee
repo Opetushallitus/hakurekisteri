@@ -390,7 +390,7 @@ app.controller "HakeneetCtrl", [
       cache: true
     ).then ((res) ->
       return [] if not res.data or res.data.length is 0
-      hakukohderyhmat = res.data.filter((r)->r.ryhmatyypit[0] == "hakukohde").map((r)->
+      hakukohderyhmat = res.data.filter((r)-> r.ryhmatyypit.some((tyyppi) -> tyyppi == "hakukohde" or tyyppi == "hakukohderyhma")).map((r)->
         oid: r.oid
         nimi: (if r.nimi.fi then r.nimi.fi else if r.nimi.sv then r.nimi.sv else if r.nimi.en then r.nimi.en)
       )
@@ -403,10 +403,8 @@ app.controller "HakeneetCtrl", [
       R.filter(((hkr) ->
         hkr.nimi.toLowerCase().indexOf(nimi.toLowerCase()) != -1), $scope.hakukohderyhmat)
 
-
-
     $scope.searchHakukohde = ->
-      $http.get(window.url("tarjonta-service.hakukohde"),
+      tarjontaResults = $http.get(window.url("tarjonta-service.hakukohde"),
         params:
           searchTerms: $scope.hakukohdenimi
           hakuOid: (if $scope.haku then $scope.haku.oid else null)
@@ -414,6 +412,7 @@ app.controller "HakeneetCtrl", [
 
         cache: true
       ).then ((res) ->
+        console.log("Tarjonta result: ", res)
         return []  if not res.data.result or res.data.result.tuloksia is 0
         hakukohteet = res.data.result.tulokset.map((tarjoaja) ->
           tarjoaja.tulokset.map (hakukohde) ->
@@ -424,10 +423,39 @@ app.controller "HakeneetCtrl", [
           a.concat b
         )
         hakukohteet.sort sortByNimi
-
+        console.log("Hakukohteet tarjonta ", hakukohteet)
         hakukohteet
-      ), ->
-        []
+      )
+
+      #Kouta-internalin hakukohderajapinta haluaa, että joko haku tai organisaatio on määritelty aina,
+      #joten käytetään oph-oidia jos kälistä ei ole valittu muuta
+      koutaTarjoaja = if $scope.organisaatio then $scope.organisaatio.oid else if not $scope.haku then "1.2.246.562.10.00000000001" else null
+      koutaResults = $http.get(window.url("kouta-internal.hakukohde.search"),
+        params:
+          q: $scope.hakukohdenimi
+          haku: (if $scope.haku then $scope.haku.oid else null)
+          tarjoaja: koutaTarjoaja
+
+        cache: true
+      ).then(((res) ->
+        rawResult = res.data
+        parsedResult = rawResult.map((hakukohde) ->
+          oid: hakukohde.oid
+          nimi: ((if hakukohde.organisaatioNimi.fi then hakukohde.organisaatioNimi.fi else ((if hakukohde.organisaatioNimi.sv then hakukohde.organisaatioNimi.sv else hakukohde.organisaatioNimi.en)))) + ": " + ((if hakukohde.nimi.fi then hakukohde.nimi.fi else ((if hakukohde.nimi.sv then hakukohde.nimi.sv else hakukohde.nimi.en))))
+        )
+        parsedResult
+      ),
+        -> console.log("Failed to get kouta hakukohtees")
+        [])
+
+      tarjontaResults.then((tarjontaHakukohtees) ->
+        koutaResults.then((koutaHakukohtees) ->
+          combined = [].concat(tarjontaHakukohtees).concat(koutaHakukohtees)
+          combined.sort sortByNimi
+          console.log("Combined results: ", combined)
+          combined
+        )
+      )
 
     $scope.setHakukohderyhma = (item) ->
       $scope.hakukohderyhma = item.oid

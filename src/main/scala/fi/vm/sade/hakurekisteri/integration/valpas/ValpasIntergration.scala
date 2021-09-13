@@ -11,7 +11,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakutoiveDTO,
   IHakemusService
 }
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, GetHakuOption, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHakuOption, Haku}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodistoKoodiArvot,
   KoodistoActorRef,
@@ -24,12 +25,11 @@ import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
   PistetietoWrapper
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  Hakukohde,
   HakukohdeOid,
-  HakukohdeQuery,
   HakukohteenKoulutukset,
   Koulutusohjelma,
-  TarjontaActorRef
+  TarjontaActorRef,
+  TarjontaHakukohde
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   ValintaTulos,

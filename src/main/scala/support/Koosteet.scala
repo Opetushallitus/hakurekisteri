@@ -89,7 +89,8 @@ class BaseKoosteet(
   val kkHakijaService: KkHakijaService = new KkHakijaService(
     integrations.hakemusService,
     hakupalvelu,
-    integrations.tarjonta,
+    integrations.hakukohderyhmaService,
+    integrations.hakukohdeAggregator,
     integrations.haut,
     integrations.koodisto,
     registers.suoritusRekisteri,

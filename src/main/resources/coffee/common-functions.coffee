@@ -25,6 +25,15 @@ getHakuNimi = ($http, hakuOid, successCallback) ->
   ).success((json) ->
     if json.result && json.result.nimi
       return successCallback(json.result.nimi.kieli_fi || json.result.nimi.kieli_sv || json.result.nimi.kieli_en)
+    else
+      console.log("getHakuNimi not found from tarjonta, trying from Kouta")
+      $http.get(window.url("kouta-internal.hakuByOid", hakuOid),
+      cache: true
+      ).success((json) ->
+        console.log("getHakuNimi Response from kouta: ", json)
+        if json && json.nimi
+          return successCallback(json.nimi.fi || json.nimi.sv || json.nimi.en)
+      )
     successCallback "")
   return
 
@@ -34,6 +43,15 @@ getHakukohdeNimi = ($http, hakukohdeOid, successCallback) ->
   ).success((json) ->
     if json.result && json.result.hakukohteenNimet
       return successCallback(json.result.hakukohteenNimet.kieli_fi || json.result.hakukohteenNimet.kieli_sv || json.result.hakukohteenNimet.kieli_en)
+    else
+      console.log("getHakukohdeNimi not found from tarjonta, trying from Kouta")
+      $http.get(window.url("kouta-internal.hakukohdeByOid", hakukohdeOid),
+        cache: true
+      ).success((json) ->
+        console.log("getHakukohdeNimi Response from kouta: ", json)
+        if json && json.nimi
+          return successCallback(json.nimi.fi || json.nimi.sv || json.nimi.en)
+      )
     successCallback "")
   return
 

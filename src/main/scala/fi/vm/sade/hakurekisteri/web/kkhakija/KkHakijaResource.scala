@@ -5,14 +5,14 @@ import java.io.OutputStream
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
-import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{AuditUtil, KKHakijatLuku}
+import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaException
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResourceSupport
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
+import fi.vm.sade.hakurekisteri.{AuditUtil, KKHakijatLuku}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
