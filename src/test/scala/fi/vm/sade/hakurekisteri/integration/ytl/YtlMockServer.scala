@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.net.SocketException
 import java.util.UUID
-
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
@@ -15,6 +14,7 @@ import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.security.{Constraint, Credential}
 import org.scalatest.{Outcome, TestSuite, TestSuiteMixin, fixture}
 
+import javax.security.auth.Subject
 import scala.collection.mutable
 
 trait YtlMockFixture extends TestSuiteMixin {
@@ -149,8 +149,13 @@ class YtlMockServer {
   def stop() = server.stop()
 
   def basicAuth(username: String, password: String, realm: String): ConstraintSecurityHandler = {
-    val l = new HashLoginService();
-    l.putUser(username, Credential.getCredential(password), Array[String] { "user" });
+    val l = new HashLoginService() {
+      val subject = new Subject
+      val principal = loadUserInfo(username)
+      subject.getPrincipals().add(principal)
+      _identityService.newUserIdentity(subject, principal, Array[String] { "user" })
+    }
+    //l.login(username, Credential.getCredential(password), Array[String] { "user" });
     //l.setName(realm);
 
     val constraint = new Constraint();
@@ -168,7 +173,7 @@ class YtlMockServer {
     csh.addConstraintMapping(cm);
     csh.setLoginService(l);
 
-    return csh;
+    csh
   }
 
   def makePostFail(times: Int): Unit = {
