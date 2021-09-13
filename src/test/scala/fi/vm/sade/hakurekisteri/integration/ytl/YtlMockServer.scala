@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.net.SocketException
 import java.util.UUID
-
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
@@ -15,6 +14,7 @@ import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.security.{Constraint, Credential}
 import org.scalatest.{Outcome, TestSuite, TestSuiteMixin, fixture}
 
+import javax.security.auth.Subject
 import scala.collection.mutable
 
 trait YtlMockFixture extends TestSuiteMixin {
@@ -128,7 +128,6 @@ class YtlMockServer {
 
   def start(): Unit = {
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-    context.setSecurityHandler(basicAuth(username, password, "Private!"));
     context.setContextPath("/");
     val v: RequestLog = new RequestLog {
       def log(var1: org.eclipse.jetty.server.Request, var2: org.eclipse.jetty.server.Response) = {
@@ -147,29 +146,6 @@ class YtlMockServer {
   }
 
   def stop() = server.stop()
-
-  def basicAuth(username: String, password: String, realm: String): ConstraintSecurityHandler = {
-    val l = new HashLoginService();
-    l.putUser(username, Credential.getCredential(password), Array[String] { "user" });
-    //l.setName(realm);
-
-    val constraint = new Constraint();
-    constraint.setName(Constraint.__BASIC_AUTH);
-    constraint.setRoles(Array[String] { "user" });
-    constraint.setAuthenticate(true);
-
-    val cm = new ConstraintMapping();
-    cm.setConstraint(constraint);
-    cm.setPathSpec("/*");
-
-    val csh = new ConstraintSecurityHandler();
-    csh.setAuthenticator(new BasicAuthenticator());
-    csh.setRealmName("myrealm");
-    csh.addConstraintMapping(cm);
-    csh.setLoginService(l);
-
-    return csh;
-  }
 
   def makePostFail(times: Int): Unit = {
     servlet.makePostFail(times)
