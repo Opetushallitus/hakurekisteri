@@ -3,8 +3,9 @@ package fi.vm.sade.hakurekisteri
 import ch.qos.logback.access.jetty.RequestLogImpl
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.properties.OphProperties
-import org.eclipse.jetty.server.{RequestLog, Server}
+import org.eclipse.jetty.server.{Connector, RequestLog, Server, ServerConnector}
 import org.eclipse.jetty.util.resource.Resource
+import org.eclipse.jetty.util.thread.{QueuedThreadPool, ThreadPool}
 import org.eclipse.jetty.webapp.WebAppContext
 
 object SureStandaloneJetty extends App {
@@ -20,9 +21,16 @@ class SureStandaloneJetty(config: Config = Config.globalConfig) {
   suoritusrekisteriApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
 
   private val port: Int = OphUrlProperties.require("suoritusrekisteri.port").toInt
-  private val server = new Server(port)
+
+  val threadPool: ThreadPool = new QueuedThreadPool(40, 10, 60000)
+  val server = new Server(threadPool)
+
   server.setHandler(suoritusrekisteriApp)
   server.setRequestLog(requestLog(OphUrlProperties))
+
+  val serverConnector = new ServerConnector(server)
+  serverConnector.setPort(port)
+  server.setConnectors(Array[Connector](serverConnector))
 
   private def requestLog(properties: OphProperties): RequestLog = {
     val requestLog = new RequestLogImpl
