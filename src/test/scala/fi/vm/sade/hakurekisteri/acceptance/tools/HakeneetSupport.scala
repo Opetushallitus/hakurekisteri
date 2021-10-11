@@ -943,7 +943,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
   val koulutus1 =
     Hakukohteenkoulutus(
       "1.5.6",
-      "123456",
+      Set("123456"),
       Some("AABB5tga"),
       Some(kausiKoodiK),
       Some(2015),

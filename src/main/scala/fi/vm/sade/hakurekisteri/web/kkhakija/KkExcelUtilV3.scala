@@ -108,32 +108,32 @@ object KkExcelUtilV3 extends HakijatExcelWriter[Seq[Hakija]] {
           hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
           hakemus.hakukohteenKoulutukset lift 0 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 1 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 2 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 3 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 4 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 5 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
             case None => ""
           },
           hakemus.liitteet match {

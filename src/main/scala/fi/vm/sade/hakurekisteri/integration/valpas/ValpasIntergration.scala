@@ -352,7 +352,8 @@ class ValpasIntergration(
         vastaanottotieto = hakutoiveenTulos.map(_.vastaanottotila.toString),
         hakutoivenumero = c.preferenceNumber,
         hakukohdeOid = hakukohdeOid,
-        hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(koulutus.tkKoulutuskoodi),
+        //TODO: Valpas-palvelulle pitäisi palauttaa kaikki koulutuskoodit
+        hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(koulutus.tkKoulutuskoodit.head),
         varasijanumero = hakutoiveenTulos.flatMap(_.varasijanumero),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä

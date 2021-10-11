@@ -52,11 +52,11 @@ class KoutaInternalActor(
 
   private def substring(s: String, before: String) = s.substring(0, s.indexOf(before))
 
-  private def getKoodistoUri(koulutus: KoutaInternalKoulutus): String =
-    substring(koulutus.koulutusKoodiUri, "_")
+  private def getKoodistoUri(koulutusKoodiUri: String): String =
+    substring(koulutusKoodiUri, "_")
 
-  private def getKoodiUri(koulutus: KoutaInternalKoulutus): String =
-    substring(koulutus.koulutusKoodiUri, "#")
+  private def getKoodiUri(koulutusKoodiUri: String): String =
+    substring(koulutusKoodiUri, "#")
 
   def getHakukohteenKoulutuksenAlkamiskausiAndVuosi(
     hakukohde: KoutaInternalHakukohde,
@@ -108,14 +108,14 @@ class KoutaInternalActor(
       toteutus <- getToteutusFromKoutaInternal(hakukohde.toteutusOid)
       koulutus <- getKoulutusFromKoutaInternal(toteutus.koulutusOid)
       (kausi, vuosi) <- getHakukohteenKoulutuksenAlkamiskausiAndVuosi(hakukohde, toteutus, haku)
-      koodi <- getKoodi(koulutus)
+      koodit <- getKoodit(koulutus)
     } yield HakukohteenKoulutukset(
       hakukohdeOid = hakukohdeOid,
       ulkoinenTunniste = hakukohde.externalId,
       koulutukset = Seq(
         Hakukohteenkoulutus(
           komoOid = koulutus.oid,
-          tkKoulutuskoodi = koodi.koodiArvo,
+          tkKoulutuskoodit = koodit,
           kkKoulutusId = None,
           koulutuksenAlkamiskausi = kausi,
           koulutuksenAlkamisvuosi = vuosi,
@@ -125,11 +125,17 @@ class KoutaInternalActor(
       )
     )
 
-  private def getKoodi(koulutus: KoutaInternalKoulutus): Future[Koodi] = {
+  private def getKoodit(koulutus: KoutaInternalKoulutus): Future[Set[String]] = {
+    Future.sequence(
+      koulutus.koulutusKoodiUrit.map(koulutusKoodiUri => getKoodi(koulutusKoodiUri))
+    )
+  }
+
+  private def getKoodi(koulutusKoodiUri: String): Future[String] = {
     (koodistoActorRef.actor ? GetKoodi(
-      koodistoUri = getKoodistoUri(koulutus),
-      koodiUri = getKoodiUri(koulutus)
-    )).mapTo[Option[Koodi]].map(_.get)
+      koodistoUri = getKoodistoUri(koulutusKoodiUri),
+      koodiUri = getKoodiUri(koulutusKoodiUri)
+    )).mapTo[Option[Koodi]].map(_.get.koodiArvo)
   }
 
   def getHaut: Future[RestHakuResult] =
@@ -142,6 +148,7 @@ class KoutaInternalActor(
         throw GetHautQueryFailedException("error retrieving all hakus from kouta-internal", t)
       }
 
+  /*
   def getHakukohde(hakukohdeOid: String): Future[Option[Hakukohde]] =
     getHakukohdeFromKoutaInternal(hakukohdeOid)
       .flatMap(hakukohde => {
@@ -158,7 +165,11 @@ class KoutaInternalActor(
               )
             )
           })
-      })
+      })*/
+
+  def getHakukohde(hakukohdeOid: String): Future[Option[Hakukohde]] =
+    getHakukohdeFromKoutaInternal(hakukohdeOid)
+      .map(hk => Some(hk.toHakukohde))
 
   private def getKoulutusFromKoutaInternal(koulutusOid: String) =
     restClient.readObject[KoutaInternalKoulutus]("kouta-internal.koulutus", koulutusOid)(200)
@@ -251,7 +262,7 @@ case class KoutaInternalRestHaku(
   )
 }
 
-case class KoutaInternalKoulutus(oid: String, koulutusKoodiUri: String)
+case class KoutaInternalKoulutus(oid: String, koulutusKoodiUrit: Set[String])
 
 case class KoutaInternalHakukohde(
   oid: String,
@@ -259,15 +270,16 @@ case class KoutaInternalHakukohde(
   nimi: Map[String, String],
   kaytetaanHaunAlkamiskautta: Option[Boolean],
   hakuOid: String,
-  externalId: Option[String]
+  externalId: Option[String],
+  tarjoaja: String
 ) {
-  def toHakukohde(tarjoajaOids: Option[Set[String]]): Hakukohde =
+  def toHakukohde(): Hakukohde =
     Hakukohde(
       oid = oid,
       hakukohteenNimet = nimi,
       hakukohdeKoulutusOids = Seq(toteutusOid),
       ulkoinenTunniste = externalId,
-      tarjoajaOids = tarjoajaOids,
+      tarjoajaOids = Some(Set(tarjoaja)),
       alinValintaPistemaara = None
     )
 }
