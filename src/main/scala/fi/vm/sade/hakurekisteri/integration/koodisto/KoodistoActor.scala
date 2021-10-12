@@ -116,6 +116,11 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
         .map(koodit => KoodistoActor.kooditToKoodisto(koodistoUri, koodit))
         .map(Some(_))
+        .recover {
+          case e: Exception =>
+            log.error(s"Failed to fetch koodisto ${koodistoUri}!", e)
+            None
+        }
     }
     koodiArvotCache.get(koodistoUri, loader).map(_.get)
   }
