@@ -106,7 +106,7 @@ case class Koulutusohjelma(tekstis: Map[String, String])
 
 case class Hakukohteenkoulutus(
   komoOid: String,
-  tkKoulutuskoodit: Set[String],
+  tkKoulutuskoodi: String,
   kkKoulutusId: Option[String],
   koulutuksenAlkamiskausi: Option[TarjontaKoodi],
   koulutuksenAlkamisvuosi: Option[Int],
@@ -208,7 +208,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
             val koulutukset = Seq(
               Hakukohteenkoulutus(
                 komo.oid,
-                Set(komo.koulutuskoodi.arvo),
+                komo.koulutuskoodi.arvo,
                 kkKoulutusId,
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,
@@ -221,7 +221,7 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                 _.arvo.map(a =>
                   koulutukset :+ Hakukohteenkoulutus(
                     komo.oid,
-                    Set(a),
+                    a,
                     kkKoulutusId,
                     k.koulutuksenAlkamiskausi,
                     k.koulutuksenAlkamisvuosi,

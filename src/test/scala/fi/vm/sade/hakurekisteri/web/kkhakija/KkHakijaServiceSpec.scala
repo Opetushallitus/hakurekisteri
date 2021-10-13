@@ -97,7 +97,7 @@ class KkHakijaServiceSpec
   private val koulutus2 =
     Hakukohteenkoulutus(
       "1.5.6",
-      Set("123457"),
+      "123457",
       Some("asdfASDF4"),
       Some(kausiKoodiS),
       Some(2015),
@@ -412,7 +412,7 @@ class KkHakijaServiceSpec
     val koulutusSyksy =
       Hakukohteenkoulutus(
         "1.5.6",
-        Set("123456"),
+        "123456",
         Some("AABB5tga"),
         Some(kausiKoodiS),
         Some(2016),
