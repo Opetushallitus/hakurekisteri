@@ -152,7 +152,7 @@ class ValpasSpec
               val kkKoulutusId = k.tunniste
               Hakukohteenkoulutus(
                 k.komoOid,
-                Set("631101"),
+                "631101",
                 kkKoulutusId,
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,

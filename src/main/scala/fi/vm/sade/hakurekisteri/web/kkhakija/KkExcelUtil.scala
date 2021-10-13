@@ -89,7 +89,7 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
           hakemus.hKelpoisuusLahde.getOrElse(""),
           hakemus.hakukohteenKoulutukset
             .map(k =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodit.head},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
             )
             .mkString(",")
         ).zipWithIndex.toSet

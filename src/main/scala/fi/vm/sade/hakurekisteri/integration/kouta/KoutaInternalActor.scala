@@ -115,7 +115,7 @@ class KoutaInternalActor(
       koulutukset = Seq(
         Hakukohteenkoulutus(
           komoOid = koulutus.oid,
-          tkKoulutuskoodit = koodit,
+          tkKoulutuskoodi = koodit.head,
           kkKoulutusId = None,
           koulutuksenAlkamiskausi = kausi,
           koulutuksenAlkamisvuosi = vuosi,
