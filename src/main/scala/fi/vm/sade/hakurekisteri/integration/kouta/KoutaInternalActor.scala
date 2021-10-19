@@ -112,17 +112,19 @@ class KoutaInternalActor(
     } yield HakukohteenKoulutukset(
       hakukohdeOid = hakukohdeOid,
       ulkoinenTunniste = hakukohde.externalId,
-      koulutukset = Seq(
-        Hakukohteenkoulutus(
-          komoOid = koulutus.oid,
-          tkKoulutuskoodi = koodit.head,
-          kkKoulutusId = None,
-          koulutuksenAlkamiskausi = kausi,
-          koulutuksenAlkamisvuosi = vuosi,
-          koulutuksenAlkamisPvms = None,
-          koulutusohjelma = None
+      koulutukset = koodit
+        .map(koodi =>
+          Hakukohteenkoulutus(
+            komoOid = koulutus.oid,
+            tkKoulutuskoodi = koodi,
+            kkKoulutusId = None,
+            koulutuksenAlkamiskausi = kausi,
+            koulutuksenAlkamisvuosi = vuosi,
+            koulutuksenAlkamisPvms = None,
+            koulutusohjelma = None
+          )
         )
-      )
+        .toSeq
     )
 
   private def getKoodit(koulutus: KoutaInternalKoulutus): Future[Set[String]] = {
