@@ -162,10 +162,20 @@ class RedisCacheSpec
       val cache = redisCacheFactory
         .getInstance[String, String](3.minutes.toMillis, this.getClass, classOf[String], "prefix6")
 
-      val mockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
-      when(mockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
+      val slowMockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
+      when(slowMockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
         override def answer(invocation: InvocationOnMock): Future[Option[String]] = {
-          Thread.sleep(1000)
+          println("Slow loader started")
+          Thread.sleep(3000)
+          Future.successful(Some(cacheEntry))
+        }
+      })
+
+      val fastMockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
+      when(fastMockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
+        override def answer(invocation: InvocationOnMock): Future[Option[String]] = {
+          println("Fast loader started")
+          Thread.sleep(500)
           Future.successful(Some(cacheEntry))
         }
       })
@@ -175,13 +185,15 @@ class RedisCacheSpec
         .par
         .map(i => {
           Thread.sleep(i * 300)
-          cache.get(cacheKey, mockLoader)
+          val loader = if (i < 3) slowMockLoader else fastMockLoader
+          cache.get(cacheKey, loader)
         })
         .map(Await.result(_, concurrencyTestResultsWaitDuration))
 
       results.foreach(_ should be(Some(cacheEntry)))
 
-      verify(mockLoader, times(2)).apply(cacheKey)
+      verify(slowMockLoader, times(1)).apply(cacheKey)
+      verify(fastMockLoader, times(1)).apply(cacheKey)
       Await.result(cache.get(cacheKey, stringLoader), 1.second) should be(Some(cacheEntry))
 
     })
