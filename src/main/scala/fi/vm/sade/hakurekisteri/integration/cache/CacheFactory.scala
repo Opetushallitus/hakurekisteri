@@ -55,6 +55,8 @@ object CacheFactory {
 
 class RedisCacheFactory(config: OphProperties)(implicit system: ActorSystem) extends CacheFactory {
 
+  val defaultLoaderTimeout: Long = 30.minutes.toMillis
+
   val r = {
 
     val host = config.getOrElse("suoritusrekisteri.cache.redis.host", "")
@@ -77,7 +79,13 @@ class RedisCacheFactory(config: OphProperties)(implicit system: ActorSystem) ext
       cacheKeyPrefix,
       config.getProperty("suoritusrekisteri.cache.redis.numberOfWaitersToLog").toInt,
       config.getProperty("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize").toInt,
-      config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt
+      config.getProperty("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis").toInt,
+      config
+        .getOrElse(
+          "suoritusrekisteri.cache.redis.loaderTimeoutMillis",
+          defaultLoaderTimeout.toString
+        )
+        .toLong
     )
   }
 
@@ -141,7 +149,8 @@ class RedisCache[K, T](
   val cacheKeyPrefix: String,
   limitOfWaitingClientsToLog: Int,
   cacheHandlingThreadPoolSize: Int,
-  slowRedisRequestThresholdMillis: Int
+  slowRedisRequestThresholdMillis: Int,
+  loaderTimeoutMillis: Long
 )(implicit m: Manifest[T])
     extends MonadCache[Future, K, T] {
 
@@ -198,7 +207,7 @@ class RedisCache[K, T](
   implicit val byteStringFormatterLong = ByteStringFormatterLongImpl
 
   private val updateConcurrencyHandler =
-    new RedisUpdateConcurrencyHandler[K, T](r, limitOfWaitingClientsToLog)
+    new RedisUpdateConcurrencyHandler[K, T](r, limitOfWaitingClientsToLog, loaderTimeoutMillis)
 
   private val versionPrefixKey = s"${cacheKeyPrefix}:version"
   private val newVersion: Long = {
@@ -374,9 +383,10 @@ class RedisCache[K, T](
 
   override def get(key: K, loader: K => Future[Option[T]]): Future[Option[T]] = {
     get(key).flatMap {
-      case Some(v) => Future.successful(Some(v))
+      case Some(v) =>
+        Future.successful(Some(v))
       case None =>
-        updateConcurrencyHandler.initiateLoadingIfNotYetRunning(key, loader, this.+, k)
+        updateConcurrencyHandler.getValueAndStartLoaderIfNeeded(key, loader, this.+, k)
     }
   }
 }

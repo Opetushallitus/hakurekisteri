@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.cache.{RedisCacheInitializationException}
+import fi.vm.sade.hakurekisteri.integration.cache.RedisCacheInitializationException
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, MonadCache}
 import fi.vm.sade.hakurekisteri.integration.hakukohde.Hakukohde
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
@@ -36,6 +36,7 @@ class RedisCacheSpec
       .addDefault("suoritusrekisteri.cache.redis.cacheHandlingThreadPoolSize", "3")
       .addDefault("suoritusrekisteri.cache.redis.slowRedisRequestThresholdMillis", "0")
       .addDefault("suoritusrekisteri.cache.redis.port", s"$port")
+      .addDefault("suoritusrekisteri.cache.redis.loaderTimeoutMillis", "700")
   )(system)
 
   override def beforeAll(): Unit = {
@@ -154,6 +155,36 @@ class RedisCacheSpec
         verify(mockLoader, times(1)).apply(cacheKey)
       })
     }
+  }
+
+  it should "activate a new loader if the previous one has been active too long" in {
+    withSystem(implicit system => {
+      val cache = redisCacheFactory
+        .getInstance[String, String](3.minutes.toMillis, this.getClass, classOf[String], "prefix6")
+
+      val mockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
+      when(mockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
+        override def answer(invocation: InvocationOnMock): Future[Option[String]] = {
+          Thread.sleep(1000)
+          Future.successful(Some(cacheEntry))
+        }
+      })
+
+      val results = 1
+        .to(8)
+        .par
+        .map(i => {
+          Thread.sleep(i * 300)
+          cache.get(cacheKey, mockLoader)
+        })
+        .map(Await.result(_, concurrencyTestResultsWaitDuration))
+
+      results.foreach(_ should be(Some(cacheEntry)))
+
+      verify(mockLoader, times(2)).apply(cacheKey)
+      Await.result(cache.get(cacheKey, stringLoader), 1.second) should be(Some(cacheEntry))
+
+    })
   }
 
   it should "store version to cache" in {
