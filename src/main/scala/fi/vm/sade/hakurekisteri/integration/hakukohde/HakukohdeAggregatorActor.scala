@@ -27,6 +27,7 @@ class HakukohdeAggregatorActor(
     getClass.getSimpleName
   )
   implicit val timeout: Timeout = Timeout(60.seconds)
+  val KOUTA_OID_LENGTH: Int = 35
 
   override def receive: Receive = {
     case q: HakukohdeQuery =>
@@ -37,26 +38,13 @@ class HakukohdeAggregatorActor(
 
   private def getHakukohteenKoulutukset(
     q: HakukohteenKoulutuksetQuery
-  ): Future[HakukohteenKoulutukset] = for {
-    koulutukset <- getTarjontaHakukohteenKoulutukset(q)
-      .flatMap { tarjontaHakukohteenKoulutukset =>
-        {
-          getKoutaInternalHakukohteenKoulutukset(q)
-            .map(koutaInternalHakukohteenKoulutukset =>
-              tarjontaHakukohteenKoulutukset.copy(
-                koulutukset =
-                  tarjontaHakukohteenKoulutukset.koulutukset ++ koutaInternalHakukohteenKoulutukset.koulutukset
-              )
-            )
-            .recover { case _ =>
-              tarjontaHakukohteenKoulutukset
-            }
-        }
-      }
-      .recoverWith { case _ =>
+  ): Future[HakukohteenKoulutukset] = {
+    q match {
+      case q if q.hakukohdeOid.length == KOUTA_OID_LENGTH =>
         getKoutaInternalHakukohteenKoulutukset(q)
-      }
-  } yield koulutukset
+      case q => getTarjontaHakukohteenKoulutukset(q)
+    }
+  }
 
   private def getKoutaInternalHakukohteenKoulutukset(q: HakukohteenKoulutuksetQuery) =
     (koutaInternal.actor ? q).mapTo[HakukohteenKoulutukset]
@@ -65,15 +53,19 @@ class HakukohdeAggregatorActor(
     (tarjonta.actor ? HakukohdeOid(q.hakukohdeOid))
       .mapTo[HakukohteenKoulutukset]
 
-  private def getHakukohde(q: HakukohdeQuery): Future[Hakukohde] = hakukohdeQuery(q, tarjonta.actor)
-    .recoverWith[Option[Hakukohde]] { case _ =>
-      hakukohdeQuery(q, koutaInternal.actor)
+  private def getHakukohde(q: HakukohdeQuery): Future[Hakukohde] = {
+    val hakukohde = q match {
+      case q if q.oid.length == KOUTA_OID_LENGTH =>
+        hakukohdeQuery(q, koutaInternal.actor)
+      case q =>
+        hakukohdeQuery(q, tarjonta.actor)
     }
-    .flatMap(
+    hakukohde.flatMap(
       _.fold(Future.failed[Hakukohde](new RuntimeException(s"Could not find hakukohde $q.oid")))(
         Future.successful
       )
     )
+  }
 
   private def hakukohdeQuery(
     q: HakukohdeQuery,
