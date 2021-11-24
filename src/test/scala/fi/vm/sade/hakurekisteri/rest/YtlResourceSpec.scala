@@ -70,11 +70,15 @@ class YtlResourceSpec
 
   val endPoint = mock[Endpoint]
 
+  def fullHakemusToHakemusHakuHetuPerson(f: FullHakemus): HakemusHakuHetuPersonOid =
+    HakemusHakuHetuPersonOid(f.oid, f.applicationSystemId, f.hetu.get, f.personOid.get)
+
   test("should launch YTL fetch") {
     post("/http_request") {
       status should be(202)
     }
-    (hakemusService.hakemuksetForPerson _) when (*) returns (hakemusWithPersonOidEnding9574)
+    hakemusService.hetuAndPersonOidForPersonOid _ when (*) returns hakemusWithPersonOidEnding9574
+      .map(h => h.map(fullHakemusToHakemusHakuHetuPerson))
     get("/http_request/050996-9574") {
       status should be(202)
     }
