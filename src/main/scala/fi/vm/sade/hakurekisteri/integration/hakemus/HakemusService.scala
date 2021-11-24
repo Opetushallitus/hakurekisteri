@@ -70,6 +70,7 @@ object Trigger {
   }
 }
 
+case class HakemusHakuHetuPersonOid(hakemus: String, haku: String, hetu: String, personOid: String)
 case class HetuPersonOid(hetu: String, personOid: String)
 
 case class ListFullSearchDto(
@@ -77,6 +78,7 @@ case class ListFullSearchDto(
   states: List[String] = List(),
   aoOids: List[String] = List(),
   asIds: List[String] = List(),
+  personOids: List[String] = List(),
   keys: List[String]
 )
 
@@ -96,6 +98,14 @@ object ListFullSearchDto {
   def hetuPersonOid(hakuOid: String) =
     ListFullSearchDto(
       asIds = List(hakuOid),
+      keys = commonKeys ++ List(
+        "answers.henkilotiedot.Henkilotunnus"
+      )
+    )
+
+  def hetuForPersonOid(personOid: String) =
+    ListFullSearchDto(
+      personOids = List(personOid),
       keys = commonKeys ++ List(
         "answers.henkilotiedot.Henkilotunnus"
       )
@@ -131,6 +141,7 @@ trait IHakemusService {
   def addTrigger(trigger: Trigger): Unit
   def reprocessHaunHakemukset(hakuOid: String): Unit
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
+  def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]]
 }
 
 case class AtaruSearchParams(
@@ -661,7 +672,37 @@ class HakemusService(
         HetuPersonOid(hetu = h.henkilo.hetu.get, personOid = h.henkilo.oidHenkilo)
     })
   }
-
+  def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]] = {
+    for {
+      hakuappHakemukset <- hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]](
+        "haku-app.listfull"
+      )(acceptedResponseCode = 200, ListFullSearchDto.hetuForPersonOid(personOid))
+      ataruHakemukset <- ataruhakemukset(
+        AtaruSearchParams(
+          hakijaOids = Some(List(personOid)),
+          hakukohdeOids = None,
+          hakuOid = None,
+          organizationOid = None,
+          modifiedAfter = None
+        )
+      )
+    } yield (hakuappHakemukset ++ ataruHakemukset).collect({
+      case h: FullHakemus if h.stateValid && h.hetu.isDefined && h.personOid.isDefined =>
+        HakemusHakuHetuPersonOid(
+          hakemus = h.oid,
+          haku = h.applicationSystemId,
+          hetu = h.hetu.get,
+          personOid = h.personOid.get
+        )
+      case h: AtaruHakemus if h.stateValid && h.henkilo.hetu.isDefined =>
+        HakemusHakuHetuPersonOid(
+          hakemus = h.oid,
+          haku = h.applicationSystemId,
+          hetu = h.henkilo.hetu.get,
+          personOid = h.henkilo.oidHenkilo
+        )
+    })
+  }
   def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
 
   def reprocessHaunHakemukset(hakuOid: String): Unit = {

@@ -35,78 +35,57 @@ class YtlIntegration(
 
   def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
 
-  def sync(hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases): Try[Kokelas] = {
-    if (activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
-      if (hakemus.stateValid) {
-        hakemus.personOid match {
-          case Some(personOid) =>
-            hakemus.hetu match {
-              case Some(hetu) =>
-                logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL hakemus=$hakemus")
-                ytlHttpClient.fetchOne(hetu) match {
-                  case None =>
-                    val noData = s"No YTL data for hakemus ${hakemus.oid}"
-                    logger.debug(noData)
-                    Failure(new RuntimeException(noData))
-                  case Some((json, student)) =>
-                    val kokelas = StudentToKokelas.convert(personOid, student)
-                    val persistKokelasStatus = ytlKokelasPersister.persistSingle(
-                      KokelasWithPersonAliases(kokelas, personOidsWithAliases)
-                    )
-                    try {
-                      Await.result(
-                        persistKokelasStatus,
-                        config.ytlSyncTimeout.duration + 10.seconds
-                      )
-                      Success(kokelas)
-                    } catch {
-                      case e: Throwable =>
-                        Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
-                    }
-                }
-              case None =>
-                val noHetu =
-                  s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!"
-                logger.debug(noHetu)
-                Failure(new RuntimeException(noHetu))
-            }
-          case None =>
-            val noOid = s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!"
-            logger.error(noOid)
-            Failure(new RuntimeException(noOid))
+  def syncWithHetuAndPersonOid(
+    hakemusOid: String,
+    hetu: String,
+    personOid: String,
+    personOidsWithAliases: PersonOidsWithAliases
+  ): Try[Kokelas] = {
+    logger.debug(s"Syncronizing hakemus ${hakemusOid} with YTL")
+    ytlHttpClient.fetchOne(hetu) match {
+      case None =>
+        val noData = s"No YTL data for hakemus ${hakemusOid}"
+        logger.debug(noData)
+        Failure(new RuntimeException(noData))
+      case Some((_, student)) =>
+        val kokelas = StudentToKokelas.convert(personOid, student)
+        val persistKokelasStatus = ytlKokelasPersister.persistSingle(
+          KokelasWithPersonAliases(kokelas, personOidsWithAliases)
+        )
+        try {
+          Await.result(
+            persistKokelasStatus,
+            config.ytlSyncTimeout.duration + 10.seconds
+          )
+          Success(kokelas)
+        } catch {
+          case e: Throwable =>
+            Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
         }
-      } else {
-        val invalidState = s"Skipping YTL update as hakemus (${hakemus.oid}) is not in valid state!"
-        logger.debug(invalidState)
-        Failure(new RuntimeException(invalidState))
-      }
-    } else {
-      val notActiveHaku =
-        s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!"
-      logger.debug(notActiveHaku)
-      Failure(new RuntimeException(notActiveHaku))
     }
   }
 
   def sync(personOid: String): Future[Seq[Try[Kokelas]]] = {
-    hakemusService
-      .hakemuksetForPerson(personOid)
-      .zip(oppijaNumeroRekisteri.enrichWithAliases(Set(personOid)))
-      .map(pair =>
-        pair._1.collect {
-          case h if h.stateValid && h.personOid.isDefined => pair.copy(_1 = h)
-        }
-      )
-      .flatMap { hakemuksetWithPersonOids =>
-        if (hakemuksetWithPersonOids.isEmpty) {
-          logger.error(
-            s"failed to fetch one hakemus from hakemus service with person OID $personOid"
+    val allHakemuksetForOid = hakemusService.hetuAndPersonOidForPersonOid(personOid)
+    oppijaNumeroRekisteri
+      .enrichWithAliases(Set(personOid))
+      .flatMap(aliases =>
+        allHakemuksetForOid
+          .map(h => h.filter(hh => activeKKHakuOids.get().contains(hh.haku)))
+          .flatMap(allHakemuses =>
+            if (allHakemuses.isEmpty) {
+              logger.error(
+                s"failed to fetch one hakemus from hakemus service with person OID $personOid"
+              )
+              Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
+            } else {
+              Future.successful(allHakemuses.map {
+                case HakemusHakuHetuPersonOid(hakemusOid, _, hetu, personOid) =>
+                  syncWithHetuAndPersonOid(hakemusOid, hetu, personOid, aliases)
+              })
+            }
           )
-          Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
-        } else {
-          Future.successful(hakemuksetWithPersonOids.map(pair => sync(pair._1, pair._2)))
-        }
-      }
+      )
   }
 
   /**
