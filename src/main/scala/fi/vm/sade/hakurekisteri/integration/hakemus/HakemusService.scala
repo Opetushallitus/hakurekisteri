@@ -839,4 +839,6 @@ class HakemusServiceMock extends IHakemusService {
   override def reprocessHaunHakemukset(hakuOid: String): Unit = ()
 
   override def hetuAndPersonOidForHaku(hakuOid: String) = Future.successful(Seq[HetuPersonOid]())
+
+  override def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]] = Future.successful(Seq[HakemusHakuHetuPersonOid]())
 }
