@@ -196,7 +196,7 @@ class HakemusService(
   def enrichAtaruHakemukset(
     ataruHakemusDtos: List[AtaruHakemusDto],
     henkilot: Map[String, Henkilo],
-    skipResolvingTarjoaja: Boolean
+    skipResolvingTarjoaja: Boolean = false
   ): Future[List[AtaruHakemus]] = {
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
       hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
