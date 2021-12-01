@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import akka.pattern.ask
@@ -28,6 +27,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
+import scala.Option
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -70,6 +70,7 @@ object Trigger {
   }
 }
 
+case class HakemusHakuHetuPersonOid(hakemus: String, haku: String, hetu: String, personOid: String)
 case class HetuPersonOid(hetu: String, personOid: String)
 
 case class ListFullSearchDto(
@@ -77,6 +78,7 @@ case class ListFullSearchDto(
   states: List[String] = List(),
   aoOids: List[String] = List(),
   asIds: List[String] = List(),
+  personOids: List[String] = List(),
   keys: List[String]
 )
 
@@ -96,6 +98,14 @@ object ListFullSearchDto {
   def hetuPersonOid(hakuOid: String) =
     ListFullSearchDto(
       asIds = List(hakuOid),
+      keys = commonKeys ++ List(
+        "answers.henkilotiedot.Henkilotunnus"
+      )
+    )
+
+  def hetuForPersonOid(personOid: String) =
+    ListFullSearchDto(
+      personOids = List(personOid),
       keys = commonKeys ++ List(
         "answers.henkilotiedot.Henkilotunnus"
       )
@@ -131,6 +141,7 @@ trait IHakemusService {
   def addTrigger(trigger: Trigger): Unit
   def reprocessHaunHakemukset(hakuOid: String): Unit
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
+  def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]]
 }
 
 case class AtaruSearchParams(
@@ -184,7 +195,8 @@ class HakemusService(
 
   def enrichAtaruHakemukset(
     ataruHakemusDtos: List[AtaruHakemusDto],
-    henkilot: Map[String, Henkilo]
+    henkilot: Map[String, Henkilo],
+    skipResolvingTarjoaja: Boolean = false
   ): Future[List[AtaruHakemus]] = {
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
       hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
@@ -258,31 +270,38 @@ class HakemusService(
         }
         .map(identity)
 
-    Future
-      .sequence(
-        ataruHakemusDtos
-          .flatMap(_.hakukohteet)
-          .distinct
-          .map(hakukohdeOid => {
-            val tarjoajaOid = hakukohteenTarjoajaOid(hakukohdeOid)
-            Future
-              .successful(hakukohdeOid)
-              .zip(tarjoajaOid.zip(tarjoajaOid.flatMap(tarjoajanParentOids)))
-          })
-      )
-      .map(_.toMap)
+    val resolveTarjoajaOids: Future[Map[String, (String, Set[String])]] =
+      if (skipResolvingTarjoaja) {
+        Future.successful(Map.empty)
+      } else {
+        Future
+          .sequence(
+            ataruHakemusDtos
+              .flatMap(_.hakukohteet)
+              .distinct
+              .map(hakukohdeOid => {
+                val tarjoajaOid = hakukohteenTarjoajaOid(hakukohdeOid)
+                Future
+                  .successful(hakukohdeOid)
+                  .zip(tarjoajaOid.zip(tarjoajaOid.flatMap(tarjoajanParentOids)))
+              })
+          )
+          .map(_.toMap)
+      }
+
+    resolveTarjoajaOids
       .map(tarjoajaAndParentOids =>
         ataruHakemusDtos.map(hakemus => {
           val hakutoiveet = hakemus.hakukohteet.zipWithIndex.map { case (hakukohdeOid, index) =>
-            val (tarjoajaOid, parentOids) = tarjoajaAndParentOids(hakukohdeOid)
+            val tarjoaja = tarjoajaAndParentOids.get(hakukohdeOid)
             HakutoiveDTO(
               index,
               Some(hakukohdeOid),
               None,
               None,
               None,
-              Some(tarjoajaOid),
-              parentOids,
+              tarjoaja.map(_._1),
+              tarjoaja.map(_._2).getOrElse(Set.empty),
               None,
               None,
               None,
@@ -318,7 +337,10 @@ class HakemusService(
       )
   }
 
-  private def ataruhakemukset(params: AtaruSearchParams): Future[List[AtaruHakemus]] = {
+  private def ataruhakemukset(
+    params: AtaruSearchParams,
+    skipResolvingTarjoaja: Boolean = false
+  ): Future[List[AtaruHakemus]] = {
     val p = params.hakuOid.fold[Map[String, Any]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
       params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
         Map("hakukohdeOids" -> hakukohdeOids)
@@ -344,7 +366,8 @@ class HakemusService(
         )
         ataruHakemukset <- enrichAtaruHakemukset(
           ataruResponse.applications,
-          ataruHenkilot
+          ataruHenkilot,
+          skipResolvingTarjoaja
         )
       } yield (
         params.organizationOid.fold(ataruHakemukset)(oid =>
@@ -652,7 +675,8 @@ class HakemusService(
           hakuOid = Some(hakuOid),
           organizationOid = None,
           modifiedAfter = None
-        )
+        ),
+        skipResolvingTarjoaja = true
       )
     } yield (hakuappHakemukset ++ ataruHakemukset).collect({
       case h: FullHakemus if h.hetu.isDefined && h.personOid.isDefined =>
@@ -661,7 +685,38 @@ class HakemusService(
         HetuPersonOid(hetu = h.henkilo.hetu.get, personOid = h.henkilo.oidHenkilo)
     })
   }
-
+  def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]] = {
+    for {
+      hakuappHakemukset <- hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]](
+        "haku-app.listfull"
+      )(acceptedResponseCode = 200, ListFullSearchDto.hetuForPersonOid(personOid))
+      ataruHakemukset <- ataruhakemukset(
+        AtaruSearchParams(
+          hakijaOids = Some(List(personOid)),
+          hakukohdeOids = None,
+          hakuOid = None,
+          organizationOid = None,
+          modifiedAfter = None
+        ),
+        skipResolvingTarjoaja = true
+      )
+    } yield (hakuappHakemukset ++ ataruHakemukset).collect({
+      case h: FullHakemus if h.stateValid && h.hetu.isDefined && h.personOid.isDefined =>
+        HakemusHakuHetuPersonOid(
+          hakemus = h.oid,
+          haku = h.applicationSystemId,
+          hetu = h.hetu.get,
+          personOid = h.personOid.get
+        )
+      case h: AtaruHakemus if h.stateValid && h.henkilo.hetu.isDefined =>
+        HakemusHakuHetuPersonOid(
+          hakemus = h.oid,
+          haku = h.applicationSystemId,
+          hetu = h.henkilo.hetu.get,
+          personOid = h.henkilo.oidHenkilo
+        )
+    })
+  }
   def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
 
   def reprocessHaunHakemukset(hakuOid: String): Unit = {
@@ -798,4 +853,8 @@ class HakemusServiceMock extends IHakemusService {
   override def reprocessHaunHakemukset(hakuOid: String): Unit = ()
 
   override def hetuAndPersonOidForHaku(hakuOid: String) = Future.successful(Seq[HetuPersonOid]())
+
+  override def hetuAndPersonOidForPersonOid(
+    personOid: String
+  ): Future[Seq[HakemusHakuHetuPersonOid]] = Future.successful(Seq[HakemusHakuHetuPersonOid]())
 }

@@ -497,7 +497,28 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val ytlTrigger: Trigger = Trigger {
     (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) =>
-      Try(ytlIntegration.sync(hakemus, personOidsWithAliases.intersect(hakemus.personOid.toSet)))
+      if (
+        hakemus.stateValid && ytlIntegration.activeKKHakuOids
+          .get()
+          .contains(hakemus.applicationSystemId)
+      ) {
+        (hakemus.hetu, hakemus.personOid) match {
+          case (Some(hetu), Some(personOid)) =>
+            Try(
+              ytlIntegration.syncWithHetuAndPersonOid(
+                hakemus.oid,
+                hetu,
+                personOid,
+                personOidsWithAliases.intersect(hakemus.personOid.toSet)
+              )
+            )
+          case _ =>
+            val noOid =
+              s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID and/or SSN!"
+            logger.error(noOid)
+        }
+
+      }
   }
 
   hakemusService.addTrigger(arvosanaTrigger)

@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipInputStream
-
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
@@ -13,6 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
   FullHakemus,
   HakemusAnswers,
+  HakemusHakuHetuPersonOid,
   HakemusHenkilotiedot,
   HakemusService,
   HetuPersonOid
@@ -144,6 +144,15 @@ class YtlIntegrationSpec
               Some(1615219923688L),
               None
             )
+          )
+        )
+      )
+    Mockito
+      .when(hakemusService.hetuAndPersonOidForPersonOid(henkiloOid))
+      .thenReturn(
+        Future.successful(
+          Seq(
+            HakemusHakuHetuPersonOid(activeHakuOid, activeHakuOid, ssn, henkiloOid)
           )
         )
       )
