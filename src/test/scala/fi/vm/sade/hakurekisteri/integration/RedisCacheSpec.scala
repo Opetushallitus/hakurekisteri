@@ -48,7 +48,7 @@ class RedisCacheSpec
   val cacheEntryF: Future[String] = Future.successful(cacheEntry)
 
   val concurrencyTestLoopCount: Int = 5
-  val concurrencyTestParallelRequestCount: Int = 10
+  val concurrencyTestParallelRequestCount: Int = 6
   val concurrencyTestResultsWaitDuration: Duration = 10.seconds
   private val stringLoader: String => Future[Nothing] = (_: String) =>
     Future.failed(new RuntimeException("should not be called"))
@@ -132,7 +132,7 @@ class RedisCacheSpec
         val mockLoader: String => Future[Option[String]] = mock[String => Future[Option[String]]]
         when(mockLoader.apply(cacheKey)).thenAnswer(new Answer[Future[Option[String]]] {
           override def answer(invocation: InvocationOnMock): Future[Option[String]] = {
-            Thread.sleep(3)
+            Thread.sleep(100)
             Future.successful(Some(cacheEntry))
           }
         })
@@ -141,7 +141,6 @@ class RedisCacheSpec
           .to(concurrencyTestParallelRequestCount)
           .par
           .map { _ =>
-            Thread.sleep(10)
             cache.get(cacheKey, mockLoader)
           }
           .map(Await.result(_, concurrencyTestResultsWaitDuration))
