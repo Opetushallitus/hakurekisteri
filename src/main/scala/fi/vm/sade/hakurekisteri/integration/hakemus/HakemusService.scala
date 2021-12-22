@@ -78,7 +78,7 @@ case class ListFullSearchDto(
   states: List[String] = List(),
   aoOids: List[String] = List(),
   asIds: List[String] = List(),
-  personOids: List[String] = List(),
+  personOids: Option[List[String]] = None,
   keys: List[String]
 )
 
@@ -105,7 +105,7 @@ object ListFullSearchDto {
 
   def hetuForPersonOid(personOid: String) =
     ListFullSearchDto(
-      personOids = List(personOid),
+      personOids = Some(List(personOid)),
       keys = commonKeys ++ List(
         "answers.henkilotiedot.Henkilotunnus"
       )
