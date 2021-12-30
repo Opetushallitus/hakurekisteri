@@ -55,6 +55,15 @@ class OpiskelijaJDBCActor(
       )
     case OpiskelijaHenkilotQuery(henkilot: PersonOidsWithAliases) =>
       Right(findWithHenkilot(henkilot, "henkilo_oid", all))
+    case OppilaitoksenOpiskelijatQuery(oppilaitosOid, vuosi, luokkaTasot) =>
+      Right(
+        all
+          .filter(t =>
+            matchOppilaitosOid(oppilaitosOid)(t) &&
+            matchVuosiAndKausi(vuosi, None)(t) &&
+            matchLuokkaTasot(luokkaTasot)(t)
+          ).result
+      )
   }
 
   private def matchHenkilo(henkilo: Option[String])(t: OpiskelijaTable): Rep[Boolean] =
@@ -73,6 +82,14 @@ class OpiskelijaJDBCActor(
     case Some(l) => t.luokka === l
     case None    => true
   }
+
+  private def matchLuokkaTasot(luokkaTasot: Option[Seq[String]])(t: OpiskelijaTable): Rep[Boolean] = {
+    if (luokkaTasot.isEmpty || luokkaTasot.get.isEmpty) {
+      return true
+    }
+    t.luokkataso.inSetBind(luokkaTasot.get)
+  }
+
 
   private def matchPaiva(paiva: Option[DateTime])(t: OpiskelijaTable): Rep[Boolean] = paiva match {
     case Some(date) =>

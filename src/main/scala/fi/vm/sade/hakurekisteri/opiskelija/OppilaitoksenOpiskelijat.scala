@@ -1,4 +1,3 @@
-package fi.vm.sade.hakurekisteri.web.opiskelija
+package fi.vm.sade.hakurekisteri.opiskelija
 
 case class OppilaitoksenOpiskelijat(henkiloOid: String, luokka: String)
-

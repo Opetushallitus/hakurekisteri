@@ -2,29 +2,28 @@ package fi.vm.sade.hakurekisteri.web.opiskelija
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
+import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.auditlog.{Changes, Target}
+import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.{AuditUtil, ResourceRead}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, IHakemusService}
-import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
-import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
-import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OppilaitoksenOpiskelijat, OppilaitoksenOpiskelijatQuery}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
+
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class OppilaitoksenOpiskelijatResource(
-                                      val rekisterit: Registers,
-                                      val hakemusService: IHakemusService
-                                      )(implicit val system: ActorSystem, sw: Swagger, val security: Security)
+class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
+                                                                  sw: Swagger,
+                                                                  val security: Security,
+                                                                  val system: ActorSystem)
   extends HakuJaValintarekisteriStack
-    with OppijaFetcher
     with OppilaitoksenOpiskelijaSwaggerApi
     with HakurekisteriJsonSupport
     with JacksonJsonSupport
@@ -32,6 +31,7 @@ class OppilaitoksenOpiskelijatResource(
     with SecuritySupport
     with QueryLogging {
 
+  override protected def applicationDescription: String = "Oppilaitoksen opiskelijat rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
@@ -51,14 +51,9 @@ class OppilaitoksenOpiskelijatResource(
   get("/:oppilaitosOid", operation(query)) {
     import org.scalatra.util.RicherString._
     val t0 = Platform.currentTime
-    implicit val user = getUser
-    val ensikertalaisuudet = params.getOrElse("ensikertalaisuudet", "true").toBoolean
-    val q = HakemusQuery(
-      haku = if (ensikertalaisuudet) Some(params("haku")) else params.get("haku"),
-      organisaatio = params.get("organisaatio").flatMap(_.blankOption),
-      None,
-      hakukohde = params.get("hakukohde").flatMap(_.blankOption)
-    )
+    implicit val user: User = getUser
+
+    val q = OppilaitoksenOpiskelijatQuery.apply(params)
 
     audit.log(
       auditUser,
@@ -74,17 +69,25 @@ class OppilaitoksenOpiskelijatResource(
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijatFuture = fetchOppijat(ensikertalaisuudet, q)
+      private val oppilaitoksenOpiskelijatFuture = fetchOppilaitoksenOpiskelijat(q)
 
-      logQuery(q, t0, oppijatFuture)
+      logQuery(q, t0, oppilaitoksenOpiskelijatFuture)
 
-      val is = oppijatFuture
+      val is = oppilaitoksenOpiskelijatFuture
     }
   }
 
+  private def fetchOppilaitoksenOpiskelijat(q: OppilaitoksenOpiskelijatQuery)(implicit user: User):
+      Future[Seq[OppilaitoksenOpiskelijat]] = {
+    (opiskelijaActor ? AuthorizedQuery(q, user)).map(opiskelijat => {
+      opiskelijat.asInstanceOf[Seq[Opiskelija]].map(oppilas => OppilaitoksenOpiskelijat(oppilas.henkiloOid, oppilas.luokka))
+    })
+  }
+
   incident {
-    case t: HakuNotFoundException    => (id) => NotFound(IncidentReport(id, t.getMessage))
     case t: NoSuchElementException   => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
+
+
 }

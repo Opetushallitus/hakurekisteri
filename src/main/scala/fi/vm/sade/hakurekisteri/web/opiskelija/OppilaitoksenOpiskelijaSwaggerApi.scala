@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.opiskelija
 
+import fi.vm.sade.hakurekisteri.opiskelija.OppilaitoksenOpiskelijat
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReportSwaggerModel, OldSwaggerSyntax}
 import org.scalatra.swagger.{DataType, SwaggerSupport}
 
