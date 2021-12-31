@@ -60,9 +60,10 @@ class OpiskelijaJDBCActor(
         all
           .filter(t =>
             matchOppilaitosOid(oppilaitosOid)(t) &&
-            matchVuosiAndKausi(vuosi, None)(t) &&
-            matchLuokkaTasot(luokkaTasot)(t)
-          ).result
+              matchVuosiAndKausi(vuosi, None)(t) &&
+              matchLuokkaTasot(luokkaTasot)(t)
+          )
+          .result
       )
   }
 
@@ -83,13 +84,14 @@ class OpiskelijaJDBCActor(
     case None    => true
   }
 
-  private def matchLuokkaTasot(luokkaTasot: Option[Seq[String]])(t: OpiskelijaTable): Rep[Boolean] = {
+  private def matchLuokkaTasot(
+    luokkaTasot: Option[Seq[String]]
+  )(t: OpiskelijaTable): Rep[Boolean] = {
     if (luokkaTasot.isEmpty || luokkaTasot.get.isEmpty) {
       return true
     }
     t.luokkataso.inSetBind(luokkaTasot.get)
   }
-
 
   private def matchPaiva(paiva: Option[DateTime])(t: OpiskelijaTable): Rep[Boolean] = paiva match {
     case Some(date) =>

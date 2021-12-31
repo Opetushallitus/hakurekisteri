@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReportSwaggerModel, Ol
 import org.scalatra.swagger.{DataType, SwaggerSupport}
 
 trait OppilaitoksenOpiskelijaSwaggerApi
-  extends SwaggerSupport
+    extends SwaggerSupport
     with IncidentReportSwaggerModel
     with OppilaitoksenOpiskelijatSwaggerModel { this: OppilaitoksenOpiskelijatResource =>
 
@@ -16,7 +16,10 @@ trait OppilaitoksenOpiskelijaSwaggerApi
     .description("Hakee oppilaitoksen opiskelijat, oidit, ja heidän luokkatietonsa")
     .parameter(queryParam[Option[String]]("oppilaitosOid").description("oppilaitoksen oid"))
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
-    .parameter(queryParam[Seq[Option[String]]]("luokkatasot").description("Luokkatasot millä tietoja heataan"))
+    .parameter(
+      queryParam[Seq[Option[String]]]("luokkatasot")
+        .description("Luokkatasot millä tietoja heataan")
+    )
 }
 
 trait OppilaitoksenOpiskelijatSwaggerModel extends OldSwaggerSyntax {
@@ -27,6 +30,9 @@ trait OppilaitoksenOpiskelijatSwaggerModel extends OldSwaggerSyntax {
   )
 
   def oppilaitoksenOpiskelijatSwaggerModel =
-    Model("OppilaitoksenOpiskelijat", "Oppilaitoksen opiskelijat luokkatiedoilla",
-      oppilaitoksenOpiskelijatFields.map(t => (t.name, t)).toMap)
+    Model(
+      "OppilaitoksenOpiskelijat",
+      "Oppilaitoksen opiskelijat luokkatiedoilla",
+      oppilaitoksenOpiskelijatFields.map(t => (t.name, t)).toMap
+    )
 }

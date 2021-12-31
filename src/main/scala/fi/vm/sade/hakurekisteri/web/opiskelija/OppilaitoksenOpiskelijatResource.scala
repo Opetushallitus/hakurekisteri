@@ -6,7 +6,11 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.{AuditUtil, ResourceRead}
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OppilaitoksenOpiskelijat, OppilaitoksenOpiskelijatQuery}
+import fi.vm.sade.hakurekisteri.opiskelija.{
+  Opiskelija,
+  OppilaitoksenOpiskelijat,
+  OppilaitoksenOpiskelijatQuery
+}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -20,10 +24,10 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
-                                                                  sw: Swagger,
-                                                                  val security: Security,
-                                                                  val system: ActorSystem)
-  extends HakuJaValintarekisteriStack
+  sw: Swagger,
+  val security: Security,
+  val system: ActorSystem
+) extends HakuJaValintarekisteriStack
     with OppilaitoksenOpiskelijaSwaggerApi
     with HakurekisteriJsonSupport
     with JacksonJsonSupport
@@ -77,10 +81,13 @@ class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
     }
   }
 
-  private def fetchOppilaitoksenOpiskelijat(q: OppilaitoksenOpiskelijatQuery)(implicit user: User):
-      Future[Seq[OppilaitoksenOpiskelijat]] = {
+  private def fetchOppilaitoksenOpiskelijat(
+    q: OppilaitoksenOpiskelijatQuery
+  )(implicit user: User): Future[Seq[OppilaitoksenOpiskelijat]] = {
     (opiskelijaActor ? AuthorizedQuery(q, user)).map(opiskelijat => {
-      opiskelijat.asInstanceOf[Seq[Opiskelija]].map(oppilas => OppilaitoksenOpiskelijat(oppilas.henkiloOid, oppilas.luokka))
+      opiskelijat
+        .asInstanceOf[Seq[Opiskelija]]
+        .map(oppilas => OppilaitoksenOpiskelijat(oppilas.henkiloOid, oppilas.luokka))
     })
   }
 
@@ -88,6 +95,5 @@ class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
     case t: NoSuchElementException   => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
-
 
 }

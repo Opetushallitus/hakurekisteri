@@ -7,14 +7,28 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
-import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3, HakijaResourceV4, HakijaResourceV5}
+import fi.vm.sade.hakurekisteri.web.hakija.{
+  HakijaResource,
+  HakijaResourceV2,
+  HakijaResourceV3,
+  HakijaResourceV4,
+  HakijaResourceV5
+}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3, KkHakijaResourceV4}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{
+  KkHakijaResource,
+  KkHakijaResourceV2,
+  KkHakijaResourceV3,
+  KkHakijaResourceV4
+}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
-import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaResource, OppilaitoksenOpiskelijatResource}
+import fi.vm.sade.hakurekisteri.web.opiskelija.{
+  OpiskelijaResource,
+  OppilaitoksenOpiskelijatResource
+}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.web.permission.PermissionResource
@@ -156,7 +170,10 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new OpiskelijaResource(
       authorizedRegisters.opiskelijaRekisteri
     ),
-    ("/rest/v1/opiskelijat/oppilaitos", "rest/v1/opiskelijat/oppilaitos") -> new OppilaitoksenOpiskelijatResource(
+    (
+      "/rest/v1/opiskelijat/oppilaitos",
+      "rest/v1/opiskelijat/oppilaitos"
+    ) -> new OppilaitoksenOpiskelijatResource(
       authorizedRegisters.opiskelijaRekisteri
     ),
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(

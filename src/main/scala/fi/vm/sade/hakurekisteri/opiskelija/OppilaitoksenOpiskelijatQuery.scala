@@ -13,7 +13,8 @@ case class OppilaitoksenOpiskelijatQuery(
 object OppilaitoksenOpiskelijatQuery extends Logging {
   def apply(params: Map[String, String]): OppilaitoksenOpiskelijatQuery = {
     val oppilaitosOid: Option[String] = params.get("oppilaitosOid")
-    val vuosi: Option[String] = params.get("vuosi").orElse(Some[String](LocalDate.now.getYear.toString))
+    val vuosi: Option[String] =
+      params.get("vuosi").orElse(Some[String](LocalDate.now.getYear.toString))
     val luokkaTasot: Option[Seq[String]] = params.get("luokkaTasot").map(lt => lt.split(",").toSeq)
     if (oppilaitosOid.isEmpty) {
       logger.error(
