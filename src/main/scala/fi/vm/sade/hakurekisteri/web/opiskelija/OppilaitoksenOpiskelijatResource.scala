@@ -53,7 +53,6 @@ class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
   }
 
   get("/:oppilaitosOid", operation(query)) {
-    import org.scalatra.util.RicherString._
     val t0 = Platform.currentTime
     implicit val user: User = getUser
 
