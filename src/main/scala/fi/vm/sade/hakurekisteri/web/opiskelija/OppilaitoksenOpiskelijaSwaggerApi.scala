@@ -14,10 +14,10 @@ trait OppilaitoksenOpiskelijaSwaggerApi
   val query = apiOperation[Seq[OppilaitoksenOpiskelijat]]("oppilaitoksen opiskelijat")
     .summary("Hakee oppilaitoksen opiskelijat ja opiskelijoiden luokat")
     .description("Hakee oppilaitoksen opiskelijat, oidit, ja heidän luokkatietonsa")
-    .parameter(queryParam[Option[String]]("oppilaitosOid").description("oppilaitoksen oid"))
+    .parameter(pathParam[String]("oppilaitosOid").description("oppilaitoksen oid"))
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
     .parameter(
-      queryParam[Seq[Option[String]]]("luokkatasot")
+      queryParam[Option[Seq[String]]]("luokkaTasot")
         .description("Luokkatasot millä tietoja heataan")
     )
 }

@@ -18,9 +18,11 @@ Tarvittaessa voit päivittää front-riippuvuudet komennolla
 
     bower update
 
-## Kaikki testit
+## Testit
 
 Voit ajaa kaikki testit komentoriviltä komennolla `mvn clean test`
+
+Voit ajaa yksittäisen test suiten komennolla `mvn test -Dsuites=fi.vm.sade.hakurekisteri.rest.OppilaitoksenOpiskelijatResourceSpec`
 
 ## Build & Run ##
 
