@@ -6,10 +6,10 @@ import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.web.opiskelija.{OppilaitoksenOpiskelijatResource}
+import fi.vm.sade.hakurekisteri.web.oppilaitos.OppilaitoksenOpiskelijatResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach

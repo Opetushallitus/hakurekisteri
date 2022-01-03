@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.web.opiskelija
+package fi.vm.sade.hakurekisteri.web.oppilaitos
 
 import fi.vm.sade.hakurekisteri.opiskelija.OppilaitoksenOpiskelijat
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReportSwaggerModel, OldSwaggerSyntax}
@@ -19,7 +19,7 @@ trait OppilaitoksenOpiskelijaSwaggerApi
     .parameter(
       queryParam[Option[Seq[String]]]("luokkaTasot")
         .description("Luokkatasot millä tietoja heataan")
-    )
+    ).tags("oppilaitos")
 }
 
 trait OppilaitoksenOpiskelijatSwaggerModel extends OldSwaggerSyntax {

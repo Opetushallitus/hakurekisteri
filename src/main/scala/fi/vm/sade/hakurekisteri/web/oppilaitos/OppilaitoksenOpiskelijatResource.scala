@@ -1,20 +1,16 @@
-package fi.vm.sade.hakurekisteri.web.opiskelija
+package fi.vm.sade.hakurekisteri.web.oppilaitos
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.auditlog.Changes
-import fi.vm.sade.hakurekisteri.{AuditUtil, ResourceRead}
-import fi.vm.sade.hakurekisteri.opiskelija.{
-  Opiskelija,
-  OppilaitoksenOpiskelijat,
-  OppilaitoksenOpiskelijatQuery
-}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OppilaitoksenOpiskelijat, OppilaitoksenOpiskelijatQuery}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
+import fi.vm.sade.hakurekisteri.{AuditUtil, ResourceRead}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
@@ -52,7 +48,7 @@ class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
     }
   }
 
-  get("/:oppilaitosOid", operation(query)) {
+  get("/:oppilaitosOid/opiskelijat", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user: User = getUser
 
