@@ -19,7 +19,8 @@ trait OppilaitoksenOpiskelijaSwaggerApi
     .parameter(
       queryParam[Option[Seq[String]]]("luokkaTasot")
         .description("Luokkatasot millä tietoja heataan")
-    ).tags("oppilaitos")
+    )
+    .tags("oppilaitos")
 }
 
 trait OppilaitoksenOpiskelijatSwaggerModel extends OldSwaggerSyntax {

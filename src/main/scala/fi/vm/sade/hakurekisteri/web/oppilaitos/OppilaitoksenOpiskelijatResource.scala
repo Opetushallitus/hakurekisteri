@@ -5,7 +5,11 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.auditlog.Changes
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OppilaitoksenOpiskelijat, OppilaitoksenOpiskelijatQuery}
+import fi.vm.sade.hakurekisteri.opiskelija.{
+  Opiskelija,
+  OppilaitoksenOpiskelijat,
+  OppilaitoksenOpiskelijatQuery
+}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack

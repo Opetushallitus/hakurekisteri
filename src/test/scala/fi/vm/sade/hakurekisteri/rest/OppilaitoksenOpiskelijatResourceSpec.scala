@@ -44,7 +44,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
           "9A",
           "1.2.246.562.24.61781310000",
           DateTime.now.minusYears(2),
-          Some(DateTime.now.minusWeeks(1)),
+          Some(DateTime.now.plusWeeks(1)),
           "source"
         ).identify
       )
@@ -57,7 +57,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
           "10A",
           "1.2.246.562.24.61781310001",
           DateTime.now.minusYears(2),
-          Some(DateTime.now.minusWeeks(1)),
+          Some(DateTime.now.plusWeeks(1)),
           "source"
         ).identify
       )
@@ -102,7 +102,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
   }
 
   test("returns all students for oppilaitos") {
-    get("/1.2.246.562.10.00000000001") {
+    get("/1.2.246.562.10.00000000001/opiskelijat") {
       response.status should be(200)
       response.body should include("1.2.246.562.24.61781310000")
       response.body should include("9A")
@@ -114,7 +114,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
   }
 
   test("returns only student with level 10 for oppilaitos") {
-    get("/1.2.246.562.10.00000000001?luokkaTasot=10") {
+    get("/1.2.246.562.10.00000000001/opiskelijat?luokkaTasot=10") {
       response.status should be(200)
       response.body should not include ("1.2.246.562.24.61781310000")
       response.body should not include ("9A")
@@ -126,7 +126,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
   }
 
   test("returns both students with level 10 and 9 for oppilaitos") {
-    get("/1.2.246.562.10.00000000001?luokkaTasot=10,9") {
+    get("/1.2.246.562.10.00000000001/opiskelijat?luokkaTasot=10,9") {
       response.status should be(200)
       response.body should include("1.2.246.562.24.61781310000")
       response.body should include("9A")
@@ -139,7 +139,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
 
   test("returns one student using year for oppilaitos") {
     val year = DateTime.now.minusYears(3).getYear
-    get("/1.2.246.562.10.00000000001?vuosi=" + year) {
+    get("/1.2.246.562.10.00000000001/opiskelijat?vuosi=" + year) {
       response.status should be(200)
       response.body should not include ("1.2.246.562.24.61781310000")
       response.body should not include ("9A")
