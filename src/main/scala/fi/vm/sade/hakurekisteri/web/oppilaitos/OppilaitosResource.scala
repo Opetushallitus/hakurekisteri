@@ -23,7 +23,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
+class OppilaitosResource(opiskelijaActor: ActorRef)(implicit
   sw: Swagger,
   val security: Security,
   val system: ActorSystem
@@ -76,8 +76,47 @@ class OppilaitoksenOpiskelijatResource(opiskelijaActor: ActorRef)(implicit
 
       logQuery(q, t0, oppilaitoksenOpiskelijatFuture)
 
-      val is = oppilaitoksenOpiskelijatFuture
+      override val is = oppilaitoksenOpiskelijatFuture
     }
+  }
+
+  get("/:oppilaitosOid/luokat", operation(query)) {
+    val t0 = Platform.currentTime
+    implicit val user: User = getUser
+
+    val q = OppilaitoksenOpiskelijatQuery.apply(params)
+
+    audit.log(
+      auditUser,
+      ResourceRead,
+      AuditUtil
+        .targetFromParams(params)
+        .setField("resource", "OppilaitoksenOpiskelijatResource")
+        .setField("summary", query.result.summary)
+        .build(),
+      Changes.EMPTY
+    )
+
+    new AsyncResult() {
+      override implicit def timeout: Duration = 500.seconds
+
+      private val oppilaitoksenLuokatFuture = fetchOppilaitoksenLuokat(q)
+
+      logQuery(q, t0, oppilaitoksenLuokatFuture)
+
+      override val is = oppilaitoksenLuokatFuture
+    }
+  }
+
+  private def fetchOppilaitoksenLuokat(
+    q: OppilaitoksenOpiskelijatQuery
+  )(implicit user: User): Future[Seq[String]] = {
+    (opiskelijaActor ? AuthorizedQuery(q, user)).map(opiskelijat => {
+      opiskelijat
+        .asInstanceOf[Seq[Opiskelija]]
+        .map(oppilas => oppilas.luokka)
+        .distinct
+    })
   }
 
   private def fetchOppilaitoksenOpiskelijat(

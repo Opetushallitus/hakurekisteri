@@ -7,7 +7,7 @@ import org.scalatra.swagger.{DataType, SwaggerSupport}
 trait OppilaitoksenOpiskelijaSwaggerApi
     extends SwaggerSupport
     with IncidentReportSwaggerModel
-    with OppilaitoksenOpiskelijatSwaggerModel { this: OppilaitoksenOpiskelijatResource =>
+    with OppilaitoksenOpiskelijatSwaggerModel { this: OppilaitosResource =>
 
   registerModel(oppilaitoksenOpiskelijatSwaggerModel)
 
@@ -20,6 +20,13 @@ trait OppilaitoksenOpiskelijaSwaggerApi
       queryParam[Option[Seq[String]]]("luokkaTasot")
         .description("Luokkatasot millä tietoja heataan")
     )
+    .tags("oppilaitos")
+
+  val read = apiOperation[Seq[String]]("oppilaitoksen luokat")
+    .summary("Hakee oppilaitoksen luokat opiskelijatiedoista")
+    .description("Hakee oppilaitoksen luokat")
+    .parameter(pathParam[String]("oppilaitosOid").description("oppilaitoksen oid"))
+    .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
     .tags("oppilaitos")
 }
 

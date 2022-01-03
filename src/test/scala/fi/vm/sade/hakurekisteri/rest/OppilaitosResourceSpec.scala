@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.web.oppilaitos.OppilaitoksenOpiskelijatResource
+import fi.vm.sade.hakurekisteri.web.oppilaitos.OppilaitosResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
@@ -20,7 +20,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
-class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeAndAfterEach {
+class OppilaitosResourceSpec extends ScalatraFunSuite with BeforeAndAfterEach {
   val now = new DateTime()
   val opiskelija = Opiskelija("1.10.1", "9", "9A", "1.24.1", now, Some(now), "test")
 
@@ -82,7 +82,7 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
         )
       )
     )
-    addServlet(new OppilaitoksenOpiskelijatResource(guardedOpiskelijaRekisteri), "/*")
+    addServlet(new OppilaitosResource(guardedOpiskelijaRekisteri), "/*")
 
     super.beforeAll()
   }
@@ -146,6 +146,25 @@ class OppilaitoksenOpiskelijatResourceSpec extends ScalatraFunSuite with BeforeA
       response.body should not include ("1.2.246.562.24.61781310001")
       response.body should not include ("10A")
       response.body should include("1.2.246.562.24.61781310003")
+      response.body should include("9B")
+    }
+  }
+
+  test("returns classes for the school") {
+    get("/1.2.246.562.10.00000000001/luokat") {
+      response.status should be(200)
+      response.body should include("9A")
+      response.body should include("10A")
+      response.body should include("9B")
+    }
+  }
+
+  test("returns classes for the school for given year") {
+    val year = DateTime.now.minusYears(3).getYear
+    get("/1.2.246.562.10.00000000001/luokat?year=" + year) {
+      response.status should be(200)
+      response.body should not include ("9A")
+      response.body should not include ("10A")
       response.body should include("9B")
     }
   }
