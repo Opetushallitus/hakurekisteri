@@ -27,6 +27,10 @@ trait OppilaitoksenOpiskelijaSwaggerApi
     .description("Hakee oppilaitoksen luokat")
     .parameter(pathParam[String]("oppilaitosOid").description("oppilaitoksen oid"))
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
+    .parameter(
+      queryParam[Option[Seq[String]]]("luokkaTasot")
+        .description("Luokkatasot millä tietoja heataan")
+    )
     .tags("oppilaitos")
 }
 
