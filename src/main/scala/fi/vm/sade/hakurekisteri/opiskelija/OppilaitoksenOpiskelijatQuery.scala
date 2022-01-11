@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.utils.slf4j.Logging
 
 case class OppilaitoksenOpiskelijatQuery(
-  oppilaitosOid: Option[String],
+  oppilaitosOid: String,
   vuosi: Option[String] = None,
   luokkaTasot: Option[Seq[String]] = None
 ) extends Query[Opiskelija]
@@ -24,6 +24,6 @@ object OppilaitoksenOpiskelijatQuery extends Logging {
         "Oppilaitoksen tunniste ('oppilaitosOid') on annettava."
       )
     }
-    OppilaitoksenOpiskelijatQuery(oppilaitosOid, vuosi, luokkaTasot)
+    OppilaitoksenOpiskelijatQuery(oppilaitosOid.get, vuosi, luokkaTasot)
   }
 }

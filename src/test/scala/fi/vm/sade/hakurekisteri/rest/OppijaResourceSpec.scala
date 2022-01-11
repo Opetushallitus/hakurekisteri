@@ -223,7 +223,7 @@ class OppijaResourceSpec
       override val ytlSuoritusRekisteri: ActorRef =
         system.actorOf(Props(new FakeAuthorizer(ytlSuoritukset)))
     }
-    val tarjontaActor = new TarjontaActorRef(system.actorOf(Props(new Actor {
+    val tarjontaActor = TarjontaActorRef(system.actorOf(Props(new Actor {
       override def receive: Receive = {
         case GetKomoQuery(oid) =>
           sender ! KomoResponse(

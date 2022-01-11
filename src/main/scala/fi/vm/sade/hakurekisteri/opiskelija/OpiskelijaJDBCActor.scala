@@ -59,7 +59,7 @@ class OpiskelijaJDBCActor(
       Right(
         all
           .filter(t =>
-            matchOppilaitosOid(oppilaitosOid)(t) &&
+            matchOppilaitosOid(Some(oppilaitosOid))(t) &&
               matchVuosiAndKausi(vuosi, None)(t) &&
               matchLuokkaTasot(luokkaTasot)(t)
           )

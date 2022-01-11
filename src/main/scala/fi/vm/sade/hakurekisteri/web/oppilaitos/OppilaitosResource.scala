@@ -7,7 +7,7 @@ import akka.util.Timeout
 import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.opiskelija.{
   Opiskelija,
-  OppilaitoksenOpiskelijat,
+  OppilaitoksenOpiskelija,
   OppilaitoksenOpiskelijatQuery
 }
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
@@ -121,11 +121,11 @@ class OppilaitosResource(opiskelijaActor: ActorRef)(implicit
 
   private def fetchOppilaitoksenOpiskelijat(
     q: OppilaitoksenOpiskelijatQuery
-  )(implicit user: User): Future[Seq[OppilaitoksenOpiskelijat]] = {
+  )(implicit user: User): Future[Seq[OppilaitoksenOpiskelija]] = {
     (opiskelijaActor ? AuthorizedQuery(q, user)).map(opiskelijat => {
       opiskelijat
         .asInstanceOf[Seq[Opiskelija]]
-        .map(oppilas => OppilaitoksenOpiskelijat(oppilas.henkiloOid, oppilas.luokka))
+        .map(oppilas => OppilaitoksenOpiskelija(oppilas.henkiloOid, oppilas.luokka))
     })
   }
 

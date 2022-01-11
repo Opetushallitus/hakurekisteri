@@ -255,7 +255,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
     withActor { actor =>
       Await.result(Future.sequence(List(o2, o3, o4, o5, o6).map(actor ? _)), 15.seconds)
       var result = Await.result(
-        (actor ? OppilaitoksenOpiskelijatQuery(Some("oppilaitos2"), None, None))
+        (actor ? OppilaitoksenOpiskelijatQuery("oppilaitos2", None, None))
           .mapTo[Seq[Opiskelija with Identified[UUID]]],
         15.seconds
       )
@@ -271,7 +271,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
     withActor { actor =>
       Await.result(Future.sequence(List(o2, o3, o4, o5, o6, o7).map(actor ? _)), 15.seconds)
       var result = Await.result(
-        (actor ? OppilaitoksenOpiskelijatQuery(Some("oppilaitos2"), Some("2001"), None))
+        (actor ? OppilaitoksenOpiskelijatQuery("oppilaitos2", Some("2001"), None))
           .mapTo[Seq[Opiskelija with Identified[UUID]]],
         15.seconds
       )
@@ -288,7 +288,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
     withActor { actor =>
       Await.result(Future.sequence(List(o6, o7, o8, o9, o10).map(actor ? _)), 15.seconds)
       var result = Await.result(
-        (actor ? OppilaitoksenOpiskelijatQuery(Some("oppilaitos2"), None, Some(Seq[String]("10"))))
+        (actor ? OppilaitoksenOpiskelijatQuery("oppilaitos2", None, Some(Seq[String]("10"))))
           .mapTo[Seq[Opiskelija with Identified[UUID]]],
         15.seconds
       )
@@ -305,7 +305,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
       Await.result(Future.sequence(List(o6, o7, o8, o9, o10).map(actor ? _)), 15.seconds)
       var result = Await.result(
         (actor ? OppilaitoksenOpiskelijatQuery(
-          Some("oppilaitos2"),
+          "oppilaitos2",
           None,
           Some(Seq[String]("10", "9"))
         ))
@@ -325,7 +325,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
       Await.result(Future.sequence(List(o6, o7, o8, o9, o10).map(actor ? _)), 15.seconds)
       var result = Await.result(
         (actor ? OppilaitoksenOpiskelijatQuery(
-          Some("oppilaitos2"),
+          "oppilaitos2",
           Some("2002"),
           Some(Seq[String]("10"))
         ))

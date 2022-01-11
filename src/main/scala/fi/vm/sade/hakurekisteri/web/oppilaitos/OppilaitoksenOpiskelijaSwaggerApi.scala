@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.oppilaitos
 
-import fi.vm.sade.hakurekisteri.opiskelija.OppilaitoksenOpiskelijat
+import fi.vm.sade.hakurekisteri.opiskelija.OppilaitoksenOpiskelija
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReportSwaggerModel, OldSwaggerSyntax}
 import org.scalatra.swagger.{DataType, SwaggerSupport}
 
@@ -11,7 +11,7 @@ trait OppilaitoksenOpiskelijaSwaggerApi
 
   registerModel(oppilaitoksenOpiskelijatSwaggerModel)
 
-  val query = apiOperation[Seq[OppilaitoksenOpiskelijat]]("oppilaitoksen opiskelijat")
+  val query = apiOperation[Seq[OppilaitoksenOpiskelija]]("oppilaitoksen opiskelijat")
     .summary("Hakee oppilaitoksen opiskelijat ja opiskelijoiden luokat")
     .description("Hakee oppilaitoksen opiskelijat, oidit, ja heidän luokkatietonsa")
     .parameter(pathParam[String]("oppilaitosOid").description("oppilaitoksen oid"))
