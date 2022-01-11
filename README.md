@@ -22,7 +22,7 @@ Tarvittaessa voit päivittää front-riippuvuudet komennolla
 
 Voit ajaa kaikki testit komentoriviltä komennolla `mvn clean test`
 
-Voit ajaa yksittäisen test suiten komennolla `mvn test -Dsuites=fi.vm.sade.hakurekisteri.rest.OppilaitoksenOpiskelijatResourceSpec`
+Voit ajaa yksittäisen test suiten komennolla `mvn test -Dsuites=fi.vm.sade.hakurekisteri.rest.OppilaitosResourceSpec`
 
 ## Build & Run ##
 

@@ -155,13 +155,13 @@ class OppilaitosResourceSpec extends ScalatraFunSuite with BeforeAndAfterEach {
       response.status should be(200)
       response.body should include("9A")
       response.body should include("10A")
-      response.body should include("9B")
+      response.body should not include ("9B") // Student of the class is not from the current year.
     }
   }
 
   test("returns classes for the school for given year") {
     val year = DateTime.now.minusYears(3).getYear
-    get("/1.2.246.562.10.00000000001/luokat?year=" + year) {
+    get("/1.2.246.562.10.00000000001/luokat?vuosi=" + year) {
       response.status should be(200)
       response.body should not include ("9A")
       response.body should not include ("10A")
