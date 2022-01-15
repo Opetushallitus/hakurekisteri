@@ -13,8 +13,8 @@
     </organization>
     <properties>
         <scala.version>2.12.8</scala.version>
-        <spring.version>4.3.21.RELEASE</spring.version>
-        <spring-security.version>4.2.10.RELEASE</spring-security.version>
+        <spring.version>5.2.19.RELEASE</spring.version>
+        <spring-security.version>5.2.9.RELEASE</spring-security.version>
         <scalatra.version>2.6.3</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>3.4.2</json4s.version>
@@ -280,7 +280,7 @@
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.1</version>
+            <version>2.3.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -1093,7 +1093,7 @@
         <dependency>
             <groupId>org.dispatchhttp</groupId>
             <artifactId>dispatch-core_2.12</artifactId>
-            <version>1.0.1</version>
+            <version>1.1.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1420,7 +1420,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
-            <version>1.1.7</version>
+            <version>1.2.7</version>
         </dependency>
         <dependency>
             <groupId>io.findify</groupId>
@@ -1686,12 +1686,10 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>reference.conf</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>fi.vm.sade.hakurekisteri.SureStandaloneJetty</Main-Class>
                                     </manifestEntries>
