@@ -270,6 +270,7 @@ var restData = {
         "kansanopistoKomoOid": "kansanopisto",
         "valmaKomoOid": "valma",
         "telmaKomoOid": "telma",
+        "opistovuosiKomoOid": "opistovuosioppivelvolliselle",
         "perusopetuksenOppiaineenOppimaaraOid": "TODO perusopetuksenOppiaineenOppimäärä"
     },
     rajoitukset: {

@@ -162,7 +162,8 @@ app.factory "MuokkaaTiedot", [
             lukio: data.lukioKomoOid
             kansanopisto: data.kansanopistoKomoOid
             valma: data.valmaKomoOid
-            telma: data.telmaKomoOid
+            telma: data.telmaKomoOid,
+            opistovuosioppivelvolliselle: data.opistovuosiKomoOid,
             perusopetuksenOppiaineenOppimaara: data.perusopetuksenOppiaineenOppimaaraOid
         ).error(->komosLoaded.reject("cannot get komos"))
         return komosLoaded.promise
