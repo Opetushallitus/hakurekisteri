@@ -1,7 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
@@ -11,10 +9,11 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.LocalDate
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
+import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -105,6 +104,19 @@ class KoskiDataHandler(
     ) {
       logger.info(
         s"Filtteröitiin henkilöltä $henkiloOid valma-suoritus, joka sisälsi alle 30 osp ja " +
+          s"kuului eronneeseen rinnastettaviin tiloihin."
+      )
+      return false
+    }
+
+    if (
+      suoritus.tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
+      && !suoritus.opintopisteitaVahintaan(26.5, true)
+      && opiskeluoikeus.tila.opiskeluoikeusjaksot
+        .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+    ) {
+      logger.info(
+        s"Filtteröitiin henkilöltä $henkiloOid opistovuosi oppivelvollisille-suoritus, joka sisälsi alle 26,5 osp ja " +
           s"kuului eronneeseen rinnastettaviin tiloihin."
       )
       return false

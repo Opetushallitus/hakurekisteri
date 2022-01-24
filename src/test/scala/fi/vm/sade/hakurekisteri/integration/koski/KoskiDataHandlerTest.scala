@@ -295,6 +295,25 @@ class KoskiDataHandlerTest
     virallinen.komo should equal(Oids.valmaKomoOid)
   }
 
+  it should "parse opintovuosi oppivelvollisille data" in {
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_opistovuosi_oppivelvollisille_valmis.json")
+      .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(
+      KoskiKoodi("vapaansivistystyonkoulutus", "opiskeluoikeudentyyppi")
+    )
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+    val virallinen = result.head.suoritus
+
+    // Opintovuosi oppivelvollisille arvosanas should not be saved
+    result.head.arvosanat should have length 0
+    virallinen.tila should equal("VALMIS")
+    virallinen.komo should equal(Oids.opistovuosiKomoOid)
+  }
+
   /*
   //TODO is the test data valid???
   it should "parse peruskoulu_lisäopetus_ei_vahvistettu.json data" in {
@@ -4445,6 +4464,41 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
     val suoritustila = run(database.run(sql"select tila from suoritus".as[String]))
     suoritustila.head should equal("KESKEYTYNYT")
+  }
+
+  it should "store opistovuosi oppivelvollisille as valmis without arvosanat" in {
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_opistovuosi_oppivelvollisille_valmis.json")
+      .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+    val suoritus = run(
+      database.run(
+        sql"select tila from suoritus where komo = 'vstoppivelvollisillesuunnattukoulutus'"
+          .as[String]
+      )
+    )
+    suoritus.head should equal("VALMIS")
+    val arvosanat = run(
+      database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
+    )
+    arvosanat should have length 0
   }
 
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
