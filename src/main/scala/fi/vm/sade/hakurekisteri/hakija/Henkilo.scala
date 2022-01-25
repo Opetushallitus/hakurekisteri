@@ -32,7 +32,8 @@ case class Henkilo(
   oppivelvollisuusVoimassaAsti: Option[String],
   oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String],
   lisakysymykset: Seq[Lisakysymys],
-  liitteet: Seq[Liite]
+  liitteet: Seq[Liite],
+  aidinkieli: String
 )
 
 case class Lisakysymys(

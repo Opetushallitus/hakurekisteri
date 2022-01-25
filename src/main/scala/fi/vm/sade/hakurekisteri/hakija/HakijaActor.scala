@@ -478,7 +478,8 @@ class HakijaActor(
         oikeusMaksuttomaanKoulutukseenVoimassaAsti = h.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
         lisakysymykset = h.lisakysymykset,
         liitteet = h.liitteet,
-        muukoulutus = h.muukoulutus
+        muukoulutus = h.muukoulutus,
+        aidinkieli = h.aidinkieli
       ),
       suoritukset = hakija.suoritukset,
       opiskeluhistoria = hakija.opiskeluhistoria,
