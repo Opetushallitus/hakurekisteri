@@ -32,7 +32,7 @@ app.controller "OrganisaatioCtrl", [
       $scope.loading = true
       $http.get(window.url("organisaatio-service.hae"),
         params:
-          searchstr: $scope.hakuehto
+          searchStr: $scope.hakuehto
           organisaatiotyyppi: $scope.organisaatiotyyppi
           oppilaitostyyppi: $scope.oppilaitostyyppi
           vainLakkautetut: $scope.lakkautetut
