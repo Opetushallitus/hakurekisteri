@@ -4344,6 +4344,29 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
   }
 
+  it should "not save a kotiopetuslainen when ysiluokka start is earlier than kotiopetusjakso ends" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "koskidata_kotiopetus_ysiluokalla_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("0")
+  }
+
   it should "not save a valmis kotiopetuslainen as valmis peruskoulun suoritus if valmistuminen is after deadline" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "valmistunut_kotiopetuslainen.json").mkString
