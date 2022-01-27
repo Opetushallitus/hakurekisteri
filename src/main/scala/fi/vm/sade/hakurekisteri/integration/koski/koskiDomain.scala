@@ -43,7 +43,9 @@ case class KoskiOpiskeluoikeus(
 
   def getYsiluokanAlkamispaiva: LocalDate = {
     if (opiskeluoikeusSisaltaaYsisuorituksen) {
-      LocalDate.parse(getLatestYsiSuoritus.alkamispäivä.getOrElse(defaultYsiluokanAlkamispaivaString))
+      LocalDate.parse(
+        getLatestYsiSuoritus.alkamispäivä.getOrElse(defaultYsiluokanAlkamispaivaString)
+      )
     } else
       LocalDate.parse(KoskiUtil.defaultYsiluokanAlkamispaivaString)
   }
@@ -59,11 +61,14 @@ case class KoskiOpiskeluoikeus(
       lt.kotiopetusjaksot
         .getOrElse(List.empty)
         .exists(koj =>
-          koj.alku.nonEmpty && (koj.loppu.isEmpty || getYsiluokanAlkamispaiva.compareTo(LocalDate.parse(koj.loppu.get)) < 0)
+          koj.alku.nonEmpty && (koj.loppu.isEmpty || getYsiluokanAlkamispaiva
+            .compareTo(LocalDate.parse(koj.loppu.get)) < 0)
         ) ||
         lt.kotiopetus.toList.exists(koj =>
-        koj.alku.nonEmpty && (koj.loppu.isEmpty || getYsiluokanAlkamispaiva.compareTo(LocalDate.parse(koj.loppu.get)) < 0)
-      )
+          koj.alku.nonEmpty && (koj.loppu.isEmpty || getYsiluokanAlkamispaiva.compareTo(
+            LocalDate.parse(koj.loppu.get)
+          ) < 0)
+        )
     )
 }
 
