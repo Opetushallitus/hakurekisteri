@@ -10,6 +10,7 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.Henkilo
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetRinnasteinenKoodiArvoQuery,
   KoodistoActorRef
@@ -575,6 +576,7 @@ object AkkaHakupalvelu {
           kaksoiskansalaisuus = Some(getHenkiloTietoOrBlank(_.kaksoiskansalaisuus)),
           kansalaisuudet = parseKansalaisuusList(_.kansalaisuus, _.kaksoiskansalaisuus),
           asiointiKieli = kieli,
+          aidinkieli = kieli,
           opetuskieli = opetuskieli.getOrElse(""),
           eiSuomalaistaHetua =
             getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
@@ -650,7 +652,7 @@ object AkkaHakupalvelu {
           postinumero = hakemus.postinumero,
           maa = maakoodit.getOrElse(hakemus.asuinmaa, "FIN"),
           postitoimipaikka = hakemus.postitoimipaikka.getOrElse(""),
-          matkapuhelin = "",
+          matkapuhelin = hakemus.matkapuhelin,
           puhelin = "",
           sahkoposti = hakemus.email,
           kotikunta = hakemus.kotikunta.getOrElse("999"),
@@ -668,6 +670,7 @@ object AkkaHakupalvelu {
           kansalaisuudet =
             Some(hakemus.henkilo.kansalaisuus.flatMap(k => maakoodit.get(k.kansalaisuusKoodi))),
           asiointiKieli = hakemus.asiointiKieli.toUpperCase,
+          aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
           opetuskieli = "",
           eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,
           sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
