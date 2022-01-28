@@ -4327,7 +4327,6 @@ class KoskiDataHandlerTest
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
-    KoskiUtil.defaultYsiluokanAlkamispaivaString = "2020-07-07"
 
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(

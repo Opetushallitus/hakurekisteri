@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil.defaultYsiluokanAlkamispaivaString
 import org.joda.time.LocalDate
 
 import scala.collection.immutable.ListMap
@@ -41,13 +40,14 @@ case class KoskiOpiskeluoikeus(
     .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
     .head
 
-  def getYsiluokanAlkamispaiva: LocalDate = {
+  def getYsiluokanAlkamispaiva: Option[LocalDate] = {
     if (opiskeluoikeusSisaltaaYsisuorituksen) {
-      LocalDate.parse(
-        getLatestYsiSuoritus.alkamispäivä.getOrElse(defaultYsiluokanAlkamispaivaString)
-      )
+      getLatestYsiSuoritus.alkamispäivä match {
+        case Some(alkamispaiva) => Some(LocalDate.parse(alkamispaiva))
+        case None               => None
+      }
     } else
-      LocalDate.parse(KoskiUtil.defaultYsiluokanAlkamispaivaString)
+      None
   }
 
   def isStateContainingOpiskeluoikeus: Boolean =
@@ -56,20 +56,29 @@ case class KoskiOpiskeluoikeus(
   def isAikuistenPerusopetus: Boolean =
     tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
 
-  def isKotiopetuslainen: Boolean =
-    lisätiedot.exists(lt =>
-      lt.kotiopetusjaksot
-        .getOrElse(List.empty)
-        .exists(koj =>
-          koj.alku.nonEmpty && (koj.loppu.isEmpty || getYsiluokanAlkamispaiva
-            .compareTo(LocalDate.parse(koj.loppu.get)) < 0)
-        ) ||
-        lt.kotiopetus.toList.exists(koj =>
-          koj.alku.nonEmpty && (koj.loppu.isEmpty || getYsiluokanAlkamispaiva.compareTo(
-            LocalDate.parse(koj.loppu.get)
-          ) < 0)
+  def isKotiopetuslainen: Boolean = {
+    getYsiluokanAlkamispaiva match {
+      case Some(alkamispaiva) =>
+        lisätiedot.exists(lt =>
+          lt.kotiopetusjaksot
+            .getOrElse(List.empty)
+            .exists(koj =>
+              koj.alku.nonEmpty && (koj.loppu.isEmpty || alkamispaiva
+                .compareTo(LocalDate.parse(koj.loppu.get)) < 0)
+            ) ||
+            lt.kotiopetus.toList.exists(koj =>
+              koj.alku.nonEmpty && (koj.loppu.isEmpty || alkamispaiva.compareTo(
+                LocalDate.parse(koj.loppu.get)
+              ) < 0)
+            )
         )
-    )
+      case None =>
+        lisätiedot.exists(lt =>
+          lt.kotiopetusjaksot.getOrElse(List.empty).exists(koj => koj.alku.nonEmpty)
+            || lt.kotiopetus.toList.exists(koj => koj.alku.nonEmpty)
+        )
+    }
+  }
 }
 
 case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {

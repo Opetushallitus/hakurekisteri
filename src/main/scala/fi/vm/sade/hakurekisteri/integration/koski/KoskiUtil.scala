@@ -17,9 +17,6 @@ object KoskiUtil {
     OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date")
   )
 
-  var defaultYsiluokanAlkamispaivaString: String =
-    LocalDate.now().minusYears(1).getYear.toString + "-07-07"
-
   //format "2020-06-01T00:00:00+02:00"
   lazy val koskiFetchStartTime: String =
     OphUrlProperties.getProperty("suoritusrekisteri.koski.start.timestamp") match {
