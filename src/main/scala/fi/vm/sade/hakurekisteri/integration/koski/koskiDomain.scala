@@ -63,13 +63,12 @@ case class KoskiOpiskeluoikeus(
           lt.kotiopetusjaksot
             .getOrElse(List.empty)
             .exists(koj =>
-              koj.alku.nonEmpty && (koj.loppu.isEmpty || alkamispaiva
-                .compareTo(LocalDate.parse(koj.loppu.get)) < 0)
+              koj.alku.nonEmpty && (koj.loppu.isEmpty ||
+                alkamispaiva.isBefore(LocalDate.parse(koj.loppu.get)))
             ) ||
             lt.kotiopetus.toList.exists(koj =>
-              koj.alku.nonEmpty && (koj.loppu.isEmpty || alkamispaiva.compareTo(
-                LocalDate.parse(koj.loppu.get)
-              ) < 0)
+              koj.alku.nonEmpty && (koj.loppu.isEmpty ||
+                alkamispaiva.isBefore(LocalDate.parse(koj.loppu.get)))
             )
         )
       case None =>
