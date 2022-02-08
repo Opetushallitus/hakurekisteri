@@ -1,7 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
@@ -11,10 +9,11 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.LocalDate
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
+import java.util.UUID
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,10 +49,6 @@ class KoskiDataHandler(
 
   private val suoritusArvosanaParser = new KoskiSuoritusArvosanaParser
   private val opiskelijaParser = new KoskiOpiskelijaParser
-
-  private def opiskeluoikeusSisaltaaYsisuorituksen(oo: KoskiOpiskeluoikeus): Boolean = {
-    oo.suoritukset.exists(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "9"))
-  }
 
   private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
     suoritus.osasuoritukset.exists(_.arviointi.exists(_.hyväksytty.contains(false)))
@@ -127,7 +122,7 @@ class KoskiDataHandler(
     if (
       opiskeluoikeus.tyyppi.exists(
         _.koodiarvo == "perusopetus"
-      ) && !opiskeluoikeusSisaltaaYsisuorituksen(opiskeluoikeus)
+      ) && !opiskeluoikeus.opiskeluoikeusSisaltaaYsisuorituksen
     ) {
       if (opiskeluoikeus.isKotiopetuslainen) {
         logger.info(

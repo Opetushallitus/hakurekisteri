@@ -2020,6 +2020,33 @@ class KoskiDataHandlerTest
     arvosanat should have length 17
   }
 
+  it should "store peruskoulu with past kotiopetusjakso before ninth grade as kesken without arvosanat if deadline date is tomorrow" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "koskidata_kotiopetuksesta_lahiopetukseen.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(database.run(sql"select tila from suoritus".as[String]))
+    suoritus.head should equal("KESKEN")
+    val arvosanat = run(
+      database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
+    )
+    arvosanat should have length 0
+  }
+
   it should "store kymppiluokka as keskeytynyt with arvosanat if deadline date is yesterday" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "koskidata_kymppiluokka.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -4314,6 +4341,29 @@ class KoskiDataHandlerTest
     opiskelija.head should equal("1")
     val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
     suoritukset.head should equal("1")
+  }
+
+  it should "not save a kotiopetuslainen when ysiluokka start is earlier than kotiopetusjakso ends" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "koskidata_kotiopetus_ysiluokalla_kesken.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("0")
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("0")
   }
 
   it should "not save a valmis kotiopetuslainen as valmis peruskoulun suoritus if valmistuminen is after deadline" in {
