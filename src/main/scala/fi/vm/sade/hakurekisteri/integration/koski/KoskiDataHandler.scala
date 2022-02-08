@@ -105,6 +105,19 @@ class KoskiDataHandler(
       return false
     }
 
+    if (
+      suoritus.isOpistovuosi()
+      && !suoritus.opintopisteitaVahintaan(26.5)
+      && opiskeluoikeus.tila.opiskeluoikeusjaksot
+        .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+    ) {
+      logger.info(
+        s"Filtteröitiin henkilöltä $henkiloOid opistovuosi oppivelvollisille-suoritus, joka sisälsi alle 26,5 osp ja " +
+          s"kuului eronneeseen rinnastettaviin tiloihin."
+      )
+      return false
+    }
+
     true
   }
 

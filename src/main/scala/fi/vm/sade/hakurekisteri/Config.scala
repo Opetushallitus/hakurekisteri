@@ -1,19 +1,17 @@
 package fi.vm.sade.hakurekisteri
 
-import java.io.InputStream
-import java.nio.file.{Files, Path, Paths}
-import java.util.Properties
-
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
-import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 import support.{Integrations, SureDbLoggingConfig}
 
+import java.io.InputStream
+import java.nio.file.{Files, Path, Paths}
+import java.util.Properties
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
@@ -55,6 +53,7 @@ object LisapistekoulutusOids {
   val valmentavaJaKuntouttava = "1.2.246.562.5.2013112814572435755085"
   val valma = "valma"
   val telma = "telma"
+  val opistovuosiOppivelvollisille = "vstoppivelvollisillesuunnattukoulutus"
 }
 
 object KomoOids {
@@ -78,7 +77,8 @@ object KomoOids {
     lisapistekoulutus.maahanmuuttajienAmmatilliseenValmistava,
     lisapistekoulutus.valmentavaJaKuntouttava,
     lisapistekoulutus.valma,
-    lisapistekoulutus.telma
+    lisapistekoulutus.telma,
+    lisapistekoulutus.opistovuosiOppivelvollisille
   )
 }
 
@@ -109,6 +109,7 @@ object Oids {
   val kansanopistoKomoOid = KomoOids.lisapistekoulutus.kansanopisto
   val valmaKomoOid = KomoOids.lisapistekoulutus.valma
   val telmaKomoOid = KomoOids.lisapistekoulutus.telma
+  val opistovuosiKomoOid = KomoOids.lisapistekoulutus.opistovuosiOppivelvollisille
   val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
   val ammatillisetKomoOids =
     Set(erikoisammattitutkintoKomoOid, ammatillinentutkintoKomoOid, ammatillinenKomoOid)

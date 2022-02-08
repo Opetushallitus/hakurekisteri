@@ -1,14 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import java.text.SimpleDateFormat
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.hakija.Henkilo
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
@@ -18,13 +14,16 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, OppivelvollisuusTieto}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
 
+import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
@@ -320,7 +319,8 @@ object AkkaHakupalvelu {
       "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
       "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO,
       "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO,
-      "LISAKOULUTUS_VALMA" -> tausta.LISAKOULUTUS_VALMA
+      "LISAKOULUTUS_VALMA" -> tausta.LISAKOULUTUS_VALMA,
+      "LISAKOULUTUS_OPISTOVUOSI" -> tausta.LISAKOULUTUS_OPISTOVUOSI
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
@@ -944,6 +944,7 @@ case class Koulutustausta(
   LISAKOULUTUS_MAAHANMUUTTO: Option[String],
   LISAKOULUTUS_MAAHANMUUTTO_LUKIO: Option[String],
   LISAKOULUTUS_VALMA: Option[String],
+  LISAKOULUTUS_OPISTOVUOSI: Option[String],
   luokkataso: Option[String],
   lahtoluokka: Option[String],
   perusopetuksen_kieli: Option[String],
@@ -971,6 +972,7 @@ case class Koulutustausta(
 
 object Koulutustausta {
   def apply(): Koulutustausta = Koulutustausta(
+    None,
     None,
     None,
     None,

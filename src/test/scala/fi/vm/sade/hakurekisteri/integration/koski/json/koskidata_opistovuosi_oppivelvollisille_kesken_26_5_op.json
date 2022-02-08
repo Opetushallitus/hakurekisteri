@@ -1,0 +1,661 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.35344307492",
+    "hetu": "240102A959R",
+    "syntymäaika": "2002-01-24",
+    "etunimet": "Rolle Testi",
+    "kutsumanimi": "Rolle",
+    "sukunimi": "Mattila-Testi",
+    "äidinkieli": {
+      "koodiarvo": "FI",
+      "nimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "lyhytNimi": {
+        "fi": "suomi",
+        "sv": "finska",
+        "en": "Finnish"
+      },
+      "koodistoUri": "kieli",
+      "koodistoVersio": 1
+    },
+    "kansalaisuus": [
+      {
+        "koodiarvo": "246",
+        "nimi": {
+          "fi": "Suomi",
+          "sv": "Finland",
+          "en": "Finland"
+        },
+        "lyhytNimi": {
+          "fi": "FI",
+          "sv": "FI",
+          "en": "FI"
+        },
+        "koodistoUri": "maatjavaltiot2",
+        "koodistoVersio": 2
+      }
+    ],
+    "turvakielto": false
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.18936626870",
+      "versionumero": 6,
+      "aikaleima": "2022-01-24T13:18:55.864328",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.141620523610",
+        "oppilaitosnumero": {
+          "koodiarvo": "01626",
+          "nimi": {
+            "fi": "Evangeliska folkhögskolan i Svenskfinland",
+            "sv": "Evangeliska folkhögskolan i Svenskfinland",
+            "en": "Evangeliska folkhögskolan i Svenskfinland"
+          },
+          "lyhytNimi": {
+            "fi": "Evangeliska folkhögskolan i Svenskfinland",
+            "sv": "Evangeliska folkhögskolan i Svenskfinland",
+            "en": "Evangeliska folkhögskolan i Svenskfinland"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Evangeliska folkhögskolan i Svenskfinland",
+          "sv": "Evangeliska folkhögskolan i Svenskfinland",
+          "en": "Evangeliska folkhögskolan i Svenskfinland"
+        },
+        "kotipaikka": {
+          "koodiarvo": "905",
+          "nimi": {
+            "fi": "Vaasa",
+            "sv": "Vasa"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.19923117386",
+        "nimi": {
+          "fi": "Garantiföreningen för Evangeliska folkhögskolan i Svenskfinland rf",
+          "sv": "Garantiföreningen för Evangeliska folkhögskolan i Svenskfinland rf"
+        },
+        "yTunnus": "0216735-7",
+        "kotipaikka": {
+          "koodiarvo": "905",
+          "nimi": {
+            "fi": "Vaasa",
+            "sv": "Vasa"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2021-08-24",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "lisätiedot": {
+        "maksuttomuus": [
+          {
+            "alku": "2021-08-24",
+            "maksuton": true
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "toimipiste": {
+            "oid": "1.2.246.562.10.141620523610",
+            "oppilaitosnumero": {
+              "koodiarvo": "01626",
+              "nimi": {
+                "fi": "Evangeliska folkhögskolan i Svenskfinland",
+                "sv": "Evangeliska folkhögskolan i Svenskfinland",
+                "en": "Evangeliska folkhögskolan i Svenskfinland"
+              },
+              "lyhytNimi": {
+                "fi": "Evangeliska folkhögskolan i Svenskfinland",
+                "sv": "Evangeliska folkhögskolan i Svenskfinland",
+                "en": "Evangeliska folkhögskolan i Svenskfinland"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Evangeliska folkhögskolan i Svenskfinland",
+              "sv": "Evangeliska folkhögskolan i Svenskfinland",
+              "en": "Evangeliska folkhögskolan i Svenskfinland"
+            },
+            "kotipaikka": {
+              "koodiarvo": "905",
+              "nimi": {
+                "fi": "Vaasa",
+                "sv": "Vasa"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "tyyppi": {
+            "koodiarvo": "vstoppivelvollisillesuunnattukoulutus",
+            "nimi": {
+              "fi": "Oppivelvollisille suunnattu vapaan sivistystyön koulutus",
+              "sv": "Utbildning inom fritt bildningsarbete som riktar sig till läropliktiga",
+              "en": "Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          },
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "999909",
+              "nimi": {
+                "fi": "Kansanopistojen vapaan sivistystyön koulutus oppivelvollisille",
+                "sv": "Folkhögskolornas utbildning inom fritt bildningsarbete för läropliktiga"
+              },
+              "lyhytNimi": {
+                "fi": "Kansanopistojen vapaan sivistystyön koulutus oppivelvollisille"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            },
+            "perusteenDiaarinumero": "OPH-58-2021"
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "1002",
+                  "nimi": {
+                    "fi": "Arjen taidot ja elämänhallinta",
+                    "sv": "Vardagsfärdigheter och livskompetens"
+                  },
+                  "koodistoUri": "vstosaamiskokonaisuus",
+                  "koodistoVersio": 1
+                },
+                "laajuus": {
+                  "arvo": 6.5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    },
+                    "lyhytNimi": {
+                      "fi": "op",
+                      "sv": "sp",
+                      "en": "ECTS cr"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko"
+                  }
+                }
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "Ymmärrä asioita",
+                      "nimi": {
+                        "fi": "Ymmärrä asioita"
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "Ymmärrä asioita"
+                    },
+                    "laajuus": {
+                      "arvo": 6,
+                      "yksikkö": {
+                        "koodiarvo": "2",
+                        "nimi": {
+                          "fi": "opintopistettä",
+                          "sv": "studiepoäng",
+                          "en": "ECTS credits"
+                        },
+                        "lyhytNimi": {
+                          "fi": "op",
+                          "sv": "sp",
+                          "en": "ECTS cr"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "Hyväksytty",
+                        "nimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd",
+                          "en": "Hyväksytty"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd"
+                        },
+                        "koodistoUri": "arviointiasteikkovst",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2022-01-24",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "vstopintokokonaisuus",
+                    "nimi": {
+                      "fi": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "sv": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "en": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "Mieti asioita",
+                      "nimi": {
+                        "fi": "Mieti asioita"
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "Mieti asioita"
+                    },
+                    "laajuus": {
+                      "arvo": 0.5,
+                      "yksikkö": {
+                        "koodiarvo": "2",
+                        "nimi": {
+                          "fi": "opintopistettä",
+                          "sv": "studiepoäng",
+                          "en": "ECTS credits"
+                        },
+                        "lyhytNimi": {
+                          "fi": "op",
+                          "sv": "sp",
+                          "en": "ECTS cr"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "Hyväksytty",
+                        "nimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd",
+                          "en": "Hyväksytty"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd"
+                        },
+                        "koodistoUri": "arviointiasteikkovst",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2022-01-24",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "vstopintokokonaisuus",
+                    "nimi": {
+                      "fi": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "sv": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "en": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "vstosaamiskokonaisuus",
+                "nimi": {
+                  "fi": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus",
+                  "sv": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus",
+                  "en": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "1003",
+                  "nimi": {
+                    "fi": "Opiskelu-, itsetuntemus- ja työelämätaidot",
+                    "sv": "Studie- och arbetslivsfärdigheter och självkännedom"
+                  },
+                  "koodistoUri": "vstosaamiskokonaisuus",
+                  "koodistoVersio": 1
+                },
+                "laajuus": {
+                  "arvo": 8,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    },
+                    "lyhytNimi": {
+                      "fi": "op",
+                      "sv": "sp",
+                      "en": "ECTS cr"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko"
+                  }
+                }
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "Tunne itsesi",
+                      "nimi": {
+                        "fi": "Tunne itsesi"
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "Tunne itsesi"
+                    },
+                    "laajuus": {
+                      "arvo": 8,
+                      "yksikkö": {
+                        "koodiarvo": "2",
+                        "nimi": {
+                          "fi": "opintopistettä",
+                          "sv": "studiepoäng",
+                          "en": "ECTS credits"
+                        },
+                        "lyhytNimi": {
+                          "fi": "op",
+                          "sv": "sp",
+                          "en": "ECTS cr"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "Hyväksytty",
+                        "nimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd",
+                          "en": "Hyväksytty"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd"
+                        },
+                        "koodistoUri": "arviointiasteikkovst",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2022-01-24",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "vstopintokokonaisuus",
+                    "nimi": {
+                      "fi": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "sv": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "en": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  },
+                  "tunnustettu": {
+                    "selite": {
+                      "fi": "tunnustan"
+                    }
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "vstosaamiskokonaisuus",
+                "nimi": {
+                  "fi": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus",
+                  "sv": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus",
+                  "en": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "1006",
+                  "nimi": {
+                    "fi": "Aktiivinen kansalaisuus",
+                    "sv": "Aktivt medborgarskap"
+                  },
+                  "koodistoUri": "vstosaamiskokonaisuus",
+                  "koodistoVersio": 1
+                },
+                "laajuus": {
+                  "arvo": 12,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    },
+                    "lyhytNimi": {
+                      "fi": "op",
+                      "sv": "sp",
+                      "en": "ECTS cr"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko"
+                  }
+                }
+              },
+              "osasuoritukset": [
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "Ole aktiivinen!",
+                      "nimi": {
+                        "fi": "Ole aktiivinen!"
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "Ole aktiivinen!"
+                    },
+                    "laajuus": {
+                      "arvo": 9,
+                      "yksikkö": {
+                        "koodiarvo": "2",
+                        "nimi": {
+                          "fi": "opintopistettä",
+                          "sv": "studiepoäng",
+                          "en": "ECTS credits"
+                        },
+                        "lyhytNimi": {
+                          "fi": "op",
+                          "sv": "sp",
+                          "en": "ECTS cr"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "Hyväksytty",
+                        "nimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd",
+                          "en": "Hyväksytty"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd"
+                        },
+                        "koodistoUri": "arviointiasteikkovst",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2022-01-24",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "vstopintokokonaisuus",
+                    "nimi": {
+                      "fi": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "sv": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "en": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  },
+                  "tunnustettu": {
+                    "selite": {
+                      "fi": "tunnustus"
+                    }
+                  }
+                },
+                {
+                  "koulutusmoduuli": {
+                    "tunniste": {
+                      "koodiarvo": "Ole kansalainen!",
+                      "nimi": {
+                        "fi": "Ole kansalainen!"
+                      }
+                    },
+                    "kuvaus": {
+                      "fi": "Ole kansalainen!"
+                    },
+                    "laajuus": {
+                      "arvo": 3,
+                      "yksikkö": {
+                        "koodiarvo": "2",
+                        "nimi": {
+                          "fi": "opintopistettä",
+                          "sv": "studiepoäng",
+                          "en": "ECTS credits"
+                        },
+                        "lyhytNimi": {
+                          "fi": "op",
+                          "sv": "sp",
+                          "en": "ECTS cr"
+                        },
+                        "koodistoUri": "opintojenlaajuusyksikko",
+                        "koodistoVersio": 1
+                      }
+                    }
+                  },
+                  "arviointi": [
+                    {
+                      "arvosana": {
+                        "koodiarvo": "Hyväksytty",
+                        "nimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd",
+                          "en": "Hyväksytty"
+                        },
+                        "lyhytNimi": {
+                          "fi": "Hyväksytty",
+                          "sv": "Godkänd"
+                        },
+                        "koodistoUri": "arviointiasteikkovst",
+                        "koodistoVersio": 1
+                      },
+                      "päivä": "2022-01-24",
+                      "hyväksytty": true
+                    }
+                  ],
+                  "tyyppi": {
+                    "koodiarvo": "vstopintokokonaisuus",
+                    "nimi": {
+                      "fi": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "sv": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus",
+                      "en": "Oppivelvollisille suunnattu vapaan sivistystyön opintokokonaisuus"
+                    },
+                    "koodistoUri": "suorituksentyyppi",
+                    "koodistoVersio": 1
+                  },
+                  "tunnustettu": {
+                    "selite": {
+                      "fi": "esa"
+                    }
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "vstosaamiskokonaisuus",
+                "nimi": {
+                  "fi": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus",
+                  "sv": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus",
+                  "en": "Oppivelvollisille suunnattu vapaan sivistystyön osaamiskokonaisuus"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ]
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "vapaansivistystyonkoulutus",
+        "nimi": {
+          "fi": "Vapaan sivistystyön koulutus",
+          "sv": "Fritt bildningsarbete"
+        },
+        "lyhytNimi": {
+          "fi": "Vapaan sivistystyön koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2021-08-24"
+    }
+  ]
+}

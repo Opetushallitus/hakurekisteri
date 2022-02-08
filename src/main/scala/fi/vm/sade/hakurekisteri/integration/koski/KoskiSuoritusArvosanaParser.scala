@@ -456,8 +456,8 @@ class KoskiSuoritusArvosanaParser {
             (Seq(), yksilollistaminen.Ei)
           }
 
-        //Ei tallenneta arvosanoja VALMA, TELMA. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
-        case Oids.valmaKomoOid | Oids.telmaKomoOid =>
+        //Ei tallenneta arvosanoja VALMA, TELMA, opistovuosi oppivelvollisille. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
+        case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid =>
           val (arv, yks) = osasuoritusToArvosana(
             personOid,
             komoOid,
@@ -502,10 +502,11 @@ class KoskiSuoritusArvosanaParser {
             "KESKEYTYNYT"
           } else suoritusTila
 
-        case Oids.valmaKomoOid | Oids.telmaKomoOid =>
+        case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid =>
           val tarpeeksiOpintopisteita =
             ((komoOid == Oids.valmaKomoOid && suoritus.opintopisteitaVahintaan(30))
-              || (komoOid == Oids.telmaKomoOid && suoritus.opintopisteitaVahintaan(25)))
+              || (komoOid == Oids.telmaKomoOid && suoritus.opintopisteitaVahintaan(25))
+              || (komoOid == Oids.opistovuosiKomoOid && suoritus.opintopisteitaVahintaan(26.5)))
           if (tarpeeksiOpintopisteita) {
             "VALMIS"
           } else {
@@ -567,6 +568,7 @@ class KoskiSuoritusArvosanaParser {
         case Oids.lukioonvalmistavaKomoOid      => suoritus.ryhmä.getOrElse("LUVA")
         case Oids.ammatillinenKomoOid           => suoritus.ryhmä.getOrElse("AMM")
         case Oids.erikoisammattitutkintoKomoOid => suoritus.ryhmä.getOrElse("")
+        case Oids.opistovuosiKomoOid            => suoritus.ryhmä.getOrElse("OPISTOVUOSI")
         case _                                  => suoritus.luokka.getOrElse("")
       }
       if (
@@ -612,6 +614,7 @@ class KoskiSuoritusArvosanaParser {
           case (Oids.lisaopetusKomoOid, _, "KESKEN")           => KoskiUtil.deadlineDate
           case (Oids.valmaKomoOid, _, "KESKEN")                => KoskiUtil.deadlineDate
           case (Oids.telmaKomoOid, _, "KESKEN")                => KoskiUtil.deadlineDate
+          case (Oids.opistovuosiKomoOid, _, "KESKEN")          => KoskiUtil.deadlineDate
           case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => KoskiUtil.deadlineDate
           case (_, _, _)                                       => valmistuminen.valmistumisPaiva
         }

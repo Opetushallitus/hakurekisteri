@@ -141,12 +141,32 @@ case class KoskiSuoritus(
   tila: Option[KoskiKoodi] = None
 ) {
 
+  def isOpistovuosi(): Boolean = {
+    tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
+  }
+
   def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
-    val sum = osasuoritukset
-      .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
-      .flatMap(_.koulutusmoduuli.laajuus)
-      .map(_.arvo.getOrElse(BigDecimal(0)))
-      .sum
+    val sum =
+      if (isOpistovuosi) {
+        osasuoritukset
+          .map(o =>
+            o.osasuoritukset
+              .map(os =>
+                os.filter(_.arviointi.exists(_.hyväksytty.contains(true)))
+                  .flatMap(_.koulutusmoduuli.laajuus)
+                  .map(_.arvo.getOrElse(BigDecimal(0)))
+                  .sum
+              )
+              .getOrElse(BigDecimal(0))
+          )
+          .sum
+      } else {
+        osasuoritukset
+          .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
+          .flatMap(_.koulutusmoduuli.laajuus)
+          .map(_.arvo.getOrElse(BigDecimal(0)))
+          .sum
+      }
     sum >= min
   }
 
@@ -160,11 +180,12 @@ case class KoskiSuoritus(
             case "perusopetuksenoppimaara" | "perusopetuksenoppiaineenoppimaara" |
                 "aikuistenperusopetuksenoppimaara" =>
               Oids.perusopetusKomoOid
-            case "perusopetuksenvuosiluokka" => Oids.perusopetusLuokkaKomoOid
-            case "valma"                     => Oids.valmaKomoOid
-            case "telma"                     => Oids.telmaKomoOid
-            case "luva"                      => Oids.lukioonvalmistavaKomoOid
-            case "perusopetuksenlisaopetus"  => Oids.lisaopetusKomoOid
+            case "perusopetuksenvuosiluokka"             => Oids.perusopetusLuokkaKomoOid
+            case "valma"                                 => Oids.valmaKomoOid
+            case "telma"                                 => Oids.telmaKomoOid
+            case "luva"                                  => Oids.lukioonvalmistavaKomoOid
+            case "vstoppivelvollisillesuunnattukoulutus" => Oids.opistovuosiKomoOid
+            case "perusopetuksenlisaopetus"              => Oids.lisaopetusKomoOid
             case "ammatillinentutkinto" =>
               koulutusmoduuli.koulutustyyppi match {
                 case Some(KoskiKoodi("12", _)) => Oids.erikoisammattitutkintoKomoOid
