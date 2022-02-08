@@ -111,11 +111,14 @@ case class KoskiSuoritus(
       if (isOpistovuosi) {
         osasuoritukset
           .map(o =>
-            o.osasuoritukset.get
-              .filter(_.arviointi.exists(_.hyväksytty.contains(true)))
-              .flatMap(_.koulutusmoduuli.laajuus)
-              .map(_.arvo.getOrElse(BigDecimal(0)))
-              .sum
+            o.osasuoritukset
+              .map(os =>
+                os.filter(_.arviointi.exists(_.hyväksytty.contains(true)))
+                  .flatMap(_.koulutusmoduuli.laajuus)
+                  .map(_.arvo.getOrElse(BigDecimal(0)))
+                  .sum
+              )
+              .getOrElse(BigDecimal(0))
           )
           .sum
       } else {
