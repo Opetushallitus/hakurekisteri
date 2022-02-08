@@ -110,8 +110,8 @@ class KoskiDataHandler(
     }
 
     if (
-      suoritus.tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
-      && !suoritus.opintopisteitaVahintaan(26.5, true)
+      suoritus.isOpistovuosi()
+      && !suoritus.opintopisteitaVahintaan(26.5)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
         .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
     ) {

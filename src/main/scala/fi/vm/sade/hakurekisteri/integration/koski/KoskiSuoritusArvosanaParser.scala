@@ -506,10 +506,7 @@ class KoskiSuoritusArvosanaParser {
           val tarpeeksiOpintopisteita =
             ((komoOid == Oids.valmaKomoOid && suoritus.opintopisteitaVahintaan(30))
               || (komoOid == Oids.telmaKomoOid && suoritus.opintopisteitaVahintaan(25))
-              || (komoOid == Oids.opistovuosiKomoOid && suoritus.opintopisteitaVahintaan(
-                26.5,
-                true
-              )))
+              || (komoOid == Oids.opistovuosiKomoOid && suoritus.opintopisteitaVahintaan(26.5)))
           if (tarpeeksiOpintopisteita) {
             "VALMIS"
           } else {

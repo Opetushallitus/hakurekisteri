@@ -106,7 +106,11 @@ case class KoskiSuoritus(
   tila: Option[KoskiKoodi] = None
 ) {
 
-  def opintopisteitaVahintaan(min: BigDecimal, isOpistovuosi: Boolean = false): Boolean = {
+  def isOpistovuosi(): Boolean = {
+    tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
+  }
+
+  def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
     val sum =
       if (isOpistovuosi) {
         osasuoritukset
