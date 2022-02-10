@@ -28,6 +28,7 @@ import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
+import fi.vm.sade.hakurekisteri.web.oppilaitos.OppilaitosResource
 import fi.vm.sade.hakurekisteri.web.permission.PermissionResource
 import fi.vm.sade.hakurekisteri.web.proxies._
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
@@ -165,6 +166,12 @@ class ScalatraBootstrap extends LifeCycle {
       config
     ),
     ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new OpiskelijaResource(
+      authorizedRegisters.opiskelijaRekisteri
+    ),
+    (
+      "/rest/v1/oppilaitos",
+      "rest/v1/oppilaitos"
+    ) -> new OppilaitosResource(
       authorizedRegisters.opiskelijaRekisteri
     ),
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(

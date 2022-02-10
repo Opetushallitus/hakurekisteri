@@ -87,6 +87,36 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
     "test"
   )
 
+  val o8 = Opiskelija(
+    "oppilaitos2",
+    "10",
+    "10A",
+    "henkilo8",
+    new DateTime(2001, 6, 1, 0, 0),
+    Some(new DateTime(2001, 7, 1, 0, 0)),
+    "test"
+  )
+
+  val o9 = Opiskelija(
+    "oppilaitos2",
+    "10",
+    "10B",
+    "henkilo9",
+    new DateTime(2002, 6, 1, 0, 0),
+    Some(new DateTime(2002, 7, 1, 0, 0)),
+    "test"
+  )
+
+  val o10 = Opiskelija(
+    "oppilaitos3",
+    "10",
+    "10A",
+    "henkilo10",
+    new DateTime(2002, 6, 1, 0, 0),
+    Some(new DateTime(2002, 7, 1, 0, 0)),
+    "test"
+  )
+
   def withActor(test: ActorRef => Any) {
     implicit val system = ActorSystem("opiskelija-test-system")
     implicit val database = ItPostgres.getDatabase
@@ -220,4 +250,94 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
       rr should not contain (o7)
     }
   }
+
+  test("returns records by lahtokoulu") {
+    withActor { actor =>
+      Await.result(Future.sequence(List(o2, o3, o4, o5, o6).map(actor ? _)), 15.seconds)
+      var result = Await.result(
+        (actor ? OppilaitoksenOpiskelijatQuery("oppilaitos2", None, None))
+          .mapTo[Seq[Opiskelija with Identified[UUID]]],
+        15.seconds
+      )
+      result should contain(o3)
+      result should contain(o4)
+      result should contain(o5)
+      result should contain(o6)
+      result should not contain (o2)
+    }
+  }
+
+  test("returns records by lahtokoulu and year") {
+    withActor { actor =>
+      Await.result(Future.sequence(List(o2, o3, o4, o5, o6, o7).map(actor ? _)), 15.seconds)
+      var result = Await.result(
+        (actor ? OppilaitoksenOpiskelijatQuery("oppilaitos2", Some("2001"), None))
+          .mapTo[Seq[Opiskelija with Identified[UUID]]],
+        15.seconds
+      )
+      result should not contain (o3)
+      result should not contain (o4)
+      result should contain(o5)
+      result should contain(o6)
+      result should contain(o7)
+      result should not contain (o2)
+    }
+  }
+
+  test("returns records by lahtokoulu and luokkataso") {
+    withActor { actor =>
+      Await.result(Future.sequence(List(o6, o7, o8, o9, o10).map(actor ? _)), 15.seconds)
+      var result = Await.result(
+        (actor ? OppilaitoksenOpiskelijatQuery("oppilaitos2", None, Some(Seq[String]("10"))))
+          .mapTo[Seq[Opiskelija with Identified[UUID]]],
+        15.seconds
+      )
+      result should not contain (o6)
+      result should not contain (o7)
+      result should not contain (o10)
+      result should contain(o8)
+      result should contain(o9)
+    }
+  }
+
+  test("returns records by lahtokoulu and multiple luokkataso") {
+    withActor { actor =>
+      Await.result(Future.sequence(List(o6, o7, o8, o9, o10).map(actor ? _)), 15.seconds)
+      var result = Await.result(
+        (actor ? OppilaitoksenOpiskelijatQuery(
+          "oppilaitos2",
+          None,
+          Some(Seq[String]("10", "9"))
+        ))
+          .mapTo[Seq[Opiskelija with Identified[UUID]]],
+        15.seconds
+      )
+      result should contain(o6)
+      result should contain(o7)
+      result should not contain (o10)
+      result should contain(o8)
+      result should contain(o9)
+    }
+  }
+
+  test("returns records by lahtokoulu, year and luokkataso") {
+    withActor { actor =>
+      Await.result(Future.sequence(List(o6, o7, o8, o9, o10).map(actor ? _)), 15.seconds)
+      var result = Await.result(
+        (actor ? OppilaitoksenOpiskelijatQuery(
+          "oppilaitos2",
+          Some("2002"),
+          Some(Seq[String]("10"))
+        ))
+          .mapTo[Seq[Opiskelija with Identified[UUID]]],
+        15.seconds
+      )
+      result should not contain (o6)
+      result should not contain (o7)
+      result should not contain (o10)
+      result should not contain (o8)
+      result should contain(o9)
+    }
+  }
+
 }
