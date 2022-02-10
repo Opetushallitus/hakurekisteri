@@ -27,7 +27,6 @@ class HakukohdeAggregatorActor(
     getClass.getSimpleName
   )
   implicit val timeout: Timeout = Timeout(60.seconds)
-  val KOUTA_OID_LENGTH: Int = 35
 
   override def receive: Receive = {
     case q: HakukohdeQuery =>
@@ -40,7 +39,7 @@ class HakukohdeAggregatorActor(
     q: HakukohteenKoulutuksetQuery
   ): Future[HakukohteenKoulutukset] = {
     q match {
-      case q if q.hakukohdeOid.length == KOUTA_OID_LENGTH =>
+      case q if Hakukohde.isKoutaHakukohdeOid(q.hakukohdeOid) =>
         getKoutaInternalHakukohteenKoulutukset(q)
       case q => getTarjontaHakukohteenKoulutukset(q)
     }
@@ -55,7 +54,7 @@ class HakukohdeAggregatorActor(
 
   private def getHakukohde(q: HakukohdeQuery): Future[Hakukohde] = {
     val hakukohde = q match {
-      case q if q.oid.length == KOUTA_OID_LENGTH =>
+      case q if Hakukohde.isKoutaHakukohdeOid(q.oid) =>
         hakukohdeQuery(q, koutaInternal.actor)
       case q =>
         hakukohdeQuery(q, tarjonta.actor)

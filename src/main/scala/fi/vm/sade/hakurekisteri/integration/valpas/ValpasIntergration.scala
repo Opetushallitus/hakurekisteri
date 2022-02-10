@@ -4,39 +4,16 @@ import java.util.concurrent.Executors
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{
-  AtaruHakemus,
-  FullHakemus,
-  HakijaHakemus,
-  HakutoiveDTO,
-  IHakemusService
-}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakijaHakemus, HakutoiveDTO, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHakuOption, Haku}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetKoodistoKoodiArvot,
-  KoodistoActorRef,
-  KoodistoKoodiArvot
-}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.Hakukohde.isKoutaHakukohdeOid
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery, HakukohteenKoulutuksetQuery}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoActorRef, KoodistoKoodiArvot}
+import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActor, KoutaInternalActorRef}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
-  PistesyottoService,
-  Pistetieto,
-  PistetietoWrapper
-}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  HakukohdeOid,
-  HakukohteenKoulutukset,
-  Koulutusohjelma,
-  TarjontaActorRef,
-  TarjontaHakukohde
-}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  ValintaTulos,
-  ValintaTulosActorRef,
-  ValintaTulosHakutoive,
-  VirkailijanValintatulos
-}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, Pistetieto, PistetietoWrapper}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Koulutusohjelma, TarjontaActorRef, TarjontaHakukohde}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActorRef, ValintaTulosHakutoive, VirkailijanValintatulos}
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, VirkailijaRestClient, valpas}
 import org.joda.time.{DateTimeZone, ReadableInstant}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
@@ -199,6 +176,7 @@ class ValpasIntergration(
   organisaatioActor: OrganisaatioActorRef,
   koodistoActor: KoodistoActorRef,
   tarjontaActor: TarjontaActorRef,
+  koutaTarjontaActor: KoutaInternalActorRef,
   hakuActor: ActorRef,
   valintaTulos: ValintaTulosActorRef,
   hakemusService: IHakemusService
@@ -515,7 +493,11 @@ class ValpasIntergration(
     val hakukohteet: Future[Map[String, Hakukohde]] = Future
       .sequence(
         hakukohdeOids.toSeq.map(oid =>
-          (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+          if(isKoutaHakukohdeOid(oid)) {
+            (koutaTarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+          } else {
+            (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+          }
         )
       )
       .map(_.flatten)
@@ -524,7 +506,11 @@ class ValpasIntergration(
     val koulutukset: Future[Map[String, HakukohteenKoulutukset]] = Future
       .sequence(
         hakukohdeOids.toSeq.map(oid =>
-          (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
+          if(isKoutaHakukohdeOid(oid)) {
+            (koutaTarjontaActor.actor ? HakukohteenKoulutuksetQuery(oid)).mapTo[HakukohteenKoulutukset]
+          } else {
+            (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
+          }
         )
       )
       .map(_.map(h => (h.hakukohdeOid, h)).toMap)

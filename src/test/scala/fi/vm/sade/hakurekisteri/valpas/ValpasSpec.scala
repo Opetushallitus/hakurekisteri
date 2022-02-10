@@ -249,6 +249,7 @@ class ValpasSpec
         organisaatiot,
         koodisto,
         tarjonta,
+        null,
         haku,
         ValintaTulosActorRef(
           system.actorOf(

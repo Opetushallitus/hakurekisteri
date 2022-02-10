@@ -9,3 +9,13 @@ case class Hakukohde(
   tarjoajaOids: Option[Set[String]],
   alinValintaPistemaara: Option[Int]
 )
+
+object Hakukohde {
+  private val KOUTA_OID_LENGTH: Int = 35
+
+  def isKoutaHakukohdeOid(oid: String): Boolean = if(oid == null || oid.length < KOUTA_OID_LENGTH) {
+    false
+  } else {
+    true
+  }
+}
