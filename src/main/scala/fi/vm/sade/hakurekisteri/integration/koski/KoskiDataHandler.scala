@@ -50,6 +50,8 @@ class KoskiDataHandler(
   private val suoritusArvosanaParser = new KoskiSuoritusArvosanaParser
   private val opiskelijaParser = new KoskiOpiskelijaParser
 
+  implicit val localDateOrdering: Ordering[LocalDate] = _ compareTo _
+
   private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
     suoritus.osasuoritukset.exists(_.arviointi.exists(_.hyväksytty.contains(false)))
   }
@@ -621,17 +623,23 @@ class KoskiDataHandler(
     )
   }
 
-  private def suoritusDuplicates(
+  private def filterAndLogSuoritusDuplicates(
     suoritukset: Seq[SuoritusArvosanat]
-  ): Seq[Seq[SuoritusArvosanat]] = {
+  ): Seq[SuoritusArvosanat] = {
+
     suoritukset
-      .filter(s =>
-        s.suoritus.komo != Oids.perusopetusLuokkaKomoOid
-      ) //Näitä löytyy Koskesta duplikaatteina luokalle jääneille, eivät ole haitaksi.
       .groupBy(_.suoritus.core)
-      .collect {
-        case (_, suoritusarvosanat) if suoritusarvosanat.size > 1 => suoritusarvosanat
-      }
+      .map(s => {
+        val latest = s._2.maxBy(s => s.lasnadate)
+        if (s._2.size > 1) {
+          logger.warn(
+            s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja " +
+              s"suorituksia komolle ${s._1.komo}. Tallennetaan vain niistä tuorein, " +
+              s"lasnaDate ${latest.lasnadate}. Vanhin ${s._2.minBy(s => s.lasnadate).lasnadate}."
+          )
+        }
+        latest
+      })
       .toSeq
   }
 
@@ -656,22 +664,10 @@ class KoskiDataHandler(
         )
       )
     }
-    val duplicates = suoritusDuplicates(suoritukset)
-    if (duplicates.nonEmpty) {
-      val msg = duplicates.map(d => s"${d.size} suoritusta ${d.head.suoritus.core}").mkString(", ")
-      return Future.successful(
-        Seq(
-          Left(
-            new RuntimeException(
-              s"Henkilön $henkiloOid Koskitiedoista syntyi useita samoja suorituksia: $msg"
-            )
-          )
-        )
-      )
-    }
+    val suorituksetWithoutDuplicates = filterAndLogSuoritusDuplicates(suoritukset)
     overrideExistingSuorituksetWithNewSuorituksetFromKoski(
       henkiloOid,
-      suoritukset,
+      suorituksetWithoutDuplicates,
       personOidsWithAliases,
       params
     )
