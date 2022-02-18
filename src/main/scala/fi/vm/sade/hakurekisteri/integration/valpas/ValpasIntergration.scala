@@ -266,6 +266,7 @@ class ValpasIntergration(
     def hakutoiveWithOidToValpasHakutoive(
       attachmentsChecked: Option[Boolean],
       hakukohdeOid: String,
+      hakutoiveNro: Int,
       c: HakutoiveDTO
     ): ValpasHakutoive = {
       def hkToVk(hk: ValintalaskentaHakutoive, pisteet: Seq[Pistetieto]): Seq[Valintakoe] = {
@@ -342,22 +343,22 @@ class ValpasIntergration(
         alinValintaPistemaara = hakukohde.alinValintaPistemaara.filterNot(p => 0.equals(p)),
         organisaatioNimi = organisaatioNimi,
         koulutusNimi = Map(
-          "fi" -> knimi.get("kieli_fi").filterNot(_.isEmpty),
-          "sv" -> knimi.get("kieli_sv").filterNot(_.isEmpty),
-          "en" -> knimi.get("kieli_en").filterNot(_.isEmpty)
+          "fi" -> knimi.get("kieli_fi").orElse(nimi.get("fi")).filterNot(_.isEmpty),
+          "sv" -> knimi.get("kieli_sv").orElse(nimi.get("sv")).filterNot(_.isEmpty),
+          "en" -> knimi.get("kieli_en").orElse(nimi.get("en")).filterNot(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         hakukohdeNimi = Map(
-          "fi" -> nimi.get("kieli_fi").filterNot(_.isEmpty),
-          "sv" -> nimi.get("kieli_sv").filterNot(_.isEmpty),
-          "en" -> nimi.get("kieli_en").filterNot(_.isEmpty)
+          "fi" -> nimi.get("kieli_fi").orElse(nimi.get("fi")).filterNot(_.isEmpty),
+          "sv" -> nimi.get("kieli_sv").orElse(nimi.get("sv")).filterNot(_.isEmpty),
+          "en" -> nimi.get("kieli_en").orElse(nimi.get("en")).filterNot(_.isEmpty)
         )
           .flatMap(kv => kv._2.map(k => (kv._1, k))),
         pisteet = hakutoiveenTulos.flatMap(_.pisteet),
         ilmoittautumistila = hakutoiveenTulos.map(_.ilmoittautumistila.ilmoittautumistila.toString),
         valintatila = hakutoiveenTulos.map(_.valintatila.toString),
         vastaanottotieto = hakutoiveenTulos.map(_.vastaanottotila.toString),
-        hakutoivenumero = c.preferenceNumber,
+        hakutoivenumero = hakutoiveNro,
         hakukohdeOid = hakukohdeOid,
         //TODO: Valpas-palvelulle pitäisi palauttaa kaikki koulutuskoodit
         hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(koulutus.tkKoulutuskoodi),
@@ -381,11 +382,12 @@ class ValpasIntergration(
 
     def hakutoiveToValpasHakutoive(
       attachmentsChecked: Option[Boolean],
+      hakutoiveNro: Int,
       c: HakutoiveDTO
     ): Option[ValpasHakutoive] = {
       c.koulutusId.filterNot(_.isEmpty) match {
         case Some(hakukohdeOid) =>
-          Some(hakutoiveWithOidToValpasHakutoive(attachmentsChecked, hakukohdeOid, c))
+          Some(hakutoiveWithOidToValpasHakutoive(attachmentsChecked, hakukohdeOid, hakutoiveNro, c))
         case _ =>
           logger.debug(
             s"Haun ${hakemus.applicationSystemId} hakemukselle ${hakemus.oid} ei löydy hakutoiveen tunnistetta: ${c.koulutusId}"
@@ -402,6 +404,7 @@ class ValpasIntergration(
               h.flatMap(hk =>
                 hakutoiveToValpasHakutoive(
                   hk.koulutusId.flatMap(a.liitteetTarkastettu.get).flatten,
+                  hk.preferenceNumber.+(1), // Ataru order starts from zero
                   hk
                 )
               )
@@ -441,7 +444,7 @@ class ValpasIntergration(
       case h: FullHakemus => {
         val hakutoiveet: List[ValpasHakutoive] =
           h.hakutoiveet
-            .map(h => h.flatMap(hakutoiveToValpasHakutoive(None, _)))
+            .map(h => h.flatMap(hk => hakutoiveToValpasHakutoive(None, hk.preferenceNumber, hk)))
             .getOrElse(List.empty)
         val hakuOid = h.applicationSystemId
         val haku = oidToHaku(hakuOid)
