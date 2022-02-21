@@ -205,7 +205,7 @@ class ValpasIntergration(
   organisaatioActor: OrganisaatioActorRef,
   koodistoActor: KoodistoActorRef,
   tarjontaActor: TarjontaActorRef,
-  koutaTarjontaActor: KoutaInternalActorRef,
+  koutaActor: KoutaInternalActorRef,
   hakuActor: ActorRef,
   valintaTulos: ValintaTulosActorRef,
   hakemusService: IHakemusService
@@ -526,7 +526,7 @@ class ValpasIntergration(
       .sequence(
         hakukohdeOids.toSeq.map(oid =>
           if (isKoutaHakukohdeOid(oid)) {
-            (koutaTarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+            (koutaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
           } else {
             (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
           }
@@ -539,7 +539,7 @@ class ValpasIntergration(
       .sequence(
         hakukohdeOids.toSeq.map(oid =>
           if (isKoutaHakukohdeOid(oid)) {
-            (koutaTarjontaActor.actor ? HakukohteenKoulutuksetQuery(oid))
+            (koutaActor.actor ? HakukohteenKoulutuksetQuery(oid))
               .mapTo[HakukohteenKoulutukset]
           } else {
             (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
