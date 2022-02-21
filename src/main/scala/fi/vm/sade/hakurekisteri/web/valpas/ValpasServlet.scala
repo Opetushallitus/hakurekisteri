@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.rest.support.ValpasReadRole
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.{ActionResult, AsyncResult, BadRequest, FutureSupport, InternalServerError}
+import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport, SwaggerSupportSyntax}
 

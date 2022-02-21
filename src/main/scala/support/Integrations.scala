@@ -211,6 +211,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       organisaatiot,
       koodisto,
       tarjonta,
+      koutaInternal,
       haut,
       valintaTulos,
       hakemusService
@@ -456,6 +457,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       organisaatiot,
       koodisto,
       tarjonta,
+      koutaInternal,
       haut,
       valintaTulos,
       hakemusService
