@@ -322,8 +322,8 @@ class ValpasIntergration(
 
       val hakukohde: Hakukohde = oidToHakukohde(hakukohdeOid)
       val nimi = hakukohde.hakukohteenNimet
-      val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.head
-      val knimi = koulutus.koulutusohjelma.getOrElse(Koulutusohjelma(Map.empty)).tekstis
+      val koulutus = oidToKoulutus(hakukohdeOid).koulutukset.headOption
+      val knimi = koulutus.flatMap(_.koulutusohjelma).getOrElse(Koulutusohjelma(Map.empty)).tekstis
       val organisaatio: Option[Organisaatio] = c.organizationOid.flatMap(oidToOrganisaatio.get)
       val organisaatioNimi = organisaatio.map(_.nimi).getOrElse(Map.empty).filterNot(_._2.isEmpty)
       val hakutoiveenTulos: Option[ValintaTulosHakutoive] = tulos.flatMap(
@@ -361,7 +361,15 @@ class ValpasIntergration(
         hakutoivenumero = hakutoiveNro,
         hakukohdeOid = hakukohdeOid,
         //TODO: Valpas-palvelulle pitäisi palauttaa kaikki koulutuskoodit
-        hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(koulutus.tkKoulutuskoodi),
+        hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(
+          koulutus
+            .map(_.tkKoulutuskoodi)
+            .getOrElse(
+              throw new RuntimeException(
+                s"Hakukohteen $hakukohdeOid koulutuksella $koulutus ei ole koulutuskoodia!"
+              )
+            )
+        ),
         varasijanumero = hakutoiveenTulos.flatMap(_.varasijanumero),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä
