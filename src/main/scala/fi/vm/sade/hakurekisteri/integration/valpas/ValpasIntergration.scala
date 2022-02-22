@@ -105,7 +105,7 @@ case class ValpasHakutoive(
   ilmoittautumistila: Option[String], //Ilmoittautumistila.Ilmoittautumistila
   hakutoivenumero: Int,
   hakukohdeOid: String,
-  hakukohdeKoulutuskoodi: ValpasKoodi,
+  hakukohdeKoulutuskoodi: Option[ValpasKoodi],
   varasijanumero: Option[Int],
   hakukohdeOrganisaatio: String,
   koulutusOid: Option[String],
@@ -361,15 +361,9 @@ class ValpasIntergration(
         hakutoivenumero = hakutoiveNro,
         hakukohdeOid = hakukohdeOid,
         //TODO: Valpas-palvelulle pitäisi palauttaa kaikki koulutuskoodit
-        hakukohdeKoulutuskoodi = koulutusKoodiToValpasKoodi(
-          koulutus
-            .map(_.tkKoulutuskoodi)
-            .getOrElse(
-              throw new RuntimeException(
-                s"Hakukohteen $hakukohdeOid koulutuksella $koulutus ei ole koulutuskoodia!"
-              )
-            )
-        ),
+        hakukohdeKoulutuskoodi = koulutus
+          .map(_.tkKoulutuskoodi)
+          .map(koulutusKoodiToValpasKoodi),
         varasijanumero = hakutoiveenTulos.flatMap(_.varasijanumero),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
         // mahdollisen pääsy- ja soveltuvuuskokeen pistemäärä

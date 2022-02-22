@@ -271,7 +271,7 @@ class ValpasSpec
 
       val result = run(v)
       val versiot: Set[Int] =
-        result.head.hakutoiveet.map(_.hakukohdeKoulutuskoodi.koodistoVersio).toSet
+        result.head.hakutoiveet.flatMap(_.hakukohdeKoulutuskoodi).map(_.koodistoVersio).toSet
       versiot should equal(Set(12))
 
       Mockito.verify(redisCache).+(anyString(), captureCacheSet.capture())
