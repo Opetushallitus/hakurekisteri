@@ -4656,6 +4656,36 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
+  it should "store yksilollistetty mother tongue and mathematics" in {
+    KoskiUtil.deadlineDate = LocalDate.now().plusYears(1)
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_yksilollistetty_mat_ai.json")
+      .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+    val suoritus = run(
+      database.run(
+        sql"select lahde_arvot from suoritus"
+          .as[String]
+      )
+    )
+    suoritus.head should include("last modified")
+    suoritus.head should include("yksilollistetty_ma_ai\":\"true\"")
+  }
+
   def getPerusopetusPäättötodistus(arvosanat: Seq[SuoritusArvosanat]): Option[SuoritusArvosanat] = {
     arvosanat.find(_.suoritus.komo.contentEquals(Oids.perusopetusKomoOid))
   }
