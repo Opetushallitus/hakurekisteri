@@ -101,7 +101,7 @@ class KoskiSuoritusArvosanaParser {
     isLukio: Boolean = false,
     suorituksenValmistumispäivä: LocalDate,
     isAikuistenPerusopetus: Boolean = false
-  ): (Seq[Arvosana], Yksilollistetty) = {
+  ): (Seq[Arvosana], Yksilollistetty, Option[Boolean]) = {
     var ordering = scala.collection.mutable.Map[String, Int]()
     var yksilöllistetyt = ListBuffer[Boolean]()
 
@@ -129,13 +129,24 @@ class KoskiSuoritusArvosanaParser {
         s
       }
     })
+    var yksilollistettyMaJaAi: Option[Boolean] = None
+    var yksilollistettyMa: Option[Boolean] = None
+    var yksilollistettyAI: Option[Boolean] = None
     var res: Seq[Arvosana] = Seq()
     for {
       suoritus <- modsuoritukset
       if suoritus.isPK || (isLukio && suoritus.isLukioSuoritus)
     } yield {
       if (isKoskiOsaSuoritusPakollinen(suoritus, isLukio, komoOid)) {
+        val yksilollistetty = suoritus.yksilöllistettyOppimäärä.getOrElse(false)
         yksilöllistetyt += suoritus.yksilöllistettyOppimäärä.getOrElse(false)
+        if (suoritus.koulutusmoduuli.tunniste.isDefined) {
+          if (suoritus.koulutusmoduuli.tunniste.get.koodiarvo == "MA") {
+            yksilollistettyMa = Option.apply(yksilollistetty)
+          } else if (suoritus.koulutusmoduuli.tunniste.get.koodiarvo == "AI") {
+            yksilollistettyAI = Option.apply(yksilollistetty)
+          }
+        }
       }
 
       suoritus.arviointi.foreach(arviointi => {
@@ -254,7 +265,10 @@ class KoskiSuoritusArvosanaParser {
         }
       }
     }
-    (res, yksilöllistetty)
+    if (yksilollistettyAI.isDefined && yksilollistettyMa.isDefined) {
+      yksilollistettyMaJaAi = Option.apply(yksilollistettyAI.get && yksilollistettyMa.get)
+    }
+    (res, yksilöllistetty, yksilollistettyMaJaAi)
   }
 
   private def getValmistuminen(
@@ -379,14 +393,14 @@ class KoskiSuoritusArvosanaParser {
         case None => false
       }
 
-      val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty) = komoOid match {
+      val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty, yksilollistettyMaJaAi: Option[Boolean]) = komoOid match {
         case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid | Oids.perusopetusLuokkaKomoOid =>
           val isValmis = suoritusTila.equals("VALMIS")
           val isAikuistenPerusopetus: Boolean = opiskeluoikeus.tyyppi
             .getOrElse(KoskiKoodi("", ""))
             .koodiarvo
             .contentEquals("aikuistenperusopetus")
-          var (as, yks) = osasuoritusToArvosana(
+          var (as, yks, yksMaAi) = osasuoritusToArvosana(
             personOid,
             komoOid,
             suoritus.osasuoritukset,
@@ -408,18 +422,18 @@ class KoskiSuoritusArvosanaParser {
           //Lisäopetuksen arvosanat tallennetaan aina suorituksen tilasta tai deadline-päivämäärästä riippumatta.
           if (isVahvistettu && isValmis) {
             if (!KoskiUtil.isAfterDeadlineDate(parseLocalDate(suoritus.vahvistus.get.päivä))) {
-              (as, yks)
+              (as, yks, yksMaAi)
             } else {
-              (Seq(), yks)
+              (Seq(), yks, yksMaAi)
             }
           } else if (
             (containsOneFailure && KoskiUtil.isAfterArvosanatWithNelosiaDeadlineDate())
             || (vuosiluokkiinSitomatonOpetus && KoskiUtil.isAfterDeadlineDate())
             || komoOid.equals(Oids.lisaopetusKomoOid)
           ) {
-            (as, yks)
+            (as, yks, yksMaAi)
           } else {
-            (Seq(), yks)
+            (Seq(), yks, yksMaAi)
           }
         case Oids.perusopetuksenOppiaineenOppimaaraOid =>
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
@@ -453,12 +467,12 @@ class KoskiSuoritusArvosanaParser {
               suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva
             )
           } else {
-            (Seq(), yksilollistaminen.Ei)
+            (Seq(), yksilollistaminen.Ei, None)
           }
 
         //Ei tallenneta arvosanoja VALMA, TELMA, opistovuosi oppivelvollisille. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
         case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid =>
-          val (arv, yks) = osasuoritusToArvosana(
+          val (arv, yks, yksMaAi) = osasuoritusToArvosana(
             personOid,
             komoOid,
             suoritus.osasuoritukset,
@@ -466,7 +480,7 @@ class KoskiSuoritusArvosanaParser {
             None,
             suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva
           )
-          (Seq(), yks)
+          (Seq(), yks, yksMaAi)
         case Oids.lukioonvalmistavaKomoOid =>
           osasuoritusToArvosana(
             personOid,
@@ -488,12 +502,16 @@ class KoskiSuoritusArvosanaParser {
               suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva
             )
           } else {
-            (Seq(), yksilollistaminen.Ei)
+            (Seq(), yksilollistaminen.Ei, None)
           }
         //https://confluence.oph.ware.fi/confluence/display/AJTS/Koski-Sure+arvosanasiirrot
         //abiturienttien arvosanat haetaan hakijoille joiden lukion oppimäärän suoritus on vahvistettu KOSKI -palvelussa. Tässä vaiheessa ei haeta vielä lukion päättötodistukseen tehtyjä korotuksia.
 
-        case _ => (Seq(), yksilollistaminen.Ei)
+        case _ => (Seq(), yksilollistaminen.Ei, None)
+      }
+
+      if (yksilollistettyMaJaAi.isDefined) {
+        lahdeArvot += ("yksilollistetty_ma_ai" -> yksilollistettyMaJaAi.get.toString)
       }
 
       suoritusTila = komoOid match {
