@@ -393,7 +393,11 @@ class KoskiSuoritusArvosanaParser {
         case None => false
       }
 
-      val (arvosanat: Seq[Arvosana], yksilöllistaminen: Yksilollistetty, yksilollistettyMaJaAi: Option[Boolean]) = komoOid match {
+      val (
+        arvosanat: Seq[Arvosana],
+        yksilöllistaminen: Yksilollistetty,
+        yksilollistettyMaJaAi: Option[Boolean]
+      ) = komoOid match {
         case Oids.perusopetusKomoOid | Oids.lisaopetusKomoOid | Oids.perusopetusLuokkaKomoOid =>
           val isValmis = suoritusTila.equals("VALMIS")
           val isAikuistenPerusopetus: Boolean = opiskeluoikeus.tyyppi
