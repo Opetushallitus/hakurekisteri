@@ -143,6 +143,9 @@ class AkkaHakupalvelu(
           .distinct
           .map({
             case "246" => Future.successful("246" -> "FIN")
+            case "736" => Future.successful("736" -> "XXX")
+            case "810" => Future.successful("810" -> "XXX")
+            case "891" => Future.successful("891" -> "XXX")
             case koodi =>
               (koodisto.actor ? GetRinnasteinenKoodiArvoQuery(
                 "maatjavaltiot2",
