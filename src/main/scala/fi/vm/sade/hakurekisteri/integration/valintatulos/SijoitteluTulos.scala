@@ -87,7 +87,7 @@ case class ValintaTulosHakutoive(
   julkaistavissa: Boolean,
   jonokohtaisetTulostiedot: Seq[ValintaTulosJono]
 )
-
+case class StoreValintatulokset(valintatulokset: Try[List[ValintaTulos]])
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
 @SerialVersionUID(3)

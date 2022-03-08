@@ -83,7 +83,22 @@ class ValintaTulosActorWithRedisSpec
             .mkString
         )
       )
-
+    when(
+      e.request(
+        forPattern("http://localhost/valinta-tulos-service/haku/hakemukset")
+      )
+    )
+      .thenReturn(
+        (
+          200,
+          List(),
+          scala.io.Source
+            .fromURL(
+              getClass.getResource("/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json")
+            )
+            .mkString
+        )
+      )
     e
   }
 
@@ -416,6 +431,46 @@ class ValintaTulosActorWithRedisSpec
 
       verify(endPoint, times(1)).request(
         forUrl("http://localhost/valinta-tulos-service/haku/" + hakuOid)
+      )
+    })
+  }
+
+  test("ValintaTulosActor should cache virkailijan valintatulokset correctly") {
+    withSystem(implicit system => {
+      implicit val formats: Formats = HakurekisteriJsonSupport.format
+      implicit val ec: ExecutionContextExecutorService =
+        ExecutorUtil.createExecutor(10, classOf[ValintaTulosActorWithRedisSpec].getSimpleName)
+      val endPoint = createEndPoint
+      val valintaTulosActor = system.actorOf(
+        Props(
+          new ValintaTulosActor(
+            config = config,
+            cacheFactory = cacheFactory,
+            client = new VirkailijaRestClient(
+              config = vtsConfig,
+              aClient = Some(new CapturingAsyncHttpClient(endPoint))
+            ),
+            hautActor = system.actorOf(Props(mockHakuActor))
+          )
+        )
+      )
+
+      val tuloksetFromRest =
+        (valintaTulosActor ? VirkailijanValintatulos(Set("1.2.246.562.11.00000000000000446632")))
+          .mapTo[Seq[ValintaTulos]]
+          .map(_.groupBy(_.hakemusOid))
+
+      val r1: Map[String, Seq[ValintaTulos]] = Await.result(tuloksetFromRest, 5.seconds)
+
+      val tuloksetFromCache =
+        (valintaTulosActor ? VirkailijanValintatulos(Set("1.2.246.562.11.00000000000000446632")))
+          .mapTo[Seq[ValintaTulos]]
+          .map(_.groupBy(_.hakemusOid))
+
+      val r2: Map[String, Seq[ValintaTulos]] = Await.result(tuloksetFromCache, 5.seconds)
+
+      verify(endPoint, times(1)).request(
+        forUrl("http://localhost/valinta-tulos-service/haku/hakemukset")
       )
     })
   }

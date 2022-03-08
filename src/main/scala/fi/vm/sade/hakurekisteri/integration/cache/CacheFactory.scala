@@ -9,6 +9,7 @@ import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import redis.{ByteStringFormatter, RedisClient}
 
+import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -349,6 +350,13 @@ class RedisCache[K, T](
   }
 
   def -(key: K): Unit = r.del(k(key))
+
+  def mget(keys: Seq[K]): Future[Seq[(Option[T], K)]] = {
+    val v: Future[Seq[Option[T]]] = r.mget[T](keys.map(k): _*)
+    val vv: Future[Seq[(Option[T], Int)]] = v.map(_.zipWithIndex)
+    val vvv: Future[Seq[(Option[T], K)]] = vv.map(a => a.map(b => (b._1, keys(b._2))))
+    vvv
+  }
 
   def contains(key: K): Future[Boolean] = {
     val prefixKey = k(key)

@@ -236,10 +236,8 @@ class ValpasSpec
       ) thenReturn tulosRedisCache
 
       val valintatulosClient = mockPostTulosClient(Seq(hakemusOid))(
-        List(
-          resource[ValintaTulos](
-            s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
-          )
+        resource[List[ValintaTulos]](
+          s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
         )
       )
 

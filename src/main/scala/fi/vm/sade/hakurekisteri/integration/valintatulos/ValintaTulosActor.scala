@@ -65,6 +65,8 @@ class ValintaTulosActor(
     super.postStop()
   }
 
+  implicit val formats = HakurekisteriJsonSupport.format
+
   private def withQueue(haunValintatulosFetchQueue: Map[String, Vector[ActorRef]]): Receive = {
     case VirkailijanValintatulos(hakemusOids) =>
       hakemuksenTulosCached(hakemusOids) pipeTo sender
@@ -113,6 +115,19 @@ class ValintaTulosActor(
 
     case Status.Failure(t) =>
       log.error(t, "Failed to update valintatulos")
+
+    case StoreValintatulokset(valintatulokset) =>
+      valintatulokset match {
+        case Success(tulokset) =>
+          tulokset.foreach { tulos =>
+            valintaCache + (tulos.hakemusOid, write(tulos))
+          }
+        case Failure(exception) =>
+          log.error(
+            s"Couldn't store Valintatulokset to Redis Cache as fetching failed: ${exception.getMessage}",
+            exception
+          )
+      }
   }
 
   private def is404(t: Throwable): Boolean = {
@@ -139,55 +154,53 @@ class ValintaTulosActor(
       }
   }
 
-  implicit val formats = HakurekisteriJsonSupport.format
-  private def hakemuksenTulosCached(hakemusOids: Set[String]): Future[Seq[ValintaTulos]] = {
-    val cachedValintatulokset: Future[Set[Option[ValintaTulos]]] = valintaCache match {
+  private def cachedValintatulokset(hakemusOids: Set[String]): Future[Seq[ValintaTulos]] = {
+    valintaCache match {
       case redis: RedisCache[String, String] =>
-        def parse(s: Option[String]): Option[ValintaTulos] = {
-          s match {
-            case Some(value) =>
-              Some(JsonMethods.parse(value).extract[ValintaTulos])
-            case None =>
+        val oidsInSeq = hakemusOids.toSeq
+        val v: Future[Seq[(Option[String], String)]] = redis.mget(oidsInSeq)
+        def parseToValintaTulosOrEvict(hakemusOid: String, json: String): Option[ValintaTulos] = {
+          Try(JsonMethods.parse(json).extract[ValintaTulos]) match {
+            case Success(vt) =>
+              Some(vt)
+            case Failure(ex) =>
+              log.error(s"Failed to parse Valintatulos: ${ex.getMessage}", ex)
+              Try(redis.-(hakemusOid))
               None
           }
         }
-        Future.sequence(hakemusOids.map(oid => redis.get(oid).map(parse)))
+        v.map(_.map {
+          case (Some(o), s) =>
+            parseToValintaTulosOrEvict(s, o)
+          case _ =>
+            None
+        }).map(_.flatten)
       case _ =>
-        Future.successful(Set.empty[Option[ValintaTulos]])
+        Future.successful(Seq.empty)
     }
+  }
 
+  private def hakemuksenTulosCached(hakemusOids: Set[String]): Future[Seq[ValintaTulos]] = {
     def fetchForReal(oids: Set[String]) = client
       .postObject[Set[String], List[ValintaTulos]]("valinta-tulos-service.hakemukset")(
         200,
         oids
       )
 
-    def saveFetched(saveTulokset: Seq[ValintaTulos]): Seq[ValintaTulos] = {
-      saveTulokset.foreach { tulos =>
-        try {
-          val json: String = write(tulos)
-          valintaCache + (tulos.hakemusOid, json)
-        } catch {
-          case e: Exception =>
-            log.error(s"Couldn't store ${tulos.hakemusOid} valintatulos into Redis cache", e)
-        }
-      }
-
-      saveTulokset
-    }
-
     for {
-      valintatulosCached: Set[Option[ValintaTulos]] <- cachedValintatulokset
-      foundValintatulokset: Seq[ValintaTulos] <- Future.successful(
-        valintatulosCached.toSeq.flatten
-      )
-      missedValintatulokset <- hakemusOids.diff(
-        foundValintatulokset.map(_.hakemusOid).toSet
+      valintatulosCached: Seq[ValintaTulos] <- cachedValintatulokset(hakemusOids)
+      allValintatulokset <- hakemusOids.diff(
+        valintatulosCached.map(_.hakemusOid).toSet
       ) match {
-        case s if s.isEmpty => Future.successful(Seq.empty[ValintaTulos])
-        case s              => fetchForReal(s)
+        case s if s.isEmpty => Future.successful(valintatulosCached)
+        case s =>
+          val restFetchedValintatulokset: Future[List[ValintaTulos]] = fetchForReal(s)
+          restFetchedValintatulokset.onComplete { tulokset =>
+            self ! StoreValintatulokset(tulokset)
+          }
+          restFetchedValintatulokset.map(_.++(valintatulosCached))
       }
-    } yield foundValintatulokset ++ saveFetched(missedValintatulokset)
+    } yield allValintatulokset
   }
 
   private def haunTulos(hakuOid: String): Future[SijoitteluTulos] = {
