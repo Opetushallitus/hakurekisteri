@@ -163,8 +163,11 @@ class ValintaTulosActor(
         None
     }
   }
-  private def parseToValintaTulos(v: Future[Seq[(Option[String], String)]]): Future[Seq[Option[ValintaTulos]]] = {
-    v.map(vv => vv.map {
+  private def parseToValintaTulos(
+    v: Future[Seq[(Option[String], String)]]
+  ): Future[Seq[Option[ValintaTulos]]] = {
+    v.map(vv =>
+      vv.map {
         case (Some(o), s) =>
           parseToValintaTulosOrEvict(s, o)
         case _ =>

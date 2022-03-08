@@ -8,18 +8,69 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
-import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHakuOption, Haku, HakuRequest, RestHaku}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{HakukohdeAggregatorActorRef, HakukohdeQuery, MockHakukohdeAggregatorActor}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloViite, IOppijaNumeroRekisteri, OppijaNumeroRekisteri}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, Koodi, KoodistoActor, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  AllHaut,
+  GetHakuOption,
+  Haku,
+  HakuRequest,
+  RestHaku
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  HakukohdeAggregatorActorRef,
+  HakukohdeQuery,
+  MockHakukohdeAggregatorActor
+}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  HenkiloViite,
+  IOppijaNumeroRekisteri,
+  OppijaNumeroRekisteri
+}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetKoodistoKoodiArvot,
+  Koodi,
+  KoodistoActor,
+  KoodistoActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActorRef, MockKoutaInternalActor}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, HttpOrganisaatioActor, Organisaatio, OrganisaatioActorRef, OrganisaatioResponse}
-import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, Pistetieto, PistetietoWrapper}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, Koulutus, TarjontaActorRef, TarjontaHakukohde, TarjontaResultResponse}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActor, ValintaTulosActorRef}
-import fi.vm.sade.hakurekisteri.integration.valpas.{ValintalaskentaOsallistuminen, ValpasHakemus, ValpasIntergration, ValpasQuery}
-import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, OphUrlProperties, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{
+  ChildOids,
+  HttpOrganisaatioActor,
+  Organisaatio,
+  OrganisaatioActorRef,
+  OrganisaatioResponse
+}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
+  PistesyottoService,
+  Pistetieto,
+  PistetietoWrapper
+}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  HakukohdeOid,
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  Koulutus,
+  TarjontaActorRef,
+  TarjontaHakukohde,
+  TarjontaResultResponse
+}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{
+  ValintaTulos,
+  ValintaTulosActor,
+  ValintaTulosActorRef
+}
+import fi.vm.sade.hakurekisteri.integration.valpas.{
+  ValintalaskentaOsallistuminen,
+  ValpasHakemus,
+  ValpasIntergration,
+  ValpasQuery
+}
+import fi.vm.sade.hakurekisteri.integration.{
+  ActorSystemSupport,
+  OphUrlProperties,
+  VirkailijaRestClient
+}
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.{ArgumentCaptor, ArgumentMatchers, Mockito}
 import org.mockito.ArgumentMatchers._
@@ -182,14 +233,25 @@ class ValpasSpec
       val tulosRedisCache = mock[RedisCache[String, String]]
       val cacheRedisCache = mock[RedisCache[String, String]]
       Mockito.when(tulosRedisCache.get(anyString())).thenReturn(Future.successful(None))
-      Mockito.when(tulosRedisCache.mget(ArgumentMatchers.eq(Vector(hakemusOid))))
+      Mockito
+        .when(tulosRedisCache.mget(ArgumentMatchers.eq(Vector(hakemusOid))))
         .thenReturn(Future.successful(Seq[(Option[String], String)]((None, hakemusOid))))
       val tulosCaptureCacheSet = ArgumentCaptor.forClass(classOf[String])
       Mockito.when(
-        tulosCacheFactory.getInstance[String, String](any(), any(), any(), ArgumentMatchers.eq("valpas-valintatulos"))(any())
+        tulosCacheFactory.getInstance[String, String](
+          any(),
+          any(),
+          any(),
+          ArgumentMatchers.eq("valpas-valintatulos")
+        )(any())
       ) thenReturn tulosRedisCache
       Mockito.when(
-        tulosCacheFactory.getInstance[String, String](any(), any(), any(), ArgumentMatchers.eq("sijoittelu-tulos"))(any())
+        tulosCacheFactory.getInstance[String, String](
+          any(),
+          any(),
+          any(),
+          ArgumentMatchers.eq("sijoittelu-tulos")
+        )(any())
       ) thenReturn cacheRedisCache
 
       val valintatulosClient = mockPostTulosClient(Seq(hakemusOid))(
@@ -245,7 +307,8 @@ class ValpasSpec
         .thenReturn(Future.successful(Some(captureCacheSet.getValue)))
 
       Mockito.reset(tulosRedisCache)
-      Mockito.when(tulosRedisCache.mget(ArgumentMatchers.eq(Vector(hakemusOid))))
+      Mockito
+        .when(tulosRedisCache.mget(ArgumentMatchers.eq(Vector(hakemusOid))))
         .thenReturn(Future.successful(Seq[(Option[String], String)]((None, hakemusOid))))
 
       val result2 =
@@ -392,7 +455,8 @@ class ValpasSpec
       .when(
         client
           .readObject[Seq[ValintaTulos]](
-            "valinta-tulos-service.haku", hakuOid
+            "valinta-tulos-service.haku",
+            hakuOid
           )(200, 1)
       )
       .thenReturn(Future.successful(Seq.empty))
