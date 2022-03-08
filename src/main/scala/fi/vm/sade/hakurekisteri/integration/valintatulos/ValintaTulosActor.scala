@@ -153,28 +153,33 @@ class ValintaTulosActor(
           ValintaTulos(hakemusOid, Seq())
       }
   }
+  private def parseToValintaTulosOrEvict(hakemusOid: String, json: String): Option[ValintaTulos] = {
+    Try(JsonMethods.parse(json).extract[ValintaTulos]) match {
+      case Success(vt) =>
+        Some(vt)
+      case Failure(ex) =>
+        log.error(s"Failed to parse Valintatulos: ${ex.getMessage}", ex)
+        Try(valintaCache.-(hakemusOid))
+        None
+    }
+  }
+  private def parseToValintaTulos(v: Future[Seq[(Option[String], String)]]): Future[Seq[Option[ValintaTulos]]] = {
+    v.map(vv => vv.map {
+        case (Some(o), s) =>
+          parseToValintaTulosOrEvict(s, o)
+        case _ =>
+          None
+      }
+    )
+  }
 
   private def cachedValintatulokset(hakemusOids: Set[String]): Future[Seq[ValintaTulos]] = {
     valintaCache match {
       case redis: RedisCache[String, String] =>
-        val oidsInSeq = hakemusOids.toSeq
+        val oidsInSeq: Seq[String] = hakemusOids.toSeq
         val v: Future[Seq[(Option[String], String)]] = redis.mget(oidsInSeq)
-        def parseToValintaTulosOrEvict(hakemusOid: String, json: String): Option[ValintaTulos] = {
-          Try(JsonMethods.parse(json).extract[ValintaTulos]) match {
-            case Success(vt) =>
-              Some(vt)
-            case Failure(ex) =>
-              log.error(s"Failed to parse Valintatulos: ${ex.getMessage}", ex)
-              Try(redis.-(hakemusOid))
-              None
-          }
-        }
-        v.map(_.map {
-          case (Some(o), s) =>
-            parseToValintaTulosOrEvict(s, o)
-          case _ =>
-            None
-        }).map(_.flatten)
+
+        parseToValintaTulos(v).map(_.flatten)
       case _ =>
         Future.successful(Seq.empty)
     }

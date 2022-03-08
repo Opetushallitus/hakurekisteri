@@ -8,71 +8,20 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.InFuture
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruResponse, FullHakemus, HakemusService}
-import fi.vm.sade.hakurekisteri.integration.haku.{
-  AllHaut,
-  GetHakuOption,
-  Haku,
-  HakuRequest,
-  RestHaku
-}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{
-  HakukohdeAggregatorActorRef,
-  HakukohdeQuery,
-  MockHakukohdeAggregatorActor
-}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{
-  Henkilo,
-  HenkiloViite,
-  IOppijaNumeroRekisteri,
-  OppijaNumeroRekisteri
-}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetKoodistoKoodiArvot,
-  Koodi,
-  KoodistoActor,
-  KoodistoActorRef
-}
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHakuOption, Haku, HakuRequest, RestHaku}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{HakukohdeAggregatorActorRef, HakukohdeQuery, MockHakukohdeAggregatorActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloViite, IOppijaNumeroRekisteri, OppijaNumeroRekisteri}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, Koodi, KoodistoActor, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActorRef, MockKoutaInternalActor}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{
-  ChildOids,
-  HttpOrganisaatioActor,
-  Organisaatio,
-  OrganisaatioActorRef,
-  OrganisaatioResponse
-}
-import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
-  PistesyottoService,
-  Pistetieto,
-  PistetietoWrapper
-}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  HakukohdeOid,
-  HakukohteenKoulutukset,
-  Hakukohteenkoulutus,
-  Koulutus,
-  TarjontaActorRef,
-  TarjontaHakukohde,
-  TarjontaResultResponse
-}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  ValintaTulos,
-  ValintaTulosActor,
-  ValintaTulosActorRef
-}
-import fi.vm.sade.hakurekisteri.integration.valpas.{
-  ValintalaskentaOsallistuminen,
-  ValpasHakemus,
-  ValpasIntergration,
-  ValpasQuery
-}
-import fi.vm.sade.hakurekisteri.integration.{
-  ActorSystemSupport,
-  OphUrlProperties,
-  VirkailijaRestClient
-}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{ChildOids, HttpOrganisaatioActor, Organisaatio, OrganisaatioActorRef, OrganisaatioResponse}
+import fi.vm.sade.hakurekisteri.integration.pistesyotto.{PistesyottoService, Pistetieto, PistetietoWrapper}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, Koulutus, TarjontaActorRef, TarjontaHakukohde, TarjontaResultResponse}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosActor, ValintaTulosActorRef}
+import fi.vm.sade.hakurekisteri.integration.valpas.{ValintalaskentaOsallistuminen, ValpasHakemus, ValpasIntergration, ValpasQuery}
+import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, OphUrlProperties, VirkailijaRestClient}
 import org.json4s.jackson.JsonMethods.parse
-import org.mockito.{ArgumentCaptor, Mockito}
+import org.mockito.{ArgumentCaptor, ArgumentMatchers, Mockito}
 import org.mockito.ArgumentMatchers._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, _}
@@ -94,6 +43,8 @@ class ValpasSpec
 
   private val oppijaOid = "1.2.246.562.24.82344311114"
   private val hakemusOid = "1.2.246.562.11.00000000000000446632"
+  private val hakuOid = "1.2.246.562.29.36339915997"
+
   behavior of "Valpas Resource"
 
   it should "handle combining Ataru and HakuApp hakemukset with valintatulokset" in {
@@ -113,7 +64,7 @@ class ValpasSpec
         new OppijaNumeroRekisteri(onrClient, system, Config.mockDevConfig)
       val haku = system.actorOf(Props(new Actor {
         val haku = resource[TarjontaResultResponse[Option[RestHaku]]](
-          s"/mock-data/tarjonta/haku_1.2.246.562.29.36339915997.json"
+          s"/mock-data/tarjonta/haku_$hakuOid.json"
         ).result.get
 
         override def receive: Actor.Receive = {
@@ -192,7 +143,7 @@ class ValpasSpec
         }))
       )
 
-      val mockAggregator = new HakukohdeAggregatorActorRef(
+      val mockAggregator = HakukohdeAggregatorActorRef(
         system.actorOf(
           Props(new MockHakukohdeAggregatorActor(tarjonta, koutaInternal, Config.mockDevConfig))
         )
@@ -229,11 +180,17 @@ class ValpasSpec
 
       val tulosCacheFactory = mock[CacheFactory]
       val tulosRedisCache = mock[RedisCache[String, String]]
+      val cacheRedisCache = mock[RedisCache[String, String]]
       Mockito.when(tulosRedisCache.get(anyString())).thenReturn(Future.successful(None))
+      Mockito.when(tulosRedisCache.mget(ArgumentMatchers.eq(Vector(hakemusOid))))
+        .thenReturn(Future.successful(Seq[(Option[String], String)]((None, hakemusOid))))
       val tulosCaptureCacheSet = ArgumentCaptor.forClass(classOf[String])
       Mockito.when(
-        tulosCacheFactory.getInstance[String, String](any(), any(), any(), any())(any())
+        tulosCacheFactory.getInstance[String, String](any(), any(), any(), ArgumentMatchers.eq("valpas-valintatulos"))(any())
       ) thenReturn tulosRedisCache
+      Mockito.when(
+        tulosCacheFactory.getInstance[String, String](any(), any(), any(), ArgumentMatchers.eq("sijoittelu-tulos"))(any())
+      ) thenReturn cacheRedisCache
 
       val valintatulosClient = mockPostTulosClient(Seq(hakemusOid))(
         resource[List[ValintaTulos]](
@@ -288,9 +245,8 @@ class ValpasSpec
         .thenReturn(Future.successful(Some(captureCacheSet.getValue)))
 
       Mockito.reset(tulosRedisCache)
-      Mockito
-        .when(tulosRedisCache.get(anyString()))
-        .thenReturn(Future.successful(Some(tulosCaptureCacheSet.getValue)))
+      Mockito.when(tulosRedisCache.mget(ArgumentMatchers.eq(Vector(hakemusOid))))
+        .thenReturn(Future.successful(Seq[(Option[String], String)]((None, hakemusOid))))
 
       val result2 =
         run(integration.fetch(ValpasQuery(Set(oppijaOid), ainoastaanAktiivisetHaut = true)))
@@ -432,6 +388,15 @@ class ValpasSpec
     post: Seq[String]
   )(response: List[ValintaTulos]): VirkailijaRestClient = {
     val client: VirkailijaRestClient = mock[VirkailijaRestClient]
+    Mockito
+      .when(
+        client
+          .readObject[Seq[ValintaTulos]](
+            "valinta-tulos-service.haku", hakuOid
+          )(200, 1)
+      )
+      .thenReturn(Future.successful(Seq.empty))
+
     Mockito
       .when(
         client
