@@ -130,6 +130,60 @@ class HakemusServiceSpec
     ataruHakemukset(0).asiointiKieli should be(asiointiKieliFromHakemus)
   }
 
+  it should "index hakutoive preference numbers starting from 1" in {
+    val asiointiKieliFromOnr = "fi"
+    val asiointiKieliFromHakemus = "en"
+    val personOid = "1.2.3.4.5.6"
+    val ataruHenkilo = henkilo.Henkilo(
+      "ataruHenkiloOid",
+      Some("ataruHetu"),
+      "OPPIJA",
+      None,
+      None,
+      None,
+      None,
+      List(),
+      None,
+      None,
+      turvakielto = Some(false)
+    )
+    val ataruHakemusDto = AtaruHakemusDto(
+      "ataruOid",
+      personOid,
+      "",
+      "",
+      kieli = asiointiKieliFromHakemus,
+      List("1.2.246.562.20.666", "1.2.246.562.20.667"),
+      "",
+      "",
+      "",
+      "",
+      None,
+      None,
+      "",
+      false,
+      false,
+      Map(),
+      Map(),
+      Map(),
+      List(),
+      None
+    )
+
+    val ataruHakemukset: List[AtaruHakemus] =
+      Await.result(
+        hakemusService.enrichAtaruHakemukset(List(ataruHakemusDto), Map(personOid -> ataruHenkilo), true),
+        10.seconds
+      )
+
+    ataruHakemukset.size should be(1)
+    val hakutoiveet = ataruHakemukset.head.hakutoiveet.get
+    hakutoiveet.size should be (2)
+    hakutoiveet.head.preferenceNumber should be (1)
+    hakutoiveet(1).preferenceNumber should be (2)
+
+  }
+
   behavior of "hakemusForPersonsInHaku"
 
   it should "return applications when searching with both persons and application system" in {

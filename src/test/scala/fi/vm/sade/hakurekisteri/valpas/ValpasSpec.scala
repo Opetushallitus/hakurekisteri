@@ -274,6 +274,8 @@ class ValpasSpec
         result.head.hakutoiveet.flatMap(_.hakukohdeKoulutuskoodi).map(_.koodistoVersio).toSet
       versiot should equal(Set(12))
 
+      result.head.hakutoiveet.head.hakutoivenumero should equal(1)
+
       Mockito.verify(redisCache).+(anyString(), captureCacheSet.capture())
       Mockito.verify(tulosRedisCache).+(anyString(), tulosCaptureCacheSet.capture())
 

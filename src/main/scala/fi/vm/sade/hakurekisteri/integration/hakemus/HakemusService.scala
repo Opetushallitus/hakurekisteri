@@ -294,7 +294,7 @@ class HakemusService(
           val hakutoiveet = hakemus.hakukohteet.zipWithIndex.map { case (hakukohdeOid, index) =>
             val tarjoaja = tarjoajaAndParentOids.get(hakukohdeOid)
             HakutoiveDTO(
-              index,
+              index+1,
               Some(hakukohdeOid),
               None,
               None,
