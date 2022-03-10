@@ -655,13 +655,13 @@ class ValpasIntergration(
 
       def excludeHakemusInHaku(haku: Option[Haku]): Boolean = {
         haku match {
-          case Some(haku) => {
-            haku.kkHaku || (query.ainoastaanAktiivisetHaut && !haku.isActive)
-          }
+          case Some(haku) =>
+            !haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")) ||
+              haku.kkHaku ||
+              (query.ainoastaanAktiivisetHaut && !haku.isActive)
           case None =>
             true
         }
-
       }
 
       (for {
