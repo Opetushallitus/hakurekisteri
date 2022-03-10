@@ -54,6 +54,8 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 import org.joda.time.format.DateTimeFormat
 
+import scala.language.postfixOps
+
 object ValpasHakemusTila extends Enumeration {
   type ValpasHakemusTila = Value
 
@@ -520,7 +522,9 @@ class ValpasIntergration(
       VirkailijanValintatulos(h)
 
     val valintarekisteri: Future[Map[String, Seq[ValintaTulos]]] =
-      (valintaTulos.actor ? hakemusToValintatulosQuery(hakemukset.map(_.oid).toSet))
+      (valintaTulos.actor ? hakemusToValintatulosQuery(hakemukset.map(_.oid).toSet))(
+        Timeout(4 minutes)
+      )
         .mapTo[Seq[ValintaTulos]]
         .map(_.groupBy(_.hakemusOid))
 
