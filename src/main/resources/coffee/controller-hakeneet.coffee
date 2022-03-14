@@ -215,7 +215,7 @@ app.controller "HakeneetCtrl", [
     if(isKk())
       $scope.rajapinnanVersio = 4
     else
-      $scope.rajapinnanVersio = 4
+      $scope.rajapinnanVersio = 5
 
     $scope.hakuehdot = [
       {
