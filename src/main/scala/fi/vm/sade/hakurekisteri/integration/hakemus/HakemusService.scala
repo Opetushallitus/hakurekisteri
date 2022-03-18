@@ -1,8 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import akka.pattern.ask
@@ -27,7 +24,9 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
-import scala.Option
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -687,9 +686,10 @@ class HakemusService(
   }
   def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]] = {
     for {
-      hakuappHakemukset <- hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]](
-        "haku-app.listfull"
-      )(acceptedResponseCode = 200, ListFullSearchDto.hetuForPersonOid(personOid))
+      hakuappHakemukset <- hakuappRestClient
+        .postObject[Set[String], Map[String, Seq[FullHakemus]]](
+          "haku-app.bypersonoid"
+        )(acceptedResponseCode = 200, Set(personOid))
       ataruHakemukset <- ataruhakemukset(
         AtaruSearchParams(
           hakijaOids = Some(List(personOid)),
@@ -700,7 +700,7 @@ class HakemusService(
         ),
         skipResolvingTarjoaja = true
       )
-    } yield (hakuappHakemukset ++ ataruHakemukset).collect({
+    } yield (hakuappHakemukset.values.flatten.toList ++ ataruHakemukset).collect({
       case h: FullHakemus if h.stateValid && h.hetu.isDefined && h.personOid.isDefined =>
         HakemusHakuHetuPersonOid(
           hakemus = h.oid,
