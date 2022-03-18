@@ -33,17 +33,24 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
     hakuOid: String,
     hs: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]] = {
-    val hakemukset: Seq[FullHakemus] = hs.collect { case h: FullHakemus => h }
-    if (hakemukset.nonEmpty) {
+    val hakuAppHakemukset: Seq[FullHakemus] = hs.collect { case h: FullHakemus => h }
+    if (hakuAppHakemukset.nonEmpty) {
       val hakemusHakijat: Seq[HakemusHakija] =
-        hakemukset.map(h => HakemusHakija(h.personOid.get, h))
-      logger.info(s"Get suoritukset for ${hakemukset.size} hakemukset for haku $hakuOid")
+        hakuAppHakemukset.map(h => HakemusHakija(h.personOid.get, h))
+      logger.info(s"Get suoritukset for ${hakuAppHakemukset.size} hakemukset for haku $hakuOid")
       restClient.postObject[Seq[HakemusHakija], Map[String, Map[String, String]]](
         "valintalaskentakoostepalvelu.suorituksetByOpiskelijaOid",
         hakuOid
       )(200, hakemusHakijat)
     } else {
-      Future.successful(Map.empty)
+      val hakemusOids = hs.map(hh => hh.oid).toList
+      logger.info(
+        s"Getting atarusuoritukset from koostepalvelu for ataruhakemukset: ${hakemusOids}"
+      )
+      restClient.postObject[List[String], Map[String, Map[String, String]]](
+        "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
+        hakuOid
+      )(200, hakemusOids)
     }
   }
 

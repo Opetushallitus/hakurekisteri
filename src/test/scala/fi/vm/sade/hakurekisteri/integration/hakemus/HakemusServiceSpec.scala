@@ -172,15 +172,16 @@ class HakemusServiceSpec
 
     val ataruHakemukset: List[AtaruHakemus] =
       Await.result(
-        hakemusService.enrichAtaruHakemukset(List(ataruHakemusDto), Map(personOid -> ataruHenkilo), true),
+        hakemusService
+          .enrichAtaruHakemukset(List(ataruHakemusDto), Map(personOid -> ataruHenkilo), true),
         10.seconds
       )
 
     ataruHakemukset.size should be(1)
     val hakutoiveet = ataruHakemukset.head.hakutoiveet.get
-    hakutoiveet.size should be (2)
-    hakutoiveet.head.preferenceNumber should be (1)
-    hakutoiveet(1).preferenceNumber should be (2)
+    hakutoiveet.size should be(2)
+    hakutoiveet.head.preferenceNumber should be(1)
+    hakutoiveet(1).preferenceNumber should be(2)
 
   }
 

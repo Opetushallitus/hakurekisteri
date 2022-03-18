@@ -47,7 +47,9 @@ class BaseKoosteet(
     integrations.haut,
     integrations.koodisto,
     config,
-    integrations.koskiService
+    integrations.koskiService,
+    registers.opiskelijaRekisteri,
+    integrations.oppijaNumeroRekisteri
   )(system)
   val hakijat = system.actorOf(
     Props(
@@ -59,7 +61,9 @@ class BaseKoosteet(
           integrations.haut,
           integrations.koodisto,
           config,
-          integrations.koskiService
+          integrations.koskiService,
+          registers.opiskelijaRekisteri,
+          integrations.oppijaNumeroRekisteri
         )(system),
         integrations.organisaatiot,
         integrations.koodisto,
