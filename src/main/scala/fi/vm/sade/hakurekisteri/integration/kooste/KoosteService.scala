@@ -2,7 +2,13 @@ package fi.vm.sade.hakurekisteri.integration.kooste
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemus, FullHakemus, HakijaHakemus}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemus,
+  AtaruHakemusToinenAste,
+  FullHakemus,
+  HakemuksenHarkinnanvaraisuus,
+  HakijaHakemus
+}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.Future
@@ -12,6 +18,7 @@ trait IKoosteService {
     hakuOid: String,
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]]
+  def getHarkinnanvaraisuudet(hs: Seq[HakijaHakemus]): Future[Seq[HakemuksenHarkinnanvaraisuus]]
 }
 
 class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(implicit
@@ -28,6 +35,28 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
   )
 
   private val logger = Logging.getLogger(system, this)
+
+  def getHarkinnanvaraisuudet(hs: Seq[HakijaHakemus]): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    val hvs = hs.collect { case h: AtaruHakemusToinenAste =>
+      HakemuksenHarkinnanvaraisuus(
+        hakemusOid = h.oid,
+        henkiloOid = h.personOid,
+        hakutoiveet = h.harkinnanvaraisuudet
+      )
+    }
+    hvs match {
+      case harkinnanvaraisuudet if harkinnanvaraisuudet.isEmpty =>
+        logger.warning(s"Ei ataruhakemuksia! $hs")
+        Future.successful(Seq.empty)
+      case harkinnanvaraisuudet =>
+        logger.info(
+          s"Haetaan koostepalvelusta harkinnanvaraisuudet hakemuksille: $harkinnanvaraisuudet"
+        )
+        restClient.postObject[Seq[HakemuksenHarkinnanvaraisuus], Seq[HakemuksenHarkinnanvaraisuus]](
+          "valintalaskentakoostepalvelu.harkinnanvaraisuudet.atarutiedoille"
+        )(200, harkinnanvaraisuudet)
+    }
+  }
 
   def getSuoritukset(
     hakuOid: String,
@@ -63,4 +92,8 @@ class KoosteServiceMock extends IKoosteService {
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]] =
     Future.successful(Map[String, Map[String, String]]())
+
+  override def getHarkinnanvaraisuudet(
+    hs: Seq[HakijaHakemus]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = Future.successful(Seq.empty)
 }

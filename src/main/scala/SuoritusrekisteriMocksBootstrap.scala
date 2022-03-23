@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija.{Hakija, HakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusServiceMock, Hakupalvelu}
+import fi.vm.sade.hakurekisteri.integration.haku.Haku
 import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
 import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaServiceMock
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
@@ -45,7 +46,11 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
     val kkHakijaService = new KkHakijaService(
       hakemusService = new HakemusServiceMock(),
       hakupalvelu = new Hakupalvelu() {
-        override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = Future.successful(Seq())
+        override def getHakijatByQuery(q: HakijaQuery): Future[Seq[Hakija]] = ???
+        override def getHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] =
+          Future.successful(Seq())
+        override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] =
+          Future.successful(Seq())
         override def getHakukohdeOids(
           hakukohderyhma: String,
           hakuOid: String

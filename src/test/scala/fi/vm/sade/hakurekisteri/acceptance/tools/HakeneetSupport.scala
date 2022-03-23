@@ -857,16 +857,29 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
     var lisakysymykset: Map[String, ThemeQuestion] = Map()
     val koosteData: Option[Map[String, String]] = None
 
-    override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
-      case Some(org) =>
-        Future(
-          hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {
-            kohde.tarjoaja == org
-          })))
-        )
-      case _ =>
-        Future(hakijat)
-    }
+    override def getHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] =
+      q.organisaatio match {
+        case Some(org) =>
+          Future(
+            hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {
+              kohde.tarjoaja == org
+            })))
+          )
+        case _ =>
+          Future(hakijat)
+      }
+
+    override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] =
+      q.organisaatio match {
+        case Some(org) =>
+          Future(
+            hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {
+              kohde.tarjoaja == org
+            })))
+          )
+        case _ =>
+          Future(hakijat)
+      }
 
     val haku = Haku(
       Kieliversiot(Some("haku"), None, None),
@@ -881,7 +894,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       None,
       None,
       "hakutapa_01#1",
-      Some("hakutyyppi_01#1")
+      Some("hakutyyppi_01#1"),
+      None
     )
 
     private val kansalaisuuskoodit = Map("246" -> "FIN")
@@ -925,6 +939,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
     override def getHakukohdeOids(hakukohderyhma: String, hakuOid: String): Future[Seq[String]] =
       Future.successful(Seq("1.2.246.562.20.14800254899", "1.2.246.562.20.44085996724"))
+
+    override def getHakijatByQuery(q: HakijaQuery): Future[Seq[Hakija]] = getHakijat(q, haku)
   }
 
   class MockedOrganisaatioActor extends Actor {

@@ -36,7 +36,8 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
     kohdejoukonTarkenne = None,
     tila = "LUONNOS",
-    hakutyyppiUri = "hakutyyppi_01#1"
+    hakutyyppiUri = "hakutyyppi_01#1",
+    None
   )
 
   test("luonnos is not included") {

@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Config, integration}
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.hakukohde.{
@@ -19,8 +19,9 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   PersonOidsWithAliases
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
+import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
@@ -129,6 +130,15 @@ trait IHakemusService {
     organisaatio: Option[String]
   ): Future[Set[String]]
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
+  def hakemuksetForToisenAsteenAtaruHaku(
+    hakuOid: String,
+    organisaatio: Option[String]
+  ): Future[Seq[HakijaHakemus]]
+  def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
+    hakuOid: String,
+    hakukohdeOid: String,
+    organisaatio: Option[String]
+  ): Future[Seq[HakijaHakemus]]
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
     hakuOid: String,
     hakukohdeOid: Option[String]
@@ -191,6 +201,134 @@ class HakemusService(
       classOf[String],
       "valpas-hakuappOrAtaruHakemus"
     )
+
+  def enrichAtaruHakemuksetToinenAste(
+    ataruHakemusDtos: List[AtaruHakemusToinenAsteDto],
+    henkilot: Map[String, Henkilo],
+    skipResolvingTarjoaja: Boolean = false,
+    hakuOid: String
+  ): Future[List[AtaruHakemusToinenAste]] = {
+    logger.info(s"enrichAtaruHakemuksetToinenAste: $ataruHakemusDtos")
+    def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
+      hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
+        .mapTo[Hakukohde]
+      tarjoajaOid <- hakukohde.tarjoajaOids.flatMap(_.headOption) match {
+        case Some(oid) => Future.successful(oid)
+        case None =>
+          Future.failed(
+            new RuntimeException(
+              s"Could not find tarjoaja for hakukohde ${hakukohde.oid}"
+            )
+          )
+      }
+    } yield tarjoajaOid
+
+    def tarjoajanParentOids(tarjoajaOid: String): Future[Set[String]] = for {
+      organisaatio <- (organisaatioActor.actor ? tarjoajaOid).mapTo[Option[Organisaatio]].flatMap {
+        case Some(o) => Future.successful(o)
+        case None    => Future.failed(new RuntimeException(s"Could not find tarjoaja $tarjoajaOid"))
+      }
+      parentOids <- organisaatio.parentOidPath match {
+        case Some(path) =>
+          val parentOids = path.replace("/", "|").split("\\|").filterNot(_.isEmpty).toSet
+          if (parentOids.forall(Organisaatio.isOrganisaatioOid)) {
+            Future.successful(parentOids + organisaatio.oid)
+          } else {
+            Future.failed(
+              new RuntimeException(
+                s"Could not parse parent oids $path of organization ${organisaatio.oid}"
+              )
+            )
+          }
+        case None => Future.successful(Set.empty[String])
+      }
+    } yield parentOids
+
+    def translateAtaruAttachments(
+      hakemus: AtaruHakemusToinenAsteDto
+    ): Map[String, Option[Boolean]] =
+      hakemus.attachments
+        .mapValues {
+          case "checked"     => Some(true)
+          case "not-checked" => Some(false)
+          case _             => None
+        }
+        .map(identity)
+
+    val hakemustenHakukohteet = ataruHakemusDtos.flatMap(_.hakukohteet).map(_.oid)
+    val resolveTarjoajaOids: Future[Map[String, (String, Set[String])]] =
+      if (skipResolvingTarjoaja) {
+        Future.successful(Map.empty)
+      } else {
+        Future
+          .sequence(
+            hakemustenHakukohteet
+              .map(hakukohdeOid => {
+                val tarjoajaOid = hakukohteenTarjoajaOid(hakukohdeOid)
+                Future
+                  .successful(hakukohdeOid)
+                  .zip(tarjoajaOid.zip(tarjoajaOid.flatMap(tarjoajanParentOids)))
+              })
+          )
+          .map(_.toMap)
+      }
+
+    val res = resolveTarjoajaOids
+      .map(tarjoajaAndParentOids =>
+        ataruHakemusDtos.map((hakemus: AtaruHakemusToinenAsteDto) => {
+          val hakutoiveet = hakemus.hakukohteet.zipWithIndex.map { case (hakutoive, index) =>
+            val tarjoaja = tarjoajaAndParentOids.get(hakutoive.oid)
+            HakutoiveDTO(
+              index + 1,
+              Some(hakutoive.oid),
+              None,
+              None,
+              None,
+              tarjoaja.map(_._1),
+              tarjoaja.map(_._2).getOrElse(Set.empty),
+              hakutoive.kiinnostunutKaksoistutkinnosta.map(v => if (v) "Kyllä" else "Ei"),
+              hakutoive.aiempiPeruminen.map(v => if (v) "Kyllä" else "Ei"),
+              hakutoive.terveys.map(v => if (v) "Kyllä" else "Ei"),
+              hakutoive.kiinnostunutUrheilijanAmmatillisestaKoulutuksesta.map(v =>
+                if (v) "Kyllä" else "Ei"
+              ),
+              None //discretionaryFollowUp Mikä tämä on, tarvitaanko?
+            )
+          }
+          val harkinnanvaraisuudet = hakemus.hakukohteet
+            .map(hk => HakutoiveenHarkinnanvaraisuus(hk.oid, hk.harkinnanvaraisuus))
+            .toList
+
+          AtaruHakemusToinenAste(
+            oid = hakemus.oid,
+            personOid = Some(hakemus.personOid), //not optional?
+            createdTime = hakemus.createdTime,
+            asiointiKieli = hakemus.kieli,
+            applicationSystemId = hakuOid,
+            hakutoiveet = Some(hakutoiveet),
+            henkilo = henkilot(hakemus.personOid),
+            email = hakemus.email,
+            matkapuhelin = hakemus.matkapuhelin,
+            lahiosoite = hakemus.lahiosoite,
+            postinumero = hakemus.postinumero,
+            postitoimipaikka = hakemus.postitoimipaikka,
+            kotikunta = hakemus.kotikunta,
+            asuinmaa = hakemus.asuinmaa,
+            attachments = hakemus.attachments,
+            pohjakoulutus = hakemus.pohjakoulutus,
+            kiinnostunutOppisopimusKoulutuksesta = hakemus.kiinnostunutOppisopimusKoulutuksesta,
+            sahkoisenAsioinninLupa = hakemus.sahkoisenAsioinninLupa,
+            valintatuloksenJulkaisulupa = hakemus.valintatuloksenJulkaisulupa,
+            koulutusmarkkinointilupa = hakemus.koulutusmarkkinointilupa,
+            tutkintoVuosi = hakemus.tutkintoVuosi,
+            tutkintoKieli = hakemus.tutkintoKieli,
+            huoltajat = hakemus.huoltajat,
+            harkinnanvaraisuudet = harkinnanvaraisuudet
+          )
+        })
+      )
+    res
+  }
 
   def enrichAtaruHakemukset(
     ataruHakemusDtos: List[AtaruHakemusDto],
@@ -379,6 +517,69 @@ class HakemusService(
       offset: Option[String],
       acc: Future[List[AtaruHakemus]]
     ): Future[List[AtaruHakemus]] = page(offset).flatMap {
+      case (applications, None)      => acc.map(_ ++ applications)
+      case (applications, newOffset) => allPages(newOffset, acc.map(_ ++ applications))
+    }
+    allPages(None, Future.successful(List.empty))
+  }
+// modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
+//    refreshFrequency: FiniteDuration = 1.minute
+//  )(implicit scheduler: Scheduler): Unit = {
+//    scheduler.scheduleOnce(refreshFrequency)({
+//      val lastChecked = new Date()
+//      val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
+
+  private def ataruhakemuksetToinenAste(
+    params: AtaruSearchParams,
+    skipResolvingTarjoaja: Boolean = false
+  ): Future[List[AtaruHakemusToinenAste]] = {
+    if (params.hakuOid.isEmpty) {
+      throw new Exception("HakuOid on pakollinen parametri toisen asteen ataruhakemusten haussa!")
+    }
+    val modifiedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(
+      new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(10))
+    )
+    val p: Map[String, Any] =
+      params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
+        Map("hakukohdeOids" -> hakukohdeOids)
+      ) ++
+        params.hakijaOids.fold[Map[String, Any]](Map.empty)(hakijaOids =>
+          Map("hakijaOids" -> List("1.2.246.562.24.71199100015", "1.2.246.562.24.73723145512"))
+        ) ++
+        params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date => Map("modifiedAfter" -> date))
+    def page(offset: Option[String]): Future[(List[AtaruHakemusToinenAste], Option[String])] = {
+      for {
+        ataruResponse <- ataruHakemusClient
+          .postObjectWithCodes[Map[String, Any], AtaruResponseToinenAste](
+            uriKey = "ataru.applications.toinenaste",
+            acceptedResponseCodes = List(200),
+            maxRetries = 2,
+            resource = offset.fold(p)(o => p + ("offset" -> o)),
+            basicAuth = false,
+            params.hakuOid.get
+          )
+        ataruHenkilot <- oppijaNumeroRekisteri.getByOids(
+          ataruResponse.applications
+            .map(_.personOid)
+            .toSet
+        )
+        ataruHakemukset <- enrichAtaruHakemuksetToinenAste(
+          ataruResponse.applications,
+          ataruHenkilot,
+          skipResolvingTarjoaja,
+          params.hakuOid.get
+        )
+      } yield (
+        params.organizationOid.fold(ataruHakemukset)(oid =>
+          ataruHakemukset.filter(hasAppliedToOrganization(_, oid))
+        ),
+        ataruResponse.offset
+      )
+    }
+    def allPages(
+      offset: Option[String],
+      acc: Future[List[AtaruHakemusToinenAste]]
+    ): Future[List[AtaruHakemusToinenAste]] = page(offset).flatMap {
       case (applications, None)      => acc.map(_ ++ applications)
       case (applications, newOffset) => allPages(newOffset, acc.map(_ ++ applications))
     }
@@ -601,6 +802,36 @@ class HakemusService(
         )
       )
     } yield hakuappHakemukset ++ ataruHakemukset
+  }
+  def hakemuksetForToisenAsteenAtaruHaku(
+    hakuOid: String,
+    organisaatio: Option[String]
+  ): Future[Seq[AtaruHakemusToinenAste]] = {
+    ataruhakemuksetToinenAste(
+      AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = organisaatio,
+        modifiedAfter = None
+      )
+    )
+  }
+
+  def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
+    hakuOid: String,
+    hakukohdeOid: String,
+    organisaatio: Option[String]
+  ): Future[Seq[HakijaHakemus]] = {
+    ataruhakemuksetToinenAste(
+      AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = Some(List(hakukohdeOid)),
+        hakuOid = Some(hakuOid),
+        organizationOid = organisaatio,
+        modifiedAfter = None
+      )
+    )
   }
 
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
@@ -839,6 +1070,21 @@ class HakemusServiceMock extends IHakemusService {
 
   override def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]) =
     Future.successful(Seq[FullHakemus]())
+
+  override def hakemuksetForToisenAsteenAtaruHaku(
+    hakuOid: String,
+    organisaatio: Option[String]
+  ): Future[Seq[HakijaHakemus]] = {
+    Future.successful(Seq[AtaruHakemusToinenAste]())
+  }
+
+  override def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
+    hakuOid: String,
+    hakukohdeOid: String,
+    organisaatio: Option[String]
+  ): Future[Seq[HakijaHakemus]] = {
+    Future.successful(Seq[AtaruHakemusToinenAste]())
+  }
 
   override def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
     hakuOid: String,

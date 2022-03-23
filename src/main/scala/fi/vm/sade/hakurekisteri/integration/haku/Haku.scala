@@ -18,7 +18,8 @@ case class Haku(
   viimeinenHakuaikaPaattyy: Option[DateTime],
   kohdejoukkoUri: Option[String],
   hakutapaUri: String,
-  hakutyyppiUri: Option[String]
+  hakutyyppiUri: Option[String],
+  hakulomakeAtaruId: Option[String] = None
 ) {
   val isActive: Boolean = aika.isCurrently
 }
@@ -43,7 +44,8 @@ object Haku {
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
       kohdejoukkoUri = haku.kohdejoukkoUri,
       hakutapaUri = haku.hakutapaUri,
-      hakutyyppiUri = None
+      hakutyyppiUri = None,
+      hakulomakeAtaruId = haku.hakulomakeAtaruId
     )
   }
 
@@ -66,7 +68,8 @@ object Haku {
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku.toRestHaku),
       kohdejoukkoUri = haku.kohdejoukkoUri,
       hakutapaUri = haku.hakutapaUri,
-      hakutyyppiUri = Some(haku.hakutyyppiUri)
+      hakutyyppiUri = Some(haku.hakutyyppiUri),
+      hakulomakeAtaruId = haku.ataruLomakeAvain
     )
   }
 

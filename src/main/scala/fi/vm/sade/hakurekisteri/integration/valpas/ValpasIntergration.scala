@@ -496,6 +496,7 @@ class ValpasIntergration(
           hakutoiveet = hakutoiveet
         )
       }
+      case _ => ???
     }
   }
 

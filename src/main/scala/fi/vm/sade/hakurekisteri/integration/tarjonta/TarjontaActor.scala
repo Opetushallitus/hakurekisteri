@@ -40,7 +40,8 @@ case class TarjontaRestHaku(
   kohdejoukkoUri: Option[String],
   kohdejoukonTarkenne: Option[String],
   tila: String,
-  hakutyyppiUri: String
+  hakutyyppiUri: String,
+  ataruLomakeAvain: Option[String] = None
 ) {
   def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
 
@@ -55,7 +56,8 @@ case class TarjontaRestHaku(
     koulutuksenAlkamisVuosi = koulutuksenAlkamisVuosi,
     kohdejoukkoUri = kohdejoukkoUri,
     kohdejoukonTarkenne = kohdejoukonTarkenne,
-    tila = tila
+    tila = tila,
+    hakulomakeAtaruId = ataruLomakeAvain
   )
 }
 
@@ -325,7 +327,8 @@ class MockTarjontaActor(config: Config)(implicit val system: ActorSystem)
             kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
             kohdejoukonTarkenne = None,
             tila = "JULKAISTU",
-            hakutyyppiUri = "hakutyyppi_01#1"
+            hakutyyppiUri = "hakutyyppi_01#1",
+            ataruLomakeAvain = None
           )
         )
       )

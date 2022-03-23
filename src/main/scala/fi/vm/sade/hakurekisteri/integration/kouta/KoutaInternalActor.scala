@@ -263,7 +263,8 @@ case class KoutaInternalRestHaku(
   kohdejoukkoKoodiUri: Option[String],
   hakuajat: List[KoutaInternalRestHakuAika],
   kohdejoukonTarkenneKoodiUri: Option[String],
-  metadata: KoutaHakuMetadata
+  metadata: KoutaHakuMetadata,
+  hakulomakeAtaruId: Option[String]
 ) {
   def toRestHaku: RestHaku = RestHaku(
     oid = oid,
@@ -288,7 +289,8 @@ case class KoutaInternalRestHaku(
       metadata.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamisvuosi.map(_.toInt)),
     kohdejoukkoUri = kohdejoukkoKoodiUri,
     kohdejoukonTarkenne = kohdejoukonTarkenneKoodiUri,
-    tila = tila
+    tila = tila,
+    hakulomakeAtaruId = hakulomakeAtaruId
   )
 }
 

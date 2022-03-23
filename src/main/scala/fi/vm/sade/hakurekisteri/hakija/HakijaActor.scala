@@ -489,7 +489,7 @@ class HakijaActor(
 
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     hakupalvelu
-      .getHakijat(q)
+      .getHakijatByQuery(q)
       .flatMap(enrichHakijat)
       .flatMap(combine2sijoittelunTulos(q.user))
       .flatMap(filterHakijatHakutoiveetByQuery(q))
