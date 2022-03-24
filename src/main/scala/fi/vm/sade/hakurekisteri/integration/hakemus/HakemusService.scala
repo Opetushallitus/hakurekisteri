@@ -522,12 +522,6 @@ class HakemusService(
     }
     allPages(None, Future.successful(List.empty))
   }
-// modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
-//    refreshFrequency: FiniteDuration = 1.minute
-//  )(implicit scheduler: Scheduler): Unit = {
-//    scheduler.scheduleOnce(refreshFrequency)({
-//      val lastChecked = new Date()
-//      val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
 
   private def ataruhakemuksetToinenAste(
     params: AtaruSearchParams,

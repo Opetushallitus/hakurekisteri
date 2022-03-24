@@ -754,7 +754,7 @@ object AkkaHakupalvelu {
               new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))
             )
             .getOrElse(""),
-          markkinointilupa = Some(hakemus.markkinointilupa),
+          markkinointilupa = Some(hakemus.koulutusmarkkinointilupa),
           kiinnostunutoppisopimuksesta = None,
           huoltajannimi = hakemus.huoltajat
             .filter(h => h.nimi.isDefined)
@@ -797,7 +797,7 @@ object AkkaHakupalvelu {
         Hakemus(
           hakutoiveet = hakutoiveetHarkinnanvaraisuuksilla,
           hakemusnumero = hakemus.oid,
-          julkaisulupa = hakemus.julkaisulupa,
+          julkaisulupa = hakemus.valintatuloksenJulkaisulupa,
           hakuOid = haku.oid,
           lisapistekoulutus = lpk,
           liitteet = Seq.empty,
@@ -987,21 +987,6 @@ object AkkaHakupalvelu {
         )
       )
     case hakemus: AtaruHakemus =>
-      //fixme, lisäpistekoulutukset ja pohjakoulutus koostepalvelun proxysuoritukset-rajapinnan kautta
-      val lpk = None
-      val kesa: MonthDay = new MonthDay(6, 4)
-      //voi olla vaarallista, think me through. Ehkä koostepalvelun kannattaa palauttaa tämä tieto jotenkin.
-      val myontaja: String = viimeisinOpiskelutieto.map(o => o.oppilaitosOid).getOrElse("")
-      val pohjakoulutus: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
-      val todistusVuosi: Option[String] = Some("2025") //fixme
-      val valmistuminen = todistusVuosi
-        .flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption)
-        .getOrElse(Suoritus.realValmistuminenNotKnownLocalDate)
-      //val kieli: String = hakemus.aidinkieli
-      val kieli = "FI"
-      val opetuskieli: Option[String] =
-        koosteData.flatMap(_.get("perusopetuksen_kieli")) //fixme, tuskin toimii
-      val suorittaja: String = hakemus.personOid.getOrElse("")
       Hakija(
         Henkilo(
           lahiosoite = hakemus.lahiosoite,
@@ -1055,22 +1040,15 @@ object AkkaHakupalvelu {
           liitteet = Seq.empty,
           muukoulutus = None
         ),
-        getSuoritus(
-          pohjakoulutus,
-          myontaja,
-          valmistuminen,
-          suorittaja,
-          kieli,
-          hakemus.personOid
-        ).toSeq,
-        if (viimeisinOpiskelutieto.nonEmpty) Seq(viimeisinOpiskelutieto.get) else Seq.empty,
+        Seq.empty,
+        Seq.empty,
         Hakemus(
           hakutoiveet =
             hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
           hakemusnumero = hakemus.oid,
           julkaisulupa = hakemus.julkaisulupa,
           hakuOid = hakemus.applicationSystemId,
-          lisapistekoulutus = lpk,
+          lisapistekoulutus = None,
           liitteet = Seq.empty,
           osaaminen = Osaaminen(
             yleinen_kielitutkinto_fi = None,
@@ -1084,119 +1062,8 @@ object AkkaHakupalvelu {
           )
         )
       )
-    case hakemus: AtaruHakemusToinenAste =>
-      System.out.println(s"Handling new hakemus: $hakemus")
-      //fixme, lisäpistekoulutukset ja pohjakoulutus koostepalvelun proxysuoritukset-rajapinnan kautta
-      val lpk = None
-      val kesa: MonthDay = new MonthDay(6, 4)
-      //voi olla vaarallista, think me through. Ehkä koostepalvelun kannattaa palauttaa tämä tieto jotenkin.
-      val myontaja: String = viimeisinOpiskelutieto.map(o => o.oppilaitosOid).getOrElse("")
-      //val pohjakoulutusKooste: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
-      val pohjakoulutusKooste = koosteData.flatMap(kd => kd.get("POHJAKOULUTUS"))
-      val pohjakoulutusHakemus =
-        if (hakemus.pohjakoulutus.nonEmpty) Some(hakemus.pohjakoulutus) else None
-      if (pohjakoulutusKooste.isEmpty) {
-        println(
-          s"Hakemukselle ${hakemus.oid} pohjakoulutus koostepalvelussa $pohjakoulutusKooste, hakemuksella $pohjakoulutusHakemus, koosteData $koosteData"
-        )
-      }
-      val pohjakoulutus: Option[String] = (pohjakoulutusKooste, pohjakoulutusHakemus) match {
-        case (Some(kooste), _)     => pohjakoulutusKooste
-        case (None, Some(hakemus)) => pohjakoulutusHakemus
-        case _                     => None
-      }
-      val todistusVuosi: Option[String] = Some("2025") //fixme
-      val valmistuminen = todistusVuosi
-        .flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption)
-        .getOrElse(Suoritus.realValmistuminenNotKnownLocalDate)
-      //val kieli: String = hakemus.aidinkieli
-      val kieli = "FI"
-      val opetuskieli: Option[String] =
-        koosteData.flatMap(_.get("perusopetuksen_kieli")) //fixme, tuskin toimii
-      val suorittaja: String = hakemus.personOid.getOrElse("")
-      Hakija(
-        Henkilo(
-          lahiosoite = hakemus.lahiosoite,
-          postinumero = hakemus.postinumero,
-          maa = maakoodit.getOrElse(hakemus.asuinmaa, "FIN"),
-          postitoimipaikka = hakemus.postitoimipaikka.getOrElse(""),
-          matkapuhelin = hakemus.matkapuhelin,
-          puhelin = "",
-          sahkoposti = hakemus.email,
-          kotikunta = hakemus.kotikunta.getOrElse("999"),
-          sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
-          etunimet = hakemus.henkilo.etunimet.getOrElse(""),
-          kutsumanimi = hakemus.henkilo.kutsumanimi.getOrElse(""),
-          turvakielto = hakemus.henkilo.turvakielto.toString,
-          oppijanumero = hakemus.henkilo.oidHenkilo,
-          kansalaisuus = Some(
-            hakemus.henkilo.kansalaisuus.headOption
-              .flatMap(k => maakoodit.get(k.kansalaisuusKoodi))
-              .getOrElse("FIN")
-          ),
-          kaksoiskansalaisuus = None,
-          kansalaisuudet =
-            Some(hakemus.henkilo.kansalaisuus.flatMap(k => maakoodit.get(k.kansalaisuusKoodi))),
-          asiointiKieli = hakemus.asiointiKieli.toUpperCase,
-          aidinkieli = hakemus.henkilo.aidinkieli.map(_.kieliKoodi.toUpperCase).getOrElse("99"),
-          opetuskieli = "",
-          eiSuomalaistaHetua = hakemus.henkilo.hetu.isEmpty,
-          sukupuoli = hakemus.henkilo.sukupuoli.getOrElse(""),
-          hetu = hakemus.henkilo.hetu.getOrElse(""),
-          syntymaaika = hakemus.henkilo.syntymaaika
-            .map(s =>
-              new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))
-            )
-            .getOrElse(""),
-          markkinointilupa = Some(hakemus.markkinointilupa),
-          kiinnostunutoppisopimuksesta = None,
-          huoltajannimi = "",
-          huoltajanpuhelinnumero = "",
-          huoltajansahkoposti = "",
-          oppivelvollisuusVoimassaAsti = getOppivelvollisuusTieto(
-            _.oppivelvollisuusVoimassaAsti,
-            h.personOid,
-            oppivelvollisuusTiedot
-          ),
-          oikeusMaksuttomaanKoulutukseenVoimassaAsti = getOppivelvollisuusTieto(
-            _.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
-            h.personOid,
-            oppivelvollisuusTiedot
-          ),
-          lisakysymykset = Seq.empty,
-          liitteet = Seq.empty,
-          muukoulutus = None
-        ),
-        getSuoritus(
-          pohjakoulutus,
-          myontaja,
-          valmistuminen,
-          suorittaja,
-          kieli,
-          hakemus.personOid
-        ).toSeq,
-        viimeisinOpiskelutieto.map(tieto => Seq(tieto)).getOrElse(Seq.empty),
-        Hakemus(
-          hakutoiveet =
-            hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
-          hakemusnumero = hakemus.oid,
-          julkaisulupa = hakemus.julkaisulupa,
-          hakuOid = haku.oid,
-          lisapistekoulutus = lpk,
-          liitteet = Seq.empty,
-          osaaminen = Osaaminen(
-            yleinen_kielitutkinto_fi = None,
-            valtionhallinnon_kielitutkinto_fi = None,
-            yleinen_kielitutkinto_sv = None,
-            valtionhallinnon_kielitutkinto_sv = None,
-            yleinen_kielitutkinto_en = None,
-            valtionhallinnon_kielitutkinto_en = None,
-            yleinen_kielitutkinto_se = None,
-            valtionhallinnon_kielitutkinto_se = None
-          )
-        )
-      )
-
+    case _ =>
+      ??? //Atarusta haetut toisen asteen hakemukset käsitellään toisaalla, kts AtaruHakemusToinenAste
   }
 
   def getSuoritus(
@@ -1310,6 +1177,7 @@ object AkkaHakupalvelu {
 
   def convertHarkinnanvaraisuudenSyy(syy: String): String = {
     syy match {
+      case "EI_HARKINNANVARAINEN"                                   => ""
       case "ATARU_OPPIMISVAIKEUDET"                                 => "1"
       case "ATARU_SOSIAALISET_SYYT"                                 => "2"
       case "ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET"               => "3"
@@ -1317,7 +1185,9 @@ object AkkaHakupalvelu {
       case "ATARU_RIITTAMATON_TUTKINTOKIELEN_TAITO"                 => "5"
       case "SURE_YKS_MAT_AI" | "ATARU_YKS_MAT_AI"                   => "6"
       case "ATARU_ULKOMAILLA_OPISKELTU"                             => "7"
-      case _                                                        => "666"
+      case _ =>
+        System.out.println(s"No mapping found for $syy")
+        "666"
     }
   }
 
@@ -1748,12 +1618,6 @@ case class AtaruHakemus(
   val stateValid: Boolean = true
 }
 
-/*
-case class HakukohteenHarkinnanvaraisuus(
-  oid: String,
-  harkinnanvaraisuus: String)
- */
-
 case class HakutoiveenHarkinnanvaraisuus(hakukohdeOid: String, harkinnanvaraisuudenSyy: String)
 case class HakemuksenHarkinnanvaraisuus(
   hakemusOid: String,
@@ -1792,8 +1656,6 @@ case class AtaruHakemusToinenAste(
   postitoimipaikka: Option[String],
   kotikunta: Option[String],
   asuinmaa: String,
-  julkaisulupa: Boolean = false,
-  markkinointilupa: Boolean = false,
   attachments: Map[String, String],
   pohjakoulutus: String,
   kiinnostunutOppisopimusKoulutuksesta: Option[Boolean],
