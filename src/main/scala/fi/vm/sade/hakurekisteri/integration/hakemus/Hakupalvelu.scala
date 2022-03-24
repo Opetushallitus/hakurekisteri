@@ -755,7 +755,7 @@ object AkkaHakupalvelu {
             )
             .getOrElse(""),
           markkinointilupa = Some(hakemus.koulutusmarkkinointilupa),
-          kiinnostunutoppisopimuksesta = None,
+          kiinnostunutoppisopimuksesta = hakemus.kiinnostunutOppisopimusKoulutuksesta,
           huoltajannimi = hakemus.huoltajat
             .filter(h => h.nimi.isDefined)
             .map(h => h.nimi.get)
