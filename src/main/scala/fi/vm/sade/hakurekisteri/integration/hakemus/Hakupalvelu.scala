@@ -1177,17 +1177,16 @@ object AkkaHakupalvelu {
 
   def convertHarkinnanvaraisuudenSyy(syy: String): String = {
     syy match {
-      case "EI_HARKINNANVARAINEN"                                   => ""
-      case "ATARU_OPPIMISVAIKEUDET"                                 => "1"
-      case "ATARU_SOSIAALISET_SYYT"                                 => "2"
-      case "ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET"               => "3"
-      case "SURE_EI_PAATTOTODISTUSTA" | "ATARU_EI_PAATTOTODISTUSTA" => "4"
-      case "ATARU_RIITTAMATON_TUTKINTOKIELEN_TAITO"                 => "5"
-      case "SURE_YKS_MAT_AI" | "ATARU_YKS_MAT_AI"                   => "6"
-      case "ATARU_ULKOMAILLA_OPISKELTU"                             => "7"
+      case "EI_HARKINNANVARAINEN"                                                    => ""
+      case "ATARU_OPPIMISVAIKEUDET"                                                  => "1"
+      case "ATARU_SOSIAALISET_SYYT"                                                  => "2"
+      case "ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET" | "ATARU_ULKOMAILLA_OPISKELTU" => "3"
+      case "SURE_EI_PAATTOTODISTUSTA" | "ATARU_EI_PAATTOTODISTUSTA"                  => "4"
+      case "ATARU_RIITTAMATON_TUTKINTOKIELEN_TAITO"                                  => "5"
+      case "SURE_YKS_MAT_AI" | "ATARU_YKS_MAT_AI"                                    => "6"
       case _ =>
         System.out.println(s"No mapping found for $syy")
-        "666"
+        "999"
     }
   }
 

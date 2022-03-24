@@ -286,11 +286,11 @@ class HakemusService(
               None,
               tarjoaja.map(_._1),
               tarjoaja.map(_._2).getOrElse(Set.empty),
-              hakutoive.kiinnostunutKaksoistutkinnosta.map(v => if (v) "Kyllä" else "Ei"),
-              hakutoive.aiempiPeruminen.map(v => if (v) "Kyllä" else "Ei"),
-              hakutoive.terveys.map(v => if (v) "Kyllä" else "Ei"),
+              hakutoive.kiinnostunutKaksoistutkinnosta.map(v => if (v) "true" else "false"),
+              hakutoive.aiempiPeruminen.map(v => if (v) "true" else "false"),
+              hakutoive.terveys.map(v => if (v) "true" else "false"),
               hakutoive.kiinnostunutUrheilijanAmmatillisestaKoulutuksesta.map(v =>
-                if (v) "Kyllä" else "Ei"
+                if (v) "true" else "false"
               ),
               None //discretionaryFollowUp Mikä tämä on, tarvitaanko?
             )
