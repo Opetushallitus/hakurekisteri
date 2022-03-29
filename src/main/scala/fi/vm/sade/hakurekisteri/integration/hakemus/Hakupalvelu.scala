@@ -226,9 +226,9 @@ class AkkaHakupalvelu(
             getUusinOpiskelijatietoForOpiskelijas(personOids)
         } yield hakemukset
           .map { hakemus =>
-            val koosteData: Option[Map[String, String]] =
-              hakijaSuorituksetMap.get(hakemus.personOid.get)
-            if (koosteData.isDefined) { logger.info(s"${hakemus.oid} koostedData: $koosteData") }
+            val koosteData: Map[String, String] =
+              hakijaSuorituksetMap.getOrElse(hakemus.personOid.get, Map.empty)
+            if (koosteData.nonEmpty) { logger.info(s"${hakemus.oid} koostedData: $koosteData") }
             else {
               logger.info(
                 s"ei koostedataa hakemukselle ${hakemus.oid}. Kaikki koosteData: $hakijaSuorituksetMap"
@@ -282,8 +282,8 @@ class AkkaHakupalvelu(
               hakemukset.map(h => h.personOid.get)
             )
           } yield {
-            val koosteData: Option[Map[String, String]] =
-              hakijaSuorituksetMap.get(hakemus.personOid.get)
+            val koosteData: Map[String, String] =
+              hakijaSuorituksetMap.getOrElse(hakemus.personOid.get, Map.empty)
             logger.info(s"KoosteData for hakija ${hakemus.personOid.get}: $koosteData")
             AkkaHakupalvelu.getToisenAsteenAtaruHakija(
               hakemus,
@@ -495,6 +495,21 @@ object AkkaHakupalvelu {
     }
   }
 
+  private def getLisapisteKoulutus(koosteData: Map[String, String]): Option[String] = {
+    val lisapisteKoulutukset = List(
+      "LISAKOULUTUS_KYMPPI",
+      "LISAKOULUTUS_VAMMAISTEN",
+      "LISAKOULUTUS_TALOUS",
+      "LISAKOULUTUS_AMMATTISTARTTI",
+      "LISAKOULUTUS_KANSANOPISTO",
+      "LISAKOULUTUS_MAAHANMUUTTO",
+      "LISAKOULUTUS_MAAHANMUUTTO_LUKIO",
+      "LISAKOULUTUS_VALMA",
+      "LISAKOULUTUS_OPISTOVUOSI"
+    )
+    lisapisteKoulutukset.find(lpk => koosteData.getOrElse(lpk, "false").equals("true"))
+  }
+
   def kaydytLisapisteKoulutukset(tausta: Koulutustausta): scala.Iterable[String] = {
     def checkKoulutus(lisakoulutus: Option[String]): Boolean = {
       Try(lisakoulutus.getOrElse("false").toBoolean).getOrElse(false)
@@ -669,30 +684,27 @@ object AkkaHakupalvelu {
     haku: Haku,
     lisakysymykset: Map[String, ThemeQuestion],
     hakukohdeOid: Option[String],
-    koosteData: Option[Map[String, String]],
+    hakijanKoosteData: Map[String, String],
     maakoodit: Map[String, String],
     oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto],
     viimeisinOpiskelutieto: Option[Opiskelija],
     harkinnanvaraisuus: HakemuksenHarkinnanvaraisuus
   ): Hakija = h match {
     case hakemus: AtaruHakemusToinenAste =>
-      System.out.println(s"Handling new hakemus: $hakemus")
-      //fixme, lisäpistekoulutukset ja pohjakoulutus koostepalvelun proxysuoritukset-rajapinnan kautta
-      val lpk = None
+      val lisapistekoulutus: Option[String] = getLisapisteKoulutus(hakijanKoosteData)
+      if (hakijanKoosteData.isEmpty) {
+        println(s"WARN Ei koostedataa hakemukselle ${hakemus.oid}")
+      }
       val kesa: MonthDay = new MonthDay(6, 4)
       //voi olla vaarallista, think me through. Ehkä koostepalvelun kannattaa palauttaa tämä tieto jotenkin.
       val myontaja: String = viimeisinOpiskelutieto.map(o => o.oppilaitosOid).getOrElse("")
       //val pohjakoulutusKooste: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
-      val pohjakoulutusKooste = koosteData.getOrElse(Map.empty).get("POHJAKOULUTUS")
+      val pohjakoulutusKooste = hakijanKoosteData.get("POHJAKOULUTUS")
       val pohjakoulutusHakemus =
         if (hakemus.pohjakoulutus.nonEmpty) Some(hakemus.pohjakoulutus) else None
       if (pohjakoulutusKooste.isEmpty) {
         println(
-          s"Hakemukselle ${hakemus.oid} pohjakoulutus koostepalvelussa $pohjakoulutusKooste, hakemuksella $pohjakoulutusHakemus, koosteData $koosteData"
-        )
-      } else {
-        println(
-          s"Hakemukselle ${hakemus.oid} löytyi pohjakoulutus koostepalvelussa $pohjakoulutusKooste, hakemuksella $pohjakoulutusHakemus, koosteData $koosteData"
+          s"Käytetään hakemukselle ${hakemus.oid} hakemuksen pohjakoulutusta $pohjakoulutusHakemus, koska koostepalvelusta ei löytynyt"
         )
       }
       val pohjakoulutus: Option[String] = (pohjakoulutusKooste, pohjakoulutusHakemus) match {
@@ -707,7 +719,7 @@ object AkkaHakupalvelu {
       //val kieli: String = hakemus.aidinkieli
       val kieli = "FI"
       val opetuskieli: Option[String] =
-        koosteData.flatMap(_.get("perusopetuksen_kieli")) //fixme, tuskin toimii
+        hakijanKoosteData.get("perusopetuksen_kieli")
       val suorittaja: String = hakemus.personOid.getOrElse("")
       val hakutoiveet: Seq[Hakutoive] =
         hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty)
@@ -719,7 +731,6 @@ object AkkaHakupalvelu {
               .map(hht => convertHarkinnanvaraisuudenSyy(hht.harkinnanvaraisuudenSyy))
           )
         )
-      System.out.println(s"Huoltajatiedot hakemukselle ${hakemus.oid} : ${hakemus.huoltajat}")
       Hakija(
         Henkilo(
           lahiosoite = hakemus.lahiosoite,
@@ -799,7 +810,7 @@ object AkkaHakupalvelu {
           hakemusnumero = hakemus.oid,
           julkaisulupa = hakemus.valintatuloksenJulkaisulupa,
           hakuOid = haku.oid,
-          lisapistekoulutus = lpk,
+          lisapistekoulutus = lisapistekoulutus,
           liitteet = Seq.empty,
           osaaminen = Osaaminen(
             yleinen_kielitutkinto_fi = None,
