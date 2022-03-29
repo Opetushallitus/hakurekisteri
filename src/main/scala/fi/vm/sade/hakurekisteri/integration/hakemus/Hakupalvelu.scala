@@ -217,7 +217,10 @@ class AkkaHakupalvelu(
             .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio)
           harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
             .getHarkinnanvaraisuudet(hakemukset)
-          hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
+          hakijaSuorituksetMap <- koosteService.getSuorituksetForAtaruhakemukset(
+            hakuOid,
+            hakemukset
+          )
           maakoodit <- maatjavaltiot2To1(hakemukset)
           oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
           lisakysymykset = getLisakysymyksetForAtaruHaku(haku.kohdejoukkoUri)

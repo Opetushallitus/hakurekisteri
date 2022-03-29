@@ -14,6 +14,10 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import scala.concurrent.Future
 
 trait IKoosteService {
+  def getSuorituksetForAtaruhakemukset(
+    hakuOid: String,
+    hs: Seq[HakijaHakemus]
+  ): Future[Map[String, Map[String, String]]]
   def getSuoritukset(
     hakuOid: String,
     hakemukset: Seq[HakijaHakemus]
@@ -58,6 +62,27 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
     }
   }
 
+  def getSuorituksetForAtaruhakemukset(
+    hakuOid: String,
+    hs: Seq[HakijaHakemus]
+  ): Future[Map[String, Map[String, String]]] = {
+
+    val hakemusOids = hs.map(hh => hh.oid).toList
+    logger.info(
+      s"Getting atarusuoritukset from koostepalvelu for ataruhakemukset: ${hakemusOids}"
+    )
+    if (hakemusOids.nonEmpty) {
+      restClient.postObject[List[String], Map[String, Map[String, String]]](
+        "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
+        hakuOid
+      )(200, hakemusOids)
+    } else {
+      logger.info(s"No ataruhakemukses found!")
+      Future.successful(Map.empty)
+    }
+
+  }
+
   def getSuoritukset(
     hakuOid: String,
     hs: Seq[HakijaHakemus]
@@ -76,10 +101,14 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
       logger.info(
         s"Getting atarusuoritukset from koostepalvelu for ataruhakemukset: ${hakemusOids}"
       )
-      restClient.postObject[List[String], Map[String, Map[String, String]]](
-        "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
-        hakuOid
-      )(200, hakemusOids)
+      if (hakemusOids.nonEmpty) {
+        restClient.postObject[List[String], Map[String, Map[String, String]]](
+          "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
+          hakuOid
+        )(200, hakemusOids)
+      } else {
+        Future.successful(Map.empty)
+      }
     }
   }
 
@@ -96,4 +125,10 @@ class KoosteServiceMock extends IKoosteService {
   override def getHarkinnanvaraisuudet(
     hs: Seq[HakijaHakemus]
   ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = Future.successful(Seq.empty)
+
+  override def getSuorituksetForAtaruhakemukset(
+    hakuOid: String,
+    hakemukset: Seq[HakijaHakemus]
+  ): Future[Map[String, Map[String, String]]] =
+    Future.successful(Map[String, Map[String, String]]())
 }
