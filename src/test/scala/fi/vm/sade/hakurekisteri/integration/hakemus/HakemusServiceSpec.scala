@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   MockOppijaNumeroRekisteri,
   PersonOidsWithAliases
 }
+import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import org.mockito.Mockito._
@@ -38,6 +39,9 @@ class HakemusServiceSpec
   val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
     system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
   )
+  val koutaInternalMock = new KoutaInternalActorRef(
+    system.actorOf(Props(new MockedKoutaInternalActor()))
+  )
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
@@ -45,6 +49,7 @@ class HakemusServiceSpec
     hakuappClient,
     ataruClient,
     hakukohdeAggregatorMock,
+    koutaInternalMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
     Config.mockDevConfig,

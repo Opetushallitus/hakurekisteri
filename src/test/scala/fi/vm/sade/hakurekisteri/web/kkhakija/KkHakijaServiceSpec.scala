@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.{
 }
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohteenKoulutukset,
@@ -66,6 +67,10 @@ class KkHakijaServiceSpec
   private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
     system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
   )
+  private val koutaInternalMock = new KoutaInternalActorRef(
+    system.actorOf(Props(new MockedKoutaInternalActor()))
+  )
+
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
@@ -73,6 +78,7 @@ class KkHakijaServiceSpec
     hakuappClient,
     ataruClient,
     hakukohdeAggregatorMock,
+    koutaInternalMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
     Config.mockDevConfig,

@@ -198,6 +198,12 @@ class ValpasSpec
         )
       )
 
+      val mockInternal = new KoutaInternalActorRef(
+        system.actorOf(
+          Props(new MockKoutaInternalActor(koodisto, Config.mockDevConfig))
+        )
+      )
+
       val cacheFactory = mock[CacheFactory]
       val redisCache = mock[RedisCache[String, String]]
       Mockito.when(redisCache.get(anyString())).thenReturn(Future.successful(None))
@@ -210,6 +216,7 @@ class ValpasSpec
         hakuAppClient,
         ataruClient,
         mockAggregator,
+        mockInternal,
         OrganisaatioActorRef(
           system.actorOf(
             Props(

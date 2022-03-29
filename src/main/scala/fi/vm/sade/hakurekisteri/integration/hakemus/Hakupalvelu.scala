@@ -247,57 +247,7 @@ class AkkaHakupalvelu(
             )
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
-        for {
-          hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
-          hakukohteittain <- Future.sequence(
-            hakukohdeOids.map(
-              hakemusService.hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
-                hakuOid.get,
-                _,
-                organisaatio
-              )
-            )
-          )
-          harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
-            .getHarkinnanvaraisuudet(hakukohteittain.flatten)
-          hauittain = hakukohdeOids
-            .zip(hakukohteittain)
-            .groupBy(_._2.headOption.map(_.applicationSystemId))
-          hakijat <- Future.sequence(for {
-            (hakuOid, hakukohteet) <- hauittain
-            lisakysymykset = getLisakysymyksetForAtaruHaku(haku.kohdejoukkoUri)
-            (hakukohdeOid, hakemukset) <- hakukohteet
-            maakooditF = maatjavaltiot2To1(hakemukset)
-            suorituksetByOppija = koosteService.getSuoritukset(
-              hakuOid.get,
-              hakemukset.filter(_.stateValid)
-            )
-            hakemus <- hakemukset if hakemus.stateValid
-          } yield for {
-            hakijaSuorituksetMap <- suorituksetByOppija
-            //lisakysymykset <- lisakysymykset
-            maakoodit <- maakooditF
-            oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
-            opiskelutiedot: Map[String, Opiskelija] <- getUusinOpiskelijatietoForOpiskelijas(
-              hakemukset.map(h => h.personOid.get)
-            )
-          } yield {
-            val koosteData: Map[String, String] =
-              hakijaSuorituksetMap.getOrElse(hakemus.personOid.get, Map.empty)
-            logger.info(s"KoosteData for hakija ${hakemus.personOid.get}: $koosteData")
-            AkkaHakupalvelu.getToisenAsteenAtaruHakija(
-              hakemus,
-              haku,
-              lisakysymykset,
-              hakukohdekoodi.map(_ => hakukohdeOid),
-              koosteData,
-              maakoodit,
-              oppivelvollisuusTiedot,
-              opiskelutiedot.get(hakemus.personOid.get),
-              harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head
-            )
-          })
-        } yield hakijat.toSeq
+        throw new RuntimeException("Hakukohdekoodi ei ole tuettu parametri kouta-hauilla.")
     }
   }
 
@@ -707,11 +657,8 @@ object AkkaHakupalvelu {
           s"Käytetään hakemukselle ${hakemus.oid} hakemuksen pohjakoulutusta $pohjakoulutusHakemus, koska koostepalvelusta ei löytynyt"
         )
       }
-      val pohjakoulutus: Option[String] = (pohjakoulutusKooste, pohjakoulutusHakemus) match {
-        case (Some(kooste), _)     => pohjakoulutusKooste
-        case (None, Some(hakemus)) => pohjakoulutusHakemus
-        case _                     => None
-      }
+      val pohjakoulutus =
+        if (pohjakoulutusKooste.isDefined) pohjakoulutusKooste else pohjakoulutusHakemus
       val todistusVuosi: Option[String] = Some("2025") //fixme
       val valmistuminen = todistusVuosi
         .flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption)

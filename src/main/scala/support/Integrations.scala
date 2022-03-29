@@ -389,6 +389,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     hakemusClient,
     ataruHakemusClient,
     hakukohdeAggregator,
+    koutaInternal,
     organisaatiot,
     oppijaNumeroRekisteri,
     config,

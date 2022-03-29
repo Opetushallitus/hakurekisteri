@@ -10,13 +10,18 @@ import fi.vm.sade.hakurekisteri.integration.cache.{CacheFactory, RedisCache}
 import fi.vm.sade.hakurekisteri.integration.hakukohde.{
   Hakukohde,
   HakukohdeAggregatorActorRef,
-  HakukohdeQuery
+  HakukohdeQuery,
+  HakukohteenKoulutuksetQuery
 }
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   IOppijaNumeroRekisteri,
   LinkedHenkiloOids,
   PersonOidsWithAliases
+}
+import fi.vm.sade.hakurekisteri.integration.kouta.{
+  KoutaInternalActorRef,
+  OrganisaationHakukohteetHaussaQuery
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
@@ -165,6 +170,7 @@ class HakemusService(
   hakuappRestClient: VirkailijaRestClient,
   ataruHakemusClient: VirkailijaRestClient,
   hakukohdeAggregatorActor: HakukohdeAggregatorActorRef,
+  koutaInternalActor: KoutaInternalActorRef,
   organisaatioActor: OrganisaatioActorRef,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
   config: Config,
@@ -527,12 +533,16 @@ class HakemusService(
     params: AtaruSearchParams,
     skipResolvingTarjoaja: Boolean = false
   ): Future[List[AtaruHakemusToinenAste]] = {
-    if (params.hakuOid.isEmpty) {
-      throw new Exception("HakuOid on pakollinen parametri toisen asteen ataruhakemusten haussa!")
+    logger.info(s"Haetaan toisen asteen ataruhakemukset: $params")
+    if (
+      params.hakuOid.isEmpty || (params.hakukohdeOids
+        .getOrElse(List.empty)
+        .isEmpty && params.hakijaOids.getOrElse(List.empty).isEmpty)
+    ) {
+      throw new Exception(
+        "HakuOid ja organisaatioOid ovat pakollisia parametreja toisen asteen ataruhakemusten haussa!"
+      )
     }
-    val modifiedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(
-      new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(10))
-    )
     val p: Map[String, Any] =
       params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
         Map("hakukohdeOids" -> hakukohdeOids)
@@ -801,13 +811,23 @@ class HakemusService(
     hakuOid: String,
     organisaatio: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
-    ataruhakemuksetToinenAste(
-      AtaruSearchParams(
-        hakijaOids = None,
-        hakukohdeOids = None,
-        hakuOid = Some(hakuOid),
-        organizationOid = organisaatio,
-        modifiedAfter = None
+    if (organisaatio.isEmpty) {
+      logger.warning(
+        s"Ollaan hakemassa atarusta toisen asteen hakemuksia, mutta organisaatiota ei ole määritelty. Tämä on luultavasti huono idea ja kannattaa mahdollisesti estää."
+      )
+    }
+    val hakukohteet: Future[Set[String]] =
+      (koutaInternalActor.actor ? OrganisaationHakukohteetHaussaQuery(hakuOid, organisaatio.get))
+        .mapTo[Set[String]]
+    hakukohteet.flatMap(hks =>
+      ataruhakemuksetToinenAste(
+        AtaruSearchParams(
+          hakijaOids = None,
+          hakukohdeOids = Some(hks.toList),
+          hakuOid = Some(hakuOid),
+          organizationOid = organisaatio,
+          modifiedAfter = None
+        )
       )
     )
   }
