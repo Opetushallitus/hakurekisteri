@@ -256,12 +256,6 @@ class AkkaHakupalvelu(
           .map { hakemus =>
             val koosteData: Map[String, String] =
               hakijaSuorituksetMap.getOrElse(hakemus.personOid.get, Map.empty)
-            if (koosteData.nonEmpty) { logger.info(s"${hakemus.oid} koostedData: $koosteData") }
-            else {
-              logger.info(
-                s"ei koostedataa hakemukselle ${hakemus.oid}. Kaikki koosteData: $hakijaSuorituksetMap"
-              )
-            }
             AkkaHakupalvelu.getToisenAsteenAtaruHakija(
               hakemus,
               haku,
