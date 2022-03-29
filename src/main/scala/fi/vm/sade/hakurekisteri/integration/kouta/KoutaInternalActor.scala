@@ -223,7 +223,7 @@ class KoutaInternalActor(
     .readObject[KoutaInternalRestHaku]("kouta-internal.haku", hakuOid)(200)
 
   private def findTarjoajanHakukohteet(hakuOid: String, organisaatioOid: String) = restClient
-    .readObject[List[KoutaInternalHakukohde]](
+    .readObject[List[KoutaInternalHakukohdeLite]](
       "kouta-internal.tarjoajanhakukohteethaussa",
       hakuOid,
       organisaatioOid
@@ -310,6 +310,9 @@ case class KoutaInternalRestHaku(
 }
 
 case class KoutaInternalKoulutus(oid: String, koulutusKoodiUrit: Set[String])
+
+//Kouta-internal saattaa palauttaa joitakin hakukohteita, jotka eivät parsiudu KoutaInternalHakukohteiksi esim. puuttuvan tarjoajan tai toteutusOidin takia. Jos vain oid kiinnostaa, tämä toimii silti.
+case class KoutaInternalHakukohdeLite(oid: String)
 
 case class KoutaInternalHakukohde(
   oid: String,
