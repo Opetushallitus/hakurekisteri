@@ -433,18 +433,6 @@ object AkkaHakupalvelu {
       if (vuosiKoosteDatasta.isDefined) vuosiKoosteDatasta else vastaukset.PK_PAATTOTODISTUSVUOSI
   }
 
-  //fixme
-  def lisapistekoulutusFromSuoritukset(suoritukset: Seq[VirallinenSuoritus]): Option[String] = {
-    //todo katso myös valmistumisen vuosi: tämän ja viime vuoden suoritukset huomioidaan?
-    suoritukset.filter(s => "VALMIS".equals(s.tila)).map(s => s.komo) match {
-      case s if s.contains(Oids.lisaopetusKomoOid)        => Some("LISAKOULUTUS_KYMPPI")
-      case s if s.contains(Oids.valmaKomoOid)             => Some("LISAKOULUTUS_VALMA")
-      case s if s.contains(Oids.opistovuosiKomoOid)       => Some("LISAKOULUTUS_OPISTOVUOSI")
-      case s if s.contains(Oids.lukioonvalmistavaKomoOid) => Some("LISAKOULUTUS_MAAHANMUUTTO_LUKIO")
-      case _                                              => None
-    }
-  }
-
   private def getLisapisteKoulutus(koosteData: Map[String, String]): Option[String] = {
     val lisapisteKoulutukset = List(
       "LISAKOULUTUS_KYMPPI",
