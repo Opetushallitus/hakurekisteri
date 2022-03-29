@@ -365,6 +365,7 @@ class AkkaHakupalvelu(
     if (q.haku.isEmpty) {
       throw new RuntimeException("Haku is not defined!")
     }
+    logger.info(s"Hakijat requested: ${q.copy(user = None)}")
     (hakuActor ? GetHaku(q.haku.get))
       .mapTo[Haku]
       .flatMap {
