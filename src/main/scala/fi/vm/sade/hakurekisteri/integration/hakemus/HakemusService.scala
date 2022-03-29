@@ -138,7 +138,7 @@ trait IHakemusService {
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String]
-  ): Future[Seq[HakijaHakemus]]
+  ): Future[Seq[AtaruHakemusToinenAste]]
   def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
     hakuOid: String,
     hakukohdeOid: String,
@@ -1088,7 +1088,7 @@ class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String]
-  ): Future[Seq[HakijaHakemus]] = {
+  ): Future[Seq[AtaruHakemusToinenAste]] = {
     Future.successful(Seq[AtaruHakemusToinenAste]())
   }
 

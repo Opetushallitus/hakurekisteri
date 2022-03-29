@@ -186,6 +186,31 @@ class AkkaHakupalvelu(
       .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
+  private def maatjavaltiot2To1AtaruToinenAste(
+    hakemukset: Seq[AtaruHakemusToinenAste]
+  ): Future[Map[String, String]] = {
+    Future
+      .sequence(
+        hakemukset
+          .collect({ case h: AtaruHakemusToinenAste => h })
+          .flatMap(h => h.asuinmaa :: h.henkilo.kansalaisuus.map(_.kansalaisuusKoodi))
+          .distinct
+          .map({
+            case "246" => Future.successful("246" -> "FIN")
+            case "736" => Future.successful("736" -> "XXX")
+            case "810" => Future.successful("810" -> "XXX")
+            case "891" => Future.successful("891" -> "XXX")
+            case koodi =>
+              (koodisto.actor ? GetRinnasteinenKoodiArvoQuery(
+                "maatjavaltiot2",
+                koodi,
+                "maatjavaltiot1"
+              )).mapTo[String].map(koodi -> _)
+          })
+      )
+      .map(_.toMap)
+  }
+
   private def maatjavaltiot2To1(hakemukset: Seq[HakijaHakemus]): Future[Map[String, String]] = {
     Future
       .sequence(
@@ -221,7 +246,7 @@ class AkkaHakupalvelu(
             hakuOid,
             hakemukset
           )
-          maakoodit <- maatjavaltiot2To1(hakemukset)
+          maakoodit <- maatjavaltiot2To1AtaruToinenAste(hakemukset)
           oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
           lisakysymykset = getLisakysymyksetForAtaruHaku(haku.kohdejoukkoUri)
           personOids = hakemukset.map(h => h.personOid.get)
