@@ -55,7 +55,7 @@ class KoutaInternalActor(
 
   val hakuCache = Suppliers.memoizeWithExpiration(
     () =>
-      getHaut.recoverWith { case ex =>
+      getHautForReal.recoverWith { case ex =>
         log.error(s"Failed to fetch all haut! Retrying..", ex)
         getHautForReal
       },
