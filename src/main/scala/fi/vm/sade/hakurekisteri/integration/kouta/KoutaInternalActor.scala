@@ -57,7 +57,7 @@ class KoutaInternalActor(
     () =>
       getHaut.recoverWith { case ex =>
         log.error(s"Failed to fetch all haut! Retrying..", ex)
-        getHaut
+        getHautForReal
       },
     30,
     MINUTES
