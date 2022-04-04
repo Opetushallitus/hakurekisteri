@@ -675,9 +675,9 @@ object AkkaHakupalvelu {
       val todistusVuosiLK = hakijanKoosteData.get("LK_PAATTOTODISTUSVUOSI")
 
       val todistusVuosi = (todistusVuosiPK, todistusVuosiLK) match {
-        case (Some(pk), _) => todistusVuosiPK
+        case (Some(pk), _)    => todistusVuosiPK
         case (None, Some(lk)) => todistusVuosiLK
-        case _ => hakemus.tutkintoVuosi.map(v => v.toString)
+        case _                => hakemus.tutkintoVuosi.map(v => v.toString)
       }
 
       val valmistuminen = todistusVuosi
