@@ -670,7 +670,16 @@ object AkkaHakupalvelu {
       }
       val pohjakoulutus =
         if (pohjakoulutusKooste.isDefined) pohjakoulutusKooste else pohjakoulutusHakemus
-      val todistusVuosi: Option[String] = Some("2025") //fixme
+
+      val todistusVuosiPK = hakijanKoosteData.get("PK_PAATTOTODISTUSVUOSI")
+      val todistusVuosiLK = hakijanKoosteData.get("LK_PAATTOTODISTUSVUOSI")
+
+      val todistusVuosi = (todistusVuosiPK, todistusVuosiLK) match {
+        case (Some(pk), _) => todistusVuosiPK
+        case (None, Some(lk)) => todistusVuosiLK
+        case _ => hakemus.tutkintoVuosi.map(v => v.toString)
+      }
+
       val valmistuminen = todistusVuosi
         .flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption)
         .getOrElse(Suoritus.realValmistuminenNotKnownLocalDate)
