@@ -214,7 +214,7 @@ class HakemusService(
     skipResolvingTarjoaja: Boolean = false,
     hakuOid: String
   ): Future[List[AtaruHakemusToinenAste]] = {
-    logger.info(s"enrichAtaruHakemuksetToinenAste: $ataruHakemusDtos")
+    //logger.info(s"enrichAtaruHakemuksetToinenAste: $ataruHakemusDtos")
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
       hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
         .mapTo[Hakukohde]
