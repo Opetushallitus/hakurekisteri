@@ -8,7 +8,6 @@ import java.security.SecureRandom
 import java.util.UUID
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
-
 import akka.actor.{ActorSystem, Props}
 import akka.event.Logging
 import akka.pattern.ask
@@ -20,6 +19,7 @@ import fi.vm.sade.scalaproperties.OphProperties
 import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie}
 import org.asynchttpclient._
 import org.asynchttpclient.filter.ThrottleRequestFilter
+import scala.collection.JavaConverters._
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -139,6 +139,14 @@ class VirkailijaRestClient(
 
       internalClient.client.getConfig.getCookieStore
         .remove(_.name().toLowerCase == jSessionName.toLowerCase)
+
+      val oldCookies = internalClient.client.getConfig.getCookieStore.getAll.asScala.toList
+      val csrfCookieWasSet = internalClient.client.getConfig.getCookieStore
+        .remove(_.name().toUpperCase == "CSRF")
+      if (csrfCookieWasSet) {
+        logger.warning(s"Removed CSRF cookie! Cookies before removing: $oldCookies")
+      }
+
       (user, password, basicAuth) match {
         case (Some(un), Some(pw), false) =>
           for (
