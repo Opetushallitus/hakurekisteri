@@ -2,10 +2,11 @@ package fi.vm.sade.hakurekisteri.integration.kouta
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
-
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.{AskableActorRef, pipe}
 import akka.util.Timeout
+import com.github.blemale.scaffeine.Scaffeine
+import com.google.common.base.{Supplier, Suppliers}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.haku.{
   GetHautQuery,
@@ -42,6 +43,24 @@ class KoutaInternalActor(
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
     config.integrations.asyncOperationThreadPoolSize,
     getClass.getSimpleName
+  )
+
+  private val koulutusCache = Scaffeine()
+    .expireAfterWrite(30.minutes)
+    .buildAsyncFuture[String, HakukohteenKoulutukset](getHakukohteenKoulutuksetForReal)
+
+  private val hakukohdeCache = Scaffeine()
+    .expireAfterWrite(30.minutes)
+    .buildAsyncFuture[String, KoutaInternalHakukohde](getHakukohdeFromKoutaInternalForReal)
+
+  val hakuCache = Suppliers.memoizeWithExpiration(
+    () =>
+      getHautForReal.recoverWith { case ex =>
+        log.error(s"Failed to fetch all haut! Retrying..", ex)
+        getHautForReal
+      },
+    30,
+    MINUTES
   )
 
   override def receive: Receive = {
@@ -102,6 +121,9 @@ class KoutaInternalActor(
   }
 
   def getHakukohteenKoulutukset(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
+    koulutusCache.get(hakukohdeOid)
+
+  def getHakukohteenKoulutuksetForReal(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
     for {
       hakukohde <- getHakukohdeFromKoutaInternal(hakukohdeOid)
       haku <- getHakuFromKoutaInternal(hakukohde.hakuOid)
@@ -140,7 +162,9 @@ class KoutaInternalActor(
     )).mapTo[Option[Koodi]].map(_.get.koodiArvo)
   }
 
-  def getHaut: Future[RestHakuResult] =
+  def getHaut: Future[RestHakuResult] = hakuCache.get()
+
+  def getHautForReal: Future[RestHakuResult] =
     restClient
       .readObject[List[KoutaInternalRestHaku]]("kouta-internal.haku.search.all")(200)
       .map(_.map(_.toRestHaku))
@@ -176,13 +200,17 @@ class KoutaInternalActor(
   private def getKoulutusFromKoutaInternal(koulutusOid: String) =
     restClient.readObject[KoutaInternalKoulutus]("kouta-internal.koulutus", koulutusOid)(200)
 
-  private def getHakukohdeFromKoutaInternal(hakukohdeOid: String) = restClient
+  private def getHakukohdeFromKoutaInternal(hakukohdeOid: String): Future[KoutaInternalHakukohde] =
+    hakukohdeCache.get(hakukohdeOid)
+
+  private def getHakukohdeFromKoutaInternalForReal(hakukohdeOid: String) = restClient
     .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200)
 
-  private def getToteutusFromKoutaInternal(toteutusOid: String) = restClient
-    .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200)
+  private def getToteutusFromKoutaInternal(toteutusOid: String): Future[KoutaInternalToteutus] =
+    restClient
+      .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200)
 
-  private def getHakuFromKoutaInternal(hakuOid: String) = restClient
+  private def getHakuFromKoutaInternal(hakuOid: String): Future[KoutaInternalRestHaku] = restClient
     .readObject[KoutaInternalRestHaku]("kouta-internal.haku", hakuOid)(200)
 
 }
