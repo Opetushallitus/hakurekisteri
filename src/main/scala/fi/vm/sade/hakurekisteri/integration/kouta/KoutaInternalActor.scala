@@ -26,7 +26,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   Hakukohteenkoulutus,
   TarjontaKoodi
 }
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, OphUrlProperties, VirkailijaRestClient}
 import org.joda.time.{LocalDate, LocalDateTime}
 import support.TypedAskableActorRef
 
@@ -64,10 +64,10 @@ class KoutaInternalActor(
   )
 
   override def receive: Receive = {
-    case GetHautQuery                           => getHaut pipeTo sender
-    case q: HakukohdeQuery                      => getHakukohde(q.oid) pipeTo sender
-    case q: HakukohteenKoulutuksetQuery         => getHakukohteenKoulutukset(q.hakukohdeOid) pipeTo sender
-    case q: OrganisaationHakukohteetHaussaQuery => getOrganisationHakukohteetHaussa(q) pipeTo sender
+    case GetHautQuery                   => getHaut pipeTo sender
+    case q: HakukohdeQuery              => getHakukohde(q.oid) pipeTo sender
+    case q: HakukohteenKoulutuksetQuery => getHakukohteenKoulutukset(q.hakukohdeOid) pipeTo sender
+    case q: HakukohteetHaussaQuery      => getOrganisationHakukohteetHaussa(q) pipeTo sender
   }
 
   private def substring(s: String, before: String) = s.substring(0, s.indexOf(before))
@@ -122,11 +122,9 @@ class KoutaInternalActor(
   }
 
   def getOrganisationHakukohteetHaussa(
-    q: OrganisaationHakukohteetHaussaQuery
+    q: HakukohteetHaussaQuery
   ): Future[Set[String]] = {
-    findTarjoajanHakukohteet(q.hakuOid, q.organisaatioOid).map(result =>
-      result.map(hakukohde => hakukohde.oid).toSet
-    )
+    findTarjoajanHakukohteet(q).map(result => result.map(hakukohde => hakukohde.oid).toSet)
   }
 
   def getHakukohteenKoulutukset(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
@@ -222,12 +220,21 @@ class KoutaInternalActor(
   private def getHakuFromKoutaInternal(hakuOid: String): Future[KoutaInternalRestHaku] = restClient
     .readObject[KoutaInternalRestHaku]("kouta-internal.haku", hakuOid)(200)
 
-  private def findTarjoajanHakukohteet(hakuOid: String, organisaatioOid: String) = restClient
-    .readObject[List[KoutaInternalHakukohdeLite]](
-      "kouta-internal.tarjoajanhakukohteethaussa",
-      hakuOid,
-      organisaatioOid
-    )(200)
+  private def findTarjoajanHakukohteet(q: HakukohteetHaussaQuery) = {
+    val orgParam = q.organisaatioOid.map(oo => "&tarjoaja=" + oo).getOrElse("")
+    val koodiParam =
+      q.hakukohdeKoodiUri.map(k => "&hakukohdeKoodiUri=" + k).getOrElse("")
+    val url =
+      OphUrlProperties.url("kouta-internal.hakukohde.search", q.hakuOid) + orgParam + koodiParam
+
+    println(s"Uri: $url")
+    restClient
+      .readObjectFromUrl[List[KoutaInternalHakukohdeLite]](
+        url,
+        List(200)
+      )
+  }
+
 }
 
 case class KoutaInternalActorRef(actor: AskableActorRef) extends TypedAskableActorRef
@@ -347,4 +354,8 @@ case class KoutaInternalToteutus(
   metadata: Option[KoutaToteutusMetadata]
 )
 
-case class OrganisaationHakukohteetHaussaQuery(hakuOid: String, organisaatioOid: String)
+case class HakukohteetHaussaQuery(
+  hakuOid: String,
+  organisaatioOid: Option[String],
+  hakukohdeKoodiUri: Option[String]
+)

@@ -19,10 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   LinkedHenkiloOids,
   PersonOidsWithAliases
 }
-import fi.vm.sade.hakurekisteri.integration.kouta.{
-  KoutaInternalActorRef,
-  OrganisaationHakukohteetHaussaQuery
-}
+import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActorRef, HakukohteetHaussaQuery}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
@@ -137,13 +134,9 @@ trait IHakemusService {
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
-    organisaatio: Option[String]
+    organisaatio: Option[String],
+    hakukohdekoodi: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]]
-  def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
-    hakuOid: String,
-    hakukohdeOid: String,
-    organisaatio: Option[String]
-  ): Future[Seq[HakijaHakemus]]
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
     hakuOid: String,
     hakukohdeOid: Option[String]
@@ -212,7 +205,8 @@ class HakemusService(
     ataruHakemusDtos: List[AtaruHakemusToinenAsteDto],
     henkilot: Map[String, Henkilo],
     skipResolvingTarjoaja: Boolean = false,
-    hakuOid: String
+    hakuOid: String,
+    hakukohdekoodi: Option[String]
   ): Future[List[AtaruHakemusToinenAste]] = {
     //logger.info(s"enrichAtaruHakemuksetToinenAste: $ataruHakemusDtos")
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
@@ -287,7 +281,7 @@ class HakemusService(
             HakutoiveDTO(
               index + 1,
               Some(hakutoive.oid),
-              None,
+              hakukohdekoodi,
               None,
               None,
               tarjoaja.map(_._1),
@@ -531,63 +525,69 @@ class HakemusService(
 
   private def ataruhakemuksetToinenAste(
     params: AtaruSearchParams,
+    hakukohdekoodi: Option[String],
     skipResolvingTarjoaja: Boolean = false
   ): Future[List[AtaruHakemusToinenAste]] = {
-    logger.info(s"Haetaan toisen asteen ataruhakemukset: $params")
+    logger.info(
+      s"Haetaan toisen asteen ataruhakemukset ${params.hakukohdeOids.map(hks => hks.size).getOrElse(0)} hakukohteelle : $params"
+    )
     if (
       params.hakuOid.isEmpty || (params.hakukohdeOids
         .getOrElse(List.empty)
         .isEmpty && params.hakijaOids.getOrElse(List.empty).isEmpty)
     ) {
-      throw new Exception(
-        "HakuOid ja organisaatioOid ovat pakollisia parametreja toisen asteen ataruhakemusten haussa!"
-      )
-    }
-    val p: Map[String, Any] =
-      params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
-        Map("hakukohdeOids" -> hakukohdeOids)
-      ) ++
-        params.hakijaOids.fold[Map[String, Any]](Map.empty)(hakijaOids =>
-          Map("hakijaOids" -> List("1.2.246.562.24.71199100015", "1.2.246.562.24.73723145512"))
+      logger.warning(s"Puutteelliset parametrit: $params, palautetaan tyhjä lista")
+      Future.successful(List.empty)
+    } else {
+      val p: Map[String, Any] =
+        params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
+          Map("hakukohdeOids" -> hakukohdeOids)
         ) ++
-        params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date => Map("modifiedAfter" -> date))
-    def page(offset: Option[String]): Future[(List[AtaruHakemusToinenAste], Option[String])] = {
-      for {
-        ataruResponse <- ataruHakemusClient
-          .postObjectWithCodes[Map[String, Any], AtaruResponseToinenAste](
-            uriKey = "ataru.applications.toinenaste",
-            acceptedResponseCodes = List(200),
-            maxRetries = 2,
-            resource = offset.fold(p)(o => p + ("offset" -> o)),
-            basicAuth = false,
-            params.hakuOid.get
+          params.hakijaOids.fold[Map[String, Any]](Map.empty)(hakijaOids =>
+            Map("hakijaOids" -> hakijaOids)
+          ) ++
+          params.modifiedAfter.fold[Map[String, Any]](Map.empty)(date =>
+            Map("modifiedAfter" -> date)
           )
-        ataruHenkilot <- oppijaNumeroRekisteri.getByOids(
-          ataruResponse.applications
-            .map(_.personOid)
-            .toSet
+      def page(offset: Option[String]): Future[(List[AtaruHakemusToinenAste], Option[String])] = {
+        for {
+          ataruResponse <- ataruHakemusClient
+            .postObjectWithCodes[Map[String, Any], AtaruResponseToinenAste](
+              uriKey = "ataru.applications.toinenaste",
+              acceptedResponseCodes = List(200),
+              maxRetries = 2,
+              resource = offset.fold(p)(o => p + ("offset" -> o)),
+              basicAuth = false,
+              params.hakuOid.get
+            )
+          ataruHenkilot <- oppijaNumeroRekisteri.getByOids(
+            ataruResponse.applications
+              .map(_.personOid)
+              .toSet
+          )
+          ataruHakemukset <- enrichAtaruHakemuksetToinenAste(
+            ataruResponse.applications,
+            ataruHenkilot,
+            skipResolvingTarjoaja,
+            params.hakuOid.get,
+            hakukohdekoodi
+          )
+        } yield (
+          params.organizationOid.fold(ataruHakemukset)(oid =>
+            ataruHakemukset.filter(hasAppliedToOrganization(_, oid))
+          ),
+          ataruResponse.offset
         )
-        ataruHakemukset <- enrichAtaruHakemuksetToinenAste(
-          ataruResponse.applications,
-          ataruHenkilot,
-          skipResolvingTarjoaja,
-          params.hakuOid.get
-        )
-      } yield (
-        params.organizationOid.fold(ataruHakemukset)(oid =>
-          ataruHakemukset.filter(hasAppliedToOrganization(_, oid))
-        ),
-        ataruResponse.offset
-      )
+      }
+      def allPages(
+        offset: Option[String],
+        acc: Future[List[AtaruHakemusToinenAste]]
+      ): Future[List[AtaruHakemusToinenAste]] = page(offset).flatMap {
+        case (applications, None)      => acc.map(_ ++ applications)
+        case (applications, newOffset) => allPages(newOffset, acc.map(_ ++ applications))
+      }
+      allPages(None, Future.successful(List.empty))
     }
-    def allPages(
-      offset: Option[String],
-      acc: Future[List[AtaruHakemusToinenAste]]
-    ): Future[List[AtaruHakemusToinenAste]] = page(offset).flatMap {
-      case (applications, None)      => acc.map(_ ++ applications)
-      case (applications, newOffset) => allPages(newOffset, acc.map(_ ++ applications))
-    }
-    allPages(None, Future.successful(List.empty))
   }
 
   private def hasAppliedToOrganization(hakemus: HakijaHakemus, organisaatio: String): Boolean =
@@ -809,17 +809,18 @@ class HakemusService(
   }
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
-    organisaatio: Option[String]
+    organisaatio: Option[String],
+    hakukohdekoodi: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
-    if (organisaatio.isEmpty) {
+    if (organisaatio.isEmpty && hakukohdekoodi.isEmpty) {
       logger.warning(
-        s"Ollaan hakemassa atarusta toisen asteen hakemuksia, mutta organisaatiota ei ole määritelty. Tämä on luultavasti huono idea ja kannattaa mahdollisesti estää."
+        s"Ollaan hakemassa atarusta toisen asteen hakemuksia, mutta organisaatiota tai hakukohdekoodia ei ole määritelty. Tämä on luultavasti huono idea ja kannattaa mahdollisesti estää."
       )
     }
     val hakukohteet: Future[Set[String]] =
-      (koutaInternalActor.actor ? OrganisaationHakukohteetHaussaQuery(hakuOid, organisaatio.get))
+      (koutaInternalActor.actor ? HakukohteetHaussaQuery(hakuOid, organisaatio, hakukohdekoodi))
         .mapTo[Set[String]]
-    hakukohteet.flatMap(hks =>
+    hakukohteet.flatMap(hks => {
       ataruhakemuksetToinenAste(
         AtaruSearchParams(
           hakijaOids = None,
@@ -827,25 +828,10 @@ class HakemusService(
           hakuOid = Some(hakuOid),
           organizationOid = organisaatio,
           modifiedAfter = None
-        )
+        ),
+        hakukohdekoodi
       )
-    )
-  }
-
-  def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
-    hakuOid: String,
-    hakukohdeOid: String,
-    organisaatio: Option[String]
-  ): Future[Seq[HakijaHakemus]] = {
-    ataruhakemuksetToinenAste(
-      AtaruSearchParams(
-        hakijaOids = None,
-        hakukohdeOids = Some(List(hakukohdeOid)),
-        hakuOid = Some(hakuOid),
-        organizationOid = organisaatio,
-        modifiedAfter = None
-      )
-    )
+    })
   }
 
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
@@ -1087,16 +1073,9 @@ class HakemusServiceMock extends IHakemusService {
 
   override def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
-    organisaatio: Option[String]
+    organisaatio: Option[String],
+    hakukohdekoodi: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
-    Future.successful(Seq[AtaruHakemusToinenAste]())
-  }
-
-  override def hakemuksetForHakukohdeForToisenAsteenAtaruHaku(
-    hakuOid: String,
-    hakukohdeOid: String,
-    organisaatio: Option[String]
-  ): Future[Seq[HakijaHakemus]] = {
     Future.successful(Seq[AtaruHakemusToinenAste]())
   }
 

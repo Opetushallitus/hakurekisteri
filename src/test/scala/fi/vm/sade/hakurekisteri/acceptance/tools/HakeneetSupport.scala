@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.hakukohde
 import fi.vm.sade.hakurekisteri.integration.hakukohde.{HakukohdeQuery, HakukohteenKoulutuksetQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
-import fi.vm.sade.hakurekisteri.integration.kouta.OrganisaationHakukohteetHaussaQuery
+import fi.vm.sade.hakurekisteri.integration.kouta.HakukohteetHaussaQuery
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohdeOid,
@@ -1018,7 +1018,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         sender ! getHakukohde(q.oid).get
       case q: HakukohteenKoulutuksetQuery =>
         sender ! getHakukohteenKoulutukset(q.hakukohdeOid)
-      case q: OrganisaationHakukohteetHaussaQuery => sender ! Set.empty
+      case q: HakukohteetHaussaQuery => sender ! Set.empty
     }
   }
 

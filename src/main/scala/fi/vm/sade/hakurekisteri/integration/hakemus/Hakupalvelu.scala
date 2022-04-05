@@ -93,7 +93,7 @@ class AkkaHakupalvelu(
     getClass.getSimpleName
   )
   private implicit val defaultTimeout: Timeout = 120.seconds
-  private val oppivelvollisuusTiedotTimeOut: Duration = Duration(10L, TimeUnit.SECONDS)
+  private val oppivelvollisuusTiedotTimeOut: Duration = Duration(20L, TimeUnit.SECONDS)
   private val acceptedResponseCode: Int = 200
   private val maxRetries: Int = 2
 
@@ -147,8 +147,9 @@ class AkkaHakupalvelu(
     hakijaHakemukset: Seq[HakijaHakemus],
     version: Int
   ): Seq[OppivelvollisuusTieto] = {
+    logger.info(s"Haetaan oppivelvollisuustiedot ${hakijaHakemukset.size} hakemukselle")
     // This data is used only for api version 5 and greater
-    if (version < 5) {
+    if (version < 5 || hakijaHakemukset.isEmpty) {
       return Seq[OppivelvollisuusTieto]()
     }
     try {
@@ -159,8 +160,8 @@ class AkkaHakupalvelu(
       )
     } catch {
       case e: Throwable =>
-        logger.error(e, "getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja");
-        Seq[OppivelvollisuusTieto]()
+        logger.error(e, "getOppivelvollisuustiedot : virhe haettaessa oppivelvollisuustietoja")
+        throw e
     }
 
   }
@@ -236,10 +237,10 @@ class AkkaHakupalvelu(
 
   override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] = {
     q match {
-      case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
+      case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, _, _, _) =>
         for {
           hakemukset <- hakemusService
-            .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio)
+            .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi)
           harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
             .getHarkinnanvaraisuudet(hakemukset)
           hakijaSuorituksetMap <- koosteService.getSuorituksetForAtaruhakemukset(
@@ -268,8 +269,11 @@ class AkkaHakupalvelu(
               harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head
             )
           }
-      case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
-        throw new RuntimeException("Hakukohdekoodi ei ole tuettu parametri kouta-hauilla.")
+      //case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
+      //  throw new RuntimeException("Hakukohdekoodi ei ole tuettu parametri kouta-hauilla.")
+      case _ =>
+        logger.warning(s"Mitäs me täällä tehdään?")
+        Future.successful(Seq.empty)
     }
   }
 
