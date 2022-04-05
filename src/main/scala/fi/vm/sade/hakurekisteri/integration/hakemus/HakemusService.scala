@@ -821,15 +821,26 @@ class HakemusService(
       (koutaInternalActor.actor ? HakukohteetHaussaQuery(hakuOid, organisaatio, hakukohdekoodi))
         .mapTo[Set[String]]
     hakukohteet.flatMap(hks => {
-      ataruhakemuksetToinenAste(
-        AtaruSearchParams(
-          hakijaOids = None,
-          hakukohdeOids = Some(hks.toList),
-          hakuOid = Some(hakuOid),
-          organizationOid = organisaatio,
-          modifiedAfter = None
-        ),
-        hakukohdekoodi
+      val hakemukset: Future[List[AtaruHakemusToinenAste]] =
+        ataruhakemuksetToinenAste(
+          AtaruSearchParams(
+            hakijaOids = None,
+            hakukohdeOids = Some(hks.toList),
+            hakuOid = Some(hakuOid),
+            organizationOid = organisaatio,
+            modifiedAfter = None
+          ),
+          hakukohdekoodi
+        )
+      //Filtteröidään pois sellaiset hakutoiveet, jotka eivät kuulu haettuihin hakukohteisiin
+      hakemukset.map(haks =>
+        haks.map(hakemus =>
+          hakemus.copy(hakutoiveet =
+            hakemus.hakutoiveet.map(hts =>
+              hts.filter(ht => hks.contains(ht.koulutusId.getOrElse("")))
+            )
+          )
+        )
       )
     })
   }
