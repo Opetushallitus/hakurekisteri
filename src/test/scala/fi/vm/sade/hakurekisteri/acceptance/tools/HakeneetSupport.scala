@@ -910,8 +910,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
           Option.empty,
           koosteData,
           kansalaisuuskoodit,
-          Seq.empty,
-          None
+          Seq.empty
         )
       )
     }

@@ -199,8 +199,7 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option("1.2.3.4"),
       None,
       Map("246" -> "FIN"),
-      Seq.empty,
-      None
+      Seq.empty
     )
     .hakemus
     .hakutoiveet
@@ -232,8 +231,7 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option.empty,
       None,
       Map("246" -> "FIN"),
-      Seq.empty,
-      None
+      Seq.empty
     )
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(
@@ -253,8 +251,7 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option.empty,
       None,
       Map("246" -> "FIN"),
-      Seq.empty,
-      None
+      Seq.empty
     )
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(
@@ -279,8 +276,7 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option.empty,
       nonExistentKoosteData,
       Map("246" -> "FIN"),
-      Seq.empty,
-      None
+      Seq.empty
     )
     val hakija2 = AkkaHakupalvelu.getHakija(
       FullHakemus1,
@@ -289,8 +285,7 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option.empty,
       emptyKoosteData,
       Map("246" -> "FIN"),
-      Seq.empty,
-      None
+      Seq.empty
     )
     val hakija3 = AkkaHakupalvelu.getHakija(
       FullHakemus1,
@@ -299,8 +294,7 @@ class HakijaSpec extends FlatSpec with Matchers {
       Option.empty,
       koosteData,
       Map("246" -> "FIN"),
-      Seq.empty,
-      None
+      Seq.empty
     )
 
     def getPohjaKoulutus(hakija: Hakija): String = {
@@ -338,8 +332,7 @@ class HakijaSpec extends FlatSpec with Matchers {
           oppivelvollisuusVoimassaAsti,
           oikeusMaksuttomaanKoulutukseenVoimassaAsti
         )
-      ),
-      None
+      )
     )
     hakija.henkilo.oppivelvollisuusVoimassaAsti.get should be(oppivelvollisuusVoimassaAsti.get)
     hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti.get should be(

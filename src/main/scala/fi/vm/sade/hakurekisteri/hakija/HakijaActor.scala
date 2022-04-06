@@ -346,7 +346,8 @@ class HakijaActor(
     )
   }
 
-  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] =
+  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
+    println(s"combine2sijoittelunTulos for ${hakijat.size} hakijas")
     Future.foldLeft(
       hakijat.groupBy(_.hakemus.hakuOid).map { case (hakuOid, hakijas) =>
         valintaTulosActor.actor
@@ -355,6 +356,7 @@ class HakijaActor(
           .map(matchSijoitteluAndHakemus(hakijas))
       }
     )(Seq[Hakija]())(_ ++ _)
+  }
 
   def hakutoiveFilter(predicate: (XMLHakutoive) => Boolean)(xh: XMLHakija): XMLHakija =
     xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(predicate)))

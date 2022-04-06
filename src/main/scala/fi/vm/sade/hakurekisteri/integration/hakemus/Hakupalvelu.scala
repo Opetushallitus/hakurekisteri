@@ -269,10 +269,8 @@ class AkkaHakupalvelu(
               harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head
             )
           }
-      //case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
-      //  throw new RuntimeException("Hakukohdekoodi ei ole tuettu parametri kouta-hauilla.")
       case _ =>
-        logger.warning(s"Mitäs me täällä tehdään?")
+        logger.warning(s"Strange HakijaQuery received: $q, doing nothing.")
         Future.successful(Seq.empty)
     }
   }
@@ -296,17 +294,10 @@ class AkkaHakupalvelu(
           hakijaSuorituksetMap <- koosteService.getSuoritukset(hakuOid, hakemukset)
           maakoodit <- maatjavaltiot2To1(hakemukset)
           oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
-          personOids = hakemukset.map(h => h.personOid.get)
-          hakijoidenOpiskelijatiedot: Map[String, Opiskelija] <-
-            getUusinOpiskelijatietoForOpiskelijas(personOids)
         } yield hakemukset
           .map { hakemus =>
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)
-            if (koosteData.isDefined) { logger.info(s"${hakemus.oid} koostedData: $koosteData") }
-            else {
-              logger.info(s"ei koostedataa hakeumkselle ${hakemus.oid}")
-            }
             AkkaHakupalvelu.getHakija(
               hakemus,
               haku,
@@ -314,8 +305,7 @@ class AkkaHakupalvelu(
               None,
               koosteData,
               maakoodit,
-              oppivelvollisuusTiedot,
-              hakijoidenOpiskelijatiedot.get(hakemus.personOid.get)
+              oppivelvollisuusTiedot
             )
           }
       case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
@@ -343,13 +333,9 @@ class AkkaHakupalvelu(
             (haku, lisakysymykset) <- hakuJaLisakysymykset
             maakoodit <- maakooditF
             oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
-            opiskelutiedot: Map[String, Opiskelija] <- getUusinOpiskelijatietoForOpiskelijas(
-              hakemukset.map(h => h.personOid.get)
-            )
           } yield {
             val koosteData: Option[Map[String, String]] =
               hakijaSuorituksetMap.get(hakemus.personOid.get)
-            logger.info(s"KoosteData for hakija ${hakemus.personOid.get}: $koosteData")
             AkkaHakupalvelu.getHakija(
               hakemus,
               haku,
@@ -357,8 +343,7 @@ class AkkaHakupalvelu(
               hakukohdekoodi.map(_ => hakukohdeOid),
               koosteData,
               maakoodit,
-              oppivelvollisuusTiedot,
-              opiskelutiedot.get(hakemus.personOid.get)
+              oppivelvollisuusTiedot
             )
           })
         } yield hakijat.toSeq
@@ -369,15 +354,19 @@ class AkkaHakupalvelu(
     if (q.haku.isEmpty) {
       throw new RuntimeException("Haku is not defined!")
     }
-    logger.info(s"Hakijat requested: ${q.copy(user = None)}")
     (hakuActor ? GetHaku(q.haku.get))
       .mapTo[Haku]
       .flatMap {
         case haku: Haku if !haku.toisenAsteenHaku && q.version >= 5 =>
           throw new RuntimeException(s"Haku ${q.haku.get} is not toisen asteen haku!")
         case haku: Haku if haku.hakulomakeAtaruId.isDefined && q.version >= 5 =>
+          logger.info(
+            s"Getting hakijat for toisen asteen ataruhakijat, query: ${q.copy(user = None)}"
+          )
           getToisenAsteenAtaruHakijat(q, haku)
-        case haku: Haku => getHakijat(q, haku)
+        case haku: Haku =>
+          logger.info(s"Getting hakijat for legacy haku, query: ${q.copy(user = None)}")
+          getHakijat(q, haku)
       }
   }
 
@@ -805,8 +794,7 @@ object AkkaHakupalvelu {
     hakukohdeOid: Option[String],
     koosteData: Option[Map[String, String]],
     maakoodit: Map[String, String],
-    oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto],
-    viimeisinOpiskelutieto: Option[Opiskelija]
+    oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto]
   ): Hakija = h match {
     case hakemus: FullHakemus =>
       def getOsaaminenOsaalue(key: String): Option[String] = {
