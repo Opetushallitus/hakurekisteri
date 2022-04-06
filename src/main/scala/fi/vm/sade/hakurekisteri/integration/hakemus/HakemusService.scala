@@ -19,7 +19,11 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   LinkedHenkiloOids,
   PersonOidsWithAliases
 }
-import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActorRef, HakukohteetHaussaQuery}
+import fi.vm.sade.hakurekisteri.integration.kouta.{
+  HakukohteetHaussaQuery,
+  KoutaInternalActorRef,
+  KoutaInternalHakukohdeLite
+}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
@@ -201,12 +205,24 @@ class HakemusService(
       "valpas-hakuappOrAtaruHakemus"
     )
 
+  def trimKoodiToNumber(koodiUri: String): String = {
+    koodiUri match {
+      case koodi if koodi == null || koodi.isEmpty => ""
+      case koodi if koodi.contains("_") =>
+        val withVersion = koodi.split("_")(1)
+        withVersion match {
+          case k: String if k.contains("#") => k.split("#")(0)
+          case k: String                    => k
+        }
+    }
+  }
+
   def enrichAtaruHakemuksetToinenAste(
     ataruHakemusDtos: List[AtaruHakemusToinenAsteDto],
     henkilot: Map[String, Henkilo],
     skipResolvingTarjoaja: Boolean = false,
     hakuOid: String,
-    hakukohdekoodi: Option[String]
+    koodisByOid: Map[String, Option[String]]
   ): Future[List[AtaruHakemusToinenAste]] = {
     //logger.info(s"enrichAtaruHakemuksetToinenAste: $ataruHakemusDtos")
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
@@ -244,17 +260,6 @@ class HakemusService(
       }
     } yield parentOids
 
-    def translateAtaruAttachments(
-      hakemus: AtaruHakemusToinenAsteDto
-    ): Map[String, Option[Boolean]] =
-      hakemus.attachments
-        .mapValues {
-          case "checked"     => Some(true)
-          case "not-checked" => Some(false)
-          case _             => None
-        }
-        .map(identity)
-
     val hakemustenHakukohteet = ataruHakemusDtos.flatMap(_.hakukohteet).map(_.oid)
     val resolveTarjoajaOids: Future[Map[String, (String, Set[String])]] =
       if (skipResolvingTarjoaja) {
@@ -281,7 +286,7 @@ class HakemusService(
             HakutoiveDTO(
               index + 1,
               Some(hakutoive.oid),
-              hakukohdekoodi,
+              koodisByOid.getOrElse(hakutoive.oid, None).map(koodi => trimKoodiToNumber(koodi)),
               None,
               None,
               tarjoaja.map(_._1),
@@ -292,12 +297,11 @@ class HakemusService(
               hakutoive.kiinnostunutUrheilijanAmmatillisestaKoulutuksesta.map(v =>
                 if (v) "true" else "false"
               ),
-              None //discretionaryFollowUp Mikä tämä on, tarvitaanko?
+              None
             )
           }
           val harkinnanvaraisuudet = hakemus.hakukohteet
             .map(hk => HakutoiveenHarkinnanvaraisuus(hk.oid, hk.harkinnanvaraisuus))
-            .toList
 
           AtaruHakemusToinenAste(
             oid = hakemus.oid,
@@ -525,7 +529,7 @@ class HakemusService(
 
   private def ataruhakemuksetToinenAste(
     params: AtaruSearchParams,
-    hakukohdekoodi: Option[String],
+    koodisByOid: Map[String, Option[String]],
     skipResolvingTarjoaja: Boolean = false
   ): Future[List[AtaruHakemusToinenAste]] = {
     logger.info(
@@ -570,7 +574,7 @@ class HakemusService(
             ataruHenkilot,
             skipResolvingTarjoaja,
             params.hakuOid.get,
-            hakukohdekoodi
+            koodisByOid
           )
         } yield (
           params.organizationOid.fold(ataruHakemukset)(oid =>
@@ -817,27 +821,31 @@ class HakemusService(
         s"Ollaan hakemassa atarusta toisen asteen hakemuksia, mutta organisaatiota tai hakukohdekoodia ei ole määritelty. Tämä on luultavasti huono idea ja kannattaa mahdollisesti estää."
       )
     }
-    val hakukohteet: Future[Set[String]] =
+    val hakukohteidenTiedot: Future[List[KoutaInternalHakukohdeLite]] =
       (koutaInternalActor.actor ? HakukohteetHaussaQuery(hakuOid, organisaatio, hakukohdekoodi))
-        .mapTo[Set[String]]
-    hakukohteet.flatMap(hks => {
+        .mapTo[List[KoutaInternalHakukohdeLite]]
+
+    hakukohteidenTiedot.flatMap(hks => {
+      val oids = hks.map(_.oid).distinct
+      val hakukohdekoodiByHakukohdeOid =
+        hks.map(hk => hk.oid -> hk.hakukohde.map(h => h.koodiUri)).toMap
       val hakemukset: Future[List[AtaruHakemusToinenAste]] =
         ataruhakemuksetToinenAste(
           AtaruSearchParams(
             hakijaOids = None,
-            hakukohdeOids = Some(hks.toList),
+            hakukohdeOids = Some(oids),
             hakuOid = Some(hakuOid),
             organizationOid = organisaatio,
             modifiedAfter = None
           ),
-          hakukohdekoodi
+          hakukohdekoodiByHakukohdeOid
         )
       //Filtteröidään pois sellaiset hakutoiveet, jotka eivät kuulu haettuihin hakukohteisiin
       hakemukset.map(haks =>
         haks.map(hakemus =>
           hakemus.copy(hakutoiveet =
             hakemus.hakutoiveet.map(hts =>
-              hts.filter(ht => hks.contains(ht.koulutusId.getOrElse("")))
+              hts.filter(ht => oids.contains(ht.koulutusId.getOrElse("")))
             )
           )
         )

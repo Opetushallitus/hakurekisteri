@@ -406,7 +406,9 @@ class HakijaActor(
     }
     if (q.version == 1)
       hakutoives
-    else
+    else if (q.version == 5 && q.haku.getOrElse("").length == 35) {
+      hakutoives //In the Ataru + Kouta case, this filtering of hakutoivees is done earlier, immediately after fetching hakemukses.
+    } else
       hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
   }
 

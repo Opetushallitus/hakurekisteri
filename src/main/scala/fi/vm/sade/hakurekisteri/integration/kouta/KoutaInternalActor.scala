@@ -123,8 +123,8 @@ class KoutaInternalActor(
 
   def getOrganisationHakukohteetHaussa(
     q: HakukohteetHaussaQuery
-  ): Future[Set[String]] = {
-    findTarjoajanHakukohteet(q).map(result => result.map(hakukohde => hakukohde.oid).toSet)
+  ): Future[List[KoutaInternalHakukohdeLite]] = {
+    findTarjoajanHakukohteet(q)
   }
 
   def getHakukohteenKoulutukset(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
@@ -222,12 +222,10 @@ class KoutaInternalActor(
 
   private def findTarjoajanHakukohteet(q: HakukohteetHaussaQuery) = {
     val orgParam = q.organisaatioOid.map(oo => "&tarjoaja=" + oo).getOrElse("")
-    val koodiParam =
-      q.hakukohdeKoodiUri.map(k => "&hakukohdeKoodiUri=" + k).getOrElse("")
+    val koodiParam = q.hakukohdeKoodiUri.map(k => "&hakukohdeKoodiUri=" + k).getOrElse("")
     val url =
       OphUrlProperties.url("kouta-internal.hakukohde.search", q.hakuOid) + orgParam + koodiParam
 
-    println(s"Uri: $url")
     restClient
       .readObjectFromUrl[List[KoutaInternalHakukohdeLite]](
         url,
@@ -318,8 +316,10 @@ case class KoutaInternalRestHaku(
 
 case class KoutaInternalKoulutus(oid: String, koulutusKoodiUrit: Set[String])
 
+case class HakukohteenTiedot(koodiUri: String)
+
 //Kouta-internal saattaa palauttaa joitakin hakukohteita, jotka eivät parsiudu KoutaInternalHakukohteiksi esim. puuttuvan tarjoajan tai toteutusOidin takia. Jos vain oid kiinnostaa, tämä toimii silti.
-case class KoutaInternalHakukohdeLite(oid: String)
+case class KoutaInternalHakukohdeLite(oid: String, hakukohde: Option[HakukohteenTiedot])
 
 case class KoutaInternalHakukohde(
   oid: String,
