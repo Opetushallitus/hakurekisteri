@@ -116,53 +116,6 @@ class HakemusBasedPermissionCheckerActorSpec
     }
   }
 
-  it should "return true if haku-app returns true even if Ataru fails" in {
-    withSystem { system =>
-      when(
-        hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
-          200,
-          permissionRequest
-        )
-      ).thenReturn(Future.successful(PermissionResponse(Some(true))))
-      when(
-        ataruClient.postObject[PermissionRequest, PermissionResponse]("ataru.permissioncheck")(
-          200,
-          permissionRequest
-        )
-      ).thenReturn(
-        Future.failed(
-          new RuntimeException("This Ataru exception should not inhibit haku-app response")
-        )
-      )
-      run(actor(system) ? HasPermission(user, oppijanumero)) should equal(true)
-    }
-  }
-
-  it should "return true if haku-app returns true even if Ataru is too slow" in {
-    withSystem { system =>
-      when(
-        hakuAppClient.postObject[PermissionRequest, PermissionResponse]("haku-app.permissioncheck")(
-          200,
-          permissionRequest
-        )
-      ).thenReturn(Future.successful(PermissionResponse(Some(true))))
-      when(
-        ataruClient.postObject[PermissionRequest, PermissionResponse]("ataru.permissioncheck")(
-          200,
-          permissionRequest
-        )
-      ).thenAnswer(new Answer[Future[PermissionResponse]] {
-        override def answer(invocation: InvocationOnMock): Future[PermissionResponse] = Future {
-          Thread.sleep(10 * timeout.duration.toMillis)
-          throw new RuntimeException(
-            "This Ataru response should come so slow that it isn't even seen."
-          )
-        }
-      })
-      run(actor(system) ? HasPermission(user, oppijanumero)) should equal(true)
-    }
-  }
-
   it should "return true if Ataru returns true even if Haku-app is too slow" in {
     withSystem { system =>
       when(
