@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   MockOppijaNumeroRekisteri,
   PersonOidsWithAliases
 }
+import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import org.mockito.Mockito._
@@ -38,6 +39,9 @@ class HakemusServiceSpec
   val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(
     system.actorOf(Props(new MockedHakukohdeAggregatorActor()))
   )
+  val koutaInternalMock = new KoutaInternalActorRef(
+    system.actorOf(Props(new MockedKoutaInternalActor()))
+  )
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
@@ -45,6 +49,7 @@ class HakemusServiceSpec
     hakuappClient,
     ataruClient,
     hakukohdeAggregatorMock,
+    koutaInternalMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
     Config.mockDevConfig,
@@ -128,6 +133,61 @@ class HakemusServiceSpec
 
     ataruHakemukset.size should be(1)
     ataruHakemukset(0).asiointiKieli should be(asiointiKieliFromHakemus)
+  }
+
+  it should "index hakutoive preference numbers starting from 1" in {
+    val asiointiKieliFromOnr = "fi"
+    val asiointiKieliFromHakemus = "en"
+    val personOid = "1.2.3.4.5.6"
+    val ataruHenkilo = henkilo.Henkilo(
+      "ataruHenkiloOid",
+      Some("ataruHetu"),
+      "OPPIJA",
+      None,
+      None,
+      None,
+      None,
+      List(),
+      None,
+      None,
+      turvakielto = Some(false)
+    )
+    val ataruHakemusDto = AtaruHakemusDto(
+      "ataruOid",
+      personOid,
+      "",
+      "",
+      kieli = asiointiKieliFromHakemus,
+      List("1.2.246.562.20.666", "1.2.246.562.20.667"),
+      "",
+      "",
+      "",
+      "",
+      None,
+      None,
+      "",
+      false,
+      false,
+      Map(),
+      Map(),
+      Map(),
+      List(),
+      None
+    )
+
+    val ataruHakemukset: List[AtaruHakemus] =
+      Await.result(
+        hakemusService
+          .enrichAtaruHakemukset(List(ataruHakemusDto), Map(personOid -> ataruHenkilo), true),
+        10.seconds
+      )
+
+    ataruHakemukset.size should be(1)
+    val hakutoiveet = ataruHakemukset.head.hakutoiveet.get
+    hakutoiveet.size should be(2)
+    hakutoiveet.head.preferenceNumber should be(1)
+    hakutoiveet(1).preferenceNumber should be(2)
+
   }
 
   behavior of "hakemusForPersonsInHaku"

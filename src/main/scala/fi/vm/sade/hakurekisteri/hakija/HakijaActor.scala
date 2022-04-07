@@ -346,7 +346,7 @@ class HakijaActor(
     )
   }
 
-  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] =
+  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
     Future.foldLeft(
       hakijat.groupBy(_.hakemus.hakuOid).map { case (hakuOid, hakijas) =>
         valintaTulosActor.actor
@@ -355,6 +355,7 @@ class HakijaActor(
           .map(matchSijoitteluAndHakemus(hakijas))
       }
     )(Seq[Hakija]())(_ ++ _)
+  }
 
   def hakutoiveFilter(predicate: (XMLHakutoive) => Boolean)(xh: XMLHakija): XMLHakija =
     xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(predicate)))
@@ -406,7 +407,9 @@ class HakijaActor(
     }
     if (q.version == 1)
       hakutoives
-    else
+    else if (q.version == 5 && q.haku.getOrElse("").length == 35) {
+      hakutoives //In the Ataru + Kouta case, this filtering of hakutoivees is done earlier, immediately after fetching hakemukses.
+    } else
       hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
   }
 
@@ -489,7 +492,7 @@ class HakijaActor(
 
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     hakupalvelu
-      .getHakijat(q)
+      .getHakijatByQuery(q)
       .flatMap(enrichHakijat)
       .flatMap(combine2sijoittelunTulos(q.user))
       .flatMap(filterHakijatHakutoiveetByQuery(q))

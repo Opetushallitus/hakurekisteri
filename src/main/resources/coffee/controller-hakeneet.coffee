@@ -76,9 +76,10 @@ app.controller "HakeneetCtrl", [
   "haut"
   "hakukohdeData"
   "aikuhakukohdeData"
+  "koutaPerusopetusHakukohdeData"
   "$interval"
   "LokalisointiService"
-  ($scope, $http, $modal, MessageService, aste, haut, hakukohdeData, aikuhakukohdeData, $interval, LokalisointiService) ->
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdeData, aikuhakukohdeData, koutaPerusopetusHakukohdeData, $interval, LokalisointiService) ->
     pollInterval = 1 * 1500 # every second
 
     $scope.handlePoll = (reply) ->
@@ -215,7 +216,7 @@ app.controller "HakeneetCtrl", [
     if(isKk())
       $scope.rajapinnanVersio = 4
     else
-      $scope.rajapinnanVersio = 4
+      $scope.rajapinnanVersio = 5
 
     $scope.hakuehdot = [
       {
@@ -366,7 +367,9 @@ app.controller "HakeneetCtrl", [
 
     $scope.updateHakukohteet = ->
       ## päivitetään hakukohteet listaan riippuen valitusta hausta
-      if isAikuHaku()
+      if isKoutaHaku()
+        loadHakukohteet koutaPerusopetusHakukohdeData, $scope
+      else if isAikuHaku()
         loadHakukohteet aikuhakukohdeData, $scope
       else
         loadHakukohteet hakukohdeData, $scope
@@ -374,6 +377,8 @@ app.controller "HakeneetCtrl", [
     isAikuHaku = ->
       return ($scope.haku && ($scope.haku.kohdejoukkoUri.indexOf("haunkohdejoukko_20") > -1))
 
+    isKoutaHaku = ->
+      return ($scope.haku && $scope.haku.oid.length > 30 && $scope.haku.oid.startsWith("1.2.246.562.29"))
 
     $scope.hakukohteet = []
 

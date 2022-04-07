@@ -406,7 +406,7 @@ class ValpasIntergration(
               h.flatMap(hk =>
                 hakutoiveToValpasHakutoive(
                   hk.koulutusId.flatMap(a.liitteetTarkastettu.get).flatten,
-                  hk.preferenceNumber.+(1), // Ataru order starts from zero
+                  hk.preferenceNumber,
                   hk
                 )
               )
@@ -496,6 +496,7 @@ class ValpasIntergration(
           hakutoiveet = hakutoiveet
         )
       }
+      case _ => ???
     }
   }
 

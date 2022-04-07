@@ -328,6 +328,7 @@ class KkHakijaService(
         case h: FullHakemus =>
           h.preferenceEligibilities.filter(_.maksuvelvollisuus.isDefined).map(_.aoId)
         case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
+        case _               => ???
       })
       .toSet
 
@@ -359,6 +360,7 @@ class KkHakijaService(
         case h: FullHakemus =>
           h.preferenceEligibilities.filter(_.maksuvelvollisuus.isDefined).map(_.aoId)
         case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
+        case _               => ???
       })
       .toSet
 
@@ -390,6 +392,7 @@ class KkHakijaService(
         case h: FullHakemus =>
           h.preferenceEligibilities.filter(_.maksuvelvollisuus.isDefined).map(_.aoId)
         case h: AtaruHakemus => h.paymentObligations.filter(_._2 == "REQUIRED").keys
+        case _               => ???
       })
       .toSet
 
@@ -746,6 +749,7 @@ class KkHakijaService(
           None
         }
       }
+    case _ => ???
   }
 
   private def resolveLukuvuosiMaksu(
@@ -930,6 +934,7 @@ class KkHakijaService(
           hakemukset = hakemukset
         )
       })
+    case _ => ???
   }
 
   private def getJononTyyppiFromKoodisto(koodiUri: String): Future[Option[String]] = {
@@ -1105,6 +1110,7 @@ class KkHakijaService(
           hakemukset = hakemukset
         )
       })
+    case _ => ???
   }
 
   private def getKkHakijaV3(
@@ -1234,6 +1240,7 @@ class KkHakijaService(
           hakemukset = hakemukset
         )
       })
+    case _ => ???
   }
 
   private def getKkHakijaV2(
@@ -1356,6 +1363,7 @@ class KkHakijaService(
           hakemukset = hakemukset
         )
       })
+    case _ => ???
   }
 }
 
