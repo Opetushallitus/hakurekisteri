@@ -646,13 +646,11 @@ object AkkaHakupalvelu {
   ): Hakija = h match {
     case hakemus: AtaruHakemusToinenAste =>
       val lisapistekoulutus: Option[String] = getLisapisteKoulutus(hakijanKoosteData)
-      if (hakijanKoosteData.isEmpty) {
-        println(s"WARN Ei koostedataa hakemukselle ${hakemus.oid}")
-      }
+
       val kesa: MonthDay = new MonthDay(6, 4)
-      //voi olla vaarallista, think me through. Ehkä koostepalvelun kannattaa palauttaa tämä tieto jotenkin.
+
       val myontaja: String = viimeisinOpiskelutieto.map(o => o.oppilaitosOid).getOrElse("")
-      //val pohjakoulutusKooste: Option[String] = for (k <- koosteData; p <- k.get("POHJAKOULUTUS")) yield p
+
       val pohjakoulutusKooste = hakijanKoosteData.get("POHJAKOULUTUS")
       val pohjakoulutusHakemus =
         if (hakemus.pohjakoulutus.nonEmpty) Some(hakemus.pohjakoulutus) else None
@@ -676,8 +674,7 @@ object AkkaHakupalvelu {
       val valmistuminen = todistusVuosi
         .flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption)
         .getOrElse(Suoritus.realValmistuminenNotKnownLocalDate)
-      //val kieli: String = hakemus.aidinkieli
-      val kieli = "FI"
+
       val opetuskieli: Option[String] =
         hakijanKoosteData.get("perusopetuksen_kieli")
       val suorittaja: String = hakemus.personOid.getOrElse("")
@@ -761,7 +758,7 @@ object AkkaHakupalvelu {
           myontaja,
           valmistuminen,
           suorittaja,
-          kieli,
+          opetuskieli.getOrElse("FI"),
           hakemus.personOid
         ).toSeq,
         viimeisinOpiskelutieto.map(tieto => Seq(tieto)).getOrElse(Seq.empty),
@@ -1131,19 +1128,6 @@ object AkkaHakupalvelu {
       .map(_.preferenceNumber)
       .getOrElse(0)
   }
-
-  //public enum HarkinnanvaraisuudenSyy {
-  //x  SURE_YKS_MAT_AI,
-  //x  SURE_EI_PAATTOTODISTUSTA,
-  //x  ATARU_YKS_MAT_AI,
-  //  ATARU_ULKOMAILLA_OPISKELTU,
-  //  ATARU_EI_PAATTOTODISTUSTA,
-  //  ATARU_SOSIAALISET_SYYT,
-  //  ATARU_OPPIMISVAIKEUDET,
-  //  ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET,
-  //  ATARU_RIITTAMATON_TUTKINTOKIELEN_TAITO,
-  //  EI_HARKINNANVARAINEN
-  //}
 
   def convertHarkinnanvaraisuudenSyy(syy: String): String = {
     syy match {

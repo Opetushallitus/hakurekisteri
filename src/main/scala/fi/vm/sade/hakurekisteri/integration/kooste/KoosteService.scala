@@ -53,9 +53,6 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
         logger.warning(s"Ei ataruhakemuksia! $hs")
         Future.successful(Seq.empty)
       case harkinnanvaraisuudet =>
-        //logger.info(
-        //  s"Haetaan koostepalvelusta harkinnanvaraisuudet hakemuksille: $harkinnanvaraisuudet"
-        //)
         restClient.postObject[Seq[HakemuksenHarkinnanvaraisuus], Seq[HakemuksenHarkinnanvaraisuus]](
           "valintalaskentakoostepalvelu.harkinnanvaraisuudet.atarutiedoille"
         )(200, harkinnanvaraisuudet)

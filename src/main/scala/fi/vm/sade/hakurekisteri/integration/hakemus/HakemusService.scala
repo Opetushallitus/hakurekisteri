@@ -224,7 +224,6 @@ class HakemusService(
     hakuOid: String,
     koodisByOid: Map[String, Option[String]]
   ): Future[List[AtaruHakemusToinenAste]] = {
-    //logger.info(s"enrichAtaruHakemuksetToinenAste: $ataruHakemusDtos")
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
       hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
         .mapTo[Hakukohde]
@@ -811,16 +810,13 @@ class HakemusService(
       )
     } yield hakuappHakemukset ++ ataruHakemukset
   }
+
+  //Käytännössä kannattaa määritellä joko organisaatio tai hakukohdekoodi, tai muuten haetaan kaikki haun hakemukset
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String],
     hakukohdekoodi: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
-    if (organisaatio.isEmpty && hakukohdekoodi.isEmpty) {
-      logger.warning(
-        s"Ollaan hakemassa atarusta toisen asteen hakemuksia, mutta organisaatiota tai hakukohdekoodia ei ole määritelty. Tämä on luultavasti huono idea ja kannattaa mahdollisesti estää."
-      )
-    }
     val hakukohteidenTiedot: Future[List[KoutaInternalHakukohdeLite]] =
       (koutaInternalActor.actor ? HakukohteetHaussaQuery(hakuOid, organisaatio, hakukohdekoodi))
         .mapTo[List[KoutaInternalHakukohdeLite]]

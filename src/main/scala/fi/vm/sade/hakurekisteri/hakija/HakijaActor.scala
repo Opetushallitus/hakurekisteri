@@ -347,7 +347,6 @@ class HakijaActor(
   }
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
-    println(s"combine2sijoittelunTulos for ${hakijat.size} hakijas")
     Future.foldLeft(
       hakijat.groupBy(_.hakemus.hakuOid).map { case (hakuOid, hakijas) =>
         valintaTulosActor.actor
