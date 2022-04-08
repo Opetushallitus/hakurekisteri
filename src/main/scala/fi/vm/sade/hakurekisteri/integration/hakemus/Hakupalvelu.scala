@@ -357,8 +357,8 @@ class AkkaHakupalvelu(
     (hakuActor ? GetHaku(q.haku.get))
       .mapTo[Haku]
       .flatMap {
-        case haku: Haku if !haku.toisenAsteenHaku && q.version >= 5 =>
-          throw new RuntimeException(s"Haku ${q.haku.get} is not toisen asteen haku!")
+        //case haku: Haku if !haku.toisenAsteenHaku && q.version >= 5 =>
+        //  throw new RuntimeException(s"Haku ${q.haku.get} is not toisen asteen haku!")
         case haku: Haku if haku.hakulomakeAtaruId.isDefined && q.version >= 5 =>
           logger.info(
             s"Getting hakijat for toisen asteen ataruhakijat, query: ${q.copy(user = None)}"
