@@ -247,13 +247,14 @@ class ValpasIntergration(
       )
     }
     def uriToValpasKoodiWithoutArvo(uri: String, koodisto: KoodistoKoodiArvot): ValpasKoodi = {
-      val Array(koodi, versio) = uri.split("#")
+      val koodi = uri.split("#").head
+      val koodiarvo = koodisto.uriToArvo(koodi)
       ValpasKoodi(
-        koodiarvo = koodisto.uriToArvo(koodi),
+        koodiarvo = koodiarvo,
         nimi = koodisto.uriToNimi(koodi),
         lyhytNimi = koodisto.uriToLyhytNimi(koodi),
         koodistoUri = koodisto.koodistoUri,
-        koodistoVersio = versio.toInt
+        koodistoVersio = koodisto.arvoToVersio(koodiarvo)
       )
     }
     def maaKoodiToValpasKoodi(arvo: String): ValpasKoodi =
