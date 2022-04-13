@@ -25,6 +25,16 @@ case class Haku(
 }
 
 object Haku {
+
+  val toisenAsteenUrit = Set(
+    "haunkohdejoukko_11",
+    "haunkohdejoukko_20",
+    "haunkohdejoukko_21",
+    "haunkohdejoukko_22",
+    "haunkohdejoukko_23",
+    "haunkohdejoukko_24"
+  )
+
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
     val ajanjakso = Ajanjakso(findStart(haku), loppu)
     Haku(
@@ -40,7 +50,9 @@ object Haku {
       haku.koulutuksenAlkamiskausiUri,
       haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
-      toisenAsteenHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_11")),
+      toisenAsteenHaku = toisenAsteenUrit.contains(
+        haku.kohdejoukkoUri.map(uri => uri.split("#").head).getOrElse("none")
+      ),
       viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku),
       kohdejoukkoUri = haku.kohdejoukkoUri,
       hakutapaUri = haku.hakutapaUri,
