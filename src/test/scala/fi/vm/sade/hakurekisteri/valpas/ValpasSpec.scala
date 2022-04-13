@@ -94,6 +94,7 @@ class ValpasSpec
 
   private val oppijaOid = "1.2.246.562.24.82344311114"
   private val hakemusOid = "1.2.246.562.11.00000000000000446632"
+  private val hakuOid = "1.2.246.562.29.36339915997"
   behavior of "Valpas Resource"
 
   it should "handle combining Ataru and HakuApp hakemukset with valintatulokset" in {
@@ -242,7 +243,10 @@ class ValpasSpec
         tulosCacheFactory.getInstance[String, String](any(), any(), any(), any())(any())
       ) thenReturn tulosRedisCache
 
-      val valintatulosClient = mockPostTulosClient(Seq(hakemusOid))(
+      val valintatulosClient = mockPostTulosClient(
+        Map("hetu" -> Map(oppijaOid -> Set(hakemusOid)), "hetuton" -> Map()),
+        hakuOid
+      )(
         List(
           resource[ValintaTulos](
             s"/mock-data/valintatulos/valintatulos-haku-hakemus-valpas.json"
@@ -440,15 +444,17 @@ class ValpasSpec
     hakuAppClient
   }
   private def mockPostTulosClient(
-    post: Seq[String]
+    post: Map[String, Map[String, Set[String]]],
+    hakuOid: String
   )(response: List[ValintaTulos]): VirkailijaRestClient = {
     val client: VirkailijaRestClient = mock[VirkailijaRestClient]
     Mockito
       .when(
         client
-          .postObject[Set[String], List[ValintaTulos]](
-            "valinta-tulos-service.hakemukset"
-          )(200, post.toSet)
+          .postObject[Map[String, Map[String, Set[String]]], List[ValintaTulos]](
+            "valinta-tulos-service.hakemukset",
+            hakuOid
+          )(200, post)
       )
       .thenReturn(Future.successful(response))
     client

@@ -518,13 +518,32 @@ class ValpasIntergration(
         .flatMap(_.organizationOid)
         .toSet
         .filterNot(_.isEmpty)
-    def hakemusToValintatulosQuery(h: Set[String]): VirkailijanValintatulos =
-      VirkailijanValintatulos(h)
+    def hakemusToValintatulosQuery(
+      hakuOid: String,
+      hakemukset: Seq[HakijaHakemus]
+    ): VirkailijanValintatulos = {
+      val hetulla = hakemukset.filter(_.hetu.isDefined)
+      val ilmanHetua = hakemukset.filter(_.hetu.isEmpty)
 
-    val valintarekisteri: Future[Map[String, Seq[ValintaTulos]]] =
-      (valintaTulos.actor ? hakemusToValintatulosQuery(hakemukset.map(_.oid).toSet))
-        .mapTo[Seq[ValintaTulos]]
-        .map(_.groupBy(_.hakemusOid))
+      def groupBy(h: Seq[HakijaHakemus]): Map[String, Set[String]] = {
+        h.groupBy(_.personOid.get).map { case (henkilo, hakemukset) =>
+          (henkilo, hakemukset.map(_.oid).toSet)
+        }
+      }
+      VirkailijanValintatulos(hakuOid, groupBy(hetulla), groupBy(ilmanHetua))
+    }
+
+    val valintarekisteri: Future[Map[String, Seq[ValintaTulos]]] = {
+      val byHaku: Map[String, Seq[HakijaHakemus]] =
+        hakemukset.filterNot(_.personOid.isEmpty).groupBy(_.applicationSystemId)
+
+      Future
+        .sequence(byHaku.map { case (hakuOid, hakemukset) =>
+          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, hakemukset))
+            .mapTo[Seq[ValintaTulos]]
+        })
+        .map(_.flatten.toSeq.groupBy(_.hakemusOid))
+    }
 
     val hakukohteet: Future[Map[String, Hakukohde]] = Future
       .sequence(
