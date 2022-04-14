@@ -22,7 +22,11 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-case class VirkailijanValintatulos(hakemusOid: Set[String])
+case class VirkailijanValintatulos(
+  hakuOid: String,
+  hetullisetHakemukset: Map[String, Set[String]],
+  hetuttomatToHakemukset: Map[String, Set[String]]
+)
 case class HakemuksenValintatulos(hakuOid: String, hakemusOid: String)
 case class HaunValintatulos(hakuOid: String)
 
@@ -66,8 +70,8 @@ class ValintaTulosActor(
   }
 
   private def withQueue(haunValintatulosFetchQueue: Map[String, Vector[ActorRef]]): Receive = {
-    case VirkailijanValintatulos(hakemusOids) =>
-      hakemuksenTulosCached(hakemusOids) pipeTo sender
+    case VirkailijanValintatulos(hakuOid, hetulliset, hetuttomat) =>
+      hakemuksenTulosCached(hakuOid, hetulliset, hetuttomat) pipeTo sender
 
     case HakemuksenValintatulos(hakuOid, hakemusOid) =>
       hakemuksenTulos(hakuOid, hakemusOid).map(SijoitteluTulos(hakuOid, _)) pipeTo sender
@@ -140,7 +144,12 @@ class ValintaTulosActor(
   }
 
   implicit val formats = HakurekisteriJsonSupport.format
-  private def hakemuksenTulosCached(hakemusOids: Set[String]): Future[Seq[ValintaTulos]] = {
+  private def hakemuksenTulosCached(
+    hakuOid: String,
+    hetulliset: Map[String, Set[String]],
+    hetuttomat: Map[String, Set[String]]
+  ): Future[Seq[ValintaTulos]] = {
+    val hakemusOids: Set[String] = (hetulliset ++ hetuttomat).flatMap(_._2).toSet
     val cachedValintatulokset: Future[Set[Option[ValintaTulos]]] = valintaCache match {
       case redis: RedisCache[String, String] =>
         def parse(s: Option[String]): Option[ValintaTulos] = {
@@ -156,11 +165,27 @@ class ValintaTulosActor(
         Future.successful(Set.empty[Option[ValintaTulos]])
     }
 
-    def fetchForReal(oids: Set[String]) = client
-      .postObject[Set[String], List[ValintaTulos]]("valinta-tulos-service.hakemukset")(
-        200,
-        oids
-      )
+    def fetchForReal(hakemusOids: Set[String]): Future[List[ValintaTulos]] = {
+      val withHetu = hakemusOids
+        .flatMap(oid => {
+          hetulliset.filter(_._2.contains(oid))
+        })
+        .toMap
+      val withoutHetu = hakemusOids
+        .flatMap(oid => {
+          hetuttomat.filter(_._2.contains(oid))
+        })
+        .toMap
+
+      val call: Map[String, Map[String, Set[String]]] =
+        Map("hetu" -> withHetu, "hetuton" -> withoutHetu)
+
+      client
+        .postObject[Map[String, Map[String, Set[String]]], List[ValintaTulos]](
+          "valinta-tulos-service.hakemukset",
+          hakuOid
+        )(200, call)
+    }
 
     def saveFetched(saveTulokset: Seq[ValintaTulos]): Seq[ValintaTulos] = {
       saveTulokset.foreach { tulos =>
