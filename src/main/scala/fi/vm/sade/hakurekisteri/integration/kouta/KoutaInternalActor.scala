@@ -89,8 +89,8 @@ class KoutaInternalActor(
           haku.metadata.koulutuksenAlkamiskausi.flatMap(ak =>
             ak.koulutuksenAlkamiskausi.map(ak =>
               ak.koodiUri match {
-                case "kausi_k#1" => TarjontaKoodi(Some("K"))
-                case "kausi_s#1" => TarjontaKoodi(Some("S"))
+                case kausi if kausi.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
+                case kausi if kausi.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
                 case unknown =>
                   log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
                   TarjontaKoodi(None)
@@ -106,8 +106,8 @@ class KoutaInternalActor(
           toteutus.metadata.flatMap(md =>
             md.opetus.map(opetus =>
               opetus.alkamiskausiKoodiUri match {
-                case Some("kausi_k#1") => TarjontaKoodi(Some("K"))
-                case Some("kausi_s#1") => TarjontaKoodi(Some("S"))
+                case Some(kausi) if kausi.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
+                case Some(kausi) if kausi.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
                 case unknown =>
                   log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
                   TarjontaKoodi(None)
