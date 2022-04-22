@@ -75,7 +75,7 @@ class YtlJsonSpec extends ScalatraFunSuite {
       |    }
     """.stripMargin
 
-  test("Aine should equal TOINENKIELI") {
+  /*  test("Aine should equal TOINENKIELI") {
     val oid = "1.2.246.562.24.71944845619"
     val oidFinder: String => Future[String] = hetu => Future.successful(oid)
     val student = parse(toinenKieliJson).extract[Student]
@@ -105,5 +105,5 @@ class YtlJsonSpec extends ScalatraFunSuite {
       |        }
       |      ]
       |    }
-    """.stripMargin
+    """.stripMargin*/
 }
