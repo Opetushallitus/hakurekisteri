@@ -109,26 +109,21 @@ case object StatusDeserializer
     )
 
 case class Student(
+  oid: String,
   ssn: String,
   lastname: String,
   firstnames: String,
   graduationPeriod: Option[Kausi] = None,
   graduationDate: Option[LocalDate] = None,
-  certificateSchoolOphOid: Option[String] = None,
-  certificateSchoolYtlNumber: Option[String] = None,
-  hasCompletedMandatoryExams: Option[Boolean] = None,
   language: String,
   exams: Seq[Exam]
 )
 
 case class Exam(
   examId: String,
-  examRoleLegacy: Option[Int],
-  examRoleShort: String,
   period: Kausi,
   grade: String,
-  points: Option[Int],
-  sections: Seq[Section]
+  points: Option[Int]
 )
 
 case class Section(sectionId: String, sectionPoints: Option[String])
@@ -168,26 +163,11 @@ object StudentToKokelas {
       YoKoe(
         ArvioYo(exam.grade, exam.points),
         exam.examId,
-        exam.examRoleShort,
-        exam.examRoleLegacy,
         exam.period.toLocalDate,
         oid
       )
     )
-    val osakokeet = s.exams.flatMap(exam =>
-      exam.sections.map(section => {
-        Osakoe(
-          ArvioOsakoe(section.sectionPoints.getOrElse("0")),
-          exam.examId,
-          section.sectionId,
-          exam.examRoleShort,
-          exam.examRoleLegacy,
-          exam.period.toLocalDate,
-          oid
-        )
-      })
-    )
-    Kokelas(oid, suoritus, yoTodistus, osakokeet)
+    Kokelas(oid, suoritus, yoTodistus)
   }
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
@@ -199,9 +179,7 @@ object StudentToKokelas {
       valmistuminen = valmistuminen,
       kieli = s.language.toUpperCase,
       valmis = päättötodistus,
-      s.hasCompletedMandatoryExams
-        .map(c => Map("hasCompletedMandatoryExams" -> c.toString))
-        .getOrElse(Map.empty)
+      Map.empty
     )
     suoritus
   }

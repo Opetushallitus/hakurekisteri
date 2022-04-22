@@ -54,7 +54,7 @@ class YtlKokelasPersister(
     )
     val arvosanaUpdateActor: ActorRef = system.actorOf(
       ArvosanaUpdateActor.props(
-        kokelas.yoTodistus ++ kokelas.osakokeet,
+        kokelas.yoTodistus,
         arvosanaRekisteri,
         timeout.duration
       )
@@ -115,7 +115,7 @@ class YtlKokelasPersister(
 
 case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: PersonOidsWithAliases)
 
-case class Kokelas(oid: String, yo: VirallinenSuoritus, yoTodistus: Seq[Koe], osakokeet: Seq[Koe])
+case class Kokelas(oid: String, yo: VirallinenSuoritus, yoTodistus: Seq[Koe])
 
 trait Koe {
   def isValinnainenRooli(aineyhdistelmarooli: String) =
@@ -443,13 +443,10 @@ case class Osakoe(
 case class YoKoe(
   arvio: ArvioYo,
   koetunnus: String,
-  aineyhdistelmarooli: String,
-  aineyhdistelmarooliLegacy: Option[Int],
   myonnetty: LocalDate,
   personOid: String
 ) extends Koe {
-  val aine = Aine(koetunnus, Some(Koe.convertToOldRole(koetunnus, aineyhdistelmarooli, personOid)))
-  val isValinnainen = isValinnainenRooli(aineyhdistelmarooli) //
+  val aine = Aine(koetunnus, None)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]): Arvosana = {
     Arvosana(
@@ -457,10 +454,10 @@ case class YoKoe(
       arvio,
       aine.aine: String,
       Some(aine.lisatiedot),
-      isValinnainen: Boolean,
+      true,
       Some(myonnetty),
       YoTutkinto.YTL,
-      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy, suoritus.henkiloOid)
+      Map.empty
     )
   }
 }
