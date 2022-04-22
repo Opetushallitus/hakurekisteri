@@ -109,7 +109,6 @@ case object StatusDeserializer
     )
 
 case class Student(
-  oid: String,
   ssn: String,
   lastname: String,
   firstnames: String,

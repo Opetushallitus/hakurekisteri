@@ -2,74 +2,25 @@
   "ssn": "050996-9574",
   "lastname": "Vasala",
   "firstnames": "Sampsa",
-  "graduationDate": null,
-  "graduationPeriod": null,
-  "hasCompletedMandatoryExams": false,
   "language": "fi",
   "exams": [
     {
       "period": "2013K",
       "examId": "PS",
-      "examNameFi": "Psykologia",
-      "examNameSv": "Psykologi",
-      "examRoleShort": "mandatory-subject",
-      "examRoleLegacy": "41",
       "grade": "I",
-      "points": 6,
-      "sections": [
-        {
-          "sectionPoints": 6,
-          "sectionId": "T000"
-        }
-      ]
+      "points": 6
     },
     {
       "period": "2012S",
       "examId": "EA",
-      "examNameFi": "Englanti, pitkä",
-      "examNameSv": "Engelska, lång",
-      "examRoleShort": "mandatory-subject",
-      "examRoleLegacy": "31",
       "grade": "B",
-      "points": 134,
-      "sections": [
-        {
-          "sectionPoints": 28,
-          "sectionId": "LM02"
-        },
-        {
-          "sectionPoints": 14,
-          "sectionId": "LT02"
-        },
-        {
-          "sectionPoints": 13,
-          "sectionId": "RM01"
-        },
-        {
-          "sectionPoints": 4,
-          "sectionId": "RT03"
-        },
-        {
-          "sectionPoints": 75,
-          "sectionId": "KK01"
-        }
-      ]
+      "points": 134
     },
     {
       "period": "2012S",
       "examId": "TE",
-      "examNameFi": "Terveystieto",
-      "examNameSv": "Hälsokunskap",
-      "examRoleShort": "mandatory-subject",
-      "examRoleLegacy": "71",
       "grade": "A",
-      "points": 15,
-      "sections": [
-        {
-          "sectionPoints": 15,
-          "sectionId": "T000"
-        }
-      ]
+      "points": 15
     }
   ]
 }

@@ -218,7 +218,7 @@ class YtlIntegrationSpec
       Map()
     )
     val kokelasWithTooManyPersonOids = KokelasWithPersonAliases(
-      Kokelas("", dummyVirallinenSuoritus, List(), List()),
+      Kokelas("", dummyVirallinenSuoritus, List()),
       PersonOidsWithAliases(Set("1.2.3.4.5.6", "1.2.3.4.5.7"), Map())
     )
   }
@@ -305,9 +305,6 @@ class YtlIntegrationSpec
     firstnames = "Test",
     graduationPeriod = Some(Kevat(2003)),
     graduationDate = Some(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate("2003-05-31")),
-    certificateSchoolOphOid = Some("1.2.246.562.10.63670951381"),
-    certificateSchoolYtlNumber = Some("1254"),
-    hasCompletedMandatoryExams = Some(true),
     language = "FI",
     exams = Seq.empty
   )
@@ -373,7 +370,7 @@ class YtlIntegrationSpec
     val kokelas = kokelasWithPersonAliases.kokelas
     val arvosanaUpdateActor: ActorRef = system.actorOf(
       ArvosanaUpdateActor.props(
-        kokelas.yoTodistus ++ kokelas.osakokeet,
+        kokelas.yoTodistus,
         rekisterit.ytlArvosanaRekisteri,
         config.ytlSyncTimeout.duration
       )
@@ -531,10 +528,10 @@ class YtlIntegrationSpec
     val result = Await.result(future, 5.seconds)
 
     result should have size 1
-    result(0) should matchPattern { case scala.util.Success(Kokelas(_, _, _, _)) => }
+    result(0) should matchPattern { case scala.util.Success(Kokelas(_, _, _)) => }
 
     val expectedResult =
-      Kokelas("1.2.246.562.24.58341904891", suoritus, List(), List())
+      Kokelas("1.2.246.562.24.58341904891", suoritus, List())
     val testKokelas: Kokelas = result.head.get
     testKokelas should be(expectedResult)
 
