@@ -448,7 +448,7 @@ class YtlIntegrationSpec
         findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
 
       suoritukset should have size 1
-      suoritukset.head.lahdeArvot should equal(Map("hasCompletedMandatoryExams" -> "true"))
+      suoritukset.head.lahdeArvot should equal(Map.empty)
     } catch {
       case e: Throwable => fail(e)
     }
@@ -605,7 +605,7 @@ class YtlIntegrationSpec
       val allArvosanasFromDatabase =
         findAllArvosanasFromDatabase.sortBy(a => (a.aine, a.lisatieto, a.arvio.toString))
       allSuoritusFromDatabase should have size 10
-      allArvosanasFromDatabase should have size 89
+      allArvosanasFromDatabase should have size 27
 
       val virallinenSuoritusToExpect = VirallinenSuoritus(
         komo = "1.2.246.562.5.2013061010184237348007",
@@ -618,7 +618,7 @@ class YtlIntegrationSpec
         opiskeluoikeus = None,
         vahv = true,
         lahde = "1.2.246.562.10.43628088406",
-        lahdeArvot = Map("hasCompletedMandatoryExams" -> "true")
+        lahdeArvot = Map.empty
       )
       allSuoritusFromDatabase.head should be(virallinenSuoritusToExpect)
 
@@ -627,10 +627,10 @@ class YtlIntegrationSpec
         arvio = ArvioYo("C", Some(216)),
         aine = "A",
         lisatieto = Some("EN"),
-        valinnainen = false,
+        valinnainen = true,
         myonnetty = Some(new LocalDate(2012, 6, 1)),
         source = "1.2.246.562.10.43628088406",
-        lahdeArvot = Map("koetunnus" -> "EA", "aineyhdistelmarooli" -> "31"),
+        lahdeArvot = Map.empty,
         jarjestys = None
       )
       allArvosanasFromDatabase.head should be(arvosanaToExpect)
