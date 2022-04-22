@@ -752,6 +752,7 @@ class HakemusService(
     hakukohdeOid: String,
     organisaatio: Option[String]
   ): Future[Seq[HakijaHakemus]] = {
+
     for {
       hakuappHakemukset <- fetchHakemuksetChunked(params =
         SearchParams(aoOids = Seq(hakukohdeOid), organizationFilter = organisaatio.orNull)

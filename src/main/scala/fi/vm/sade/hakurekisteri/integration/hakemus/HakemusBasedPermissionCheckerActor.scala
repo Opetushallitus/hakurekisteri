@@ -100,7 +100,10 @@ class HakemusBasedPermissionCheckerActor(
       .sequence(orgs.map(oid => (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]))
       .map(_.collect { case Some(org) => org }.flatMap(getOrganisationPath))
       .flatMap(orgs =>
-        OphFutures.parallelOr(checkHakuApp(forPerson, orgs), checkAtaru(forPerson, orgs))
+        checkAtaru(forPerson, orgs).flatMap(ataruResult =>
+          if (!ataruResult) checkHakuApp(forPerson, orgs)
+          else Future.successful(ataruResult)
+        )
       )
   }
 
