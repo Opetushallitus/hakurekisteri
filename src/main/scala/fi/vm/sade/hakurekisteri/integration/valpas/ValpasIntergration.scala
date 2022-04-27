@@ -186,7 +186,7 @@ object SlowFutureLogger {
 }
 object ValintakoeTunnisteParser {
   private def toValpasPistetieto(p: Pistetieto): Option[ValpasPistetieto] = {
-    if(p.isValid) {
+    if (p.isValid) {
       Some(ValpasPistetieto(p.tunniste, p.arvo.toString, p.osallistuminen))
     } else {
       None
