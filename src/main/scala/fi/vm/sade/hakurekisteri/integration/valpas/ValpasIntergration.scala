@@ -185,17 +185,21 @@ object SlowFutureLogger {
   }
 }
 object ValintakoeTunnisteParser {
-  private def toValpasPistetieto(p: Pistetieto): ValpasPistetieto = {
-    ValpasPistetieto(p.tunniste, p.arvo.toString, p.osallistuminen)
+  private def toValpasPistetieto(p: Pistetieto): Option[ValpasPistetieto] = {
+    if(p.isValid) {
+      Some(ValpasPistetieto(p.tunniste, p.arvo.toString, p.osallistuminen))
+    } else {
+      None
+    }
   }
   def findPaasykoe(pistetiedot: Seq[Pistetieto]): Option[ValpasPistetieto] = {
-    pistetiedot.find(_.tunniste.contains("paasykoe")).map(toValpasPistetieto)
+    pistetiedot.find(_.tunniste.contains("paasykoe")).flatMap(toValpasPistetieto)
   }
   def findKielikoe(pistetiedot: Seq[Pistetieto]): Option[ValpasPistetieto] = {
-    pistetiedot.find(_.tunniste.contains("kielikoe")).map(toValpasPistetieto)
+    pistetiedot.find(_.tunniste.contains("kielikoe")).flatMap(toValpasPistetieto)
   }
   def findLisanaytto(pistetiedot: Seq[Pistetieto]): Option[ValpasPistetieto] = {
-    pistetiedot.find(_.tunniste.contains("lisanaytto")).map(toValpasPistetieto)
+    pistetiedot.find(_.tunniste.contains("lisanaytto")).flatMap(toValpasPistetieto)
   }
 }
 

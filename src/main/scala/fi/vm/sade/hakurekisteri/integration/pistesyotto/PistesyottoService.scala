@@ -8,7 +8,9 @@ case class Pistetieto(
   tunniste: String,
   arvo: Any,
   osallistuminen: String
-)
+) {
+  def isValid: Boolean = arvo != null && tunniste != null
+}
 case class PistetietoWrapper(hakemusOID: String, pisteet: Seq[Pistetieto])
 
 class PistesyottoService(restClient: VirkailijaRestClient) {
