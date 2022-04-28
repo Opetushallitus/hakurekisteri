@@ -145,6 +145,12 @@ class KoskiDataHandler(
             s"koska oo sisälsi kotiopetusjakson."
         )
         return true
+      } else if (opiskeluoikeus.opiskeluoikeusSisaltaaErityisentutkinnon) {
+        logger.info(
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+            s"koska oo sisälsi erityisen tutkinnon."
+        )
+        return true
       } else {
         logger.info(
           s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus joka ei sisällä 9. luokan suoritusta."

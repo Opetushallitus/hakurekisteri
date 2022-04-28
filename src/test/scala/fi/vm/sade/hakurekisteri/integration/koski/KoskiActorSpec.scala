@@ -307,7 +307,8 @@ class KoskiActorSpec
         osasuoritukset = Seq(getOsasuoritus("MA", Some("9"))),
         ryhmä = None,
         alkamispäivä = alkamisPaiva,
-        jääLuokalle = None
+        jääLuokalle = None,
+        suoritustapa = None
       )
       this.copy(suoritukset = uudetSuoritukset)
     }
@@ -336,7 +337,8 @@ class KoskiActorSpec
         osasuoritukset = osasuoritus,
         ryhmä = None,
         alkamispäivä = None,
-        jääLuokalle = None
+        jääLuokalle = None,
+        suoritustapa = None
       )
     }
 
@@ -355,7 +357,8 @@ class KoskiActorSpec
         osasuoritukset = osasuoritus,
         ryhmä = None,
         alkamispäivä = None,
-        jääLuokalle = None
+        jääLuokalle = None,
+        suoritustapa = None
       )
     }
 

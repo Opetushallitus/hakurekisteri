@@ -32,6 +32,9 @@ case class KoskiOpiskeluoikeus(
   aikaleima: Option[String]
 ) {
 
+  def opiskeluoikeusSisaltaaErityisentutkinnon: Boolean =
+    suoritukset.exists(_.isErityinentutkinto())
+
   def opiskeluoikeusSisaltaaYsisuorituksen: Boolean =
     suoritukset.exists(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "9"))
 
@@ -121,6 +124,8 @@ case class KoskiTila(alku: String, tila: KoskiKoodi)
 
 case class KoskiOrganisaatio(oid: Option[String])
 
+case class KoskiSuoritustapa(koodiarvo: String)
+
 case class KoskiSuoritus(
   luokka: Option[String],
   koulutusmoduuli: KoskiKoulutusmoduuli,
@@ -138,11 +143,16 @@ case class KoskiSuoritus(
   //jääLuokalle is only used for peruskoulu
   jääLuokalle: Option[Boolean],
   tutkintonimike: Seq[KoskiKoodi] = Nil,
-  tila: Option[KoskiKoodi] = None
+  tila: Option[KoskiKoodi] = None,
+  suoritustapa: Option[KoskiSuoritustapa]
 ) {
 
   def isOpistovuosi(): Boolean = {
     tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
+  }
+
+  def isErityinentutkinto(): Boolean = {
+    suoritustapa.exists(tapa => tapa.koodiarvo == "erityinentutkinto")
   }
 
   def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
