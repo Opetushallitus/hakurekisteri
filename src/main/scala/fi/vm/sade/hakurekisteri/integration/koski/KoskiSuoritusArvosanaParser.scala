@@ -381,6 +381,7 @@ class KoskiSuoritusArvosanaParser {
       val komoOid: String = suoritus.getKomoOid(opiskeluoikeus.isAikuistenPerusopetus)
       val luokkataso: Option[String] =
         if (opiskeluoikeus.isKotiopetuslainen) Some("kotiopetus9")
+        else if (opiskeluoikeus.opiskeluoikeusSisaltaaErityisentutkinnon) Some("erityinentutkinto9")
         else suoritus.getLuokkataso(opiskeluoikeus.isAikuistenPerusopetus)
 
       val vuosiluokkiinSitomatonOpetus: Boolean = opiskeluoikeus.lisätiedot match {
@@ -705,7 +706,9 @@ class KoskiSuoritusArvosanaParser {
       )
     }
     //todo this doens't have to be a sort of post-processing for the result list, could be done prior with koski data
-    if (isPerusopetus && !(hasNinthGrade || opiskeluoikeus.isKotiopetuslainen)) {
+    if (
+      isPerusopetus && !(hasNinthGrade || opiskeluoikeus.isKotiopetuslainen || opiskeluoikeus.opiskeluoikeusSisaltaaErityisentutkinnon)
+    ) {
       Seq()
     } else {
       result
@@ -779,13 +782,19 @@ class KoskiSuoritusArvosanaParser {
 
       val isNinthGrade = result.exists(_.luokkataso.getOrElse("").startsWith("9"))
       val isKotiopetus = result.exists(_.luokkataso.getOrElse("").equals("kotiopetus9"))
+      val isErityinenTutkinto =
+        result.exists(_.luokkataso.getOrElse("").equals("erityinentutkinto9"))
       val isPerusopetus = useSuoritus.komo.equals(Oids.perusopetusKomoOid)
 
-      if ((isNinthGrade || isKotiopetus) && isPerusopetus) {
+      if ((isNinthGrade || isKotiopetus || isErityinenTutkinto) && isPerusopetus) {
         useLuokka = result
           .find(_.luokkataso.getOrElse("").startsWith("9"))
           .map(l => l.luokka)
-          .getOrElse("kotiopetus")
+          .getOrElse((isKotiopetus, isErityinenTutkinto) match {
+            case (true, false) => "kotiopetus"
+            case (false, true) => "erityinentutkinto"
+            case (_, _)        => ""
+          })
         useLuokkaAste = Some("9")
         useLasnaDate = result
           .find(_.suoritus match {

@@ -86,6 +86,16 @@ class KoskiDataHandler(
     }
 
     if (
+      Oids.perusopetusKomoOid == komoOid && suoritus
+        .isErityinentutkinto() && !(opiskeluoikeus.tila.determineSuoritusTila == "VALMIS" && suoritus.vahvistus.isDefined)
+    ) {
+      logger.info(
+        s"Filtteröitiin henkilöltä $henkiloOid ei (valmis ja vahvistettu) perusopetuksen suoritus joka on tyyppiä erityinen tutkinto koska se ei ole valmis."
+      )
+      return false
+    }
+
+    if (
       suoritus.tyyppi.exists(_.koodiarvo == "ammatillinentutkinto") && suoritus.vahvistus.isEmpty
     ) {
       logger.info(

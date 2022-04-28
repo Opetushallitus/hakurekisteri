@@ -4662,6 +4662,42 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
+  it should "store valmis perusopetuksen erityinen tutkinto with arvosanat" in {
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_perusopetus_erityinen_tutkinto_valmis.json")
+      .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusYears(1)
+    //KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+    val suoritus = run(
+      database.run(
+        sql"select tila from suoritus where komo = '1.2.246.562.13.62959769647'"
+          .as[String]
+      )
+    )
+    suoritus.head should equal("VALMIS")
+    val arvosanat = run(
+      database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
+    )
+    arvosanat should have length 17
+  }
+
   it should "store yksilollistetty mother tongue and mathematics" in {
     KoskiUtil.deadlineDate = LocalDate.now().plusYears(1)
     val json: String = scala.io.Source
