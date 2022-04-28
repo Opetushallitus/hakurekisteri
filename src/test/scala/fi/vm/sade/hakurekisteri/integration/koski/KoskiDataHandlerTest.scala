@@ -4669,8 +4669,6 @@ class KoskiDataHandlerTest
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    KoskiUtil.deadlineDate = LocalDate.now().plusYears(1)
-    //KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
