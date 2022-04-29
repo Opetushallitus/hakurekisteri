@@ -31,6 +31,8 @@ jobs:
           node-version: '6'
       - run: npm install bower
       - run: node_modules/bower/bin/bower update
+      - run: npm -v
+      - run: node -v
 
       - name: Build with Maven
         run: mvn clean spotless:check install -B -DargLine="-Dlog4j.configuration=file:./src/test/resources/log4j.properties"
