@@ -118,8 +118,6 @@ case class KokelasWithPersonAliases(kokelas: Kokelas, personOidsWithAliases: Per
 case class Kokelas(oid: String, yo: VirallinenSuoritus, yoTodistus: Seq[Koe])
 
 trait Koe {
-  def isValinnainenRooli(aineyhdistelmarooli: String) =
-    aineyhdistelmarooli != null && aineyhdistelmarooli.equals("optional-subject")
   def toArvosana(suoritus: Suoritus with Identified[UUID]): Arvosana
 }
 case class Aine(aine: String, lisatiedot: String)
@@ -204,11 +202,8 @@ object Aine {
     "W" -> Aine("AI", "QS")
   )
 
-  def apply(koetunnus: String, aineyhdistelmärooli: Option[String] = None): Aine =
-    if (aineyhdistelmärooli == Some("22"))
-      Aine("TOINENKIELI", aineet(koetunnus).lisatiedot)
-    else
-      aineet(koetunnus)
+  def apply(koetunnus: String): Aine =
+    aineet(koetunnus)
 }
 object YoTutkinto {
   val YTL: String = Oids.ytlOrganisaatioOid
@@ -236,209 +231,6 @@ object YoTutkinto {
     )
   }
 }
-private object Koe {
-  private val EXAM_ROLE_CONVERTER: Map[String, Map[String, String]] = Map(
-    "mother-tongue" -> Map(
-      "A" -> "11",
-      "Z" -> "11",
-      "O" -> "11",
-      "W" -> "11",
-      "I" -> "11",
-      "J" -> "13",
-      "A5" -> "14",
-      "O5" -> "14"
-    ),
-    "mandatory-subject" -> Map(
-      "CA" -> "21",
-      "S2" -> "21",
-      "T1" -> "21",
-      "E2" -> "21",
-      "P1" -> "21",
-      "F1" -> "21",
-      "CB" -> "21",
-      "V2" -> "21",
-      "S1" -> "21",
-      "P2" -> "21",
-      "V1" -> "21",
-      "G2" -> "21",
-      "F2" -> "21",
-      "T2" -> "21",
-      "E1" -> "21",
-      "H2" -> "21",
-      "BB" -> "21",
-      //"RR","21",
-      //"VC","21",
-      //"PA","21",
-      //"M","21",
-      //"FA","21",
-      //"N","21",
-      //"SC","21",
-      //"SA","21",
-      //"BA","21",
-      //"PC","21",
-      //"EA","21",
-      //"FC","21",
-      //"TC","21",
-      //"VA","21",
-      //"EC","21",
-      /* END OF 21 */
-
-      "O" -> "22",
-      "W" -> "22",
-      "Z" -> "22",
-      "A" -> "22",
-      /* END OF 22 */
-      "PC" -> "31",
-      "DC" -> "31",
-      "TC" -> "31",
-      "SC" -> "31",
-      "SA" -> "31",
-      "BA" -> "21",
-      //"BB","31",
-      "FC" -> "31",
-      "EA" -> "31",
-      "PA" -> "31",
-      "L1" -> "31",
-      "VC" -> "31",
-      "CC" -> "31",
-      "EB" -> "31",
-      "EC" -> "31",
-      "S9" -> "31",
-      "L7" -> "31",
-      "VA" -> "31",
-      "FA" -> "31",
-      /* END OF 31 */
-
-      "UE" -> "41",
-      "RY" -> "41",
-      "HI" -> "41",
-      "GE" -> "41",
-      "PS" -> "41",
-      "YH" -> "41",
-      "FY" -> "41",
-      "RO" -> "41",
-      "TE" -> "41",
-      "BI" -> "41",
-      "KE" -> "41",
-      "FF" -> "41",
-      "UO" -> "41",
-      "ET" -> "41",
-      "RR" -> "41",
-      "M" -> "42",
-      "N" -> "42"
-    ),
-    "optional-subject" -> Map(
-      "A" -> "60",
-      "O" -> "60",
-      "Z" -> "60",
-      "I" -> "60",
-      "W" -> "60",
-      /* END OF 60 */
-      "L7" -> "61",
-      "VA" -> "61",
-      "IC" -> "61",
-      "L1" -> "61",
-      "VC" -> "61",
-      "EB" -> "61",
-      "PC" -> "61",
-      "DC" -> "61",
-      "SA" -> "61",
-      "S9" -> "61",
-      "EC" -> "61",
-      "FA" -> "61",
-      "KC" -> "61",
-      "TC" -> "61",
-      "GC" -> "61",
-      "QC" -> "61",
-      "P2" -> "61",
-      "EA" -> "61",
-      "FC" -> "61",
-      "PA" -> "61",
-      "SC" -> "61",
-      /* END OF 61 */
-      "CA" -> "62",
-      "BB" -> "62",
-      "A5" -> "62",
-      "O5" -> "62",
-      "BA" -> "62",
-      "CB" -> "62",
-      /* END OF 71 */
-      "RR" -> "71",
-      "PS" -> "71",
-      "UE" -> "71",
-      "GE" -> "71",
-      "RY" -> "71",
-      "KE" -> "71",
-      "FF" -> "71",
-      "YH" -> "71",
-      "HI" -> "71",
-      "ET" -> "71",
-      "TE" -> "71",
-      "RO" -> "71",
-      "FY" -> "71",
-      "UO" -> "71",
-      "BI" -> "71",
-      /* END OF 71 */
-      "M" -> "81",
-      "N" -> "81"
-    )
-  )
-
-  def convertToOldRole(id: String, newRole: String, henkiloOid: String): String = {
-    val v: Map[String, String] = EXAM_ROLE_CONVERTER.getOrElse(
-      newRole,
-      throw new RuntimeException(s"(Hakija: ${henkiloOid} ) Unrecognized examRole: ${newRole}")
-    )
-    v.getOrElse(
-      id,
-      throw new RuntimeException(
-        s"(Hakija: ${henkiloOid} ) Unrecognized examRole and examId pair: ${newRole} => ${id}"
-      )
-    )
-  }
-
-  def lahdeArvot(
-    koetunnus: String,
-    aineyhdistelmarooli: String,
-    aineyhdistelmarooliLegacy: Option[Int],
-    henkiloOid: String
-  ): Map[String, String] = {
-    aineyhdistelmarooliLegacy match {
-      case Some(oldRooli) =>
-        Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> oldRooli.toString)
-      case _ =>
-        Map(
-          "koetunnus" -> koetunnus,
-          "aineyhdistelmarooli" -> convertToOldRole(koetunnus, aineyhdistelmarooli, henkiloOid)
-        )
-    }
-  }
-}
-case class Osakoe(
-  arvio: ArvioOsakoe,
-  koetunnus: String,
-  osakoetunnus: String,
-  aineyhdistelmarooli: String,
-  aineyhdistelmarooliLegacy: Option[Int],
-  myonnetty: LocalDate,
-  personOid: String
-) extends Koe {
-  val aine = Aine(koetunnus, Some(Koe.convertToOldRole(koetunnus, aineyhdistelmarooli, personOid)))
-  val isValinnainen = isValinnainenRooli(aineyhdistelmarooli)
-
-  def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(
-      suoritus.id,
-      arvio,
-      aine.aine + "_" + osakoetunnus: String,
-      Some(aine.lisatiedot),
-      isValinnainen: Boolean,
-      Some(myonnetty),
-      YoTutkinto.YTL,
-      Koe.lahdeArvot(koetunnus, aineyhdistelmarooli, aineyhdistelmarooliLegacy, suoritus.henkiloOid)
-    )
-  }
-}
 
 case class YoKoe(
   arvio: ArvioYo,
@@ -446,7 +238,7 @@ case class YoKoe(
   myonnetty: LocalDate,
   personOid: String
 ) extends Koe {
-  val aine = Aine(koetunnus, None)
+  val aine = Aine(koetunnus)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]): Arvosana = {
     Arvosana(
