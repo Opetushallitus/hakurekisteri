@@ -1,9 +1,10 @@
 name: Suoritusrekisteri
 
 on:
+  workflow_dispatch:
   push:
-  schedule:
-    - cron:  '0 * * * *'
+    paths-ignore:
+      - '**.md'
 
 jobs:
   build:
@@ -25,14 +26,17 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Install Node.js
-        uses: actions/setup-node@v2
+
+      - uses: dcodeIO/setup-node-nvm@master
         with:
-          node-version: '6'
-      - run: npm install bower
-      - run: node_modules/bower/bin/bower update
-      - run: npm -v
-      - run: node -v
+          node-version: lts/v6
+
+      - name: Run NPM
+        run: |
+          npm install bower
+          node_modules/bower/bin/bower update
+          npm -v
+          node -v
 
       - uses: szenius/set-timezone@v1.0
         with:
