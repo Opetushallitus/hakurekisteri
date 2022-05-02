@@ -6,18 +6,13 @@
       "firstnames": "Jussi Johannes",
       "graduationPeriod": "2015K",
       "graduationDate": "2016-06-04",
-      "graduationSchoolOphOid": "1.2.33.44444",
-      "graduationSchoolYtlNumber": "1234",
       "language": "fi",
       "exams": [
         {
           "examId": "A",
-          "examRoleShort": "mother-tongue",
-          "examRoleLegacy": "11",
           "period": "2015K",
           "grade": "M",
-          "points": 65,
-          "sections": null
+          "points": 65
         }
       ]
     }

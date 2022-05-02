@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
@@ -23,7 +22,8 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.tagobjects.Retryable
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers, Retries}
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.concurrent.duration._
@@ -35,7 +35,15 @@ class KoskiDataHandlerTest
     with BeforeAndAfterAll
     with Matchers
     with MockitoSugar
+    with Retries
     with Waiters {
+
+  override def withFixture(test: NoArgTest) = {
+    if (isRetryable(test))
+      withRetryOnFailure { super.withFixture(test) }
+    else
+      super.withFixture(test)
+  }
 
   implicit val formats = org.json4s.DefaultFormats
 
@@ -1484,7 +1492,7 @@ class KoskiDataHandlerTest
     arvosanat should have length 18
   }
 
-  it should "delete opiskelija, suoritus and arvosanat not existing in koski anymore" in {
+  it should "delete opiskelija, suoritus and arvosanat not existing in koski anymore" taggedAs Retryable in {
     var json: String = scala.io.Source.fromFile(jsonDir + "koskidata_1pk_1amm.json").mkString
     var henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     val henkiloOid: String = henkilo.henkilö.oid.get.toString

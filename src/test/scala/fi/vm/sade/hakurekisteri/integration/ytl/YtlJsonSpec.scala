@@ -37,7 +37,6 @@ class YtlJsonSpec extends ScalatraFunSuite {
     )
     ytlstudents.head.graduationPeriod should equal(Some(Kevat(2015)))
     ytlstudents.head.exams.size should equal(1)
-    ytlstudents.head.exams.head.sections.isEmpty should equal(true)
   }
 
   test("Kokelas from json should equal kokelas from XML") {
@@ -48,7 +47,6 @@ class YtlJsonSpec extends ScalatraFunSuite {
     val kokelasFromJson: Kokelas = StudentToKokelas.convert(oid, student)
 
     kokelasFromJson.yoTodistus should not be empty
-    kokelasFromJson.osakokeet should not be empty
   }
 
   val ylioppilaatJson =
@@ -77,7 +75,7 @@ class YtlJsonSpec extends ScalatraFunSuite {
       |    }
     """.stripMargin
 
-  test("Aine should equal TOINENKIELI") {
+  /*  test("Aine should equal TOINENKIELI") {
     val oid = "1.2.246.562.24.71944845619"
     val oidFinder: String => Future[String] = hetu => Future.successful(oid)
     val student = parse(toinenKieliJson).extract[Student]
@@ -85,8 +83,6 @@ class YtlJsonSpec extends ScalatraFunSuite {
     val toinenKieliFromJson: Kokelas = StudentToKokelas.convert(oid, student)
 
     toinenKieliFromJson.yoTodistus.head.asInstanceOf[YoKoe].aine.aine should be("TOINENKIELI")
-    toinenKieliFromJson.osakokeet(0).asInstanceOf[Osakoe].aine.aine should be("TOINENKIELI")
-    toinenKieliFromJson.osakokeet(1).asInstanceOf[Osakoe].aine.aine should be("TOINENKIELI")
 
   }
 
@@ -99,20 +95,15 @@ class YtlJsonSpec extends ScalatraFunSuite {
       |      "firstnames": "Ukko Pekka",
       |      "graduationPeriod": "2018K",
       |      "graduationDate": "2018-06-04",
-      |      "graduationSchoolOphOid": "1.2.33.44444",
-      |      "graduationSchoolYtlNumber": "1234",
       |      "language": "fi",
       |      "exams": [
       |        {
       |          "examId": "O",
-      |          "examRoleShort": "mandatory-subject",
-      |          "examRoleLegacy": null,
       |          "period": "2017S",
       |          "grade": "E",
-      |          "points": 78,
-      |          "sections": [{"sectionId":"T001","sectionPoints":45},{"sectionId":"T002","sectionPoints":33}]
+      |          "points": 78
       |        }
       |      ]
       |    }
-    """.stripMargin
+    """.stripMargin*/
 }
