@@ -48,4 +48,4 @@ jobs:
       - name: Build with Maven
         run: |
           chrome --version
-          mvn clean spotless:check install -B -DargLine="-Dlog4j.configuration=file:./src/test/resources/log4j.properties" -Dsuites=fi.vm.sade.hakurekisteri.mocha.HakureRekisteriMochaTest
+          mvn clean spotless:check install -B -DargLine="-Dlog4j.configuration=file:./src/test/resources/log4j.properties"
