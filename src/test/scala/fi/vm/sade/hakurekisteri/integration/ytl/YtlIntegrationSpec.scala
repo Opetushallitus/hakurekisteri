@@ -630,7 +630,7 @@ class YtlIntegrationSpec
         valinnainen = true,
         myonnetty = Some(new LocalDate(2012, 6, 1)),
         source = "1.2.246.562.10.43628088406",
-        lahdeArvot = Map.empty,
+        lahdeArvot = Map("koetunnus" -> "EA"),
         jarjestys = None
       )
       allArvosanasFromDatabase.head should be(arvosanaToExpect)
