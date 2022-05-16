@@ -249,7 +249,7 @@ case class YoKoe(
       true,
       Some(myonnetty),
       YoTutkinto.YTL,
-      Map.empty
+      Map("koetunnus" -> koetunnus)
     )
   }
 }
