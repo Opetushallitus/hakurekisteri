@@ -19,18 +19,22 @@ object SequentialBatchExecutor {
 
   private def performBatchesSequentially[A](
     batches: Seq[Batch[A]],
-    batchExecutor: BatchExecutor[A]
+    batchExecutor: BatchExecutor[A],
+    hasErrors: Boolean = false
   )(itemFunction: A => Future[Unit])(implicit ec: ExecutionContext): Future[Unit] = {
     batches.headOption match {
       case Some(nextBatch) =>
         val fut = batchExecutor.executeBatch(nextBatch, itemFunction)
-        fut.flatMap { _ =>
-          // successful, let's move on to the next!
-          performBatchesSequentially(batches.tail, batchExecutor)(itemFunction)
+        fut recoverWith { case t: Throwable =>
+          logger.error("Exception in sequential batch: ", t)
+          performBatchesSequentially(batches.tail, batchExecutor, hasErrors = true)(itemFunction)
+        } flatMap { _ =>
+          performBatchesSequentially(batches.tail, batchExecutor, hasErrors)(itemFunction)
         }
       case None =>
         // nothing left to process
-        Future.successful(())
+        if (hasErrors) Future.failed(new Exception(s"Batch contained errors!"))
+        else Future.successful(())
     }
   }
 
