@@ -15,7 +15,7 @@
         <java.version>11</java.version>
         <scala.version>2.12.8</scala.version>
         <spring.version>4.3.21.RELEASE</spring.version>
-        <spring-security.version>4.2.10.RELEASE</spring-security.version>
+        <spring-security.version>5.5.7</spring-security.version>
         <scalatra.version>2.6.3</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>3.4.2</json4s.version>
