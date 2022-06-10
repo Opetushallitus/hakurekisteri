@@ -29,7 +29,7 @@ class HttpOrganisaatioActor(
   organisaatioClient: VirkailijaRestClient,
   config: Config,
   cacheFactory: CacheFactory,
-  initDuringStartup: Boolean = true,
+  initDuringStartup: Boolean = false,
   ttl: Option[FiniteDuration] = None
 ) extends Actor
     with ActorLogging {
@@ -40,13 +40,13 @@ class HttpOrganisaatioActor(
   val maxRetries: Int = config.integrations.organisaatioConfig.httpClientMaxRetries
   val timeToLive: FiniteDuration = ttl.getOrElse(config.integrations.organisaatioCacheHours.hours)
   val reloadInterval = timeToLive / 2
-  val refresh = context.system.scheduler.schedule(
-    reloadInterval,
-    reloadInterval,
-    self,
-    RefreshOrganisaatioCache
-  )
-  var retryRefresh: Option[Cancellable] = None
+//  val refresh = context.system.scheduler.schedule(
+//    reloadInterval,
+//    reloadInterval,
+//    self,
+//    RefreshOrganisaatioCache
+//  )
+//  var retryRefresh: Option[Cancellable] = None
 
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
@@ -208,8 +208,8 @@ class HttpOrganisaatioActor(
   }
 
   override def postStop(): Unit = {
-    refresh.cancel()
-    retryRefresh.foreach(_.cancel())
+    //refresh.cancel()
+    //retryRefresh.foreach(_.cancel())
   }
 
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
@@ -238,10 +238,10 @@ class HttpOrganisaatioActor(
 
     case Failure(t: OrganisaatioFetchFailedException) =>
       log.error(t.t, "organisaatio refresh failed, retrying in 1 minute")
-      retryRefresh.foreach(_.cancel())
-      retryRefresh = Some(
-        context.system.scheduler.scheduleOnce(1.minute, self, RefreshOrganisaatioCache)
-      )
+    //retryRefresh.foreach(_.cancel())
+    //retryRefresh = Some(
+    //  context.system.scheduler.scheduleOnce(1.minute, self, RefreshOrganisaatioCache)
+    //)
 
     case Failure(t: Throwable) =>
       log.error(t, "error in organisaatio actor")
