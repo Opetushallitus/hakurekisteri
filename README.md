@@ -94,3 +94,7 @@ Korjattua nämä saa ajamalla
 `mvn spotless:apply`
 
 Lisätietoa https://github.com/diffplug/spotless/tree/master/plugin-maven
+
+## Java-versio
+
+Käytössä oleva Java-versio on 11
