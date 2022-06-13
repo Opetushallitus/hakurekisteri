@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.rest.support.ValpasReadRole
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
+import org.scalatra.{AsyncResult, FutureSupport, InternalServerError, Ok}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport, SwaggerSupportSyntax}
 
@@ -17,6 +17,16 @@ import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
 trait ValpasSwaggerApi extends SwaggerSupport {
+  val warmUpValpasCache: SwaggerSupportSyntax.OperationBuilder =
+    apiOperation[Seq[ValpasHakemus]]("warmUpValpasCache")
+      .summary("Valpas-tietojen välimuistin virkistysrajanpinta")
+      .description(
+        "Virkistää polkuparametrina annetulle haulle välimuistit"
+      )
+      .parameter(
+        pathParam("hakuOid").description("Haun OID").required
+      )
+      .tags("Valpas-resource")
 
   val fetchValpasDataForPersons: SwaggerSupportSyntax.OperationBuilder =
     apiOperation[Seq[ValpasHakemus]]("fetchValpasDataForPersons")
@@ -59,6 +69,12 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
 
   before() {
     contentType = formats("json")
+  }
+
+  post("/:hakuOid/cache", operation(warmUpValpasCache)) {
+    val hakuOid = params("hakuOid")
+
+    Ok(s"Virkistetään välimuistit haulle $hakuOid")
   }
 
   post("/", operation(fetchValpasDataForPersons)) {

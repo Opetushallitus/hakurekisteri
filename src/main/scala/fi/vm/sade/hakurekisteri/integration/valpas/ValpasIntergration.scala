@@ -549,38 +549,14 @@ class ValpasIntergration(
         .map(_.flatten.toSeq.groupBy(_.hakemusOid))
     }
 
-    val hakukohteet: Future[Map[String, Hakukohde]] = Future
-      .sequence(
-        hakukohdeOids.toSeq.map(oid =>
-          if (isKoutaHakukohdeOid(oid)) {
-            (koutaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
-          } else {
-            (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
-          }
-        )
-      )
+    val hakukohteet: Future[Map[String, Hakukohde]] = fetchHakukohteet(hakukohdeOids)
       .map(_.flatten)
       .map(_.map(h => (h.oid, h)).toMap)
 
-    val koulutukset: Future[Map[String, HakukohteenKoulutukset]] = Future
-      .sequence(
-        hakukohdeOids.toSeq.map(oid =>
-          if (isKoutaHakukohdeOid(oid)) {
-            (koutaActor.actor ? HakukohteenKoulutuksetQuery(oid))
-              .mapTo[HakukohteenKoulutukset]
-          } else {
-            (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
-          }
-        )
-      )
+    val koulutukset: Future[Map[String, HakukohteenKoulutukset]] = fetchKoulutukset(hakukohdeOids)
       .map(_.map(h => (h.hakukohdeOid, h)).toMap)
 
-    val organisaatiot: Future[Map[String, Organisaatio]] = Future
-      .sequence(
-        organisaatioOids.toSeq.map(oid =>
-          (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]
-        )
-      )
+    val organisaatiot: Future[Map[String, Organisaatio]] = fetchOrganisaatiot(organisaatioOids)
       .map(s => s.flatten)
       .map(s => s.map(q => (q.oid, q)).toMap)
 
@@ -654,6 +630,42 @@ class ValpasIntergration(
       )
     }
   }
+
+  private def fetchOrganisaatiot(organisaatioOids: Set[String]) = {
+    Future
+      .sequence(
+        organisaatioOids.toSeq.map(oid =>
+          (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]
+        )
+      )
+  }
+
+  private def fetchKoulutukset(hakukohdeOids: Set[String]): Future[Seq[HakukohteenKoulutukset]] = {
+    Future
+      .sequence(
+        hakukohdeOids.toSeq.map(oid =>
+          if (isKoutaHakukohdeOid(oid)) {
+            (koutaActor.actor ? HakukohteenKoulutuksetQuery(oid))
+              .mapTo[HakukohteenKoulutukset]
+          } else {
+            (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
+          }
+        )
+      )
+  }
+
+  private def fetchHakukohteet(hakukohdeOids: Set[String]): Future[Seq[Option[Hakukohde]]] = {
+    Future.sequence(
+      hakukohdeOids.toSeq.map(oid =>
+        if (isKoutaHakukohdeOid(oid)) {
+          (koutaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+        } else {
+          (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+        }
+      )
+    )
+  }
+
   def fetchOsallistumiset(oids: Set[String]): Future[Seq[ValintalaskentaOsallistuminen]] = {
     valintalaskentaClient
       .postObject[Set[String], Seq[ValintalaskentaOsallistuminen]](
@@ -662,6 +674,53 @@ class ValpasIntergration(
         200,
         oids
       )
+  }
+
+  def warmupCache(hakuOid: String) = {
+    val haku: Future[Option[Haku]] = (hakuActor ? GetHakuOption(hakuOid)).mapTo[Option[Haku]]
+    haku.onComplete {
+      case Success(Some(hk)) =>
+        hk.kohdejoukkoUri.filter(_.startsWith("haunkohdejoukko_11")) match {
+          case Some(f) =>
+            hakemusService.hakemuksetForHaku(hakuOid, None).onComplete {
+              case Success(hakemukset) =>
+                val hakukohteet: Set[String] = hakemukset
+                  .flatMap(h => h.hakutoiveet.getOrElse(Seq.empty))
+                  .flatMap(h => h.koulutusId)
+                  .toSet
+                val organisaatioOids =
+                  hakemukset
+                    .flatMap(_.hakutoiveet.getOrElse(List.empty))
+                    .flatMap(_.organizationOid)
+                    .toSet
+                    .filterNot(_.isEmpty)
+
+                val f1 = fetchHakukohteet(hakukohteet)
+                val f2 = fetchKoulutukset(hakukohteet)
+                val f3 = fetchOrganisaatiot(organisaatioOids)
+
+                Future.sequence(List(f1, f2, f3)) onComplete {
+                  case Success(_) =>
+                    logger.info(s"Caches successfully warmed up on haku $hakuOid!")
+                  case Failure(e) =>
+                    logger.error(s"Couldn't warm up cache on haku $hakuOid!", e)
+                }
+              case Failure(e) =>
+                logger.error(
+                  s"Couldn't warm up cache on none existing haku $hakuOid! Hakemukset fetch failed!",
+                  e
+                )
+            }
+          case None =>
+            logger.error(
+              s"Wont warm up cache on haku $hakuOid because kohde joukko not 11 (was ${hk.kohdejoukkoUri})!"
+            )
+        }
+      case Success(None) =>
+        logger.error(s"Couldn't warm up cache on none existing haku $hakuOid!")
+      case Failure(e) =>
+        logger.error(s"Couldn't warm up cache on haku $hakuOid!", e)
+    }
   }
 
   def fetch(query: ValpasQuery): Future[Seq[ValpasHakemus]] = {
