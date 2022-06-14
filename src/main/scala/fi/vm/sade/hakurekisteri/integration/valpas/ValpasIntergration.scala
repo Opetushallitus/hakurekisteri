@@ -715,8 +715,6 @@ class ValpasIntergration(
                 val maatjavaltiot2 =
                   (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2"))
                     .mapTo[KoodistoKoodiArvot]
-                val pisteet: Future[Seq[PistetietoWrapper]] =
-                  fetchPisteet(hakemukset)
 
                 val tulokset: Future[Seq[ValintaTulos]] =
                   if (warmUpValintatulokset) {
@@ -737,8 +735,7 @@ class ValpasIntergration(
                     koulutus,
                     posti,
                     maatjavaltiot1,
-                    maatjavaltiot2,
-                    pisteet
+                    maatjavaltiot2
                   )
                 ) onComplete {
                   case Success(_) =>
