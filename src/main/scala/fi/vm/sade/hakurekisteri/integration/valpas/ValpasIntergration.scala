@@ -723,7 +723,7 @@ class ValpasIntergration(
                     (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, hakemukset))
                       .mapTo[Seq[ValintaTulos]]
                   } else {
-                    Future.sequence(Seq.empty)
+                    Future.successful(Seq.empty[ValintaTulos])
                   }
 
                 Future.sequence(
