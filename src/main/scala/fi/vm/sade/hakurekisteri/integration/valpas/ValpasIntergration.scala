@@ -223,6 +223,20 @@ class ValpasIntergration(
   private val Formatter =
     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
+  private def hakemusToValintatulosQuery(
+    hakuOid: String,
+    hakemukset: Seq[HakijaHakemus]
+  ): VirkailijanValintatulos = {
+    val hetulla = hakemukset.filter(_.hetu.isDefined)
+    val ilmanHetua = hakemukset.filter(_.hetu.isEmpty)
+
+    def groupBy(h: Seq[HakijaHakemus]): Map[String, Set[String]] = {
+      h.groupBy(_.personOid.get).map { case (henkilo, hakemukset) =>
+        (henkilo, hakemukset.map(_.oid).toSet)
+      }
+    }
+    VirkailijanValintatulos(hakuOid, groupBy(hetulla), groupBy(ilmanHetua))
+  }
 
   def fromFetchedResources(
     oidToPisteet: Map[String, Seq[PistetietoWrapper]],
@@ -522,20 +536,6 @@ class ValpasIntergration(
         .flatMap(_.organizationOid)
         .toSet
         .filterNot(_.isEmpty)
-    def hakemusToValintatulosQuery(
-      hakuOid: String,
-      hakemukset: Seq[HakijaHakemus]
-    ): VirkailijanValintatulos = {
-      val hetulla = hakemukset.filter(_.hetu.isDefined)
-      val ilmanHetua = hakemukset.filter(_.hetu.isEmpty)
-
-      def groupBy(h: Seq[HakijaHakemus]): Map[String, Set[String]] = {
-        h.groupBy(_.personOid.get).map { case (henkilo, hakemukset) =>
-          (henkilo, hakemukset.map(_.oid).toSet)
-        }
-      }
-      VirkailijanValintatulos(hakuOid, groupBy(hetulla), groupBy(ilmanHetua))
-    }
 
     val valintarekisteri: Future[Map[String, Seq[ValintaTulos]]] = {
       val byHaku: Map[String, Seq[HakijaHakemus]] =
@@ -676,7 +676,7 @@ class ValpasIntergration(
       )
   }
 
-  def warmupCache(hakuOid: String) = {
+  def warmupCache(hakuOid: String, warmUpValintatulokset: Boolean) = {
     val haku: Future[Option[Haku]] = (hakuActor ? GetHakuOption(hakuOid)).mapTo[Option[Haku]]
     haku.onComplete {
       case Success(Some(hk)) =>
@@ -697,7 +697,50 @@ class ValpasIntergration(
                 val f1 = fetchHakukohteet(hakukohteet)
                 val f2 = fetchKoulutukset(hakukohteet)
                 val f3 = fetchOrganisaatiot(organisaatioOids)
-                Future.sequence(List(f1, f2, f3)) onComplete {
+
+                val hakutapa =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutapa"))
+                    .mapTo[KoodistoKoodiArvot]
+                val hakutyyppi =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutyyppi"))
+                    .mapTo[KoodistoKoodiArvot]
+                val koulutus =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("koulutus"))
+                    .mapTo[KoodistoKoodiArvot]
+                val posti =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("posti")).mapTo[KoodistoKoodiArvot]
+                val maatjavaltiot1 =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot1"))
+                    .mapTo[KoodistoKoodiArvot]
+                val maatjavaltiot2 =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2"))
+                    .mapTo[KoodistoKoodiArvot]
+                val pisteet: Future[Seq[PistetietoWrapper]] =
+                  pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
+
+                val tulokset: Future[Seq[ValintaTulos]] =
+                  if (warmUpValintatulokset) {
+                    (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, hakemukset))
+                      .mapTo[Seq[ValintaTulos]]
+                  } else {
+                    Future.sequence(Seq.empty)
+                  }
+
+                Future.sequence(
+                  List(
+                    tulokset,
+                    f1,
+                    f2,
+                    f3,
+                    hakutapa,
+                    hakutyyppi,
+                    koulutus,
+                    posti,
+                    maatjavaltiot1,
+                    maatjavaltiot2,
+                    pisteet
+                  )
+                ) onComplete {
                   case Success(_) =>
                     logger.info(s"Caches successfully warmed up on haku $hakuOid!")
                   case Failure(e) =>

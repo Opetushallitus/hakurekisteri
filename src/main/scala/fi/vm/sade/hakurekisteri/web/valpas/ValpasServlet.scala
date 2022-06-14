@@ -27,6 +27,12 @@ trait ValpasSwaggerApi extends SwaggerSupport {
         bodyParam[Map[String, String]]("pakollinen parametri").description("ei vaikutusta").required
       )
       .parameter(
+        queryParam[Option[Boolean]]("valintatulokset")
+          .description("virkistetäänkö valintatulokset? vakioarvoisesti ei virkistetä")
+          .defaultValue(Some(false))
+          .optional
+      )
+      .parameter(
         pathParam("hakuOid").description("Haun OID").required
       )
       .tags("Valpas-resource")
@@ -75,8 +81,15 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
   }
 
   post("/:hakuOid/cache", operation(warmUpValpasCache)) {
+    shouldBeAdminOrValpasRead()
     val hakuOid = params("hakuOid")
-    valpasIntergration.warmupCache(hakuOid)
+    val valintatulokset: Boolean =
+      Try(Option(params("valintatulokset")).map(_.toBoolean)) match {
+        case Success(Some(v)) => v
+        case _                => false
+      }
+
+    valpasIntergration.warmupCache(hakuOid, valintatulokset)
     Ok(Map("result" -> s"Virkistetään välimuistit haulle $hakuOid"))
   }
 
