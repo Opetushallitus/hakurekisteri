@@ -694,11 +694,9 @@ class ValpasIntergration(
                     .flatMap(_.organizationOid)
                     .toSet
                     .filterNot(_.isEmpty)
-
                 val f1 = fetchHakukohteet(hakukohteet)
                 val f2 = fetchKoulutukset(hakukohteet)
                 val f3 = fetchOrganisaatiot(organisaatioOids)
-
                 Future.sequence(List(f1, f2, f3)) onComplete {
                   case Success(_) =>
                     logger.info(s"Caches successfully warmed up on haku $hakuOid!")
