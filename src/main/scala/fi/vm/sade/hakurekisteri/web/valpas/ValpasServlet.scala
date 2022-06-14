@@ -24,7 +24,7 @@ trait ValpasSwaggerApi extends SwaggerSupport {
         "Virkistää polkuparametrina annetulle haulle välimuistit"
       )
       .parameter(
-        bodyParam[Any]("pakollinen parametri").description("ei vaikutusta").required
+        bodyParam[Map[String, String]]("pakollinen parametri").description("ei vaikutusta").required
       )
       .parameter(
         pathParam("hakuOid").description("Haun OID").required
