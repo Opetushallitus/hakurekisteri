@@ -18,7 +18,7 @@ import scala.util.{Success, Try}
 
 trait ValpasSwaggerApi extends SwaggerSupport {
   val warmUpValpasCache: SwaggerSupportSyntax.OperationBuilder =
-    apiOperation[Seq[ValpasHakemus]]("warmUpValpasCache")
+    apiOperation("warmUpValpasCache")
       .summary("Valpas-tietojen välimuistin virkistysrajanpinta")
       .description(
         "Virkistää polkuparametrina annetulle haulle välimuistit"
@@ -73,7 +73,7 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
 
   post("/:hakuOid/cache", operation(warmUpValpasCache)) {
     val hakuOid = params("hakuOid")
-
+    valpasIntergration.warmupCache(hakuOid)
     Ok(s"Virkistetään välimuistit haulle $hakuOid")
   }
 
