@@ -573,7 +573,7 @@ class ValpasIntergration(
     val maatjavaltiot2 =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2")).mapTo[KoodistoKoodiArvot]
     val pisteet: Future[Seq[PistetietoWrapper]] =
-      pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
+      fetchPisteet(hakemukset)
 
     for {
       oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- SlowFutureLogger(
@@ -716,7 +716,7 @@ class ValpasIntergration(
                   (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2"))
                     .mapTo[KoodistoKoodiArvot]
                 val pisteet: Future[Seq[PistetietoWrapper]] =
-                  pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
+                  fetchPisteet(hakemukset)
 
                 val tulokset: Future[Seq[ValintaTulos]] =
                   if (warmUpValintatulokset) {
@@ -762,6 +762,15 @@ class ValpasIntergration(
       case Failure(e) =>
         logger.error(s"Couldn't warm up cache on haku $hakuOid!", e)
     }
+  }
+
+  private val MAX_PISTEET_KERRALLA = 30000
+
+  private def fetchPisteet(hakemukset: Seq[HakijaHakemus]): Future[Seq[PistetietoWrapper]] = {
+    val pisteet: List[Set[String]] =
+      hakemukset.map(_.oid).toSet.sliding(MAX_PISTEET_KERRALLA, MAX_PISTEET_KERRALLA).toList
+
+    Future.sequence(pisteet.map(pistesyottoService.fetchPistetiedot)).map(vv => vv.flatten)
   }
 
   def fetch(query: ValpasQuery): Future[Seq[ValpasHakemus]] = {
