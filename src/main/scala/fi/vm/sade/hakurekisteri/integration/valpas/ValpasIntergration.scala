@@ -761,11 +761,19 @@ class ValpasIntergration(
 
   private val MAX_TULOKSET_KERRALLA = 10000
 
-  private def fetchHaunTulokset(hakuOid: String, hakemukset: Seq[HakijaHakemus]): Future[Seq[ValintaTulos]] = {
+  private def fetchHaunTulokset(
+    hakuOid: String,
+    hakemukset: Seq[HakijaHakemus]
+  ): Future[Seq[ValintaTulos]] = {
     val hks: List[Seq[HakijaHakemus]] =
       hakemukset.sliding(MAX_TULOKSET_KERRALLA, MAX_TULOKSET_KERRALLA).toList
 
-    Future.sequence(hks.map(h => (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, h)).mapTo[Seq[ValintaTulos]]))
+    Future
+      .sequence(
+        hks.map(h =>
+          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, h)).mapTo[Seq[ValintaTulos]]
+        )
+      )
       .map(vv => vv.flatten)
   }
 
