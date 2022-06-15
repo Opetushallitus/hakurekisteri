@@ -215,7 +215,7 @@ class KoutaInternalActor(
 
   private def getToteutusFromKoutaInternal(toteutusOid: String): Future[KoutaInternalToteutus] =
     restClient
-      .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200,3)
+      .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200, 3)
 
   private def getHakuFromKoutaInternal(hakuOid: String): Future[KoutaInternalRestHaku] = restClient
     .readObject[KoutaInternalRestHaku]("kouta-internal.haku", hakuOid)(200, 3)
