@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.rest.support.ValpasReadRole
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized}
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
+import org.scalatra.{AsyncResult, FutureSupport, InternalServerError, Ok}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport, SwaggerSupportSyntax}
 
@@ -17,6 +17,25 @@ import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
 trait ValpasSwaggerApi extends SwaggerSupport {
+  val warmUpValpasCache: SwaggerSupportSyntax.OperationBuilder =
+    apiOperation("warmUpValpasCache")
+      .summary("Valpas-tietojen välimuistin virkistysrajanpinta")
+      .description(
+        "Virkistää polkuparametrina annetulle haulle välimuistit"
+      )
+      .parameter(
+        bodyParam[Map[String, String]]("pakollinen parametri").description("ei vaikutusta").required
+      )
+      .parameter(
+        queryParam[Option[Boolean]]("valintatulokset")
+          .description("virkistetäänkö valintatulokset? vakioarvoisesti ei virkistetä")
+          .defaultValue(Some(false))
+          .optional
+      )
+      .parameter(
+        pathParam("hakuOid").description("Haun OID").required
+      )
+      .tags("Valpas-resource")
 
   val fetchValpasDataForPersons: SwaggerSupportSyntax.OperationBuilder =
     apiOperation[Seq[ValpasHakemus]]("fetchValpasDataForPersons")
@@ -59,6 +78,19 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
 
   before() {
     contentType = formats("json")
+  }
+
+  post("/:hakuOid/cache", operation(warmUpValpasCache)) {
+    shouldBeAdminOrValpasRead()
+    val hakuOid = params("hakuOid")
+    val valintatulokset: Boolean =
+      Try(Option(params("valintatulokset")).map(_.toBoolean)) match {
+        case Success(Some(v)) => v
+        case _                => false
+      }
+
+    valpasIntergration.warmupCache(hakuOid, valintatulokset)
+    Ok(Map("result" -> s"Virkistetään välimuistit haulle $hakuOid"))
   }
 
   post("/", operation(fetchValpasDataForPersons)) {

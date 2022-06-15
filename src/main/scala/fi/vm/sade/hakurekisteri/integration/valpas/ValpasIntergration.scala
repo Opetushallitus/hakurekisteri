@@ -223,6 +223,20 @@ class ValpasIntergration(
   private val Formatter =
     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
+  private def hakemusToValintatulosQuery(
+    hakuOid: String,
+    hakemukset: Seq[HakijaHakemus]
+  ): VirkailijanValintatulos = {
+    val hetulla = hakemukset.filter(_.hetu.isDefined)
+    val ilmanHetua = hakemukset.filter(_.hetu.isEmpty)
+
+    def groupBy(h: Seq[HakijaHakemus]): Map[String, Set[String]] = {
+      h.groupBy(_.personOid.get).map { case (henkilo, hakemukset) =>
+        (henkilo, hakemukset.map(_.oid).toSet)
+      }
+    }
+    VirkailijanValintatulos(hakuOid, groupBy(hetulla), groupBy(ilmanHetua))
+  }
 
   def fromFetchedResources(
     oidToPisteet: Map[String, Seq[PistetietoWrapper]],
@@ -522,20 +536,6 @@ class ValpasIntergration(
         .flatMap(_.organizationOid)
         .toSet
         .filterNot(_.isEmpty)
-    def hakemusToValintatulosQuery(
-      hakuOid: String,
-      hakemukset: Seq[HakijaHakemus]
-    ): VirkailijanValintatulos = {
-      val hetulla = hakemukset.filter(_.hetu.isDefined)
-      val ilmanHetua = hakemukset.filter(_.hetu.isEmpty)
-
-      def groupBy(h: Seq[HakijaHakemus]): Map[String, Set[String]] = {
-        h.groupBy(_.personOid.get).map { case (henkilo, hakemukset) =>
-          (henkilo, hakemukset.map(_.oid).toSet)
-        }
-      }
-      VirkailijanValintatulos(hakuOid, groupBy(hetulla), groupBy(ilmanHetua))
-    }
 
     val valintarekisteri: Future[Map[String, Seq[ValintaTulos]]] = {
       val byHaku: Map[String, Seq[HakijaHakemus]] =
@@ -543,44 +543,19 @@ class ValpasIntergration(
 
       Future
         .sequence(byHaku.map { case (hakuOid, hakemukset) =>
-          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, hakemukset))
-            .mapTo[Seq[ValintaTulos]]
+          fetchHaunTulokset(hakuOid, hakemukset)
         })
         .map(_.flatten.toSeq.groupBy(_.hakemusOid))
     }
 
-    val hakukohteet: Future[Map[String, Hakukohde]] = Future
-      .sequence(
-        hakukohdeOids.toSeq.map(oid =>
-          if (isKoutaHakukohdeOid(oid)) {
-            (koutaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
-          } else {
-            (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
-          }
-        )
-      )
+    val hakukohteet: Future[Map[String, Hakukohde]] = fetchHakukohteet(hakukohdeOids)
       .map(_.flatten)
       .map(_.map(h => (h.oid, h)).toMap)
 
-    val koulutukset: Future[Map[String, HakukohteenKoulutukset]] = Future
-      .sequence(
-        hakukohdeOids.toSeq.map(oid =>
-          if (isKoutaHakukohdeOid(oid)) {
-            (koutaActor.actor ? HakukohteenKoulutuksetQuery(oid))
-              .mapTo[HakukohteenKoulutukset]
-          } else {
-            (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
-          }
-        )
-      )
+    val koulutukset: Future[Map[String, HakukohteenKoulutukset]] = fetchKoulutukset(hakukohdeOids)
       .map(_.map(h => (h.hakukohdeOid, h)).toMap)
 
-    val organisaatiot: Future[Map[String, Organisaatio]] = Future
-      .sequence(
-        organisaatioOids.toSeq.map(oid =>
-          (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]
-        )
-      )
+    val organisaatiot: Future[Map[String, Organisaatio]] = fetchOrganisaatiot(organisaatioOids)
       .map(s => s.flatten)
       .map(s => s.map(q => (q.oid, q)).toMap)
 
@@ -597,7 +572,7 @@ class ValpasIntergration(
     val maatjavaltiot2 =
       (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2")).mapTo[KoodistoKoodiArvot]
     val pisteet: Future[Seq[PistetietoWrapper]] =
-      pistesyottoService.fetchPistetiedot(hakemukset.map(_.oid).toSet)
+      fetchPisteet(hakemukset)
 
     for {
       oidToPisteet: Map[String, Seq[PistetietoWrapper]] <- SlowFutureLogger(
@@ -654,6 +629,42 @@ class ValpasIntergration(
       )
     }
   }
+
+  private def fetchOrganisaatiot(organisaatioOids: Set[String]) = {
+    Future
+      .sequence(
+        organisaatioOids.toSeq.map(oid =>
+          (organisaatioActor.actor ? oid).mapTo[Option[Organisaatio]]
+        )
+      )
+  }
+
+  private def fetchKoulutukset(hakukohdeOids: Set[String]): Future[Seq[HakukohteenKoulutukset]] = {
+    Future
+      .sequence(
+        hakukohdeOids.toSeq.map(oid =>
+          if (isKoutaHakukohdeOid(oid)) {
+            (koutaActor.actor ? HakukohteenKoulutuksetQuery(oid))
+              .mapTo[HakukohteenKoulutukset]
+          } else {
+            (tarjontaActor.actor ? HakukohdeOid(oid)).mapTo[HakukohteenKoulutukset]
+          }
+        )
+      )
+  }
+
+  private def fetchHakukohteet(hakukohdeOids: Set[String]): Future[Seq[Option[Hakukohde]]] = {
+    Future.sequence(
+      hakukohdeOids.toSeq.map(oid =>
+        if (isKoutaHakukohdeOid(oid)) {
+          (koutaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+        } else {
+          (tarjontaActor.actor ? HakukohdeQuery(oid)).mapTo[Option[Hakukohde]]
+        }
+      )
+    )
+  }
+
   def fetchOsallistumiset(oids: Set[String]): Future[Seq[ValintalaskentaOsallistuminen]] = {
     valintalaskentaClient
       .postObject[Set[String], Seq[ValintalaskentaOsallistuminen]](
@@ -662,6 +673,117 @@ class ValpasIntergration(
         200,
         oids
       )
+  }
+
+  def warmupCache(hakuOid: String, warmUpValintatulokset: Boolean) = {
+    val haku: Future[Option[Haku]] = (hakuActor ? GetHakuOption(hakuOid)).mapTo[Option[Haku]]
+    haku.onComplete {
+      case Success(Some(hk)) =>
+        hk.kohdejoukkoUri.filter(_.startsWith("haunkohdejoukko_11")) match {
+          case Some(f) =>
+            hakemusService.hakemuksetForHaku(hakuOid, None).onComplete {
+              case Success(hakemukset) =>
+                val hakukohteet: Set[String] = hakemukset
+                  .flatMap(h => h.hakutoiveet.getOrElse(Seq.empty))
+                  .flatMap(h => h.koulutusId)
+                  .toSet
+                val organisaatioOids =
+                  hakemukset
+                    .flatMap(_.hakutoiveet.getOrElse(List.empty))
+                    .flatMap(_.organizationOid)
+                    .toSet
+                    .filterNot(_.isEmpty)
+                val f1 = fetchHakukohteet(hakukohteet)
+                val f2 = fetchKoulutukset(hakukohteet)
+                val f3 = fetchOrganisaatiot(organisaatioOids)
+
+                val hakutapa =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutapa"))
+                    .mapTo[KoodistoKoodiArvot]
+                val hakutyyppi =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("hakutyyppi"))
+                    .mapTo[KoodistoKoodiArvot]
+                val koulutus =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("koulutus"))
+                    .mapTo[KoodistoKoodiArvot]
+                val posti =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("posti")).mapTo[KoodistoKoodiArvot]
+                val maatjavaltiot1 =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot1"))
+                    .mapTo[KoodistoKoodiArvot]
+                val maatjavaltiot2 =
+                  (koodistoActor.actor ? GetKoodistoKoodiArvot("maatjavaltiot2"))
+                    .mapTo[KoodistoKoodiArvot]
+
+                val tulokset: Future[Seq[ValintaTulos]] =
+                  if (warmUpValintatulokset) {
+                    fetchHaunTulokset(hakuOid, hakemukset)
+                  } else {
+                    Future.successful(Seq.empty[ValintaTulos])
+                  }
+
+                Future.sequence(
+                  List(
+                    tulokset,
+                    f1,
+                    f2,
+                    f3,
+                    hakutapa,
+                    hakutyyppi,
+                    koulutus,
+                    posti,
+                    maatjavaltiot1,
+                    maatjavaltiot2
+                  )
+                ) onComplete {
+                  case Success(_) =>
+                    logger.info(s"Caches successfully warmed up on haku $hakuOid!")
+                  case Failure(e) =>
+                    logger.error(s"Couldn't warm up cache on haku $hakuOid!", e)
+                }
+              case Failure(e) =>
+                logger.error(
+                  s"Couldn't warm up cache on none existing haku $hakuOid! Hakemukset fetch failed!",
+                  e
+                )
+            }
+          case None =>
+            logger.error(
+              s"Wont warm up cache on haku $hakuOid because kohde joukko not 11 (was ${hk.kohdejoukkoUri})!"
+            )
+        }
+      case Success(None) =>
+        logger.error(s"Couldn't warm up cache on none existing haku $hakuOid!")
+      case Failure(e) =>
+        logger.error(s"Couldn't warm up cache on haku $hakuOid!", e)
+    }
+  }
+
+  private val MAX_TULOKSET_KERRALLA = 10000
+
+  private def fetchHaunTulokset(
+    hakuOid: String,
+    hakemukset: Seq[HakijaHakemus]
+  ): Future[Seq[ValintaTulos]] = {
+    val hks: List[Seq[HakijaHakemus]] =
+      hakemukset.sliding(MAX_TULOKSET_KERRALLA, MAX_TULOKSET_KERRALLA).toList
+
+    Future
+      .sequence(
+        hks.map(h =>
+          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, h)).mapTo[Seq[ValintaTulos]]
+        )
+      )
+      .map(vv => vv.flatten)
+  }
+
+  private val MAX_PISTEET_KERRALLA = 30000
+
+  private def fetchPisteet(hakemukset: Seq[HakijaHakemus]): Future[Seq[PistetietoWrapper]] = {
+    val pisteet: List[Set[String]] =
+      hakemukset.map(_.oid).toSet.sliding(MAX_PISTEET_KERRALLA, MAX_PISTEET_KERRALLA).toList
+
+    Future.sequence(pisteet.map(pistesyottoService.fetchPistetiedot)).map(vv => vv.flatten)
   }
 
   def fetch(query: ValpasQuery): Future[Seq[ValpasHakemus]] = {
