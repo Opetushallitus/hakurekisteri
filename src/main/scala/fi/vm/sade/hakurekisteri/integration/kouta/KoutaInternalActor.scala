@@ -173,7 +173,7 @@ class KoutaInternalActor(
 
   def getHautForReal: Future[RestHakuResult] =
     restClient
-      .readObject[List[KoutaInternalRestHaku]]("kouta-internal.haku.search.all")(200)
+      .readObject[List[KoutaInternalRestHaku]]("kouta-internal.haku.search.all")(200, 3)
       .map(_.map(_.toRestHaku))
       .map(RestHakuResult)
       .recover { case t: Throwable =>
@@ -205,20 +205,20 @@ class KoutaInternalActor(
       .map(hk => Some(hk.toHakukohde))
 
   private def getKoulutusFromKoutaInternal(koulutusOid: String) =
-    restClient.readObject[KoutaInternalKoulutus]("kouta-internal.koulutus", koulutusOid)(200)
+    restClient.readObject[KoutaInternalKoulutus]("kouta-internal.koulutus", koulutusOid)(200, 3)
 
   private def getHakukohdeFromKoutaInternal(hakukohdeOid: String): Future[KoutaInternalHakukohde] =
     hakukohdeCache.get(hakukohdeOid)
 
   private def getHakukohdeFromKoutaInternalForReal(hakukohdeOid: String) = restClient
-    .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200)
+    .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200, 3)
 
   private def getToteutusFromKoutaInternal(toteutusOid: String): Future[KoutaInternalToteutus] =
     restClient
-      .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200)
+      .readObject[KoutaInternalToteutus]("kouta-internal.toteutus", toteutusOid)(200,3)
 
   private def getHakuFromKoutaInternal(hakuOid: String): Future[KoutaInternalRestHaku] = restClient
-    .readObject[KoutaInternalRestHaku]("kouta-internal.haku", hakuOid)(200)
+    .readObject[KoutaInternalRestHaku]("kouta-internal.haku", hakuOid)(200, 3)
 
   private def findTarjoajanHakukohteet(q: HakukohteetHaussaQuery) = {
     val orgParam = q.organisaatioOid.map(oo => "&tarjoaja=" + oo).getOrElse("")
@@ -229,7 +229,8 @@ class KoutaInternalActor(
     restClient
       .readObjectFromUrl[List[KoutaInternalHakukohdeLite]](
         url,
-        List(200)
+        List(200),
+        3
       )
   }
 
