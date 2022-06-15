@@ -543,8 +543,7 @@ class ValpasIntergration(
 
       Future
         .sequence(byHaku.map { case (hakuOid, hakemukset) =>
-          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, hakemukset))
-            .mapTo[Seq[ValintaTulos]]
+          fetchHaunTulokset(hakuOid, hakemukset)
         })
         .map(_.flatten.toSeq.groupBy(_.hakemusOid))
     }
@@ -718,8 +717,7 @@ class ValpasIntergration(
 
                 val tulokset: Future[Seq[ValintaTulos]] =
                   if (warmUpValintatulokset) {
-                    (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, hakemukset))
-                      .mapTo[Seq[ValintaTulos]]
+                    fetchHaunTulokset(hakuOid, hakemukset)
                   } else {
                     Future.successful(Seq.empty[ValintaTulos])
                   }
@@ -759,6 +757,16 @@ class ValpasIntergration(
       case Failure(e) =>
         logger.error(s"Couldn't warm up cache on haku $hakuOid!", e)
     }
+  }
+
+  private val MAX_TULOKSET_KERRALLA = 10000
+
+  private def fetchHaunTulokset(hakuOid: String, hakemukset: Seq[HakijaHakemus]): Future[Seq[ValintaTulos]] = {
+    val hks: List[Seq[HakijaHakemus]] =
+      hakemukset.sliding(MAX_TULOKSET_KERRALLA, MAX_TULOKSET_KERRALLA).toList
+
+    Future.sequence(hks.map(h => (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, h)).mapTo[Seq[ValintaTulos]]))
+      .map(vv => vv.flatten)
   }
 
   private val MAX_PISTEET_KERRALLA = 30000
