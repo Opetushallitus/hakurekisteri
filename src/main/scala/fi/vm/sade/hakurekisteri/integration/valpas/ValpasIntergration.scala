@@ -303,7 +303,7 @@ class ValpasIntergration(
                   valinnanVaiheJarjestysluku = vv.valinnanVaiheJarjestysluku,
                   arvo = pisteet
                     .find(_.tunniste.equals(vk.valintakoeTunniste))
-                    .flatMap(a => if(a.arvo == null) None else Some(a.arvo.toString))
+                    .flatMap(a => if (a.arvo == null) None else Some(a.arvo.toString))
                 )
               )
             else None
