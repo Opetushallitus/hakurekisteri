@@ -210,11 +210,15 @@ class ValintaTulosActor(
         foundValintatulokset.map(_.hakemusOid).toSet
       ) match {
         case s if s.isEmpty =>
-          log.info(s"Found all valintatulokset for ${foundValintatulokset.size} hakemukset to haku $hakuOid from cache!")
+          log.info(
+            s"Found all valintatulokset for ${foundValintatulokset.size} hakemukset to haku $hakuOid from cache!"
+          )
           Future.successful(Seq.empty[ValintaTulos])
-        case s              =>
-          log.info(s"Found valintatulokset for ${foundValintatulokset.size} hakemukset to haku $hakuOid from cache and fetching for " +
-            s"${s.size} hakemukset!")
+        case s =>
+          log.info(
+            s"Found valintatulokset for ${foundValintatulokset.size} hakemukset to haku $hakuOid from cache and fetching for " +
+              s"${s.size} hakemukset!"
+          )
           fetchForReal(s)
       }
     } yield foundValintatulokset ++ saveFetched(missedValintatulokset)

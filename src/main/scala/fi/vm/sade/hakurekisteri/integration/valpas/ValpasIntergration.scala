@@ -833,30 +833,41 @@ class ValpasIntergration(
           if (hakemukset.isEmpty) {
             Future.successful(Seq.empty)
           } else {
-            fetchValintarekisteriAndTarjonta(haut, hakemukset, osallistumisetFuture).flatMap(s => {
-              if (s.exists(_.isFailure)) {
-                Future.failed(
-                  new RuntimeException(
-                    s.flatMap {
-                      case Failure(x) =>
-                        logger.error("Valpas fetch failed!", x)
-                        Some(x.getMessage)
-                      case _ => None
-                    }.mkString(", ")
-                  )
-                )
-              } else {
-                Future.successful(s.flatMap {
-                  case Success(value) =>
-                    Some(value)
-                  case _ => None
-                })
-              }
-            })
+            fetchValintarekisteriAndTarjonta(haut, hakemukset, osallistumisetFuture)
+              .flatMap(collectValintatulosResults)
           }
       } yield valpasHakemukset).recoverWith { case e: Exception =>
         logger.error(s"Failed to fetch Valpas-tiedot:", e)
         Future.failed(e)
+      }
+    }
+  }
+
+  private def collectValintatulosResults(s: Seq[Try[ValpasHakemus]]): Future[Seq[ValpasHakemus]] = {
+    if (s == null || !s.exists(a => a != null)) {
+      logger.warn("Zero results for Valpas query")
+      Future.successful(Seq.empty[ValpasHakemus])
+    } else {
+      val fails: Seq[Try[ValpasHakemus]] = s.filter(a => a != null).filter(_.isFailure)
+      if (fails.nonEmpty) {
+        Future.failed(
+          new RuntimeException(
+            fails
+              .flatMap {
+                case Failure(x) =>
+                  logger.error("Valpas fetch failed!", x)
+                  Some(if (x == null) "null" else s"${x.getMessage}")
+                case _ => None
+              }
+              .mkString(", ")
+          )
+        )
+      } else {
+        Future.successful(s.filter(a => a != null).flatMap {
+          case Success(value) =>
+            Some(value)
+          case _ => None
+        })
       }
     }
   }

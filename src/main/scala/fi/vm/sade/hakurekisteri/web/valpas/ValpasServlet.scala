@@ -119,7 +119,7 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
       else
         valpasIntergration.fetch(ValpasQuery(personOids, ainoastaanAktiivisetHaut)).recoverWith {
           case t: Throwable =>
-            logger.error(s"Valpas fetch failed: ${t.getMessage}")
+            logger.error(s"Valpas fetch failed: ${t.getMessage}", t)
             Future.successful(InternalServerError(body = Map("reason" -> t.getMessage)))
         }
 
