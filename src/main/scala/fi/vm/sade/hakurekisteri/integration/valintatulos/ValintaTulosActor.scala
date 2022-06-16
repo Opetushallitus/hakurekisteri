@@ -209,8 +209,13 @@ class ValintaTulosActor(
       missedValintatulokset <- hakemusOids.diff(
         foundValintatulokset.map(_.hakemusOid).toSet
       ) match {
-        case s if s.isEmpty => Future.successful(Seq.empty[ValintaTulos])
-        case s              => fetchForReal(s)
+        case s if s.isEmpty =>
+          log.info(s"Found all valintatulokset for ${foundValintatulokset.size} hakemukset to haku $hakuOid from cache!")
+          Future.successful(Seq.empty[ValintaTulos])
+        case s              =>
+          log.info(s"Found valintatulokset for ${foundValintatulokset.size} hakemukset to haku $hakuOid from cache and fetching for " +
+            s"${s.size} hakemukset!")
+          fetchForReal(s)
       }
     } yield foundValintatulokset ++ saveFetched(missedValintatulokset)
   }
