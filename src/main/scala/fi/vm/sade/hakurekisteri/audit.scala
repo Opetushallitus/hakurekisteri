@@ -129,7 +129,7 @@ object AuditUtil {
   }
 
   def targetFromParams(params: Params): Target.Builder = {
-    new Target.Builder().setField("params", params.keySet.map(k => k + ":" + params(k)).toString())
+    new Target.Builder().setField("params", params.toString())
   }
 }
 
