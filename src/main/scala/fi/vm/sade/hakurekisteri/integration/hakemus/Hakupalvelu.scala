@@ -1186,7 +1186,6 @@ object AkkaHakupalvelu {
       }
       val aiempiperuminen = toive.soraOikeudenMenetys.map(s => Try(s.toBoolean).getOrElse(false))
       val terveys = toive.soraTerveys.map(s => Try(s.toBoolean).getOrElse(false))
-      val organisaatioParentOidPath = toive.organizationParentOids.mkString(",")
       val hakukohdeOid = toive.koulutusId.getOrElse("")
       val koulutuksenKieli: Option[String] = (
         jno == ensimmainenSuomenkielinenHakukohde,
@@ -1209,7 +1208,7 @@ object AkkaHakupalvelu {
         aiempiperuminen,
         terveys,
         None,
-        organisaatioParentOidPath,
+        toive.organizationParentOids,
         koulutuksenKieli,
         None,
         None,
