@@ -72,7 +72,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         Some("0000101"),
         None,
         Some("1.10.1"),
-        None,
+        Some("1.10.1,1.10.3"),
         Seq()
       )
   object OpetuspisteZ

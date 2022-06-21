@@ -83,7 +83,8 @@ class TestSecurity extends Security {
 
 object TestUser extends User {
   override def orgsFor(action: String, resource: String): Set[String] = Set(
-    "1.2.246.562.10.00000000001"
+    "1.2.246.562.10.00000000001",
+    "1.10.3"
   )
   override val username: String = "Test"
   override val auditSession =

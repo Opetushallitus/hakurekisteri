@@ -24,8 +24,6 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
     override def hasRole(role: Role) = true
   }
 
-  val role = DefinedRole("Hakukohde", "READ", OpetuspisteX.oid)
-  //val testUser: User = user having Set(role)
   val testUser = createTestUser(
     "testikäyttäjä",
     Set(OpetuspisteX.oid, OpetuspisteY.oid, OpetuspisteZ.oid, "1.2.246.562.10.00000000001")
