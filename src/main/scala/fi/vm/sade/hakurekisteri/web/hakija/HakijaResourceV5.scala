@@ -5,8 +5,10 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
+import fi.vm.sade.auditlog.Changes
+import fi.vm.sade.hakurekisteri.{AuditUtil, HakijatLuku}
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijatV5}
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV5
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
@@ -54,6 +56,7 @@ class HakijaResourceV5(hakijaActor: ActorRef)(implicit
     if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
     val tyyppi = getFormatFromTypeParam()
     val thisResponse = response
+    audit.log(auditUser, HakijatLuku, AuditUtil.targetFromParams(params).build(), Changes.EMPTY)
     val hakijatFuture: Future[Any] = (hakijaActor ? q).flatMap {
       case result
           if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
