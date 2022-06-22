@@ -72,7 +72,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
         Some("0000101"),
         None,
         Some("1.10.1"),
-        None,
+        Some("1.10.1,1.10.3"),
         Seq()
       )
   object OpetuspisteZ
@@ -210,6 +210,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
                 "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
                 "preference1-Opetuspiste-id" -> "1.10.3",
                 "preference1-Opetuspiste-id-parents" -> "1.10.3,1.2.246.562.10.00000000001",
+                "preference2-Opetuspiste-id-parents" -> "1.10.4,1.2.246.562.10.00000000001",
                 "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
                 "preference1-Koulutus-id" -> "1.11.1",
                 "preference1-Koulutus-id-aoIdentifier" -> "460",
@@ -342,6 +343,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
                 "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
                 "preference1-Opetuspiste-id" -> "1.10.4",
                 "preference1-Opetuspiste-id-parents" -> "1.10.4,1.2.246.562.10.00000000001",
+                "preference2-Opetuspiste-id-parents" -> "1.10.5,1.2.246.562.10.00000000001",
                 "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
                 "preference1-Koulutus-id" -> "1.11.2",
                 "preference1-Koulutus-id-aoIdentifier" -> "460",

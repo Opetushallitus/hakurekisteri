@@ -37,7 +37,7 @@ class SiirtotiedostojonoResource(jono: Siirtotiedostojono)(implicit val security
         audit.log(
           auditUser,
           SiirtotiedostoQueryWithExistingAsiakirja,
-          AuditUtil.targetFromParams(params).build(),
+          AuditUtil.targetFromParams(params).setField("request body", request.body).build(),
           Changes.EMPTY
         )
         if (isForceNewDocument) {

@@ -41,7 +41,7 @@ case class Hakutoive(
   aiempiperuminen: Option[Boolean],
   terveys: Option[Boolean],
   yhteispisteet: Option[BigDecimal],
-  organisaatioParendOidPath: String,
+  organisaatioParentOids: Set[String],
   koulutuksenKieli: Option[String],
   valinta: Option[Valintatila],
   vastaanotto: Option[Vastaanottotila],
@@ -360,8 +360,8 @@ class HakijaActor(
   def hakutoiveFilter(predicate: (XMLHakutoive) => Boolean)(xh: XMLHakija): XMLHakija =
     xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(predicate)))
 
-  def matchOrganisaatio(oid: Option[String], parentOidPath: String): Boolean = oid match {
-    case Some(o) => parentOidPath.isEmpty || parentOidPath.split(",").contains(o)
+  def matchOrganisaatio(oid: Option[String], parentOidPath: Set[String]): Boolean = oid match {
+    case Some(o) => parentOidPath.isEmpty || parentOidPath.contains(o)
     case None    => true
   }
 
@@ -378,8 +378,12 @@ class HakijaActor(
     )
   }
 
-  def matchesOrganisation(h: Hakutoive, q: HakijaQuery) =
-    q.organisaatio.isEmpty || h.organisaatioParendOidPath.contains(q.organisaatio.get)
+  def matchesOrganisation(h: Hakutoive, q: HakijaQuery): Boolean =
+    q.organisaatio.isEmpty || h.organisaatioParentOids.contains(q.organisaatio.get)
+
+  def getAllowedOrgsForUser(user: User): Set[String] = {
+    user.orgsFor("READ", "Hakukohde")
+  }
 
   def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = {
     val hakutoives: Seq[Hakutoive] = q.hakuehto match {
@@ -389,22 +393,23 @@ class HakijaActor(
           (h.valinta.exists(Valintatila.isHyvaksytty) ||
             h.vastaanotto.contains(Vastaanottotila.PERUNUT) ||
             h.vastaanotto.contains(Vastaanottotila.PERUUTETTU)) &&
-            matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
+            matchOrganisaatio(q.organisaatio, h.organisaatioParentOids) &&
             matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
         )
       case Hakuehto.Vastaanottaneet =>
         toiveet.filter(h =>
           h.vastaanotto.exists(Vastaanottotila.isVastaanottanut) &&
-            matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
+            matchOrganisaatio(q.organisaatio, h.organisaatioParentOids) &&
             matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
         )
       case Hakuehto.Hylatyt =>
         toiveet.filter(h =>
           h.valinta.contains(Valintatila.HYLATTY) &&
-            matchOrganisaatio(q.organisaatio, h.organisaatioParendOidPath) &&
+            matchOrganisaatio(q.organisaatio, h.organisaatioParentOids) &&
             matchHakukohdekoodi(q.hakukohdekoodi, h.hakukohde.hakukohdekoodi)
         )
     }
+
     if (q.version == 1)
       hakutoives
     else if (q.version == 5 && q.haku.getOrElse("").length == 35) {
@@ -414,11 +419,48 @@ class HakijaActor(
   }
 
   def filterHakijatHakutoiveetByQuery(q: HakijaQuery)(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
-    Future.successful(hakijat.flatMap(filterHakutoiveetByQuery(q)(_)))
+    val orgsForUser = q.user.map(u => getAllowedOrgsForUser(u)).getOrElse(Set.empty)
+    if (orgsForUser.nonEmpty) {
+      Future.successful(hakijat.flatMap(filterHakutoiveetByQuery(q, orgsForUser)(_)))
+    } else {
+      log.warning(
+        s"Ei sallittuja hakukohteiden lukuoikeuksia käyttäjälle (query $q), joten ei palauteta tietoja"
+      )
+      Future.successful(Seq.empty)
+    }
   }
 
-  def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Option[Hakija] = {
-    val filteredHakutoiveet = filterByQuery(q)(hakija.hakemus.hakutoiveet)
+  def filterByAllowed(
+    orgs: Set[String],
+    hakija: String,
+    hakutoivees: Seq[Hakutoive]
+  ): Seq[Hakutoive] = {
+    if (orgs.nonEmpty) {
+      hakutoivees.foreach(ht =>
+        if (ht.organisaatioParentOids.isEmpty) {
+          log.error(s"hakutoiveella $ht ei ole sallittuja organisaatioita!")
+        }
+      )
+      val filtered = hakutoivees.filter(ht => orgs.intersect(ht.organisaatioParentOids).nonEmpty)
+      if (filtered.size < hakutoivees.size && filtered.nonEmpty) {
+        log.info(
+          s"Filtteröitiin hakijalta $hakija pois ${hakutoivees.size - filtered.size}/${hakutoivees.size} hakutoivetta pois oikeuksien puuttumisen takia"
+        )
+      }
+      filtered
+    } else {
+      log.warning("Ei sallittuja organisaatioita, joten filtteröidään kaikki hakutoiveet pois!")
+      Seq()
+    }
+  }
+
+  def filterHakutoiveetByQuery(q: HakijaQuery, orgs: Set[String])(
+    hakija: Hakija
+  ): Option[Hakija] = {
+    val allowedHakutoiveet =
+      filterByAllowed(orgs, hakija.hakemus.hakemusnumero, hakija.hakemus.hakutoiveet)
+    val filteredHakutoiveet = filterByQuery(q)(allowedHakutoiveet)
+
     if (filteredHakutoiveet.nonEmpty) {
       Some(
         hakija.copy(
@@ -432,6 +474,7 @@ class HakijaActor(
       None
     }
   }
+
   def enrichHakijat(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(for {
     hakija <- hakijat
   } yield for {

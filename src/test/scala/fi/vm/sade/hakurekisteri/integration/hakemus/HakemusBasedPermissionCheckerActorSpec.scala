@@ -38,7 +38,7 @@ class HakemusBasedPermissionCheckerActorSpec
   private val user: User = TestUser
   private val oppijanumero: String = "1.2.3.4.5.6"
   private val permissionRequest: PermissionRequest =
-    PermissionRequest(List(oppijanumero), Vector(), List())
+    PermissionRequest(List(oppijanumero), Vector("1.10.3"), List())
 
   it should "return false if both backend systems return false" in {
     withSystem { system =>

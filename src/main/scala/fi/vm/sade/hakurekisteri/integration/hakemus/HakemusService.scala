@@ -259,7 +259,7 @@ class HakemusService(
       }
     } yield parentOids
 
-    val hakemustenHakukohteet = ataruHakemusDtos.flatMap(_.hakukohteet).map(_.oid)
+    val hakemustenHakukohteet = ataruHakemusDtos.flatMap(_.hakukohteet).map(_.oid).distinct
     val resolveTarjoajaOids: Future[Map[String, (String, Set[String])]] =
       if (skipResolvingTarjoaja) {
         Future.successful(Map.empty)
