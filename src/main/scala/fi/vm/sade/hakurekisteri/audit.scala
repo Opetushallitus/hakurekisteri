@@ -1,11 +1,12 @@
 package fi.vm.sade.hakurekisteri
 
 import java.net.InetAddress
-
 import fi.vm.sade.auditlog._
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
+
 import javax.servlet.http.HttpServletRequest
 import org.ietf.jgss.{GSSException, Oid}
+import org.json4s.jackson.Serialization
 import org.scalatra.Params
 import org.slf4j.LoggerFactory
 
@@ -115,6 +116,8 @@ class AuditUtil {}
 object AuditUtil {
   private val logger = LoggerFactory.getLogger(classOf[Audit])
 
+  implicit val formats = org.json4s.DefaultFormats
+
   def parseUser(request: HttpServletRequest, userOid: String): User = {
     try {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
@@ -129,7 +132,7 @@ object AuditUtil {
   }
 
   def targetFromParams(params: Params): Target.Builder = {
-    new Target.Builder().setField("params", params.toString())
+    new Target.Builder().setField("params", Serialization.write(params))
   }
 }
 
