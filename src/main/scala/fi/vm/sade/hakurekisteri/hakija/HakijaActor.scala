@@ -436,16 +436,15 @@ class HakijaActor(
     hakutoivees: Seq[Hakutoive]
   ): Seq[Hakutoive] = {
     if (orgs.nonEmpty) {
-      log.info(s"first ${hakutoivees.head.organisaatioParentOids}")
       hakutoivees.foreach(ht =>
         if (ht.organisaatioParentOids.isEmpty) {
-          log.warning(s"hakutoiveella $ht ei ole sallittuja organisaatiota!")
+          log.error(s"hakutoiveella $ht ei ole sallittuja organisaatioita!")
         }
       )
       val filtered = hakutoivees.filter(ht => orgs.intersect(ht.organisaatioParentOids).nonEmpty)
-      if (filtered.size < hakutoivees.size) {
+      if (filtered.size < hakutoivees.size && filtered.nonEmpty) {
         log.info(
-          s"Filtteröitiin hakijalta pois $hakija ${hakutoivees.size - filtered.size}/${hakutoivees.size} hakutoivetta pois oikeuksien puuttumisen takia"
+          s"Filtteröitiin hakijalta $hakija pois ${hakutoivees.size - filtered.size}/${hakutoivees.size} hakutoivetta pois oikeuksien puuttumisen takia"
         )
       }
       filtered
