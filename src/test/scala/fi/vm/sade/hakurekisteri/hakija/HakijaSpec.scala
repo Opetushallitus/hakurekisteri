@@ -94,7 +94,11 @@ class HakijaSpec extends FlatSpec with Matchers {
                 aiempitutkinto_vuosi = None,
                 suoritusoikeus_tai_aiempi_tutkinto = None,
                 suoritusoikeus_tai_aiempi_tutkinto_vuosi = None,
-                muukoulutus = None
+                muukoulutus = None,
+                pohjakoulutus_amp = None,
+                pohjakoulutus_amp_vuosi = None,
+                pohjakoulutus_amv = None,
+                pohjakoulutus_amv_vuosi = None
               )
             ),
             hakutoiveet = Some(

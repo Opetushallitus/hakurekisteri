@@ -1491,10 +1491,12 @@ object KkHakijaUtil {
         }
     }
 
+  //pohjakoulutus_am || pohjakoulutus_amp || pohjakoulutus_amv => "am"
   def getPohjakoulutukset(k: Koulutustausta): Seq[String] = {
     Map(
       "yo" -> k.pohjakoulutus_yo,
-      "am" -> k.pohjakoulutus_am,
+      "am" -> Set(k.pohjakoulutus_am, k.pohjakoulutus_amv, k.pohjakoulutus_amp)
+        .find(pk => pk.getOrElse("false").equals("true")),
       "amt" -> k.pohjakoulutus_amt,
       "kk" -> k.pohjakoulutus_kk,
       "ulk" -> k.pohjakoulutus_ulk,

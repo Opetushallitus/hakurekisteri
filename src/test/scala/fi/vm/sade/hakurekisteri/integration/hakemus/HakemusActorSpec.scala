@@ -652,7 +652,11 @@ case class HakemusBuilder(
             suoritusoikeus_tai_aiempi_tutkinto_vuosi = suoritusoikeus_tai_aiempi_tutkinto_vuosi,
             suoritusoikeus_tai_aiempi_tutkinto =
               if (suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined) Some("true") else None,
-            muukoulutus = None
+            muukoulutus = None,
+            pohjakoulutus_amp = None,
+            pohjakoulutus_amp_vuosi = None,
+            pohjakoulutus_amv = None,
+            pohjakoulutus_amv_vuosi = None
           )
         ),
         None,

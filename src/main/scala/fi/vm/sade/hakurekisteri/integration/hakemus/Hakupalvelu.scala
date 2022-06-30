@@ -1277,6 +1277,10 @@ case class Koulutustausta(
   pohjakoulutus_yo_vuosi: Option[String],
   pohjakoulutus_am: Option[String],
   pohjakoulutus_am_vuosi: Option[String],
+  pohjakoulutus_amp: Option[String],
+  pohjakoulutus_amp_vuosi: Option[String],
+  pohjakoulutus_amv: Option[String],
+  pohjakoulutus_amv_vuosi: Option[String],
   pohjakoulutus_amt: Option[String],
   pohjakoulutus_amt_vuosi: Option[String],
   pohjakoulutus_kk: Option[String],
@@ -1296,6 +1300,10 @@ case class Koulutustausta(
 
 object Koulutustausta {
   def apply(): Koulutustausta = Koulutustausta(
+    None,
+    None,
+    None,
+    None,
     None,
     None,
     None,
