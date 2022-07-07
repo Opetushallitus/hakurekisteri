@@ -9,10 +9,24 @@ import com.github.blemale.scaffeine.Scaffeine
 import com.google.common.base.{Supplier, Suppliers}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batch.support.BatchOneApiCallAsMany
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHautQuery, RestHaku, RestHakuAika, RestHakuResult}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery, HakukohteenKoulutuksetQuery}
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  GetHautQuery,
+  RestHaku,
+  RestHakuAika,
+  RestHakuResult
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  Hakukohde,
+  HakukohdeQuery,
+  HakukohteenKoulutuksetQuery
+}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetHautQueryFailedException, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaKoodi}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  GetHautQueryFailedException,
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, OphUrlProperties, VirkailijaRestClient}
 import org.joda.time.{LocalDate, LocalDateTime}
 import support.TypedAskableActorRef
@@ -44,7 +58,8 @@ class KoutaInternalActor(
     poolSize = 2,
     poolName = "KoutaInternalHakukohdeBatcher",
     getHakukohdeFromKoutaInternalBatched,
-    oidsAtMostPerSingleApiCall = 500)
+    oidsAtMostPerSingleApiCall = 500
+  )
 
   val hakuCache = Suppliers.memoizeWithExpiration(
     () =>
@@ -203,13 +218,22 @@ class KoutaInternalActor(
   private def getHakukohdeFromKoutaInternal(hakukohdeOid: String): Future[KoutaInternalHakukohde] =
     hakukohdeCache.get(hakukohdeOid)
 
-  private def getHakukohdeFromKoutaInternalBatched(hakukohdeOids: Set[String]): Future[List[KoutaInternalHakukohde]] = {
+  private def getHakukohdeFromKoutaInternalBatched(
+    hakukohdeOids: Set[String]
+  ): Future[List[KoutaInternalHakukohde]] = {
     restClient
       .postObjectWithCodes[Set[String], List[KoutaInternalHakukohde]](
-        "kouta-internal.hakukohde.batch", Seq(200), 2, hakukohdeOids, basicAuth = false)
+        "kouta-internal.hakukohde.batch",
+        Seq(200),
+        2,
+        hakukohdeOids,
+        basicAuth = false
+      )
   }
 
-  private def getHakukohdeFromKoutaInternalForReal(hakukohdeOid: String): Future[KoutaInternalHakukohde] =
+  private def getHakukohdeFromKoutaInternalForReal(
+    hakukohdeOid: String
+  ): Future[KoutaInternalHakukohde] =
     koutaInternalHakukohdeBatcher.batch(hakukohdeOid, hk => hakukohdeOid.equals(hk.oid))
 
   private def getToteutusFromKoutaInternal(toteutusOid: String): Future[KoutaInternalToteutus] =

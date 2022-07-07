@@ -10,7 +10,8 @@ import scala.concurrent.{Await, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success}
 
 class BatchOneApiCallAsManySpec extends ScalatraFunSuite {
-  implicit val batchEc: ExecutionContextExecutorService = ExecutorUtil.createExecutor(1, "batch-test-pool")
+  implicit val batchEc: ExecutionContextExecutorService =
+    ExecutorUtil.createExecutor(1, "batch-test-pool")
   val testOids: List[String] = Range.inclusive(0, 10).map(_.toString).toList
 
   test("batcher works on happy path") {
@@ -34,7 +35,7 @@ class BatchOneApiCallAsManySpec extends ScalatraFunSuite {
     val firstFails = new AtomicBoolean(true)
 
     val oidsToCall = (oids: Set[String]) => {
-      if(firstFails.getAndSet(false)) {
+      if (firstFails.getAndSet(false)) {
         Future.failed(new RuntimeException("First batch fails"))
       } else {
         Future.successful(oids.toList)
@@ -52,11 +53,11 @@ class BatchOneApiCallAsManySpec extends ScalatraFunSuite {
 
     val successful = batches.filter(_.value match {
       case Some(Success(_)) => true
-      case _ => false
+      case _                => false
     })
     val failed = batches.filter(_.value match {
       case Some(Failure(_)) => true
-      case _ => false
+      case _                => false
     })
 
     successful should not be empty
