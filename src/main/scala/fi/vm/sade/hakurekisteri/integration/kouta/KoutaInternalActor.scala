@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.github.blemale.scaffeine.Scaffeine
 import com.google.common.base.{Supplier, Suppliers}
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.batch.support.BatchOneApiCallAsMany
 import fi.vm.sade.hakurekisteri.integration.haku.{
   GetHautQuery,
   RestHaku,
@@ -52,6 +53,13 @@ class KoutaInternalActor(
   private val hakukohdeCache = Scaffeine()
     .expireAfterWrite(30.minutes)
     .buildAsyncFuture[String, KoutaInternalHakukohde](getHakukohdeFromKoutaInternalForReal)
+
+  private val koutaInternalHakukohdeBatcher = new BatchOneApiCallAsMany[KoutaInternalHakukohde](
+    poolSize = 2,
+    poolName = "KoutaInternalHakukohdeBatcher",
+    getHakukohdeFromKoutaInternalBatched,
+    oidsAtMostPerSingleApiCall = 500
+  )
 
   val hakuCache = Suppliers.memoizeWithExpiration(
     () =>
@@ -210,8 +218,23 @@ class KoutaInternalActor(
   private def getHakukohdeFromKoutaInternal(hakukohdeOid: String): Future[KoutaInternalHakukohde] =
     hakukohdeCache.get(hakukohdeOid)
 
-  private def getHakukohdeFromKoutaInternalForReal(hakukohdeOid: String) = restClient
-    .readObject[KoutaInternalHakukohde]("kouta-internal.hakukohde", hakukohdeOid)(200, 3)
+  private def getHakukohdeFromKoutaInternalBatched(
+    hakukohdeOids: Set[String]
+  ): Future[List[KoutaInternalHakukohde]] = {
+    restClient
+      .postObjectWithCodes[Set[String], List[KoutaInternalHakukohde]](
+        "kouta-internal.hakukohde.batch",
+        Seq(200),
+        2,
+        hakukohdeOids,
+        basicAuth = false
+      )
+  }
+
+  private def getHakukohdeFromKoutaInternalForReal(
+    hakukohdeOid: String
+  ): Future[KoutaInternalHakukohde] =
+    koutaInternalHakukohdeBatcher.batch(hakukohdeOid, hk => hakukohdeOid.equals(hk.oid))
 
   private def getToteutusFromKoutaInternal(toteutusOid: String): Future[KoutaInternalToteutus] =
     restClient
