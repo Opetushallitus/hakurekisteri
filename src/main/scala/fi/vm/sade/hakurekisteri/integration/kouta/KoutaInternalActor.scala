@@ -86,49 +86,6 @@ class KoutaInternalActor(
   private def getKoodiUri(koulutusKoodiUri: String): String =
     substring(koulutusKoodiUri, "#")
 
-  def getHakukohteenKoulutuksenAlkamiskausiAndVuosi(
-    hakukohde: KoutaInternalHakukohde,
-    toteutus: KoutaInternalToteutus,
-    haku: KoutaInternalRestHaku
-  ): Future[(Option[TarjontaKoodi], Option[Int])] = {
-    val (kausi, vuosi) =
-      if (hakukohde.kaytetaanHaunAlkamiskautta.getOrElse(false))
-        (
-          haku.metadata.koulutuksenAlkamiskausi.flatMap(ak =>
-            ak.koulutuksenAlkamiskausi.map(ak =>
-              ak.koodiUri match {
-                case kausi if kausi.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
-                case kausi if kausi.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
-                case unknown =>
-                  log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
-                  TarjontaKoodi(None)
-              }
-            )
-          ),
-          haku.metadata.koulutuksenAlkamiskausi.flatMap(ak =>
-            ak.koulutuksenAlkamisvuosi.map(_.toInt)
-          )
-        )
-      else
-        (
-          toteutus.metadata.flatMap(md =>
-            md.opetus.map(opetus =>
-              opetus.alkamiskausiKoodiUri match {
-                case Some(kausi) if kausi.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
-                case Some(kausi) if kausi.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
-                case unknown =>
-                  log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
-                  TarjontaKoodi(None)
-              }
-            )
-          ),
-          toteutus.metadata.flatMap(md =>
-            md.opetus.flatMap(opetus => opetus.alkamisvuosi.map(_.toInt))
-          )
-        )
-    Future.successful((kausi, vuosi))
-  }
-
   def getOrganisationHakukohteetHaussa(
     q: HakukohteetHaussaQuery
   ): Future[List[KoutaInternalHakukohdeLite]] = {
@@ -141,10 +98,8 @@ class KoutaInternalActor(
   def getHakukohteenKoulutuksetForReal(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
     for {
       hakukohde <- getHakukohdeFromKoutaInternal(hakukohdeOid)
-      haku <- getHakuFromKoutaInternal(hakukohde.hakuOid)
       toteutus <- getToteutusFromKoutaInternal(hakukohde.toteutusOid)
       koulutus <- getKoulutusFromKoutaInternal(toteutus.koulutusOid)
-      (kausi, vuosi) <- getHakukohteenKoulutuksenAlkamiskausiAndVuosi(hakukohde, toteutus, haku)
       koodit <- getKoodit(koulutus)
     } yield HakukohteenKoulutukset(
       hakukohdeOid = hakukohdeOid,
@@ -155,8 +110,10 @@ class KoutaInternalActor(
             komoOid = koulutus.oid,
             tkKoulutuskoodi = koodi,
             kkKoulutusId = None,
-            koulutuksenAlkamiskausi = kausi,
-            koulutuksenAlkamisvuosi = vuosi,
+            koulutuksenAlkamiskausi =
+              hakukohde.paateltyAlkamiskausi.map(ak => TarjontaKoodi(Some(ak.kausiUri))),
+            koulutuksenAlkamisvuosi =
+              hakukohde.paateltyAlkamiskausi.map(ak => Integer.parseInt(ak.vuosi)),
             koulutuksenAlkamisPvms = None,
             koulutusohjelma = None
           )
@@ -342,6 +299,12 @@ case class KoutaInternalKoulutus(oid: String, koulutusKoodiUrit: Set[String])
 
 case class HakukohteenTiedot(koodiUri: String)
 
+case class PaateltyAlkamiskausi(
+  source: String, //lähde-entiteetin oid (hakukohde, haku tai toteutus)
+  kausiUri: String,
+  vuosi: String
+)
+
 //Kouta-internal saattaa palauttaa joitakin hakukohteita, jotka eivät parsiudu KoutaInternalHakukohteiksi esim. puuttuvan tarjoajan tai toteutusOidin takia. Jos vain oid kiinnostaa, tämä toimii silti.
 case class KoutaInternalHakukohdeLite(oid: String, hakukohde: Option[HakukohteenTiedot])
 
@@ -352,7 +315,8 @@ case class KoutaInternalHakukohde(
   kaytetaanHaunAlkamiskautta: Option[Boolean],
   hakuOid: String,
   externalId: Option[String],
-  tarjoaja: String
+  tarjoaja: String,
+  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]
 ) {
   def toHakukohde(): Hakukohde =
     Hakukohde(
