@@ -110,8 +110,15 @@ class KoutaInternalActor(
             komoOid = koulutus.oid,
             tkKoulutuskoodi = koodi,
             kkKoulutusId = None,
-            koulutuksenAlkamiskausi =
-              hakukohde.paateltyAlkamiskausi.map(ak => TarjontaKoodi(Some(ak.kausiUri))),
+            koulutuksenAlkamiskausi = hakukohde.paateltyAlkamiskausi.map(ak =>
+              ak match {
+                case kausi if kausi.kausiUri.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
+                case kausi if kausi.kausiUri.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
+                case unknown =>
+                  log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
+                  TarjontaKoodi(None)
+              }
+            ),
             koulutuksenAlkamisvuosi =
               hakukohde.paateltyAlkamiskausi.map(ak => Integer.parseInt(ak.vuosi)),
             koulutuksenAlkamisPvms = None,
