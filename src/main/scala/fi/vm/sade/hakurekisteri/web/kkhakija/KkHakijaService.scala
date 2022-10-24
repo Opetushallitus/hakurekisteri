@@ -1441,6 +1441,7 @@ object KkHakijaUtil {
     ec: ExecutionContext
   ): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
+    case "rom" => Future.successful("642") //Romanian vanha maakoodiarvo, voi löytyä vanhoilta hakemuksilta.
     case ""    => Future.successful("999")
 
     case arvo =>
