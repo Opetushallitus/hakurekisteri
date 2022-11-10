@@ -141,7 +141,7 @@ class YtlIntegration(
       persons.map(person => person.hetu -> person.personOid).toMap
     val personOidsWithAliases: PersonOidsWithAliases = Await.result(
       oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
-      Duration(5, TimeUnit.MINUTES)
+      Duration(30, TimeUnit.MINUTES)
     )
 
     try {
