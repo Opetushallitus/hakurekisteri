@@ -139,10 +139,21 @@ class YtlIntegration(
   ): Unit = {
     val hetuToPersonOid: Map[String, String] =
       persons.map(person => person.hetu -> person.personOid).toMap
-    val personOidsWithAliases: PersonOidsWithAliases = Await.result(
-      oppijaNumeroRekisteri.enrichWithAliases(persons.map(_.personOid)),
-      Duration(30, TimeUnit.MINUTES)
-    )
+    val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+    logger.info(s"Handle hakemukset for ${persons.size} persons")
+    val personOidsWithAliases = personsGrouped
+      .map(ps =>
+        Await.result(
+          oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)),
+          Duration(5, TimeUnit.MINUTES)
+        )
+      )
+      .reduce((a, b) =>
+        PersonOidsWithAliases(
+          a.henkiloOids ++ b.henkiloOids,
+          a.aliasesByPersonOids ++ b.aliasesByPersonOids
+        )
+      )
 
     try {
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
