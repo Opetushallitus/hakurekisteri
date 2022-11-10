@@ -377,15 +377,15 @@ class HakemusServiceSpec
     triggerCounter should equal(2)
   }
 
-  "hetuAndPersonOidForHaku" should "return hetus and personOids" in {
-    when(endPoint.request(forPattern(".*listfull.*")))
-      .thenReturn((200, List(), getJson("hetuAndPersonOid")))
-    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
-      .thenReturn((200, List(), "{\"applications\": []}"))
-
-    val result: Seq[HetuPersonOid] =
-      Await.result(hakemusService.hetuAndPersonOidForHaku("testHaku"), 10.seconds)
-    Array(2, 6).contains(result.length) should equal(true)
-  }
+//  "hetuAndPersonOidForHaku" should "return hetus and personOids" in {
+//    when(endPoint.request(forPattern(".*listfull.*")))
+//      .thenReturn((200, List(), getJson("hetuAndPersonOid")))
+//    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+//      .thenReturn((200, List(), "{\"applications\": []}"))
+//
+//    val result: Seq[HetuPersonOid] =
+//      Await.result(hakemusService.hetuAndPersonOidForHaku("testHaku"), 10.seconds)
+//    Array(2, 6).contains(result.length) should equal(true)
+//  }
 
 }
