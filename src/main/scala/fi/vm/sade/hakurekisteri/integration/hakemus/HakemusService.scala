@@ -911,9 +911,6 @@ class HakemusService(
 
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]] = {
     for {
-      hakuappHakemukset <- hakuappRestClient.postObject[ListFullSearchDto, List[FullHakemus]](
-        "haku-app.listfull"
-      )(acceptedResponseCode = 200, ListFullSearchDto.hetuPersonOid(hakuOid))
       ataruHakemukset <- ataruhakemukset(
         AtaruSearchParams(
           hakijaOids = None,
@@ -924,13 +921,12 @@ class HakemusService(
         ),
         skipResolvingTarjoaja = true
       )
-    } yield (hakuappHakemukset ++ ataruHakemukset).collect({
-      case h: FullHakemus if h.hetu.isDefined && h.personOid.isDefined =>
-        HetuPersonOid(hetu = h.hetu.get, personOid = h.personOid.get)
+    } yield ataruHakemukset.collect({
       case h: AtaruHakemus if h.henkilo.hetu.isDefined =>
         HetuPersonOid(hetu = h.henkilo.hetu.get, personOid = h.henkilo.oidHenkilo)
     })
   }
+
   def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]] = {
     for {
       hakuappHakemukset <- hakuappRestClient
