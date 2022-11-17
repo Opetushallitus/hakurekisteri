@@ -106,7 +106,7 @@ class KoskiDataHandler(
 
     if (
       suoritus.tyyppi.exists(_.koodiarvo == "valma")
-      && !suoritus.opintopisteitaVahintaan(30)
+      && !suoritus.laajuusVahintaan(30)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
         .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
     ) {
@@ -119,7 +119,7 @@ class KoskiDataHandler(
 
     if (
       suoritus.isOpistovuosi()
-      && !suoritus.opintopisteitaVahintaan(26.5)
+      && !suoritus.laajuusVahintaan(26.5)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
         .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
     ) {

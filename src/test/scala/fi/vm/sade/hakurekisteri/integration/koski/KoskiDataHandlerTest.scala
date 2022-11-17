@@ -322,6 +322,25 @@ class KoskiDataHandlerTest
     virallinen.komo should equal(Oids.opistovuosiKomoOid)
   }
 
+  it should "parse tutkintokoulutukseen valmentava data" in {
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_tutkintokoulutukseen_valmentava_valmis.json")
+      .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi shouldEqual Some(
+      KoskiKoodi("tuva", "opiskeluoikeudentyyppi")
+    )
+    val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
+    result should have length 1
+    val virallinen = result.head.suoritus
+
+    // Tutkintokoulutukseen valmistava koulutus arvosanas should not be saved
+    result.head.arvosanat should have length 0
+    virallinen.tila should equal("VALMIS")
+    virallinen.komo should equal(Oids.tuvaKomoOid)
+  }
+
   /*
   //TODO is the test data valid???
   it should "parse peruskoulu_lisäopetus_ei_vahvistettu.json data" in {

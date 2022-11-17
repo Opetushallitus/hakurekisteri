@@ -3,14 +3,13 @@ package fi.vm.sade.hakurekisteri.integration.koski
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvio410, ArvioHyvaksytty, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil.parseLocalDate
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.{LocalDate, LocalDateTime}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer
-import scala.math.BigDecimal
 
 class KoskiSuoritusArvosanaParser {
 
@@ -476,7 +475,7 @@ class KoskiSuoritusArvosanaParser {
           }
 
         //Ei tallenneta arvosanoja VALMA, TELMA, opistovuosi oppivelvollisille. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
-        case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid =>
+        case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid | Oids.tuvaKomoOid =>
           val (arv, yks, yksMaAi) = osasuoritusToArvosana(
             personOid,
             komoOid,
@@ -525,11 +524,12 @@ class KoskiSuoritusArvosanaParser {
             "KESKEYTYNYT"
           } else suoritusTila
 
-        case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid =>
+        case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid | Oids.tuvaKomoOid =>
           val tarpeeksiOpintopisteita =
-            ((komoOid == Oids.valmaKomoOid && suoritus.opintopisteitaVahintaan(30))
-              || (komoOid == Oids.telmaKomoOid && suoritus.opintopisteitaVahintaan(25))
-              || (komoOid == Oids.opistovuosiKomoOid && suoritus.opintopisteitaVahintaan(26.5)))
+            ((komoOid == Oids.valmaKomoOid && suoritus.laajuusVahintaan(30))
+              || (komoOid == Oids.telmaKomoOid && suoritus.laajuusVahintaan(25))
+              || (komoOid == Oids.opistovuosiKomoOid && suoritus.laajuusVahintaan(26.5))
+              || (komoOid == Oids.tuvaKomoOid && suoritus.laajuusVahintaan(19)))
           if (tarpeeksiOpintopisteita) {
             "VALMIS"
           } else {
@@ -592,6 +592,7 @@ class KoskiSuoritusArvosanaParser {
         case Oids.ammatillinenKomoOid           => suoritus.ryhmä.getOrElse("AMM")
         case Oids.erikoisammattitutkintoKomoOid => suoritus.ryhmä.getOrElse("")
         case Oids.opistovuosiKomoOid            => suoritus.ryhmä.getOrElse("OPISTOVUOSI")
+        case Oids.tuvaKomoOid                   => suoritus.ryhmä.getOrElse("TUVA")
         case _                                  => suoritus.luokka.getOrElse("")
       }
       if (
@@ -638,6 +639,7 @@ class KoskiSuoritusArvosanaParser {
           case (Oids.valmaKomoOid, _, "KESKEN")                => KoskiUtil.deadlineDate
           case (Oids.telmaKomoOid, _, "KESKEN")                => KoskiUtil.deadlineDate
           case (Oids.opistovuosiKomoOid, _, "KESKEN")          => KoskiUtil.deadlineDate
+          case (Oids.tuvaKomoOid, _, "KESKEN")                 => KoskiUtil.deadlineDate
           case (Oids.perusopetusLuokkaKomoOid, true, "KESKEN") => KoskiUtil.deadlineDate
           case (_, _, _)                                       => valmistuminen.valmistumisPaiva
         }

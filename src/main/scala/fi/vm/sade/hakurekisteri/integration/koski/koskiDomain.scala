@@ -4,7 +4,6 @@ import fi.vm.sade.hakurekisteri.Oids
 import org.joda.time.LocalDate
 
 import scala.collection.immutable.ListMap
-import scala.math.BigDecimal
 
 case class MuuttuneetOppijatResponse(result: Seq[String], mayHaveMore: Boolean, nextCursor: String)
 
@@ -151,13 +150,17 @@ case class KoskiSuoritus(
     tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
   }
 
+  def isTuva(): Boolean = {
+    tyyppi.exists(_.koodiarvo == "tuva")
+  }
+
   def isErityinentutkinto(): Boolean = {
     suoritustapa.exists(tapa => tapa.koodiarvo == "erityinentutkinto")
   }
 
-  def opintopisteitaVahintaan(min: BigDecimal): Boolean = {
+  def laajuusVahintaan(min: BigDecimal): Boolean = {
     val sum =
-      if (isOpistovuosi) {
+      if (isOpistovuosi || isTuva) {
         osasuoritukset
           .map(o =>
             o.osasuoritukset
@@ -194,6 +197,7 @@ case class KoskiSuoritus(
             case "valma"                                 => Oids.valmaKomoOid
             case "telma"                                 => Oids.telmaKomoOid
             case "luva"                                  => Oids.lukioonvalmistavaKomoOid
+            case "tuva"                                  => Oids.tuvaKomoOid
             case "vstoppivelvollisillesuunnattukoulutus" => Oids.opistovuosiKomoOid
             case "perusopetuksenlisaopetus"              => Oids.lisaopetusKomoOid
             case "ammatillinentutkinto" =>
