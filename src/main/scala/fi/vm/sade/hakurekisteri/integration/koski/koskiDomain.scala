@@ -150,17 +150,13 @@ case class KoskiSuoritus(
     tyyppi.exists(_.koodiarvo == "vstoppivelvollisillesuunnattukoulutus")
   }
 
-  def isTuva(): Boolean = {
-    tyyppi.exists(_.koodiarvo == "tuva")
-  }
-
   def isErityinentutkinto(): Boolean = {
     suoritustapa.exists(tapa => tapa.koodiarvo == "erityinentutkinto")
   }
 
   def laajuusVahintaan(min: BigDecimal): Boolean = {
     val sum =
-      if (isOpistovuosi || isTuva) {
+      if (isOpistovuosi) {
         osasuoritukset
           .map(o =>
             o.osasuoritukset
@@ -197,7 +193,7 @@ case class KoskiSuoritus(
             case "valma"                                 => Oids.valmaKomoOid
             case "telma"                                 => Oids.telmaKomoOid
             case "luva"                                  => Oids.lukioonvalmistavaKomoOid
-            case "tuva"                                  => Oids.tuvaKomoOid
+            case "tuvakoulutuksensuoritus"               => Oids.tuvaKomoOid
             case "vstoppivelvollisillesuunnattukoulutus" => Oids.opistovuosiKomoOid
             case "perusopetuksenlisaopetus"              => Oids.lisaopetusKomoOid
             case "ammatillinentutkinto" =>

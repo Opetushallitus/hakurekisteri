@@ -1,19 +1,19 @@
 {
   "henkilö" : {
-    "oid" : "1.2.246.562.24.18438112918",
-    "hetu" : "050814A297V",
-    "syntymäaika" : "2014-08-05",
-    "etunimet" : "Teppo",
-    "kutsumanimi" : "Teppo",
-    "sukunimi" : "Tuvanen",
+    "oid" : "1.2.246.562.24.47137803117",
+    "hetu" : "250577-724C",
+    "syntymäaika" : "1977-05-25",
+    "etunimet" : "Tuuva",
+    "kutsumanimi" : "Tuuva",
+    "sukunimi" : "Tuvattaja",
     "turvakielto" : false
   },
   "opiskeluoikeudet" : [ {
-    "oid" : "1.2.246.562.15.11792285477",
-    "versionumero" : 25,
-    "aikaleima" : "2022-10-20T11:10:22.818120",
+    "oid" : "1.2.246.562.15.14242943935",
+    "versionumero" : 10,
+    "aikaleima" : "2022-09-28T08:30:25.596346",
     "lähdejärjestelmänId" : {
-      "id" : "4362978334",
+      "id" : "4369985864",
       "lähdejärjestelmä" : {
         "koodiarvo" : "studentaplus",
         "nimi" : {
@@ -73,10 +73,10 @@
         "koodistoVersio" : 2
       }
     },
-    "arvioituPäättymispäivä" : "2022-09-28",
+    "arvioituPäättymispäivä" : "2022-09-27",
     "tila" : {
       "opiskeluoikeusjaksot" : [ {
-        "alku" : "2022-08-02",
+        "alku" : "2022-07-31",
         "tila" : {
           "koodiarvo" : "lasna",
           "nimi" : {
@@ -97,7 +97,7 @@
           "koodistoVersio" : 1
         }
       }, {
-        "alku" : "2022-09-28",
+        "alku" : "2022-09-27",
         "tila" : {
           "koodiarvo" : "valmistunut",
           "nimi" : {
@@ -120,6 +120,7 @@
       } ]
     },
     "lisätiedot" : {
+      "erityinenTuki" : [ ],
       "koulutusvienti" : false,
       "pidennettyPäättymispäivä" : false
     },
@@ -181,18 +182,16 @@
         },
         "perusteenDiaarinumero" : "OPH-1488-2021",
         "koulutustyyppi" : {
-          "koodiarvo" : "40",
+          "koodiarvo" : "41",
           "nimi" : {
-            "fi" : "Tutkintokoulutukseen valmentava koulutus TUVA)",
-            "sv" : "Utbildning som handleder för examensutbildning (Hux)"
+            "fi" : "Tutkintokoulutukseen valmentava koulutus (TUVA) vaativa erityinen tuki",
+            "sv" : "Utbildning som handleder för examensutbildning (Hux) krävande särskilt stöd"
           },
-          "lyhytNimi" : {
-            "fi" : "TUVA"
-          },
-          "koodistoUri" : "koulutustyyppi"
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
         },
         "laajuus" : {
-          "arvo" : 38.0,
+          "arvo" : 29.0,
           "yksikkö" : {
             "koodiarvo" : "8",
             "nimi" : {
@@ -202,15 +201,15 @@
             },
             "lyhytNimi" : {
               "fi" : "vk",
-              "sv" : "v",
-              "en" : "w"
+              "sv" : "veckor",
+              "en" : "weeks"
             },
             "koodistoUri" : "opintojenlaajuusyksikko"
           }
         }
       },
       "vahvistus" : {
-        "päivä" : "2022-09-28",
+        "päivä" : "2022-09-27",
         "paikkakunta" : {
           "koodiarvo" : "018",
           "nimi" : {
@@ -292,16 +291,16 @@
         } ]
       },
       "suorituskieli" : {
-        "koodiarvo" : "FI",
+        "koodiarvo" : "ES",
         "nimi" : {
-          "fi" : "suomi",
-          "sv" : "finska",
-          "en" : "Finnish"
+          "fi" : "espanja",
+          "sv" : "spanska",
+          "en" : "Spanish, Castilian"
         },
         "lyhytNimi" : {
-          "fi" : "suomi",
-          "sv" : "finska",
-          "en" : "Finnish"
+          "fi" : "espanja",
+          "sv" : "spanska",
+          "en" : "Spanish, Castilian"
         },
         "koodistoUri" : "kieli",
         "koodistoVersio" : 1
@@ -309,70 +308,11 @@
       "osasuoritukset" : [ {
         "koulutusmoduuli" : {
           "tunniste" : {
-            "koodiarvo" : "105",
+            "koodiarvo" : "107",
             "nimi" : {
-              "fi" : "Ammatillisen koulutuksen opinnot ja niihin valmentautuminen",
-              "sv" : "Studier inom yrkesutbildning och studier som förbereder för dem",
-              "en" : "Ammatillisen koulutuksen opinnot ja niihin valmentautuminen"
-            },
-            "koodistoUri" : "koulutuksenosattuva",
-            "koodistoVersio" : 1
-          },
-          "laajuus" : {
-            "arvo" : 10.0,
-            "yksikkö" : {
-              "koodiarvo" : "8",
-              "nimi" : {
-                "fi" : "viikkoa",
-                "sv" : "veckor",
-                "en" : "weeks"
-              },
-              "lyhytNimi" : {
-                "fi" : "vk",
-                "sv" : "v",
-                "en" : "w"
-              },
-              "koodistoUri" : "opintojenlaajuusyksikko",
-              "koodistoVersio" : 1
-            }
-          }
-        },
-        "arviointi" : [ {
-          "arvosana" : {
-            "koodiarvo" : "Hyväksytty",
-            "nimi" : {
-              "fi" : "Hyväksytty",
-              "sv" : "Godkänd",
-              "en" : "Hyväksytty"
-            },
-            "lyhytNimi" : {
-              "fi" : "Hyväksytty",
-              "sv" : "Godkänd",
-              "en" : "Hyväksytty"
-            },
-            "koodistoUri" : "arviointiasteikkotuva",
-            "koodistoVersio" : 1
-          },
-          "päivä" : "2022-09-10",
-          "hyväksytty" : true
-        } ],
-        "tyyppi" : {
-          "koodiarvo" : "tutkintokoulutukseenvalmentava",
-          "nimi" : {
-            "fi" : "Tutkintokoulutukseen valmentava suoritus",
-            "sv" : "Tutkintokoulutukseen valmentava suoritus",
-            "en" : "Tutkintokoulutukseen valmentava muu suoritus"
-          },
-          "koodistoUri" : "suorituksentyyppi",
-          "koodistoVersio" : 1
-        }
-      }, {
-        "koulutusmoduuli" : {
-          "tunniste" : {
-            "koodiarvo" : "101",
-            "nimi" : {
-              "fi" : "Opiskelu- ja urasuunnittelutaidot",
-              "sv" : "Studiefärdigheter och karriärplaneringsfärdigheter"
+              "fi" : "Perustaitojen vahvistaminen",
+              "sv" : "Stärkande av grundläggande färdigheter",
+              "en" : "Perustaitojen vahvistaminen"
             },
             "koodistoUri" : "koulutuksenosattuva",
             "koodistoVersio" : 1
@@ -412,7 +352,66 @@
             "koodistoUri" : "arviointiasteikkotuva",
             "koodistoVersio" : 1
           },
-          "päivä" : "2022-09-08",
+          "päivä" : "2022-09-26",
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "tutkintokoulutukseenvalmentava",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava suoritus",
+            "sv" : "Tutkintokoulutukseen valmentava suoritus",
+            "en" : "Tutkintokoulutukseen valmentava muu suoritus"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "102",
+            "nimi" : {
+              "fi" : "Työelämätaidot ja työelämässä tapahtuva oppiminen",
+              "sv" : "Arbetslivsfärdigheter och lärande i arbetslivet"
+            },
+            "koodistoUri" : "koulutuksenosattuva",
+            "koodistoVersio" : 1
+          },
+          "laajuus" : {
+            "arvo" : 5.0,
+            "yksikkö" : {
+              "koodiarvo" : "8",
+              "nimi" : {
+                "fi" : "viikkoa",
+                "sv" : "veckor",
+                "en" : "weeks"
+              },
+              "lyhytNimi" : {
+                "fi" : "vk",
+                "sv" : "v",
+                "en" : "w"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkotuva",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2022-09-27",
           "hyväksytty" : true
         } ],
         "tyyppi" : {
@@ -471,7 +470,7 @@
             "koodistoUri" : "arviointiasteikkotuva",
             "koodistoVersio" : 1
           },
-          "päivä" : "2022-09-28",
+          "päivä" : "2022-09-26",
           "hyväksytty" : true
         } ],
         "tyyppi" : {
@@ -487,17 +486,17 @@
       }, {
         "koulutusmoduuli" : {
           "tunniste" : {
-            "koodiarvo" : "107",
+            "koodiarvo" : "105",
             "nimi" : {
-              "fi" : "Perustaitojen vahvistaminen",
-              "sv" : "Stärkande av grundläggande färdigheter",
-              "en" : "Perustaitojen vahvistaminen"
+              "fi" : "Ammatillisen koulutuksen opinnot ja niihin valmentautuminen",
+              "sv" : "Studier inom yrkesutbildning och studier som förbereder för dem",
+              "en" : "Ammatillisen koulutuksen opinnot ja niihin valmentautuminen"
             },
             "koodistoUri" : "koulutuksenosattuva",
             "koodistoVersio" : 1
           },
           "laajuus" : {
-            "arvo" : 10.0,
+            "arvo" : 5.0,
             "yksikkö" : {
               "koodiarvo" : "8",
               "nimi" : {
@@ -531,7 +530,7 @@
             "koodistoUri" : "arviointiasteikkotuva",
             "koodistoVersio" : 1
           },
-          "päivä" : "2022-09-28",
+          "päivä" : "2022-09-27",
           "hyväksytty" : true
         } ],
         "tyyppi" : {
@@ -547,16 +546,17 @@
       }, {
         "koulutusmoduuli" : {
           "tunniste" : {
-            "koodiarvo" : "104",
+            "koodiarvo" : "106",
             "nimi" : {
-              "fi" : "Valinnaiset opinnot",
-              "sv" : "Valbara utbildningsdelar"
+              "fi" : "Lukiokoulutuksen opinnot ja niihin valmentautuminen",
+              "sv" : "Studier inom gymnasieutbildning och studier som förbereder för dem",
+              "en" : "Lukiokoulutuksen opinnot ja niihin valmentautuminen"
             },
             "koodistoUri" : "koulutuksenosattuva",
             "koodistoVersio" : 1
           },
           "laajuus" : {
-            "arvo" : 8.0,
+            "arvo" : 5.0,
             "yksikkö" : {
               "koodiarvo" : "8",
               "nimi" : {
@@ -569,7 +569,8 @@
                 "sv" : "v",
                 "en" : "w"
               },
-              "koodistoUri" : "opintojenlaajuusyksikko"
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
             }
           }
         },
@@ -589,68 +590,67 @@
             "koodistoUri" : "arviointiasteikkotuva",
             "koodistoVersio" : 1
           },
-          "päivä" : "2022-09-01",
+          "päivä" : "2022-09-27",
           "hyväksytty" : true
         } ],
-        "osasuoritukset" : [ {
-          "koulutusmoduuli" : {
-            "nimi" : {
-              "fi" : "Vuorovaikutus- ja viestintätaidot"
-            },
-            "tunniste" : {
-              "koodiarvo" : "1004 OSKO Osasuoritus",
-              "nimi" : {
-                "fi" : "Vuorovaikutus- ja viestintätaidot"
-              }
-            },
-            "laajuus" : {
-              "arvo" : 8.0,
-              "yksikkö" : {
-                "koodiarvo" : "8",
-                "nimi" : {
-                  "fi" : "viikkoa",
-                  "sv" : "veckor",
-                  "en" : "weeks"
-                },
-                "lyhytNimi" : {
-                  "fi" : "vk",
-                  "sv" : "v",
-                  "en" : "w"
-                },
-                "koodistoUri" : "opintojenlaajuusyksikko",
-                "koodistoVersio" : 1
-              }
-            }
+        "tyyppi" : {
+          "koodiarvo" : "tutkintokoulutukseenvalmentava",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava suoritus",
+            "sv" : "Tutkintokoulutukseen valmentava suoritus",
+            "en" : "Tutkintokoulutukseen valmentava muu suoritus"
           },
-          "arviointi" : [ {
-            "arvosana" : {
-              "koodiarvo" : "Hyväksytty",
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "101",
+            "nimi" : {
+              "fi" : "Opiskelu- ja urasuunnittelutaidot",
+              "sv" : "Studiefärdigheter och karriärplaneringsfärdigheter"
+            },
+            "koodistoUri" : "koulutuksenosattuva",
+            "koodistoVersio" : 1
+          },
+          "laajuus" : {
+            "arvo" : 4.0,
+            "yksikkö" : {
+              "koodiarvo" : "8",
               "nimi" : {
-                "fi" : "Hyväksytty",
-                "sv" : "Godkänd",
-                "en" : "Hyväksytty"
+                "fi" : "viikkoa",
+                "sv" : "veckor",
+                "en" : "weeks"
               },
               "lyhytNimi" : {
-                "fi" : "Hyväksytty",
-                "sv" : "Godkänd",
-                "en" : "Hyväksytty"
+                "fi" : "vk",
+                "sv" : "v",
+                "en" : "w"
               },
-              "koodistoUri" : "arviointiasteikkotuva",
+              "koodistoUri" : "opintojenlaajuusyksikko",
               "koodistoVersio" : 1
-            },
-            "päivä" : "2022-09-28",
-            "hyväksytty" : true
-          } ],
-          "tyyppi" : {
-            "koodiarvo" : "tutkintokoulutukseenvalmentava",
-            "nimi" : {
-              "fi" : "Tutkintokoulutukseen valmentava suoritus",
-              "sv" : "Tutkintokoulutukseen valmentava suoritus",
-              "en" : "Tutkintokoulutukseen valmentava muu suoritus"
-            },
-            "koodistoUri" : "suorituksentyyppi",
-            "koodistoVersio" : 1
+            }
           }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkotuva",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2022-09-27",
+          "hyväksytty" : true
         } ],
         "tyyppi" : {
           "koodiarvo" : "tutkintokoulutukseenvalmentava",
@@ -685,7 +685,7 @@
       "koodistoUri" : "tuvajarjestamislupa",
       "koodistoVersio" : 1
     },
-    "alkamispäivä" : "2022-08-02",
-    "päättymispäivä" : "2022-09-28"
+    "alkamispäivä" : "2022-07-31",
+    "päättymispäivä" : "2022-09-27"
   } ]
 }
