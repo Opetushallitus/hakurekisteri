@@ -123,7 +123,7 @@ class EnsikertalainenActor(
         tutkinnotHakemuksilta(hakuOid)
       )
       personOidsWithAliases <- timed(
-        s"haunEnsikertalaiset: enrichWithAliases for ${tutkintovuodetHakemuksilta.keySet} henkilos from hakemukses (${tutkintovuodetHakemuksilta.keySet.size})",
+        s"haunEnsikertalaiset: enrichWithAliases for ${tutkintovuodetHakemuksilta.keySet.size} henkilos from hakemukses",
         oppijaNumeroRekisteri.enrichWithAliases(tutkintovuodetHakemuksilta.keySet)
       )
       valmistumishetket <- timed(
