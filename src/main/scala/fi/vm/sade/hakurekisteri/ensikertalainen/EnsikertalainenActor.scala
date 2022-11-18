@@ -109,7 +109,7 @@ class EnsikertalainenActor(
   }
 
   private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = {
-    val logId = UUID.randomUUID()
+    val logId = hakuOid + "_" + UUID.randomUUID().toString
     def timed[A](msg: String, f: Future[A]): Future[A] =
       DurationHelper.timed[A](log, Duration(0, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
