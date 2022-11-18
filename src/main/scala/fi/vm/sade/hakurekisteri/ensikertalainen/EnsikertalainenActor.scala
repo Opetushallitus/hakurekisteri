@@ -23,8 +23,11 @@ import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
 }
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.tools.DurationHelper
 import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
 
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -105,28 +108,50 @@ class EnsikertalainenActor(
       sender ! QueriesRunning(Map[String, Int]())
   }
 
-  private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = for {
-    haku <- (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
-    tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(hakuOid)
-    personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(
-      tutkintovuodetHakemuksilta.keySet
-    )
-    valmistumishetket <- valmistumiset(personOidsWithAliases, Seq())
-    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(personOidsWithAliases, Seq())
-    vastaanottohetket <- vastaanotot(personOidsWithAliases)
-  } yield {
-    tutkintovuodetHakemuksilta.map { case (henkiloOid, tutkintovuosi) =>
-      ensikertalaisuus(
-        henkiloOid,
-        haku.viimeinenHakuaikaPaattyy.getOrElse(
-          throw new IllegalArgumentException(s"haku $hakuOid is missing hakuajan päätös")
-        ),
-        valmistumishetket.get(henkiloOid),
-        opiskeluoikeuksienAlkamiset.get(henkiloOid),
-        vastaanottohetket.get(henkiloOid),
-        tutkintovuosi
+  private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = {
+    val logId = UUID.randomUUID()
+    def timed[A](msg: String, f: Future[A]): Future[A] =
+      DurationHelper.timed[A](log, Duration(0, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
+
+    for {
+      haku <- timed(
+        "haunEnsikertalaiset: Haun tietojen haku",
+        (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
       )
-    }.toSeq
+      tutkintovuodetHakemuksilta <- timed(
+        s"haunEnsikertalaiset: tutkinnotHakemuksilta haulle ${haku.oid}",
+        tutkinnotHakemuksilta(hakuOid)
+      )
+      personOidsWithAliases <- timed(
+        s"haunEnsikertalaiset: enrichWithAliases for ${tutkintovuodetHakemuksilta.keySet} henkilos from hakemukses",
+        oppijaNumeroRekisteri.enrichWithAliases(tutkintovuodetHakemuksilta.keySet)
+      )
+      valmistumishetket <- timed(
+        s"haunEnsikertalaiset: valmistumiset for ${personOidsWithAliases.henkiloOids.size} henkilos",
+        valmistumiset(personOidsWithAliases, Seq())
+      )
+      opiskeluoikeuksienAlkamiset <- timed(
+        s"haunEnsikertalaiset: opiskeluoikeudetAlkaneet for ${personOidsWithAliases.henkiloOids.size} henkilos",
+        opiskeluoikeudetAlkaneet(personOidsWithAliases, Seq())
+      )
+      vastaanottohetket <- timed(
+        s"haunEnsikertalaiset: vastaanotot for ${personOidsWithAliases.henkiloOids.size} henkilos",
+        vastaanotot(personOidsWithAliases)
+      )
+    } yield {
+      tutkintovuodetHakemuksilta.map { case (henkiloOid, tutkintovuosi) =>
+        ensikertalaisuus(
+          henkiloOid,
+          haku.viimeinenHakuaikaPaattyy.getOrElse(
+            throw new IllegalArgumentException(s"haku $hakuOid is missing hakuajan päätös")
+          ),
+          valmistumishetket.get(henkiloOid),
+          opiskeluoikeuksienAlkamiset.get(henkiloOid),
+          vastaanottohetket.get(henkiloOid),
+          tutkintovuosi
+        )
+      }.toSeq
+    }
   }
 
   def mergeEnsikertalaisuus(
