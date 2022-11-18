@@ -64,6 +64,23 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     extends IOppijaNumeroRekisteri {
   private val logger = Logging.getLogger(system, this)
 
+  def fetchInBatches(henkiloOids: Set[String], batchSize: Int) = {
+    henkiloOids
+      .grouped(batchSize)
+      .foldLeft(Future(LinkedHenkiloOids(Map[String, Set[String]](), Map[String, String]()))) {
+        case (result, chunk) =>
+          result.flatMap(rs => {
+            logger.info(s"Querying onr for batch: ${chunk.size} oids")
+            queryFromOppijaNumeroRekisteri(chunk).map(cr =>
+              LinkedHenkiloOids(
+                rs.oidToLinkedOids ++ cr.oidToLinkedOids,
+                rs.oidToMasterOid ++ cr.oidToMasterOid
+              )
+            )
+          })
+      }
+  }
+
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
     logger.info(
       s"fetchLinkedHenkiloOidsMap for ${henkiloOids.size} henkilos, first 100: ${henkiloOids.take(100)}"
@@ -71,7 +88,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     if (henkiloOids.isEmpty) {
       Future.successful(LinkedHenkiloOids(Map(), Map()))
     } else {
-      queryFromOppijaNumeroRekisteri(henkiloOids)
+      fetchInBatches(henkiloOids, 10000)
     }
   }
 
