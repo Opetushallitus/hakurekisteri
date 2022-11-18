@@ -65,6 +65,9 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   private val logger = Logging.getLogger(system, this)
 
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
+    logger.info(
+      s"fetchLinkedHenkiloOidsMap for ${henkiloOids.size} henkilos, first 100: ${henkiloOids.take(100)}"
+    )
     if (henkiloOids.isEmpty) {
       Future.successful(LinkedHenkiloOids(Map(), Map()))
     } else {
