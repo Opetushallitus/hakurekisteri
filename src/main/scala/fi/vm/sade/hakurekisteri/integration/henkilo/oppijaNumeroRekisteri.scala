@@ -65,30 +65,33 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   private val logger = Logging.getLogger(system, this)
 
   def fetchInBatches(henkiloOids: Set[String], batchSize: Int) = {
-    henkiloOids
-      .grouped(batchSize)
-      .foldLeft(Future(LinkedHenkiloOids(Map[String, Set[String]](), Map[String, String]()))) {
-        case (result, chunk) =>
-          result.flatMap(rs => {
-            logger.info(s"Querying onr for batch: ${chunk.size} oids")
-            queryFromOppijaNumeroRekisteri(chunk).map(cr =>
-              LinkedHenkiloOids(
-                rs.oidToLinkedOids ++ cr.oidToLinkedOids,
-                rs.oidToMasterOid ++ cr.oidToMasterOid
-              )
+    val started = System.currentTimeMillis()
+    val batches = henkiloOids.grouped(batchSize).zipWithIndex.toList
+    logger.info(
+      s"fetch LinkedHenkiloOids in ${batches.size} batches for ${henkiloOids.size} henkilos"
+    )
+    batches.foldLeft(Future(LinkedHenkiloOids(Map[String, Set[String]](), Map[String, String]()))) {
+      case (result, chunk) =>
+        result.flatMap(rs => {
+          logger.info(
+            s"Querying onr for batch: ${chunk._1.size} oids, batch ${chunk._2 + 1 + "/" + batches.size}, started ${started}"
+          )
+          queryFromOppijaNumeroRekisteri(chunk._1).map(cr =>
+            LinkedHenkiloOids(
+              rs.oidToLinkedOids ++ cr.oidToLinkedOids,
+              rs.oidToMasterOid ++ cr.oidToMasterOid
             )
-          })
-      }
+          )
+        })
+    }
   }
 
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
-    logger.info(
-      s"fetchLinkedHenkiloOidsMap for ${henkiloOids.size} henkilos, first 100: ${henkiloOids.take(100)}"
-    )
+
     if (henkiloOids.isEmpty) {
       Future.successful(LinkedHenkiloOids(Map(), Map()))
     } else {
-      fetchInBatches(henkiloOids, 10000)
+      fetchInBatches(henkiloOids, 20000)
     }
   }
 
