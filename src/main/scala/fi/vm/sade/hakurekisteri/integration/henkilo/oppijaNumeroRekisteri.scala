@@ -91,7 +91,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     if (henkiloOids.isEmpty) {
       Future.successful(LinkedHenkiloOids(Map(), Map()))
     } else {
-      fetchInBatches(henkiloOids, 20000)
+      fetchInBatches(henkiloOids, 50000)
     }
   }
 
