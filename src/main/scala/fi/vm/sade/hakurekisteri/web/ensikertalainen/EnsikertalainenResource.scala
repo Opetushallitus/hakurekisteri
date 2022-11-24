@@ -86,8 +86,8 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
       new Changes.Builder().build()
     )
     new AsyncResult() {
-      override implicit def timeout: Duration = 15.minutes
-      override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(15.minutes)
+      override implicit def timeout: Duration = 30.minutes
+      override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(30.minutes)
         .mapTo[Seq[Ensikertalainen]]
       logQuery(Map("haku" -> hakuOid), t0, is)
     }
