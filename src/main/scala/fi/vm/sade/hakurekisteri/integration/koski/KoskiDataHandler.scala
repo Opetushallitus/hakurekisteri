@@ -130,6 +130,21 @@ class KoskiDataHandler(
       return false
     }
 
+    if (suoritus.isTuva()) {
+      if (!suoritus.laajuusVahintaan(19)) {
+        logger.info(
+          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka sisälsi alle 19 opintoviikkoa."
+        )
+        return false
+      }
+      if (KoskiUtil.isBeforeTuvaStartDate(lasnaDate.get)) {
+        logger.info(
+          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka on alkanut ennen 1.8.2022."
+        )
+        return false
+      }
+    }
+
     true
   }
 

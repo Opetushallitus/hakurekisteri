@@ -1,14 +1,12 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.sql.Date
-import java.text.SimpleDateFormat
-import java.util.concurrent.TimeUnit
-
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
-import scala.math.BigDecimal
+import java.sql.Date
+import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 
 object KoskiUtil {
 
@@ -16,6 +14,8 @@ object KoskiUtil {
   var deadlineDate: LocalDate = new LocalDate(
     OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date")
   )
+
+  val tuvaStartDate: LocalDate = LocalDate.parse("2022-08-01")
 
   //format "2020-06-01T00:00:00+02:00"
   lazy val koskiFetchStartTime: String =
@@ -47,6 +47,10 @@ object KoskiUtil {
 
   def isAfterDeadlineDate(date: LocalDate = LocalDate.now()): Boolean = {
     date.isAfter(deadlineDate)
+  }
+
+  def isBeforeTuvaStartDate(date: LocalDate = LocalDate.now()): Boolean = {
+    date.isBefore(tuvaStartDate)
   }
 
   def parseLocalDate(s: String): LocalDate =

@@ -154,6 +154,10 @@ case class KoskiSuoritus(
     suoritustapa.exists(tapa => tapa.koodiarvo == "erityinentutkinto")
   }
 
+  def isTuva(): Boolean = {
+    tyyppi.exists(_.koodiarvo == "tuvakoulutuksensuoritus")
+  }
+
   def laajuusVahintaan(min: BigDecimal): Boolean = {
     val sum =
       if (isOpistovuosi) {

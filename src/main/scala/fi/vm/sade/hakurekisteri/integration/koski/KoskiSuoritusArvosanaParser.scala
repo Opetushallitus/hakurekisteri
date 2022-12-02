@@ -474,7 +474,7 @@ class KoskiSuoritusArvosanaParser {
             (Seq(), yksilollistaminen.Ei, None)
           }
 
-        //Ei tallenneta arvosanoja VALMA, TELMA, opistovuosi oppivelvollisille. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
+        //Ei tallenneta arvosanoja VALMA, TELMA, TUVA, opistovuosi oppivelvollisille. Osasuoritusten määrä vaikuttaa kuitenkin suorituksen tilaan toisaalla.
         case Oids.valmaKomoOid | Oids.telmaKomoOid | Oids.opistovuosiKomoOid | Oids.tuvaKomoOid =>
           val (arv, yks, yksMaAi) = osasuoritusToArvosana(
             personOid,
