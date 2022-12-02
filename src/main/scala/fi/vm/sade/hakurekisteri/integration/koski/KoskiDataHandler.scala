@@ -131,9 +131,14 @@ class KoskiDataHandler(
     }
 
     if (suoritus.isTuva()) {
-      if (!suoritus.laajuusVahintaan(19)) {
+      if (
+        !suoritus.laajuusVahintaan(19)
+        && opiskeluoikeus.tila.opiskeluoikeusjaksot
+          .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+      ) {
         logger.info(
-          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka sisälsi alle 19 opintoviikkoa."
+          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka sisälsi alle 19 opintoviikkoa.ja " +
+            s"kuului eronneeseen rinnastettaviin tiloihin."
         )
         return false
       }

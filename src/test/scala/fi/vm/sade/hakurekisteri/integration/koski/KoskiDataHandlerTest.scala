@@ -4870,7 +4870,44 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "not store tutkintokoulutukseen valmentava koulutus without arvosanat if deadline date is tomorrow and alku is 030822 and opintoviikot is 18" in {
+  it should "store tutkintokoulutukseen valmentava koulutus as kesken without arvosanat if deadline date is tomorrow and alku is 030822 and opintoviikot is 18" in {
+    val json: String = scala.io.Source
+      .fromFile(
+        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
+      )
+      .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    suoritukset.head should equal("1")
+    val suoritus = run(
+      database.run(
+        sql"select tila from suoritus where komo = 'tuva'"
+          .as[String]
+      )
+    )
+    suoritus.head should equal("KESKEN")
+    val arvosanat = run(
+      database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
+    )
+    arvosanat should have length 0
+  }
+
+  it should "store tutkintokoulutukseen valmentava koulutus as keskeytynyt without arvosanat if deadline date was yesterday and alku is 030822 and opintoviikot is 18" in {
     val json: String = scala.io.Source
       .fromFile(
         jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
@@ -4891,9 +4928,16 @@ class KoskiDataHandlerTest
     )
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
-    opiskelijat.size should equal(0)
+    opiskelijat.size should equal(1)
     val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("0")
+    suoritukset.head should equal("1")
+    val suoritus = run(
+      database.run(
+        sql"select tila from suoritus where komo = 'tuva'"
+          .as[String]
+      )
+    )
+    suoritus.head should equal("KESKEYTYNYT")
     val arvosanat = run(
       database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
     )
