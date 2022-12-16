@@ -271,7 +271,7 @@ var restData = {
         "valmaKomoOid": "valma",
         "telmaKomoOid": "telma",
         "opistovuosiKomoOid": "opistovuosioppivelvolliselle",
-        "tuvaKomoOid": "tuva",
+        "tuvaKomoOid": "tuvakoulutuksensuoritus",
         "perusopetuksenOppiaineenOppimaaraOid": "TODO perusopetuksenOppiaineenOppimäärä"
     },
     rajoitukset: {

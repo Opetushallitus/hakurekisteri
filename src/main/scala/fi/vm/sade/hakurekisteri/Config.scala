@@ -54,7 +54,7 @@ object LisapistekoulutusOids {
   val valma = "valma"
   val telma = "telma"
   val opistovuosiOppivelvollisille = "vstoppivelvollisillesuunnattukoulutus"
-  val tuva = "tuva"
+  val tuva = "tuvakoulutuksensuoritus"
 }
 
 object KomoOids {

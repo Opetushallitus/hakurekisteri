@@ -4785,7 +4785,7 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
     val suoritus = run(
       database.run(
-        sql"select tila from suoritus where komo = 'tuva'"
+        sql"select tila from suoritus where komo = 'tuvakoulutuksensuoritus'"
           .as[String]
       )
     )
@@ -4822,7 +4822,7 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
     val suoritus = run(
       database.run(
-        sql"select tila from suoritus where komo = 'tuva'"
+        sql"select tila from suoritus where komo = 'tuvakoulutuksensuoritus'"
           .as[String]
       )
     )
@@ -4859,7 +4859,7 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
     val suoritus = run(
       database.run(
-        sql"select tila from suoritus where komo = 'tuva'"
+        sql"select tila from suoritus where komo = 'tuvakoulutuksensuoritus'"
           .as[String]
       )
     )
@@ -4896,7 +4896,7 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
     val suoritus = run(
       database.run(
-        sql"select tila from suoritus where komo = 'tuva'"
+        sql"select tila from suoritus where komo = 'tuvakoulutuksensuoritus'"
           .as[String]
       )
     )
@@ -4933,7 +4933,7 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
     val suoritus = run(
       database.run(
-        sql"select tila from suoritus where komo = 'tuva'"
+        sql"select tila from suoritus where komo = 'tuvakoulutuksensuoritus'"
           .as[String]
       )
     )
