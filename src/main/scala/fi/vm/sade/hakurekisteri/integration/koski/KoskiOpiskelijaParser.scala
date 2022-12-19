@@ -88,6 +88,11 @@ class KoskiOpiskelijaParser {
         suoritus.suoritus.myontaja,
         suoritus.luokka
       ),
+      Oids.tuvaKomoOid -> OppilaitosAndLuokka(
+        "TUVA",
+        suoritus.suoritus.myontaja,
+        suoritus.luokka
+      ),
       Oids.ammatillinentutkintoKomoOid -> OppilaitosAndLuokka(
         "",
         suoritus.suoritus.myontaja,

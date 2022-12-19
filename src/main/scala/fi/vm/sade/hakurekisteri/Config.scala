@@ -54,6 +54,7 @@ object LisapistekoulutusOids {
   val valma = "valma"
   val telma = "telma"
   val opistovuosiOppivelvollisille = "vstoppivelvollisillesuunnattukoulutus"
+  val tuva = "tuvakoulutuksensuoritus"
 }
 
 object KomoOids {
@@ -78,7 +79,8 @@ object KomoOids {
     lisapistekoulutus.valmentavaJaKuntouttava,
     lisapistekoulutus.valma,
     lisapistekoulutus.telma,
-    lisapistekoulutus.opistovuosiOppivelvollisille
+    lisapistekoulutus.opistovuosiOppivelvollisille,
+    lisapistekoulutus.tuva
   )
 }
 
@@ -109,6 +111,7 @@ object Oids {
   val kansanopistoKomoOid = KomoOids.lisapistekoulutus.kansanopisto
   val valmaKomoOid = KomoOids.lisapistekoulutus.valma
   val telmaKomoOid = KomoOids.lisapistekoulutus.telma
+  val tuvaKomoOid = KomoOids.lisapistekoulutus.tuva
   val opistovuosiKomoOid = KomoOids.lisapistekoulutus.opistovuosiOppivelvollisille
   val DUMMYOID = "999999" //Dummy oid value for to-be-ignored komos
   val ammatillisetKomoOids =

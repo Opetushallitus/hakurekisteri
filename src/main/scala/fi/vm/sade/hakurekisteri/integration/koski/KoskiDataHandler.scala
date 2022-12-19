@@ -106,7 +106,7 @@ class KoskiDataHandler(
 
     if (
       suoritus.tyyppi.exists(_.koodiarvo == "valma")
-      && !suoritus.opintopisteitaVahintaan(30)
+      && !suoritus.laajuusVahintaan(30)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
         .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
     ) {
@@ -119,7 +119,7 @@ class KoskiDataHandler(
 
     if (
       suoritus.isOpistovuosi()
-      && !suoritus.opintopisteitaVahintaan(26.5)
+      && !suoritus.laajuusVahintaan(26.5)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
         .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
     ) {
@@ -128,6 +128,26 @@ class KoskiDataHandler(
           s"kuului eronneeseen rinnastettaviin tiloihin."
       )
       return false
+    }
+
+    if (suoritus.isTuva()) {
+      if (
+        !suoritus.laajuusVahintaan(19)
+        && opiskeluoikeus.tila.opiskeluoikeusjaksot
+          .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+      ) {
+        logger.info(
+          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka sisälsi alle 19 opintoviikkoa.ja " +
+            s"kuului eronneeseen rinnastettaviin tiloihin."
+        )
+        return false
+      }
+      if (KoskiUtil.isBeforeTuvaStartDate(lasnaDate.get)) {
+        logger.info(
+          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka on alkanut ennen 1.8.2022."
+        )
+        return false
+      }
     }
 
     true

@@ -33,6 +33,7 @@ class GuiServlet(implicit val system: ActorSystem)
     valmaKomoOid = Oids.valmaKomoOid,
     telmaKomoOid = Oids.telmaKomoOid,
     opistovuosiKomoOid = Oids.opistovuosiKomoOid,
+    tuvaKomoOid = Oids.tuvaKomoOid,
     perusopetuksenOppiaineenOppimaaraOid = Oids.perusopetuksenOppiaineenOppimaaraOid
   )
 
@@ -62,5 +63,6 @@ case class GuiOidit(
   valmaKomoOid: String,
   telmaKomoOid: String,
   opistovuosiKomoOid: String,
+  tuvaKomoOid: String,
   perusopetuksenOppiaineenOppimaaraOid: String
 )

@@ -1,0 +1,432 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.81632219835",
+    "hetu" : "010104A991E",
+    "syntymäaika" : "2004-01-01",
+    "etunimet" : "Anas Testi",
+    "kutsumanimi" : "Anas",
+    "sukunimi" : "Ruohonen-Testi",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.43373523042",
+    "versionumero" : 4,
+    "aikaleima" : "2022-12-02T14:41:17.535519",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.70472828204",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "01923",
+        "nimi" : {
+          "fi" : "Musiikkiopisto Juvenalia",
+          "sv" : "Musiikkiopisto Juvenalia",
+          "en" : "Musiikkiopisto Juvenalia"
+        },
+        "lyhytNimi" : {
+          "fi" : "Musiikkiopisto Juvenalia",
+          "sv" : "Musiikkiopisto Juvenalia",
+          "en" : "Musiikkiopisto Juvenalia"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Musiikkiopisto Juvenalia",
+        "sv" : "Musiikkiopisto Juvenalia",
+        "en" : "Musiikkiopisto Juvenalia"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "049",
+        "nimi" : {
+          "fi" : "Espoo",
+          "sv" : "Esbo"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.35751498086",
+      "nimi" : {
+        "fi" : "Musiikkiopisto Juvenalia ry",
+        "sv" : "Musiikkiopisto Juvenalia ry",
+        "en" : "Musiikkiopisto Juvenalia ry"
+      },
+      "yTunnus" : "0200558-5",
+      "kotipaikka" : {
+        "koodiarvo" : "049",
+        "nimi" : {
+          "fi" : "Espoo",
+          "sv" : "Esbo"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-08-03",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "maksuttomuus" : [ {
+        "alku" : "2022-08-03",
+        "maksuton" : true
+      } ],
+      "koulutusvienti" : false,
+      "pidennettyPäättymispäivä" : false
+    },
+    "suoritukset" : [ {
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.70472828204",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "01923",
+          "nimi" : {
+            "fi" : "Musiikkiopisto Juvenalia",
+            "sv" : "Musiikkiopisto Juvenalia",
+            "en" : "Musiikkiopisto Juvenalia"
+          },
+          "lyhytNimi" : {
+            "fi" : "Musiikkiopisto Juvenalia",
+            "sv" : "Musiikkiopisto Juvenalia",
+            "en" : "Musiikkiopisto Juvenalia"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Musiikkiopisto Juvenalia",
+          "sv" : "Musiikkiopisto Juvenalia",
+          "en" : "Musiikkiopisto Juvenalia"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "049",
+          "nimi" : {
+            "fi" : "Espoo",
+            "sv" : "Esbo"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "tyyppi" : {
+        "koodiarvo" : "tuvakoulutuksensuoritus",
+        "nimi" : {
+          "fi" : "Tutkintokoulutukseen valmentava koulutuksen suoritus",
+          "sv" : "Tutkintokoulutukseen valmentava koulutuksen suoritus",
+          "en" : "Tutkintokoulutukseen valmentava koulutuksen suoritus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      },
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "999908",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava koulutus",
+            "sv" : "Utbildning som handleder för examensutbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "TUVA"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "OPH-1488-2021",
+        "koulutustyyppi" : {
+          "koodiarvo" : "40",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava koulutus TUVA)",
+            "sv" : "Utbildning som handleder för examensutbildning (Hux)"
+          },
+          "lyhytNimi" : {
+            "fi" : "TUVA"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        },
+        "laajuus" : {
+          "arvo" : 19.0,
+          "yksikkö" : {
+            "koodiarvo" : "8",
+            "nimi" : {
+              "fi" : "viikkoa",
+              "sv" : "veckor",
+              "en" : "weeks"
+            },
+            "lyhytNimi" : {
+              "fi" : "vk",
+              "sv" : "v",
+              "en" : "w"
+            },
+            "koodistoUri" : "opintojenlaajuusyksikko"
+          }
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "101",
+            "nimi" : {
+              "fi" : "Opiskelu- ja urasuunnittelutaidot",
+              "sv" : "Studiefärdigheter och karriärplaneringsfärdigheter"
+            },
+            "koodistoUri" : "koulutuksenosattuva",
+            "koodistoVersio" : 1
+          },
+          "laajuus" : {
+            "arvo" : 5.0,
+            "yksikkö" : {
+              "koodiarvo" : "8",
+              "nimi" : {
+                "fi" : "viikkoa",
+                "sv" : "veckor",
+                "en" : "weeks"
+              },
+              "lyhytNimi" : {
+                "fi" : "vk",
+                "sv" : "v",
+                "en" : "w"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkotuva",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2022-08-11",
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "tutkintokoulutukseenvalmentava",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava suoritus",
+            "sv" : "Tutkintokoulutukseen valmentava suoritus",
+            "en" : "Tutkintokoulutukseen valmentava muu suoritus"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "107",
+            "nimi" : {
+              "fi" : "Perustaitojen vahvistaminen",
+              "sv" : "Stärkande av grundläggande färdigheter",
+              "en" : "Perustaitojen vahvistaminen"
+            },
+            "koodistoUri" : "koulutuksenosattuva",
+            "koodistoVersio" : 1
+          },
+          "laajuus" : {
+            "arvo" : 10.0,
+            "yksikkö" : {
+              "koodiarvo" : "8",
+              "nimi" : {
+                "fi" : "viikkoa",
+                "sv" : "veckor",
+                "en" : "weeks"
+              },
+              "lyhytNimi" : {
+                "fi" : "vk",
+                "sv" : "v",
+                "en" : "w"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkotuva",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2022-08-25",
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "tutkintokoulutukseenvalmentava",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava suoritus",
+            "sv" : "Tutkintokoulutukseen valmentava suoritus",
+            "en" : "Tutkintokoulutukseen valmentava muu suoritus"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "105",
+            "nimi" : {
+              "fi" : "Ammatillisen koulutuksen opinnot ja niihin valmentautuminen",
+              "sv" : "Studier inom yrkesutbildning och studier som förbereder för dem",
+              "en" : "Ammatillisen koulutuksen opinnot ja niihin valmentautuminen"
+            },
+            "koodistoUri" : "koulutuksenosattuva",
+            "koodistoVersio" : 1
+          },
+          "laajuus" : {
+            "arvo" : 4.0,
+            "yksikkö" : {
+              "koodiarvo" : "8",
+              "nimi" : {
+                "fi" : "viikkoa",
+                "sv" : "veckor",
+                "en" : "weeks"
+              },
+              "lyhytNimi" : {
+                "fi" : "vk",
+                "sv" : "v",
+                "en" : "w"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd",
+              "en" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkotuva",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2022-08-12",
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "tutkintokoulutukseenvalmentava",
+          "nimi" : {
+            "fi" : "Tutkintokoulutukseen valmentava suoritus",
+            "sv" : "Tutkintokoulutukseen valmentava suoritus",
+            "en" : "Tutkintokoulutukseen valmentava muu suoritus"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ]
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "tuva",
+      "nimi" : {
+        "fi" : "Tutkintokoulutukseen valmentava koulutus",
+        "sv" : "Utbildning som handleder för examensutbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Tutkintokoulutukseen valmentava koulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "järjestämislupa" : {
+      "koodiarvo" : "ammatillinen",
+      "nimi" : {
+        "fi" : "Ammatillisen koulutuksen järjestämislupa (TUVA)",
+        "sv" : "Tillstånd att ordna yrkesutbildning (Hux)"
+      },
+      "koodistoUri" : "tuvajarjestamislupa",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-08-03"
+  } ]
+}
