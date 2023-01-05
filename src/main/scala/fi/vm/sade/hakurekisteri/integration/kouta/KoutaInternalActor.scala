@@ -132,7 +132,7 @@ class KoutaInternalActor(
           k.map(toHakukohteenKoulutus(koulutus, hakukohde)).toSeq
         case (_, Some(false)) =>
           // tutkintoon johtamattomalla ei välttämättä ole koulutuskoodeja koutassa
-          Seq(toHakukohteenKoulutus(koulutus, hakukohde)("koulutus_999999"))
+          Seq(toHakukohteenKoulutus(koulutus, hakukohde)("999999"))
         case _ =>
           Seq()
       }
