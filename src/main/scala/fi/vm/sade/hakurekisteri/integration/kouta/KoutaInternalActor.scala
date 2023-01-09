@@ -95,6 +95,29 @@ class KoutaInternalActor(
   def getHakukohteenKoulutukset(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
     koulutusCache.get(hakukohdeOid)
 
+  private def toHakukohteenKoulutus(
+    koulutus: KoutaInternalKoulutus,
+    hakukohde: KoutaInternalHakukohde
+  )(koodi: String) =
+    Hakukohteenkoulutus(
+      komoOid = koulutus.oid,
+      tkKoulutuskoodi = koodi,
+      kkKoulutusId = None,
+      koulutuksenAlkamiskausi = hakukohde.paateltyAlkamiskausi.map(ak =>
+        ak match {
+          case kausi if kausi.kausiUri.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
+          case kausi if kausi.kausiUri.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
+          case unknown =>
+            log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
+            TarjontaKoodi(None)
+        }
+      ),
+      koulutuksenAlkamisvuosi =
+        hakukohde.paateltyAlkamiskausi.map(ak => Integer.parseInt(ak.vuosi)),
+      koulutuksenAlkamisPvms = None,
+      koulutusohjelma = None
+    )
+
   def getHakukohteenKoulutuksetForReal(hakukohdeOid: String): Future[HakukohteenKoulutukset] =
     for {
       hakukohde <- getHakukohdeFromKoutaInternal(hakukohdeOid)
@@ -104,28 +127,15 @@ class KoutaInternalActor(
     } yield HakukohteenKoulutukset(
       hakukohdeOid = hakukohdeOid,
       ulkoinenTunniste = hakukohde.externalId,
-      koulutukset = koodit
-        .map(koodi =>
-          Hakukohteenkoulutus(
-            komoOid = koulutus.oid,
-            tkKoulutuskoodi = koodi,
-            kkKoulutusId = None,
-            koulutuksenAlkamiskausi = hakukohde.paateltyAlkamiskausi.map(ak =>
-              ak match {
-                case kausi if kausi.kausiUri.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
-                case kausi if kausi.kausiUri.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
-                case unknown =>
-                  log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
-                  TarjontaKoodi(None)
-              }
-            ),
-            koulutuksenAlkamisvuosi =
-              hakukohde.paateltyAlkamiskausi.map(ak => Integer.parseInt(ak.vuosi)),
-            koulutuksenAlkamisPvms = None,
-            koulutusohjelma = None
-          )
-        )
-        .toSeq
+      koulutukset = (koodit, koulutus.johtaaTutkintoon) match {
+        case (k, _) if k.nonEmpty =>
+          k.map(toHakukohteenKoulutus(koulutus, hakukohde)).toSeq
+        case (_, Some(false)) =>
+          // tutkintoon johtamattomalla ei välttämättä ole koulutuskoodeja koutassa
+          Seq(toHakukohteenKoulutus(koulutus, hakukohde)("999999"))
+        case _ =>
+          Seq()
+      }
     )
 
   private def getKoodit(koulutus: KoutaInternalKoulutus): Future[Set[String]] = {
@@ -302,7 +312,11 @@ case class KoutaInternalRestHaku(
   )
 }
 
-case class KoutaInternalKoulutus(oid: String, koulutusKoodiUrit: Set[String])
+case class KoutaInternalKoulutus(
+  oid: String,
+  koulutusKoodiUrit: Set[String],
+  johtaaTutkintoon: Option[Boolean]
+)
 
 case class HakukohteenTiedot(koodiUri: String)
 

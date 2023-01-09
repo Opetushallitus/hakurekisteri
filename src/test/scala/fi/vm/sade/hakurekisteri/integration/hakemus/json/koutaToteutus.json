@@ -1,0 +1,163 @@
+{
+  "oid": "1.2.246.562.17.00000000000000011399",
+  "koulutusOid": "1.2.246.562.13.00000000000000003172",
+  "tila": "julkaistu",
+  "tarjoajat": [
+    "1.2.246.562.10.86446950551"
+  ],
+  "nimi": {
+    "en": "FITech courses for adult learners, LUT University, spring 2023",
+    "fi": "FITech-kurssit aikuisopiskelijoille, LUT-yliopisto, kevät 2023"
+  },
+  "metadata": {
+    "tyyppi": "kk-opintojakso",
+    "kuvaus": {
+      "en": "<p><a href=\"https://fitech.io/en/\" rel=\"noopener noreferrer\" target=\"_blank\">FITech</a> is a network of Finnish universities of technology that offers a selection of university courses to study free of charge. Course topics include information technology, 5G technology, energy storages and other fields of technology. Courses are open and available for all Finns and permanent residents of Finland, everyone from high school students to adults in working life.</p><p></p><p>FITech applicants are divided into degree students and adult learners. Adult learners are those who are currently not studying at any higher education institution in Finland (a university or a university of applied sciences). For example doctoral students in a university, high school students and those who are employed, unemployed or outside workforce should apply as an adult learner.</p><p></p><p>Courses on this page are organised by LUT University. The application process is started on the FITech website. <a href=\"https://fitech.io/en/studies/?fit_course_types=upcoming&amp;orderby=start_date&amp;fit_student_type=128\" rel=\"noopener noreferrer\" target=\"_blank\">Get to know all the courses</a>.</p>",
+      "fi": "<p><a href=\"https://fitech.io/fi/\" rel=\"noopener noreferrer\" target=\"_blank\">FITech</a> on Suomen tekniikan alan yliopistojen muodostama verkosto, jonka kautta on mahdollista opiskella näiden yliopistojen valikoituja kursseja maksuttomasti. Opintoja on tarjolla monipuolisesti ICT- ja 5G-aiheista sekä energiavarastoinnista. Kurssit ovat kaikille avoimia ja niitä voivat suorittaa kaikki suomalaiset ja Suomessa vakituisesti asuvat, lukiolaisista työikäisiin.</p><p></p><p>FITech-kursseille hakijat jaetaan aikuisopiskelijoihin ja tutkinto-opiskelijoihin. Aikuisopiskelijalla tarkoitetaan kaikkia sellaisia hakijoita, jotka eivät opiskele tai ole kirjoilla missään suomalaisessa korkeakoulussa. Jos olet esim. työssä, työtön, lukiolainen tai työvoiman ulkopuolella, voit hakea aikuisopiskelijana. Myös yliopistojen jatko-opiskelijat voivat hakea aikuisopiskelijoiden haussa.</p><p></p><p>Tällä sivulla näkyvät kurssit ovat LUT-yliopiston järjestämiä opintoja. Kursseille haetaan FITechin verkkosivujen kautta. <a href=\"https://fitech.io/fi/opinnot/?fit_course_types=upcoming&amp;orderby=start_date&amp;fit_student_type=929\" rel=\"noopener noreferrer\" target=\"_blank\">Tutustu kaikkien yliopistojen opintoihin</a>.</p>"
+    },
+    "opetus": {
+      "opetuskieliKoodiUrit": [
+        "oppilaitoksenopetuskieli_1#2",
+        "oppilaitoksenopetuskieli_4#2"
+      ],
+      "opetuskieletKuvaus": {
+        "en": "<p>Language of instruction depends on the course selected</p>",
+        "fi": "<p>Opetuskieli riippuu valitusta kurssista</p>"
+      },
+      "opetusaikaKoodiUrit": [
+        "opetusaikakk_5#1",
+        "opetusaikakk_4#1"
+      ],
+      "opetusaikaKuvaus": {
+        "en": "<p>Check the teaching period from the course information</p>",
+        "fi": "<p>Tarkista opetusaika kurssin tiedoista</p>"
+      },
+      "opetustapaKoodiUrit": [
+        "opetuspaikkakk_2#1",
+        "opetuspaikkakk_5#1",
+        "opetuspaikkakk_1#1",
+        "opetuspaikkakk_4#1",
+        "opetuspaikkakk_3#1"
+      ],
+      "opetustapaKuvaus": {
+        "en": "<p>Check the teaching methods from the course information</p>",
+        "fi": "<p>Tarkista opetustapa kurssin tiedoista</p>"
+      },
+      "maksullisuustyyppi": "maksuton",
+      "maksullisuusKuvaus": {},
+      "lisatiedot": []
+    },
+    "asiasanat": [
+      {
+        "kieli": "fi",
+        "arvo": "fitech"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "täydennyskoulutus"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "ict"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "energia"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "5g-teknologia"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "tekoäly"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "ohjelmointi"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "kyberturvallisuus"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "ilmainen koulutus"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "ilmainen"
+      },
+      {
+        "kieli": "fi",
+        "arvo": "tietoliikennetekniikka "
+      },
+      {
+        "kieli": "fi",
+        "arvo": "LUT-yliopisto"
+      },
+      {
+        "kieli": "en",
+        "arvo": "fitech"
+      },
+      {
+        "kieli": "en",
+        "arvo": "professional training"
+      },
+      {
+        "kieli": "en",
+        "arvo": "ict"
+      },
+      {
+        "kieli": "en",
+        "arvo": "energy"
+      },
+      {
+        "kieli": "en",
+        "arvo": "5g technology"
+      },
+      {
+        "kieli": "en",
+        "arvo": "artificial intelligence"
+      },
+      {
+        "kieli": "en",
+        "arvo": "programming"
+      },
+      {
+        "kieli": "en",
+        "arvo": "cyber security"
+      },
+      {
+        "kieli": "en",
+        "arvo": "LUT University"
+      },
+      {
+        "kieli": "en",
+        "arvo": "free education"
+      },
+      {
+        "kieli": "en",
+        "arvo": "free"
+      },
+      {
+        "kieli": "en",
+        "arvo": "information and communications technology"
+      }
+    ],
+    "ammattinimikkeet": [],
+    "yhteyshenkilot": [],
+    "lisatietoaHakeutumisesta": {},
+    "lisatietoaValintaperusteista": {},
+    "hakutermi": "hakeutuminen",
+    "hakulomaketyyppi": "ataru",
+    "hakulomakeLinkki": {}
+  },
+  "muokkaaja": "1.2.246.562.24.26297558035",
+  "organisaatioOid": "1.2.246.562.10.86446950551",
+  "kielivalinta": [
+    "fi",
+    "en"
+  ],
+  "modified": "2022-10-26T15:10:40"
+}

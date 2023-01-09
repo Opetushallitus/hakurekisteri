@@ -1,0 +1,42 @@
+{
+  "oid": "1.2.246.562.13.00000000000000003172",
+  "johtaaTutkintoon": false,
+  "koulutustyyppi": "kk-opintojakso",
+  "koulutusKoodiUrit": [],
+  "tila": "julkaistu",
+  "tarjoajat": [
+    "1.2.246.562.10.38417217288",
+    "1.2.246.562.10.39218317368",
+    "1.2.246.562.10.42777795784",
+    "1.2.246.562.10.56753942459",
+    "1.2.246.562.10.64733493619",
+    "1.2.246.562.10.74057379666",
+    "1.2.246.562.10.78305677532",
+    "1.2.246.562.10.79559059674",
+    "1.2.246.562.10.91392558028"
+  ],
+  "nimi": {
+    "en": "FITech courses for adult learners",
+    "fi": "FITech-kurssit aikuisopiskelijoille"
+  },
+  "metadata": {
+    "tyyppi": "kk-opintojakso",
+    "kuvaus": {
+      "en": "<p><a href=\"https://fitech.io/en/\" rel=\"noopener noreferrer\" target=\"_blank\">FITech</a> is a network of Finnish universities of technology that offers a selection of university courses to study free of charge. Course topics include information technology, 5G technology, energy storages and other fields of technology. Courses are open and available for all Finns and permanent residents of Finland, everyone from high school students to adults in working life.</p><p></p><p>FITech applicants are divided into degree students and adult learners. Adult learners are those who are currently not studying at any higher education institution in Finland (a university or a university of applied sciences). For example doctoral students in a university, high school students and those who are employed, unemployed or outside workforce should apply as an adult learner.</p><p></p><p>After completing a course, the student will receive study credits from the university and a digital badge from FITech. Some courses have contact learning on campus but the offering also includes many online courses and MOOCs (Massive Open Online Course) that can be studied independently on your own pace. Course level varies from beginner to advanced and teaching language can be either Finnish, English or Swedish. The only one offer of admission per academic term rule applies only for degree studies, so accepting a study place for a FITech course doesn’t affect applications for degree studies.</p><p></p><p>FITech member universities are Aalto University, LUT University, Tampere University, University of Eastern Finland, University of Jyväskylä, University of Oulu, University of Turku, University of Vaasa and Åbo Akademi University. The main goal for FITech is to guide experts to growth sectors in Finland and respond to competence needs arising in the field of technology. The projects of FITech network are funded by the Ministry of Education and Culture and will continue on current funding until the end of 2023.</p><p></p><p><a href=\"https://fitech.io/en/studies/\" rel=\"noopener noreferrer\" target=\"_blank\">Get to know the FITech studies</a></p>",
+      "fi": "<p><a href=\"https://fitech.io/fi/\" rel=\"noopener noreferrer\" target=\"_blank\">FITech</a> on Suomen tekniikan alan yliopistojen muodostama verkosto, jonka kautta on mahdollista opiskella näiden yliopistojen valikoituja kursseja maksuttomasti. Opintoja on tarjolla monipuolisesti ICT- ja 5G-aiheista sekä energiavarastoinnista. Kurssit ovat kaikille avoimia ja niitä voivat suorittaa kaikki suomalaiset ja Suomessa vakituisesti asuvat, lukiolaisista työikäisiin.</p><p></p><p>FITech-kursseille hakijat jaetaan aikuisopiskelijoihin ja tutkinto-opiskelijoihin. Aikuisopiskelijalla tarkoitetaan kaikkia sellaisia hakijoita, jotka eivät opiskele tai ole kirjoilla missään suomalaisessa korkeakoulussa. Jos olet esim. työssä, työtön, lukiolainen tai työvoiman ulkopuolella, voit hakea aikuisopiskelijana. Myös yliopistojen jatko-opiskelijat voivat hakea aikuisopiskelijoiden haussa.</p><p></p><p>Kurssin suoritettuaan opiskelija saa yliopistojen myöntämät viralliset opintopisteet ja FITechin virtuaalisen suoritusmerkin. Osassa kursseja on lähiopetusta yliopiston omalla kampuksella, mutta tarjonnassa on myös runsaasti verkkokursseja ja MOOCeja (Massive Open Online Course), joita voi suorittaa itsenäisesti omaan tahtiin. Kurssien taso vaihtelee alkeista syventävään ja opetuskielenä on joko suomi, ruotsi tai englanti. FITech-kurssipaikan vastaanottaminen ei vaikuta yhden korkeakoulupaikan säännökseen.</p><p></p><p>FITechin jäsenyliopistoja ovat Aalto-yliopisto, Itä-Suomen yliopisto, Jyväskylän yliopisto, LUT-yliopisto, Oulun yliopisto, Tampereen yliopisto, Turun yliopisto, Vaasan yliopisto ja Åbo Akademi. Verkosto perustettiin lisäämään yhteistyötä tekniikan alalla, ja tavoitteena on ohjata tekniikan alan osaajia Suomen kasvualoille ja vastata tekniikan alalla nouseviin osaajatarpeisiin. Opetus- ja kulttuuriministeriön (OKM) rahoittamien FITech-hankkeiden toiminta jatkuu vuoden 2023 loppuun saakka.</p><p></p><p><a href=\"https://fitech.io/fi/opinnot/\" rel=\"noopener noreferrer\" target=\"_blank\">Tutustu FITech-opintoihin</a></p>"
+    },
+    "lisatiedot": [],
+    "koulutusalaKoodiUrit": [
+      "kansallinenkoulutusluokitus2016koulutusalataso2_061#1",
+      "kansallinenkoulutusluokitus2016koulutusalataso2_071#1"
+    ]
+  },
+  "julkinen": true,
+  "muokkaaja": "1.2.246.562.24.26297558035",
+  "organisaatioOid": "1.2.246.562.10.32528303723",
+  "kielivalinta": [
+    "fi",
+    "en"
+  ],
+  "modified": "2022-10-26T15:51:24"
+}

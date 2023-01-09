@@ -1,0 +1,72 @@
+[
+  {
+    "oid": "1.2.246.562.20.00000000000000027357",
+    "toteutusOid": "1.2.246.562.17.00000000000000011399",
+    "hakuOid": "1.2.246.562.29.00000000000000022980",
+    "tila": "julkaistu",
+    "nimi": {
+      "en": "Peliohjelmoinnin alkeet Unitylla",
+      "fi": "Peliohjelmoinnin alkeet Unitylla"
+    },
+    "kaytetaanHaunAlkamiskautta": true,
+    "hakulomakeKuvaus": {},
+    "hakulomakeLinkki": {
+      "fi": "https://opintopolku.fi/hakemus/hakukohde/1.2.246.562.20.00000000000000027357?lang=fi",
+      "sv": "https://opintopolku.fi/hakemus/hakukohde/1.2.246.562.20.00000000000000027357?lang=sv",
+      "en": "https://opintopolku.fi/hakemus/hakukohde/1.2.246.562.20.00000000000000027357?lang=en"
+    },
+    "kaytetaanHaunHakulomaketta": true,
+    "aloituspaikat": 0,
+    "painotetutArvosanat": [],
+    "pohjakoulutusvaatimusKoodiUrit": [
+      "pohjakoulutusvaatimuskouta_xx#1"
+    ],
+    "muuPohjakoulutusvaatimus": {},
+    "toinenAsteOnkoKaksoistutkinto": false,
+    "kaytetaanHaunAikataulua": false,
+    "valintaperusteValintakokeet": [],
+    "yhdenPaikanSaanto": {
+      "voimassa": false,
+      "syy": "Ei tutkintoon johtavaa koulutusta"
+    },
+    "salliikoHakukohdeHarkinnanvaraisuudenKysymisen": false,
+    "voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita": false,
+    "liitteetOnkoSamaToimitusaika": false,
+    "liitteetOnkoSamaToimitusosoite": false,
+    "liitteet": [],
+    "valintakokeet": [],
+    "hakuajat": [
+      {
+        "alkaa": "2022-11-07T12:00:00",
+        "paattyy": "2023-04-04T13:00:00"
+      }
+    ],
+    "muokkaaja": "1.2.246.562.24.26297558035",
+    "tarjoaja": "1.2.246.562.10.86446950551",
+    "organisaatioOid": "1.2.246.562.10.86446950551",
+    "organisaatioNimi": {
+      "fi": "Lappeenrannan-Lahden teknillinen yliopisto LUT, LUT-yliopisto, FITech",
+      "sv": "Lappeenrannan-Lahden teknillinen yliopisto LUT, LUT-yliopisto, FITech",
+      "en": "Lappeenranta-Lahti University of Technology LUT, LUT University, FITech"
+    },
+    "kielivalinta": [
+      "fi",
+      "en"
+    ],
+    "modified": "2022-11-22T09:40:42",
+    "oikeusHakukohteeseen": true,
+    "uudenOpiskelijanUrl": {},
+    "paateltyAlkamiskausi": {
+      "alkamiskausityyppi": "alkamiskausi ja -vuosi",
+      "source": "1.2.246.562.29.00000000000000022980",
+      "kausiUri": "kausi_k#1",
+      "vuosi": "2023"
+    },
+    "odwKkTasot": {
+      "alempiKkAste": false,
+      "ylempiKkAste": false,
+      "kkTutkinnonTaso": 5,
+      "kkTutkinnonTasoSykli": 6
+    }
+  }
+]
