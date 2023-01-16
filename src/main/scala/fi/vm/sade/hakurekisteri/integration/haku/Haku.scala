@@ -22,6 +22,8 @@ case class Haku(
   hakulomakeAtaruId: Option[String] = None
 ) {
   val isActive: Boolean = aika.isCurrently
+
+  def isJatkuvaHaku = hakutapaUri.split('#').head.equals("hakutapa_03")
 }
 
 object Haku {
