@@ -12,7 +12,8 @@ import fi.vm.sade.hakurekisteri.web.hakija.{
   HakijaResourceV2,
   HakijaResourceV3,
   HakijaResourceV4,
-  HakijaResourceV5
+  HakijaResourceV5,
+  HakijaResourceV6,
 }
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
@@ -152,6 +153,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v3/hakijat", "rest/v3/hakijat") -> new HakijaResourceV3(koosteet.hakijat),
     ("/rest/v4/hakijat", "rest/v4/hakijat") -> new HakijaResourceV4(koosteet.hakijat),
     ("/rest/v5/hakijat", "rest/v5/hakijat") -> new HakijaResourceV5(koosteet.hakijat),
+    ("/rest/v6/hakijat", "rest/v6/hakijat") -> new HakijaResourceV6(koosteet.hakijat),
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(koosteet.kkHakijaService),
     ("/rest/v2/kkhakijat", "rest/v2/kkhakijat") -> new KkHakijaResourceV2(
       koosteet.kkHakijaService,

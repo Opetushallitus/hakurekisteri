@@ -220,6 +220,36 @@ case class JSONHakijaV5(
   lisakysymykset: Seq[Lisakysymys]
 )
 
+case class JSONHakijaV6(
+                         hetu: String,
+                         oppijanumero: String,
+                         sukunimi: String,
+                         etunimet: String,
+                         kutsumanimi: Option[String],
+                         lahiosoite: String,
+                         postinumero: String,
+                         postitoimipaikka: String,
+                         maa: String,
+                         kansalaisuudet: List[String],
+                         matkapuhelin: Option[String],
+                         muupuhelin: Option[String],
+                         sahkoposti: Option[String],
+                         kotikunta: Option[String],
+                         sukupuoli: String,
+                         aidinkieli: String,
+                         opetuskieli: String,
+                         koulutusmarkkinointilupa: Boolean,
+                         kiinnostunutoppisopimuksesta: Boolean,
+                         huoltajannimi: Option[String],
+                         huoltajanpuhelinnumero: Option[String],
+                         huoltajansahkoposti: Option[String],
+                         hakemus: XMLHakemus,
+                         oppivelvollisuusVoimassaAsti: Option[String],
+                         oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String],
+                         lisakysymykset: Seq[Lisakysymys]
+                       )
+
 case class JSONHakijat(hakijat: Seq[JSONHakija])
 case class JSONHakijatV4(hakijat: Seq[JSONHakijaV4])
 case class JSONHakijatV5(hakijat: Seq[JSONHakijaV5])
+case class JSONHakijatV6(hakijat: Seq[JSONHakijaV6])
