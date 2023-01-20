@@ -354,6 +354,25 @@ class KoskiDataHandlerTest
     result.head.arvosanat should have length 13
   }
 
+  it should "parse 8-luokkalainen to be imported for 8_luokka.json oppilaitos" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val lasnaOpiskeluOikeudet = koskiDatahandler.filterLasnaOpiskeluoikeudet(henkilo)
+    lasnaOpiskeluOikeudet should have length 1
+    val filteredOpiskeluOikeudet =
+      koskiDatahandler.filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
+        lasnaOpiskeluOikeudet
+      )
+    filteredOpiskeluOikeudet should not be empty
+    val seiskaKasiTaiPerusopetukseenValmistava = koskiDatahandler
+      .onkoSeiskaKasiTaiPerusopetukseenValmistava(filteredOpiskeluOikeudet, henkilo.henkilö.oid.get)
+    seiskaKasiTaiPerusopetukseenValmistava shouldBe true
+    // seuraavat stepit opiskelijan parsiminen
+    // ylemmän tason funkkarille updateOppilaitosSeiskaKasiJaValmentava testi että kutsuu save-funktiota halutuille caseille - miten salassa hoituu mockaus ja assertointi että funktiota kutsuttu?
+  }
+
   it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt after deadline" in {
     val json: String = scala.io.Source
       .fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_jää_luokalle.json")

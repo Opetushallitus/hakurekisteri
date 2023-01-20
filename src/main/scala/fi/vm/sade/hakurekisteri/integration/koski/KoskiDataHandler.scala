@@ -6,6 +6,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -709,6 +710,86 @@ class KoskiDataHandler(
       .toSeq
   }
 
+  def updateOppilaitosSeiskaKasiJaValmentava(
+    koskihenkilöcontainer: KoskiHenkiloContainer
+  ): Unit = {
+    val lasnaOpiskeluoikeudet = filterLasnaOpiskeluoikeudet(koskihenkilöcontainer)
+    val perusopetusJaValmentavaEiYsit = filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
+      lasnaOpiskeluoikeudet
+    )
+    val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
+    val seiskaKasiTaiPerusopetukseenValmistava: Boolean =
+      onkoSeiskaKasiTaiPerusopetukseenValmistava(perusopetusJaValmentavaEiYsit, henkiloOid)
+    if (!seiskaKasiTaiPerusopetukseenValmistava) {
+      return
+    }
+    // tallennetaan opiskelija
+    // voidaanko olettaa että ei ole samaan aikaan useammassa perusopetuksen opinto-oikeudessa läsnä?
+    val viimeisinLasnaSuoritus =
+      lasnaOpiskeluoikeudet.head.suoritukset
+        .filterNot(_.alkamispäivä.isEmpty)
+        .sortBy(suoritus => LocalDate.parse(suoritus.alkamispäivä.getOrElse("")))(
+          Ordering[LocalDate].reverse
+        )
+        .head
+    val lasnaDate = lasnaOpiskeluoikeudet.head.tila.findEarliestLasnaDate
+
+    val opiskelija = Opiskelija(
+      oppilaitosOid = lasnaOpiskeluoikeudet.head.oppilaitos.get.oid.getOrElse({
+        // heitettäisiinkö poikkeus?
+        logger.error(
+          s"Opiskelijalle ${henkiloOid} löytyi opiskeluoikeus ilman oppilaitosorganisaation oidia."
+        )
+        return
+      }),
+      luokkataso = viimeisinLasnaSuoritus.getLuokkataso(false).get,
+      luokka = viimeisinLasnaSuoritus.luokka.get,
+      henkiloOid = henkiloOid,
+      alkuPaiva = lasnaDate.get.toDateTimeAtStartOfDay,
+      loppuPaiva = null,
+      source = KoskiUtil.koski_integration_source
+    )
+    saveOpiskelija(Some(opiskelija))
+  }
+
+  def onkoSeiskaKasiTaiPerusopetukseenValmistava(
+    opiskeluOikeudet: Seq[KoskiOpiskeluoikeus],
+    henkiloOid: String
+  ): Boolean = {
+    val onkoSeiskaKasiTaiPerusopetukseenValmistava = suoritusArvosanaParser
+      .getSuoritusArvosanatFromOpiskeluoikeudes(
+        henkiloOid,
+        opiskeluOikeudet
+      )
+      .map(s =>
+        s.filter(virallinenSuoritus =>
+          (virallinenSuoritus.suoritus.komo
+            .equals(Oids.perusopetusKomoOid) && (virallinenSuoritus.luokkataso
+            .getOrElse("")
+            .startsWith("7") || virallinenSuoritus.luokkataso.getOrElse("").startsWith("8"))) ||
+            virallinenSuoritus.suoritus.komo.equals("999905") // Perusopetukseen valmistava opetus
+        )
+      )
+      .nonEmpty
+    onkoSeiskaKasiTaiPerusopetukseenValmistava
+  }
+
+  def filterLasnaOpiskeluoikeudet(koskihenkilöcontainer: KoskiHenkiloContainer) = {
+    val lasnaOpiskeluoikeudet = koskihenkilöcontainer.opiskeluoikeudet
+      .filter(_.tila.opiskeluoikeusjaksot.exists(jakso => jakso.tila.koodiarvo.equals("lasna")))
+    lasnaOpiskeluoikeudet
+  }
+  def filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
+    lasnaOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
+  ): Seq[KoskiOpiskeluoikeus] = {
+    val perusopetusJaValmentavaEiYsit = lasnaOpiskeluoikeudet.filter(opiskeluoikeus =>
+      (opiskeluoikeus.tyyppi.exists(_.koodiarvo == "perusopetus") || opiskeluoikeus.tyyppi.exists(
+        _.koodiarvo == "perusopetukseenvalmistavaopetus"
+      )) && !opiskeluoikeus.opiskeluoikeusSisaltaaYsisuorituksen
+    )
+    perusopetusJaValmentavaEiYsit
+  }
+
   def processHenkilonTiedotKoskesta(
     koskihenkilöcontainer: KoskiHenkiloContainer,
     personOidsWithAliases: PersonOidsWithAliases,
@@ -716,6 +797,9 @@ class KoskiDataHandler(
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
+    if (suoritukset.isEmpty && params.saveSeiskaKasiJaValmentava) {
+      updateOppilaitosSeiskaKasiJaValmentava(koskihenkilöcontainer)
+    }
     val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
     if (muidenSuoritukset.nonEmpty) {
       return Future.successful(
