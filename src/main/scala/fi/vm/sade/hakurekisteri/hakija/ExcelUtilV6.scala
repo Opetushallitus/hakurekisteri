@@ -23,9 +23,8 @@ object ExcelUtilV6 extends HakijatExcelWriterV3[JSONHakijatV6] {
     "Sukupuoli",
     "Aidinkieli",
     "Opetuskieli",
-    "Huoltajan nimi",
-    "Huoltajan puhelinnumero",
-    "Huoltajan sähköposti",
+    "Huoltaja 1",
+    "Huoltaja 2",
     "Koulutusmarkkinointilupa",
     "Kiinnostunut oppisopimuskoulutuksesta",
     "Oppivelvollisuus voimassa asti",
@@ -58,13 +57,14 @@ object ExcelUtilV6 extends HakijatExcelWriterV3[JSONHakijatV6] {
     "Lasnaolo",
     "Terveys",
     "Aiempiperuminen",
-    "Kaksoistutkinto" /*, "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"*/
+    "Kaksoistutkinto", /*, "Yleinenkielitutkinto", "Valtionhallinnonkielitutkinto"*/
+    "Urheilijan lisakysymykset" //fixme, tähän oikeasti moneen kenttään tiedot
   )
 
   private def getLisakysymysIdsAndQuestionsInOrder(
-                                                    hakijat: JSONHakijatV6,
-                                                    hakukohdeOid: String
-                                                  ): Seq[lisakysymysHeader] = {
+    hakijat: JSONHakijatV6,
+    hakukohdeOid: String
+  ): Seq[lisakysymysHeader] = {
     val raw: Seq[(String, String)] = hakijat.hakijat
       .flatMap(
         _.lisakysymykset
@@ -113,9 +113,8 @@ object ExcelUtilV6 extends HakijatExcelWriterV3[JSONHakijatV6] {
             h.sukupuoli,
             h.aidinkieli,
             h.opetuskieli,
-            h.huoltajannimi.getOrElse(""),
-            h.huoltajanpuhelinnumero.getOrElse(""),
-            h.huoltajansahkoposti.getOrElse(""),
+            h.huoltaja1.map(_.toSingleFieldString).getOrElse(""), //fixme, also for huoltaja2
+            h.huoltaja2.map(_.toSingleFieldString).getOrElse(""), //fixme, also for huoltaja2
             toBooleanX(h.koulutusmarkkinointilupa),
             toBooleanX(h.kiinnostunutoppisopimuksesta),
             h.oppivelvollisuusVoimassaAsti.getOrElse(""),
@@ -149,7 +148,8 @@ object ExcelUtilV6 extends HakijatExcelWriterV3[JSONHakijatV6] {
             ht.lasnaolo.getOrElse(""),
             toBooleanX(ht.terveys),
             toBooleanX(ht.aiempiperuminen),
-            toBooleanX(ht.kaksoistutkinto)
+            toBooleanX(ht.kaksoistutkinto),
+            h.hakemus.urheilijanLisakysymykset.map(_.toString).getOrElse("ei löydy") //fixme
           )
 
           def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {

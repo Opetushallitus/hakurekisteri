@@ -306,6 +306,7 @@ class HakemusService(
             oid = hakemus.oid,
             personOid = Some(hakemus.personOid), //not optional?
             createdTime = hakemus.createdTime,
+            hakemusFirstSubmittedTime = hakemus.hakemusFirstSubmittedTime,
             asiointiKieli = hakemus.kieli,
             applicationSystemId = hakuOid,
             hakutoiveet = Some(hakutoiveet),
@@ -326,7 +327,8 @@ class HakemusService(
             tutkintoVuosi = hakemus.tutkintoVuosi,
             tutkintoKieli = hakemus.tutkintoKieli,
             huoltajat = hakemus.huoltajat,
-            harkinnanvaraisuudet = harkinnanvaraisuudet
+            harkinnanvaraisuudet = harkinnanvaraisuudet,
+            urheilijanLisakysymykset = hakemus.urheilijanLisakysymykset
           )
         })
       )

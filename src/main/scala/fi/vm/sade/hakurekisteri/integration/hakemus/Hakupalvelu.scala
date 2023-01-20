@@ -5,35 +5,18 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.representation.UrheilijanLisakysymykset
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{
-  IOppijaNumeroRekisteri,
-  Kieli,
-  PersonOidsWithAliases
-}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetRinnasteinenKoodiArvoQuery,
-  KoodistoActorRef
-}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, Kieli, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
-import fi.vm.sade.hakurekisteri.integration.koski.{
-  IKoskiService,
-  KoskiHenkiloContainer,
-  OppivelvollisuusTieto
-}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiHenkiloContainer, OppivelvollisuusTieto}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{
-  Komoto,
-  Suoritus,
-  SuoritusQuery,
-  SuoritusQueryWithPersonAliases,
-  VirallinenSuoritus,
-  yksilollistaminen
-}
+import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, SuoritusQuery, SuoritusQueryWithPersonAliases, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
@@ -237,19 +220,19 @@ class AkkaHakupalvelu(
 
   override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] = {
     q match {
-      case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, _, _, _) =>
+      case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, hakukohdeOid, _, _, _) =>
         for {
           hakemukset <- hakemusService
             .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi)
           harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
             .getHarkinnanvaraisuudet(hakemukset)
+          //todo fixme haetaan valintalaskennasta keskiarvot ehkä tässä vaiheessa
           hakijaSuorituksetMap <- koosteService.getSuorituksetForAtaruhakemukset(
             hakuOid,
             hakemukset
           )
           maakoodit <- maatjavaltiot2To1AtaruToinenAste(hakemukset)
           oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
-          lisakysymykset = getLisakysymyksetForAtaruHaku(haku.kohdejoukkoUri)
           personOids = hakemukset.map(h => h.personOid.get)
           hakijoidenOpiskelijatiedot: Map[String, Opiskelija] <-
             getUusinOpiskelijatietoForOpiskelijas(personOids)
@@ -260,8 +243,6 @@ class AkkaHakupalvelu(
             AkkaHakupalvelu.getToisenAsteenAtaruHakija(
               hakemus,
               haku,
-              lisakysymykset,
-              None,
               koosteData,
               maakoodit,
               oppivelvollisuusTiedot,
@@ -373,7 +354,6 @@ class AkkaHakupalvelu(
           getHakijat(q, haku)
       }
   }
-
 }
 
 object AkkaHakupalvelu {
@@ -640,8 +620,6 @@ object AkkaHakupalvelu {
   def getToisenAsteenAtaruHakija(
     h: HakijaHakemus,
     haku: Haku,
-    lisakysymykset: Map[String, ThemeQuestion],
-    hakukohdeOid: Option[String],
     hakijanKoosteData: Map[String, String],
     maakoodit: Map[String, String],
     oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto],
@@ -783,7 +761,8 @@ object AkkaHakupalvelu {
             yleinen_kielitutkinto_se = None,
             valtionhallinnon_kielitutkinto_se = None
           )
-        )
+        ),
+        ataruHakemus = Some(hakemus)
       )
     case _ => throw new RuntimeException("Wrong type of hakemus!")
   }
@@ -1524,6 +1503,7 @@ case class AtaruHakemusToinenAsteDto(
   oid: String,
   personOid: String,
   createdTime: String,
+  hakemusFirstSubmittedTime: String,
   kieli: String,
   hakukohteet: List[HakurekisteriHakukohde],
   email: String,
@@ -1541,7 +1521,8 @@ case class AtaruHakemusToinenAsteDto(
   koulutusmarkkinointilupa: Boolean,
   tutkintoVuosi: Option[Int],
   tutkintoKieli: Option[String],
-  huoltajat: List[GuardianContactInfo]
+  huoltajat: List[GuardianContactInfo],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
 )
 
 @SerialVersionUID(1)
@@ -1600,7 +1581,8 @@ case class GuardianContactInfo(
 case class AtaruHakemusToinenAste(
   oid: String,
   personOid: Option[String],
-  createdTime: String,
+  createdTime: String, //hakemusversion luontihetki
+  hakemusFirstSubmittedTime: String, //ensimmäisen hakemusversion jättöhetki
   applicationSystemId: String,
   hakutoiveet: Option[List[HakutoiveDTO]],
   henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,
@@ -1621,7 +1603,8 @@ case class AtaruHakemusToinenAste(
   tutkintoVuosi: Option[Int],
   tutkintoKieli: Option[String],
   huoltajat: List[GuardianContactInfo],
-  harkinnanvaraisuudet: List[HakutoiveenHarkinnanvaraisuus]
+  harkinnanvaraisuudet: List[HakutoiveenHarkinnanvaraisuus],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset],
 ) extends HakijaHakemus
     with Serializable {
 

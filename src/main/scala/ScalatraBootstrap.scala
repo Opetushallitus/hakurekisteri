@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.web.hakija.{
   HakijaResourceV3,
   HakijaResourceV4,
   HakijaResourceV5,
-  HakijaResourceV6,
+  HakijaResourceV6
 }
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}

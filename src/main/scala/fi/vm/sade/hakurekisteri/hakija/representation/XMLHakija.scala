@@ -1,16 +1,12 @@
 package fi.vm.sade.hakurekisteri.hakija.representation
 
 import java.text.SimpleDateFormat
-
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.representation.XMLHakemus.{getRelevantSuoritus, resolvePohjakoulutus, resolveYear}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  Ilmoittautumistila,
-  Valintatila,
-  Vastaanottotila
-}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.{Alueittain, Ei, Kokonaan, Osittain}
@@ -311,6 +307,80 @@ case class XMLHakemus(
   }
 }
 
+case class UrheilijanLisakysymykset(peruskoulu: Option[String],
+                                    keskiarvo: Option[String],
+                                    tamakausi: Option[String],
+                                    viimekausi: Option[String],
+                                    toissakausi: Option[String],
+                                    sivulaji: Option[String],
+                                    valmennusryhma_seurajoukkue: Option[String],
+                                    valmennusryhma_piirijoukkue: Option[String],
+                                    valmennusryhma_maajoukkue: Option[String],
+                                    valmentaja_nimi: Option[String],
+                                    valmentaja_email: Option[String],
+                                    valmentaja_puh: Option[String],
+                                    laji: Option[String],
+                                    liitto: Option[String],
+                                    seura: Option[String])
+object HakijaV6Hakemus {
+  private[hakija] def apply(
+                             hakija: Hakija,
+                             opiskelutieto: Option[Opiskelija],
+                             lahtokoulu: Option[Organisaatio],
+                             toiveet: Seq[XMLHakutoive],
+                             osaaminen: Option[XMLOsaaminen]
+                           ): HakijaV6Hakemus =
+    HakijaV6Hakemus(
+      vuosi = hakija.hakemus.hakutoiveet.headOption
+        .flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamisvuosi))
+        .getOrElse(""),
+      kausi = hakija.hakemus.hakutoiveet.headOption
+        .flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamiskausi.map(_.toString)))
+        .getOrElse(""),
+      hakemusnumero = hakija.hakemus.hakemusnumero,
+      hakemuksenJattopaiva = hakija.ataruHakemus.map(h => h.hakemusFirstSubmittedTime).getOrElse("ei tiedossa"),
+      hakemuksenMuokkauspaiva = hakija.ataruHakemus.map(h => h.createdTime).getOrElse("ei tiedossa"),
+      lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
+      lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
+      luokka = opiskelutieto.map(_.luokka),
+      luokkataso = opiskelutieto.map(_.luokkataso),
+      pohjakoulutus = resolvePohjakoulutus(getRelevantSuoritus(hakija.suoritukset)),
+      todistusvuosi = getRelevantSuoritus(hakija.suoritukset).flatMap(resolveYear),
+      muukoulutus = hakija.henkilo.muukoulutus,
+      julkaisulupa = Some(hakija.hakemus.julkaisulupa),
+      yhteisetaineet = None,
+      lukiontasapisteet = None,
+      lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
+      yleinenkoulumenestys = None,
+      painotettavataineet = None,
+      hakutoiveet = toiveet,
+      osaaminen = osaaminen,
+      urheilijanLisakysymykset = hakija.ataruHakemus.flatMap(h => h.urheilijanLisakysymykset)
+    )
+}
+
+case class HakijaV6Hakemus(
+                       vuosi: String,
+                       kausi: String,
+                       hakemusnumero: String,
+                       hakemuksenJattopaiva: String, //alkuperäinen jättöpäivä
+                       hakemuksenMuokkauspaiva: String, //viimeisimmän version tallennuspäivä
+                       lahtokoulu: Option[String],
+                       lahtokoulunnimi: Option[String],
+                       luokka: Option[String],
+                       luokkataso: Option[String],
+                       pohjakoulutus: String,
+                       todistusvuosi: Option[String],
+                       muukoulutus: Option[String],
+                       julkaisulupa: Option[Boolean],
+                       yhteisetaineet: Option[BigDecimal],
+                       lukiontasapisteet: Option[BigDecimal],
+                       lisapistekoulutus: Option[String],
+                       yleinenkoulumenestys: Option[BigDecimal],
+                       painotettavataineet: Option[BigDecimal],
+                       hakutoiveet: Seq[XMLHakutoive],
+                       osaaminen: Option[XMLOsaaminen],
+                       urheilijanLisakysymykset: Option[UrheilijanLisakysymykset])
 case class XMLHakutoive(
   hakukohdeOid: String,
   hakujno: Short,
