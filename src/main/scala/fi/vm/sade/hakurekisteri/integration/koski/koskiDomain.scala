@@ -42,12 +42,31 @@ case class KoskiOpiskeluoikeus(
     .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
     .head
 
+  def getLatestSeiskaKasiSuoritus: KoskiSuoritus = {
+    suoritukset
+      .filter(s =>
+        s.koulutusmoduuli.tunniste
+          .getOrElse(null)
+          .koodiarvo
+          .equals("7") || s.koulutusmoduuli.tunniste.getOrElse(null).koodiarvo.equals("8")
+      )
+      .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
+      .head
+  }
+
+  private def getSuorituksenAlkamispaiva(suoritus: KoskiSuoritus): Option[LocalDate] = {
+    suoritus.alkamispäivä match {
+      case Some(alkamispaiva) => Some(LocalDate.parse(alkamispaiva))
+      case None               => None
+    }
+  }
+
+  def getSeiskaKasiluokanAlkamispaiva: Option[LocalDate] = {
+    getSuorituksenAlkamispaiva(getLatestSeiskaKasiSuoritus)
+  }
   def getYsiluokanAlkamispaiva: Option[LocalDate] = {
     if (opiskeluoikeusSisaltaaYsisuorituksen) {
-      getLatestYsiSuoritus.alkamispäivä match {
-        case Some(alkamispaiva) => Some(LocalDate.parse(alkamispaiva))
-        case None               => None
-      }
+      getSuorituksenAlkamispaiva(getLatestYsiSuoritus)
     } else
       None
   }

@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
@@ -713,63 +713,62 @@ class KoskiDataHandler(
   def updateOppilaitosSeiskaKasiJaValmentava(
     koskihenkilöcontainer: KoskiHenkiloContainer
   ): Future[Any] = {
+
     val lasnaOpiskeluoikeudet = filterLasnaOpiskeluoikeudet(koskihenkilöcontainer)
-    val perusopetusJaValmentavaEiYsit = filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
-      lasnaOpiskeluoikeudet
-    )
-    val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
-    val seiskaKasiTaiPerusopetukseenValmistava: Boolean =
-      onkoSeiskaKasiTaiPerusopetukseenValmistava(perusopetusJaValmentavaEiYsit)
-    if (!seiskaKasiTaiPerusopetukseenValmistava) {
-      return Future.successful(())
-    }
-    // tallennetaan opiskelija
-    // voidaanko olettaa että ei ole samaan aikaan useammassa perusopetuksen opinto-oikeudessa läsnä?
-    val viimeisinLasnaSuoritus =
-      lasnaOpiskeluoikeudet.head.suoritukset
-        .filterNot(_.alkamispäivä.isEmpty)
-        .sortBy(suoritus => LocalDate.parse(suoritus.alkamispäivä.getOrElse("")))(
-          Ordering[LocalDate].reverse
-        )
-        .head
-    val lasnaDate =
-      lasnaOpiskeluoikeudet.head.tila.findEarliestLasnaDate // pitäisikö katsoa kaikista opiskeluoikeuksista?
-
-    val opiskelija = Opiskelija(
-      oppilaitosOid = lasnaOpiskeluoikeudet.head.oppilaitos.get.oid.getOrElse({
-        // heitettäisiinkö poikkeus?
-        logger.error(
-          s"Opiskelijalle ${henkiloOid} löytyi opiskeluoikeus ilman oppilaitosorganisaation oidia."
-        )
-        return Future.failed(
-          new RuntimeException(
-            s"Opiskelijalle ${henkiloOid} löytyi opiskeluoikeus ilman oppilaitosorganisaation oidia."
-          )
-        )
-      }),
-      luokkataso = viimeisinLasnaSuoritus.getLuokkataso(false).get,
-      luokka = viimeisinLasnaSuoritus.luokka.get,
-      henkiloOid = henkiloOid,
-      alkuPaiva = lasnaDate.get.toDateTimeAtStartOfDay,
-      loppuPaiva = None,
-      source = KoskiUtil.koski_integration_source
-    )
-    return saveOpiskelija(Some(opiskelija))
-  }
-
-  def onkoSeiskaKasiTaiPerusopetukseenValmistava(
-    opiskeluOikeudet: Seq[KoskiOpiskeluoikeus]
-  ): Boolean = {
-    // voidaanko olettaa että ei ole samaan aikaan useammassa perusopetuksen opinto-oikeudessa läsnä?
-    val onkoSeiskaKasiTaiPerusopetukseenValmistava = opiskeluOikeudet.head.tyyppi.equals(
-      "perusopetukseenvalmistavaopetus"
-    ) || opiskeluOikeudet.head.suoritukset
-      .filter(koskiSuoritus =>
-        koskiSuoritus.getLuokkataso(false).getOrElse("").equals("7") ||
-          koskiSuoritus.getLuokkataso(false).getOrElse("").equals("8")
+    val perusopetus78JaValmentavaEiYsiOpiskeluOikeus =
+      filterPerusopetus78JaValmentavaEiYsiLasnaOpiskeluoikeudet(
+        lasnaOpiskeluoikeudet
+      ).headOption
+    // perusopetuksessa olevalla ei saisi olla useampaa läsnä-tilaista opiskeluoikeutta
+    if (
+      perusopetus78JaValmentavaEiYsiOpiskeluOikeus.isDefined && lasnaOpiskeluoikeudet.length > 1
+    ) {
+      val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
+      logger.error(
+        s"Perusopetuksen opiskelijalle ${henkiloOid} löytyi useampi läsnä-tilainen opiskeluoikeus."
       )
-      .nonEmpty
-    onkoSeiskaKasiTaiPerusopetukseenValmistava
+      return Future.failed(
+        new RuntimeException(
+          s"Perusopetuksen opiskelijalle ${henkiloOid} löytyi useampi läsnä-tilainen opiskeluoikeus."
+        )
+      )
+    }
+
+    val opiskelija: Option[Opiskelija] = perusopetus78JaValmentavaEiYsiOpiskeluOikeus
+      .map(opiskeluoikeus => {
+        opiskeluoikeus.tyyppi.get.koodiarvo match {
+          case "perusopetukseenvalmistavaopetus" =>
+            Opiskelija(
+              oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
+              luokkataso = "TODO valm",
+              luokka = "TODO valm",
+              henkiloOid = koskihenkilöcontainer.henkilö.oid.get,
+              alkuPaiva = opiskeluoikeus.aikaleima match {
+                case Some(aikaleima) => DateTime.parse(aikaleima)
+                case None            => null // TODO poikkeus?
+              },
+              loppuPaiva = None,
+              source = KoskiUtil.koski_integration_source
+            )
+          case "perusopetus" =>
+            Opiskelija(
+              oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
+              luokkataso = opiskeluoikeus.getLatestSeiskaKasiSuoritus.getLuokkataso(false).get,
+              luokka = opiskeluoikeus.getLatestSeiskaKasiSuoritus.luokka.get,
+              henkiloOid = koskihenkilöcontainer.henkilö.oid.get,
+              alkuPaiva = opiskeluoikeus.getSeiskaKasiluokanAlkamispaiva match {
+                case Some(alkamispaiva) => alkamispaiva.toDateTimeAtStartOfDay
+                case None               => null
+              },
+              loppuPaiva = None,
+              source = KoskiUtil.koski_integration_source
+            )
+        }
+      })
+      .headOption
+
+    // tallennetaan opiskelija
+    saveOpiskelija(opiskelija)
   }
 
   def filterLasnaOpiskeluoikeudet(koskihenkilöcontainer: KoskiHenkiloContainer) = {
@@ -784,15 +783,22 @@ class KoskiDataHandler(
       )
     lasnaOpiskeluoikeudet
   }
-  def filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
+  def filterPerusopetus78JaValmentavaEiYsiLasnaOpiskeluoikeudet(
     lasnaOpiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
   ): Seq[KoskiOpiskeluoikeus] = {
-    val perusopetusJaValmentavaEiYsit = lasnaOpiskeluoikeudet.filter(opiskeluoikeus =>
-      (opiskeluoikeus.tyyppi.exists(_.koodiarvo == "perusopetus") || opiskeluoikeus.tyyppi.exists(
+    val perusopetus78JaValmentavaEiYsit = lasnaOpiskeluoikeudet.filter(opiskeluoikeus =>
+      opiskeluoikeus.tyyppi.exists(
         _.koodiarvo == "perusopetukseenvalmistavaopetus"
-      )) && !opiskeluoikeus.opiskeluoikeusSisaltaaYsisuorituksen
+      ) || (opiskeluoikeus.tyyppi.exists(
+        _.koodiarvo == "perusopetus"
+      ) && opiskeluoikeus.suoritukset
+        .filter(koskiSuoritus =>
+          koskiSuoritus.getLuokkataso(false).getOrElse("").equals("7") ||
+            koskiSuoritus.getLuokkataso(false).getOrElse("").equals("8")
+        )
+        .nonEmpty) && !opiskeluoikeus.opiskeluoikeusSisaltaaYsisuorituksen
     )
-    perusopetusJaValmentavaEiYsit
+    perusopetus78JaValmentavaEiYsit
   }
 
   def processHenkilonTiedotKoskesta(

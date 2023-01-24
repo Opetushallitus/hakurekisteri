@@ -363,7 +363,7 @@ class KoskiDataHandlerTest
     lasnaOpiskeluOikeudet should have length 0
   }
 
-  it should "parse 8-luokkalainen to be imported for 8_luokka_lasna.json oppilaitos" in {
+  it should "parse 8-luokkalainen to be imported for 8_luokka_lasna.json" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -371,20 +371,30 @@ class KoskiDataHandlerTest
     val lasnaOpiskeluOikeudet = koskiDatahandler.filterLasnaOpiskeluoikeudet(henkilo)
     lasnaOpiskeluOikeudet should have length 1
     val filteredOpiskeluOikeudet =
-      koskiDatahandler.filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
+      koskiDatahandler.filterPerusopetus78JaValmentavaEiYsiLasnaOpiskeluoikeudet(
         lasnaOpiskeluOikeudet
       )
     filteredOpiskeluOikeudet should not be empty
-    val seiskaKasiTaiPerusopetukseenValmistava = koskiDatahandler
-      .onkoSeiskaKasiTaiPerusopetukseenValmistava(filteredOpiskeluOikeudet)
-    seiskaKasiTaiPerusopetukseenValmistava shouldBe true
-    // seuraavat stepit opiskelijan parsiminen
-    // ylemmän tason funkkarille updateOppilaitosSeiskaKasiJaValmentava testi että kutsuu save-funktiota halutuille caseille - miten salassa hoituu mockaus ja assertointi että funktiota kutsuttu?
   }
 
-  // ei tallenna esim 4. luokkalaista
-  // ei tallenna 9. luokkalaista
-  // tallentaa perusopetukseen valmistavan
+  it should "parse perusopetukseen valmistava for koskidata_perusopetukseen_valmistava.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val lasnaOpiskeluOikeudet = koskiDatahandler.filterLasnaOpiskeluoikeudet(henkilo)
+    lasnaOpiskeluOikeudet should have length 1
+    val filteredOpiskeluOikeudet =
+      koskiDatahandler.filterPerusopetus78JaValmentavaEiYsiLasnaOpiskeluoikeudet(
+        lasnaOpiskeluOikeudet
+      )
+    filteredOpiskeluOikeudet should not be empty
+    filteredOpiskeluOikeudet should have length 1
+  }
+
   it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt after deadline" in {
     val json: String = scala.io.Source
       .fromFile(jsonDir + "peruskoulu_9_luokka_päättötodistus_jää_luokalle.json")
@@ -3628,6 +3638,67 @@ class KoskiDataHandlerTest
     val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
     oppilaitos.head should not be empty
     oppilaitos.head should equal("1.2.246.562.10.207119642610")
+  }
+
+  // ei tallenna esim 4. luokkalaista
+  // ei tallenna 9. luokkalaista
+
+  it should "save perusopetukseen valmistava opiskelija for koskidata_perusopetukseen_valmistava.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      5.seconds
+    )
+
+    val opiskelijaCount = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelijaCount.head should equal("1")
+
+  }
+
+  it should "should not save 4-luokkalainen opiskelija for koskidata_peruskoulu_kesken_nelonen.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_peruskoulu_kesken_nelonen.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      5.seconds
+    )
+
+    val result = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result.head.toInt should equal(0)
+  }
+
+  it should "throw error if there are multiple lasna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_monessalasna.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    try {
+      Await.result(
+        koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+        5.seconds
+      )
+    } catch {
+      case ex: RuntimeException => // Expected
+    }
+    val result = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result.head.toInt should equal(0)
   }
 
   it should "store correct luokka and oppilaitosoid for erikoisammattitutkinto" in {
