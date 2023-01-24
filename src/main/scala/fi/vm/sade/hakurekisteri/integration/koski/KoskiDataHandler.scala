@@ -712,16 +712,16 @@ class KoskiDataHandler(
 
   def updateOppilaitosSeiskaKasiJaValmentava(
     koskihenkilöcontainer: KoskiHenkiloContainer
-  ): Unit = {
+  ): Future[Any] = {
     val lasnaOpiskeluoikeudet = filterLasnaOpiskeluoikeudet(koskihenkilöcontainer)
     val perusopetusJaValmentavaEiYsit = filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(
       lasnaOpiskeluoikeudet
     )
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val seiskaKasiTaiPerusopetukseenValmistava: Boolean =
-      onkoSeiskaKasiTaiPerusopetukseenValmistava(perusopetusJaValmentavaEiYsit, henkiloOid)
+      onkoSeiskaKasiTaiPerusopetukseenValmistava(perusopetusJaValmentavaEiYsit)
     if (!seiskaKasiTaiPerusopetukseenValmistava) {
-      return
+      return Future.successful(())
     }
     // tallennetaan opiskelija
     // voidaanko olettaa että ei ole samaan aikaan useammassa perusopetuksen opinto-oikeudessa läsnä?
@@ -732,7 +732,8 @@ class KoskiDataHandler(
           Ordering[LocalDate].reverse
         )
         .head
-    val lasnaDate = lasnaOpiskeluoikeudet.head.tila.findEarliestLasnaDate
+    val lasnaDate =
+      lasnaOpiskeluoikeudet.head.tila.findEarliestLasnaDate // pitäisikö katsoa kaikista opiskeluoikeuksista?
 
     val opiskelija = Opiskelija(
       oppilaitosOid = lasnaOpiskeluoikeudet.head.oppilaitos.get.oid.getOrElse({
@@ -740,35 +741,32 @@ class KoskiDataHandler(
         logger.error(
           s"Opiskelijalle ${henkiloOid} löytyi opiskeluoikeus ilman oppilaitosorganisaation oidia."
         )
-        return
+        return Future.failed(
+          new RuntimeException(
+            s"Opiskelijalle ${henkiloOid} löytyi opiskeluoikeus ilman oppilaitosorganisaation oidia."
+          )
+        )
       }),
       luokkataso = viimeisinLasnaSuoritus.getLuokkataso(false).get,
       luokka = viimeisinLasnaSuoritus.luokka.get,
       henkiloOid = henkiloOid,
       alkuPaiva = lasnaDate.get.toDateTimeAtStartOfDay,
-      loppuPaiva = null,
+      loppuPaiva = None,
       source = KoskiUtil.koski_integration_source
     )
-    saveOpiskelija(Some(opiskelija))
+    return saveOpiskelija(Some(opiskelija))
   }
 
   def onkoSeiskaKasiTaiPerusopetukseenValmistava(
-    opiskeluOikeudet: Seq[KoskiOpiskeluoikeus],
-    henkiloOid: String
+    opiskeluOikeudet: Seq[KoskiOpiskeluoikeus]
   ): Boolean = {
-    val onkoSeiskaKasiTaiPerusopetukseenValmistava = suoritusArvosanaParser
-      .getSuoritusArvosanatFromOpiskeluoikeudes(
-        henkiloOid,
-        opiskeluOikeudet
-      )
-      .map(s =>
-        s.filter(virallinenSuoritus =>
-          (virallinenSuoritus.suoritus.komo
-            .equals(Oids.perusopetusKomoOid) && (virallinenSuoritus.luokkataso
-            .getOrElse("")
-            .startsWith("7") || virallinenSuoritus.luokkataso.getOrElse("").startsWith("8"))) ||
-            virallinenSuoritus.suoritus.komo.equals("999905") // Perusopetukseen valmistava opetus
-        )
+    // voidaanko olettaa että ei ole samaan aikaan useammassa perusopetuksen opinto-oikeudessa läsnä?
+    val onkoSeiskaKasiTaiPerusopetukseenValmistava = opiskeluOikeudet.head.tyyppi.equals(
+      "perusopetukseenvalmistavaopetus"
+    ) || opiskeluOikeudet.head.suoritukset
+      .filter(koskiSuoritus =>
+        koskiSuoritus.getLuokkataso(false).getOrElse("").equals("7") ||
+          koskiSuoritus.getLuokkataso(false).getOrElse("").equals("8")
       )
       .nonEmpty
     onkoSeiskaKasiTaiPerusopetukseenValmistava
@@ -776,7 +774,14 @@ class KoskiDataHandler(
 
   def filterLasnaOpiskeluoikeudet(koskihenkilöcontainer: KoskiHenkiloContainer) = {
     val lasnaOpiskeluoikeudet = koskihenkilöcontainer.opiskeluoikeudet
-      .filter(_.tila.opiskeluoikeusjaksot.exists(jakso => jakso.tila.koodiarvo.equals("lasna")))
+      .filter(
+        _.tila.opiskeluoikeusjaksot
+          .sortBy(jakso => LocalDate.parse(jakso.alku))(Ordering[LocalDate].reverse)
+          .head
+          .tila
+          .koodiarvo
+          .equals("lasna")
+      )
     lasnaOpiskeluoikeudet
   }
   def filterPerusopetusJaValmentavaEiYsiLasnaOpiskeluoikeudet(

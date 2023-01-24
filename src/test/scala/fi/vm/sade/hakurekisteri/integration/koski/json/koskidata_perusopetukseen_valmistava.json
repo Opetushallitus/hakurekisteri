@@ -1,0 +1,4189 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.92170778843",
+    "hetu" : "070850-8188",
+    "syntymäaika" : "1950-08-07",
+    "etunimet" : "Anselmi",
+    "kutsumanimi" : "Anselmi",
+    "sukunimi" : "982Validaatio",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.22844111918",
+    "versionumero" : 1,
+    "aikaleima" : "2021-02-24T14:14:19.627477",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.44633630015",
+      "nimi" : {
+        "fi" : "Päiväkoti Kätzlein",
+        "sv" : "Päiväkoti Kätzlein",
+        "en" : "Päiväkoti Kätzlein"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "593",
+        "nimi" : {
+          "fi" : "Pieksämäki",
+          "sv" : "Pieksämäki"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2021-02-24",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "999905",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Undervisning som förebereder för den grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetukseen valmistava opetus"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "57/011/2015"
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.44633630015",
+        "nimi" : {
+          "fi" : "Päiväkoti Kätzlein",
+          "sv" : "Päiväkoti Kätzlein",
+          "en" : "Päiväkoti Kätzlein"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "593",
+          "nimi" : {
+            "fi" : "Pieksämäki",
+            "sv" : "Pieksämäki"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "perusopetukseenvalmistavaopetus",
+        "nimi" : {
+          "fi" : "Perusopetukseen valmistava opetus",
+          "sv" : "Förberedande undervisning för grundläggande utbildning",
+          "en" : "Instruction preparing for basic education"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetukseenvalmistavaopetus",
+      "nimi" : {
+        "fi" : "Perusopetukseen valmistava opetus",
+        "sv" : "Förberedande undervisning för den grundläggande utbildningen"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetukseen valmistava opetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2021-02-24"
+  }, {
+    "oid" : "1.2.246.562.15.15265493567",
+    "versionumero" : 10,
+    "aikaleima" : "2022-11-07T11:05:44.865130",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.91097209935",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "03035",
+        "nimi" : {
+          "fi" : "Porolahden peruskoulu",
+          "sv" : "Porolahden peruskoulu",
+          "en" : "Porolahden peruskoulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Porolahden peruskoulu",
+          "sv" : "Porolahden peruskoulu",
+          "en" : "Porolahden peruskoulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Porolahden peruskoulu",
+        "sv" : "Porolahden peruskoulu",
+        "en" : "Porolahden peruskoulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2020-01-01",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2020-12-01",
+        "tila" : {
+          "koodiarvo" : "eronnut",
+          "nimi" : {
+            "fi" : "Eronnut",
+            "sv" : "Utskriven",
+            "en" : "Discontinued"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "pidennettyOppivelvollisuus" : {
+        "alku" : "2020-01-01"
+      },
+      "erityisenTuenPäätökset" : [ {
+        "alku" : "2020-01-01",
+        "opiskeleeToimintaAlueittain" : false
+      } ],
+      "vuosiluokkiinSitoutumatonOpetus" : false,
+      "vammainen" : [ {
+        "alku" : "2020-01-01"
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "104/011/2014",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "16",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.91097209935",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "03035",
+          "nimi" : {
+            "fi" : "Porolahden peruskoulu",
+            "sv" : "Porolahden peruskoulu",
+            "en" : "Porolahden peruskoulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Porolahden peruskoulu",
+            "sv" : "Porolahden peruskoulu",
+            "en" : "Porolahden peruskoulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Porolahden peruskoulu",
+          "sv" : "Porolahden peruskoulu",
+          "en" : "Porolahden peruskoulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "välttävä",
+              "sv" : "försvarlig"
+            },
+            "lyhytNimi" : {
+              "fi" : "5"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "A1",
+            "nimi" : {
+              "fi" : "A1-kieli",
+              "sv" : "A1-språk"
+            },
+            "lyhytNimi" : {
+              "fi" : "A1-kieli",
+              "sv" : "A1-språk"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "EN",
+            "nimi" : {
+              "fi" : "englanti",
+              "sv" : "engelska",
+              "en" : "English"
+            },
+            "lyhytNimi" : {
+              "fi" : "englanti",
+              "sv" : "engelska",
+              "en" : "English"
+            },
+            "koodistoUri" : "kielivalikoima",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "välttävä",
+              "sv" : "försvarlig"
+            },
+            "lyhytNimi" : {
+              "fi" : "5"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "B1",
+            "nimi" : {
+              "fi" : "B1-kieli",
+              "sv" : "B1-språk"
+            },
+            "lyhytNimi" : {
+              "fi" : "B1-kieli",
+              "sv" : "B1-språk"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "SV",
+            "nimi" : {
+              "fi" : "ruotsi",
+              "sv" : "svenska",
+              "en" : "Swedish"
+            },
+            "lyhytNimi" : {
+              "fi" : "ruotsi",
+              "sv" : "svenska",
+              "en" : "Swedish"
+            },
+            "koodistoUri" : "kielivalikoima",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MA",
+            "nimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Matematiikka",
+              "sv" : "Matematik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "välttävä",
+              "sv" : "försvarlig"
+            },
+            "lyhytNimi" : {
+              "fi" : "5"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "BI",
+            "nimi" : {
+              "fi" : "Biologia",
+              "sv" : "Biologi"
+            },
+            "lyhytNimi" : {
+              "fi" : "Biologia",
+              "sv" : "Biologi"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "välttävä",
+              "sv" : "försvarlig"
+            },
+            "lyhytNimi" : {
+              "fi" : "5"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "GE",
+            "nimi" : {
+              "fi" : "Maantieto",
+              "sv" : "Geografi"
+            },
+            "lyhytNimi" : {
+              "fi" : "Maantieto",
+              "sv" : "Geografi"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "FY",
+            "nimi" : {
+              "fi" : "Fysiikka",
+              "sv" : "Fysik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Fysiikka",
+              "sv" : "Fysik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "7",
+            "nimi" : {
+              "fi" : "tyydyttävä",
+              "sv" : "nöjaktig"
+            },
+            "lyhytNimi" : {
+              "fi" : "7"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "KE",
+            "nimi" : {
+              "fi" : "Kemia",
+              "sv" : "Kemi"
+            },
+            "lyhytNimi" : {
+              "fi" : "Kemia",
+              "sv" : "Kemi"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "TE",
+            "nimi" : {
+              "fi" : "Terveystieto",
+              "sv" : "Hälsokunskap"
+            },
+            "lyhytNimi" : {
+              "fi" : "Terveystieto",
+              "sv" : "Hälsokunskap"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "KT",
+            "nimi" : {
+              "fi" : "Uskonto/Elämänkatsomustieto",
+              "sv" : "Religion/Livsåskådningskunskap"
+            },
+            "lyhytNimi" : {
+              "fi" : "Uskonto",
+              "sv" : "Religion"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "välttävä",
+              "sv" : "försvarlig"
+            },
+            "lyhytNimi" : {
+              "fi" : "5"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "HI",
+            "nimi" : {
+              "fi" : "Historia",
+              "sv" : "Historia"
+            },
+            "lyhytNimi" : {
+              "fi" : "Historia",
+              "sv" : "Historia"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "5",
+            "nimi" : {
+              "fi" : "välttävä",
+              "sv" : "försvarlig"
+            },
+            "lyhytNimi" : {
+              "fi" : "5"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "YH",
+            "nimi" : {
+              "fi" : "Yhteiskuntaoppi",
+              "sv" : "Samhällslära"
+            },
+            "lyhytNimi" : {
+              "fi" : "Yhteiskuntaoppi",
+              "sv" : "Samhällslära"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "MU",
+            "nimi" : {
+              "fi" : "Musiikki",
+              "sv" : "Musik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Musiikki",
+              "sv" : "Musik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "7",
+            "nimi" : {
+              "fi" : "tyydyttävä",
+              "sv" : "nöjaktig"
+            },
+            "lyhytNimi" : {
+              "fi" : "7"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "KU",
+            "nimi" : {
+              "fi" : "Kuvataide",
+              "sv" : "Bildkonst"
+            },
+            "lyhytNimi" : {
+              "fi" : "Kuvataide",
+              "sv" : "Bildkonst"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "7",
+            "nimi" : {
+              "fi" : "tyydyttävä",
+              "sv" : "nöjaktig"
+            },
+            "lyhytNimi" : {
+              "fi" : "7"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "KS",
+            "nimi" : {
+              "fi" : "Käsityö",
+              "sv" : "Slöjd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Käsityö",
+              "sv" : "Slöjd"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "6",
+            "nimi" : {
+              "fi" : "kohtalainen",
+              "sv" : "hjälplig"
+            },
+            "lyhytNimi" : {
+              "fi" : "6"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "LI",
+            "nimi" : {
+              "fi" : "Liikunta",
+              "sv" : "Gymnastik"
+            },
+            "lyhytNimi" : {
+              "fi" : "Liikunta",
+              "sv" : "Gymnastik"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "8",
+            "nimi" : {
+              "fi" : "hyvä",
+              "sv" : "god"
+            },
+            "lyhytNimi" : {
+              "fi" : "8"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "KO",
+            "nimi" : {
+              "fi" : "Kotitalous",
+              "sv" : "Huslig ekonomi"
+            },
+            "lyhytNimi" : {
+              "fi" : "Kotitalous",
+              "sv" : "Huslig ekonomi"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "8",
+            "nimi" : {
+              "fi" : "hyvä",
+              "sv" : "god"
+            },
+            "lyhytNimi" : {
+              "fi" : "8"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "OP",
+            "nimi" : {
+              "fi" : "Opinto-ohjaus",
+              "sv" : "Elevhandledning"
+            },
+            "lyhytNimi" : {
+              "fi" : "Opinto-ohjaus"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 2.0,
+            "yksikkö" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "lyhytNimi" : {
+                "fi" : "vuosiviikkotuntia",
+                "sv" : "årsveckotimmar",
+                "en" : "weekly lessons per year"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          }
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "H",
+            "nimi" : {
+              "fi" : "hylätty",
+              "sv" : "underkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "H"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : false
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppimäärä",
+          "sv" : "Grundläggande utbildningens lärokurs",
+          "en" : "Basic education syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      },
+      "koulusivistyskieli" : [ {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi"
+        },
+        "koodistoUri" : "kieli"
+      } ]
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2020-01-01",
+    "päättymispäivä" : "2020-12-01"
+  }, {
+    "oid" : "1.2.246.562.15.38824694152",
+    "versionumero" : 3,
+    "aikaleima" : "2022-09-30T17:42:29.138780",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.52251087186",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "10105",
+        "nimi" : {
+          "fi" : "Stadin ammatti- ja aikuisopisto",
+          "sv" : "Stadin ammatti- ja aikuisopisto",
+          "en" : "Stadin ammatti- ja aikuisopisto"
+        },
+        "lyhytNimi" : {
+          "fi" : "Stadin ammatti- ja aikuisopisto",
+          "sv" : "Stadin ammatti- ja aikuisopisto",
+          "en" : "Stadin ammatti- ja aikuisopisto"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Stadin ammatti- ja aikuisopisto",
+        "sv" : "Stadin ammatti- ja aikuisopisto",
+        "en" : "Stadin ammatti- ja aikuisopisto"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "arvioituPäättymispäivä" : "2015-05-31",
+    "ostettu" : true,
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2012-09-01",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "4",
+          "nimi" : {
+            "fi" : "Työnantajan kokonaan rahoittama",
+            "sv" : "I sin helhet finansierad av arbetsgivaren"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2019-09-15",
+        "tila" : {
+          "koodiarvo" : "valmistunut",
+          "nimi" : {
+            "fi" : "Valmistunut",
+            "sv" : "Utexaminerad",
+            "en" : "Graduated"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "4",
+          "nimi" : {
+            "fi" : "Työnantajan kokonaan rahoittama",
+            "sv" : "I sin helhet finansierad av arbetsgivaren"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "351301",
+          "nimi" : {
+            "fi" : "Ajoneuvoalan perustutkinto",
+            "sv" : "Grundexamen inom fordonsbranschen",
+            "en" : "Vocational qualification in the Vehicle Sector"
+          },
+          "lyhytNimi" : {
+            "fi" : "Ajoneuvoalan perustutkinto",
+            "sv" : "Grundexamen inom fordonsbranschen",
+            "en" : "Vocational qualification in the Vehicle Sector"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "39/011/2014",
+        "perusteenNimi" : {
+          "fi" : "Autoalan perustutkinto",
+          "sv" : "Grundexamen inom bilbranschen"
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatillinen perustutkinto",
+            "sv" : "Yrkesinriktad grundexamen",
+            "en" : "Vocational upper secondary qualification"
+          },
+          "lyhytNimi" : {
+            "fi" : "Ammatillinen perustutkinto",
+            "sv" : "Yrkesinriktad grundexamen"
+          },
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "naytto",
+        "nimi" : {
+          "fi" : "Näyttötutkinto",
+          "sv" : "Fristående examen",
+          "en" : "Näyttö"
+        },
+        "koodistoUri" : "ammatillisentutkinnonsuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "tutkintonimike" : [ {
+        "koodiarvo" : "10089",
+        "nimi" : {
+          "fi" : "Hammaslaborantti",
+          "sv" : "Tandlaborant"
+        },
+        "lyhytNimi" : {
+          "fi" : "Hammaslaborantti",
+          "sv" : "Tandlaborant"
+        },
+        "koodistoUri" : "tutkintonimikkeet",
+        "koodistoVersio" : 2
+      } ],
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.56139411567",
+        "nimi" : {
+          "fi" : "Stadin ammatti- ja aikuisopisto, Abraham Wetterin tien toimipaikka",
+          "sv" : "Stadin ammatti- ja aikuisopisto, Abraham Wetterin tien toimipaikka",
+          "en" : "Stadin ammatti- ja aikuisopisto, Abraham Wetterin tien toimipaikka"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "vahvistus" : {
+        "päivä" : "2016-01-09",
+        "paikkakunta" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.52251087186",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "10105",
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "lyhytNimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto",
+            "sv" : "Stadin ammatti- ja aikuisopisto",
+            "en" : "Stadin ammatti- ja aikuisopisto"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "Mauri Bauer",
+          "titteli" : {
+            "fi" : "puheenjohtaja"
+          },
+          "organisaatio" : {
+            "nimi" : {
+              "fi" : "Autokorjaamoalan tutkintotoimikunta"
+            },
+            "tutkintotoimikunnanNumero" : "8406"
+          }
+        }, {
+          "nimi" : "Reijo Reksi",
+          "titteli" : {
+            "fi" : "rehtori"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "järjestämismuodot" : [ {
+        "alku" : "2012-09-01",
+        "järjestämismuoto" : {
+          "tunniste" : {
+            "koodiarvo" : "10",
+            "nimi" : {
+              "fi" : "Koulutuksen järjestäminen oppilaitosmuotoisena",
+              "sv" : "Att ordna utbildningen som när-, distansundervisning eller på en arbetsplats"
+            },
+            "koodistoUri" : "jarjestamismuoto",
+            "koodistoVersio" : 1
+          }
+        }
+      } ],
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "100016",
+            "nimi" : {
+              "fi" : "Huolto- ja korjaustyöt"
+            },
+            "lyhytNimi" : {
+              "fi" : "Huolto- ja korjaustyöt"
+            },
+            "koodistoUri" : "tutkinnonosat",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true
+        },
+        "tutkinnonOsanRyhmä" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatilliset tutkinnon osat",
+            "sv" : "Yrkesinriktade examensdelar"
+          },
+          "koodistoUri" : "ammatillisentutkinnonosanryhma",
+          "koodistoVersio" : 1
+        },
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.42456023292",
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "sv" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "en" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2012-10-20",
+          "arvioitsijat" : [ {
+            "nimi" : "Jaana Arstila"
+          }, {
+            "nimi" : "Pekka Saurmann"
+          }, {
+            "nimi" : "Juhani Mykkänen"
+          } ],
+          "hyväksytty" : true
+        } ],
+        "vahvistus" : {
+          "päivä" : "2013-01-31",
+          "myöntäjäOrganisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          },
+          "myöntäjäHenkilöt" : [ {
+            "nimi" : "Reijo Reksi",
+            "titteli" : {
+              "fi" : "rehtori"
+            },
+            "organisaatio" : {
+              "oid" : "1.2.246.562.10.52251087186",
+              "oppilaitosnumero" : {
+                "koodiarvo" : "10105",
+                "nimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri" : "oppilaitosnumero",
+                "koodistoVersio" : 1
+              },
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka" : {
+                "koodiarvo" : "091",
+                "nimi" : {
+                  "fi" : "Helsinki",
+                  "sv" : "Helsingfors"
+                },
+                "koodistoUri" : "kunta",
+                "koodistoVersio" : 2
+              }
+            }
+          } ]
+        },
+        "näyttö" : {
+          "kuvaus" : {
+            "fi" : "Huolto- ja korjaustyöt"
+          },
+          "suorituspaikka" : {
+            "tunniste" : {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "työpaikka",
+                "sv" : "arbetsplats"
+              },
+              "koodistoUri" : "ammatillisennaytonsuorituspaikka",
+              "koodistoVersio" : 1
+            },
+            "kuvaus" : {
+              "fi" : "Autokorjaamo Oy, Riihimäki"
+            }
+          },
+          "suoritusaika" : {
+            "alku" : "2012-10-20",
+            "loppu" : "2012-10-20"
+          },
+          "työssäoppimisenYhteydessä" : false,
+          "arviointi" : {
+            "arvosana" : {
+              "koodiarvo" : "3",
+              "nimi" : {
+                "fi" : "kiitettävä",
+                "sv" : "berömlig"
+              },
+              "lyhytNimi" : {
+                "fi" : "K3"
+              },
+              "koodistoUri" : "arviointiasteikkoammatillinent1k3",
+              "koodistoVersio" : 1
+            },
+            "päivä" : "2014-10-20",
+            "arvioitsijat" : [ {
+              "nimi" : "Jaana Arstila",
+              "ntm" : true
+            }, {
+              "nimi" : "Pekka Saurmann",
+              "ntm" : true
+            }, {
+              "nimi" : "Juhani Mykkänen",
+              "ntm" : false
+            } ],
+            "arviointikohteet" : [ {
+              "tunniste" : {
+                "koodiarvo" : "1",
+                "nimi" : {
+                  "fi" : "Työprosessin hallinta",
+                  "sv" : "Behärskande av arbetsprocessen"
+                },
+                "koodistoUri" : "ammatillisennaytonarviointikohde",
+                "koodistoVersio" : 1
+              },
+              "arvosana" : {
+                "koodiarvo" : "3",
+                "nimi" : {
+                  "fi" : "kiitettävä",
+                  "sv" : "berömlig"
+                },
+                "lyhytNimi" : {
+                  "fi" : "K3"
+                },
+                "koodistoUri" : "arviointiasteikkoammatillinent1k3",
+                "koodistoVersio" : 1
+              }
+            }, {
+              "tunniste" : {
+                "koodiarvo" : "2",
+                "nimi" : {
+                  "fi" : "Työmenetelmien, -välineiden ja materiaalin hallinta",
+                  "sv" : "Behärskande av arbetsmetoder, -redskap och material"
+                },
+                "koodistoUri" : "ammatillisennaytonarviointikohde",
+                "koodistoVersio" : 1
+              },
+              "arvosana" : {
+                "koodiarvo" : "2",
+                "nimi" : {
+                  "fi" : "hyvä",
+                  "sv" : "god"
+                },
+                "lyhytNimi" : {
+                  "fi" : "H2"
+                },
+                "koodistoUri" : "arviointiasteikkoammatillinent1k3",
+                "koodistoVersio" : 1
+              }
+            }, {
+              "tunniste" : {
+                "koodiarvo" : "3",
+                "nimi" : {
+                  "fi" : "Työn perustana olevan tiedon hallinta",
+                  "sv" : "Behärskande av den kunskap som ligger till grund för arbetet"
+                },
+                "koodistoUri" : "ammatillisennaytonarviointikohde",
+                "koodistoVersio" : 1
+              },
+              "arvosana" : {
+                "koodiarvo" : "2",
+                "nimi" : {
+                  "fi" : "hyvä",
+                  "sv" : "god"
+                },
+                "lyhytNimi" : {
+                  "fi" : "H2"
+                },
+                "koodistoUri" : "arviointiasteikkoammatillinent1k3",
+                "koodistoVersio" : 1
+              }
+            }, {
+              "tunniste" : {
+                "koodiarvo" : "4",
+                "nimi" : {
+                  "fi" : "Elinikäisen oppimisen avaintaidot",
+                  "sv" : "Nyckelkompetenser för livslångt lärande"
+                },
+                "koodistoUri" : "ammatillisennaytonarviointikohde",
+                "koodistoVersio" : 1
+              },
+              "arvosana" : {
+                "koodiarvo" : "3",
+                "nimi" : {
+                  "fi" : "kiitettävä",
+                  "sv" : "berömlig"
+                },
+                "lyhytNimi" : {
+                  "fi" : "K3"
+                },
+                "koodistoUri" : "arviointiasteikkoammatillinent1k3",
+                "koodistoVersio" : 1
+              }
+            } ],
+            "arvioinnistaPäättäneet" : [ {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "Opettaja",
+                "sv" : "Lärare"
+              },
+              "koodistoUri" : "ammatillisennaytonarvioinnistapaattaneet",
+              "koodistoVersio" : 1
+            } ],
+            "arviointikeskusteluunOsallistuneet" : [ {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "Opettaja",
+                "sv" : "Lärare"
+              },
+              "koodistoUri" : "ammatillisennaytonarviointikeskusteluunosallistuneet",
+              "koodistoVersio" : 1
+            }, {
+              "koodiarvo" : "4",
+              "nimi" : {
+                "fi" : "Itsenäinen ammatinharjoittaja",
+                "sv" : "Självständig yrkesutövare"
+              },
+              "koodistoUri" : "ammatillisennaytonarviointikeskusteluunosallistuneet",
+              "koodistoVersio" : 1
+            } ],
+            "hyväksytty" : true
+          }
+        },
+        "tyyppi" : {
+          "koodiarvo" : "ammatillisentutkinnonosa",
+          "nimi" : {
+            "fi" : "Ammatillisen tutkinnon osa",
+            "sv" : "Yrkesexamensdel",
+            "en" : "A vocational education qualification unit"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "123456789",
+            "nimi" : {
+              "fi" : "Pintavauriotyöt"
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Opetellaan korjaamaan pinnallisia vaurioita"
+          },
+          "pakollinen" : false
+        },
+        "tutkinnonOsanRyhmä" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatilliset tutkinnon osat",
+            "sv" : "Yrkesinriktade examensdelar"
+          },
+          "koodistoUri" : "ammatillisentutkinnonosanryhma",
+          "koodistoVersio" : 1
+        },
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.42456023292",
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "sv" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "en" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2013-03-20",
+          "arvioitsijat" : [ {
+            "nimi" : "Jaana Arstila"
+          }, {
+            "nimi" : "Pekka Saurmann"
+          }, {
+            "nimi" : "Juhani Mykkänen"
+          } ],
+          "hyväksytty" : true
+        } ],
+        "vahvistus" : {
+          "päivä" : "2013-05-31",
+          "myöntäjäOrganisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          },
+          "myöntäjäHenkilöt" : [ {
+            "nimi" : "Reijo Reksi",
+            "titteli" : {
+              "fi" : "rehtori"
+            },
+            "organisaatio" : {
+              "oid" : "1.2.246.562.10.52251087186",
+              "oppilaitosnumero" : {
+                "koodiarvo" : "10105",
+                "nimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri" : "oppilaitosnumero",
+                "koodistoVersio" : 1
+              },
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka" : {
+                "koodiarvo" : "091",
+                "nimi" : {
+                  "fi" : "Helsinki",
+                  "sv" : "Helsingfors"
+                },
+                "koodistoUri" : "kunta",
+                "koodistoVersio" : 2
+              }
+            }
+          } ]
+        },
+        "näyttö" : {
+          "kuvaus" : {
+            "fi" : "Pintavaurioiden korjausta"
+          },
+          "suorituspaikka" : {
+            "tunniste" : {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "työpaikka",
+                "sv" : "arbetsplats"
+              },
+              "koodistoUri" : "ammatillisennaytonsuorituspaikka",
+              "koodistoVersio" : 1
+            },
+            "kuvaus" : {
+              "fi" : "Autokorjaamo Oy, Riihimäki"
+            }
+          },
+          "suoritusaika" : {
+            "alku" : "2013-05-20",
+            "loppu" : "2013-05-20"
+          },
+          "työssäoppimisenYhteydessä" : false
+        },
+        "tyyppi" : {
+          "koodiarvo" : "ammatillisentutkinnonosa",
+          "nimi" : {
+            "fi" : "Ammatillisen tutkinnon osa",
+            "sv" : "Yrkesexamensdel",
+            "en" : "A vocational education qualification unit"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "100019",
+            "nimi" : {
+              "fi" : "Mittaus- ja korivauriotyöt"
+            },
+            "lyhytNimi" : {
+              "fi" : "Mittaus- ja korivauriotyöt"
+            },
+            "koodistoUri" : "tutkinnonosat",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true
+        },
+        "tutkinnonOsanRyhmä" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatilliset tutkinnon osat",
+            "sv" : "Yrkesinriktade examensdelar"
+          },
+          "koodistoUri" : "ammatillisentutkinnonosanryhma",
+          "koodistoVersio" : 1
+        },
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.42456023292",
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "sv" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "en" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2013-04-01",
+          "arvioitsijat" : [ {
+            "nimi" : "Jaana Arstila"
+          }, {
+            "nimi" : "Pekka Saurmann"
+          }, {
+            "nimi" : "Juhani Mykkänen"
+          } ],
+          "hyväksytty" : true
+        } ],
+        "vahvistus" : {
+          "päivä" : "2013-05-31",
+          "myöntäjäOrganisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          },
+          "myöntäjäHenkilöt" : [ {
+            "nimi" : "Reijo Reksi",
+            "titteli" : {
+              "fi" : "rehtori"
+            },
+            "organisaatio" : {
+              "oid" : "1.2.246.562.10.52251087186",
+              "oppilaitosnumero" : {
+                "koodiarvo" : "10105",
+                "nimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri" : "oppilaitosnumero",
+                "koodistoVersio" : 1
+              },
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka" : {
+                "koodiarvo" : "091",
+                "nimi" : {
+                  "fi" : "Helsinki",
+                  "sv" : "Helsingfors"
+                },
+                "koodistoUri" : "kunta",
+                "koodistoVersio" : 2
+              }
+            }
+          } ]
+        },
+        "näyttö" : {
+          "kuvaus" : {
+            "fi" : "Mittaus- ja korivauriotöitä"
+          },
+          "suorituspaikka" : {
+            "tunniste" : {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "työpaikka",
+                "sv" : "arbetsplats"
+              },
+              "koodistoUri" : "ammatillisennaytonsuorituspaikka",
+              "koodistoVersio" : 1
+            },
+            "kuvaus" : {
+              "fi" : "Autokorjaamo Oy, Riihimäki"
+            }
+          },
+          "suoritusaika" : {
+            "alku" : "2013-04-01",
+            "loppu" : "2013-04-01"
+          },
+          "työssäoppimisenYhteydessä" : false
+        },
+        "tyyppi" : {
+          "koodiarvo" : "ammatillisentutkinnonosa",
+          "nimi" : {
+            "fi" : "Ammatillisen tutkinnon osa",
+            "sv" : "Yrkesexamensdel",
+            "en" : "A vocational education qualification unit"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "100034",
+            "nimi" : {
+              "fi" : "Maalauksen esikäsittelytyöt",
+              "sv" : "Förberedande arbeten inför billackering"
+            },
+            "lyhytNimi" : {
+              "fi" : "Maalauksen esikäsittelytyöt",
+              "sv" : "Förberedande arbeten inför billackering"
+            },
+            "koodistoUri" : "tutkinnonosat",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true
+        },
+        "tutkinnonOsanRyhmä" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatilliset tutkinnon osat",
+            "sv" : "Yrkesinriktade examensdelar"
+          },
+          "koodistoUri" : "ammatillisentutkinnonosanryhma",
+          "koodistoVersio" : 1
+        },
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.42456023292",
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "sv" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "en" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2014-10-20",
+          "arvioitsijat" : [ {
+            "nimi" : "Jaana Arstila"
+          }, {
+            "nimi" : "Pekka Saurmann"
+          }, {
+            "nimi" : "Juhani Mykkänen"
+          } ],
+          "hyväksytty" : true
+        } ],
+        "vahvistus" : {
+          "päivä" : "2014-11-08",
+          "myöntäjäOrganisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          },
+          "myöntäjäHenkilöt" : [ {
+            "nimi" : "Reijo Reksi",
+            "titteli" : {
+              "fi" : "rehtori"
+            },
+            "organisaatio" : {
+              "oid" : "1.2.246.562.10.52251087186",
+              "oppilaitosnumero" : {
+                "koodiarvo" : "10105",
+                "nimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri" : "oppilaitosnumero",
+                "koodistoVersio" : 1
+              },
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka" : {
+                "koodiarvo" : "091",
+                "nimi" : {
+                  "fi" : "Helsinki",
+                  "sv" : "Helsingfors"
+                },
+                "koodistoUri" : "kunta",
+                "koodistoVersio" : 2
+              }
+            }
+          } ]
+        },
+        "näyttö" : {
+          "kuvaus" : {
+            "fi" : "Maalauksen esikäsittelytöitä"
+          },
+          "suorituspaikka" : {
+            "tunniste" : {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "työpaikka",
+                "sv" : "arbetsplats"
+              },
+              "koodistoUri" : "ammatillisennaytonsuorituspaikka",
+              "koodistoVersio" : 1
+            },
+            "kuvaus" : {
+              "fi" : "Autokorjaamo Oy, Riihimäki"
+            }
+          },
+          "suoritusaika" : {
+            "alku" : "2014-10-20",
+            "loppu" : "2014-10-20"
+          },
+          "työssäoppimisenYhteydessä" : false
+        },
+        "tyyppi" : {
+          "koodiarvo" : "ammatillisentutkinnonosa",
+          "nimi" : {
+            "fi" : "Ammatillisen tutkinnon osa",
+            "sv" : "Yrkesexamensdel",
+            "en" : "A vocational education qualification unit"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "100037",
+            "nimi" : {
+              "fi" : "Auton lisävarustetyöt",
+              "sv" : "Arbeten med bilens tilläggsutrustning"
+            },
+            "lyhytNimi" : {
+              "fi" : "Auton lisävarustetyöt",
+              "sv" : "Arbeten med bilens tilläggsutrustning"
+            },
+            "koodistoUri" : "tutkinnonosat",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 15.0,
+            "yksikkö" : {
+              "koodiarvo" : "6",
+              "nimi" : {
+                "fi" : "osaamispistettä",
+                "sv" : "kompetenspoäng",
+                "en" : "ECVET competence points"
+              },
+              "lyhytNimi" : {
+                "fi" : "osp",
+                "sv" : "kp",
+                "en" : "competence points"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko",
+              "koodistoVersio" : 1
+            }
+          },
+          "kuvaus" : {
+            "fi" : "Tuunaus"
+          }
+        },
+        "tutkinnonOsanRyhmä" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatilliset tutkinnon osat",
+            "sv" : "Yrkesinriktade examensdelar"
+          },
+          "koodistoUri" : "ammatillisentutkinnonosanryhma",
+          "koodistoVersio" : 1
+        },
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.42456023292",
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "sv" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "en" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2015-04-01",
+          "arvioitsijat" : [ {
+            "nimi" : "Jaana Arstila"
+          }, {
+            "nimi" : "Pekka Saurmann"
+          }, {
+            "nimi" : "Juhani Mykkänen"
+          } ],
+          "hyväksytty" : true
+        } ],
+        "vahvistus" : {
+          "päivä" : "2015-05-01",
+          "myöntäjäOrganisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          },
+          "myöntäjäHenkilöt" : [ {
+            "nimi" : "Reijo Reksi",
+            "titteli" : {
+              "fi" : "rehtori"
+            },
+            "organisaatio" : {
+              "oid" : "1.2.246.562.10.52251087186",
+              "oppilaitosnumero" : {
+                "koodiarvo" : "10105",
+                "nimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri" : "oppilaitosnumero",
+                "koodistoVersio" : 1
+              },
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka" : {
+                "koodiarvo" : "091",
+                "nimi" : {
+                  "fi" : "Helsinki",
+                  "sv" : "Helsingfors"
+                },
+                "koodistoUri" : "kunta",
+                "koodistoVersio" : 2
+              }
+            }
+          } ]
+        },
+        "näyttö" : {
+          "kuvaus" : {
+            "fi" : "Auton lisävarustetöitä"
+          },
+          "suorituspaikka" : {
+            "tunniste" : {
+              "koodiarvo" : "1",
+              "nimi" : {
+                "fi" : "työpaikka",
+                "sv" : "arbetsplats"
+              },
+              "koodistoUri" : "ammatillisennaytonsuorituspaikka",
+              "koodistoVersio" : 1
+            },
+            "kuvaus" : {
+              "fi" : "Autokorjaamo Oy, Riihimäki"
+            }
+          },
+          "suoritusaika" : {
+            "alku" : "2015-04-01",
+            "loppu" : "2015-04-01"
+          },
+          "työssäoppimisenYhteydessä" : false
+        },
+        "tyyppi" : {
+          "koodiarvo" : "ammatillisentutkinnonosa",
+          "nimi" : {
+            "fi" : "Ammatillisen tutkinnon osa",
+            "sv" : "Yrkesexamensdel",
+            "en" : "A vocational education qualification unit"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "101050",
+            "nimi" : {
+              "fi" : "Yritystoiminnan suunnittelu",
+              "sv" : "Planering av företagsverksamhet"
+            },
+            "lyhytNimi" : {
+              "fi" : "Yritystoiminnan suunnittelu",
+              "sv" : "Planering av företagsverksamhet"
+            },
+            "koodistoUri" : "tutkinnonosat",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true
+        },
+        "tutkinnonOsanRyhmä" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatilliset tutkinnon osat",
+            "sv" : "Yrkesinriktade examensdelar"
+          },
+          "koodistoUri" : "ammatillisentutkinnonosanryhma",
+          "koodistoVersio" : 1
+        },
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.42456023292",
+          "nimi" : {
+            "fi" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "sv" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka",
+            "en" : "Stadin ammatti- ja aikuisopisto, Lehtikuusentien toimipaikka"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "Hyväksytty",
+            "nimi" : {
+              "fi" : "Hyväksytty",
+              "sv" : "Godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "Hyväksytty"
+            },
+            "koodistoUri" : "arviointiasteikkoammatillinenhyvaksyttyhylatty",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2016-01-09",
+          "arvioitsijat" : [ {
+            "nimi" : "Jaana Arstila"
+          }, {
+            "nimi" : "Pekka Saurmann"
+          }, {
+            "nimi" : "Juhani Mykkänen"
+          } ],
+          "hyväksytty" : true
+        } ],
+        "vahvistus" : {
+          "päivä" : "2016-01-09",
+          "paikkakunta" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          },
+          "myöntäjäOrganisaatio" : {
+            "oid" : "1.2.246.562.10.52251087186",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "10105",
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Stadin ammatti- ja aikuisopisto",
+              "sv" : "Stadin ammatti- ja aikuisopisto",
+              "en" : "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          },
+          "myöntäjäHenkilöt" : [ {
+            "nimi" : "Reijo Reksi",
+            "titteli" : {
+              "fi" : "rehtori"
+            },
+            "organisaatio" : {
+              "oid" : "1.2.246.562.10.52251087186",
+              "oppilaitosnumero" : {
+                "koodiarvo" : "10105",
+                "nimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Stadin ammatti- ja aikuisopisto",
+                  "sv" : "Stadin ammatti- ja aikuisopisto",
+                  "en" : "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri" : "oppilaitosnumero",
+                "koodistoVersio" : 1
+              },
+              "nimi" : {
+                "fi" : "Stadin ammatti- ja aikuisopisto",
+                "sv" : "Stadin ammatti- ja aikuisopisto",
+                "en" : "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka" : {
+                "koodiarvo" : "091",
+                "nimi" : {
+                  "fi" : "Helsinki",
+                  "sv" : "Helsingfors"
+                },
+                "koodistoUri" : "kunta",
+                "koodistoVersio" : 2
+              }
+            }
+          } ]
+        },
+        "tunnustettu" : {
+          "osaaminen" : {
+            "koulutusmoduuli" : {
+              "tunniste" : {
+                "koodiarvo" : "100238",
+                "nimi" : {
+                  "fi" : "Asennushitsaus",
+                  "sv" : "Montagesvetsning"
+                },
+                "lyhytNimi" : {
+                  "fi" : "Asennushitsaus",
+                  "sv" : "Montagesvetsning"
+                },
+                "koodistoUri" : "tutkinnonosat",
+                "koodistoVersio" : 1
+              },
+              "pakollinen" : true
+            },
+            "tyyppi" : {
+              "koodiarvo" : "ammatillisentutkinnonosa",
+              "nimi" : {
+                "fi" : "Ammatillisen tutkinnon osa",
+                "sv" : "Yrkesexamensdel",
+                "en" : "A vocational education qualification unit"
+              },
+              "koodistoUri" : "suorituksentyyppi",
+              "koodistoVersio" : 1
+            }
+          },
+          "selite" : {
+            "fi" : "Tutkinnon osa on tunnustettu Kone- ja metallialan perustutkinnosta"
+          },
+          "rahoituksenPiirissä" : false
+        },
+        "tyyppi" : {
+          "koodiarvo" : "ammatillisentutkinnonosa",
+          "nimi" : {
+            "fi" : "Ammatillisen tutkinnon osa",
+            "sv" : "Yrkesexamensdel",
+            "en" : "A vocational education qualification unit"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "todistuksellaNäkyvätLisätiedot" : {
+        "fi" : "test"
+      },
+      "tyyppi" : {
+        "koodiarvo" : "ammatillinentutkinto",
+        "nimi" : {
+          "fi" : "Ammatillinen tutkinto",
+          "sv" : "Yrkesinriktad examen",
+          "en" : "Vocational education  qualification"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      },
+      "ryhmä" : "AUT12SN"
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "ammatillinenkoulutus",
+      "nimi" : {
+        "fi" : "Ammatillinen koulutus",
+        "sv" : "Yrkesutbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Ammatillinen koulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2012-09-01",
+    "päättymispäivä" : "2019-09-15"
+  }, {
+    "oid" : "1.2.246.562.15.56799216371",
+    "versionumero" : 3,
+    "aikaleima" : "2022-05-06T14:15:25.855067",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.52251087186",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "10105",
+        "nimi" : {
+          "fi" : "Stadin ammatti- ja aikuisopisto",
+          "sv" : "Stadin ammatti- ja aikuisopisto",
+          "en" : "Stadin ammatti- ja aikuisopisto"
+        },
+        "lyhytNimi" : {
+          "fi" : "Stadin ammatti- ja aikuisopisto",
+          "sv" : "Stadin ammatti- ja aikuisopisto",
+          "en" : "Stadin ammatti- ja aikuisopisto"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Stadin ammatti- ja aikuisopisto",
+        "sv" : "Stadin ammatti- ja aikuisopisto",
+        "en" : "Stadin ammatti- ja aikuisopisto"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "ostettu" : false,
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-04-05",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "341101",
+          "nimi" : {
+            "fi" : "Tieto- ja viestintätekniikan perustutkinto",
+            "sv" : "Grundexamen i informations- och kommunikationsteknik",
+            "en" : "Vocational qualification in Information and Communications Technology"
+          },
+          "lyhytNimi" : {
+            "fi" : "Tieto- ja viestintätekniikan pt",
+            "sv" : "Grundexamen i informations- och kommunikationsteknik",
+            "en" : "Vocational qualification in Information and Communications Technology"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "OPH-1117-2019",
+        "perusteenNimi" : {
+          "fi" : "Tieto- ja viestintätekniikan perustutkinto, koulutusvientikokeilu",
+          "sv" : "Grundexamen i informations- och kommunikationsteknik",
+          "en" : "Vocational Qualification in Information and Communications Technology"
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Ammatillinen perustutkinto",
+            "sv" : "Yrkesinriktad grundexamen",
+            "en" : "Vocational upper secondary qualification"
+          },
+          "lyhytNimi" : {
+            "fi" : "Ammatillinen perustutkinto",
+            "sv" : "Yrkesinriktad grundexamen"
+          },
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "reformi",
+        "nimi" : {
+          "fi" : "Reformin mukainen näyttö",
+          "sv" : "Reform"
+        },
+        "lyhytNimi" : {
+          "fi" : "Reformi"
+        },
+        "koodistoUri" : "ammatillisentutkinnonsuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.56139411567",
+        "nimi" : {
+          "fi" : "Abraham Wetterin tien toimipaikka",
+          "sv" : "Abraham Wetterin tien toimipaikka",
+          "en" : "Abraham Wetterin tien toimipaikka"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "ammatillinentutkinto",
+        "nimi" : {
+          "fi" : "Ammatillinen tutkinto",
+          "sv" : "Yrkesinriktad examen",
+          "en" : "Vocational education  qualification"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "lisätiedot" : {
+      "henkilöstökoulutus" : false,
+      "koulutusvienti" : false,
+      "maksuttomuus" : [ {
+        "alku" : "2022-04-05",
+        "maksuton" : true
+      } ]
+    },
+    "tyyppi" : {
+      "koodiarvo" : "ammatillinenkoulutus",
+      "nimi" : {
+        "fi" : "Ammatillinen koulutus",
+        "sv" : "Yrkesutbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Ammatillinen koulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-04-05"
+  }, {
+    "oid" : "1.2.246.562.15.55223326681",
+    "versionumero" : 3,
+    "aikaleima" : "2022-06-29T14:07:27.933527",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.62858797335",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "00082",
+        "nimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "lyhytNimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Ressun lukio",
+        "sv" : "Ressun lukio",
+        "en" : "Ressun lukio"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-06-29",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "lukionaineopinnot"
+        },
+        "perusteenDiaarinumero" : "OPH-2267-2019"
+      },
+      "oppimäärä" : {
+        "koodiarvo" : "aikuistenops",
+        "nimi" : {
+          "fi" : "Lukio suoritetaan aikuisten opetussuunnitelman mukaan",
+          "sv" : "Gymnasiet genomförs enligt läroplanen vuxna"
+        },
+        "koodistoUri" : "lukionoppimaara",
+        "koodistoVersio" : 1
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.62858797335",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00082",
+          "nimi" : {
+            "fi" : "Ressun lukio",
+            "sv" : "Ressun lukio",
+            "en" : "Ressun lukio"
+          },
+          "lyhytNimi" : {
+            "fi" : "Ressun lukio",
+            "sv" : "Ressun lukio",
+            "en" : "Ressun lukio"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "HI",
+            "nimi" : {
+              "fi" : "Historia",
+              "sv" : "Historia"
+            },
+            "lyhytNimi" : {
+              "fi" : "Historia",
+              "sv" : "Historia"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 10.0,
+            "yksikkö" : {
+              "koodiarvo" : "2",
+              "nimi" : {
+                "fi" : "opintopistettä",
+                "sv" : "studiepoäng",
+                "en" : "ECTS credits"
+              },
+              "lyhytNimi" : {
+                "fi" : "op",
+                "sv" : "sp",
+                "en" : "ECTS cr"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko"
+            }
+          }
+        },
+        "suoritettuErityisenäTutkintona" : false,
+        "osasuoritukset" : [ {
+          "koulutusmoduuli" : {
+            "tunniste" : {
+              "koodiarvo" : "HI2",
+              "nimi" : {
+                "fi" : "Itsenäisen Suomen historia",
+                "sv" : "Det självständiga Finlands historia"
+              },
+              "koodistoUri" : "moduulikoodistolops2021",
+              "koodistoVersio" : 1
+            },
+            "laajuus" : {
+              "arvo" : 5.0,
+              "yksikkö" : {
+                "koodiarvo" : "2",
+                "nimi" : {
+                  "fi" : "opintopistettä",
+                  "sv" : "studiepoäng",
+                  "en" : "ECTS credits"
+                },
+                "lyhytNimi" : {
+                  "fi" : "op",
+                  "sv" : "sp",
+                  "en" : "ECTS cr"
+                },
+                "koodistoUri" : "opintojenlaajuusyksikko",
+                "koodistoVersio" : 1
+              }
+            },
+            "pakollinen" : false
+          },
+          "tyyppi" : {
+            "koodiarvo" : "lukionvaltakunnallinenmoduuli",
+            "nimi" : {
+              "fi" : "Lukion valtakunnallinen moduuli",
+              "sv" : "Lukion valtakunnallinen moduuli",
+              "en" : "Lukion valtakunnallinen moduuli"
+            },
+            "koodistoUri" : "suorituksentyyppi",
+            "koodistoVersio" : 1
+          }
+        }, {
+          "koulutusmoduuli" : {
+            "tunniste" : {
+              "koodiarvo" : "HI3",
+              "nimi" : {
+                "fi" : "Kansainväliset suhteet",
+                "sv" : "Internationella relationer"
+              },
+              "koodistoUri" : "moduulikoodistolops2021",
+              "koodistoVersio" : 1
+            },
+            "laajuus" : {
+              "arvo" : 5.0,
+              "yksikkö" : {
+                "koodiarvo" : "2",
+                "nimi" : {
+                  "fi" : "opintopistettä",
+                  "sv" : "studiepoäng",
+                  "en" : "ECTS credits"
+                },
+                "lyhytNimi" : {
+                  "fi" : "op",
+                  "sv" : "sp",
+                  "en" : "ECTS cr"
+                },
+                "koodistoUri" : "opintojenlaajuusyksikko",
+                "koodistoVersio" : 1
+              }
+            },
+            "pakollinen" : false
+          },
+          "tyyppi" : {
+            "koodiarvo" : "lukionvaltakunnallinenmoduuli",
+            "nimi" : {
+              "fi" : "Lukion valtakunnallinen moduuli",
+              "sv" : "Lukion valtakunnallinen moduuli",
+              "en" : "Lukion valtakunnallinen moduuli"
+            },
+            "koodistoUri" : "suorituksentyyppi",
+            "koodistoVersio" : 1
+          }
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "lukionoppiaine",
+          "nimi" : {
+            "fi" : "Lukion oppiaine",
+            "sv" : "Läroämne i gymnasiet",
+            "en" : "General upper secondary education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "lukionaineopinnot",
+        "nimi" : {
+          "fi" : "Lukion aineopinnot",
+          "sv" : "Ämnesstudier i gymnasiet"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "lukiokoulutus",
+      "nimi" : {
+        "fi" : "Lukiokoulutus",
+        "sv" : "Gymnasieutbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Lukiokoulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-06-29"
+  }, {
+    "oid" : "1.2.246.562.15.47944987511",
+    "versionumero" : 3,
+    "aikaleima" : "2023-01-04T14:43:22.879306",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.62858797335",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "00082",
+        "nimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "lyhytNimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Ressun lukio",
+        "sv" : "Ressun lukio",
+        "en" : "Ressun lukio"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-06-29",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "309902",
+          "nimi" : {
+            "fi" : "Lukion oppimäärä",
+            "sv" : "Gymnasiets lärokurs"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "OPH-2267-2019",
+        "koulutustyyppi" : {
+          "koodiarvo" : "14",
+          "nimi" : {
+            "fi" : "Aikuisten lukiokoulutus",
+            "sv" : "Gymnasieutbildning för vuxna",
+            "en" : "Aikuisten lukiokoulutus"
+          },
+          "lyhytNimi" : {
+            "fi" : "Aikuisten lukiokoulutus",
+            "sv" : "Gymnasieutbildning för vuxna",
+            "en" : "Aikuisten lukiokoulutus"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "oppimäärä" : {
+        "koodiarvo" : "aikuistenops",
+        "nimi" : {
+          "fi" : "Lukio suoritetaan aikuisten opetussuunnitelman mukaan",
+          "sv" : "Gymnasiet genomförs enligt läroplanen vuxna"
+        },
+        "koodistoUri" : "lukionoppimaara",
+        "koodistoVersio" : 1
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.62858797335",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00082",
+          "nimi" : {
+            "fi" : "Ressun lukio",
+            "sv" : "Ressun lukio",
+            "en" : "Ressun lukio"
+          },
+          "lyhytNimi" : {
+            "fi" : "Ressun lukio",
+            "sv" : "Ressun lukio",
+            "en" : "Ressun lukio"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritettuErityisenäTutkintona" : false,
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "HI",
+            "nimi" : {
+              "fi" : "Historia",
+              "sv" : "Historia"
+            },
+            "lyhytNimi" : {
+              "fi" : "Historia",
+              "sv" : "Historia"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "laajuus" : {
+            "arvo" : 5.0,
+            "yksikkö" : {
+              "koodiarvo" : "2",
+              "nimi" : {
+                "fi" : "opintopistettä",
+                "sv" : "studiepoäng",
+                "en" : "ECTS credits"
+              },
+              "lyhytNimi" : {
+                "fi" : "op",
+                "sv" : "sp",
+                "en" : "ECTS cr"
+              },
+              "koodistoUri" : "opintojenlaajuusyksikko"
+            }
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "7",
+            "nimi" : {
+              "fi" : "tyydyttävä",
+              "sv" : "nöjaktig"
+            },
+            "lyhytNimi" : {
+              "fi" : "7"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "hyväksytty" : true
+        } ],
+        "suoritettuErityisenäTutkintona" : false,
+        "osasuoritukset" : [ {
+          "koulutusmoduuli" : {
+            "tunniste" : {
+              "koodiarvo" : "HI3",
+              "nimi" : {
+                "fi" : "Kansainväliset suhteet",
+                "sv" : "Internationella relationer"
+              },
+              "koodistoUri" : "moduulikoodistolops2021",
+              "koodistoVersio" : 1
+            },
+            "laajuus" : {
+              "arvo" : 5.0,
+              "yksikkö" : {
+                "koodiarvo" : "2",
+                "nimi" : {
+                  "fi" : "opintopistettä",
+                  "sv" : "studiepoäng",
+                  "en" : "ECTS credits"
+                },
+                "lyhytNimi" : {
+                  "fi" : "op",
+                  "sv" : "sp",
+                  "en" : "ECTS cr"
+                },
+                "koodistoUri" : "opintojenlaajuusyksikko",
+                "koodistoVersio" : 1
+              }
+            },
+            "pakollinen" : false
+          },
+          "arviointi" : [ {
+            "arvosana" : {
+              "koodiarvo" : "8",
+              "nimi" : {
+                "fi" : "hyvä",
+                "sv" : "god"
+              },
+              "lyhytNimi" : {
+                "fi" : "8"
+              },
+              "koodistoUri" : "arviointiasteikkoyleissivistava",
+              "koodistoVersio" : 1
+            },
+            "päivä" : "2023-01-04",
+            "hyväksytty" : true
+          } ],
+          "tyyppi" : {
+            "koodiarvo" : "lukionvaltakunnallinenmoduuli",
+            "nimi" : {
+              "fi" : "Lukion valtakunnallinen moduuli",
+              "sv" : "Lukion valtakunnallinen moduuli",
+              "en" : "Lukion valtakunnallinen moduuli"
+            },
+            "koodistoUri" : "suorituksentyyppi",
+            "koodistoVersio" : 1
+          }
+        } ],
+        "tyyppi" : {
+          "koodiarvo" : "lukionoppiaine",
+          "nimi" : {
+            "fi" : "Lukion oppiaine",
+            "sv" : "Läroämne i gymnasiet",
+            "en" : "General upper secondary education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "lukionoppimaara",
+        "nimi" : {
+          "fi" : "Lukion oppimäärä",
+          "sv" : "Gymnasiets lärokurs",
+          "en" : "General upper secondary education  syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "lukiokoulutus",
+      "nimi" : {
+        "fi" : "Lukiokoulutus",
+        "sv" : "Gymnasieutbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Lukiokoulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-06-29"
+  }, {
+    "oid" : "1.2.246.562.15.19877245746",
+    "versionumero" : 1,
+    "aikaleima" : "2022-09-02T15:44:39.902260",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.90578059058",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "01697",
+        "nimi" : {
+          "fi" : "Västra Nylands folkhögskola",
+          "sv" : "Västra Nylands folkhögskola",
+          "en" : "Västra Nylands folkhögskola"
+        },
+        "lyhytNimi" : {
+          "fi" : "Västra Nylands folkhögskola",
+          "sv" : "Västra Nylands folkhögskola",
+          "en" : "Västra Nylands folkhögskola"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Västra Nylands folkhögskola",
+        "sv" : "Västra Nylands folkhögskola",
+        "en" : "Västra Nylands folkhögskola"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "710",
+        "nimi" : {
+          "fi" : "Raasepori",
+          "sv" : "Raseborg"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.73316574554",
+      "nimi" : {
+        "fi" : "Samkommunen för Västra Nylands folkhögskola",
+        "sv" : "Samkommunen för Västra Nylands folkhögskola",
+        "en" : "Samkommunen för Västra Nylands folkhögskola"
+      },
+      "yTunnus" : "0203394-9",
+      "kotipaikka" : {
+        "koodiarvo" : "710",
+        "nimi" : {
+          "fi" : "Raasepori",
+          "sv" : "Raseborg"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-09-02",
+        "tila" : {
+          "koodiarvo" : "hyvaksytystisuoritettu",
+          "nimi" : {
+            "fi" : "Hyväksytysti suoritettu",
+            "sv" : "Avlagd med godkänt resultat",
+            "en" : "Passed"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.90578059058",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "01697",
+          "nimi" : {
+            "fi" : "Västra Nylands folkhögskola",
+            "sv" : "Västra Nylands folkhögskola",
+            "en" : "Västra Nylands folkhögskola"
+          },
+          "lyhytNimi" : {
+            "fi" : "Västra Nylands folkhögskola",
+            "sv" : "Västra Nylands folkhögskola",
+            "en" : "Västra Nylands folkhögskola"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Västra Nylands folkhögskola",
+          "sv" : "Västra Nylands folkhögskola",
+          "en" : "Västra Nylands folkhögskola"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "710",
+          "nimi" : {
+            "fi" : "Raasepori",
+            "sv" : "Raseborg"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "tyyppi" : {
+        "koodiarvo" : "vstvapaatavoitteinenkoulutus",
+        "nimi" : {
+          "fi" : "Vapaan sivistystyön vapaatavoitteinen koulutus",
+          "sv" : "Utbildning inom fritt bildningsarbete med fri inriktning",
+          "en" : "Vapaan sivistystyön vapaatavoitteinen koulutus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      },
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "099999",
+          "nimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "lyhytNimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "10",
+          "nimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "lyhytNimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
+        },
+        "opintokokonaisuus" : {
+          "koodiarvo" : "1487",
+          "nimi" : {
+            "fi" : "22SKAtk Tietotekniikka"
+          },
+          "koodistoUri" : "opintokokonaisuudet",
+          "koodistoVersio" : 1
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "SV",
+        "nimi" : {
+          "fi" : "ruotsi",
+          "sv" : "svenska",
+          "en" : "Swedish"
+        },
+        "lyhytNimi" : {
+          "fi" : "ruotsi",
+          "sv" : "svenska",
+          "en" : "Swedish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "vapaansivistystyonkoulutus",
+      "nimi" : {
+        "fi" : "Vapaan sivistystyön koulutus",
+        "sv" : "Fritt bildningsarbete"
+      },
+      "lyhytNimi" : {
+        "fi" : "Vapaan sivistystyön koulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-09-02",
+    "päättymispäivä" : "2022-09-02"
+  }, {
+    "oid" : "1.2.246.562.15.50637251757",
+    "versionumero" : 1,
+    "aikaleima" : "2022-12-22T09:50:53.519409",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.62858797335",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "00082",
+        "nimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "lyhytNimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Ressun lukio",
+        "sv" : "Ressun lukio",
+        "en" : "Ressun lukio"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-12-22",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "301102",
+          "nimi" : {
+            "fi" : "IB-tutkinto (International Baccalaureate)",
+            "sv" : "IB-examen (International Baccalaureate)",
+            "en" : "IB Examination"
+          },
+          "lyhytNimi" : {
+            "fi" : "IB-tutkinto",
+            "sv" : "IB-examen (Intern. Bacc.)",
+            "en" : "International Baccalaureate Examination"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "2",
+          "nimi" : {
+            "fi" : "Lukiokoulutus",
+            "sv" : "Gymnasieutbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Lukiokoulutus",
+            "sv" : "Gymnasieutbildning"
+          },
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.62858797335",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00082",
+          "nimi" : {
+            "fi" : "Ressun lukio",
+            "sv" : "Ressun lukio",
+            "en" : "Ressun lukio"
+          },
+          "lyhytNimi" : {
+            "fi" : "Ressun lukio",
+            "sv" : "Ressun lukio",
+            "en" : "Ressun lukio"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Ressun lukio",
+          "sv" : "Ressun lukio",
+          "en" : "Ressun lukio"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "ibtutkinto",
+        "nimi" : {
+          "fi" : "IB-tutkinto",
+          "sv" : "IB-examen",
+          "en" : "International Baccalaureate Diploma"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "ibtutkinto",
+      "nimi" : {
+        "fi" : "IB-tutkinto",
+        "sv" : "IB-examen"
+      },
+      "lyhytNimi" : {
+        "fi" : "IB-tutkinto"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-12-22"
+  } ]
+}
