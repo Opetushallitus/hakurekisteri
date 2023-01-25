@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -3638,10 +3638,12 @@ class KoskiDataHandlerTest
     val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
     oppilaitos.head should not be empty
     oppilaitos.head should equal("1.2.246.562.10.207119642610")
-  }
+    val alkamispaiva = run(database.run(sql"select alku_paiva from opiskelija".as[String]))
+    alkamispaiva.head should equal(
+      LocalDate.parse("2021-08-02").toDateTimeAtStartOfDay.getMillis.toString
+    )
 
-  // ei tallenna esim 4. luokkalaista
-  // ei tallenna 9. luokkalaista
+  }
 
   it should "save perusopetukseen valmistava opiskelija for koskidata_perusopetukseen_valmistava.json" in {
     val json: String =
@@ -3659,13 +3661,37 @@ class KoskiDataHandlerTest
 
     val opiskelijaCount = run(database.run(sql"select count(*) from opiskelija".as[String]))
     opiskelijaCount.head should equal("1")
-
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.44633630015")
+    val alkamispaiva = run(database.run(sql"select alku_paiva from opiskelija".as[String]))
+    alkamispaiva.head should equal(
+      DateTime.parse("2021-02-24T14:14:19.627477").getMillis.toString
+    )
   }
 
   it should "should not save 4-luokkalainen opiskelija for koskidata_peruskoulu_kesken_nelonen.json" in {
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_peruskoulu_kesken_nelonen.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      5.seconds
+    )
+
+    val result = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result.head.toInt should equal(0)
+  }
+
+  it should "should not save 9-luokkalainen opiskelija for koskidata_9_luokka_lasna.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_9_luokka_lasna.json")
         .mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null

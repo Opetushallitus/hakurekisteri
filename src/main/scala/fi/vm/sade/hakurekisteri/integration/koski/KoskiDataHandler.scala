@@ -740,8 +740,8 @@ class KoskiDataHandler(
           case "perusopetukseenvalmistavaopetus" =>
             Opiskelija(
               oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
-              luokkataso = "TODO valm",
-              luokka = "TODO valm",
+              luokkataso = "valmistava",
+              luokka = "",
               henkiloOid = koskihenkilöcontainer.henkilö.oid.get,
               alkuPaiva = opiskeluoikeus.aikaleima match {
                 case Some(aikaleima) => DateTime.parse(aikaleima)
