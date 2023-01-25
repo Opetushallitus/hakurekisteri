@@ -1924,6 +1924,66 @@ class KoskiDataHandlerTest
     suoritus.size should equal(0)
   }
 
+  it should "store 8-luokkalainen opiskelija but not suoritukset when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmentava = true
+        )
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
+  it should "not store 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is false" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = henkilo.henkilö.oid.toString
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmentava = false
+        )
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(0)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
   it should "store peruskoulu as keskeytynyt without arvosanat if deadline date is yesterday and no vahvistus" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "koskidata_peruskoulu_kesken.json").mkString

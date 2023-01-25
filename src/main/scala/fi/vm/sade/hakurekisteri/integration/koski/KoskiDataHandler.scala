@@ -731,13 +731,17 @@ class KoskiDataHandler(
       case oikeudet =>
         val opiskelija: Option[Opiskelija] = oikeudet.headOption
           .map(opiskeluoikeus => {
+            val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
+            logger.info(
+              s"Tuotiin perusopetuksen opiskelijan ${henkiloOid} tiedot Koskesta."
+            )
             opiskeluoikeus.tyyppi.get.koodiarvo match {
               case "perusopetukseenvalmistavaopetus" =>
                 Opiskelija(
                   oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
                   luokkataso = "valmistava",
                   luokka = "",
-                  henkiloOid = koskihenkilöcontainer.henkilö.oid.get,
+                  henkiloOid = henkiloOid,
                   alkuPaiva = opiskeluoikeus.aikaleima match {
                     case Some(aikaleima) => DateTime.parse(aikaleima)
                     case None            => null // TODO poikkeus?
@@ -754,7 +758,7 @@ class KoskiDataHandler(
                   luokka = opiskeluoikeus.getLatestSeiskaKasiSuoritus
                     .map(suoritus => suoritus.luokka.get)
                     .get,
-                  henkiloOid = koskihenkilöcontainer.henkilö.oid.get,
+                  henkiloOid = henkiloOid,
                   alkuPaiva = opiskeluoikeus.getSeiskaKasiluokanAlkamispaiva
                     .map(ap => ap.toDateTimeAtStartOfDay)
                     .getOrElse(null),
