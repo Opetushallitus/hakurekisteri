@@ -42,7 +42,7 @@ case class KoskiOpiskeluoikeus(
     .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
     .head
 
-  def getLatestSeiskaKasiSuoritus: KoskiSuoritus = {
+  def getLatestSeiskaKasiSuoritus: Option[KoskiSuoritus] = {
     suoritukset
       .filter(s =>
         s.koulutusmoduuli.tunniste.exists(tunniste =>
@@ -50,22 +50,17 @@ case class KoskiOpiskeluoikeus(
         )
       )
       .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
-      .head
-  }
-
-  private def getSuorituksenAlkamispaiva(suoritus: KoskiSuoritus): Option[LocalDate] = {
-    suoritus.alkamispäivä match {
-      case Some(alkamispaiva) => Some(LocalDate.parse(alkamispaiva))
-      case None               => None
-    }
+      .headOption
   }
 
   def getSeiskaKasiluokanAlkamispaiva: Option[LocalDate] = {
-    getSuorituksenAlkamispaiva(getLatestSeiskaKasiSuoritus)
+    getLatestSeiskaKasiSuoritus.flatMap(suoritus =>
+      suoritus.alkamispäivä.map(ap => LocalDate.parse(ap))
+    )
   }
   def getYsiluokanAlkamispaiva: Option[LocalDate] = {
     if (opiskeluoikeusSisaltaaYsisuorituksen) {
-      getSuorituksenAlkamispaiva(getLatestYsiSuoritus)
+      getLatestYsiSuoritus.alkamispäivä.map(ap => LocalDate.parse(ap))
     } else
       None
   }

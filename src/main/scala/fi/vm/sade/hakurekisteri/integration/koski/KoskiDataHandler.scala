@@ -748,13 +748,16 @@ class KoskiDataHandler(
               case "perusopetus" =>
                 Opiskelija(
                   oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
-                  luokkataso = opiskeluoikeus.getLatestSeiskaKasiSuoritus.getLuokkataso(false).get,
-                  luokka = opiskeluoikeus.getLatestSeiskaKasiSuoritus.luokka.get,
+                  luokkataso = opiskeluoikeus.getLatestSeiskaKasiSuoritus
+                    .flatMap(suoritus => suoritus.getLuokkataso(false))
+                    .get,
+                  luokka = opiskeluoikeus.getLatestSeiskaKasiSuoritus
+                    .map(suoritus => suoritus.luokka.get)
+                    .get,
                   henkiloOid = koskihenkilöcontainer.henkilö.oid.get,
-                  alkuPaiva = opiskeluoikeus.getSeiskaKasiluokanAlkamispaiva match {
-                    case Some(alkamispaiva) => alkamispaiva.toDateTimeAtStartOfDay
-                    case None               => null
-                  },
+                  alkuPaiva = opiskeluoikeus.getSeiskaKasiluokanAlkamispaiva
+                    .map(ap => ap.toDateTimeAtStartOfDay)
+                    .getOrElse(null),
                   loppuPaiva = None,
                   source = KoskiUtil.koski_integration_source
                 )

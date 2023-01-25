@@ -182,7 +182,11 @@ class KoskiService(
       Await.result(
         updateHenkilotForHaku(
           haku,
-          KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+          KoskiSuoritusHakuParams(
+            saveLukio = true,
+            saveAmmatillinen = false,
+            saveSeiskaKasiJaValmentava = true
+          )
         ),
         5.hours
       )
