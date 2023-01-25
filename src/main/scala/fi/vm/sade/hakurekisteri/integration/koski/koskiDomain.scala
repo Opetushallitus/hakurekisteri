@@ -45,10 +45,9 @@ case class KoskiOpiskeluoikeus(
   def getLatestSeiskaKasiSuoritus: KoskiSuoritus = {
     suoritukset
       .filter(s =>
-        s.koulutusmoduuli.tunniste
-          .getOrElse(null)
-          .koodiarvo
-          .equals("7") || s.koulutusmoduuli.tunniste.getOrElse(null).koodiarvo.equals("8")
+        s.koulutusmoduuli.tunniste.exists(tunniste =>
+          tunniste.koodiarvo.equals("7") || tunniste.koodiarvo.equals("8")
+        )
       )
       .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
       .head

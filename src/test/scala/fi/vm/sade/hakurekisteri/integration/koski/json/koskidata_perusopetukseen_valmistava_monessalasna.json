@@ -23,7 +23,7 @@
     },
     "turvakielto" : false
   },
-  "opiskeluoikeudet" : [ {
+  "opiskeluoikeudet" : [{
     "oid" : "1.2.246.562.15.22844111918",
     "versionumero" : 1,
     "aikaleima" : "2021-02-24T14:14:19.627477",
@@ -198,18 +198,6 @@
           "koodistoUri" : "koskiopiskeluoikeudentila",
           "koodistoVersio" : 1
         }
-      }, {
-        "alku" : "2020-12-01",
-        "tila" : {
-          "koodiarvo" : "eronnut",
-          "nimi" : {
-            "fi" : "Eronnut",
-            "sv" : "Utskriven",
-            "en" : "Discontinued"
-          },
-          "koodistoUri" : "koskiopiskeluoikeudentila",
-          "koodistoVersio" : 1
-        }
       } ]
     },
     "lisätiedot" : {
@@ -226,7 +214,7 @@
         "alku" : "2020-01-01"
       } ]
     },
-    "suoritukset" : [ {
+    "suoritukset" : [{
       "koulutusmoduuli" : {
         "perusteenDiaarinumero" : "104/011/2014",
         "tunniste" : {
@@ -1480,7 +1468,122 @@
         },
         "koodistoUri" : "kieli"
       } ]
-    } ],
+    } ,
+      {
+        "koulutusmoduuli": {
+          "tunniste": {
+            "koodiarvo": "8",
+            "nimi": {
+              "fi": "8. vuosiluokka",
+              "sv": "Årskurs 8"
+            },
+            "koodistoUri": "perusopetuksenluokkaaste",
+            "koodistoVersio": 1
+          },
+          "perusteenDiaarinumero": "104/011/2014"
+        },
+        "luokka": "8a",
+        "toimipiste": {
+          "oid": "1.2.246.562.10.207119642610",
+          "oppilaitosnumero": {
+            "koodiarvo": "04275",
+            "nimi": {
+              "fi": "Muurolan peruskoulu",
+              "sv": "Muurolan peruskoulu",
+              "en": "Muurolan peruskoulu"
+            },
+            "lyhytNimi": {
+              "fi": "Muurolan peruskoulu",
+              "sv": "Muurolan peruskoulu",
+              "en": "Muurolan peruskoulu"
+            },
+            "koodistoUri": "oppilaitosnumero",
+            "koodistoVersio": 1
+          },
+          "nimi": {
+            "fi": "Muurolan peruskoulu",
+            "sv": "Muurolan peruskoulu",
+            "en": "Muurolan peruskoulu"
+          },
+          "kotipaikka": {
+            "koodiarvo": "698",
+            "nimi": {
+              "fi": "Rovaniemi",
+              "sv": "Rovaniemi"
+            },
+            "koodistoUri": "kunta",
+            "koodistoVersio": 2
+          }
+        },
+        "alkamispäivä": "2021-08-02",
+        "suorituskieli": {
+          "koodiarvo": "FI",
+          "nimi": {
+            "fi": "suomi",
+            "sv": "finska",
+            "en": "Finnish"
+          },
+          "lyhytNimi": {
+            "fi": "suomi",
+            "sv": "finska",
+            "en": "Finnish"
+          },
+          "koodistoUri": "kieli",
+          "koodistoVersio": 1
+        },
+        "jääLuokalle": false,
+        "osasuoritukset": [
+          {
+            "koulutusmoduuli": {
+              "tunniste": {
+                "koodiarvo": "AI",
+                "nimi": {
+                  "fi": "Äidinkieli ja kirjallisuus",
+                  "sv": "Modersmålet och litteratur"
+                },
+                "lyhytNimi": {
+                  "fi": "Äidinkieli ja kirjallisuus",
+                  "sv": "Modersmålet och litteratur"
+                },
+                "koodistoUri": "koskioppiaineetyleissivistava",
+                "koodistoVersio": 1
+              },
+              "kieli": {
+                "koodiarvo": "AI1",
+                "nimi": {
+                  "fi": "Suomen kieli ja kirjallisuus",
+                  "sv": "Finska och litteratur"
+                },
+                "koodistoUri": "oppiaineaidinkielijakirjallisuus",
+                "koodistoVersio": 1
+              },
+              "pakollinen": true
+            },
+            "yksilöllistettyOppimäärä": false,
+            "painotettuOpetus": false,
+            "tyyppi": {
+              "koodiarvo": "perusopetuksenoppiaine",
+              "nimi": {
+                "fi": "Perusopetuksen oppiaine",
+                "sv": "Läroämne i grundläggande utbildning",
+                "en": "Basic education subject"
+              },
+              "koodistoUri": "suorituksentyyppi",
+              "koodistoVersio": 1
+            }
+          }
+        ],
+        "tyyppi": {
+          "koodiarvo": "perusopetuksenvuosiluokka",
+          "nimi": {
+            "fi": "Perusopetuksen vuosiluokka",
+            "sv": "Årskurs i grundläggande utbildning",
+            "en": "Basic education class"
+          },
+          "koodistoUri": "suorituksentyyppi",
+          "koodistoVersio": 1
+        }
+      }],
     "tyyppi" : {
       "koodiarvo" : "perusopetus",
       "nimi" : {
@@ -1493,8 +1596,7 @@
       "koodistoUri" : "opiskeluoikeudentyyppi",
       "koodistoVersio" : 1
     },
-    "alkamispäivä" : "2020-01-01",
-    "päättymispäivä" : "2020-12-01"
+    "alkamispäivä" : "2020-01-01"
   }, {
     "oid" : "1.2.246.562.15.38824694152",
     "versionumero" : 3,

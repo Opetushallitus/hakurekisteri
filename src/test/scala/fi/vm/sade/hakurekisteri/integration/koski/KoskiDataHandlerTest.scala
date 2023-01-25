@@ -359,7 +359,8 @@ class KoskiDataHandlerTest
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val lasnaOpiskeluOikeudet = koskiDatahandler.filterLasnaOpiskeluoikeudet(henkilo)
+    val lasnaOpiskeluOikeudet =
+      koskiDatahandler.filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(henkilo)
     lasnaOpiskeluOikeudet should have length 0
   }
 
@@ -368,13 +369,9 @@ class KoskiDataHandlerTest
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val lasnaOpiskeluOikeudet = koskiDatahandler.filterLasnaOpiskeluoikeudet(henkilo)
+    val lasnaOpiskeluOikeudet =
+      koskiDatahandler.filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(henkilo)
     lasnaOpiskeluOikeudet should have length 1
-    val filteredOpiskeluOikeudet =
-      koskiDatahandler.filterPerusopetus78JaValmentavaEiYsiLasnaOpiskeluoikeudet(
-        lasnaOpiskeluOikeudet
-      )
-    filteredOpiskeluOikeudet should not be empty
   }
 
   it should "parse perusopetukseen valmistava for koskidata_perusopetukseen_valmistava.json" in {
@@ -385,14 +382,9 @@ class KoskiDataHandlerTest
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val lasnaOpiskeluOikeudet = koskiDatahandler.filterLasnaOpiskeluoikeudet(henkilo)
+    val lasnaOpiskeluOikeudet =
+      koskiDatahandler.filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(henkilo)
     lasnaOpiskeluOikeudet should have length 1
-    val filteredOpiskeluOikeudet =
-      koskiDatahandler.filterPerusopetus78JaValmentavaEiYsiLasnaOpiskeluoikeudet(
-        lasnaOpiskeluOikeudet
-      )
-    filteredOpiskeluOikeudet should not be empty
-    filteredOpiskeluOikeudet should have length 1
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt after deadline" in {
