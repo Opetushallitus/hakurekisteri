@@ -284,7 +284,7 @@ class AkkaHakupalvelu(
     }
 
     q match {
-      case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
+      case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _, _) =>
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService
@@ -307,7 +307,7 @@ class AkkaHakupalvelu(
               oppivelvollisuusTiedot
             )
           }
-      case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
+      case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _, _) =>
         for {
           hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
           hakukohteittain <- Future.sequence(

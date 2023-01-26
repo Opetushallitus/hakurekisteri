@@ -43,7 +43,15 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       val hakijat: JSONHakijat = Await
         .result(
           testHakijaResource.get(
-            HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Some(testUser), 2)
+            HakijaQuery(
+              None,
+              Some(OpetuspisteX.oid),
+              None,
+              None,
+              Hakuehto.Kaikki,
+              Some(testUser),
+              2
+            )
           ),
           Timeout(60 seconds).duration
         )
@@ -63,7 +71,9 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       When("rajaan muodostusta valitsemalla 'Kaikki hakeneet'")
       val hakijat: JSONHakijat = Await
         .result(
-          testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, Some(testUser), 2)),
+          testHakijaResource.get(
+            HakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser), 2)
+          ),
           Timeout(60 seconds).duration
         )
         .asInstanceOf[JSONHakijat]
@@ -80,7 +90,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       val hakijat: JSONHakijat = Await
         .result(
           testHakijaResource.get(
-            HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, Some(testUser), 2)
+            HakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(testUser), 2)
           ),
           Timeout(60 seconds).duration
         )
@@ -98,7 +108,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       val hakijat: JSONHakijat = Await
         .result(
           testHakijaResource.get(
-            HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, Some(testUser), 2)
+            HakijaQuery(None, None, None, None, Hakuehto.Vastaanottaneet, Some(testUser), 2)
           ),
           Timeout(60 seconds).duration
         )
@@ -117,7 +127,9 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       When("haen kaikki hakeneet")
       val hakijat: JSONHakijat = Await
         .result(
-          testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, Some(testUser), 2)),
+          testHakijaResource.get(
+            HakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser), 2)
+          ),
           Timeout(60 seconds).duration
         )
         .asInstanceOf[JSONHakijat]
@@ -144,6 +156,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
               Some("1.1"),
               Some(OpetuspisteX.oid),
               Some("000"),
+              None,
               Hakuehto.Kaikki,
               Some(testUser),
               2
