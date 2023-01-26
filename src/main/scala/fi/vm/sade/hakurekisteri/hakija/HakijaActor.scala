@@ -8,8 +8,17 @@ import fi.vm.sade.hakurekisteri.hakija.ForkedSeq._
 import fi.vm.sade.hakurekisteri.hakija.TupledFuture._
 import fi.vm.sade.hakurekisteri.hakija.representation._
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AtaruHakemusToinenAste, GuardianContactInfo, Hakupalvelu}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemusToinenAste,
+  GuardianContactInfo,
+  Hakupalvelu
+}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetKoodi,
+  GetRinnasteinenKoodiArvoQuery,
+  Koodi,
+  KoodistoActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
@@ -600,7 +609,9 @@ class HakijaActor(
 case class HakijaQuery(
   haku: Option[String],
   organisaatio: Option[String],
-  hakukohdekoodi: Option[String], //Käytetään versioissa 1-5 aina ja versiossa 6, jos hakukohdeOidia ei annettu
+  hakukohdekoodi: Option[
+    String
+  ], //Käytetään versioissa 1-5 aina ja versiossa 6, jos hakukohdeOidia ei annettu
   hakukohdeOid: Option[String], //Käytetään versiossa 6
   hakuehto: Hakuehto.Hakuehto,
   user: Option[User],

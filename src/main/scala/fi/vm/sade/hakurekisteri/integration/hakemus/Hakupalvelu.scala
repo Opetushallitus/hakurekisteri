@@ -7,16 +7,34 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.representation.UrheilijanLisakysymykset
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, Kieli, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  IOppijaNumeroRekisteri,
+  Kieli,
+  PersonOidsWithAliases
+}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetRinnasteinenKoodiArvoQuery,
+  KoodistoActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiHenkiloContainer, OppivelvollisuusTieto}
+import fi.vm.sade.hakurekisteri.integration.koski.{
+  IKoskiService,
+  KoskiHenkiloContainer,
+  OppivelvollisuusTieto
+}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, SuoritusQuery, SuoritusQueryWithPersonAliases, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{
+  Komoto,
+  Suoritus,
+  SuoritusQuery,
+  SuoritusQueryWithPersonAliases,
+  VirallinenSuoritus,
+  yksilollistaminen
+}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
@@ -1604,7 +1622,7 @@ case class AtaruHakemusToinenAste(
   tutkintoKieli: Option[String],
   huoltajat: List[GuardianContactInfo],
   harkinnanvaraisuudet: List[HakutoiveenHarkinnanvaraisuus],
-  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
 ) extends HakijaHakemus
     with Serializable {
 

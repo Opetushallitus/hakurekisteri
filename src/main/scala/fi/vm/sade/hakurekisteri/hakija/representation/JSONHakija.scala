@@ -161,10 +161,18 @@ object JSONHakijaV6 {
       opetuskieli = hakija.henkilo.opetuskieli,
       koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
       kiinnostunutoppisopimuksesta = hakija.henkilo.kiinnostunutoppisopimuksesta.getOrElse(false),
-      huoltaja1 = hakija.ataruHakemus.flatMap(h => h.huoltajat.headOption
-        .map(ataruHuoltaja => Huoltaja(ataruHuoltaja.nimi, ataruHuoltaja.matkapuhelin, ataruHuoltaja.email))),
-      huoltaja2 = hakija.ataruHakemus.flatMap(h => h.huoltajat.tail.headOption
-        .map(ataruHuoltaja => Huoltaja(ataruHuoltaja.nimi, ataruHuoltaja.matkapuhelin, ataruHuoltaja.email))),
+      huoltaja1 = hakija.ataruHakemus.flatMap(h =>
+        h.huoltajat.headOption
+          .map(ataruHuoltaja =>
+            Huoltaja(ataruHuoltaja.nimi, ataruHuoltaja.matkapuhelin, ataruHuoltaja.email)
+          )
+      ),
+      huoltaja2 = hakija.ataruHakemus.flatMap(h =>
+        h.huoltajat.tail.headOption
+          .map(ataruHuoltaja =>
+            Huoltaja(ataruHuoltaja.nimi, ataruHuoltaja.matkapuhelin, ataruHuoltaja.email)
+          )
+      ),
       hakemus = hakemus,
       oppivelvollisuusVoimassaAsti = hakija.henkilo.oppivelvollisuusVoimassaAsti,
       oikeusMaksuttomaanKoulutukseenVoimassaAsti =
@@ -266,12 +274,16 @@ case class JSONHakijaV5(
   lisakysymykset: Seq[Lisakysymys]
 )
 
-case class Huoltaja(nimi: Option[String],
-                    puhelinnumero: Option[String],
-                    sahkoposti: Option[String]) {
+case class Huoltaja(
+  nimi: Option[String],
+  puhelinnumero: Option[String],
+  sahkoposti: Option[String]
+) {
 
-  def toSingleFieldString = Seq(nimi.getOrElse(""), puhelinnumero.getOrElse(""), sahkoposti.getOrElse(""))
-    .filter(_.nonEmpty).mkString(", ")
+  def toSingleFieldString =
+    Seq(nimi.getOrElse(""), puhelinnumero.getOrElse(""), sahkoposti.getOrElse(""))
+      .filter(_.nonEmpty)
+      .mkString(", ")
 }
 
 case class JSONHakijaV6(
