@@ -6,15 +6,22 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import scala.concurrent.Future
 
 trait IValintalaskentaTulosService {
-  def getLaskennanTulosForHakemusOids(hakuOid: String, hakemusOids: Seq[String]): Future[Seq[LaskennanTulosHakemukselle]]
+  def getLaskennanTulosForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Seq[LaskennanTulosHakemukselle]]
 }
 
 case class LaskennanTulosHakemukselle(hakemusOid: String)
 
-class ValintalaskentaTulosService(restClient: VirkailijaRestClient)(implicit val system: ActorSystem
+class ValintalaskentaTulosService(restClient: VirkailijaRestClient)(implicit
+  val system: ActorSystem
 ) extends IValintalaskentaTulosService {
 
-  override def getLaskennanTulosForHakemusOids(hakuOid: String, hakemusOids: Seq[String]): Future[Seq[LaskennanTulosHakemukselle]] = {
+  override def getLaskennanTulosForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Seq[LaskennanTulosHakemukselle]] = {
     if (hakemusOids.isEmpty) {
       Future.successful(Seq.empty)
     } else {
@@ -27,6 +34,9 @@ class ValintalaskentaTulosService(restClient: VirkailijaRestClient)(implicit val
 }
 
 class ValintalaskentaTulosServiceMock extends IValintalaskentaTulosService {
-  override def getLaskennanTulosForHakemusOids(hakuOid: String, hakemusOids: Seq[String]): Future[Seq[LaskennanTulosHakemukselle]] =
+  override def getLaskennanTulosForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Seq[LaskennanTulosHakemukselle]] =
     Future.successful(Seq.empty)
 }
