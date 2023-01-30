@@ -207,7 +207,7 @@ app.controller "HakeneetCtrl", [
           }
           {
             value: 6,
-            text: ""
+            text: "6"
           }
           {
             value: 6,
