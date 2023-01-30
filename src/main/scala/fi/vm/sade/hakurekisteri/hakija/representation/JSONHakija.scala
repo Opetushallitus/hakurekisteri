@@ -168,7 +168,9 @@ object JSONHakijaV6 {
           )
       ),
       huoltaja2 = hakija.ataruHakemus.flatMap(h =>
-        h.huoltajat.tail.headOption
+        h.huoltajat
+          .drop(1)
+          .headOption
           .map(ataruHuoltaja =>
             Huoltaja(ataruHuoltaja.nimi, ataruHuoltaja.matkapuhelin, ataruHuoltaja.email)
           )
