@@ -575,7 +575,8 @@ class HakijaActor(
       ),
       suoritukset = hakija.suoritukset,
       opiskeluhistoria = hakija.opiskeluhistoria,
-      hakemus = hakija.hakemus
+      hakemus = hakija.hakemus,
+      ataruHakemus = hakija.ataruHakemus
     )
   })
 
