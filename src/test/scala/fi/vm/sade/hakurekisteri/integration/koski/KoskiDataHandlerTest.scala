@@ -1946,6 +1946,9 @@ class KoskiDataHandlerTest
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.207119642610")
     val suoritus = run(
       database.run(
         sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
