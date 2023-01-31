@@ -78,7 +78,9 @@ class ValintalaskentaTulosService(restClient: VirkailijaRestClient)(implicit
   override def getHakukohteidenValinnanvaiheet(
     hakukohdeOids: Set[String]
   ): Future[Map[String, Seq[LaskennanTulosValinnanvaihe]]] = {
-    logger.info(s"Haetaan valintalaskennasta tulokset hakukohteiden ${hakukohdeOids} valinnanvaiheille.")
+    logger.info(
+      s"Haetaan valintalaskennasta tulokset hakukohteiden ${hakukohdeOids} valinnanvaiheille."
+    )
     Future
       .sequence(hakukohdeOids.map(hk => getHakukohteenValinnanvaiheet(hk)))
       .map(r => r.map(res => res._1 -> res._2).toMap)
