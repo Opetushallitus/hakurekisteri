@@ -23,6 +23,11 @@ import fi.vm.sade.hakurekisteri.integration.koski.{
   OppivelvollisuusTieto
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{
+  IValintalaskentaTulosService,
+  LaskennanTulosHakemukselle,
+  LaskennanTulosValinnanvaihe
+}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
@@ -83,7 +88,8 @@ class AkkaHakupalvelu(
   config: Config,
   koskiService: IKoskiService,
   opiskeluActor: ActorRef,
-  onr: IOppijaNumeroRekisteri
+  onr: IOppijaNumeroRekisteri,
+  valintalaskenta: IValintalaskentaTulosService
 )(implicit val system: ActorSystem)
     extends Hakupalvelu {
 
@@ -236,6 +242,26 @@ class AkkaHakupalvelu(
       .map(_.toMap)
   }
 
+  def getHakemustenHakutoiveidenLaskennanTulokset(
+    hakemukset: Seq[AtaruHakemusToinenAste],
+    q: HakijaQuery
+  ): Future[Map[String, Seq[LaskennanTulosValinnanvaihe]]] = {
+    q.version match {
+      case v if v >= 6 =>
+        val hakukohdeOids: Set[String] = hakemukset
+          .flatMap(hak =>
+            hak.hakutoiveet
+              .getOrElse(Seq.empty)
+              .map(toive => toive.koulutusId)
+          )
+          .filter(_.isDefined)
+          .flatten
+          .toSet
+        valintalaskenta.getHakukohteidenValinnanvaiheet(hakukohdeOids)
+      case _ => Future.successful(Map.empty)
+    }
+  }
+
   override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] = {
     q match {
       case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, hakukohdeOid, _, _, _) =>
@@ -244,7 +270,7 @@ class AkkaHakupalvelu(
             .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi)
           harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
             .getHarkinnanvaraisuudet(hakemukset)
-          //todo fixme haetaan valintalaskennasta keskiarvot ehkä tässä vaiheessa
+          hakukohteidenTulokset <- getHakemustenHakutoiveidenLaskennanTulokset(hakemukset, q)
           hakijaSuorituksetMap <- koosteService.getSuorituksetForAtaruhakemukset(
             hakuOid,
             hakemukset
@@ -265,7 +291,9 @@ class AkkaHakupalvelu(
               maakoodit,
               oppivelvollisuusTiedot,
               hakijoidenOpiskelijatiedot.get(hakemus.personOid.get),
-              harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head
+              harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head,
+              hakukohteidenTulokset,
+              q
             )
           }
       case _ =>
@@ -642,9 +670,26 @@ object AkkaHakupalvelu {
     maakoodit: Map[String, String],
     oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto],
     viimeisinOpiskelutieto: Option[Opiskelija],
-    harkinnanvaraisuus: HakemuksenHarkinnanvaraisuus
+    harkinnanvaraisuus: HakemuksenHarkinnanvaraisuus,
+    laskennanTulosHakutoiveille: Map[String, Seq[LaskennanTulosValinnanvaihe]],
+    query: HakijaQuery
   ): Hakija = h match {
     case hakemus: AtaruHakemusToinenAste =>
+      val hakutoiveidenKeskiarvot: Map[String, String] =
+        if (query.version >= 6)
+          h.hakutoiveet
+            .getOrElse(List.empty)
+            .map(ht =>
+              ht.koulutusId.get -> laskennanTulosHakutoiveille
+                .getOrElse(ht.koulutusId.get, Seq.empty)
+                .map(_.keskiarvoHakemukselle(h.oid))
+                .find(_.isDefined)
+                .flatten
+                .getOrElse("")
+            )
+            .toMap
+        else Map.empty
+
       val lisapistekoulutus: Option[String] = getLisapisteKoulutus(hakijanKoosteData)
 
       val kesa: MonthDay = new MonthDay(6, 4)
@@ -679,7 +724,9 @@ object AkkaHakupalvelu {
         hakijanKoosteData.get("perusopetuksen_kieli")
       val suorittaja: String = hakemus.personOid.getOrElse("")
       val hakutoiveet: Seq[Hakutoive] =
-        hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty)
+        hakemus.hakutoiveet
+          .map(toiveet => convertToiveet(toiveet, haku, hakutoiveidenKeskiarvot))
+          .getOrElse(Seq.empty)
       val hakutoiveetHarkinnanvaraisuuksilla = hakutoiveet
         .map(ht =>
           ht.copy(harkinnanvaraisuusperuste =
@@ -945,7 +992,9 @@ object AkkaHakupalvelu {
           case _ => Seq()
         },
         Hakemus(
-          hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
+          hakemus.hakutoiveet
+            .map(toiveet => convertToiveet(toiveet, haku, Map.empty))
+            .getOrElse(Seq.empty),
           hakemus.oid,
           hakemus.julkaisulupa,
           hakemus.applicationSystemId,
@@ -1011,8 +1060,9 @@ object AkkaHakupalvelu {
         Seq.empty,
         Seq.empty,
         Hakemus(
-          hakutoiveet =
-            hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
+          hakutoiveet = hakemus.hakutoiveet
+            .map(toiveet => convertToiveet(toiveet, haku, Map.empty))
+            .getOrElse(Seq.empty),
           hakemusnumero = hakemus.oid,
           julkaisulupa = hakemus.julkaisulupa,
           hakuOid = hakemus.applicationSystemId,
@@ -1145,7 +1195,11 @@ object AkkaHakupalvelu {
     }
   }
 
-  def convertToiveet(toiveet: List[HakutoiveDTO], haku: Haku): Seq[Hakutoive] = {
+  def convertToiveet(
+    toiveet: List[HakutoiveDTO],
+    haku: Haku,
+    keskiarvot: Map[String, String]
+  ): Seq[Hakutoive] = {
     val ensimmainenSuomenkielinenHakukohde: Int =
       findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "FI")
     val ensimmainenRuotsinkielinenHakukohde: Int =
@@ -1213,7 +1267,8 @@ object AkkaHakupalvelu {
         koulutuksenKieli,
         None,
         None,
-        None
+        None,
+        keskiarvo = keskiarvot.get(hakukohdeOid)
       )
     }
   }

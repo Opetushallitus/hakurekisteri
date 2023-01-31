@@ -201,7 +201,8 @@ object XMLHakutoive {
     ht.terveys,
     ht.aiempiperuminen,
     ht.kaksoistutkinto,
-    ht.koulutuksenKieli
+    ht.koulutuksenKieli,
+    keskiarvo = ht.keskiarvo
   )
 
   def lasnaolo(ht: Hakutoive): Option[String] = {
@@ -410,7 +411,8 @@ case class XMLHakutoive(
   terveys: Option[Boolean],
   aiempiperuminen: Option[Boolean],
   kaksoistutkinto: Option[Boolean],
-  koulutuksenKieli: Option[String]
+  koulutuksenKieli: Option[String],
+  keskiarvo: Option[String] = None //Valintalaskennan keskiarvo, HakijatV6 ->
 ) {
 
   import fi.vm.sade.hakurekisteri.hakija.representation.XMLUtil._

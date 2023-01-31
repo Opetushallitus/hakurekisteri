@@ -55,6 +55,11 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   TarjontaActor,
   TarjontaActorRef
 }
+import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{
+  IValintalaskentaTulosService,
+  ValintalaskentaTulosService,
+  ValintalaskentaTulosServiceMock
+}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
   IValintaperusteetService,
   ValintaperusteetService,
@@ -111,6 +116,7 @@ trait Integrations {
   val valintaperusteetService: IValintaperusteetService
   val pistesyottoService: PistesyottoService
   val hakukohderyhmaService: IHakukohderyhmaService
+  val valintalaskentaTulosService: IValintalaskentaTulosService
 }
 
 object Integrations {
@@ -141,6 +147,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val hakemusService = new HakemusServiceMock
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
+  override val valintalaskentaTulosService = new ValintalaskentaTulosServiceMock
   override val valintaperusteetService = new ValintaperusteetServiceMock
   override val hakukohderyhmaService = new HakukohderyhmaServiceMock
   override val koodisto: KoodistoActorRef = new KoodistoActorRef(
@@ -408,6 +415,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       system
     )
   val koosteService = new KoosteService(koosteClient)(system)
+  val valintalaskentaTulosService = new ValintalaskentaTulosService(valintalaskentaClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
   val hakukohderyhmaService = new HakukohderyhmaService(hakukohderyhmaClient)(system)
   val parametrit = new ParametritActorRef(

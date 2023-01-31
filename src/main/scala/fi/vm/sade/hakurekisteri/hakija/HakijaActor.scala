@@ -49,7 +49,8 @@ case class Hakutoive(
   koulutuksenKieli: Option[String],
   valinta: Option[Valintatila],
   vastaanotto: Option[Vastaanottotila],
-  ilmoittautumistila: Option[Ilmoittautumistila]
+  ilmoittautumistila: Option[Ilmoittautumistila],
+  keskiarvo: Option[String] = None
 )
 
 sealed trait Lasnaolo
