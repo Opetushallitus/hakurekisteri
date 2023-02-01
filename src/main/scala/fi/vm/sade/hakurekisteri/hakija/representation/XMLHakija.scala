@@ -185,25 +185,26 @@ object XMLHakemus {
 }
 
 object XMLHakutoive {
-  private[hakija] def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(
-    ht.hakukohde.oid,
-    ht.jno.toShort,
-    k,
-    o.toimipistekoodi,
-    o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
-    ht.hakukohde.hakukohdekoodi,
-    ht.harkinnanvaraisuusperuste,
-    ht.urheilijanammatillinenkoulutus,
-    ht.yhteispisteet,
-    ht.valinta.flatMap(valinta.lift),
-    ht.vastaanotto.flatMap(vastaanotto.lift),
-    lasnaolo(ht),
-    ht.terveys,
-    ht.aiempiperuminen,
-    ht.kaksoistutkinto,
-    ht.koulutuksenKieli,
-    keskiarvo = ht.keskiarvo
-  )
+  private[hakija] def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive =
+    XMLHakutoive(
+      ht.hakukohde.oid,
+      ht.jno.toShort,
+      k,
+      o.toimipistekoodi,
+      o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
+      ht.hakukohde.hakukohdekoodi,
+      ht.harkinnanvaraisuusperuste,
+      ht.urheilijanammatillinenkoulutus,
+      ht.yhteispisteet,
+      ht.valinta.map(_.toString).flatMap(valinta.lift),
+      ht.vastaanotto.map(_.toString).flatMap(vastaanotto.lift),
+      lasnaolo(ht),
+      ht.terveys,
+      ht.aiempiperuminen,
+      ht.kaksoistutkinto,
+      ht.koulutuksenKieli,
+      keskiarvo = ht.keskiarvo
+    )
 
   def lasnaolo(ht: Hakutoive): Option[String] = {
     ht.vastaanotto match {
@@ -221,28 +222,26 @@ object XMLHakutoive {
       case _ => None
     }
   }
-
-  def valinta: PartialFunction[Valintatila, String] = {
-    case Valintatila.HYVAKSYTTY                     => "1"
-    case Valintatila.HARKINNANVARAISESTI_HYVAKSYTTY => "1"
-    case Valintatila.VARASIJALTA_HYVAKSYTTY         => "1"
-    case Valintatila.VARALLA                        => "2"
-    case Valintatila.HYLATTY                        => "3"
-    case Valintatila.PERUNUT                        => "4"
-    case Valintatila.PERUUNTUNUT                    => "4"
-    case Valintatila.PERUUTETTU                     => "5"
+  def valinta: PartialFunction[String, String] = {
+    case "HYVAKSYTTY"                     => "1"
+    case "HARKINNANVARAISESTI_HYVAKSYTTY" => "1"
+    case "VARASIJALTA_HYVAKSYTTY"         => "1"
+    case "VARALLA"                        => "2"
+    case "HYLATTY"                        => "3"
+    case "PERUNUT"                        => "4"
+    case "PERUUNTUNUT"                    => "4"
+    case "PERUUTETTU"                     => "5"
   }
 
-  def vastaanotto: PartialFunction[Vastaanottotila, String] = {
-    case Vastaanottotila.KESKEN                        => "1"
-    case Vastaanottotila.VASTAANOTTANUT                => "3"
-    case Vastaanottotila.EHDOLLISESTI_VASTAANOTTANUT   => "3"
-    case Vastaanottotila.PERUNUT                       => "4"
-    case Vastaanottotila.EI_VASTAANOTETTU_MAARA_AIKANA => "5"
-    case Vastaanottotila.PERUUTETTU                    => "6"
+  def vastaanotto: PartialFunction[String, String] = {
+    case "KESKEN"                        => "1"
+    case "VASTAANOTTANUT"                => "3"
+    case "EHDOLLISESTI_VASTAANOTTANUT"   => "3"
+    case "PERUNUT"                       => "4"
+    case "EI_VASTAANOTETTU_MAARA_AIKANA" => "5"
+    case "PERUUTETTU"                    => "6"
   }
 }
-
 case class XMLOsaaminen(
   yleinen_kielitutkinto_fi: Option[String],
   valtionhallinnon_kielitutkinto_fi: Option[String],
