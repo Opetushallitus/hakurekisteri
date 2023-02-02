@@ -1095,7 +1095,8 @@ class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String],
-    hakukohdekoodi: Option[String]
+    hakukohdekoodi: Option[String],
+    hakukohdeOid: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
     Future.successful(Seq[AtaruHakemusToinenAste]())
   }
