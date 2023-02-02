@@ -267,7 +267,7 @@ class AkkaHakupalvelu(
       case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, hakukohdeOid, _, _, _) =>
         for {
           hakemukset <- hakemusService
-            .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi)
+            .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi, hakukohdeOid)
           harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
             .getHarkinnanvaraisuudet(hakemukset)
           hakukohteidenTulokset <- getHakemustenHakutoiveidenLaskennanTulokset(hakemukset, q)
@@ -384,17 +384,15 @@ class AkkaHakupalvelu(
     (hakuActor ? GetHaku(q.haku.get))
       .mapTo[Haku]
       .flatMap {
-        //case haku: Haku if !haku.toisenAsteenHaku && q.version >= 5 =>
-        //  throw new RuntimeException(s"Haku ${q.haku.get} is not toisen asteen haku!")
         case haku: Haku
             if haku.hakulomakeAtaruId.isDefined && haku.toisenAsteenHaku && q.version >= 5 && !haku.isJatkuvaHaku =>
           logger.info(
-            s"Getting hakijat for toisen asteen ataruhakijat, query: ${q.copy(user = None)}"
+            s"Getting ataruhakijat for toinen aste, query: ${q.copy(user = None)}"
           )
           getToisenAsteenAtaruHakijat(q, haku)
-        case haku: Haku if haku.isJatkuvaHaku && q.version >= 5 =>
-          logger.info(s"hakijatV5 - Käsitellään jatkuva haku. $q - $haku")
-          getHakijat(q, haku)
+        case haku: Haku if haku.isJatkuvaHaku && q.version >= 6 =>
+          logger.info(s"Getting ataruhakijat for jatkuva haku, query: ${q.copy(user = None)}")
+          getToisenAsteenAtaruHakijat(q, haku)
         case haku: Haku =>
           logger.info(s"Getting hakijat for legacy haku, query: ${q.copy(user = None)}")
           getHakijat(q, haku)

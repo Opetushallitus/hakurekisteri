@@ -139,7 +139,8 @@ trait IHakemusService {
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String],
-    hakukohdekoodi: Option[String]
+    hakukohdekoodi: Option[String],
+    hakukohdeOid: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]]
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
     hakuOid: String,
@@ -818,10 +819,16 @@ class HakemusService(
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String],
-    hakukohdekoodi: Option[String]
+    hakukohdekoodi: Option[String],
+    hakukohdeOid: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
     val hakukohteidenTiedot: Future[List[KoutaInternalHakukohdeLite]] =
-      (koutaInternalActor.actor ? HakukohteetHaussaQuery(hakuOid, organisaatio, hakukohdekoodi))
+      (koutaInternalActor.actor ? HakukohteetHaussaQuery(
+        hakuOid,
+        organisaatio,
+        hakukohdekoodi,
+        hakukohdeOid
+      ))
         .mapTo[List[KoutaInternalHakukohdeLite]]
 
     hakukohteidenTiedot.flatMap(hks => {

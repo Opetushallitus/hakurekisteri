@@ -229,6 +229,14 @@ class KoutaInternalActor(
         List(200),
         3
       )
+      .map(
+        _.filter(hakukohde =>
+          q.hakukohdeOid match {
+            case Some(oid) => oid.equals(hakukohde.oid)
+            case None      => true
+          }
+        )
+      )
   }
 
 }
@@ -337,7 +345,8 @@ case class KoutaInternalHakukohde(
   hakuOid: String,
   externalId: Option[String],
   tarjoaja: String,
-  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]
+  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi],
+  hakukohde: Option[HakukohteenTiedot]
 ) {
   def toHakukohde(): Hakukohde =
     Hakukohde(
@@ -366,5 +375,6 @@ case class KoutaInternalToteutus(
 case class HakukohteetHaussaQuery(
   hakuOid: String,
   organisaatioOid: Option[String],
-  hakukohdeKoodiUri: Option[String]
+  hakukohdeKoodiUri: Option[String],
+  hakukohdeOid: Option[String]
 )
