@@ -317,6 +317,7 @@ app.controller "HakeneetCtrl", [
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
         hakukohdekoodi: (if $scope.hakukohdekoodi then $scope.hakukohdekoodiuri else null)
+        hakukohdeoid: (if $scope.hakukohdeoid then $scope.hakukohdeoid else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
@@ -472,6 +473,11 @@ app.controller "HakeneetCtrl", [
 
     $scope.setHakukohde = (item) ->
       $scope.hakukohdekoodi = item.oid
+      return
+
+    $scope.setHakukohdeOid = (item) ->
+      console.log("Hakijatv6 set hakukohdeoid: ", item)
+      $scope.hakukohdeoid = item.oid
       return
 
     $scope.searchHenkilo = ->

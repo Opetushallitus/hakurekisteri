@@ -27,7 +27,7 @@ class HakijaResourceV6(hakijaActor: ActorRef)(implicit
   val security: Security,
   val ct: ClassTag[JSONHakijatV6]
 ) extends HakuJaValintarekisteriStack
-    with HakijaSwaggerApiV5
+    with HakijaSwaggerApiV6
     with HakurekisteriJsonSupport
     with JacksonJsonSupport
     with FutureSupport

@@ -614,7 +614,7 @@ case class HakijaQuery(
   hakukohdekoodi: Option[
     String
   ], //Käytetään versioissa 1-5 aina ja versiossa 6, jos hakukohdeOidia ei annettu
-  hakukohdeOid: Option[String], //Käytetään versiossa 6
+  hakukohdeoid: Option[String], //Käytetään versiossa 6
   hakuehto: Hakuehto.Hakuehto,
   user: Option[User],
   version: Int
