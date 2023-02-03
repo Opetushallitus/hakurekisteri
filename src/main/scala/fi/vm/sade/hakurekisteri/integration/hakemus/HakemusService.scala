@@ -22,7 +22,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
 import fi.vm.sade.hakurekisteri.integration.kouta.{
   HakukohteetHaussaQuery,
   KoutaInternalActorRef,
-  KoutaInternalHakukohdeLite
+  KoutaInternalHakukohde
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
@@ -822,14 +822,13 @@ class HakemusService(
     hakukohdekoodi: Option[String],
     hakukohdeOid: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]] = {
-    val hakukohteidenTiedot: Future[List[KoutaInternalHakukohdeLite]] =
+    val hakukohteidenTiedot: Future[List[KoutaInternalHakukohde]] =
       (koutaInternalActor.actor ? HakukohteetHaussaQuery(
         hakuOid,
         organisaatio,
         hakukohdekoodi,
         hakukohdeOid
-      ))
-        .mapTo[List[KoutaInternalHakukohdeLite]]
+      )).mapTo[List[KoutaInternalHakukohde]]
 
     hakukohteidenTiedot.flatMap(hks => {
       val oids = hks.map(_.oid).distinct

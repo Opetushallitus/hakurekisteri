@@ -9,24 +9,10 @@ import com.github.blemale.scaffeine.Scaffeine
 import com.google.common.base.{Supplier, Suppliers}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batch.support.BatchOneApiCallAsMany
-import fi.vm.sade.hakurekisteri.integration.haku.{
-  GetHautQuery,
-  RestHaku,
-  RestHakuAika,
-  RestHakuResult
-}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{
-  Hakukohde,
-  HakukohdeQuery,
-  HakukohteenKoulutuksetQuery
-}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHautQuery, RestHaku, RestHakuAika, RestHakuResult}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery, HakukohteenKoulutuksetQuery}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  GetHautQueryFailedException,
-  HakukohteenKoulutukset,
-  Hakukohteenkoulutus,
-  TarjontaKoodi
-}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetHautQueryFailedException, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaKoodi}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, OphUrlProperties, VirkailijaRestClient}
 import org.joda.time.{LocalDate, LocalDateTime}
 import support.TypedAskableActorRef
@@ -88,7 +74,7 @@ class KoutaInternalActor(
 
   def getOrganisationHakukohteetHaussa(
     q: HakukohteetHaussaQuery
-  ): Future[List[KoutaInternalHakukohdeLite]] = {
+  ): Future[List[KoutaInternalHakukohde]] = {
     findTarjoajanHakukohteet(q)
   }
 
@@ -224,7 +210,7 @@ class KoutaInternalActor(
       OphUrlProperties.url("kouta-internal.hakukohde.search", q.hakuOid) + orgParam + koodiParam
 
     restClient
-      .readObjectFromUrl[List[KoutaInternalHakukohdeLite]](
+      .readObjectFromUrl[List[KoutaInternalHakukohde]](
         url,
         List(200),
         3
@@ -334,8 +320,7 @@ case class PaateltyAlkamiskausi(
   vuosi: String
 )
 
-//Kouta-internal saattaa palauttaa joitakin hakukohteita, jotka eivät parsiudu KoutaInternalHakukohteiksi esim. puuttuvan tarjoajan tai toteutusOidin takia. Jos vain oid kiinnostaa, tämä toimii silti.
-case class KoutaInternalHakukohdeLite(oid: String, hakukohde: Option[HakukohteenTiedot])
+case class LukioTieto(isLukio: Boolean, linja: Option[KoodiUri])
 
 case class KoutaInternalHakukohde(
   oid: String,
@@ -346,7 +331,8 @@ case class KoutaInternalHakukohde(
   externalId: Option[String],
   tarjoaja: String,
   paateltyAlkamiskausi: Option[PaateltyAlkamiskausi],
-  hakukohde: Option[HakukohteenTiedot]
+  hakukohde: Option[HakukohteenTiedot],
+  lukioTieto: Option[LukioTieto]
 ) {
   def toHakukohde(): Hakukohde =
     Hakukohde(
