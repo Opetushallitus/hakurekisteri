@@ -293,7 +293,9 @@ class HakemusService(
                 if (v) "true" else "false"
               ),
               None,
-              urheilijanLisakysymykset = if (urheilijaLukioOids.contains(hakutoive.oid)) hakemus.urheilijanLisakysymykset else None
+              urheilijanLisakysymykset =
+                if (urheilijaLukioOids.contains(hakutoive.oid)) hakemus.urheilijanLisakysymykset
+                else None
             )
           }
           val harkinnanvaraisuudet = hakemus.hakukohteet
