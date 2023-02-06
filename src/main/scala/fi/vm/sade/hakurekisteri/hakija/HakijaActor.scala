@@ -50,7 +50,8 @@ case class Hakutoive(
   valinta: Option[Valintatila],
   vastaanotto: Option[Vastaanottotila],
   ilmoittautumistila: Option[Ilmoittautumistila],
-  keskiarvo: Option[String] = None
+  keskiarvo: Option[String] = None,
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset] = None
 )
 
 sealed trait Lasnaolo

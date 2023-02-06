@@ -203,7 +203,8 @@ object XMLHakutoive {
       ht.aiempiperuminen,
       ht.kaksoistutkinto,
       ht.koulutuksenKieli,
-      keskiarvo = ht.keskiarvo
+      keskiarvo = ht.keskiarvo,
+      urheilijanLisakysymykset = ht.urheilijanLisakysymykset
     )
 
   def lasnaolo(ht: Hakutoive): Option[String] = {
@@ -315,6 +316,7 @@ case class XMLHakemus(
   }
 }
 
+//Lukion urheilijalinjoille hakevilta kysyttävät kysymykset
 case class UrheilijanLisakysymykset(
   peruskoulu: Option[String],
   keskiarvo: Option[String],
@@ -366,8 +368,7 @@ object HakijaV6Hakemus {
       yleinenkoulumenestys = None,
       painotettavataineet = None,
       hakutoiveet = toiveet,
-      osaaminen = osaaminen,
-      urheilijanLisakysymykset = hakija.ataruHakemus.flatMap(h => h.urheilijanLisakysymykset)
+      osaaminen = osaaminen
     )
 }
 
@@ -391,8 +392,7 @@ case class HakijaV6Hakemus(
   yleinenkoulumenestys: Option[BigDecimal],
   painotettavataineet: Option[BigDecimal],
   hakutoiveet: Seq[XMLHakutoive],
-  osaaminen: Option[XMLOsaaminen],
-  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
+  osaaminen: Option[XMLOsaaminen]
 )
 case class XMLHakutoive(
   hakukohdeOid: String,
@@ -411,7 +411,8 @@ case class XMLHakutoive(
   aiempiperuminen: Option[Boolean],
   kaksoistutkinto: Option[Boolean],
   koulutuksenKieli: Option[String],
-  keskiarvo: Option[String] = None //Valintalaskennan keskiarvo, HakijatV6 ->
+  keskiarvo: Option[String] = None, //Valintalaskennan keskiarvo, HakijatV6 ->
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset] = None
 ) {
 
   import fi.vm.sade.hakurekisteri.hakija.representation.XMLUtil._

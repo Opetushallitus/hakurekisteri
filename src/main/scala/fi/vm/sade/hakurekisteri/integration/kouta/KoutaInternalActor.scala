@@ -9,10 +9,24 @@ import com.github.blemale.scaffeine.Scaffeine
 import com.google.common.base.{Supplier, Suppliers}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batch.support.BatchOneApiCallAsMany
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHautQuery, RestHaku, RestHakuAika, RestHakuResult}
-import fi.vm.sade.hakurekisteri.integration.hakukohde.{Hakukohde, HakukohdeQuery, HakukohteenKoulutuksetQuery}
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  GetHautQuery,
+  RestHaku,
+  RestHakuAika,
+  RestHakuResult
+}
+import fi.vm.sade.hakurekisteri.integration.hakukohde.{
+  Hakukohde,
+  HakukohdeQuery,
+  HakukohteenKoulutuksetQuery
+}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetHautQueryFailedException, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaKoodi}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{
+  GetHautQueryFailedException,
+  HakukohteenKoulutukset,
+  Hakukohteenkoulutus,
+  TarjontaKoodi
+}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, OphUrlProperties, VirkailijaRestClient}
 import org.joda.time.{LocalDate, LocalDateTime}
 import support.TypedAskableActorRef
@@ -343,6 +357,11 @@ case class KoutaInternalHakukohde(
       tarjoajaOids = Some(Set(tarjoaja)),
       alinValintaPistemaara = None
     )
+
+  def urheilijaKoodit = Set("lukiolinjaterityinenkoulutustehtava_0105", "lukiopainotukset_0105")
+  def isUrheilijaLukio = lukioTieto.exists(lt =>
+    lt.linja.exists(linja => urheilijaKoodit.contains(linja.koodiUri.split('#').head))
+  )
 }
 
 case class KoutaToteutusOpetustiedot(

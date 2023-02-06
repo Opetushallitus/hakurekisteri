@@ -1266,7 +1266,8 @@ object AkkaHakupalvelu {
         None,
         None,
         None,
-        keskiarvo = keskiarvot.get(hakukohdeOid)
+        keskiarvo = keskiarvot.get(hakukohdeOid),
+        urheilijanLisakysymykset = toive.urheilijanLisakysymykset
       )
     }
   }
@@ -1449,7 +1450,8 @@ case class HakutoiveDTO(
   soraOikeudenMenetys: Option[String],
   soraTerveys: Option[String],
   urheilijanAmmatillisenLisakysymys: Option[String],
-  discretionaryFollowUp: Option[String]
+  discretionaryFollowUp: Option[String],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset] = None
 )
 
 @SerialVersionUID(1)
