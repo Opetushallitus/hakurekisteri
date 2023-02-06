@@ -2,8 +2,10 @@ package fi.vm.sade.hakurekisteri.integration.valintalaskentatulos
 
 import akka.actor.ActorSystem
 import akka.event.Logging
+import com.github.blemale.scaffeine.Scaffeine
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -61,6 +63,16 @@ class ValintalaskentaTulosService(restClient: VirkailijaRestClient)(implicit
 ) extends IValintalaskentaTulosService {
   val logger = Logging.getLogger(system, this)
 
+  private val laskennanTulosCache = Scaffeine()
+    .expireAfterWrite(30.minutes)
+    .buildAsyncFuture[String, (String, Seq[LaskennanTulosValinnanvaihe])](
+      getHakukohteenValinnanvaiheet
+    )
+
+  private def getHakukohteenValinnanvaiheetCached(hakukohdeOid: String) = {
+    laskennanTulosCache.get(hakukohdeOid)
+  }
+
   private def getHakukohteenValinnanvaiheet(
     hakukohdeOid: String
   ): Future[(String, Seq[LaskennanTulosValinnanvaihe])] = {
@@ -82,7 +94,7 @@ class ValintalaskentaTulosService(restClient: VirkailijaRestClient)(implicit
       s"Haetaan valintalaskennasta tulokset hakukohteiden ${hakukohdeOids} valinnanvaiheille."
     )
     Future
-      .sequence(hakukohdeOids.map(hk => getHakukohteenValinnanvaiheet(hk)))
+      .sequence(hakukohdeOids.map(hk => getHakukohteenValinnanvaiheetCached(hk)))
       .map(r => r.map(res => res._1 -> res._2).toMap)
   }
 }
