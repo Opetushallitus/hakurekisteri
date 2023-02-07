@@ -399,6 +399,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     koutaInternal,
     organisaatiot,
     oppijaNumeroRekisteri,
+    koodisto,
     config,
     cacheFactory,
     maxOidsChunkSize = config.properties

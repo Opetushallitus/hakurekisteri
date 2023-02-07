@@ -51,6 +51,8 @@ class KkHakijaResourceSpec
   )
   private val hakukohdeAggregatorMock = new HakukohdeAggregatorActorRef(mock[ActorRef])
   private val koutaInternalActorMock = new KoutaInternalActorRef(mock[ActorRef])
+  private val koodistoActorMock = new KoodistoActorRef(mock[ActorRef])
+
   private val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
@@ -58,6 +60,7 @@ class KkHakijaResourceSpec
     koutaInternalActorMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
+    koodistoActorMock,
     Config.mockDevConfig,
     MockCacheFactory.get()
   )

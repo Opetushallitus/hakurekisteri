@@ -74,6 +74,11 @@ class KkHakijaServiceSpec
   private val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
+
+  private val koodistoMock: KoodistoActorRef = new KoodistoActorRef(
+    system.actorOf(Props(new MockedKoodistoActor()))
+  )
+
   private val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
@@ -81,6 +86,7 @@ class KkHakijaServiceSpec
     koutaInternalMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
+    koodistoMock,
     Config.mockDevConfig,
     MockCacheFactory.get()
   )
@@ -129,7 +135,6 @@ class KkHakijaServiceSpec
   private val paymentRequiredHakukohdeWithMaksettu = "1.2.246.562.20.49219384432"
   private val paymentRquiredHakukohdeWithoutPayment = "1.2.246.562.20.95810447722"
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
-  private val koodistoMock = new KoodistoActorRef(system.actorOf(Props(new MockedKoodistoActor())))
   private val valintaperusteetMock = new ValintaperusteetServiceMock
   private val hakukohderyhmaServiceMock = Mockito.mock(classOf[HakukohderyhmaService]);
 

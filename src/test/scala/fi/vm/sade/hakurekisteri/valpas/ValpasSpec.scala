@@ -213,6 +213,10 @@ class ValpasSpec
         cacheFactory.getInstance[String, String](any(), any(), any(), any())(any())
       ) thenReturn redisCache
 
+      val koodistoMock: KoodistoActorRef = new KoodistoActorRef(
+        system.actorOf(Props(new MockedKoodistoActor()))
+      )
+
       val hakemusService = new HakemusService(
         hakuAppClient,
         ataruClient,
@@ -230,6 +234,7 @@ class ValpasSpec
           )
         ),
         oppijaNumeroRekisteri,
+        koodistoMock,
         Config.mockDevConfig,
         cacheFactory,
         150
