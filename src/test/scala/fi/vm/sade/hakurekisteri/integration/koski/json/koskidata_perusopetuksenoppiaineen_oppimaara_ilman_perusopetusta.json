@@ -1,0 +1,670 @@
+
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.21712719396",
+    "hetu" : "010195-991X",
+    "syntymäaika" : "1995-01-01",
+    "etunimet" : "Sami-Pekka Testi",
+    "kutsumanimi" : "Sami-Pekka",
+    "sukunimi" : "Niva-Testi",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.64949523100",
+    "versionumero" : 1,
+    "aikaleima" : "2022-10-06T12:44:20.409921",
+    "lähdejärjestelmänId" : {
+      "id" : "617",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.84189747029",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "01963",
+        "nimi" : {
+          "fi" : "Lappeenrannan musiikkiopisto",
+          "sv" : "Lappeenrannan musiikkiopisto",
+          "en" : "Lappeenrannan musiikkiopisto"
+        },
+        "lyhytNimi" : {
+          "fi" : "Lappeenrannan musiikkiopisto",
+          "sv" : "Lappeenrannan musiikkiopisto",
+          "en" : "Lappeenrannan musiikkiopisto"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Lappeenrannan musiikkiopisto",
+        "sv" : "Lappeenrannan musiikkiopisto",
+        "en" : "Lappeenrannan musiikkiopisto"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "405",
+        "nimi" : {
+          "fi" : "Lappeenranta",
+          "sv" : "Villmanstrand"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.63964626889",
+      "nimi" : {
+        "fi" : "Lappeenrannan Musiikkiopiston kannatusyhdistys r.y."
+      },
+      "yTunnus" : "0206823-6",
+      "kotipaikka" : {
+        "koodiarvo" : "405",
+        "nimi" : {
+          "fi" : "Lappeenranta",
+          "sv" : "Villmanstrand"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2020-08-15",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2020-12-15",
+        "tila" : {
+          "koodiarvo" : "loma",
+          "nimi" : {
+            "fi" : "Loma",
+            "sv" : "Semester",
+            "en" : "Vacation"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2021-01-07",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2021-02-11",
+        "tila" : {
+          "koodiarvo" : "valmistunut",
+          "nimi" : {
+            "fi" : "Valmistunut",
+            "sv" : "Utexaminerad",
+            "en" : "Graduated"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "999905",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Undervisning som förebereder för den grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetukseen valmistava opetus"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "57/011/2015"
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.84189747029",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "01963",
+          "nimi" : {
+            "fi" : "Lappeenrannan musiikkiopisto",
+            "sv" : "Lappeenrannan musiikkiopisto",
+            "en" : "Lappeenrannan musiikkiopisto"
+          },
+          "lyhytNimi" : {
+            "fi" : "Lappeenrannan musiikkiopisto",
+            "sv" : "Lappeenrannan musiikkiopisto",
+            "en" : "Lappeenrannan musiikkiopisto"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Lappeenrannan musiikkiopisto",
+          "sv" : "Lappeenrannan musiikkiopisto",
+          "en" : "Lappeenrannan musiikkiopisto"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "405",
+          "nimi" : {
+            "fi" : "Lappeenranta",
+            "sv" : "Villmanstrand"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "vahvistus" : {
+        "päivä" : "2021-02-11",
+        "paikkakunta" : {
+          "koodiarvo" : "020",
+          "nimi" : {
+            "fi" : "Akaa",
+            "sv" : "Akaa",
+            "en" : "Akaa"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.84189747029",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "01963",
+            "nimi" : {
+              "fi" : "Lappeenrannan musiikkiopisto",
+              "sv" : "Lappeenrannan musiikkiopisto",
+              "en" : "Lappeenrannan musiikkiopisto"
+            },
+            "lyhytNimi" : {
+              "fi" : "Lappeenrannan musiikkiopisto",
+              "sv" : "Lappeenrannan musiikkiopisto",
+              "en" : "Lappeenrannan musiikkiopisto"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Lappeenrannan musiikkiopisto",
+            "sv" : "Lappeenrannan musiikkiopisto",
+            "en" : "Lappeenrannan musiikkiopisto"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "405",
+            "nimi" : {
+              "fi" : "Lappeenranta",
+              "sv" : "Villmanstrand"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "Herra Rehtori",
+          "titteli" : {
+            "fi" : "Rex"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.84189747029",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "01963",
+              "nimi" : {
+                "fi" : "Lappeenrannan musiikkiopisto",
+                "sv" : "Lappeenrannan musiikkiopisto",
+                "en" : "Lappeenrannan musiikkiopisto"
+              },
+              "lyhytNimi" : {
+                "fi" : "Lappeenrannan musiikkiopisto",
+                "sv" : "Lappeenrannan musiikkiopisto",
+                "en" : "Lappeenrannan musiikkiopisto"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Lappeenrannan musiikkiopisto",
+              "sv" : "Lappeenrannan musiikkiopisto",
+              "en" : "Lappeenrannan musiikkiopisto"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "405",
+              "nimi" : {
+                "fi" : "Lappeenranta",
+                "sv" : "Villmanstrand"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "1049",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus"
+            }
+          }
+        },
+        "arviointi" : [ {
+          "arvosana" : {
+            "koodiarvo" : "S",
+            "nimi" : {
+              "fi" : "hyväksytty",
+              "sv" : "godkänd"
+            },
+            "lyhytNimi" : {
+              "fi" : "S"
+            },
+            "koodistoUri" : "arviointiasteikkoyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "päivä" : "2021-02-11",
+          "hyväksytty" : true
+        } ],
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetukseenvalmistavanopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistavan opetuksen oppiaine",
+            "sv" : "Läroämne i förberedande undervisning för grundläggande utbildning",
+            "en" : "Instruction preparing for basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetukseenvalmistavaopetus",
+        "nimi" : {
+          "fi" : "Perusopetukseen valmistava opetus",
+          "sv" : "Förberedande undervisning för grundläggande utbildning",
+          "en" : "Instruction preparing for basic education"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetukseenvalmistavaopetus",
+      "nimi" : {
+        "fi" : "Perusopetukseen valmistava opetus",
+        "sv" : "Förberedande undervisning för den grundläggande utbildningen"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetukseen valmistava opetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2020-08-15",
+    "päättymispäivä" : "2021-02-11"
+  }, {
+    "oid" : "1.2.246.562.15.36171969037",
+    "versionumero" : 2,
+    "aikaleima" : "2023-02-08T08:48:52.295617",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.81017043621",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "00551",
+        "nimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "lyhytNimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Helsingin aikuislukio",
+        "sv" : "Helsingin aikuislukio",
+        "en" : "Helsingin aikuislukio"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingin kaupunki",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2023-01-10",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "MA",
+          "nimi" : {
+            "fi" : "Matematiikka",
+            "sv" : "Matematik"
+          },
+          "lyhytNimi" : {
+            "fi" : "Matematiikka",
+            "sv" : "Matematik"
+          },
+          "koodistoUri" : "koskioppiaineetyleissivistava",
+          "koodistoVersio" : 1
+        },
+        "pakollinen" : true,
+        "perusteenDiaarinumero" : "OPH-1280-2017",
+        "laajuus" : {
+          "arvo" : 2.0,
+          "yksikkö" : {
+            "koodiarvo" : "4",
+            "nimi" : {
+              "fi" : "kurssia",
+              "sv" : "kurser",
+              "en" : "course units"
+            },
+            "lyhytNimi" : {
+              "fi" : "kurssia",
+              "sv" : "kurser",
+              "en" : "courses"
+            },
+            "koodistoUri" : "opintojenlaajuusyksikko",
+            "koodistoVersio" : 1
+          }
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.81017043621",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00551",
+          "nimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "lyhytNimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "arviointi" : [ {
+        "arvosana" : {
+          "koodiarvo" : "8",
+          "nimi" : {
+            "fi" : "hyvä",
+            "sv" : "god"
+          },
+          "lyhytNimi" : {
+            "fi" : "8"
+          },
+          "koodistoUri" : "arviointiasteikkoyleissivistava",
+          "koodistoVersio" : 1
+        },
+        "hyväksytty" : true
+      } ],
+      "vahvistus" : {
+        "päivä" : "2023-02-08",
+        "paikkakunta" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        },
+        "myöntäjäOrganisaatio" : {
+          "oid" : "1.2.246.562.10.81017043621",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "00551",
+            "nimi" : {
+              "fi" : "Helsingin aikuislukio",
+              "sv" : "Helsingin aikuislukio",
+              "en" : "Helsingin aikuislukio"
+            },
+            "lyhytNimi" : {
+              "fi" : "Helsingin aikuislukio",
+              "sv" : "Helsingin aikuislukio",
+              "en" : "Helsingin aikuislukio"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "091",
+            "nimi" : {
+              "fi" : "Helsinki",
+              "sv" : "Helsingfors"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "myöntäjäHenkilöt" : [ {
+          "nimi" : "testaaja",
+          "titteli" : {
+            "fi" : "reksi"
+          },
+          "organisaatio" : {
+            "oid" : "1.2.246.562.10.81017043621",
+            "oppilaitosnumero" : {
+              "koodiarvo" : "00551",
+              "nimi" : {
+                "fi" : "Helsingin aikuislukio",
+                "sv" : "Helsingin aikuislukio",
+                "en" : "Helsingin aikuislukio"
+              },
+              "lyhytNimi" : {
+                "fi" : "Helsingin aikuislukio",
+                "sv" : "Helsingin aikuislukio",
+                "en" : "Helsingin aikuislukio"
+              },
+              "koodistoUri" : "oppilaitosnumero",
+              "koodistoVersio" : 1
+            },
+            "nimi" : {
+              "fi" : "Helsingin aikuislukio",
+              "sv" : "Helsingin aikuislukio",
+              "en" : "Helsingin aikuislukio"
+            },
+            "kotipaikka" : {
+              "koodiarvo" : "091",
+              "nimi" : {
+                "fi" : "Helsinki",
+                "sv" : "Helsingfors"
+              },
+              "koodistoUri" : "kunta",
+              "koodistoVersio" : 2
+            }
+          }
+        } ]
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppiaineenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppiaineen oppimäärä",
+          "sv" : "Lärokurs i ett läroämne i grundläggande utbildning",
+          "en" : "Basic education Subject syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "aikuistenperusopetus",
+      "nimi" : {
+        "fi" : "Aikuisten perusopetus",
+        "sv" : "Grundläggande utbildning för vuxna"
+      },
+      "lyhytNimi" : {
+        "fi" : "Aikuisten perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2023-01-10"
+  } ]
+}
