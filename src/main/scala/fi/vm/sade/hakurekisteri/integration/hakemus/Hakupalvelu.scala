@@ -390,7 +390,8 @@ class AkkaHakupalvelu(
             s"Getting ataruhakijat for toinen aste, query: ${q.copy(user = None)}"
           )
           getToisenAsteenAtaruHakijat(q, haku)
-        case haku: Haku if haku.isJatkuvaHaku && q.version >= 6 =>
+        case haku: Haku
+            if haku.hakulomakeAtaruId.isDefined && haku.isJatkuvaHaku && q.version >= 6 =>
           logger.info(s"Getting ataruhakijat for jatkuva haku, query: ${q.copy(user = None)}")
           getToisenAsteenAtaruHakijat(q, haku)
         case haku: Haku =>
