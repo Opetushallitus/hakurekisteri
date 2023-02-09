@@ -334,6 +334,6 @@ case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean]
 case class KoskiSuoritusHakuParams(
   saveLukio: Boolean = false,
   saveAmmatillinen: Boolean = false,
-  saveSeiskaKasiJaValmentava: Boolean = false,
+  saveSeiskaKasiJaValmistava: Boolean = false,
   retryWaitMillis: Long = 10000
 )

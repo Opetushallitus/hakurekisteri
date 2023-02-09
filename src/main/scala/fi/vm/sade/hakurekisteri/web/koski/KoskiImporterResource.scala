@@ -110,7 +110,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
     val hakuOid = params("hakuOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
-    val haeSeiskaKasiJaValmentava: Boolean = params.getAsOrElse("haeseiskakasijavalmentava", false)
+    val haeSeiskaKasiJaValmistava: Boolean = params.getAsOrElse("haeseiskakasijavalmistava", false)
     val useBulk: Boolean = params.getAsOrElse("bulk", false)
     audit.log(
       auditUser,
@@ -119,7 +119,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
         .setField("hakuOid", hakuOid)
         .setField("haeLukio", haeLukio.toString)
         .setField("haeAmmatilliset", haeAmmatilliset.toString)
-        .setField("haeSeiskaKasiJaValmentava", haeSeiskaKasiJaValmentava.toString)
+        .setField("haeSeiskaKasiJaValmistava", haeSeiskaKasiJaValmistava.toString)
         .build(),
       Changes.EMPTY
     )
@@ -129,7 +129,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
         KoskiSuoritusHakuParams(
           saveLukio = haeLukio,
           saveAmmatillinen = haeAmmatilliset,
-          saveSeiskaKasiJaValmentava = haeSeiskaKasiJaValmentava
+          saveSeiskaKasiJaValmistava = haeSeiskaKasiJaValmistava
         )
       )
     }

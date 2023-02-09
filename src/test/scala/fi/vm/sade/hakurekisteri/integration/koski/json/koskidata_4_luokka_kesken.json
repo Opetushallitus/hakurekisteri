@@ -1,0 +1,377 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.46031125565",
+    "hetu" : "221111A9363",
+    "syntymäaika" : "2011-11-22",
+    "etunimet" : "Maisa Testi",
+    "kutsumanimi" : "Maisa",
+    "sukunimi" : "Jaatinen-Testi",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.16352956151",
+    "versionumero" : 1,
+    "aikaleima" : "2022-10-21T22:22:12.582264",
+    "lähdejärjestelmänId" : {
+      "id" : "89",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.57118763579",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "00000",
+        "nimi" : {
+          "fi" : "Tuntematon",
+          "sv" : "Okänd",
+          "en" : "Unknown"
+        },
+        "lyhytNimi" : {
+          "fi" : "Tuntematon",
+          "sv" : "Okänd",
+          "en" : "Unknown"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Tuntematon",
+        "sv" : "Okänd",
+        "en" : "Unknown"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.2013120314194853405606",
+      "nimi" : {
+        "fi" : "Tuntematon",
+        "sv" : "Tuntematon",
+        "en" : "Tuntematon"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "999",
+        "nimi" : {
+          "fi" : "Ei tiedossa (kunta)",
+          "sv" : "Okänd kommun",
+          "en" : "Not known"
+        },
+        "lyhytNimi" : {
+          "fi" : "Ei tiedossa (kunta)",
+          "sv" : "Okänd kommun"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2017-08-14",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "vuosiluokkiinSitoutumatonOpetus" : false
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "4",
+          "nimi" : {
+            "fi" : "4. vuosiluokka",
+            "sv" : "Årskurs 4"
+          },
+          "koodistoUri" : "perusopetuksenluokkaaste",
+          "koodistoVersio" : 1
+        },
+        "perusteenDiaarinumero" : "104/011/2014",
+        "koulutustyyppi" : {
+          "koodiarvo" : "16",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "luokka" : "4a_testi",
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.57118763579",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00000",
+          "nimi" : {
+            "fi" : "Tuntematon",
+            "sv" : "Okänd",
+            "en" : "Unknown"
+          },
+          "lyhytNimi" : {
+            "fi" : "Tuntematon",
+            "sv" : "Okänd",
+            "en" : "Unknown"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Tuntematon",
+          "sv" : "Okänd",
+          "en" : "Unknown"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "alkamispäivä" : "2022-08-11",
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "jääLuokalle" : false,
+      "osasuoritukset" : [ {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "AI",
+            "nimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "lyhytNimi" : {
+              "fi" : "Äidinkieli ja kirjallisuus",
+              "sv" : "Modersmålet och litteratur"
+            },
+            "koodistoUri" : "koskioppiaineetyleissivistava",
+            "koodistoVersio" : 1
+          },
+          "kieli" : {
+            "koodiarvo" : "AI1",
+            "nimi" : {
+              "fi" : "Suomen kieli ja kirjallisuus",
+              "sv" : "Finska och litteratur"
+            },
+            "koodistoUri" : "oppiaineaidinkielijakirjallisuus",
+            "koodistoVersio" : 1
+          },
+          "pakollinen" : true,
+          "perusteenDiaarinumero" : "104/011/2014"
+        },
+        "yksilöllistettyOppimäärä" : false,
+        "painotettuOpetus" : false,
+        "suorituskieli" : {
+          "koodiarvo" : "FI",
+          "nimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "lyhytNimi" : {
+            "fi" : "suomi",
+            "sv" : "finska",
+            "en" : "Finnish"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenoppiaine",
+          "nimi" : {
+            "fi" : "Perusopetuksen oppiaine",
+            "sv" : "Läroämne i grundläggande utbildning",
+            "en" : "Basic education subject"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenvuosiluokka",
+        "nimi" : {
+          "fi" : "Perusopetuksen vuosiluokka",
+          "sv" : "Årskurs i grundläggande utbildning",
+          "en" : "Basic education class"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
+      "koulutusmoduuli" : {
+        "perusteenDiaarinumero" : "104/011/2014",
+        "tunniste" : {
+          "koodiarvo" : "201101",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning",
+            "en" : "Basic education"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "16",
+          "nimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetus",
+            "sv" : "Grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.57118763579",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00000",
+          "nimi" : {
+            "fi" : "Tuntematon",
+            "sv" : "Okänd",
+            "en" : "Unknown"
+          },
+          "lyhytNimi" : {
+            "fi" : "Tuntematon",
+            "sv" : "Okänd",
+            "en" : "Unknown"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Tuntematon",
+          "sv" : "Okänd",
+          "en" : "Unknown"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppimäärä",
+          "sv" : "Grundläggande utbildningens lärokurs",
+          "en" : "Basic education syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2017-08-14"
+  } ]
+}

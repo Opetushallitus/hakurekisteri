@@ -83,7 +83,7 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
         .defaultValue(Some(false))
     )
     .parameter(
-      queryParam[Option[Boolean]]("haeseiskakasijavalmentava")
+      queryParam[Option[Boolean]]("haeseiskakasijavalmistava")
         .description(
           "Haetaanko koskesta myös 7.- ja 8.-luokkalaisten ja perusopetukseen valmistavan opetuksen opiskelijoiden tiedot"
         )

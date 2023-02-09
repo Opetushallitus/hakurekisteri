@@ -185,7 +185,7 @@ class KoskiService(
           KoskiSuoritusHakuParams(
             saveLukio = true,
             saveAmmatillinen = false,
-            saveSeiskaKasiJaValmentava = true
+            saveSeiskaKasiJaValmistava = true
           )
         ),
         5.hours

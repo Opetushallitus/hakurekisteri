@@ -1938,7 +1938,7 @@ class KoskiDataHandlerTest
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
-          saveSeiskaKasiJaValmentava = true
+          saveSeiskaKasiJaValmistava = true
         )
       ),
       5.seconds
@@ -1971,7 +1971,7 @@ class KoskiDataHandlerTest
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
-          saveSeiskaKasiJaValmentava = false
+          saveSeiskaKasiJaValmistava = false
         )
       ),
       5.seconds
@@ -3684,7 +3684,7 @@ class KoskiDataHandlerTest
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(
-      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
       5.seconds
     )
 
@@ -3710,7 +3710,7 @@ class KoskiDataHandlerTest
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(
-      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
       5.seconds
     )
 
@@ -3725,17 +3725,17 @@ class KoskiDataHandlerTest
     )
   }
 
-  it should "should not save 4-luokkalainen opiskelija for koskidata_peruskoulu_kesken_nelonen.json" in {
+  it should "should not save 4-luokkalainen opiskelija for koskidata_4_luokka_kesken.json" in {
     val json: String =
       scala.io.Source
-        .fromFile(jsonDir + "koskidata_peruskoulu_kesken_nelonen.json")
+        .fromFile(jsonDir + "koskidata_4_luokka_kesken.json")
         .mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(
-      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
       5.seconds
     )
 
@@ -3753,7 +3753,7 @@ class KoskiDataHandlerTest
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(
-      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
       5.seconds
     )
 
@@ -3772,7 +3772,7 @@ class KoskiDataHandlerTest
 
     try {
       Await.result(
-        koskiDatahandler.updateOppilaitosSeiskaKasiJaValmentava(henkilo),
+        koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
         5.seconds
       )
     } catch {

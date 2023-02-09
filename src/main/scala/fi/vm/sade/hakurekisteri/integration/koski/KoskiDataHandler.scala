@@ -710,7 +710,7 @@ class KoskiDataHandler(
       .toSeq
   }
 
-  def updateOppilaitosSeiskaKasiJaValmentava(
+  def updateOppilaitosSeiskaKasiJaValmistava(
     koskihenkilöcontainer: KoskiHenkiloContainer
   ) = {
     val opiskeluoikeudet = filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(
@@ -801,8 +801,8 @@ class KoskiDataHandler(
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
-    if (suoritukset.isEmpty && params.saveSeiskaKasiJaValmentava) {
-      updateOppilaitosSeiskaKasiJaValmentava(koskihenkilöcontainer)
+    if (suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava) {
+      updateOppilaitosSeiskaKasiJaValmistava(koskihenkilöcontainer)
     }
     val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
     if (muidenSuoritukset.nonEmpty) {
