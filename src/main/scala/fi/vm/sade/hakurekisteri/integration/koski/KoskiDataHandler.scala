@@ -747,10 +747,8 @@ class KoskiDataHandler(
                   luokkataso = "valmistava",
                   luokka = "",
                   henkiloOid = henkiloOid,
-                  alkuPaiva = opiskeluoikeus.aikaleima match {
-                    case Some(aikaleima) => DateTime.parse(aikaleima)
-                    case None            => null // TODO poikkeus?
-                  },
+                  alkuPaiva =
+                    opiskeluoikeus.aikaleima.map(al => DateTime.parse(al)).getOrElse(null),
                   loppuPaiva = None,
                   source = KoskiUtil.koski_integration_source
                 )
