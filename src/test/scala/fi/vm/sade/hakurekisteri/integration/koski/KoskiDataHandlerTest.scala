@@ -1927,14 +1927,20 @@ class KoskiDataHandlerTest
   it should "store 8-luokkalainen opiskelija but not suoritukset when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    val henkiloOid: String = henkilo.henkilö.oid.toString
     henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    // varmistetaan että testitapaus ei ajan kuluessa täysi-ikäisty
+    val alaikainenHenkilo =
+      henkilo.copy(henkilö =
+        henkilo.henkilö.copy(syntymäaika = Option(LocalDate.now().minusYears(15).toString()))
+      )
+    val henkiloOid: String = alaikainenHenkilo.henkilö.oid.toString
+
+    alaikainenHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
-        henkilo,
-        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        alaikainenHenkilo,
+        PersonOidsWithAliases(alaikainenHenkilo.henkilö.oid.toSet),
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
@@ -1972,6 +1978,41 @@ class KoskiDataHandlerTest
           saveLukio = false,
           saveAmmatillinen = false,
           saveSeiskaKasiJaValmistava = false
+        )
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(0)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
+  it should "not store 18 year old 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val taysiIkainenHenkilo =
+      henkilo.copy(henkilö =
+        henkilo.henkilö.copy(syntymäaika = Option(LocalDate.now().minusYears(18).toString()))
+      )
+    val henkiloOid: String = taysiIkainenHenkilo.henkilö.oid.toString
+    taysiIkainenHenkilo should not be null
+    taysiIkainenHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val isAlaikainen = koskiDatahandler.isAlaikainen(taysiIkainenHenkilo)
+    isAlaikainen should equal(false)
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        taysiIkainenHenkilo,
+        PersonOidsWithAliases(taysiIkainenHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
         )
       ),
       5.seconds

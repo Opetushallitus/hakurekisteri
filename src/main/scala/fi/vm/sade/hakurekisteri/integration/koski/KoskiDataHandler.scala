@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{DateTime, LocalDate, Period}
 import org.json4s.DefaultFormats
 import org.slf4j.LoggerFactory
 
@@ -710,6 +710,11 @@ class KoskiDataHandler(
       .toSeq
   }
 
+  def isAlaikainen(koskiHenkiloContainer: KoskiHenkiloContainer) = {
+    koskiHenkiloContainer.henkilö.syntymäaika
+      .map(syntymaAika => new Period(LocalDate.parse(syntymaAika), LocalDate.now()).getYears < 18)
+      .getOrElse(false)
+  }
   def updateOppilaitosSeiskaKasiJaValmistava(
     koskihenkilöcontainer: KoskiHenkiloContainer
   ) = {
@@ -801,7 +806,11 @@ class KoskiDataHandler(
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
-    if (suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava) {
+    if (
+      suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
+        koskihenkilöcontainer
+      )
+    ) {
       updateOppilaitosSeiskaKasiJaValmistava(koskihenkilöcontainer)
     }
     val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
