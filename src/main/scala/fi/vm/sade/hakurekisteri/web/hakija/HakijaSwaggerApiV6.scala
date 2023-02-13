@@ -2,7 +2,12 @@ package fi.vm.sade.hakurekisteri.web.hakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijatV6}
-import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.web.rest.support.{
+  ApiFormat,
+  IncidentReportSwaggerModel,
+  ModelResponseMessage,
+  OldSwaggerSyntax
+}
 import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
