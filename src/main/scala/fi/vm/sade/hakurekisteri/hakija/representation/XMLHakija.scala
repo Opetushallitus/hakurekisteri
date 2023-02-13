@@ -236,7 +236,7 @@ object XMLHakutoive {
 
   def vastaanotto: PartialFunction[String, String] = {
     case "KESKEN"                        => "1"
-    case "VASTAANOTTANUT"                => "3"
+    case "VASTAANOTTANUT_SITOVASTI"      => "3"
     case "EHDOLLISESTI_VASTAANOTTANUT"   => "3"
     case "PERUNUT"                       => "4"
     case "EI_VASTAANOTETTU_MAARA_AIKANA" => "5"
