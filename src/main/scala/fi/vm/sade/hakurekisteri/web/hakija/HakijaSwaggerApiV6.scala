@@ -1,13 +1,8 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
-import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV5
-import fi.vm.sade.hakurekisteri.web.rest.support.{
-  ApiFormat,
-  IncidentReportSwaggerModel,
-  ModelResponseMessage,
-  OldSwaggerSyntax
-}
+import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijatV6}
+import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReportSwaggerModel, ModelResponseMessage, OldSwaggerSyntax}
 import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
@@ -61,7 +56,7 @@ trait HakijaSwaggerApiV6
 
   registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map { t => (t.name, t) }.toMap))
 
-  val hakijaFieldsV5 = Seq(
+  val hakijaFieldsV6 = Seq(
     ModelField("hetu", null, DataType.String),
     ModelField("oppijanumero", null, DataType.String),
     ModelField("sukunimi", null, DataType.String),
@@ -117,16 +112,16 @@ trait HakijaSwaggerApiV6
     )
   )
 
-  val hakijatFieldsV5 = Seq(
+  val hakijatFieldsV6 = Seq(
     ModelField(
       "hakijat",
       null,
-      ContainerDataType("List", Some(ValueDataType("JSONHakijaV5", None, Some("JSONHakijaV5"))))
+      ContainerDataType("List", Some(ValueDataType("JSONHakijaV6", None, Some("JSONHakijaV6"))))
     )
   )
 
-  registerModel(Model("JSONHakijatV5", "Hakijat", hakijatFieldsV5.map { t => (t.name, t) }.toMap))
-  registerModel(Model("JSONHakijaV5", "Hakija", hakijaFieldsV5.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijatV6", "Hakijat", hakijatFieldsV6.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijaVG", "Hakija", hakijaFieldsV6.map { t => (t.name, t) }.toMap))
   registerModel(
     Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map { t => (t.name, t) }.toMap)
   )
@@ -138,7 +133,7 @@ trait HakijaSwaggerApiV6
     )
   )
 
-  val queryV2: OperationBuilder = apiOperation[JSONHakijatV5]("haeHakijat")
+  val queryV2: OperationBuilder = apiOperation[JSONHakijatV6]("haeHakijatV6")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
