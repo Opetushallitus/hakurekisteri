@@ -138,7 +138,7 @@ trait HakijaSwaggerApiV5
     )
   )
 
-  val queryV2: OperationBuilder = apiOperation[JSONHakijatV5]("haeHakijat")
+  val queryV2: OperationBuilder = apiOperation[JSONHakijatV5]("haeHakijatV5")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
