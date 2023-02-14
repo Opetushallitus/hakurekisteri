@@ -47,7 +47,7 @@ trait HakijaSwaggerApiV6
     ModelField("yleinen_kielitutkinto_en", null, DataType.String, required = false),
     ModelField("valtionhallinnon_kielitutkinto_en", null, DataType.String, required = false),
     ModelField("yleinen_kielitutkinto_se", null, DataType.String, required = false),
-    ModelField("valtionhallinnon_kielitutkinto_se", null, DataType.String, required = false),
+    ModelField("valtionhallinnon_kielitutkinto_se", null, DataType.String, required = false)
   )
 
   registerModel(Model("OsaaminenV6", "Osaaminen", osaaminenFields.map { t => (t.name, t) }.toMap))
