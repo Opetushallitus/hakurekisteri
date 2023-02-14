@@ -26,7 +26,7 @@ trait HakijaSwaggerApiV6
     ModelField("koulutus", null, DataType.String),
     ModelField("harkinnanvaraisuusperuste", null, DataType.String, required = false),
     ModelField("urheilijanammatillinenkoulutus", null, DataType.String, required = false),
-    ModelField("yhteispisteet", null, DataType("double"), required = false),
+    ModelField("yhteispisteet", null, DataType.Double, required = false),
     ModelField("valinta", null, DataType.String, required = false),
     ModelField("vastaanotto", null, DataType.String, required = false),
     ModelField("lasnaolo", null, DataType.String, required = false),
