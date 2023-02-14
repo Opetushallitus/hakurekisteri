@@ -8,7 +8,7 @@ import _root_.akka.util.Timeout
 import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.{AuditUtil, HakijatLuku}
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijatV5, JSONHakijatV6}
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV6
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
@@ -51,7 +51,7 @@ class HakijaResourceV6(hakijaActor: ActorRef)(implicit
     ExcelUtilV6.write(out, hakijat)
   }
 
-  get("/", operation(queryV2)) {
+  get("/", operation(queryV6)) {
     val q = HakijaQuery(params, currentUser, 6)
     if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
     val tyyppi = getFormatFromTypeParam()
