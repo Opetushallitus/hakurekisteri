@@ -584,6 +584,11 @@ class KoskiDataHandler(
         )
       }
 
+      if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
+        logger.info(s"Henkilö: $henkilöOid | tallennettavatSuoritukset: $tallennettavatSuoritukset")
+        logger.info(s"Henkilö: $henkilöOid | fetchedSuoritukset: $fetchedSuoritukset")
+      }
+
       // Tarkistetaan onko henkilön Koskessa tulevissa suorituksissa tai jo kannassa olevissa
       // suorituksissa valmis ja vahvistettu perusopetuksen suoritus.
       //
