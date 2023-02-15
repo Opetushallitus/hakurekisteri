@@ -87,5 +87,11 @@ db/schema.ddl
 *.xls#
 .jvmopts
 
+# IDE specific
+.bsp/
+.vscode/
+project/
+
 suoritusrekisteri-it-db
 src/main/webapp/
+

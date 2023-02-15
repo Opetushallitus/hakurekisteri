@@ -23,7 +23,8 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.{
   KkHakijaResource,
   KkHakijaResourceV2,
   KkHakijaResourceV3,
-  KkHakijaResourceV4
+  KkHakijaResourceV4,
+  KkHakijaResourceV5
 }
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
@@ -164,6 +165,10 @@ class ScalatraBootstrap extends LifeCycle {
       config
     ),
     ("/rest/v4/kkhakijat", "rest/v4/kkhakijat") -> new KkHakijaResourceV4(
+      koosteet.kkHakijaService,
+      config
+    ),
+    ("/rest/v5/kkhakijat", "rest/v5/kkhakijat") -> new KkHakijaResourceV5(
       koosteet.kkHakijaService,
       config
     ),
