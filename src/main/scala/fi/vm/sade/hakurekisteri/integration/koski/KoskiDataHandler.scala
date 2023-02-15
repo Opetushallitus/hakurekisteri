@@ -574,6 +574,7 @@ class KoskiDataHandler(
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
+      var suorituksetForRemoving = viimeisimmatSuoritukset
       if (!params.saveLukio) {
         tallennettavatSuoritukset =
           tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
@@ -616,6 +617,9 @@ class KoskiDataHandler(
         tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
           Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
         )
+        suorituksetForRemoving = suorituksetForRemoving.filterNot(s =>
+          Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
+        )
       }
 
       if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
@@ -625,11 +629,17 @@ class KoskiDataHandler(
         logger.info(
           s"Henkilö: $henkilöOid | hasValmisPerusopetuksenSuoritus: $hasValmisPerusopetuksenSuoritus"
         )
+        logger.info(
+          s"Henkilö: $henkilöOid | viimeisimmatSuoritukset: $viimeisimmatSuoritukset"
+        )
+        logger.info(
+          s"Henkilö: $henkilöOid | suorituksetForRemoving: $suorituksetForRemoving"
+        )
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
         fetchedSuoritukset,
-        tallennettavatSuoritukset,
+        suorituksetForRemoving,
         henkilöOid,
         getAliases(personOidsWithAliases)
       ).recoverWith { case e: Exception =>
