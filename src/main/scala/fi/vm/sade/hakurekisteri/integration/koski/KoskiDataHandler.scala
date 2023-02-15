@@ -629,7 +629,7 @@ class KoskiDataHandler(
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
         fetchedSuoritukset,
-        viimeisimmatSuoritukset,
+        tallennettavatSuoritukset,
         henkilöOid,
         getAliases(personOidsWithAliases)
       ).recoverWith { case e: Exception =>
