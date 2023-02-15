@@ -804,6 +804,12 @@ class KoskiDataHandler(
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
+    val alaikainen = isAlaikainen(
+      koskihenkilöcontainer
+    )
+    logger.info(
+      s"Löytyikö Koskesta tuotavia suorituksia: ${suoritukset.nonEmpty} tuodaanko seiskaKasiJaValmistava: ${params.saveSeiskaKasiJaValmistava} onko alaikäinen: ${alaikainen}"
+    )
     if (
       suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
         koskihenkilöcontainer
