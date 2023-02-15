@@ -604,7 +604,9 @@ class KoskiDataHandler(
         )
 
       if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
-        logger.info(s"Henkilö: $henkilöOid | tallennettavatSuoritukset (ennen): $tallennettavatSuoritukset")
+        logger.info(
+          s"Henkilö: $henkilöOid | tallennettavatSuoritukset (ennen): $tallennettavatSuoritukset"
+        )
         logger.info(s"Henkilö: $henkilöOid | fetchedSuoritukset: $fetchedSuoritukset")
       }
 
@@ -617,8 +619,12 @@ class KoskiDataHandler(
       }
 
       if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
-        logger.info(s"Henkilö: $henkilöOid | tallennettavatSuoritukset (jälkeen): $tallennettavatSuoritukset")
-        logger.info(s"Henkilö: $henkilöOid | hasValmisPerusopetuksenSuoritus: $hasValmisPerusopetuksenSuoritus")
+        logger.info(
+          s"Henkilö: $henkilöOid | tallennettavatSuoritukset (jälkeen): $tallennettavatSuoritukset"
+        )
+        logger.info(
+          s"Henkilö: $henkilöOid | hasValmisPerusopetuksenSuoritus: $hasValmisPerusopetuksenSuoritus"
+        )
       }
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
