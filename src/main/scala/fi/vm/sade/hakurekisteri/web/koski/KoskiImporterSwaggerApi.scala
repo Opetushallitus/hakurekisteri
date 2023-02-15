@@ -30,6 +30,14 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
         .optional
         .defaultValue(Some(false))
     )
+    .parameter(
+      queryParam[Option[Boolean]]("haeseiskakasijavalmistava")
+        .description(
+          "Haetaanko koskesta myös 7.- ja 8.-luokkalaisten ja perusopetukseen valmistavan opetuksen opiskelijan lähtökoulutieto"
+        )
+        .optional
+        .defaultValue(Some(false))
+    )
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(404, "oppija not found"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
@@ -54,6 +62,14 @@ trait KoskiImporterSwaggerApi extends SwaggerSupport {
     .parameter(
       queryParam[Option[Boolean]]("haeammatilliset")
         .description("Haetaanko koskesta myös ammatillisten opiskelijoiden arvosanat")
+        .optional
+        .defaultValue(Some(false))
+    )
+    .parameter(
+      queryParam[Option[Boolean]]("haeseiskakasijavalmistava")
+        .description(
+          "Haetaanko koskesta myös 7.- ja 8.-luokkalaisten ja perusopetukseen valmistavan opetuksen opiskelijoiden lähtökoulutieto"
+        )
         .optional
         .defaultValue(Some(false))
     )

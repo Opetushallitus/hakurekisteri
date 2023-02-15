@@ -57,6 +57,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
     val personOid = params("oppijaOid")
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
+    val haeSeiskaKasiJaValmistava: Boolean = params.getAsOrElse("haeseiskakasijavalmistava", false)
 
     audit.log(
       auditUser,
@@ -65,13 +66,18 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
         .setField("oppijaOid", personOid)
         .setField("haeLukio", haeLukio.toString)
         .setField("haeAmmatilliset", haeAmmatilliset.toString)
+        .setField("haeSeiskaKasiJaValmistava", haeSeiskaKasiJaValmistava.toString)
         .build(),
       Changes.EMPTY
     )
     new AsyncResult {
       override val is: Future[_] = koskiService.updateHenkilotWithAliases(
         Set(personOid),
-        KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset)
+        KoskiSuoritusHakuParams(
+          saveLukio = haeLukio,
+          saveAmmatillinen = haeAmmatilliset,
+          saveSeiskaKasiJaValmistava = haeSeiskaKasiJaValmistava
+        )
       )
     }
   }
@@ -81,6 +87,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
     val personOids = parse(request.body).extract[Set[String]]
     val haeLukio: Boolean = params.getAsOrElse("haelukio", false)
     val haeAmmatilliset: Boolean = params.getAsOrElse("haeammatilliset", false)
+    val haeSeiskaKasiJaValmistava: Boolean = params.getAsOrElse("haeseiskakasijavalmistava", false)
     val maxOppijatPostSize: Int = ophConfig.integrations.koskiMaxOppijatPostSize
 
     if (personOids.size > maxOppijatPostSize) {
@@ -100,7 +107,11 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
     new AsyncResult {
       override val is: Future[_] = koskiService.updateHenkilotWithAliases(
         personOids,
-        KoskiSuoritusHakuParams(saveLukio = haeLukio, saveAmmatillinen = haeAmmatilliset)
+        KoskiSuoritusHakuParams(
+          saveLukio = haeLukio,
+          saveAmmatillinen = haeAmmatilliset,
+          saveSeiskaKasiJaValmistava = haeSeiskaKasiJaValmistava
+        )
       )
     }
   }
