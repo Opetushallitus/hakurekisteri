@@ -603,6 +603,11 @@ class KoskiDataHandler(
             && s.tila == "VALMIS"
         )
 
+      if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
+        logger.info(s"Henkilö: $henkilöOid | tallennettavatSuoritukset (ennen): $tallennettavatSuoritukset")
+        logger.info(s"Henkilö: $henkilöOid | fetchedSuoritukset: $fetchedSuoritukset")
+      }
+
       // Ei tallenneta perusopetuksen oppiaineen oppimäärän suorituksia
       // ellei henkilöllä ole myös valmista ja vahvistettua perusopetuksen suoritusta
       if (!hasValmisPerusopetuksenSuoritus) {
@@ -612,8 +617,7 @@ class KoskiDataHandler(
       }
 
       if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
-        logger.info(s"Henkilö: $henkilöOid | tallennettavatSuoritukset: $tallennettavatSuoritukset")
-        logger.info(s"Henkilö: $henkilöOid | fetchedSuoritukset: $fetchedSuoritukset")
+        logger.info(s"Henkilö: $henkilöOid | tallennettavatSuoritukset (jälkeen): $tallennettavatSuoritukset")
         logger.info(s"Henkilö: $henkilöOid | hasValmisPerusopetuksenSuoritus: $hasValmisPerusopetuksenSuoritus")
       }
 
