@@ -574,16 +574,6 @@ class KoskiDataHandler(
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
-      var suorituksetForRemoving = viimeisimmatSuoritukset
-      if (!params.saveLukio) {
-        tallennettavatSuoritukset =
-          tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
-      }
-      if (!params.saveAmmatillinen) {
-        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
-          Oids.ammatillisetKomoOids contains s.suoritus.komo
-        )
-      }
 
       // Tarkistetaan onko henkilön Koskessa tulevissa suorituksissa tai jo kannassa olevissa
       // suorituksissa valmis ja vahvistettu perusopetuksen suoritus.
@@ -604,36 +594,23 @@ class KoskiDataHandler(
             && s.tila == "VALMIS"
         )
 
-      if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
-        logger.info(
-          s"Henkilö: $henkilöOid | tallennettavatSuoritukset (ennen): $tallennettavatSuoritukset"
-        )
-        logger.info(s"Henkilö: $henkilöOid | fetchedSuoritukset: $fetchedSuoritukset")
-      }
-
       // Ei tallenneta perusopetuksen oppiaineen oppimäärän suorituksia
       // ellei henkilöllä ole myös valmista ja vahvistettua perusopetuksen suoritusta
       if (!hasValmisPerusopetuksenSuoritus) {
         tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
           Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
         )
-        suorituksetForRemoving = suorituksetForRemoving.filterNot(s =>
-          Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
-        )
       }
 
-      if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
-        logger.info(
-          s"Henkilö: $henkilöOid | tallennettavatSuoritukset (jälkeen): $tallennettavatSuoritukset"
-        )
-        logger.info(
-          s"Henkilö: $henkilöOid | hasValmisPerusopetuksenSuoritus: $hasValmisPerusopetuksenSuoritus"
-        )
-        logger.info(
-          s"Henkilö: $henkilöOid | viimeisimmatSuoritukset: $viimeisimmatSuoritukset"
-        )
-        logger.info(
-          s"Henkilö: $henkilöOid | suorituksetForRemoving: $suorituksetForRemoving"
+      val suorituksetForRemoving = tallennettavatSuoritukset
+
+      if (!params.saveLukio) {
+        tallennettavatSuoritukset =
+          tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
+      }
+      if (!params.saveAmmatillinen) {
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
+          Oids.ammatillisetKomoOids contains s.suoritus.komo
         )
       }
 
