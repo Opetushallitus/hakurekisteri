@@ -614,21 +614,6 @@ class KoskiDataHandler(
         )
       }
 
-      if (henkilöOid.equals("1.2.246.562.24.38994425611")) {
-        logger.info(
-          s"Henkilö: $henkilöOid | tallennettavatSuoritukset (jälkeen): $tallennettavatSuoritukset"
-        )
-        logger.info(
-          s"Henkilö: $henkilöOid | hasValmisPerusopetuksenSuoritus: $hasValmisPerusopetuksenSuoritus"
-        )
-        logger.info(
-          s"Henkilö: $henkilöOid | viimeisimmatSuoritukset: $viimeisimmatSuoritukset"
-        )
-        logger.info(
-          s"Henkilö: $henkilöOid | suorituksetForRemoving: $suorituksetForRemoving"
-        )
-      }
-
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
         fetchedSuoritukset,
         suorituksetForRemoving,
