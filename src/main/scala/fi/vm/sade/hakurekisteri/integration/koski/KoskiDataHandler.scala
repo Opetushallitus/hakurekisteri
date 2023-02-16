@@ -711,6 +711,12 @@ class KoskiDataHandler(
   }
 
   def isAlaikainen(koskiHenkiloContainer: KoskiHenkiloContainer) = {
+    val syntymaAika = koskiHenkiloContainer.henkilö.syntymäaika
+    val parsittu = LocalDate.parse(syntymaAika.get)
+    val ika = new Period(LocalDate.parse(syntymaAika.get), LocalDate.now()).getYears
+    logger.info(
+      s"Henkilön ${koskiHenkiloContainer.henkilö.oid} syntymäaika: ${syntymaAika} parsittuna: ${parsittu} ikä: ${ika}"
+    )
     koskiHenkiloContainer.henkilö.syntymäaika
       .map(syntymaAika => new Period(LocalDate.parse(syntymaAika), LocalDate.now()).getYears < 18)
       .getOrElse(false)
@@ -808,7 +814,7 @@ class KoskiDataHandler(
       koskihenkilöcontainer
     )
     logger.info(
-      s"Löytyikö Koskesta tuotavia suorituksia: ${suoritukset.nonEmpty} tuodaanko seiskaKasiJaValmistava: ${params.saveSeiskaKasiJaValmistava} onko alaikäinen: ${alaikainen}"
+      s"Löytyikö henkilölle ${henkiloOid} Koskesta tuotavia suorituksia: ${suoritukset.nonEmpty} tuodaanko seiskaKasiJaValmistava: ${params.saveSeiskaKasiJaValmistava} onko alaikäinen: ${alaikainen}"
     )
     if (
       suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(

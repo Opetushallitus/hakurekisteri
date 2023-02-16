@@ -1,0 +1,206 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.58787027701",
+    "hetu" : "200208A998S",
+    "syntymäaika" : "2008-02-20",
+    "etunimet" : "Mari-Anne Testi",
+    "kutsumanimi" : "Mari-Anne",
+    "sukunimi" : "Sandell-Testi",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.48970534995",
+    "versionumero" : 1,
+    "aikaleima" : "2023-02-15T07:44:26.969744",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.21458335409",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "03094",
+        "nimi" : {
+          "fi" : "Pukinmäenkaaren peruskoulu",
+          "sv" : "Pukinmäenkaaren peruskoulu",
+          "en" : "Pukinmäenkaaren peruskoulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Pukinmäenkaaren peruskoulu",
+          "sv" : "Pukinmäenkaaren peruskoulu",
+          "en" : "Pukinmäenkaaren peruskoulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Pukinmäenkaaren peruskoulu",
+        "sv" : "Pukinmäenkaaren peruskoulu",
+        "en" : "Pukinmäenkaaren peruskoulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingin kaupunki",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-08-11",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "999905",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Undervisning som förebereder för den grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetukseen valmistava opetus"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "57/011/2015",
+        "koulutustyyppi" : {
+          "koodiarvo" : "22",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Utbildning som förbereder för grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.21458335409",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "03094",
+          "nimi" : {
+            "fi" : "Pukinmäenkaaren peruskoulu",
+            "sv" : "Pukinmäenkaaren peruskoulu",
+            "en" : "Pukinmäenkaaren peruskoulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Pukinmäenkaaren peruskoulu",
+            "sv" : "Pukinmäenkaaren peruskoulu",
+            "en" : "Pukinmäenkaaren peruskoulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Pukinmäenkaaren peruskoulu",
+          "sv" : "Pukinmäenkaaren peruskoulu",
+          "en" : "Pukinmäenkaaren peruskoulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "perusopetukseenvalmistavaopetus",
+        "nimi" : {
+          "fi" : "Perusopetukseen valmistava opetus",
+          "sv" : "Förberedande undervisning för grundläggande utbildning",
+          "en" : "Instruction preparing for basic education"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetukseenvalmistavaopetus",
+      "nimi" : {
+        "fi" : "Perusopetukseen valmistava opetus",
+        "sv" : "Förberedande undervisning för den grundläggande utbildningen"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetukseen valmistava opetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-08-11"
+  } ]
+}
