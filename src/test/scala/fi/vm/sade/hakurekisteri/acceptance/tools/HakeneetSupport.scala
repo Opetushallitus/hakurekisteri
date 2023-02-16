@@ -972,7 +972,8 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
       Some(kausiKoodiK),
       Some(2015),
       None,
-      Some(Koulutusohjelma(Map.empty))
+      Some(Koulutusohjelma(Map.empty)),
+      None // TODO
     )
   val ataruHakukohde1 = hakukohde.Hakukohde(
     "1.2.246.562.20.14800254899",

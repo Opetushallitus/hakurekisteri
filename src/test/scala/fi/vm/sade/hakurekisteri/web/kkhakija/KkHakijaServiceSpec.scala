@@ -114,7 +114,8 @@ class KkHakijaServiceSpec
       Some(kausiKoodiS),
       Some(2015),
       None,
-      Some(Koulutusohjelma(Map.empty))
+      Some(Koulutusohjelma(Map.empty)),
+      None
     )
   private val suoritus1 = VirallinenSuoritus(
     YoTutkinto.yotutkinto,
@@ -428,7 +429,8 @@ class KkHakijaServiceSpec
         Some(kausiKoodiS),
         Some(2016),
         None,
-        Some(Koulutusohjelma(Map.empty))
+        Some(Koulutusohjelma(Map.empty)),
+        None
       )
     val hakukohteenKoulutukset: HakukohteenKoulutukset =
       HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))

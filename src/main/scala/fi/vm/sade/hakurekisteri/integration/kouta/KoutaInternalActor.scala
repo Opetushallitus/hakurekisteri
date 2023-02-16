@@ -103,19 +103,18 @@ class KoutaInternalActor(
       komoOid = koulutus.oid,
       tkKoulutuskoodi = koodi,
       kkKoulutusId = None,
-      koulutuksenAlkamiskausi = hakukohde.paateltyAlkamiskausi.map(ak =>
-        ak match {
-          case kausi if kausi.kausiUri.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
-          case kausi if kausi.kausiUri.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
-          case unknown =>
-            log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
-            TarjontaKoodi(None)
-        }
-      ),
+      koulutuksenAlkamiskausi = hakukohde.paateltyAlkamiskausi.map {
+        case kausi if kausi.kausiUri.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
+        case kausi if kausi.kausiUri.startsWith("kausi_s") => TarjontaKoodi(Some("S"))
+        case unknown =>
+          log.warning("Unknown alkamiskausiKoodiUri: " + unknown)
+          TarjontaKoodi(None)
+      },
       koulutuksenAlkamisvuosi =
         hakukohde.paateltyAlkamiskausi.map(ak => Integer.parseInt(ak.vuosi)),
       koulutuksenAlkamisPvms = None,
-      koulutusohjelma = None
+      koulutusohjelma = None,
+      johtaaTutkintoon = koulutus.johtaaTutkintoon
     )
 
   def getHakukohteenKoulutuksetForReal(hakukohdeOid: String): Future[HakukohteenKoulutukset] =

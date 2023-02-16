@@ -88,7 +88,8 @@ class KoutaInternalActorSpec
             Some(TarjontaKoodi(Some("K"))),
             Some(2023),
             None,
-            None
+            None,
+            Some(false)
           )
         )
       )
