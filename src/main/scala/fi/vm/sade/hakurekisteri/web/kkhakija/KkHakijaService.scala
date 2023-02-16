@@ -793,8 +793,6 @@ class KkHakijaService(
               hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
                 .map(koulutus =>
                   koulutus.copy(
-                    koulutuksenAlkamiskausi = None,
-                    koulutuksenAlkamisvuosi = None,
                     koulutuksenAlkamisPvms = None,
                     koulutusohjelma = None
                   )
