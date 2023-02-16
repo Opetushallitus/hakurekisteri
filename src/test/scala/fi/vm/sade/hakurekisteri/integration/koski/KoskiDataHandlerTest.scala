@@ -1450,11 +1450,14 @@ class KoskiDataHandlerTest
       5.seconds
     )
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
-    opiskelijat.size should equal(1)
+    opiskelijat.size should equal(2)
     opiskelijat.head should equal("1.2.246.562.24.32656706483")
     val opiskelija = opiskelijat.head
     val suoritukset = run(
-      database.run(sql"select resource_id from suoritus where henkilo_oid = $opiskelija".as[String])
+      database.run(
+        sql"select resource_id from suoritus where komo = ${Oids.perusopetuksenOppiaineenOppimaaraOid} and henkilo_oid = $opiskelija"
+          .as[String]
+      )
     )
     suoritukset should have length 1
     val suoritus = suoritukset.head
@@ -1968,6 +1971,50 @@ class KoskiDataHandlerTest
       database.run(sql"select * from arvosana where deleted = false and current = true".as[String])
     )
     arvosanat should have length 0
+  }
+
+  it should "store perusoppimäärän oppiaine if valmis perusopetus" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetuksenoppiaineen_oppimaara_perusopetuksella.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val komot = run(database.run(sql"select komo from suoritus".as[String]))
+    komot should contain(Oids.perusopetuksenOppiaineenOppimaaraOid)
+  }
+
+  it should "store not store perusoppimäärän oppiaine if no valmis perusopetus" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetuksenoppiaineen_oppimaara_ilman_perusopetusta.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val komot = run(database.run(sql"select komo from suoritus".as[String]))
+    komot should not contain Oids.perusopetuksenOppiaineenOppimaaraOid
   }
 
   it should "store peruskoulu with nelosia as kesken without arvosanat if nelosia deadline date is tomorrow" in {
@@ -3768,21 +3815,45 @@ class KoskiDataHandlerTest
     )
 
     val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("2")
+    opiskelija.head should equal("3")
 
-    val suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
+    val suoritukset = run(
+      database.run(
+        sql"select count(*) from suoritus where komo = ${Oids.perusopetuksenOppiaineenOppimaaraOid}"
+          .as[String]
+      )
+    )
     suoritukset.head should equal("2")
 
+    val perusopetuksenSuoritus = run(
+      database.run(
+        sql"select resource_id from suoritus where komo = ${Oids.perusopetusKomoOid}".as[String]
+      )
+    ).head
+
     var arvosanat =
-      run(database.run(sql"select count(*) from arvosana where current = true".as[String]))
+      run(
+        database.run(
+          sql"select count(*) from arvosana where current = true and suoritus != $perusopetuksenSuoritus"
+            .as[String]
+        )
+      )
     arvosanat.head should equal("2")
 
-    arvosanat =
-      run(database.run(sql"select count(*) from arvosana where aine like 'BI%'".as[String]))
+    arvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine like 'BI%' and suoritus != $perusopetuksenSuoritus"
+          .as[String]
+      )
+    )
     arvosanat.head should equal("1")
 
-    arvosanat =
-      run(database.run(sql"select count(*) from arvosana where aine like 'HI%'".as[String]))
+    arvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine like 'HI%' and suoritus != $perusopetuksenSuoritus"
+          .as[String]
+      )
+    )
     arvosanat.head should equal("1")
   }
 

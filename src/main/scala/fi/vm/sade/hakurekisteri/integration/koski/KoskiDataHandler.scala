@@ -574,6 +574,36 @@ class KoskiDataHandler(
     fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
+
+      // Tarkistetaan onko henkilön Koskessa tulevissa suorituksissa tai jo kannassa olevissa
+      // suorituksissa valmis ja vahvistettu perusopetuksen suoritus.
+      //
+      // Suoritusrekisterin kannassa jo olevista huomiodaan vain sellaiset jotka eivät ole tulleet
+      // Koskesta, koska sellaisten tulee löytyä yhä Koskesta tulevista suorituksista ja ne poistuvat
+      // jos suoritusta ei enää tulekaan Koskesta.
+      val hasValmisPerusopetuksenSuoritus = tallennettavatSuoritukset.exists(s =>
+        Oids.perusopetusKomoOid.contains(s.suoritus.komo)
+          && s.suoritus.vahv
+          && s.suoritus.tila == "VALMIS"
+      ) || fetchedSuoritukset
+        .map(_.asInstanceOf[VirallinenSuoritus])
+        .exists(s =>
+          Oids.perusopetusKomoOid.contains(s.komo)
+            && s.vahvistettu
+            && s.source != KoskiUtil.koski_integration_source
+            && s.tila == "VALMIS"
+        )
+
+      // Ei tallenneta perusopetuksen oppiaineen oppimäärän suorituksia
+      // ellei henkilöllä ole myös valmista ja vahvistettua perusopetuksen suoritusta
+      if (!hasValmisPerusopetuksenSuoritus) {
+        tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
+          Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
+        )
+      }
+
+      val suorituksetForRemoving = tallennettavatSuoritukset
+
       if (!params.saveLukio) {
         tallennettavatSuoritukset =
           tallennettavatSuoritukset.filterNot(s => s.suoritus.komo.equals(Oids.lukioKomoOid))
@@ -586,7 +616,7 @@ class KoskiDataHandler(
 
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
         fetchedSuoritukset,
-        viimeisimmatSuoritukset,
+        suorituksetForRemoving,
         henkilöOid,
         getAliases(personOidsWithAliases)
       ).recoverWith { case e: Exception =>
