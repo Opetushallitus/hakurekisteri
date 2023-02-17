@@ -104,6 +104,7 @@ case class Hakemus(
   hakemusnumero: String,
   organisaatio: String,
   hakukohde: String,
+  hakutoivePrioriteetti: Option[Int],
   hakukohdeKkId: Option[String],
   avoinVayla: Option[Boolean],
   valinnanTila: Option[Valintatila],
@@ -771,6 +772,7 @@ class KkHakijaService(
               hakemusnumero = hakemus.oid,
               organisaatio = toive.organizationOid.getOrElse(""),
               hakukohde = toive.koulutusId.getOrElse(""),
+              hakutoivePrioriteetti = Some(toive.preferenceNumber),
               hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
               avoinVayla = None, // TODO valinnoista?
               valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
@@ -848,6 +850,7 @@ class KkHakijaService(
             hakemusnumero = hakemusOid,
             organisaatio = toive.organizationOid.getOrElse(""),
             hakukohde = toive.koulutusId.getOrElse(""),
+            hakutoivePrioriteetti = None,
             hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
@@ -919,6 +922,7 @@ class KkHakijaService(
               hakemusnumero = hakemus.oid,
               organisaatio = toive.organizationOid.getOrElse(""),
               hakukohde = toive.koulutusId.getOrElse(""),
+              hakutoivePrioriteetti = None,
               hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
               avoinVayla = None, // TODO valinnoista?
               valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),

@@ -136,7 +136,7 @@ trait KkHakijaSwaggerApiV5
     ModelField("vastaanottaja", null, DataType.String)
   )
 
-  registerModel(Model("HakemusV5", "HakemusV5", hakemusFields.map { t => (t.name, t) }.toMap))
+  registerModel(Model("Hakemus", "Hakemus", hakemusFields.map { t => (t.name, t) }.toMap))
 
   registerModel(Model("Liite", "Liite", liiteFields.map { t => (t.name, t) }.toMap))
 
@@ -174,7 +174,7 @@ trait KkHakijaSwaggerApiV5
     ModelField(
       "hakemukset",
       null,
-      ContainerDataType("List", Some(ValueDataType("HakemusV5", None, Some("HakemusV5"))))
+      ContainerDataType("List", Some(ValueDataType("Hakemus", None, Some("Hakemus"))))
     ),
     ModelField(
       "liitteet",
