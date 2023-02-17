@@ -5,7 +5,7 @@ import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
@@ -710,19 +710,19 @@ class KoskiDataHandler(
       .toSeq
   }
 
-  def isAlaikainen(koskiHenkiloContainer: KoskiHenkiloContainer) = {
-    val syntymaAika = koskiHenkiloContainer.henkilö.syntymäaika
+  def isAlaikainen(henkilo: Option[Henkilo]) = {
+    val syntymaAika = henkilo.flatMap(_.syntymaaika)
     val parsittu = syntymaAika.map(s => LocalDate.parse(s)).getOrElse("ei ole")
     val ika = syntymaAika
       .map(s => new Period(LocalDate.parse(s), LocalDate.now()).getYears)
       .getOrElse("ei ole")
     logger.info(
-      s"Henkilön ${koskiHenkiloContainer.henkilö.oid} syntymäaika: ${syntymaAika
+      s"Henkilön ${henkilo.map(h => h.oidHenkilo).getOrElse("tyhjä")} syntymäaika: ${syntymaAika
         .getOrElse("ei ole")} parsittuna: ${parsittu} ikä: ${ika}"
     )
-    koskiHenkiloContainer.henkilö.syntymäaika
-      .map(syntymaAika => new Period(LocalDate.parse(syntymaAika), LocalDate.now()).getYears < 18)
-      .getOrElse(false)
+    henkilo
+      .flatMap(_.syntymaaika)
+      .exists(s => new Period(LocalDate.parse(s), LocalDate.now()).getYears < 18)
   }
   def updateOppilaitosSeiskaKasiJaValmistava(
     koskihenkilöcontainer: KoskiHenkiloContainer
@@ -809,19 +809,25 @@ class KoskiDataHandler(
   def processHenkilonTiedotKoskesta(
     koskihenkilöcontainer: KoskiHenkiloContainer,
     personOidsWithAliases: PersonOidsWithAliases,
-    params: KoskiSuoritusHakuParams
+    params: KoskiSuoritusHakuParams,
+    henkilo: Option[Henkilo] = None
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
+    val syntymaAikaKoskesta = koskihenkilöcontainer.henkilö.syntymäaika
+    val syntymaAikaOnrsta = henkilo.flatMap(_.syntymaaika)
     val alaikainen = isAlaikainen(
-      koskihenkilöcontainer
+      henkilo
+    )
+    logger.info(
+      s"Henkilön ${henkiloOid} syntymäaika Koskesta: ${syntymaAikaKoskesta} ja oppijanumerorekisteristä: ${syntymaAikaOnrsta} onko alaikäinen: ${alaikainen}"
     )
     logger.info(
       s"Löytyikö henkilölle ${henkiloOid} Koskesta tuotavia suorituksia: ${suoritukset.nonEmpty} tuodaanko seiskaKasiJaValmistava: ${params.saveSeiskaKasiJaValmistava} onko alaikäinen: ${alaikainen}"
     )
     if (
       suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
-        koskihenkilöcontainer
+        henkilo
       )
     ) {
       updateOppilaitosSeiskaKasiJaValmistava(koskihenkilöcontainer)

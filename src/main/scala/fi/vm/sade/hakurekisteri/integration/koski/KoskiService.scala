@@ -399,6 +399,11 @@ class KoskiService(
         s"saveKoskiHenkilotAsSuorituksetAndArvosanat: Filteröitiin ${filteredHenkilot.size - loytyyHenkiloOidi.size} henkilöä joilla ei oidia."
       )
     }
+    val henkiloOidToHenkilo =
+      Await.result(
+        oppijaNumeroRekisteri.getByOids(loytyyHenkiloOidi.flatMap(_.henkilö.oid).toSet),
+        Duration(1, TimeUnit.MINUTES)
+      )
     Future
       .sequence(
         loytyyHenkiloOidi.map(henkilo =>
@@ -406,7 +411,8 @@ class KoskiService(
             koskiDataHandler.processHenkilonTiedotKoskesta(
               henkilo,
               personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)),
-              params
+              params,
+              henkiloOidToHenkilo.get(henkilo.henkilö.oid.get)
             )
           } catch {
             case e: Exception => Future.successful(Seq(Left(e)))

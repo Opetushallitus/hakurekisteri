@@ -7,6 +7,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
   IOppijaNumeroRekisteri,
   MockPersonAliasesProvider,
   PersonOidsWithAliases
@@ -1927,21 +1928,23 @@ class KoskiDataHandlerTest
   it should "store valmistava opiskelija but not suoritukset when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "valmistava_sadun_testitapaus.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    val henkiloOid: String = henkilo.henkilö.oid.toString
-
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    koskiHenkilo should not be null
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
 
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
-        henkilo,
-        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
           saveSeiskaKasiJaValmistava = true
-        )
+        ),
+        Option(alaikainenOnrHenkilo)
       ),
       5.seconds
     )
@@ -1961,26 +1964,25 @@ class KoskiDataHandlerTest
 
   it should "store 8-luokkalainen opiskelija but not suoritukset when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    koskiHenkilo should not be null
     // varmistetaan että testitapaus ei ajan kuluessa täysi-ikäisty
-    val alaikainenHenkilo =
-      henkilo.copy(henkilö =
-        henkilo.henkilö.copy(syntymäaika = Option(LocalDate.now().minusYears(15).toString()))
-      )
-    val henkiloOid: String = alaikainenHenkilo.henkilö.oid.toString
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
 
-    alaikainenHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
-        alaikainenHenkilo,
-        PersonOidsWithAliases(alaikainenHenkilo.henkilö.oid.toSet),
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
           saveSeiskaKasiJaValmistava = true
-        )
+        ),
+        Option(alaikainenOnrHenkilo)
       ),
       5.seconds
     )
@@ -2000,20 +2002,22 @@ class KoskiDataHandlerTest
 
   it should "not store 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is false" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    val henkiloOid: String = henkilo.henkilö.oid.toString
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo should not be null
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
-        henkilo,
-        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
           saveSeiskaKasiJaValmistava = false
-        )
+        ),
+        Option(alaikainenOnrHenkilo)
       ),
       5.seconds
     )
@@ -2030,25 +2034,24 @@ class KoskiDataHandlerTest
 
   it should "not store 18 year old 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    val taysiIkainenHenkilo =
-      henkilo.copy(henkilö =
-        henkilo.henkilö.copy(syntymäaika = Option(LocalDate.now().minusYears(18).toString()))
-      )
-    val henkiloOid: String = taysiIkainenHenkilo.henkilö.oid.toString
-    taysiIkainenHenkilo should not be null
-    taysiIkainenHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
-    val isAlaikainen = koskiDatahandler.isAlaikainen(taysiIkainenHenkilo)
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val taysiIkainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(18).toString())
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo should not be null
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val isAlaikainen = koskiDatahandler.isAlaikainen(Option(taysiIkainenOnrHenkilo))
     isAlaikainen should equal(false)
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
-        taysiIkainenHenkilo,
-        PersonOidsWithAliases(taysiIkainenHenkilo.henkilö.oid.toSet),
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
         new KoskiSuoritusHakuParams(
           saveLukio = false,
           saveAmmatillinen = false,
           saveSeiskaKasiJaValmistava = true
-        )
+        ),
+        Option(taysiIkainenOnrHenkilo)
       ),
       5.seconds
     )
@@ -2061,6 +2064,23 @@ class KoskiDataHandlerTest
       )
     )
     suoritus.size should equal(0)
+  }
+
+  private def generateTestONRHenkilo(koskiKenkilo: KoskiHenkiloContainer, syntymaAika: String) = {
+    val taysiIkainenOnrHenkilo = new Henkilo(
+      oidHenkilo = koskiKenkilo.henkilö.oid.get,
+      hetu = None,
+      henkiloTyyppi = "whatever",
+      etunimet = None,
+      kutsumanimi = None,
+      sukunimi = None,
+      aidinkieli = None,
+      kansalaisuus = List(),
+      syntymaaika = Option(syntymaAika),
+      sukupuoli = None,
+      turvakielto = Option(false)
+    )
+    taysiIkainenOnrHenkilo
   }
 
   it should "store peruskoulu as keskeytynyt without arvosanat if deadline date is yesterday and no vahvistus" in {
