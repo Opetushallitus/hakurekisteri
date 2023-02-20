@@ -70,6 +70,7 @@ class KkHakijaResourceSpec
   private val valintaRekisteri = new ValintarekisteriActorRef(mock[ActorRef])
   private val koodistoMock = new KoodistoActorRef(mock[ActorRef])
   private val valintaperusteetMock = new ValintaperusteetServiceMock
+  private val ensikertalaisuusMock = mock[ActorRef]
 
   val service = new KkHakijaService(
     hakemusService,
@@ -82,7 +83,8 @@ class KkHakijaResourceSpec
     valintaTulosMock,
     valintaRekisteri,
     valintaperusteetMock,
-    Timeout(1.minute)
+    Timeout(1.minute),
+    ensikertalaisuusMock
   )
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")

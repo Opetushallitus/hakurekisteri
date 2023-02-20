@@ -64,7 +64,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       valintaTulos = new ValintaTulosActorRef(anyActorRef),
       valintaRekisteri = new ValintarekisteriActorRef(anyActorRef),
       valintaperusteetService = new ValintaperusteetServiceMock,
-      Timeout(1, TimeUnit.MINUTES)
+      Timeout(1, TimeUnit.MINUTES),
+      ensikertalainenActor = anyActorRef
     )
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")

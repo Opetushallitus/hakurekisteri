@@ -6,6 +6,7 @@ import java.util.{Calendar, Date}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
@@ -50,7 +51,6 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
-import org.joda.time.DateTime
 import org.scalatra.util.RicherString._
 import org.slf4j.LoggerFactory
 
@@ -151,7 +151,8 @@ case class Hakija(
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
   turvakielto: Boolean,
-  hakemukset: Seq[Hakemus]
+  hakemukset: Seq[Hakemus],
+  ensikertalainen: Option[Boolean]
 )
 
 case class HakijaV3(
@@ -232,7 +233,8 @@ case class HakijaV5(
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
   turvakielto: Boolean,
-  hakemukset: Seq[Hakemus]
+  hakemukset: Seq[Hakemus],
+  ensikertalainen: Option[Boolean]
 )
 
 object KkHakijaParamMissingException extends Exception
@@ -248,7 +250,8 @@ class KkHakijaService(
   valintaTulos: ValintaTulosActorRef,
   valintaRekisteri: ValintarekisteriActorRef,
   valintaperusteetService: IValintaperusteetService,
-  valintaTulosTimeout: Timeout
+  valintaTulosTimeout: Timeout,
+  ensikertalainenActor: ActorRef
 )(implicit system: ActorSystem) {
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
@@ -469,6 +472,14 @@ class KkHakijaService(
   ) = {
     val hakemusOid: Option[String] = if (hakemukset.size == 1) Some(hakemukset.last.oid) else None
 
+    val ensikertalaisuudet: Future[Map[String, Boolean]] =
+      ((ensikertalainenActor ? EnsikertalainenQuery(
+        henkiloOids = hakemukset.flatMap(h => h.personOid).toSet,
+        hakuOid = haku.oid
+      )))(60.seconds)
+        .mapTo[Seq[Ensikertalainen]]
+        .map(_.groupBy(_.henkiloOid).mapValues(_(0).ensikertalainen))
+
     val maksuvelvollisuudet: Set[String] = hakemukset
       .flatMap(_ match {
         case h: FullHakemus =>
@@ -496,7 +507,8 @@ class KkHakijaService(
                         sijoittelunTulokset,
                         hakukohdeOids,
                         maksusByHakijaAndHakukohde,
-                        jonotiedot
+                        jonotiedot,
+                        ensikertalaisuudet
                       )
                     )
                   )
@@ -1103,7 +1115,8 @@ class KkHakijaService(
             julkaisulupa = hakemus.julkaisulupa,
             hKelpoisuusMaksuvelvollisuus = None
           )
-        )
+        ),
+        ensikertalainen = None
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1148,7 +1161,8 @@ class KkHakijaService(
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = None,
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset
+          hakemukset = hakemukset,
+          ensikertalainen = None
         )
       })
     case _ => ???
@@ -1203,7 +1217,8 @@ class KkHakijaService(
     tulokset: SijoitteluTulos,
     hakukohdeOids: Seq[String],
     lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]],
-    jonotiedot: Seq[ValintatapajononTiedot]
+    jonotiedot: Seq[ValintatapajononTiedot],
+    ensikertalaisuudet: Future[Map[String, Boolean]]
   )(h: HakijaHakemus): Option[Future[Hakija]] = h match {
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1220,6 +1235,7 @@ class KkHakijaService(
           henkilo = hakemus.henkilo.oidHenkilo,
           komo = YoTutkinto.yotutkinto
         )).mapTo[Seq[VirallinenSuoritus]]
+        ens <- ensikertalaisuudet
       } yield {
         val syntymaaika = hakemus.henkilo.syntymaaika.map(s =>
           new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))
@@ -1255,7 +1271,8 @@ class KkHakijaService(
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset
+          hakemukset = hakemukset,
+          ensikertalainen = ens.get(hakemus.henkilo.oidHenkilo)
         )
       })
     case _ => ???
@@ -1336,7 +1353,8 @@ class KkHakijaService(
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
-        hakemukset = hakemukset
+        hakemukset = hakemukset,
+        ensikertalainen = None
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1388,7 +1406,8 @@ class KkHakijaService(
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset
+          hakemukset = hakemukset,
+          ensikertalainen = None
         )
       })
     case _ => ???
@@ -1467,7 +1486,8 @@ class KkHakijaService(
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
-        hakemukset = hakemukset
+        hakemukset = hakemukset,
+        ensikertalainen = None
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1518,7 +1538,8 @@ class KkHakijaService(
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset
+          hakemukset = hakemukset,
+          ensikertalainen = None
         )
       })
     case _ => ???
@@ -1589,7 +1610,8 @@ class KkHakijaService(
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
-        hakemukset = hakemukset
+        hakemukset = hakemukset,
+        ensikertalainen = None
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1641,7 +1663,8 @@ class KkHakijaService(
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset
+          hakemukset = hakemukset,
+          ensikertalainen = None
         )
       })
     case _ => ???

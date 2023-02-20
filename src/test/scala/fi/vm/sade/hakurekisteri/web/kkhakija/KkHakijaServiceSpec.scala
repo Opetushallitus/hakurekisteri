@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
 import dispatch.Future
 import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
@@ -138,6 +138,7 @@ class KkHakijaServiceSpec
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val valintaperusteetMock = new ValintaperusteetServiceMock
   private val hakukohderyhmaServiceMock = Mockito.mock(classOf[HakukohderyhmaService]);
+  private val ensikertalaisuusMock = mock[ActorRef]
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -188,7 +189,8 @@ class KkHakijaServiceSpec
     valintaTulosMock,
     valintaRekisteri,
     valintaperusteetMock,
-    Timeout(1.minute)
+    Timeout(1.minute),
+    ensikertalaisuusMock
   )
 
   override def beforeEach() {
@@ -240,7 +242,8 @@ class KkHakijaServiceSpec
       valintaTulosMock,
       valintaRekisteri,
       valintaperusteetMock,
-      Timeout(1.minute)
+      Timeout(1.minute),
+      ensikertalaisuusMock
     )
     try {
       Await.result(
@@ -731,7 +734,8 @@ class KkHakijaServiceSpec
       valintaTulosMock,
       valintaRekisteri,
       valintaperusteetMock,
-      Timeout(1.minute)
+      Timeout(1.minute),
+      ensikertalaisuusMock
     )
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), "{}"))
