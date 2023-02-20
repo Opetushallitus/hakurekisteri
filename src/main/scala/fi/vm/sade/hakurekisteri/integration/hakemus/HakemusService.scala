@@ -465,6 +465,7 @@ class HakemusService(
             personOid = Some(hakemus.personOid),
             applicationSystemId = hakemus.applicationSystemId,
             createdTime = hakemus.createdTime,
+            hakemusFirstSubmittedTime = hakemus.hakemusFirstSubmittedTime,
             hakutoiveet = Some(hakutoiveet),
             henkilo = henkilot(hakemus.personOid),
             asiointiKieli = hakemus.kieli,
