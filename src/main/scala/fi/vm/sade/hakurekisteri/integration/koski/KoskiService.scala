@@ -399,6 +399,9 @@ class KoskiService(
         s"saveKoskiHenkilotAsSuorituksetAndArvosanat: Filteröitiin ${filteredHenkilot.size - loytyyHenkiloOidi.size} henkilöä joilla ei oidia."
       )
     }
+    logger.info(
+      s"Haetaan syntymäaika oppijanumerorekisteristä"
+    )
     val henkiloOidToHenkilo =
       Await.result(
         oppijaNumeroRekisteri.getByOids(loytyyHenkiloOidi.flatMap(_.henkilö.oid).toSet),
