@@ -2,14 +2,17 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import java.util.{TimeZone}
-
+import java.util.TimeZone
 import akka.actor.{ActorSystem, Scheduler}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  IOppijaNumeroRekisteri,
+  PersonOidsWithAliases
+}
 import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -402,42 +405,82 @@ class KoskiService(
     logger.info(
       s"Haetaan syntymäaika oppijanumerorekisteristä"
     )
-    val henkiloOidToHenkilo =
-      Await.result(
-        oppijaNumeroRekisteri.getByOids(loytyyHenkiloOidi.flatMap(_.henkilö.oid).toSet),
-        Duration(1, TimeUnit.MINUTES)
-      )
-    Future
-      .sequence(
-        loytyyHenkiloOidi.map(henkilo =>
-          (try {
-            koskiDataHandler.processHenkilonTiedotKoskesta(
-              henkilo,
-              personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)),
-              params,
-              henkiloOidToHenkilo.get(henkilo.henkilö.oid.get)
-            )
-          } catch {
-            case e: Exception => Future.successful(Seq(Left(e)))
-          }).map(results => {
-            val es = results.collect { case Left(e) => e }
-            es.foreach(e =>
-              logger.error(
-                e,
-                s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} epäonnistui"
+    logger.info(
+      s"Haetaan syntymäaika oppijanumerorekisteristä"
+    )
+    val henkiloOidToHenkilo: Future[Map[String, Henkilo]] =
+      if (params.saveSeiskaKasiJaValmistava)
+        oppijaNumeroRekisteri.getByOids(loytyyHenkiloOidi.flatMap(_.henkilö.oid).toSet)
+      else
+        Future.successful(Map.empty)
+
+    henkiloOidToHenkilo.flatMap(henkilot =>
+      Future
+        .sequence(
+          loytyyHenkiloOidi.map(henkilo =>
+            (try {
+              koskiDataHandler.processHenkilonTiedotKoskesta(
+                henkilo,
+                personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)),
+                params,
+                henkilot.get(henkilo.henkilö.oid.get)
               )
-            )
-            if (es.isEmpty) {
-              logger.info(s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} onnistui")
-              Right(henkilo.henkilö.oid.get)
-            } else {
-              Left(henkilo.henkilö.oid.get)
-            }
-          })
+            } catch {
+              case e: Exception => Future.successful(Seq(Left(e)))
+            }).map(results => {
+              val es = results.collect { case Left(e) => e }
+              es.foreach(e =>
+                logger.error(
+                  e,
+                  s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} epäonnistui"
+                )
+              )
+              if (es.isEmpty) {
+                logger.info(
+                  s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} onnistui"
+                )
+                Right(henkilo.henkilö.oid.get)
+              } else {
+                Left(henkilo.henkilö.oid.get)
+              }
+            })
+          )
         )
-      )
-      .map(results =>
-        (results.collect { case Left(oid) => oid }, results.collect { case Right(oid) => oid })
-      )
+        .map(results =>
+          (results.collect { case Left(oid) => oid }, results.collect { case Right(oid) => oid })
+        )
+    )
+//    Future
+//      .sequence(
+//        loytyyHenkiloOidi.map(henkilo =>
+//          (try {
+//            koskiDataHandler.processHenkilonTiedotKoskesta(
+//              henkilo,
+//              personOidsWithAliases.intersect(Set(henkilo.henkilö.oid.get)),
+//              params,
+//              oppijaNumeroRekisteri.getByOids((loytyyHenkiloOidi.flatMap(_.henkilö.oid).toSet).flatMap(henkilo => henkilo.).flatMap(henkilo => henkilo.henkilö.oid.get) henkiloOidToHenkilo.get(henkilo.henkilö.oid.get)
+//            )
+//          } catch {
+//            case e: Exception => Future.successful(Seq(Left(e)))
+//          }).map(results => {
+//            val es = results.collect { case Left(e) => e }
+//            es.foreach(e =>
+//              logger.error(
+//                e,
+//                s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} epäonnistui"
+//              )
+//            )
+//            if (es.isEmpty) {
+//              logger.info(s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} onnistui")
+//              Right(henkilo.henkilö.oid.get)
+//            } else {
+//              Left(henkilo.henkilö.oid.get)
+//            }
+//          })
+//        )
+//      )
+//      .map(results =>
+//        (results.collect { case Left(oid) => oid }, results.collect { case Right(oid) => oid })
+//      )
   }
 }
