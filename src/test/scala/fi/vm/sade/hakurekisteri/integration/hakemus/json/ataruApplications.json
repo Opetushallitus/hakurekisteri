@@ -2,6 +2,7 @@
   "applications": [
     {
       "createdTime": "",
+      "hakemusFirstSubmittedTime": "",
       "oid": "1.2.246.562.11.00000000000000005261",
       "personOid": "1.2.246.562.24.91842462815",
       "applicationSystemId": "1.2.246.562.29.31587915971",
@@ -34,6 +35,7 @@
     {
       "oid": "1.2.246.562.11.00000000000000005224",
       "createdTime": "",
+      "hakemusFirstSubmittedTime": "",
       "personOid": "1.2.246.562.24.91842462815",
       "applicationSystemId": "1.2.246.562.29.64944541586",
       "kieli": "en",
