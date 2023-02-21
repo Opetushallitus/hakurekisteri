@@ -7,6 +7,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
   IOppijaNumeroRekisteri,
   MockPersonAliasesProvider,
   PersonOidsWithAliases
@@ -16,7 +17,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -352,6 +353,39 @@ class KoskiDataHandlerTest
     result should have length 1
     result.head.suoritus.tila should equal("VALMIS")
     result.head.arvosanat should have length 13
+  }
+
+  it should "not parse lasna-opiskeluoikeus if there is another tila later for 8_luokka.json oppilaitos" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val lasnaOpiskeluOikeudet =
+      koskiDatahandler.filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(henkilo)
+    lasnaOpiskeluOikeudet should have length 0
+  }
+
+  it should "parse 8-luokkalainen to be imported for 8_luokka_lasna.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val lasnaOpiskeluOikeudet =
+      koskiDatahandler.filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(henkilo)
+    lasnaOpiskeluOikeudet should have length 1
+  }
+
+  it should "parse perusopetukseen valmistava for koskidata_perusopetukseen_valmistava.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val lasnaOpiskeluOikeudet =
+      koskiDatahandler.filter78ValmistavaEiYsiLasnaOpiskeluoikeudet(henkilo)
+    lasnaOpiskeluOikeudet should have length 1
   }
 
   it should "parse peruskoulu_9_luokka_päättötodistus_jää_luokalle.json data as keskeytynyt after deadline" in {
@@ -1889,6 +1923,164 @@ class KoskiDataHandlerTest
       )
     )
     suoritus.size should equal(0)
+  }
+
+  it should "store valmistava opiskelija but not suoritukset when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "valmistava_sadun_testitapaus.json").mkString
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    koskiHenkilo should not be null
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
+        ),
+        Option(alaikainenOnrHenkilo)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.21458335409")
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
+  it should "store 8-luokkalainen opiskelija but not suoritukset when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    koskiHenkilo should not be null
+    // varmistetaan että testitapaus ei ajan kuluessa täysi-ikäisty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
+        ),
+        Option(alaikainenOnrHenkilo)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.207119642610")
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
+  it should "not store 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is false" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo should not be null
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = false
+        ),
+        Option(alaikainenOnrHenkilo)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(0)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
+  it should "not store 18 year old 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val taysiIkainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(18).toString())
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo should not be null
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val isAlaikainen = koskiDatahandler.isAlaikainen(Option(taysiIkainenOnrHenkilo))
+    isAlaikainen should equal(false)
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
+        ),
+        Option(taysiIkainenOnrHenkilo)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(0)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
+  private def generateTestONRHenkilo(koskiKenkilo: KoskiHenkiloContainer, syntymaAika: String) = {
+    val taysiIkainenOnrHenkilo = new Henkilo(
+      oidHenkilo = koskiKenkilo.henkilö.oid.get,
+      hetu = None,
+      henkiloTyyppi = "whatever",
+      etunimet = None,
+      kutsumanimi = None,
+      sukunimi = None,
+      aidinkieli = None,
+      kansalaisuus = List(),
+      syntymaaika = Option(syntymaAika),
+      sukupuoli = None,
+      turvakielto = Option(false)
+    )
+    taysiIkainenOnrHenkilo
   }
 
   it should "store peruskoulu as keskeytynyt without arvosanat if deadline date is yesterday and no vahvistus" in {
@@ -3579,6 +3771,111 @@ class KoskiDataHandlerTest
 
     KoskiUtil.deadlineDate = new LocalDate("2019-06-03").minusDays(30)
     koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo) should be(Seq())
+  }
+
+  it should "save 8-luokkalainen opiskelija with oppilaitos for 8_luokka_lasna.json" in {
+    val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
+      5.seconds
+    )
+
+    val opiskelijaCount = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelijaCount.head should equal("1")
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.207119642610")
+    val alkamispaiva = run(database.run(sql"select alku_paiva from opiskelija".as[String]))
+    alkamispaiva.head should equal(
+      LocalDate.parse("2021-08-02").toDateTimeAtStartOfDay.getMillis.toString
+    )
+
+  }
+
+  it should "save perusopetukseen valmistava opiskelija for koskidata_perusopetukseen_valmistava.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
+      5.seconds
+    )
+
+    val opiskelijaCount = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelijaCount.head should equal("1")
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.44633630015")
+    val alkamispaiva = run(database.run(sql"select alku_paiva from opiskelija".as[String]))
+    alkamispaiva.head should equal(
+      DateTime.parse("2021-02-24T14:14:19.627477").getMillis.toString
+    )
+  }
+
+  it should "should not save 4-luokkalainen opiskelija for koskidata_4_luokka_kesken.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_4_luokka_kesken.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
+      5.seconds
+    )
+
+    val result = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result.head.toInt should equal(0)
+  }
+
+  it should "should not save 9-luokkalainen opiskelija for koskidata_9_luokka_lasna.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_9_luokka_lasna.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
+      5.seconds
+    )
+
+    val result = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result.head.toInt should equal(0)
+  }
+
+  it should "throw error if there are multiple lasna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_monessalasna.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    try {
+      Await.result(
+        koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
+        5.seconds
+      )
+    } catch {
+      case ex: RuntimeException => // Expected
+    }
+    val result = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    result.head.toInt should equal(0)
   }
 
   it should "store correct luokka and oppilaitosoid for erikoisammattitutkinto" in {

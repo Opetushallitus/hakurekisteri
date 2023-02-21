@@ -1,0 +1,315 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.92170778843",
+    "hetu" : "070850-8188",
+    "syntymäaika" : "1950-08-07",
+    "etunimet" : "Anselmi",
+    "kutsumanimi" : "Anselmi",
+    "sukunimi" : "982Validaatio",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [
+    {
+    "oid" : "1.2.246.562.15.22844111918",
+    "versionumero" : 1,
+    "aikaleima" : "2021-02-24T14:14:19.627477",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.44633630015",
+      "nimi" : {
+        "fi" : "Päiväkoti Kätzlein",
+        "sv" : "Päiväkoti Kätzlein",
+        "en" : "Päiväkoti Kätzlein"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "593",
+        "nimi" : {
+          "fi" : "Pieksämäki",
+          "sv" : "Pieksämäki"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2021-02-24",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "999905",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Undervisning som förebereder för den grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetukseen valmistava opetus"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "57/011/2015"
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.44633630015",
+        "nimi" : {
+          "fi" : "Päiväkoti Kätzlein",
+          "sv" : "Päiväkoti Kätzlein",
+          "en" : "Päiväkoti Kätzlein"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "593",
+          "nimi" : {
+            "fi" : "Pieksämäki",
+            "sv" : "Pieksämäki"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "perusopetukseenvalmistavaopetus",
+        "nimi" : {
+          "fi" : "Perusopetukseen valmistava opetus",
+          "sv" : "Förberedande undervisning för grundläggande utbildning",
+          "en" : "Instruction preparing for basic education"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetukseenvalmistavaopetus",
+      "nimi" : {
+        "fi" : "Perusopetukseen valmistava opetus",
+        "sv" : "Förberedande undervisning för den grundläggande utbildningen"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetukseen valmistava opetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2021-02-24"
+  },
+    {
+    "oid" : "1.2.246.562.15.19877245746",
+    "versionumero" : 1,
+    "aikaleima" : "2022-09-02T15:44:39.902260",
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.90578059058",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "01697",
+        "nimi" : {
+          "fi" : "Västra Nylands folkhögskola",
+          "sv" : "Västra Nylands folkhögskola",
+          "en" : "Västra Nylands folkhögskola"
+        },
+        "lyhytNimi" : {
+          "fi" : "Västra Nylands folkhögskola",
+          "sv" : "Västra Nylands folkhögskola",
+          "en" : "Västra Nylands folkhögskola"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Västra Nylands folkhögskola",
+        "sv" : "Västra Nylands folkhögskola",
+        "en" : "Västra Nylands folkhögskola"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "710",
+        "nimi" : {
+          "fi" : "Raasepori",
+          "sv" : "Raseborg"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.73316574554",
+      "nimi" : {
+        "fi" : "Samkommunen för Västra Nylands folkhögskola",
+        "sv" : "Samkommunen för Västra Nylands folkhögskola",
+        "en" : "Samkommunen för Västra Nylands folkhögskola"
+      },
+      "yTunnus" : "0203394-9",
+      "kotipaikka" : {
+        "koodiarvo" : "710",
+        "nimi" : {
+          "fi" : "Raasepori",
+          "sv" : "Raseborg"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-09-02",
+        "tila" : {
+          "koodiarvo" : "hyvaksytystisuoritettu",
+          "nimi" : {
+            "fi" : "Hyväksytysti suoritettu",
+            "sv" : "Avlagd med godkänt resultat",
+            "en" : "Passed"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.90578059058",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "01697",
+          "nimi" : {
+            "fi" : "Västra Nylands folkhögskola",
+            "sv" : "Västra Nylands folkhögskola",
+            "en" : "Västra Nylands folkhögskola"
+          },
+          "lyhytNimi" : {
+            "fi" : "Västra Nylands folkhögskola",
+            "sv" : "Västra Nylands folkhögskola",
+            "en" : "Västra Nylands folkhögskola"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Västra Nylands folkhögskola",
+          "sv" : "Västra Nylands folkhögskola",
+          "en" : "Västra Nylands folkhögskola"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "710",
+          "nimi" : {
+            "fi" : "Raasepori",
+            "sv" : "Raseborg"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "tyyppi" : {
+        "koodiarvo" : "vstvapaatavoitteinenkoulutus",
+        "nimi" : {
+          "fi" : "Vapaan sivistystyön vapaatavoitteinen koulutus",
+          "sv" : "Utbildning inom fritt bildningsarbete med fri inriktning",
+          "en" : "Vapaan sivistystyön vapaatavoitteinen koulutus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      },
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "099999",
+          "nimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "lyhytNimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "koulutustyyppi" : {
+          "koodiarvo" : "10",
+          "nimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "lyhytNimi" : {
+            "fi" : "Vapaan sivistystyön koulutus",
+            "sv" : "Fritt bildningsarbete"
+          },
+          "koodistoUri" : "koulutustyyppi",
+          "koodistoVersio" : 2
+        },
+        "opintokokonaisuus" : {
+          "koodiarvo" : "1487",
+          "nimi" : {
+            "fi" : "22SKAtk Tietotekniikka"
+          },
+          "koodistoUri" : "opintokokonaisuudet",
+          "koodistoVersio" : 1
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "SV",
+        "nimi" : {
+          "fi" : "ruotsi",
+          "sv" : "svenska",
+          "en" : "Swedish"
+        },
+        "lyhytNimi" : {
+          "fi" : "ruotsi",
+          "sv" : "svenska",
+          "en" : "Swedish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "vapaansivistystyonkoulutus",
+      "nimi" : {
+        "fi" : "Vapaan sivistystyön koulutus",
+        "sv" : "Fritt bildningsarbete"
+      },
+      "lyhytNimi" : {
+        "fi" : "Vapaan sivistystyön koulutus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-09-02",
+    "päättymispäivä" : "2022-09-02"
+  } ]
+}

@@ -42,12 +42,25 @@ case class KoskiOpiskeluoikeus(
     .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
     .head
 
+  def getLatestSeiskaKasiSuoritus: Option[KoskiSuoritus] = {
+    suoritukset
+      .filter(s =>
+        s.koulutusmoduuli.tunniste.exists(tunniste =>
+          tunniste.koodiarvo.equals("7") || tunniste.koodiarvo.equals("8")
+        )
+      )
+      .sortBy(_.alkamispäivä.getOrElse(null))(Ordering[String].reverse)
+      .headOption
+  }
+
+  def getSeiskaKasiluokanAlkamispaiva: Option[LocalDate] = {
+    getLatestSeiskaKasiSuoritus.flatMap(suoritus =>
+      suoritus.alkamispäivä.map(ap => LocalDate.parse(ap))
+    )
+  }
   def getYsiluokanAlkamispaiva: Option[LocalDate] = {
     if (opiskeluoikeusSisaltaaYsisuorituksen) {
-      getLatestYsiSuoritus.alkamispäivä match {
-        case Some(alkamispaiva) => Some(LocalDate.parse(alkamispaiva))
-        case None               => None
-      }
+      getLatestYsiSuoritus.alkamispäivä.map(ap => LocalDate.parse(ap))
     } else
       None
   }
@@ -321,5 +334,6 @@ case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean]
 case class KoskiSuoritusHakuParams(
   saveLukio: Boolean = false,
   saveAmmatillinen: Boolean = false,
+  saveSeiskaKasiJaValmistava: Boolean = false,
   retryWaitMillis: Long = 10000
 )
