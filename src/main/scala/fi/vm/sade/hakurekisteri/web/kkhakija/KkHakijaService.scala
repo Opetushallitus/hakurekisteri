@@ -779,6 +779,9 @@ class KkHakijaService(
             maksuvelvollisuus =
               Some(hakemus.paymentObligations.getOrElse(hakukohdeOid, "NOT_CHECKED"))
           )
+          val jononOid = sijoitteluTulos.valintatapajono.get(hakemus.oid, hakukohdeOid)
+          val jononNimi = jononOid.flatMap(oid => jonotiedot.find(_.oid == oid)).flatMap(_.nimi)
+
           Some(
             Hakemus(
               haku = hakemus.applicationSystemId,
@@ -795,7 +798,7 @@ class KkHakijaService(
               valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
               vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemus.oid, hakukohdeOid),
               valintatapajononTyyppi = jononTyyppi,
-              valintatapajononNimi = sijoitteluTulos.valintatapajono.get(hakemus.oid, hakukohdeOid),
+              valintatapajononNimi = jononNimi,
               hyvaksymisenEhto = sijoitteluTulos.hyvaksymisenEhto.get(hakemus.oid, hakukohdeOid),
               pisteet = sijoitteluTulos.pisteet.get(hakemus.oid, hakukohdeOid),
               ilmoittautumiset = lasnaolot,

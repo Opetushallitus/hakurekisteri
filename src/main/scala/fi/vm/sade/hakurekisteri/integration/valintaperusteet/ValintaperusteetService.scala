@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-case class ValintatapajononTiedot(oid: String, tyyppi: Option[String])
+case class ValintatapajononTiedot(oid: String, tyyppi: Option[String], nimi: Option[String])
 
 trait IValintaperusteetService {
   def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]]
@@ -46,6 +46,10 @@ class ValintaperusteetService(restClient: VirkailijaRestClient)(implicit val sys
 class ValintaperusteetServiceMock extends IValintaperusteetService {
   override def getValintatapajonot(jonoOids: Set[String]): Future[Seq[ValintatapajononTiedot]] =
     Future.successful(
-      jonoOids.map(oid => ValintatapajononTiedot(oid, Some("valintatapajono_m"))).toSeq
+      jonoOids
+        .map(oid =>
+          ValintatapajononTiedot(oid, Some("valintatapajono_m"), Some("valintatapajono_nimi"))
+        )
+        .toSeq
     )
 }
