@@ -711,15 +711,6 @@ class KoskiDataHandler(
   }
 
   def isAlaikainen(henkilo: Option[Henkilo]) = {
-    val syntymaAika = henkilo.flatMap(_.syntymaaika)
-    val parsittu = syntymaAika.map(s => LocalDate.parse(s)).getOrElse("ei ole")
-    val ika = syntymaAika
-      .map(s => new Period(LocalDate.parse(s), LocalDate.now()).getYears)
-      .getOrElse("ei ole")
-    logger.info(
-      s"Henkilön ${henkilo.map(h => h.oidHenkilo).getOrElse("tyhjä")} syntymäaika: ${syntymaAika
-        .getOrElse("ei ole")} parsittuna: ${parsittu} ikä: ${ika}"
-    )
     henkilo
       .flatMap(_.syntymaaika)
       .exists(s => new Period(LocalDate.parse(s), LocalDate.now()).getYears < 18)
@@ -746,11 +737,11 @@ class KoskiDataHandler(
         val opiskelija: Option[Opiskelija] = oikeudet.headOption
           .map(opiskeluoikeus => {
             val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
-            logger.info(
-              s"Tuotiin perusopetuksen opiskelijan ${henkiloOid} tiedot Koskesta."
-            )
             opiskeluoikeus.tyyppi.get.koodiarvo match {
               case "perusopetukseenvalmistavaopetus" =>
+                logger.info(
+                  s"Tuotiin perusopetukseen valmistavan opetuksen opiskelijan ${henkiloOid} tiedot Koskesta."
+                )
                 Opiskelija(
                   oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
                   luokkataso = "valmistava",
@@ -762,6 +753,9 @@ class KoskiDataHandler(
                   source = KoskiUtil.koski_integration_source
                 )
               case "perusopetus" =>
+                logger.info(
+                  s"Tuotiin perusopetuksen 7./8.-luokkalaisen opiskelijan ${henkiloOid} tiedot Koskesta."
+                )
                 Opiskelija(
                   oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
                   luokkataso = opiskeluoikeus.getLatestSeiskaKasiSuoritus
@@ -814,17 +808,6 @@ class KoskiDataHandler(
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
-    val syntymaAikaKoskesta = koskihenkilöcontainer.henkilö.syntymäaika
-    val syntymaAikaOnrsta = henkilo.flatMap(_.syntymaaika)
-    val alaikainen = isAlaikainen(
-      henkilo
-    )
-    logger.info(
-      s"Henkilön ${henkiloOid} syntymäaika Koskesta: ${syntymaAikaKoskesta} ja oppijanumerorekisteristä: ${syntymaAikaOnrsta} onko alaikäinen: ${alaikainen}"
-    )
-    logger.info(
-      s"Löytyikö henkilölle ${henkiloOid} Koskesta tuotavia suorituksia: ${suoritukset.nonEmpty} tuodaanko seiskaKasiJaValmistava: ${params.saveSeiskaKasiJaValmistava} onko alaikäinen: ${alaikainen}"
-    )
     if (
       suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
         henkilo
