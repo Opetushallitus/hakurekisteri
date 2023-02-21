@@ -62,6 +62,14 @@ import Ilmoittautumistila.Ilmoittautumistila
 
 case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
 
+case class HyvaksymisenEhto(
+  ehdollisestiHyvaksyttavissa: Boolean,
+  ehtoKoodi: Option[String],
+  ehtoFI: Option[String],
+  ehtoSV: Option[String],
+  ehtoEN: Option[String]
+)
+
 case class ValintaTulosJono(
   oid: String,
   nimi: String,
@@ -71,10 +79,6 @@ case class ValintaTulosJono(
   julkaistavissa: Boolean,
   valintatapajonoPrioriteetti: Option[Int],
   ehdollisestiHyvaksyttavissa: Boolean,
-  ehdollisenHyvaksymisenEhtoKoodi: Option[String],
-  ehdollisenHyvaksymisenEhtoFI: Option[String],
-  ehdollisenHyvaksymisenEhtoSV: Option[String],
-  ehdollisenHyvaksymisenEhtoEN: Option[String],
   varasijanumero: Option[Int],
   eiVarasijatayttoa: Boolean,
   varasijat: Option[Int],
@@ -86,6 +90,11 @@ case class ValintaTulosHakutoive(
   valintatila: Valintatila,
   vastaanottotila: Vastaanottotila,
   ilmoittautumistila: HakutoiveenIlmoittautumistila,
+  ehdollisestiHyvaksyttavissa: Boolean,
+  ehdollisenHyvaksymisenEhtoKoodi: Option[String],
+  ehdollisenHyvaksymisenEhtoFI: Option[String],
+  ehdollisenHyvaksymisenEhtoSV: Option[String],
+  ehdollisenHyvaksymisenEhtoEN: Option[String],
   pisteet: Option[BigDecimal],
   valintatapajonoOid: String,
   varasijanumero: Option[Int],
@@ -95,7 +104,7 @@ case class ValintaTulosHakutoive(
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
-@SerialVersionUID(3)
+@SerialVersionUID(4)
 case class SijoitteluTulos(
   hakuOid: String,
   pisteet: Map[(String, String), BigDecimal],
@@ -103,7 +112,8 @@ case class SijoitteluTulos(
   vastaanottotila: Map[(String, String), Vastaanottotila],
   ilmoittautumistila: Map[(String, String), Ilmoittautumistila],
   valintatapajono: Map[(String, String), String],
-  varasijanumero: Map[(String, String), Option[Int]]
+  varasijanumero: Map[(String, String), Option[Int]],
+  hyvaksymisenEhto: Map[(String, String), HyvaksymisenEhto]
 )
 
 object SijoitteluTulos {
@@ -111,7 +121,7 @@ object SijoitteluTulos {
     new SijoitteluTulos(
       hakuOid,
       valintatulos.hakutoiveet.collect {
-        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
+        case ValintaTulosHakutoive(oid, _, _, _, _, _, _, _, _, _, Some(pisteet), _, _, _, _) =>
           (valintatulos.hakemusOid, oid) -> pisteet
       }.toMap,
       valintatulos.hakutoiveet
@@ -132,6 +142,19 @@ object SijoitteluTulos {
       valintatulos.hakutoiveet
         .filter(h => h.valintatapajonoOid.nonEmpty)
         .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.varasijanumero)
+        .toMap,
+      valintatulos.hakutoiveet
+        .filter(h => h.valintatapajonoOid.nonEmpty)
+        .map(h =>
+          (valintatulos.hakemusOid, h.hakukohdeOid) ->
+            HyvaksymisenEhto(
+              ehdollisestiHyvaksyttavissa = h.ehdollisestiHyvaksyttavissa,
+              ehtoKoodi = h.ehdollisenHyvaksymisenEhtoKoodi,
+              ehtoFI = h.ehdollisenHyvaksymisenEhtoFI,
+              ehtoSV = h.ehdollisenHyvaksymisenEhtoSV,
+              ehtoEN = h.ehdollisenHyvaksymisenEhtoEN
+            )
+        )
         .toMap
     )
   }
@@ -142,7 +165,7 @@ object SijoitteluTulos {
       valintatulokset
         .flatMap(valintatulos => {
           valintatulos.hakutoiveet.collect {
-            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
+            case ValintaTulosHakutoive(oid, _, _, _, _, _, _, _, _, _, Some(pisteet), _, _, _, _) =>
               (valintatulos.hakemusOid, oid) -> pisteet
           }
         })
@@ -175,7 +198,23 @@ object SijoitteluTulos {
             .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
         })
         .toMap,
-      Map.empty
+      Map.empty,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet
+            .filter(h => h.valintatapajonoOid.nonEmpty)
+            .map(h =>
+              (valintatulos.hakemusOid, h.hakukohdeOid) ->
+                HyvaksymisenEhto(
+                  ehdollisestiHyvaksyttavissa = h.ehdollisestiHyvaksyttavissa,
+                  ehtoKoodi = h.ehdollisenHyvaksymisenEhtoKoodi,
+                  ehtoFI = h.ehdollisenHyvaksymisenEhtoFI,
+                  ehtoSV = h.ehdollisenHyvaksymisenEhtoSV,
+                  ehtoEN = h.ehdollisenHyvaksymisenEhtoEN
+                )
+            )
+        })
+        .toMap
     )
   }
 }
