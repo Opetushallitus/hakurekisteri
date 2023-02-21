@@ -61,6 +61,7 @@ import Vastaanottotila.Vastaanottotila
 import Ilmoittautumistila.Ilmoittautumistila
 
 case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
+
 case class ValintaTulosJono(
   oid: String,
   nimi: String,
@@ -70,6 +71,10 @@ case class ValintaTulosJono(
   julkaistavissa: Boolean,
   valintatapajonoPrioriteetti: Option[Int],
   ehdollisestiHyvaksyttavissa: Boolean,
+  ehdollisenHyvaksymisenEhtoKoodi: Option[String],
+  ehdollisenHyvaksymisenEhtoFI: Option[String],
+  ehdollisenHyvaksymisenEhtoSV: Option[String],
+  ehdollisenHyvaksymisenEhtoEN: Option[String],
   varasijanumero: Option[Int],
   eiVarasijatayttoa: Boolean,
   varasijat: Option[Int],
