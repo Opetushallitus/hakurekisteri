@@ -8,7 +8,11 @@ import fi.vm.sade.hakurekisteri.hakija.ForkedSeq._
 import fi.vm.sade.hakurekisteri.hakija.TupledFuture._
 import fi.vm.sade.hakurekisteri.hakija.representation._
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
-import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemusToinenAste,
+  GuardianContactInfo,
+  Hakupalvelu
+}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodi,
   GetRinnasteinenKoodiArvoQuery,
@@ -45,7 +49,9 @@ case class Hakutoive(
   koulutuksenKieli: Option[String],
   valinta: Option[Valintatila],
   vastaanotto: Option[Vastaanottotila],
-  ilmoittautumistila: Option[Ilmoittautumistila]
+  ilmoittautumistila: Option[Ilmoittautumistila],
+  keskiarvo: Option[String] = None,
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset] = None
 )
 
 sealed trait Lasnaolo
@@ -72,7 +78,8 @@ case class Hakija(
   henkilo: Henkilo,
   suoritukset: Seq[Suoritus],
   opiskeluhistoria: Seq[Opiskelija],
-  hakemus: Hakemus
+  hakemus: Hakemus,
+  ataruHakemus: Option[AtaruHakemusToinenAste] = None //Käytössä HakijatV6 alkaen
 )
 object Hakija {
   val mies: Regex = "\\d{6}[-A]\\d{2}[13579].".r
@@ -122,6 +129,7 @@ class HakijaActor(
         case 3 => JSONQueryV3(q) pipeTo sender
         case 4 => JSONQueryV4(q) pipeTo sender
         case 5 => JSONQueryV5(q) pipeTo sender
+        case 6 => JSONQueryV6(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
@@ -186,6 +194,13 @@ class HakijaActor(
     os: Option[XMLOsaaminen]
   ) = XMLHakemus(hakija, opiskelija, org, ht, os)
 
+  def createV6Hakemus(hakija: Hakija)(
+    opiskelija: Option[Opiskelija],
+    org: Option[Organisaatio],
+    ht: Seq[XMLHakutoive],
+    os: Option[XMLOsaaminen]
+  ) = HakijaV6Hakemus(hakija, opiskelija, org, ht, os)
+
   def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
@@ -206,6 +221,28 @@ class HakijaActor(
     val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
 
     data.tupledMap(createHakemus(hakija))
+  }
+
+  def getHakijaV6Hakemus(hakija: Hakija): Future[HakijaV6Hakemus] = {
+    val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
+    val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
+    val osaaminen: Future[Option[XMLOsaaminen]] = Future.successful(
+      Option(
+        XMLOsaaminen(
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_fi,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_fi,
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_sv,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv,
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_en,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_en,
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_se,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_se
+        )
+      )
+    )
+    val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
+
+    data.tupledMap(createV6Hakemus(hakija))
   }
 
   def getOpiskelijaTiedot(
@@ -275,6 +312,10 @@ class HakijaActor(
     getXmlHakemus(hakija).map(data2JsonHakijaV5(hakija))
   }
 
+  def hakija2JSONHakijaV6(hakija: Hakija): Future[JSONHakijaV6] = {
+    getHakijaV6Hakemus(hakija).map(data2JsonHakijaV6(hakija))
+  }
+
   def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
     val hakutoiveet2 = hakemus.hakutoiveet.map(toive => toive.copy(koulutuksenKieli = None))
     val hakemus2 = hakemus.copy(osaaminen = None, hakutoiveet = hakutoiveet2)
@@ -291,6 +332,10 @@ class HakijaActor(
 
   def data2JsonHakijaV5(hakija: Hakija)(hakemus: XMLHakemus) = {
     JSONHakijaV5(hakija, hakemus)
+  }
+
+  def data2JsonHakijaV6(hakija: Hakija)(hakemus: HakijaV6Hakemus) = {
+    JSONHakijaV6(hakija, hakemus)
   }
 
   def data2JsonHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
@@ -313,6 +358,9 @@ class HakijaActor(
 
   def hakijat2JsonHakijatV5(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV5]] =
     hakijat.map(hakija2JSONHakijaV5).join
+
+  def hakijat2JsonHakijatV6(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV6]] =
+    hakijat.map(hakija2JSONHakijaV6).join
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
     hakijas
@@ -529,7 +577,8 @@ class HakijaActor(
       ),
       suoritukset = hakija.suoritukset,
       opiskeluhistoria = hakija.opiskeluhistoria,
-      hakemus = hakija.hakemus
+      hakemus = hakija.hakemus,
+      ataruHakemus = hakija.ataruHakemus
     )
   })
 
@@ -555,13 +604,18 @@ class HakijaActor(
     getHakijat(q).flatMap(hakijat2JsonHakijatV4).map(JSONHakijatV4)
   def JSONQueryV5(q: HakijaQuery): Future[JSONHakijatV5] =
     getHakijat(q).flatMap(hakijat2JsonHakijatV5).map(JSONHakijatV5)
+  def JSONQueryV6(q: HakijaQuery): Future[JSONHakijatV6] =
+    getHakijat(q).flatMap(hakijat2JsonHakijatV6).map(JSONHakijatV6)
 
 }
 
 case class HakijaQuery(
   haku: Option[String],
   organisaatio: Option[String],
-  hakukohdekoodi: Option[String],
+  hakukohdekoodi: Option[
+    String
+  ], //Käytetään versioissa 1-5 aina ja versiossa 6, jos hakukohdeOidia ei annettu
+  hakukohdeoid: Option[String], //Käytetään versiossa 6
   hakuehto: Hakuehto.Hakuehto,
   user: Option[User],
   version: Int

@@ -5,6 +5,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.hakija.representation.UrheilijanLisakysymykset
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   IOppijaNumeroRekisteri,
@@ -22,6 +23,11 @@ import fi.vm.sade.hakurekisteri.integration.koski.{
   OppivelvollisuusTieto
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{
+  IValintalaskentaTulosService,
+  LaskennanTulosHakemukselle,
+  LaskennanTulosValinnanvaihe
+}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
@@ -82,7 +88,8 @@ class AkkaHakupalvelu(
   config: Config,
   koskiService: IKoskiService,
   opiskeluActor: ActorRef,
-  onr: IOppijaNumeroRekisteri
+  onr: IOppijaNumeroRekisteri,
+  valintalaskenta: IValintalaskentaTulosService
 )(implicit val system: ActorSystem)
     extends Hakupalvelu {
 
@@ -235,21 +242,41 @@ class AkkaHakupalvelu(
       .map(_.toMap)
   }
 
+  def getHakemustenHakutoiveidenLaskennanTulokset(
+    hakemukset: Seq[AtaruHakemusToinenAste],
+    q: HakijaQuery
+  ): Future[Map[String, Seq[LaskennanTulosValinnanvaihe]]] = {
+    q.version match {
+      case v if v >= 6 =>
+        val hakukohdeOids: Set[String] = hakemukset
+          .flatMap(hak =>
+            hak.hakutoiveet
+              .getOrElse(Seq.empty)
+              .map(toive => toive.koulutusId)
+          )
+          .filter(_.isDefined)
+          .flatten
+          .toSet
+        valintalaskenta.getHakukohteidenValinnanvaiheet(hakukohdeOids)
+      case _ => Future.successful(Map.empty)
+    }
+  }
+
   override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] = {
     q match {
-      case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, _, _, _) =>
+      case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, hakukohdeOid, _, _, _) =>
         for {
           hakemukset <- hakemusService
-            .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi)
+            .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi, hakukohdeOid)
           harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
             .getHarkinnanvaraisuudet(hakemukset)
+          hakukohteidenTulokset <- getHakemustenHakutoiveidenLaskennanTulokset(hakemukset, q)
           hakijaSuorituksetMap <- koosteService.getSuorituksetForAtaruhakemukset(
             hakuOid,
             hakemukset
           )
           maakoodit <- maatjavaltiot2To1AtaruToinenAste(hakemukset)
           oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
-          lisakysymykset = getLisakysymyksetForAtaruHaku(haku.kohdejoukkoUri)
           personOids = hakemukset.map(h => h.personOid.get)
           hakijoidenOpiskelijatiedot: Map[String, Opiskelija] <-
             getUusinOpiskelijatietoForOpiskelijas(personOids)
@@ -260,13 +287,13 @@ class AkkaHakupalvelu(
             AkkaHakupalvelu.getToisenAsteenAtaruHakija(
               hakemus,
               haku,
-              lisakysymykset,
-              None,
               koosteData,
               maakoodit,
               oppivelvollisuusTiedot,
               hakijoidenOpiskelijatiedot.get(hakemus.personOid.get),
-              harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head
+              harkinnanvaraisuudet.filter(h => h.hakemusOid.equals(hakemus.oid)).head,
+              hakukohteidenTulokset,
+              q
             )
           }
       case _ =>
@@ -285,7 +312,7 @@ class AkkaHakupalvelu(
     }
 
     q match {
-      case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
+      case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _, _) =>
         for {
           (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
           hakemukset <- hakemusService
@@ -308,7 +335,7 @@ class AkkaHakupalvelu(
               oppivelvollisuusTiedot
             )
           }
-      case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
+      case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _, _) =>
         for {
           hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
           hakukohteittain <- Future.sequence(
@@ -357,19 +384,21 @@ class AkkaHakupalvelu(
     (hakuActor ? GetHaku(q.haku.get))
       .mapTo[Haku]
       .flatMap {
-        case haku: Haku if !haku.toisenAsteenHaku && q.version >= 5 =>
-          throw new RuntimeException(s"Haku ${q.haku.get} is not toisen asteen haku!")
-        case haku: Haku if haku.hakulomakeAtaruId.isDefined && q.version >= 5 =>
+        case haku: Haku
+            if haku.hakulomakeAtaruId.isDefined && haku.toisenAsteenHaku && q.version >= 5 && !haku.isJatkuvaHaku =>
           logger.info(
-            s"Getting hakijat for toisen asteen ataruhakijat, query: ${q.copy(user = None)}"
+            s"Getting ataruhakijat for toinen aste, query: ${q.copy(user = None)}"
           )
+          getToisenAsteenAtaruHakijat(q, haku)
+        case haku: Haku
+            if haku.hakulomakeAtaruId.isDefined && haku.isJatkuvaHaku && q.version >= 6 =>
+          logger.info(s"Getting ataruhakijat for jatkuva haku, query: ${q.copy(user = None)}")
           getToisenAsteenAtaruHakijat(q, haku)
         case haku: Haku =>
           logger.info(s"Getting hakijat for legacy haku, query: ${q.copy(user = None)}")
           getHakijat(q, haku)
       }
   }
-
 }
 
 object AkkaHakupalvelu {
@@ -636,15 +665,30 @@ object AkkaHakupalvelu {
   def getToisenAsteenAtaruHakija(
     h: HakijaHakemus,
     haku: Haku,
-    lisakysymykset: Map[String, ThemeQuestion],
-    hakukohdeOid: Option[String],
     hakijanKoosteData: Map[String, String],
     maakoodit: Map[String, String],
     oppivelvollisuusTiedot: Seq[OppivelvollisuusTieto],
     viimeisinOpiskelutieto: Option[Opiskelija],
-    harkinnanvaraisuus: HakemuksenHarkinnanvaraisuus
+    harkinnanvaraisuus: HakemuksenHarkinnanvaraisuus,
+    laskennanTulosHakutoiveille: Map[String, Seq[LaskennanTulosValinnanvaihe]],
+    query: HakijaQuery
   ): Hakija = h match {
     case hakemus: AtaruHakemusToinenAste =>
+      val hakutoiveidenKeskiarvot: Map[String, String] =
+        if (query.version >= 6)
+          h.hakutoiveet
+            .getOrElse(List.empty)
+            .map(ht =>
+              ht.koulutusId.get -> laskennanTulosHakutoiveille
+                .getOrElse(ht.koulutusId.get, Seq.empty)
+                .map(_.keskiarvoHakemukselle(h.oid))
+                .find(_.isDefined)
+                .flatten
+                .getOrElse("")
+            )
+            .toMap
+        else Map.empty
+
       val lisapistekoulutus: Option[String] = getLisapisteKoulutus(hakijanKoosteData)
 
       val kesa: MonthDay = new MonthDay(6, 4)
@@ -679,7 +723,9 @@ object AkkaHakupalvelu {
         hakijanKoosteData.get("perusopetuksen_kieli")
       val suorittaja: String = hakemus.personOid.getOrElse("")
       val hakutoiveet: Seq[Hakutoive] =
-        hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty)
+        hakemus.hakutoiveet
+          .map(toiveet => convertToiveet(toiveet, haku, hakutoiveidenKeskiarvot))
+          .getOrElse(Seq.empty)
       val hakutoiveetHarkinnanvaraisuuksilla = hakutoiveet
         .map(ht =>
           ht.copy(harkinnanvaraisuusperuste =
@@ -779,7 +825,8 @@ object AkkaHakupalvelu {
             yleinen_kielitutkinto_se = None,
             valtionhallinnon_kielitutkinto_se = None
           )
-        )
+        ),
+        ataruHakemus = Some(hakemus)
       )
     case _ => throw new RuntimeException("Wrong type of hakemus!")
   }
@@ -944,7 +991,9 @@ object AkkaHakupalvelu {
           case _ => Seq()
         },
         Hakemus(
-          hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
+          hakemus.hakutoiveet
+            .map(toiveet => convertToiveet(toiveet, haku, Map.empty))
+            .getOrElse(Seq.empty),
           hakemus.oid,
           hakemus.julkaisulupa,
           hakemus.applicationSystemId,
@@ -1010,8 +1059,9 @@ object AkkaHakupalvelu {
         Seq.empty,
         Seq.empty,
         Hakemus(
-          hakutoiveet =
-            hakemus.hakutoiveet.map(toiveet => convertToiveet(toiveet, haku)).getOrElse(Seq.empty),
+          hakutoiveet = hakemus.hakutoiveet
+            .map(toiveet => convertToiveet(toiveet, haku, Map.empty))
+            .getOrElse(Seq.empty),
           hakemusnumero = hakemus.oid,
           julkaisulupa = hakemus.julkaisulupa,
           hakuOid = hakemus.applicationSystemId,
@@ -1144,7 +1194,11 @@ object AkkaHakupalvelu {
     }
   }
 
-  def convertToiveet(toiveet: List[HakutoiveDTO], haku: Haku): Seq[Hakutoive] = {
+  def convertToiveet(
+    toiveet: List[HakutoiveDTO],
+    haku: Haku,
+    keskiarvot: Map[String, String]
+  ): Seq[Hakutoive] = {
     val ensimmainenSuomenkielinenHakukohde: Int =
       findEnsimmainenAmmatillinenKielinenHakukohde(toiveet, "FI")
     val ensimmainenRuotsinkielinenHakukohde: Int =
@@ -1212,7 +1266,9 @@ object AkkaHakupalvelu {
         koulutuksenKieli,
         None,
         None,
-        None
+        None,
+        keskiarvo = keskiarvot.get(hakukohdeOid),
+        urheilijanLisakysymykset = toive.urheilijanLisakysymykset
       )
     }
   }
@@ -1395,7 +1451,8 @@ case class HakutoiveDTO(
   soraOikeudenMenetys: Option[String],
   soraTerveys: Option[String],
   urheilijanAmmatillisenLisakysymys: Option[String],
-  discretionaryFollowUp: Option[String]
+  discretionaryFollowUp: Option[String],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset] = None
 )
 
 @SerialVersionUID(1)
@@ -1520,6 +1577,7 @@ case class AtaruHakemusToinenAsteDto(
   oid: String,
   personOid: String,
   createdTime: String,
+  hakemusFirstSubmittedTime: String,
   kieli: String,
   hakukohteet: List[HakurekisteriHakukohde],
   email: String,
@@ -1537,7 +1595,8 @@ case class AtaruHakemusToinenAsteDto(
   koulutusmarkkinointilupa: Boolean,
   tutkintoVuosi: Option[Int],
   tutkintoKieli: Option[String],
-  huoltajat: List[GuardianContactInfo]
+  huoltajat: List[GuardianContactInfo],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
 )
 
 @SerialVersionUID(1)
@@ -1596,7 +1655,8 @@ case class GuardianContactInfo(
 case class AtaruHakemusToinenAste(
   oid: String,
   personOid: Option[String],
-  createdTime: String,
+  createdTime: String, //hakemusversion luontihetki
+  hakemusFirstSubmittedTime: String, //ensimmäisen hakemusversion jättöhetki
   applicationSystemId: String,
   hakutoiveet: Option[List[HakutoiveDTO]],
   henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,
@@ -1617,7 +1677,8 @@ case class AtaruHakemusToinenAste(
   tutkintoVuosi: Option[Int],
   tutkintoKieli: Option[String],
   huoltajat: List[GuardianContactInfo],
-  harkinnanvaraisuudet: List[HakutoiveenHarkinnanvaraisuus]
+  harkinnanvaraisuudet: List[HakutoiveenHarkinnanvaraisuus],
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
 ) extends HakijaHakemus
     with Serializable {
 

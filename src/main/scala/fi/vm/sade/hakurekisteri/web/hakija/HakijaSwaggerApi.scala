@@ -95,7 +95,7 @@ trait HakijaSwaggerApi
 
   registerModel(incidentReportModel)
 
-  val query: OperationBuilder = apiOperation[XMLHakijat]("haeHakijat")
+  val query: OperationBuilder = apiOperation[XMLHakijat]("haeXMLHakijat")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."

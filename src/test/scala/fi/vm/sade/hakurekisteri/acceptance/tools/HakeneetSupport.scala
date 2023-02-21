@@ -1029,9 +1029,9 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
 
   class MockedKoodistoActor extends Actor {
     override def receive: Actor.Receive = {
-      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "fin", _) => sender ! "246"
-      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot2", "246", _) => sender ! "FIN"
-      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "nan", _) => sender ! "999"
+      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "fin", _, false) => sender ! "246"
+      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot2", "246", _, false) => sender ! "FIN"
+      case GetRinnasteinenKoodiArvoQuery("maatjavaltiot1", "nan", _, false) => sender ! "999"
       case q: GetKoodi =>
         sender ! Some(
           Koodi(

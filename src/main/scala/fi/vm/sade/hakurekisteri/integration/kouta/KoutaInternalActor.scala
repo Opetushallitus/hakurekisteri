@@ -88,7 +88,7 @@ class KoutaInternalActor(
 
   def getOrganisationHakukohteetHaussa(
     q: HakukohteetHaussaQuery
-  ): Future[List[KoutaInternalHakukohdeLite]] = {
+  ): Future[List[KoutaInternalHakukohde]] = {
     findTarjoajanHakukohteet(q)
   }
 
@@ -224,10 +224,18 @@ class KoutaInternalActor(
       OphUrlProperties.url("kouta-internal.hakukohde.search", q.hakuOid) + orgParam + koodiParam
 
     restClient
-      .readObjectFromUrl[List[KoutaInternalHakukohdeLite]](
+      .readObjectFromUrl[List[KoutaInternalHakukohde]](
         url,
         List(200),
         3
+      )
+      .map(
+        _.filter(hakukohde =>
+          q.hakukohdeOid match {
+            case Some(oid) => oid.equals(hakukohde.oid)
+            case None      => true
+          }
+        )
       )
   }
 
@@ -326,8 +334,7 @@ case class PaateltyAlkamiskausi(
   vuosi: String
 )
 
-//Kouta-internal saattaa palauttaa joitakin hakukohteita, jotka eivät parsiudu KoutaInternalHakukohteiksi esim. puuttuvan tarjoajan tai toteutusOidin takia. Jos vain oid kiinnostaa, tämä toimii silti.
-case class KoutaInternalHakukohdeLite(oid: String, hakukohde: Option[HakukohteenTiedot])
+case class LukioTieto(isLukio: Boolean, linja: Option[KoodiUri])
 
 case class KoutaInternalHakukohde(
   oid: String,
@@ -337,7 +344,9 @@ case class KoutaInternalHakukohde(
   hakuOid: String,
   externalId: Option[String],
   tarjoaja: String,
-  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]
+  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi],
+  hakukohde: Option[HakukohteenTiedot],
+  lukioTieto: Option[LukioTieto]
 ) {
   def toHakukohde(): Hakukohde =
     Hakukohde(
@@ -348,6 +357,11 @@ case class KoutaInternalHakukohde(
       tarjoajaOids = Some(Set(tarjoaja)),
       alinValintaPistemaara = None
     )
+
+  def urheilijaKoodit = Set("lukiolinjaterityinenkoulutustehtava_0105", "lukiopainotukset_0105")
+  def isUrheilijaLukio = lukioTieto.exists(lt =>
+    lt.linja.exists(linja => urheilijaKoodit.contains(linja.koodiUri.split('#').head))
+  )
 }
 
 case class KoutaToteutusOpetustiedot(
@@ -366,5 +380,6 @@ case class KoutaInternalToteutus(
 case class HakukohteetHaussaQuery(
   hakuOid: String,
   organisaatioOid: Option[String],
-  hakukohdeKoodiUri: Option[String]
+  hakukohdeKoodiUri: Option[String],
+  hakukohdeOid: Option[String]
 )

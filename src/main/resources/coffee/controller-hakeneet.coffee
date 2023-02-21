@@ -206,7 +206,11 @@ app.controller "HakeneetCtrl", [
             text: "5"
           }
           {
-            value: 5,
+            value: 6,
+            text: "6"
+          }
+          {
+            value: 6,
             text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
           }
         ]
@@ -216,7 +220,7 @@ app.controller "HakeneetCtrl", [
     if(isKk())
       $scope.rajapinnanVersio = 4
     else
-      $scope.rajapinnanVersio = 5
+      $scope.rajapinnanVersio = 6
 
     $scope.hakuehdot = [
       {
@@ -313,6 +317,7 @@ app.controller "HakeneetCtrl", [
         haku: (if $scope.haku then $scope.haku.oid else null)
         organisaatio: (if $scope.organisaatio then $scope.organisaatio.oid else null)
         hakukohdekoodi: (if $scope.hakukohdekoodi then $scope.hakukohdekoodiuri else null)
+        hakukohdeoid: (if $scope.hakukohdeoid then $scope.hakukohdeoid else null)
         hakuehto: $scope.hakuehto
         tyyppi: $scope.tiedostotyyppi
         tiedosto: true
@@ -333,6 +338,7 @@ app.controller "HakeneetCtrl", [
       delete $scope.hakukohdekoodi
 
       $scope.hakukohdenimi = ""
+      $scope.hakukohdekoodinimi = ""
       $scope.hakukohdekoodiuri = ""
       $scope.hakuehto = "Kaikki"
       $scope.tiedostotyyppi = "Json"
@@ -358,8 +364,10 @@ app.controller "HakeneetCtrl", [
 
     $scope.clearHakukohde = ->
       delete $scope.hakukohdenimi
+      delete $scope.hakukohdeoid
 
       delete $scope.hakukohdekoodi
+      delete $scope.hakukohdekoodinimi
 
       $scope.updateHakukohteet()
 
@@ -491,12 +499,19 @@ app.controller "HakeneetCtrl", [
       ($scope.hakukohteet.filter (h) ->
         h.koodi == koodi)[0]
 
+    $scope.setHakukohdeOid = (item) ->
+      console.log("Hakijatv6 set hakukohdeoid, reseting hakukohdekoodi: ", item)
+      $scope.hakukohdeoid = item.oid
+      $scope.hakukohdenimi = item.nimi
+      $scope.hakukohdekoodi = null
+      $scope.hakukohdekoodinimi = ""
+      return
 
     $scope.setHakukohdenimi = ->
       if $scope.hakukohdekoodi
         hakukohde = $scope.getHakukohdeWithKoodi($scope.hakukohdekoodi)
         if hakukohde
-          $scope.hakukohdenimi = hakukohde.nimi
+          $scope.hakukohdekoodinimi = hakukohde.nimi
           $scope.hakukohdekoodiuri = hakukohde.koodiUri
         else
           $scope.hakukohdenimi = ""

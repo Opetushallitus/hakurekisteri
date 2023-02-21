@@ -20,7 +20,8 @@ import scala.concurrent.{ExecutionContext, Future}
 case class GetRinnasteinenKoodiArvoQuery(
   koodisto: String,
   arvo: String,
-  rinnasteinenKoodistoUri: String
+  rinnasteinenKoodistoUri: String,
+  emptyValueOk: Boolean = false
 )
 case class Koodisto(koodistoUri: String, koodistoVersios: Seq[Int])
 case class KoodiMetadata(nimi: String, kieli: String, lyhytNimi: String)
@@ -163,9 +164,15 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
               )
               .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
                 case None =>
-                  throw RinnasteinenKoodiNotFoundException(
-                    s"rinnasteisia koodeja ei löytynyt koodiurilla $uri"
-                  )
+                  if (q.emptyValueOk) {
+                    log.warning(s"Ei löytynyt rinnasteista koodiarvoa: $q")
+                    ""
+                  } else {
+                    throw RinnasteinenKoodiNotFoundException(
+                      s"rinnasteisia koodeja ei löytynyt koodiurilla $uri"
+                    )
+
+                  }
                 case Some(k) => k.koodiArvo
               })
             fs.map(Option(_))

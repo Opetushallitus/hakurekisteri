@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   MockOppijaNumeroRekisteri,
   PersonOidsWithAliases
 }
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
@@ -45,6 +46,9 @@ class HakemusServiceSpec
   val organisaatioMock: OrganisaatioActorRef = new OrganisaatioActorRef(
     system.actorOf(Props(new MockedOrganisaatioActor()))
   )
+  val koodistoMock: KoodistoActorRef = new KoodistoActorRef(
+    system.actorOf(Props(new MockedKoodistoActor()))
+  )
   val hakemusService = new HakemusService(
     hakuappClient,
     ataruClient,
@@ -52,6 +56,7 @@ class HakemusServiceSpec
     koutaInternalMock,
     organisaatioMock,
     MockOppijaNumeroRekisteri,
+    koodistoMock,
     Config.mockDevConfig,
     MockCacheFactory.get(),
     pageSize = 10

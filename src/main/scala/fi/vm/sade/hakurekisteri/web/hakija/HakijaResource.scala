@@ -31,6 +31,7 @@ object HakijaQuery {
       haku = params.get("haku").flatMap(_.blankOption),
       organisaatio = params.get("organisaatio").flatMap(_.blankOption),
       hakukohdekoodi = params.get("hakukohdekoodi").flatMap(_.blankOption),
+      hakukohdeoid = params.get("hakukohdeoid").flatMap(_.blankOption),
       hakuehto = Try(Hakuehto.withName(s = params("hakuehto"))).recover { case _ =>
         Hakuehto.Kaikki
       }.get,
