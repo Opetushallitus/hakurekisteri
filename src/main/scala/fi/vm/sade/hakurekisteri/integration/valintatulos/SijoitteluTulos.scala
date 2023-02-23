@@ -90,6 +90,7 @@ case class ValintaTulosHakutoive(
   valintatila: Valintatila,
   vastaanottotila: Vastaanottotila,
   ilmoittautumistila: HakutoiveenIlmoittautumistila,
+  hyvaksyttyJaJulkaistuDate: Option[String],
   ehdollisestiHyvaksyttavissa: Boolean,
   ehdollisenHyvaksymisenEhtoKoodi: Option[String],
   ehdollisenHyvaksymisenEhtoFI: Option[String],
@@ -113,7 +114,8 @@ case class SijoitteluTulos(
   ilmoittautumistila: Map[(String, String), Ilmoittautumistila],
   valintatapajono: Map[(String, String), String],
   varasijanumero: Map[(String, String), Option[Int]],
-  hyvaksymisenEhto: Map[(String, String), HyvaksymisenEhto]
+  hyvaksymisenEhto: Map[(String, String), HyvaksymisenEhto],
+  valinnanAikaleima: Map[(String, String), String]
 )
 
 object SijoitteluTulos {
@@ -121,7 +123,7 @@ object SijoitteluTulos {
     new SijoitteluTulos(
       hakuOid,
       valintatulos.hakutoiveet.collect {
-        case ValintaTulosHakutoive(oid, _, _, _, _, _, _, _, _, _, Some(pisteet), _, _, _, _) =>
+        case ValintaTulosHakutoive(oid, _, _, _, _, _, _, _, _, _, _, Some(pisteet), _, _, _, _) =>
           (valintatulos.hakemusOid, oid) -> pisteet
       }.toMap,
       valintatulos.hakutoiveet
@@ -155,7 +157,28 @@ object SijoitteluTulos {
               ehtoEN = h.ehdollisenHyvaksymisenEhtoEN
             )
         )
-        .toMap
+        .toMap,
+      valintatulos.hakutoiveet.collect {
+        case ValintaTulosHakutoive(
+              oid,
+              _,
+              _,
+              _,
+              _,
+              Some(valinnanAikaleima),
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          (valintatulos.hakemusOid, oid) -> valinnanAikaleima
+      }.toMap
     )
   }
 
@@ -165,7 +188,24 @@ object SijoitteluTulos {
       valintatulokset
         .flatMap(valintatulos => {
           valintatulos.hakutoiveet.collect {
-            case ValintaTulosHakutoive(oid, _, _, _, _, _, _, _, _, _, Some(pisteet), _, _, _, _) =>
+            case ValintaTulosHakutoive(
+                  oid,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  Some(pisteet),
+                  _,
+                  _,
+                  _,
+                  _
+                ) =>
               (valintatulos.hakemusOid, oid) -> pisteet
           }
         })
@@ -213,6 +253,31 @@ object SijoitteluTulos {
                   ehtoEN = h.ehdollisenHyvaksymisenEhtoEN
                 )
             )
+        })
+        .toMap,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet.collect {
+            case ValintaTulosHakutoive(
+                  oid,
+                  _,
+                  _,
+                  _,
+                  _,
+                  Some(valinnanAikaleima),
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _
+                ) =>
+              (valintatulos.hakemusOid, oid) -> valinnanAikaleima
+          }
         })
         .toMap
     )
