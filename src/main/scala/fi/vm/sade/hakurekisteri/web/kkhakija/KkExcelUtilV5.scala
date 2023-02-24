@@ -27,17 +27,25 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
     "Koulusivistyskieli",
     "Koulutusmarkkinointilupa",
     "On ylioppilas",
+    "On ensikertalainen",
     "Suoritusvuosi",
     "Haku",
     "Hakuvuosi",
     "Hakukausi",
     "Hakemusnumero",
+    "Hakemuksen jättämisen aikaleima",
+    "Hakemuksen viimeinen muokkausaikaleima",
     "Organisaatio",
     "Hakukohde",
     "Hakukohteen kk-id",
+    "Hakutoiveen prioriteetti",
     "Avoin vayla",
     "Valinnan tila",
+    "Valinnan aikaleima",
+    "Pisteet",
+    "Hyväksymisen ehto (ehdolliisestiHyvaksyttavissa,ehtoKoodi,ehtoFI,ehtoSV,ehtoEN)",
     "Valintatapajonon tyyppi",
+    "Valintatapajonon nimi",
     "Vastaanottotieto",
     "Ilmoittautumiset",
     "Pohjakoulutus",
@@ -45,7 +53,8 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
     "Hakukelpoisuus",
     "Hakukelpoisuuden lahde",
     "Maksuvelvollisuus",
-    "Hakukohteen koulutukset 1(komoOid,koulutusKoodi,kkKoulutusId)",
+    "Hakukohteen koulutukset 1(komoOid,koulutusKoodi,kkKoulutusId,koulutuksenAlkamisvuosi,koulutuksenAlkamiskausi," +
+      "johtaaTutkintoon)",
     "Koulutus 2",
     "Koulutus 3",
     "Koulutus 4",
@@ -91,16 +100,29 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
           toBooleanX(hakija.koulutusmarkkinointilupa),
           toBooleanX(hakija.onYlioppilas),
           hakija.yoSuoritusVuosi.getOrElse(""),
+          hakija.ensikertalainen.map(e => toBooleanX(e)).getOrElse(""),
           hakemus.haku,
           hakemus.hakuVuosi.toString,
           hakemus.hakuKausi,
           hakemus.hakemusnumero,
+          hakemus.hakemusJattoAikaleima.getOrElse(""),
+          hakemus.hakemusViimeinenMuokkausAikaleima.getOrElse(""),
           hakemus.organisaatio,
           hakemus.hakukohde,
           hakemus.hakukohdeKkId.getOrElse(""),
+          hakemus.hakutoivePrioriteetti.map(_.toString).getOrElse(""),
           toBooleanX(hakemus.avoinVayla),
           hakemus.valinnanTila.map(_.toString).getOrElse(""),
+          hakemus.valinnanAikaleima.getOrElse(""),
+          hakemus.pisteet.map(_.toString()).getOrElse(""),
+          hakemus.hyvaksymisenEhto match {
+            case None => ""
+            case Some(h) =>
+              s"HyvaksymisenEhto(${toBooleanX(h.ehdollisestiHyvaksyttavissa)},${h.ehtoKoodi.getOrElse("")}," +
+                s"${h.ehtoFI.getOrElse("")},${h.ehtoSV.getOrElse("")},${h.ehtoEN.getOrElse("")})"
+          },
           hakemus.valintatapajononTyyppi.getOrElse(""),
+          hakemus.valintatapajononNimi.getOrElse(""),
           hakemus.vastaanottotieto.map(_.toString).getOrElse(""),
           hakemus.ilmoittautumiset.mkString(","),
           hakemus.pohjakoulutus.mkString(","),
@@ -110,32 +132,44 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
           hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
           hakemus.hakukohteenKoulutukset lift 0 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
+                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
+                s"${k.johtaaTutkintoon.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 1 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
+                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
+                s"${k.johtaaTutkintoon.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 2 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
+                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
+                s"${k.johtaaTutkintoon.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 3 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
+                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
+                s"${k.johtaaTutkintoon.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 4 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
+                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
+                s"${k.johtaaTutkintoon.getOrElse("")})"
             case None => ""
           },
           hakemus.hakukohteenKoulutukset lift 5 match {
             case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})"
+              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
+                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
+                s"${k.johtaaTutkintoon.getOrElse("")})"
             case None => ""
           },
           hakemus.liitteet match {
