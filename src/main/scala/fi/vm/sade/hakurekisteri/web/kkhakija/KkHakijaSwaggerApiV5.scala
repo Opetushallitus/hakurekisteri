@@ -20,7 +20,11 @@ trait KkHakijaSwaggerApiV5
   val hakukohteenKoulutusFields: Seq[ModelField] = Seq(
     ModelField("komoOid", null, DataType.String),
     ModelField("tkKoulutuskoodi", null, DataType.String),
-    ModelField("kkKoulutusId", null, DataType.String, required = false)
+    ModelField("kkKoulutusId", null, DataType.String, required = false),
+    // TODO: tämä on vielä oikeasti {"arvo": "K"} -mallinen rakenne
+    ModelField("koulutuksenAlkamiskausi", null, DataType.String, required = false),
+    ModelField("koulutuksenAlkamisvuosi", null, DataType.String, required = false),
+    ModelField("johtaaTutkintoon", null, DataType.String, required = false)
   )
 
   registerModel(
@@ -44,6 +48,22 @@ trait KkHakijaSwaggerApiV5
     )
   )
 
+  val hyvaksymisenEhtoFields: Seq[ModelField] = Seq(
+    ModelField("ehdollisestiHyvaksyttavissa", null, DataType.Boolean),
+    ModelField("ehtoKoodi", null, DataType.String),
+    ModelField("ehtoFI", null, DataType.String),
+    ModelField("ehtoSV", null, DataType.String),
+    ModelField("ehtoEN", null, DataType.String)
+  )
+
+  registerModel(
+    Model(
+      "HyvaksymisenEhto",
+      "HyvaksymisenEhto",
+      hyvaksymisenEhtoFields.map { t => (t.name, t) }.toMap
+    )
+  )
+
   val hakemusFields: Seq[ModelField] = Seq(
     ModelField("haku", null, DataType.String),
     ModelField("hakuVuosi", null, DataType.Int),
@@ -56,8 +76,11 @@ trait KkHakijaSwaggerApiV5
       required = true
     ),
     ModelField("hakemusnumero", null, DataType.String),
+    ModelField("hakemusJattoAikaleima", null, DataType.String),
+    ModelField("hakemusViimeinenMuokkausAikaleima", null, DataType.String),
     ModelField("organisaatio", null, DataType.String),
     ModelField("hakukohde", null, DataType.String),
+    ModelField("hakutoivePrioriteetti", null, DataType.Int, required = false),
     ModelField("hakukohdeKkId", null, DataType.String, required = false),
     ModelField("avoinVayla", null, DataType.Boolean, required = false),
     ModelField(
@@ -68,7 +91,16 @@ trait KkHakijaSwaggerApiV5
       AllowableValues(Valintatila.values.map(_.toString)),
       required = false
     ),
+    ModelField("valinnanAikaleima", null, DataType.String, required = false),
+    ModelField("pisteet", null, DataType.Int, required = false),
+    ModelField(
+      "hyvaksymisenEhto",
+      null,
+      ValueDataType("HyvaksymisenEhto", None, Some("HyvaksymisenEhto")),
+      required = false
+    ),
     ModelField("valintatapajononTyyppi", null, DataType.String, None, required = false),
+    ModelField("valintatapajononNimi", null, DataType.String, required = false),
     ModelField(
       "vastaanottotieto",
       null,
@@ -170,6 +202,7 @@ trait KkHakijaSwaggerApiV5
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, required = false),
     ModelField("onYlioppilas", null, DataType.Boolean),
     ModelField("yoSuoritusvuosi", null, DataType.String),
+    ModelField("ensikertalainen", null, DataType.Boolean),
     ModelField("turvakielto", null, DataType.Boolean),
     ModelField(
       "hakemukset",
