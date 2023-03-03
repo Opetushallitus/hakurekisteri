@@ -103,6 +103,7 @@ class BaseKoosteet(
     integrations.valintaTulos,
     integrations.valintarekisteri,
     integrations.valintaperusteetService,
+    integrations.koskiService,
     Timeout(config.valintaTulosTimeout),
     ensikertalainen
   )(system)

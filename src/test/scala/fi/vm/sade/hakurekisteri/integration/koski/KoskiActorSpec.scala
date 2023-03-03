@@ -308,7 +308,8 @@ class KoskiActorSpec
         ryhmä = None,
         alkamispäivä = alkamisPaiva,
         jääLuokalle = None,
-        suoritustapa = None
+        suoritustapa = None,
+        koulusivistyskieli = None
       )
       this.copy(suoritukset = uudetSuoritukset)
     }
@@ -338,7 +339,8 @@ class KoskiActorSpec
         ryhmä = None,
         alkamispäivä = None,
         jääLuokalle = None,
-        suoritustapa = None
+        suoritustapa = None,
+        koulusivistyskieli = None
       )
     }
 
@@ -358,7 +360,8 @@ class KoskiActorSpec
         ryhmä = None,
         alkamispäivä = None,
         jääLuokalle = None,
-        suoritustapa = None
+        suoritustapa = None,
+        koulusivistyskieli = None
       )
     }
 

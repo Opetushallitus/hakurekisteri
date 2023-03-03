@@ -334,11 +334,10 @@ class KoskiService(
     updateHenkilot(personOidsWithAliases.henkiloOidsWithLinkedOids, params)
   }
 
-  override def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])] = {
-    val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
+  def fetchHenkilot(
+    oppijaOids: Set[String]
+  ): Future[Seq[KoskiHenkiloContainer]] = {
+    virkailijaRestClient
       .postObjectWithCodes[Set[String], Seq[KoskiHenkiloContainer]](
         "koski.sure",
         Seq(200),
@@ -350,6 +349,29 @@ class KoskiService(
         logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
         Future.failed(e)
       }
+  }
+
+  def resolveKoulusivistyskieli(henkilo: KoskiHenkiloContainer): Seq[String] = {
+    val validitSuoritukset = henkilo.opiskeluoikeudet.flatMap(o =>
+      o.suoritukset.filter(s => s.isLukionOrPerusopetuksenoppimaara())
+    )
+
+    validitSuoritukset.flatMap(s => s.koulusivistyskieli.map(k => k.map(_.koodiarvo))).flatten
+  }
+
+  override def fetchKoulusivistyskielet(
+    oppijaOids: Seq[String]
+  ): Future[Map[String, Seq[String]]] = {
+    fetchHenkilot(oppijaOids.toSet).map(
+      _.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap
+    )
+  }
+
+  override def updateHenkilot(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])] = {
+    val oppijat = fetchHenkilot(oppijaOids)
     oppijat
       .flatMap(fetchPersonAliases)
       .flatMap(res => {

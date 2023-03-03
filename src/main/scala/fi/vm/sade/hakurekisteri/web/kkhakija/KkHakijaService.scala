@@ -29,6 +29,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   Koodi,
   KoodistoActorRef
 }
+import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
@@ -45,7 +46,10 @@ import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
   ValintarekisteriActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.{
+  VASTAANOTTANUT,
+  Vastaanottotila
+}
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -55,7 +59,7 @@ import org.scalatra.util.RicherString._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 case class KkHakijaQuery(
@@ -64,6 +68,7 @@ case class KkHakijaQuery(
   organisaatio: Option[String],
   hakukohde: Option[String],
   hakukohderyhma: Option[String],
+  palautaKoulusivistyskielet: Boolean,
   hakuehto: Hakuehto.Hakuehto,
   version: Int,
   user: Option[User]
@@ -77,6 +82,9 @@ object KkHakijaQuery {
       organisaatio = params.get("organisaatio").flatMap(_.blankOption),
       hakukohde = params.get("hakukohde").flatMap(_.blankOption),
       hakukohderyhma = params.get("hakukohderyhma").flatMap(_.blankOption),
+      palautaKoulusivistyskielet = Try(params("palautaKoulusivistyskielet").toBoolean).recover {
+        case _ => false
+      }.get,
       hakuehto = Try(Hakuehto.withName(params("hakuehto"))).recover { case _ =>
         Hakuehto.Kaikki
       }.get,
@@ -149,6 +157,7 @@ case class Hakija(
   aidinkieli: String,
   asiointikieli: String,
   koulusivistyskieli: String,
+  koulusivistyskielet: Option[Seq[String]],
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
@@ -231,6 +240,7 @@ case class HakijaV5(
   aidinkieli: String,
   asiointikieli: String,
   koulusivistyskieli: String,
+  koulusivistyskielet: Option[Seq[String]],
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
@@ -252,6 +262,7 @@ class KkHakijaService(
   valintaTulos: ValintaTulosActorRef,
   valintaRekisteri: ValintarekisteriActorRef,
   valintaperusteetService: IValintaperusteetService,
+  koskiService: IKoskiService,
   valintaTulosTimeout: Timeout,
   ensikertalainenActor: ActorRef
 )(implicit system: ActorSystem) {
@@ -275,11 +286,11 @@ class KkHakijaService(
 
     for (
       hakemukset <- queryFixed match {
-        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _, _) =>
+        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _, _, _, _) =>
           hakemusService.hakemuksetForPerson(oppijanumero)
-        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _) =>
+        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _, _, _, _) =>
           hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
-        case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _) =>
+        case KkHakijaQuery(None, Some(haku), _, None, Some(hakukohderyhma), _, _, _, _) =>
           getHakukohdeOidsForHakukohdeRyhma(hakukohderyhma, haku)
             .flatMap(resolveMultipleHakukohdeOidsAsHakemukset)
         case _ => Future.failed(KkHakijaParamMissingException)
@@ -303,6 +314,25 @@ class KkHakijaService(
           Future.successful(hakukohdeoids)
         }
       })
+  }
+
+  private def withKoulusivistyskieliForVastaanottaneet(
+    eventualHakijat: Future[Seq[Hakija]]
+  ): Future[Seq[Hakija]] = {
+    val hakijat = Await.result(eventualHakijat, 30.seconds)
+
+    val vastaanottaneetOids = hakijat
+      .filter(h => h.hakemukset.exists(_.vastaanottotieto == VASTAANOTTANUT))
+      .map(_.oppijanumero)
+
+    val koulusivistyskielet = Await.result(
+      koskiService.fetchKoulusivistyskielet(vastaanottaneetOids),
+      30.seconds
+    )
+
+    Future.successful(
+      hakijat.map(h => h.copy(koulusivistyskielet = koulusivistyskielet.get(h.oppijanumero)))
+    )
   }
 
   private def fullHakemukset2hakijat(hakemukset: Seq[HakijaHakemus], version: Int)(
@@ -342,7 +372,13 @@ class KkHakijaService(
                       createV4Hakijas(q, fullHakemuses, haku, hakukohdeOids)
                     case 5 =>
                       logger.info("Kkhakijat v{} requested, hakuOid: {}", q.version, hakuOid)
-                      createV5Hakijas(q, fullHakemuses, haku, hakukohdeOids)
+                      if (q.palautaKoulusivistyskielet) {
+                        withKoulusivistyskieliForVastaanottaneet(
+                          createV5Hakijas(q, fullHakemuses, haku, hakukohdeOids)
+                        )
+                      } else {
+                        createV5Hakijas(q, fullHakemuses, haku, hakukohdeOids)
+                      }
                   }
                 })
             } else {
@@ -473,10 +509,11 @@ class KkHakijaService(
     hakukohdeOids: Seq[String]
   ) = {
     val hakemusOid: Option[String] = if (hakemukset.size == 1) Some(hakemukset.last.oid) else None
+    val henkiloOids = hakemukset.flatMap(h => h.personOid).toSet
 
     val ensikertalaisuudet: Future[Map[String, Boolean]] =
       ((ensikertalainenActor ? EnsikertalainenQuery(
-        henkiloOids = hakemukset.flatMap(h => h.personOid).toSet,
+        henkiloOids = henkiloOids,
         hakuOid = haku.oid
       )))(60.seconds)
         .mapTo[Seq[Ensikertalainen]]
@@ -1116,6 +1153,7 @@ class KkHakijaService(
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
           henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+        koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = None,
@@ -1168,6 +1206,7 @@ class KkHakijaService(
             case _    => "9"
           },
           koulusivistyskieli = "99",
+          koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = None,
@@ -1278,6 +1317,7 @@ class KkHakijaService(
             case _    => "9"
           },
           koulusivistyskieli = "99",
+          koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
@@ -1360,6 +1400,7 @@ class KkHakijaService(
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
           henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+        koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
@@ -1413,6 +1454,7 @@ class KkHakijaService(
             case _    => "9"
           },
           koulusivistyskieli = "99",
+          koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
@@ -1493,6 +1535,7 @@ class KkHakijaService(
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
           henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+        koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
@@ -1545,6 +1588,7 @@ class KkHakijaService(
             case _    => "9"
           },
           koulusivistyskieli = "99",
+          koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
@@ -1617,6 +1661,7 @@ class KkHakijaService(
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
           henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+        koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
@@ -1670,6 +1715,7 @@ class KkHakijaService(
             case _    => "9"
           },
           koulusivistyskieli = "99",
+          koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),

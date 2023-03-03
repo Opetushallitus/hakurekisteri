@@ -24,7 +24,8 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
     "Sukupuoli",
     "Aidinkieli",
     "Asiointikieli",
-    "Koulusivistyskieli",
+    "Koulusivistyskieli (ei käytössä)",
+    "Koulusivistyskielet",
     "Koulutusmarkkinointilupa",
     "On ylioppilas",
     "On ensikertalainen",
@@ -75,7 +76,6 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
   override def getRows(hakijat: Seq[Hakija]): Set[Row] = hakijat
     .flatMap(hakija =>
       hakija.hakemukset.map(hakemus => {
-        val kansalaisuudet = hakija.kansalaisuudet.getOrElse(List.empty)
         val rivi = Seq(
           hakija.hetu,
           hakija.syntymaaika.getOrElse(""),
@@ -97,6 +97,7 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
           hakija.aidinkieli,
           hakija.asiointikieli,
           hakija.koulusivistyskieli,
+          hakija.koulusivistyskielet.getOrElse(List.empty).mkString(", "),
           toBooleanX(hakija.koulutusmarkkinointilupa),
           toBooleanX(hakija.onYlioppilas),
           hakija.yoSuoritusVuosi.getOrElse(""),

@@ -1108,7 +1108,8 @@ class KoskiDataHandlerTest
       ryhmä = None,
       alkamispäivä = None,
       jääLuokalle = None,
-      suoritustapa = None
+      suoritustapa = None,
+      koulusivistyskieli = None
     )
 
     val ks2 = ks1.copy(vahvistus = Some(vahvistus2))
@@ -1143,7 +1144,8 @@ class KoskiDataHandlerTest
       ryhmä = None,
       alkamispäivä = None,
       jääLuokalle = None,
-      suoritustapa = None
+      suoritustapa = None,
+      koulusivistyskieli = None
     )
 
     val ks2 = KoskiSuoritus(
@@ -1161,7 +1163,8 @@ class KoskiDataHandlerTest
       ryhmä = None,
       alkamispäivä = None,
       jääLuokalle = None,
-      suoritustapa = None
+      suoritustapa = None,
+      koulusivistyskieli = None
     )
 
     val ks3 = KoskiSuoritus(
@@ -1179,7 +1182,8 @@ class KoskiDataHandlerTest
       ryhmä = None,
       alkamispäivä = None,
       jääLuokalle = None,
-      suoritustapa = None
+      suoritustapa = None,
+      koulusivistyskieli = None
     )
 
     val ks4 = KoskiSuoritus(
@@ -1197,7 +1201,8 @@ class KoskiDataHandlerTest
       ryhmä = None,
       alkamispäivä = None,
       jääLuokalle = None,
-      suoritustapa = None
+      suoritustapa = None,
+      koulusivistyskieli = None
     )
 
     val ks5 = KoskiSuoritus(
@@ -1215,7 +1220,8 @@ class KoskiDataHandlerTest
       ryhmä = None,
       alkamispäivä = None,
       jääLuokalle = None,
-      suoritustapa = None
+      suoritustapa = None,
+      koulusivistyskieli = None
     )
 
     val suoritukset: Seq[KoskiSuoritus] = Seq(ks1, ks2, ks3, ks4, ks5)

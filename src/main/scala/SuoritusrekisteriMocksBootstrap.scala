@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.haku.Haku
 import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
 import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaServiceMock
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
@@ -64,6 +65,7 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       valintaTulos = new ValintaTulosActorRef(anyActorRef),
       valintaRekisteri = new ValintarekisteriActorRef(anyActorRef),
       valintaperusteetService = new ValintaperusteetServiceMock,
+      koskiService = new KoskiServiceMock,
       Timeout(1, TimeUnit.MINUTES),
       ensikertalainenActor = anyActorRef
     )

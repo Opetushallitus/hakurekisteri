@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.{
 }
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
@@ -139,6 +140,7 @@ class KkHakijaServiceSpec
   private val valintaperusteetMock = new ValintaperusteetServiceMock
   private val hakukohderyhmaServiceMock = Mockito.mock(classOf[HakukohderyhmaService]);
   private val ensikertalaisuusMock = mock[ActorRef]
+  private val koskiServiceMock = new KoskiServiceMock
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -195,6 +197,7 @@ class KkHakijaServiceSpec
     valintaTulosMock,
     valintaRekisteri,
     valintaperusteetMock,
+    koskiServiceMock,
     Timeout(1.minute),
     ensikertalaisuusMock
   )
@@ -219,6 +222,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.1"))
@@ -248,6 +252,7 @@ class KkHakijaServiceSpec
       valintaTulosMock,
       valintaRekisteri,
       valintaperusteetMock,
+      koskiServiceMock,
       Timeout(1.minute),
       ensikertalaisuusMock
     )
@@ -260,6 +265,7 @@ class KkHakijaServiceSpec
             None,
             None,
             Some("1.2.246.562.28.001"),
+            false,
             Hakuehto.Kaikki,
             4,
             Some(testUser("test", "1.1"))
@@ -288,6 +294,7 @@ class KkHakijaServiceSpec
             None,
             None,
             Some("1.2.246.562.28.001"),
+            false,
             Hakuehto.Kaikki,
             4,
             Some(testUser("test", "1.1"))
@@ -318,6 +325,7 @@ class KkHakijaServiceSpec
           None,
           None,
           Some("ryhma"),
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -347,6 +355,7 @@ class KkHakijaServiceSpec
           None,
           Some("1.2.246.562.20.649956391810"),
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -373,6 +382,7 @@ class KkHakijaServiceSpec
           None,
           Some("1.11.2"),
           None,
+          false,
           Hakuehto.Hyvaksytyt,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -481,6 +491,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -507,6 +518,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -533,6 +545,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -559,6 +572,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -585,6 +599,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -611,6 +626,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -637,6 +653,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -665,6 +682,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -694,6 +712,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -720,6 +739,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -746,6 +766,7 @@ class KkHakijaServiceSpec
       valintaTulosMock,
       valintaRekisteri,
       valintaperusteetMock,
+      koskiServiceMock,
       Timeout(1.minute),
       ensikertalaisuusMock
     )
@@ -762,6 +783,7 @@ class KkHakijaServiceSpec
           None,
           None,
           Some("ryhma"),
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -804,6 +826,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -832,6 +855,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -885,6 +909,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
