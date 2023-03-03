@@ -325,10 +325,7 @@ class KkHakijaService(
       .filter(h => h.hakemukset.exists(_.vastaanottotieto == VASTAANOTTANUT))
       .map(_.oppijanumero)
 
-    val koulusivistyskielet = Await.result(
-      koskiService.fetchKoulusivistyskielet(vastaanottaneetOids),
-      30.seconds
-    )
+    val koulusivistyskielet = koskiService.fetchKoulusivistyskielet(vastaanottaneetOids)
 
     Future.successful(
       hakijat.map(h => h.copy(koulusivistyskielet = koulusivistyskielet.get(h.oppijanumero)))

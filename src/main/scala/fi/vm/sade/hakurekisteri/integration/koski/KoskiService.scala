@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   PersonOidsWithAliases
 }
 import org.joda.time.{DateTime, DateTimeZone}
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -29,6 +30,13 @@ class KoskiService(
   pageSize: Int = 200
 )(implicit val system: ActorSystem)
     extends IKoskiService {
+
+  private val koskiKoulusivistyskieliCache: Cache[String, Seq[String]] =
+    Scaffeine()
+      .recordStats()
+      .expireAfterWrite(12.hour)
+      .maximumSize(5000)
+      .build[String, Seq[String]]()
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val logger = Logging.getLogger(system, this)
@@ -359,12 +367,24 @@ class KoskiService(
     validitSuoritukset.flatMap(s => s.koulusivistyskieli.map(k => k.map(_.koodiarvo))).flatten
   }
 
-  override def fetchKoulusivistyskielet(
+  private def fetchKoulusivistyskieletForReal(
     oppijaOids: Seq[String]
   ): Future[Map[String, Seq[String]]] = {
     fetchHenkilot(oppijaOids.toSet).map(
       _.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap
     )
+  }
+
+  override def fetchKoulusivistyskielet(
+    oppijaOids: Seq[String]
+  ): Map[String, Seq[String]] = {
+    val cached = koskiKoulusivistyskieliCache.getAllPresent(oppijaOids)
+    val missing = oppijaOids.filterNot(cached.keys.toSet.contains(_))
+    val fetched = Await.result(fetchKoulusivistyskieletForReal(missing), 30.seconds)
+
+    koskiKoulusivistyskieliCache.putAll(fetched)
+
+    cached ++ fetched
   }
 
   override def updateHenkilot(
