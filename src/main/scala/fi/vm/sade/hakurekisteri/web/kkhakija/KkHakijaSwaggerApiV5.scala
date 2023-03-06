@@ -21,7 +21,6 @@ trait KkHakijaSwaggerApiV5
     ModelField("komoOid", null, DataType.String),
     ModelField("tkKoulutuskoodi", null, DataType.String),
     ModelField("kkKoulutusId", null, DataType.String, required = false),
-    // TODO: tämä on vielä oikeasti {"arvo": "K"} -mallinen rakenne
     ModelField("koulutuksenAlkamiskausi", null, DataType.String, required = false),
     ModelField("koulutuksenAlkamisvuosi", null, DataType.String, required = false),
     ModelField("johtaaTutkintoon", null, DataType.String, required = false)
