@@ -219,7 +219,7 @@ trait KkHakijaSwaggerApiV5
 
   registerModel(incidentReportModel)
 
-  val query: OperationBuilder = apiOperation[Seq[HakijaV5]]("haeKkHakijat")
+  val query: OperationBuilder = apiOperation[Seq[HakijaV5]]("haeKkHakijatV5")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
