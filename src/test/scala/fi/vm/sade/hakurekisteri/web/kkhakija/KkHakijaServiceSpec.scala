@@ -692,10 +692,9 @@ class KkHakijaServiceSpec
       15.seconds
     )
 
-    val koulutus: Hakukohteenkoulutus = hakijat.head.hakemukset.head.hakukohteenKoulutukset.head
+    val koulutus: KkHakukohteenkoulutus = hakijat.head.hakemukset.head.hakukohteenKoulutukset.head
     koulutus.koulutuksenAlkamiskausi should be(None)
     koulutus.koulutuksenAlkamisvuosi should be(None)
-    koulutus.koulutuksenAlkamisPvms should be(None)
   }
 
   test("should not return hakemus of expired haku") {

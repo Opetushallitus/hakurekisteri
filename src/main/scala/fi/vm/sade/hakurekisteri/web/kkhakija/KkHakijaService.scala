@@ -33,6 +33,7 @@ import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
+  Koulutusohjelma,
   TarjontaKoodi
 }
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
@@ -96,6 +97,15 @@ object KkHakijaQuery {
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
 case class InvalidKausiException(m: String) extends Exception(m)
 
+case class KkHakukohteenkoulutus(
+  komoOid: String,
+  tkKoulutuskoodi: String,
+  kkKoulutusId: Option[String],
+  koulutuksenAlkamiskausi: Option[String],
+  koulutuksenAlkamisvuosi: Option[Int],
+  johtaaTutkintoon: Option[Boolean]
+)
+
 case class Liite(
   hakuId: String,
   hakuRyhmaId: String,
@@ -131,7 +141,7 @@ case class Hakemus(
   hKelpoisuusLahde: Option[String],
   hKelpoisuusMaksuvelvollisuus: Option[String],
   lukuvuosimaksu: Option[String],
-  hakukohteenKoulutukset: Seq[Hakukohteenkoulutus],
+  hakukohteenKoulutukset: Seq[KkHakukohteenkoulutus],
   liitteet: Option[Seq[Liite]]
 )
 
@@ -851,9 +861,13 @@ class KkHakijaService(
               ),
               hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
                 .map(koulutus =>
-                  koulutus.copy(
-                    koulutuksenAlkamisPvms = None,
-                    koulutusohjelma = None
+                  KkHakukohteenkoulutus(
+                    komoOid = koulutus.komoOid,
+                    tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                    kkKoulutusId = koulutus.kkKoulutusId,
+                    koulutuksenAlkamiskausi = koulutus.koulutuksenAlkamiskausi.flatMap(_.arvo),
+                    koulutuksenAlkamisvuosi = koulutus.koulutuksenAlkamisvuosi,
+                    johtaaTutkintoon = koulutus.johtaaTutkintoon
                   )
                 ),
               liitteet = None
@@ -933,11 +947,13 @@ class KkHakijaService(
             ),
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
               .map(koulutus =>
-                koulutus.copy(
+                KkHakukohteenkoulutus(
+                  komoOid = koulutus.komoOid,
+                  tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                  kkKoulutusId = koulutus.kkKoulutusId,
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
-                  koulutuksenAlkamisPvms = None,
-                  koulutusohjelma = None
+                  johtaaTutkintoon = koulutus.johtaaTutkintoon
                 )
               ),
             liitteet = attachmentToLiite(hakemus.attachmentRequests)
@@ -1009,11 +1025,13 @@ class KkHakijaService(
               ),
               hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
                 .map(koulutus =>
-                  koulutus.copy(
+                  KkHakukohteenkoulutus(
+                    komoOid = koulutus.komoOid,
+                    tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                    kkKoulutusId = koulutus.kkKoulutusId,
                     koulutuksenAlkamiskausi = None,
                     koulutuksenAlkamisvuosi = None,
-                    koulutuksenAlkamisPvms = None,
-                    koulutusohjelma = None
+                    johtaaTutkintoon = koulutus.johtaaTutkintoon
                   )
                 ),
               liitteet = None
