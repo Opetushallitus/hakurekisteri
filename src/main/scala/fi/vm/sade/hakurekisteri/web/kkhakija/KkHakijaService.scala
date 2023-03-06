@@ -1330,7 +1330,7 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = Some("99"),
+          koulusivistyskieli = None,
           koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
