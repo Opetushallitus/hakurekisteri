@@ -166,7 +166,7 @@ case class Hakija(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: String,
+  koulusivistyskieli: Option[String],
   koulusivistyskielet: Option[Seq[String]],
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
@@ -195,7 +195,7 @@ case class HakijaV3(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: String,
+  koulusivistyskieli: Option[String],
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
@@ -222,7 +222,7 @@ case class HakijaV4(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: String,
+  koulusivistyskieli: Option[String],
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
@@ -249,7 +249,6 @@ case class HakijaV5(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: String,
   koulusivistyskielet: Option[Seq[String]],
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
@@ -1167,7 +1166,7 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
         koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
@@ -1220,7 +1219,7 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = "99",
+          koulusivistyskieli = Some("99"),
           koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
@@ -1331,7 +1330,7 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = "99",
+          koulusivistyskieli = Some("99"),
           koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
@@ -1414,7 +1413,7 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
         koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
@@ -1468,7 +1467,7 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = "99",
+          koulusivistyskieli = Some("99"),
           koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
@@ -1549,7 +1548,7 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
         koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
@@ -1602,7 +1601,7 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = "99",
+          koulusivistyskieli = Some("99"),
           koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
@@ -1675,7 +1674,7 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
+          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
         koulusivistyskielet = None,
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
@@ -1729,7 +1728,7 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = "99",
+          koulusivistyskieli = Some("99"),
           koulusivistyskielet = None,
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),

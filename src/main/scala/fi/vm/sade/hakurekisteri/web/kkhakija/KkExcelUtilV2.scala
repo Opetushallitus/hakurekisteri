@@ -88,7 +88,7 @@ object KkExcelUtilV2 extends HakijatExcelWriter[Seq[Hakija]] {
           hakija.sukupuoli,
           hakija.aidinkieli,
           hakija.asiointikieli,
-          hakija.koulusivistyskieli,
+          hakija.koulusivistyskieli.getOrElse(""),
           toBooleanX(hakija.koulutusmarkkinointilupa),
           toBooleanX(hakija.onYlioppilas),
           hakija.yoSuoritusVuosi.getOrElse(""),

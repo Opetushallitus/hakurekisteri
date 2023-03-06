@@ -750,7 +750,7 @@ class KkHakijaServiceSpec
 
     hakijat.last.aidinkieli should be("99")
     hakijat.last.asiointikieli should be("9") // Default is not empty!
-    hakijat.last.koulusivistyskieli should be("99")
+    hakijat.last.koulusivistyskieli should be(Some("99"))
   }
 
   def testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(apiVersion: Int): Assertion = {

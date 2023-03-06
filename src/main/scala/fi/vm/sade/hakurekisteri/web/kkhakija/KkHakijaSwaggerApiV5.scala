@@ -198,7 +198,6 @@ trait KkHakijaSwaggerApiV5
     ),
     ModelField("aidinkieli", null, DataType.String),
     ModelField("asiointikieli", null, DataType.String, None, AllowableValues("1", "2", "3", "9")),
-    ModelField("koulusivistyskieli", null, DataType.String),
     ModelField("koulusivistyskielet", null, DataType.GenList(DataType.String), required = false),
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, required = false),
     ModelField("onYlioppilas", null, DataType.Boolean),
