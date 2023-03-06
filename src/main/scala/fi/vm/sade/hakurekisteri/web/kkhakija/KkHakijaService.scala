@@ -337,7 +337,9 @@ class KkHakijaService(
     val koulusivistyskielet = koskiService.fetchKoulusivistyskielet(vastaanottaneetOids)
 
     Future.successful(
-      hakijat.map(h => h.copy(koulusivistyskielet = koulusivistyskielet.get(h.oppijanumero)))
+      hakijat.map(h =>
+        h.copy(koulusivistyskielet = Some(koulusivistyskielet.getOrElse(h.oppijanumero, Seq.empty)))
+      )
     )
   }
 
@@ -1331,7 +1333,7 @@ class KkHakijaService(
             case _    => "9"
           },
           koulusivistyskieli = None,
-          koulusivistyskielet = None,
+          koulusivistyskielet = Some(Seq.empty),
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
