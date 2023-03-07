@@ -146,7 +146,6 @@ object SijoitteluTulos {
         .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.varasijanumero)
         .toMap,
       valintatulos.hakutoiveet
-        .filter(h => h.valintatapajonoOid.nonEmpty)
         .map(h =>
           (valintatulos.hakemusOid, h.hakukohdeOid) ->
             HyvaksymisenEhto(
@@ -242,7 +241,6 @@ object SijoitteluTulos {
       valintatulokset
         .flatMap(valintatulos => {
           valintatulos.hakutoiveet
-            .filter(h => h.valintatapajonoOid.nonEmpty)
             .map(h =>
               (valintatulos.hakemusOid, h.hakukohdeOid) ->
                 HyvaksymisenEhto(
