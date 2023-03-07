@@ -334,7 +334,11 @@ class KkHakijaService(
       .filter(h => h.hakemukset.exists(_.vastaanottotieto == VASTAANOTTANUT))
       .map(_.oppijanumero)
 
+    logger.info(s"Requesting koulusivistyskielet for ${vastaanottaneetOids.size} hakijas.")
+
     val koulusivistyskielet = koskiService.fetchKoulusivistyskielet(vastaanottaneetOids)
+
+    logger.info(s"Received koulusivistyskielet for ${koulusivistyskielet.keys.size} hakijas.")
 
     Future.successful(
       hakijat.map(h =>
