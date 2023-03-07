@@ -381,9 +381,13 @@ class KoskiService(
     logger.info(s"Pyydetty Koskesta koulusivistyskieli ${oppijaOids.size} henkilölle.")
     val cached = koskiKoulusivistyskieliCache.getAllPresent(oppijaOids)
     val missing = oppijaOids.filterNot(cached.keys.toSet.contains(_))
-    logger.info(s"Välimuistista saatu ${cached.keys.size} henkilön koulusivistyskieli, haetaan suoraan Koskesta tiedot ${missing.size} henkilölle.")
+    logger.info(
+      s"Välimuistista saatu ${cached.keys.size} henkilön koulusivistyskieli, haetaan suoraan Koskesta tiedot ${missing.size} henkilölle."
+    )
     val fetched = Await.result(fetchKoulusivistyskieletForReal(missing), 30.seconds)
-    logger.info(s"Koski palautti ${fetched.keys.size} henkilön koulusivistyskielen, tallennetaan välimuistiin.")
+    logger.info(
+      s"Koski palautti ${fetched.keys.size} henkilön koulusivistyskielen, tallennetaan välimuistiin."
+    )
 
     koskiKoulusivistyskieliCache.putAll(fetched)
 
