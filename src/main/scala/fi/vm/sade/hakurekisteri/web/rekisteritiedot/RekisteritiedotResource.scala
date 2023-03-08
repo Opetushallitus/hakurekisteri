@@ -74,6 +74,9 @@ class RekisteritiedotResource(
     implicit val user = getUser
     val q = queryForParams(params)
 
+    if (params.isEmpty)
+      throw new IllegalArgumentException("at least one search parameter is required")
+
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
@@ -174,6 +177,9 @@ class RekisteritiedotResource(
     val t0 = Platform.currentTime
     implicit val user = getUser
     val q = queryForParams(params)
+
+    if (params.isEmpty)
+      throw new IllegalArgumentException("at least one search parameter is required")
 
     audit.log(
       auditUser,

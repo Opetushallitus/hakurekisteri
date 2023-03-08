@@ -155,6 +155,17 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
     }
   }
 
+  test("should return bad request without query parameters") {
+    get("/") {
+      response.status should be(400)
+    }
+  }
+
+  test("should return bad request for light get without query parameters") {
+    get("/light") {
+      response.status should be(400)
+    }
+  }
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     super.stop()
