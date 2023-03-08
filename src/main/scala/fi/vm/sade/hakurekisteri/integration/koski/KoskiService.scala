@@ -35,7 +35,7 @@ class KoskiService(
     Scaffeine()
       .recordStats()
       .expireAfterWrite(12.hour)
-      .maximumSize(5000)
+      .maximumSize(50000)
       .build[String, Seq[String]]()
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
