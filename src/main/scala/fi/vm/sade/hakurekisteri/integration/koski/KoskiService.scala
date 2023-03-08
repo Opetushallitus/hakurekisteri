@@ -364,7 +364,10 @@ class KoskiService(
       o.suoritukset.filter(s => s.isLukionOrPerusopetuksenoppimaara())
     )
 
-    validitSuoritukset.flatMap(s => s.koulusivistyskieli.map(k => k.map(_.koodiarvo))).flatten
+    validitSuoritukset
+      .flatMap(s => s.koulusivistyskieli.map(k => k.map(_.koodiarvo)))
+      .flatten
+      .distinct
   }
 
   private def fetchKoulusivistyskieletForReal(
