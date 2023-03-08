@@ -186,7 +186,8 @@ case class KoskiSuoritus(
 
   def isLukionOrPerusopetuksenoppimaara(): Boolean = {
     tyyppi.exists(_.koodiarvo == "perusopetuksenoppimaara") ||
-    tyyppi.exists(_.koodiarvo == "lukionoppimaara")
+    tyyppi.exists(_.koodiarvo == "lukionoppimaara") ||
+    tyyppi.exists(_.koodiarvo == "aikuistenperusopetuksenoppimaara")
   }
 
   def laajuusVahintaan(min: BigDecimal): Boolean = {

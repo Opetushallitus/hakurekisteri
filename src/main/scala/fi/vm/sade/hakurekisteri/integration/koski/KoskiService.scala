@@ -360,9 +360,9 @@ class KoskiService(
   }
 
   def resolveKoulusivistyskieli(henkilo: KoskiHenkiloContainer): Seq[String] = {
-    val validitSuoritukset = henkilo.opiskeluoikeudet.flatMap(o =>
-      o.suoritukset.filter(s => s.isLukionOrPerusopetuksenoppimaara())
-    )
+    val validitSuoritukset = henkilo.opiskeluoikeudet
+      .filter(o => o.tila.determineSuoritusTila == "VALMIS")
+      .flatMap(o => o.suoritukset.filter(s => s.isLukionOrPerusopetuksenoppimaara()))
 
     validitSuoritukset
       .flatMap(s => s.koulusivistyskieli.map(k => k.map(_.koodiarvo)))
