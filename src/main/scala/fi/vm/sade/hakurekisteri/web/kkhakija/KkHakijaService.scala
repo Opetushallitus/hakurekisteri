@@ -104,7 +104,12 @@ case class KkHakukohteenkoulutus(
   koulutuksenAlkamiskausi: Option[String],
   koulutuksenAlkamisvuosi: Option[Int],
   johtaaTutkintoon: Option[Boolean]
-)
+) {
+  def toExcelString: String =
+    s"Koulutus(${komoOid},${tkKoulutuskoodi},${kkKoulutusId.getOrElse("")}," +
+      s"${koulutuksenAlkamisvuosi.getOrElse("")},${koulutuksenAlkamiskausi.getOrElse("")}," +
+      s"${johtaaTutkintoon.getOrElse("")})"
+}
 
 case class Liite(
   hakuId: String,
@@ -113,7 +118,10 @@ case class Liite(
   saapumisenTila: String,
   nimi: String,
   vastaanottaja: String
-)
+) {
+  def toExcelString: String = s"Liite(${hakuId},${hakuRyhmaId},${tila},${saapumisenTila}," +
+    s"${nimi},${vastaanottaja})"
+}
 
 case class Hakemus(
   haku: String,

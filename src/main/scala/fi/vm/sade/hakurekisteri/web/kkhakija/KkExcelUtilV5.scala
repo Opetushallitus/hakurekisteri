@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
+import fi.vm.sade.hakurekisteri.integration.valintatulos.HyvaksymisenEhto
 import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
@@ -130,99 +131,75 @@ object KkExcelUtilV5 extends HakijatExcelWriter[Seq[Hakija]] {
           hakemus.hKelpoisuusLahde.getOrElse(""),
           hakemus.hKelpoisuusMaksuvelvollisuus.getOrElse(""),
           hakemus.hakukohteenKoulutukset lift 0 match {
-            case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
-                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
-                s"${k.johtaaTutkintoon.getOrElse("")})"
-            case None => ""
+            case Some(k) => k.toExcelString
+            case None    => ""
           },
           hakemus.hakukohteenKoulutukset lift 1 match {
-            case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
-                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
-                s"${k.johtaaTutkintoon.getOrElse("")})"
-            case None => ""
+            case Some(k) => k.toExcelString
+            case None    => ""
           },
           hakemus.hakukohteenKoulutukset lift 2 match {
-            case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
-                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
-                s"${k.johtaaTutkintoon.getOrElse("")})"
-            case None => ""
+            case Some(k) => k.toExcelString
+            case None    => ""
           },
           hakemus.hakukohteenKoulutukset lift 3 match {
-            case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
-                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
-                s"${k.johtaaTutkintoon.getOrElse("")})"
-            case None => ""
+            case Some(k) => k.toExcelString
+            case None    => ""
           },
           hakemus.hakukohteenKoulutukset lift 4 match {
-            case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
-                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
-                s"${k.johtaaTutkintoon.getOrElse("")})"
-            case None => ""
+            case Some(k) => k.toExcelString
+            case None    => ""
           },
           hakemus.hakukohteenKoulutukset lift 5 match {
-            case Some(k) =>
-              s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")}," +
-                s"${k.koulutuksenAlkamisvuosi.getOrElse("")},${k.koulutuksenAlkamiskausi.getOrElse("")}," +
-                s"${k.johtaaTutkintoon.getOrElse("")})"
-            case None => ""
+            case Some(k) => k.toExcelString
+            case None    => ""
           },
           hakemus.liitteet match {
             case None => ""
             case Some(l) =>
               l lift 0 match {
-                case Some(j) =>
-                  s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})"
-                case None => ""
+                case Some(j) => j.toExcelString
+                case None    => ""
               }
           },
           hakemus.liitteet match {
             case None => ""
             case Some(l) =>
               l lift 1 match {
-                case Some(j) =>
-                  s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})"
-                case None => ""
+                case Some(j) => j.toExcelString
+                case None    => ""
               }
           },
           hakemus.liitteet match {
             case None => ""
             case Some(l) =>
               l lift 2 match {
-                case Some(j) =>
-                  s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})"
-                case None => ""
+                case Some(j) => j.toExcelString
+                case None    => ""
               }
           },
           hakemus.liitteet match {
             case None => ""
             case Some(l) =>
               l lift 3 match {
-                case Some(j) =>
-                  s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})"
-                case None => ""
+                case Some(j) => j.toExcelString
+                case None    => ""
               }
           },
           hakemus.liitteet match {
             case None => ""
             case Some(l) =>
               l lift 4 match {
-                case Some(j) =>
-                  s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})"
-                case None => ""
+                case Some(j) => j.toExcelString
+                case None    => ""
               }
           },
           hakemus.liitteet match {
             case None => ""
             case Some(l) =>
               l lift 5 match {
-                case Some(j) =>
-                  s"Liite(${j.hakuId},${j.hakuRyhmaId},${j.tila},${j.saapumisenTila},${j.nimi},${j.vastaanottaja})"
-                case None => ""
+                case Some(j) => j.toExcelString
+                case None    => ""
               }
           }
         ).zipWithIndex.toSet
