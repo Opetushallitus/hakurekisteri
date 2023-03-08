@@ -325,30 +325,35 @@ class KkHakijaService(
       })
   }
 
+  private def getVastaanottaneetOids(eventualHakijat: Future[Seq[Hakija]]): Future[Seq[String]] = {
+    for {
+      hakijat <- eventualHakijat
+    } yield {
+      logger.info(s"Received ${hakijat.size} hakijas for vastaanottaneet filtering.")
+      val vastaanottaneetOids = hakijat
+        .filter(h =>
+          h.hakemukset
+            .exists(_.vastaanottotieto.contains(Vastaanottotila.VASTAANOTTANUT))
+        )
+        .map(_.oppijanumero)
+      logger.info(s"Found ${vastaanottaneetOids.size} vastaanottaneet oids.")
+
+      vastaanottaneetOids
+    }
+  }
+
   private def withKoulusivistyskieliForVastaanottaneet(
     eventualHakijat: Future[Seq[Hakija]]
   ): Future[Seq[Hakija]] = {
-    val hakijat = Await.result(eventualHakijat, 30.seconds)
-
-    logger.info(s"Fetching koulusivistyskielet, received ${hakijat.size} hakijas for filtering.")
-
-    val vastaanottaneetOids = hakijat
-      .filter(h => h.hakemukset.exists(_.vastaanottotieto.contains(Vastaanottotila.VASTAANOTTANUT)))
-      .map(_.oppijanumero)
-
-    logger.info(
-      s"Requesting koulusivistyskielet for ${vastaanottaneetOids.size} vastaanottaneet oids."
-    )
-
-    val koulusivistyskielet = koskiService.fetchKoulusivistyskielet(vastaanottaneetOids)
-
-    logger.info(s"Received koulusivistyskielet for ${koulusivistyskielet.keys.size} hakijas.")
-
-    Future.successful(
+    for {
+      hakijat <- eventualHakijat
+      vastaanottaneetOids <- getVastaanottaneetOids(eventualHakijat)
+      koulusivistyskielet <- koskiService.fetchKoulusivistyskielet(vastaanottaneetOids)
+    } yield {
       hakijat.map(h =>
         h.copy(koulusivistyskielet = Some(koulusivistyskielet.getOrElse(h.oppijanumero, Seq.empty)))
       )
-    )
+    }
   }
 
   private def fullHakemukset2hakijat(hakemukset: Seq[HakijaHakemus], version: Int)(
