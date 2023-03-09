@@ -87,4 +87,11 @@ class OpiskeluoikeusResourceSpec extends ScalatraFunSuite with BeforeAndAfterEac
       body should include("Pakollista kenttää komo ei löydy")
     }
   }
+
+  test("get Opiskeluoikeudet without params should return 400") {
+     get("/") {
+      status should be(400)
+      body should include("Vähintään yksi hakuehto on pakollinen")
+    }
+  }
 }

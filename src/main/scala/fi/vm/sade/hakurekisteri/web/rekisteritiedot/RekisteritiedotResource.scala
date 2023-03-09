@@ -74,8 +74,12 @@ class RekisteritiedotResource(
     implicit val user = getUser
     val q = queryForParams(params)
 
-    if (params.isEmpty)
-      throw new IllegalArgumentException("at least one search parameter is required")
+    if (params.isEmpty) {
+      logger.error(
+        s"Both oppilaitosOid and vuosi were empty, throwing an exception to avoid a too large query."
+      )
+      throw new IllegalArgumentException("Vähintään yksi hakuehto on pakollinen")
+    }
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -178,8 +182,12 @@ class RekisteritiedotResource(
     implicit val user = getUser
     val q = queryForParams(params)
 
-    if (params.isEmpty)
-      throw new IllegalArgumentException("at least one search parameter is required")
+    if (params.isEmpty) {
+      logger.error(
+        s"Both oppilaitosOid and vuosi were empty, throwing an exception to avoid a too large query."
+      )
+      throw new IllegalArgumentException("Vähintään yksi hakuehto on pakollinen")
+    }
 
     audit.log(
       auditUser,

@@ -180,6 +180,13 @@ class SuoritusResourceWithOPHSpec
       response.status should be(201)
     }
   }
+
+  test("should return bad request without query parameters") {
+    get("/") {
+      response.status should be(400)
+      body should include("Vähintään yksi hakuehto on pakollinen")
+    }
+  }
 }
 
 class SuoritusResourceWithOPOSpec
