@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriContainer
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.junit.runner.RunWith
 import org.scalatest.GivenWhenThen
 import org.scalatest.junit.JUnitRunner
@@ -166,7 +166,8 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
       create(suoritus)
 
       Then("löytyy kannasta ainoastaan tallennettu suoritus")
-      allSuoritukset should equal(Seq(suoritus))
+      // testidatassa ainoastaan peruskoulusuorituksia ja ilman kriteerejä ei voi hakea
+      peruskouluSuoritukset should equal(Seq(suoritus))
     }
 
     scenario("Tallennettaan kantaan jossa on tietoa") {
@@ -178,7 +179,7 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
       create(suoritus3)
 
       Then("löytyy kannasta  tallennettu suoritus")
-      allSuoritukset should contain(suoritus3.asInstanceOf[Suoritus])
+      peruskouluSuoritukset should contain(suoritus3.asInstanceOf[Suoritus])
     }
 
     scenario("Vanhat tiedot säilyvät") {
@@ -190,7 +191,7 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
       create(suoritus3)
 
       Then("löytyy kannasta  tallennettu suoritus")
-      allSuoritukset should (contain(suoritus.asInstanceOf[Suoritus]) and contain(
+      peruskouluSuoritukset should (contain(suoritus.asInstanceOf[Suoritus]) and contain(
         suoritus2.asInstanceOf[Suoritus]
       ))
     }

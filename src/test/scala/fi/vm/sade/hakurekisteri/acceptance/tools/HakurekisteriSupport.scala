@@ -129,8 +129,11 @@ trait HakurekisteriContainer
     }
   }
 
-  def allSuoritukset: Seq[Suoritus] = get("/rest/v1/suoritukset") {
-    hae(suoritukset)
+  def peruskouluSuoritukset: Seq[Suoritus] = get("/rest/v1/suoritukset") {
+    hae(
+      suoritukset
+        koulutusmoduulille "peruskoulu"
+    )
   }
 
   def create(suoritus: Suoritus) {
@@ -179,6 +182,10 @@ trait HakurekisteriContainer
 
     def koululle(oid: String): SuoritusQuery = {
       new SuoritusQuery(arvot + ("myontaja" -> oid))
+    }
+
+    def koulutusmoduulille(komo: String): SuoritusQuery = {
+      new SuoritusQuery(arvot + ("komo" -> komo))
     }
 
     def getKausiCode(kausi: Kausi): String = kausi match {
