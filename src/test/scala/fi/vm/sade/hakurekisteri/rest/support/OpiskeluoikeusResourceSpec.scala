@@ -89,9 +89,9 @@ class OpiskeluoikeusResourceSpec extends ScalatraFunSuite with BeforeAndAfterEac
   }
 
   test("get Opiskeluoikeudet without params should return 400") {
-     get("/") {
+    get("/") {
       status should be(400)
-      body should include("Vähintään yksi hakuehto on pakollinen")
+      body should include("illegal query params")
     }
   }
 }
