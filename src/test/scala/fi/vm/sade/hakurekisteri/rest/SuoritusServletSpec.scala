@@ -134,9 +134,15 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
     suoritusJournal.addModification(Updated(suoritus.identify))
   }
 
-  test("get root should return 200") {
-    get("/") {
+  test("get root with param should return 200") {
+    get("/?komo=peruskoulu") {
       status should equal(200)
+    }
+  }
+
+  test("get root without param should return 400") {
+    get("/") {
+      status should equal(400)
     }
   }
 
