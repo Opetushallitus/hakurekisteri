@@ -21,9 +21,11 @@ case class SuoritusQuery(
 
 object SuoritusQuery extends Logging {
   def apply(params: Map[String, String]): SuoritusQuery = {
-    if (params.isEmpty) {
+    val validParams =
+      Set("henkilo", "kausi", "vuosi", "myontaja", "komo", "muokattuJalkeen", "muokattuEnnen")
+    if (params.filterKeys(validParams.contains(_)).isEmpty) {
       logger.error(
-        s"All parameters were empty, throwing an exception to avoid a too large query."
+        s"No valid parameters, throwing an exception to avoid a too large query."
       )
       throw new IllegalArgumentException("Vähintään yksi hakuehto on pakollinen")
     }

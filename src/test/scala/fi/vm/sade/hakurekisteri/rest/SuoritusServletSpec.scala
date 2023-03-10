@@ -146,6 +146,12 @@ class SuoritusServletSpec extends ScalatraFunSuite with BeforeAndAfterEach {
     }
   }
 
+  test("get root without valid param should return 400") {
+    get("/?foo=bar") {
+      status should equal(400)
+    }
+  }
+
   implicit val formats = HakurekisteriJsonSupport.format
 
   test("save vahvistamaton suoritus should return vahvistettu:false") {

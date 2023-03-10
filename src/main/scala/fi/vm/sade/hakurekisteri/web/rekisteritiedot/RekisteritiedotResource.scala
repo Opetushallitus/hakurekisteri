@@ -74,7 +74,7 @@ class RekisteritiedotResource(
     implicit val user = getUser
     val q = queryForParams(params)
 
-    if (params.isEmpty) {
+    if (params.get("oppilaitosOid").isEmpty && params.get("vuosi").isEmpty) {
       logger.error(
         s"Both oppilaitosOid and vuosi were empty, throwing an exception to avoid a too large query."
       )
@@ -182,7 +182,7 @@ class RekisteritiedotResource(
     implicit val user = getUser
     val q = queryForParams(params)
 
-    if (params.isEmpty) {
+    if (params.get("oppilaitosOid").isEmpty && params.get("vuosi").isEmpty) {
       logger.error(
         s"Both oppilaitosOid and vuosi were empty, throwing an exception to avoid a too large query."
       )

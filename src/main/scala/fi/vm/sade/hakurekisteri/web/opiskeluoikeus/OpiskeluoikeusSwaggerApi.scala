@@ -13,7 +13,9 @@ trait OpiskeluoikeusSwaggerApi extends OpiskeluoikeusSwaggerModel {
 
   val query = apiOperation[Seq[Opiskeluoikeus]]("opiskeluoikeudet")
     .summary("näyttää kaikki opiskeluoikeustiedot")
-    .description("Näyttää kaikki opiskeluoikeustiedot. Voit myös hakea eri parametreillä.")
+    .description(
+      "Näyttää kaikki opiskeluoikeustiedot. Joko henkilön tai oppilaitoksen tunniste on annettava."
+    )
     .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
     .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
     .tags("opiskeluoikeudet")

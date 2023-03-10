@@ -9,13 +9,15 @@ case class OpiskeluoikeusQuery(henkilo: Option[String] = None, myontaja: Option[
 
 object OpiskeluoikeusQuery extends Logging {
   def apply(params: Map[String, String]): OpiskeluoikeusQuery = {
-    if (params.isEmpty) {
+    val personOid: Option[String] = params.get("henkilo")
+    val oppilaitosOid: Option[String] = params.get("myontaja")
+    if (personOid.isEmpty && oppilaitosOid.isEmpty) {
       logger.error(
         s"Both henkilo and myontaja parameters were empty, throwing an exception to avoid a too large query."
       )
       throw new IllegalArgumentException("Vähintään yksi hakuehto on pakollinen")
     }
-    OpiskeluoikeusQuery(params.get("henkilo"), params.get("myontaja"))
+    OpiskeluoikeusQuery(personOid, oppilaitosOid)
   }
 }
 
