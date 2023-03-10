@@ -1573,6 +1573,7 @@ case class AtaruHakemusDto(
   attachments: Map[String, String],
   eligibilities: Map[String, String],
   kkPohjakoulutus: List[String],
+  kkPohjakoulutusLomake: List[String],
   korkeakoulututkintoVuosi: Option[Int]
 )
 
@@ -1626,6 +1627,7 @@ case class AtaruHakemus(
   eligibilities: Map[String, String],
   liitteetTarkastettu: Map[String, Option[Boolean]],
   kkPohjakoulutus: List[String],
+  kkPohjakoulutusLomake: List[String],
   korkeakoulututkintoVuosi: Option[Int]
 ) extends HakijaHakemus
     with Serializable {

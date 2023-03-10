@@ -128,6 +128,7 @@ class HakemusServiceSpec
       Map(),
       Map(),
       List(),
+      List(),
       None
     )
 
@@ -178,6 +179,7 @@ class HakemusServiceSpec
       Map(),
       Map(),
       Map(),
+      List(),
       List(),
       None
     )
@@ -347,6 +349,7 @@ class HakemusServiceSpec
         Map.empty,
         Map.empty,
         List.empty,
+        List.empty,
         None
       ),
       PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid")))
@@ -378,6 +381,7 @@ class HakemusServiceSpec
         Map.empty,
         Map.empty,
         Map.empty,
+        List.empty,
         List.empty,
         None
       ),

@@ -36,6 +36,9 @@
       "kkPohjakoulutus": [
         "am"
       ],
+      "kkPohjakoulutusLomake": [
+        "pohjakoulutus_am"
+      ],
       "createdTime": "yyyyMMddHHmm",
       "hakemusFirstSubmittedTime": "yyyyMMddHHmm",
       "personOid": "1.2.246.562.24.82344311114",

@@ -29,6 +29,9 @@
       "kkPohjakoulutus": [
         "kk"
       ],
+      "kkPohjakoulutusLomake": [
+        "pohjakoulutus_kk"
+      ],
       "valintatuloksenJulkaisulupa": true,
       "koulutusmarkkinointilupa": true
     },

@@ -870,7 +870,7 @@ class KkHakijaService(
               hyvaksymisenEhto = sijoitteluTulos.hyvaksymisenEhto.get(hakemus.oid, hakukohdeOid),
               pisteet = sijoitteluTulos.pisteet.get(hakemus.oid, hakukohdeOid),
               ilmoittautumiset = lasnaolot,
-              pohjakoulutus = hakemus.kkPohjakoulutus,
+              pohjakoulutus = hakemus.kkPohjakoulutusLomake,
               julkaisulupa = Some(hakemus.julkaisulupa),
               hKelpoisuus = hakukelpoisuus.status,
               hKelpoisuusLahde = hakukelpoisuus.source,
