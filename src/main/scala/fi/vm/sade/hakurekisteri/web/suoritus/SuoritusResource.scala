@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.suoritus
 
 import java.util.concurrent.TimeUnit
-
 import _root_.akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.KomoOids

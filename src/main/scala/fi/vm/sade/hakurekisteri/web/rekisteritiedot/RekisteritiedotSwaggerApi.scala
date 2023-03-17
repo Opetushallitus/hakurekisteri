@@ -33,11 +33,15 @@ trait RekisteritiedotSwaggerApi
       "Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Tämän resurssin oppijoiden Opiskeluoikeudet ovat aina tyhjiä listoja"
     )
     .parameter(
-      queryParam[Option[String]]("oppilaitosOid").description("koulutuksen tarjoajan  oid").optional
+      queryParam[Option[String]]("oppilaitosOid")
+        .description("koulutuksen tarjoajan oid, pakollinen jos vuosi ei ole määritetty")
+        .optional
     )
     .parameter(
       queryParam[Option[String]]("vuosi")
-        .description("vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen")
+        .description(
+          "vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen, pakollinen jos oppilaitosta ei ole määritetty"
+        )
         .optional
     )
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
@@ -75,11 +79,15 @@ trait RekisteritiedotSwaggerApi
     .summary("Näyttää kevennetyn version opiskelijatiedoista")
     .description("Näyttää nimen luokan ja onko henkilön arvosanoissa puutteita")
     .parameter(
-      queryParam[Option[String]]("oppilaitosOid").description("koulutuksen tarjoajan  oid").optional
+      queryParam[Option[String]]("oppilaitosOid")
+        .description("koulutuksen tarjoajan oid, pakollinen jos vuosi ei ole määritetty")
+        .optional
     )
     .parameter(
       queryParam[Option[String]]("vuosi")
-        .description("vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen")
+        .description(
+          "vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen, pakollinen jos oppilaitos ei ole määritetty"
+        )
         .optional
     )
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))

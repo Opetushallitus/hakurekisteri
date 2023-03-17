@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.suoritus
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query, QueryWithPersonOid}
+import fi.vm.sade.utils.slf4j.Logging
 import org.joda.time.DateTime
 
 case class SuoritusQuery(
@@ -18,8 +19,16 @@ case class SuoritusQuery(
     SuoritusQueryWithPersonAliases(this, personOidsWithAliases)
 }
 
-object SuoritusQuery {
+object SuoritusQuery extends Logging {
   def apply(params: Map[String, String]): SuoritusQuery = {
+    val validParams =
+      Set("henkilo", "kausi", "vuosi", "myontaja", "komo", "muokattuJalkeen", "muokattuEnnen")
+    if (params.filterKeys(validParams.contains(_)).isEmpty) {
+      logger.error(
+        s"No valid parameters, throwing an exception to avoid a too large query."
+      )
+      throw new IllegalArgumentException("Vähintään yksi hakuehto on pakollinen")
+    }
     SuoritusQuery(
       params.get("henkilo"),
       params.get("kausi").map(Kausi.withName),

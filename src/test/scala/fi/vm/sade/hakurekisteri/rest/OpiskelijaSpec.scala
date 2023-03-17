@@ -77,4 +77,10 @@ class OpiskelijaSpec extends ScalatraFunSuite with BeforeAndAfterEach {
       body should include("loppuPaiva must be after alkuPaiva")
     }
   }
+
+  test("get opiskelija without params should return 400") {
+    get("/") {
+      status should be(400)
+    }
+  }
 }

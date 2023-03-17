@@ -27,6 +27,10 @@ trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResou
       queryParam[Option[String]]("muokattuJalkeen")
         .description("ISO aikaleima (esim. 2015-01-01T12:34:56.000+02:00) jonka jälkeen muokatut")
     )
+    .parameter(
+      queryParam[Option[String]]("muokattuEnnen")
+        .description("ISO aikaleima (esim. 2015-01-01T12:34:56.000+02:00) jota ennen muokatut")
+    )
     .tags("suoritukset")
 
   val create = apiOperation[Suoritus]("lisääSuoritus")

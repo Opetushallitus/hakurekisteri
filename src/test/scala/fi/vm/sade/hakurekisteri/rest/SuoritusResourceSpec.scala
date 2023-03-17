@@ -180,6 +180,13 @@ class SuoritusResourceWithOPHSpec
       response.status should be(201)
     }
   }
+
+  test("should return bad request without query parameters") {
+    get("/") {
+      status should be(400)
+      body should include("illegal query params")
+    }
+  }
 }
 
 class SuoritusResourceWithOPOSpec
