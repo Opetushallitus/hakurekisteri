@@ -346,7 +346,8 @@ case class KoutaInternalHakukohde(
   tarjoaja: String,
   paateltyAlkamiskausi: Option[PaateltyAlkamiskausi],
   hakukohde: Option[HakukohteenTiedot],
-  lukioTieto: Option[LukioTieto]
+  lukioTieto: Option[LukioTieto],
+  jarjestaaUrheilijanAmmKoulutusta: Option[Boolean]
 ) {
   def toHakukohde(): Hakukohde =
     Hakukohde(
@@ -360,7 +361,7 @@ case class KoutaInternalHakukohde(
 
   def urheilijaKoodit = Set("lukiolinjaterityinenkoulutustehtava_0105", "lukiopainotukset_0105")
   def isUrheilijaLukio = lukioTieto.exists(lt =>
-    lt.linja.exists(linja => urheilijaKoodit.contains(linja.koodiUri.split('#').head))
+    lt.isLukio && lt.linja.exists(linja => urheilijaKoodit.contains(linja.koodiUri.split('#').head))
   )
 }
 

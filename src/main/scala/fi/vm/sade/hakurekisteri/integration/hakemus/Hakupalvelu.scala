@@ -1596,7 +1596,8 @@ case class AtaruHakemusToinenAsteDto(
   tutkintoVuosi: Option[Int],
   tutkintoKieli: Option[String],
   huoltajat: List[GuardianContactInfo],
-  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset],
+  urheilijanLisakysymyksetAmmatillinen: Option[UrheilijanLisakysymykset]
 )
 
 @SerialVersionUID(1)
