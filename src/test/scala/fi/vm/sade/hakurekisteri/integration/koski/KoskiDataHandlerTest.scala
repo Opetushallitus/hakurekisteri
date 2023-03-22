@@ -25,6 +25,7 @@ import org.scalatest.concurrent.Waiters
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.tagobjects.Retryable
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers, Retries}
+import org.slf4j.LoggerFactory
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
 import scala.concurrent.duration._
@@ -55,6 +56,8 @@ class KoskiDataHandlerTest
   private implicit val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
   private val config: MockConfig = new MockConfig
   private val journals: DbJournals = new DbJournals(config)
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   private val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = mock[IOppijaNumeroRekisteri]
   private val personAliasesProvider: PersonAliasesProvider = new PersonAliasesProvider {
@@ -1240,6 +1243,26 @@ class KoskiDataHandlerTest
     arvosanat.suoritus.valmistuminen shouldEqual expectedDate
   }
 
+  it should "parse 1.2.246.562.24.90777265447.json and äidinkielenomainen suoritus (AOM) to A1 language" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "1.2.246.562.24.90777265447.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+
+    henkilo.opiskeluoikeudet.head.aikaleima shouldEqual Some("2023-03-09T12:05:51.805663")
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    val resultgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgroup should have length 1
+    val result: Seq[SuoritusArvosanat] = resultgroup.head
+    result should have length 2
+    val arvosanat = result.head
+    arvosanat.arvosanat should have length 17
+    val aomArvosana = arvosanat.arvosanat(16)
+    aomArvosana.lisatieto shouldEqual Some("SV")
+    aomArvosana.aine shouldEqual "A1"
+  }
+
   it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset2.json" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset2.json").mkString
@@ -1352,6 +1375,7 @@ class KoskiDataHandlerTest
 
     val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
     //val resgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo, createLukioArvosanat = true)
+
     val res: Seq[SuoritusArvosanat] = resgroup.head
 
     val arvosanat: Seq[Arvosana] = res.head.arvosanat

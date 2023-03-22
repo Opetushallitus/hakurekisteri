@@ -107,7 +107,26 @@ class KoskiSuoritusArvosanaParser {
     //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
     //while sure only supports the former. Thus we must convert "ET" codes into "KT"
     var modsuoritukset: Seq[KoskiOsasuoritus] = osasuoritukset.map(s => {
-      if (s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("ET")) {
+      if (s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("AOM")) {
+        val koulmod = s.koulutusmoduuli
+        val aidinkielenomainen = KoskiKoulutusmoduuli(
+          Some(KoskiKoodi("A1", "koskioppiaineetyleissivistava")),
+          koulmod.kieli,
+          koulmod.koulutustyyppi,
+          koulmod.laajuus,
+          koulmod.pakollinen
+        )
+        KoskiOsasuoritus(
+          aidinkielenomainen,
+          s.tyyppi,
+          s.arviointi,
+          s.pakollinen,
+          s.yksilöllistettyOppimäärä,
+          s.osasuoritukset
+        )
+      } else if (
+        s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("ET")
+      ) {
         val koulmod = s.koulutusmoduuli
         val uskontoElamankatsomusTieto = KoskiKoulutusmoduuli(
           Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")),
