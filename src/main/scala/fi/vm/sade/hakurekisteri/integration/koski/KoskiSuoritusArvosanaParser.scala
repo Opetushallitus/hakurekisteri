@@ -106,45 +106,24 @@ class KoskiSuoritusArvosanaParser {
 
     //this processing is necessary because koskiopintooikeus might have either KT or ET code for "Uskonto/Elämänkatsomustieto"
     //while sure only supports the former. Thus we must convert "ET" codes into "KT"
+    // Also äidinkielemomainen (AOM) needs to be mapped to A1 language
     var modsuoritukset: Seq[KoskiOsasuoritus] = osasuoritukset.map(s => {
-      if (s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("AOM")) {
-        val koulmod = s.koulutusmoduuli
-        val aidinkielenomainen = KoskiKoulutusmoduuli(
-          Some(KoskiKoodi("A1", "koskioppiaineetyleissivistava")),
-          koulmod.kieli,
-          koulmod.koulutustyyppi,
-          koulmod.laajuus,
-          koulmod.pakollinen
-        )
-        KoskiOsasuoritus(
-          aidinkielenomainen,
-          s.tyyppi,
-          s.arviointi,
-          s.pakollinen,
-          s.yksilöllistettyOppimäärä,
-          s.osasuoritukset
-        )
-      } else if (
-        s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("ET")
-      ) {
-        val koulmod = s.koulutusmoduuli
-        val uskontoElamankatsomusTieto = KoskiKoulutusmoduuli(
-          Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")),
-          koulmod.kieli,
-          koulmod.koulutustyyppi,
-          koulmod.laajuus,
-          koulmod.pakollinen
-        )
-        KoskiOsasuoritus(
-          uskontoElamankatsomusTieto,
-          s.tyyppi,
-          s.arviointi,
-          s.pakollinen,
-          s.yksilöllistettyOppimäärä,
-          s.osasuoritukset
-        )
-      } else {
-        s
+      val koulmod = s.koulutusmoduuli
+      //s.koulutusmoduuli.tunniste.get.koodiarvo match {
+      s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo match {
+        case "AOM" => {
+          val uusiKoulMod =
+            koulmod.copy(tunniste = Some(KoskiKoodi("A1", "koskioppiaineetyleissivistava")))
+          s.copy(koulutusmoduuli = uusiKoulMod)
+        }
+        case "ET" => {
+          val uusiKoulMod =
+            koulmod.copy(tunniste = Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")))
+          s.copy(koulutusmoduuli = uusiKoulMod)
+        }
+        case _ => {
+          s
+        }
       }
     })
     var yksilollistettyMaJaAi: Option[Boolean] = None
