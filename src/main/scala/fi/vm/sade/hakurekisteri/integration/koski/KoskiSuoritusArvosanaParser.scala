@@ -108,22 +108,20 @@ class KoskiSuoritusArvosanaParser {
     //while sure only supports the former. Thus we must convert "ET" codes into "KT"
     // Also äidinkielemomainen (AOM) needs to be mapped to A1 language
     var modsuoritukset: Seq[KoskiOsasuoritus] = osasuoritukset.map(s => {
-      val koulmod = s.koulutusmoduuli
-      //s.koulutusmoduuli.tunniste.get.koodiarvo match {
-      s.koulutusmoduuli.tunniste.getOrElse(KoskiKoodi("", "")).koodiarvo match {
-        case "AOM" => {
-          val uusiKoulMod =
-            koulmod.copy(tunniste = Some(KoskiKoodi("A1", "koskioppiaineetyleissivistava")))
-          s.copy(koulutusmoduuli = uusiKoulMod)
-        }
-        case "ET" => {
-          val uusiKoulMod =
-            koulmod.copy(tunniste = Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava")))
-          s.copy(koulutusmoduuli = uusiKoulMod)
-        }
-        case _ => {
+      s.koulutusmoduuli.tunniste.map(_.koodiarvo) match {
+        case Some("AOM") =>
+          s.copy(koulutusmoduuli =
+            s.koulutusmoduuli
+              .copy(tunniste = Some(KoskiKoodi("A1", "koskioppiaineetyleissivistava")))
+          )
+        case Some("ET") =>
+          s.copy(koulutusmoduuli =
+            s.koulutusmoduuli.copy(tunniste =
+              Some(KoskiKoodi("KT", "koskioppiaineetyleissivistava"))
+            )
+          )
+        case _ =>
           s
-        }
       }
     })
     var yksilollistettyMaJaAi: Option[Boolean] = None
