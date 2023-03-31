@@ -28,6 +28,7 @@ case class VirtaStatus(
 )
 case class QueryProsessed(q: VirtaQuery)
 case class RefreshOppijaFromVirta(oppijaOid: String)
+case class RefreshHakuFromVirta(hakuOid: String)
 
 object RescheduleVirtaProcessing
 object StartVirtaProcessing
@@ -84,6 +85,35 @@ class VirtaQueue(
         )
         virtaActor.actor ! q
       }
+
+    case r: RefreshHakuFromVirta =>
+      val hakuOid = r.hakuOid
+      (hakuActor ? GetHaku(hakuOid))(1.hour)
+        .mapTo[Haku]
+        .map(haku => {
+          if (haku.kkHaku) {
+            log.info(
+              s"Aloitetaan haun $hakuOid hakijoiden tietojen päivittäminen Virta-järjestelmästä."
+            )
+            hakemusService
+              .personOidsForHaku(hakuOid, None)
+              .map(personOids => {
+                oppijaNumeroRekisteri
+                  .enrichWithAliases(personOids)
+                  .map(personOidsWithAliases => {
+                    log.info(
+                      s"Päivitetään ${personOidsWithAliases.henkiloOidsWithLinkedOids.size} henkilön tiedot Virta-järjestelmästä haulle $hakuOid"
+                    )
+                    personOidsWithAliases.henkiloOidsWithLinkedOids
+                      .foreach(personOid => self ! VirtaQuery(personOid, None))
+                  })
+              })
+          } else {
+            log.warning(
+              s"Haku ${hakuOid} ei ole kk-haku. Ei päivitetä haun hakijoiden tietoja Virta-järjestelmästä."
+            )
+          }
+        })
 
     case StartVirtaProcessing if !processing =>
       log.info("started to process virta queries")
