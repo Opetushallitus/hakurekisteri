@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.koodisto
 
 import java.util.concurrent.ExecutionException
-
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{AskableActorRef, pipe}
 import fi.vm.sade.hakurekisteri.Config
@@ -149,6 +148,17 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     val loader: GetRinnasteinenKoodiArvoQuery => Future[Option[String]] = { query =>
       lazy val url =
         OphUrlProperties.url("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)
+      //logger.info("url = " + url)
+//      println("url = " + url)
+//      println("q = " + q)
+//      println("q.koodisto = " + q.koodisto)
+//      println("q.arvo = " + q.arvo)
+
+//      if (q.koodisto equals ("maatjavaltiot2")) {//&& q.arvo equals ("maatjavaltiot2") {
+//        "XX"
+//      }
+
+
       restClient
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)(
           200,
@@ -157,14 +167,20 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
         .map(_.headOption.map(_.koodiUri))
         .flatMap {
           case Some(uri) =>
+//            println("uri = $uri")
             val fs = restClient
               .readObject[Seq[Koodi]]("koodisto-service.relaatio", "rinnasteinen", uri)(
                 200,
                 maxRetries
               )
               .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
-                case None =>
-                  if (q.emptyValueOk) {
+//                case q.koodisto == "maatjavaltiot2" && q.arvo ==  "990" =>
+//                  "XX"
+                case None => {
+                  if(uri == "maatjavaltiot2_990") {
+                    log.info("Mapping 'Muu epäitsenäinen alue (maatjavaltiot2_990)' to unkwnown")
+                    "XX"
+                  } else if (q.emptyValueOk) {
                     log.warning(s"Ei löytynyt rinnasteista koodiarvoa: $q")
                     ""
                   } else {
@@ -173,6 +189,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                     )
 
                   }
+                }
                 case Some(k) => k.koodiArvo
               })
             fs.map(Option(_))
@@ -194,7 +211,6 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     }
   }
 }
-
 case class KoodistoActorRef(actor: AskableActorRef) extends TypedAskableActorRef
 
 class MockKoodistoActor extends Actor {
