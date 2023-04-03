@@ -158,7 +158,6 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
 //        "XX"
 //      }
 
-
       restClient
         .readObject[Seq[Koodi]]("koodisto-service.koodisByKoodistoAndArvo", q.koodisto, q.arvo)(
           200,
@@ -177,7 +176,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
 //                case q.koodisto == "maatjavaltiot2" && q.arvo ==  "990" =>
 //                  "XX"
                 case None => {
-                  if(uri == "maatjavaltiot2_990") {
+                  if (uri == "maatjavaltiot2_990") {
                     log.info("Mapping 'Muu epäitsenäinen alue (maatjavaltiot2_990)' to unkwnown")
                     "XX"
                   } else if (q.emptyValueOk) {
