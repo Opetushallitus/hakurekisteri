@@ -88,6 +88,19 @@ class VirtaResource(virtaQueue: ActorRef)(implicit
     }
   }
 
+  get("/refresh/:hakuOid", operation(refreshHaku)) {
+    if (!hasAccess) throw UserNotAuthorized("not authorized")
+    else {
+      val hakuOid = params("hakuOid")
+      new AsyncResult() {
+        override implicit def timeout: Duration = 120.seconds
+
+        virtaQueue ! RefreshHakuFromVirta(hakuOid)
+        override val is = virtaStatus
+      }
+    }
+  }
+
   get("/reschedule") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {

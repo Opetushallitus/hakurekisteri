@@ -23,6 +23,16 @@ trait VirtaSwaggerApi extends SwaggerSupport with VirtaSwaggerModel {
     )
     .tags("virta")
 
+  val refreshHaku = apiOperation[VirtaStatus]("päivitäHaunOppijoidenTiedot")
+    .summary("Päivittää yhden haun kaikkien hakemusten oppijoiden tiedot VIRTA-järjestelmästä.")
+    .description("Päivittää yhden haun kaikkien hakemusten oppijoiden tiedot VIRTA-järjestelmästä.")
+    .parameter(
+      pathParam[String]("hakuOid")
+        .description("Haun oid")
+        .required
+    )
+    .tags("virta")
+
   val statusQuery = apiOperation[VirtaStatus]("status")
     .summary("Palauttaa VIRTA-integraation tilan.")
     .description("Palauttaa VIRTA-integraation tilan.")
