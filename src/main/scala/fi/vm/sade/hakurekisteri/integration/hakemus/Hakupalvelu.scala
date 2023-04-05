@@ -221,7 +221,6 @@ class AkkaHakupalvelu(
   }
 
   private def maatjavaltiot2To1(hakemukset: Seq[HakijaHakemus]): Future[Map[String, String]] = {
-    logger.info("Suoritan maatjavaltiot2To1!!")
     Future
       .sequence(
         hakemukset
