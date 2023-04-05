@@ -4117,6 +4117,39 @@ class KoskiDataHandlerTest
     arvosanat.head should equal("1")
   }
 
+  it should "store 2 aikuisten perusopetuksen oppimäärä even when there is a newer aikuisten perusopetuksen oppiaineen oppimäärä present" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "aik_perusopetus_ja_aik_perusopetus_oppiaineen_oppimaara.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)
+      ),
+      5.seconds
+    )
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("2")
+
+    val suoritukset = run(
+      database.run(
+        sql"select count(*) from suoritus where komo = '1.2.246.562.13.62959769647'"
+          .as[String]
+      )
+    )
+    suoritukset.head should equal("1")
+
+  }
+
   it should "store 2 separate opiskeluoikeutta and valmis tilaiset arvosanat when perusopetuksen oppiaineen oppimäärä and tila equals läsnä" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "koskidata_aik_perusopetus_poo.json").mkString

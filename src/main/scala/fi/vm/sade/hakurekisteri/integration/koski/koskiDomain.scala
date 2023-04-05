@@ -71,6 +71,16 @@ case class KoskiOpiskeluoikeus(
   def isAikuistenPerusopetus: Boolean =
     tyyppi.getOrElse(KoskiKoodi("", "")).koodiarvo.contentEquals("aikuistenperusopetus")
 
+  def isAikuistenPerusopetuksenOppimaara: Boolean =
+    isAikuistenPerusopetus && suoritukset.exists(
+      _.tyyppi.exists(_.koodiarvo == "aikuistenperusopetuksenoppimaara")
+    )
+
+  def hasPerusopetuksenOppiaineenOppimaara: Boolean =
+    suoritukset.exists(
+      _.tyyppi.exists(_.koodiarvo == "perusopetuksenoppiaineenoppimaara")
+    )
+
   def isKotiopetuslainen: Boolean = {
     getYsiluokanAlkamispaiva match {
       case Some(alkamispaiva) =>
