@@ -220,7 +220,23 @@ class KoskiDataHandler(
           Seq()
         case (Some("ammatillinenkoulutus"), os) =>
           os
-        case (Some(_), os) =>
+        case (Some("aikuistenperusopetus"), os) =>
+          val (kokonaisetOppimaarat, muut) = os.partition(_.isAikuistenPerusopetuksenOppimaara)
+          val oppiaineenOppimaarat = muut.filter(_.hasPerusopetuksenOppiaineenOppimaara)
+          (viimeisinOpiskeluoikeus(kokonaisetOppimaarat), oppiaineenOppimaarat) match {
+            case (Some(viimeisinKokonainen), oppiaineet) =>
+              if (viimeisinKokonainen._2.nonEmpty) {
+                logger.info(
+                  s"Filtteröitiin henkilöltä $henkiloOid aikuisten perusopetuksen opiskeluoikeuksia (${viimeisinKokonainen._2
+                    .map(_.oid)}), koska löytyi tuoreempi opiskeluoikeus oidilla ${viimeisinKokonainen._1.oid}"
+                )
+              }
+              oppiaineet :+ viimeisinKokonainen._1
+            case (None, oppiaineet) =>
+              oppiaineet
+            case _ => Seq()
+          }
+        case (Some(_), os: Seq[KoskiOpiskeluoikeus]) =>
           viimeisinOpiskeluoikeus(os) match {
             case Some((viimeisin, muut)) =>
               muut.filter(
