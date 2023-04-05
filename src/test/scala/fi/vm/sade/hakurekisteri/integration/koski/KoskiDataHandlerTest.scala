@@ -4117,7 +4117,7 @@ class KoskiDataHandlerTest
     arvosanat.head should equal("1")
   }
 
-  it should "store 2 aikuisten perusopetuksen oppimäärä even when there is a newer aikuisten perusopetuksen oppiaineen oppimäärä present" in {
+  it should "store full aikuisten perusopetuksen oppimäärä even when there is a newer aikuisten perusopetuksen oppiaineen oppimäärä present" in {
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "aik_perusopetus_ja_aik_perusopetus_oppiaineen_oppimaara.json")
