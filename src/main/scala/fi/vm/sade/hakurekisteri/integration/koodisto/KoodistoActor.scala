@@ -163,10 +163,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
               )
               .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
                 case None => {
-                  if (uri == "maatjavaltiot2_990") {
-                    log.info("Mapping 'Muu epäitsenäinen alue (maatjavaltiot2_990)' to unkwnown")
-                    "XX"
-                  } else if (q.emptyValueOk) {
+                  if (q.emptyValueOk) {
                     log.warning(s"Ei löytynyt rinnasteista koodiarvoa: $q")
                     ""
                   } else {
