@@ -1,0 +1,297 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.345.678.15.12345678901",
+    "hetu" : "010101-0101",
+    "syntymäaika" : "1901-01-01",
+    "etunimet" : "Testi",
+    "kutsumanimi" : "Testi",
+    "sukunimi" : "Testaaja",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid" : "1.2.246.562.15.36644967501",
+    "versionumero" : 44,
+    "aikaleima" : "2022-12-21T14:44:12.063797",
+    "lähdejärjestelmänId" : {
+      "id" : "240572",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.30858013912",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "03667",
+        "nimi" : {
+          "fi" : "Testikoulu",
+          "sv" : "Testikoulu",
+          "en" : "Testikoulu"
+        },
+        "lyhytNimi" : {
+          "fi" : "Testikoulu",
+          "sv" : "Testikoulu",
+          "en" : "Testikoulu"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Testikoulu",
+        "sv" : "Testikoulu",
+        "en" : "Testikoulu"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "092",
+        "nimi" : {
+          "fi" : "Vantaa",
+          "sv" : "Vanda"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.494695390410",
+      "nimi" : {
+        "fi" : "Vantaan kaupunki",
+        "sv" : "Vanda stad",
+        "en" : "Vantaan kaupunki"
+      },
+      "yTunnus" : "0124610-9",
+      "kotipaikka" : {
+        "koodiarvo" : "092",
+        "nimi" : {
+          "fi" : "Vantaa",
+          "sv" : "Vanda"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2016-08-16",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2023-01-09",
+        "tila" : {
+          "koodiarvo" : "valiaikaisestikeskeytynyt",
+          "nimi" : {
+            "fi" : "Väliaikaisesti keskeytynyt",
+            "sv" : "Tillfälligt avbruten",
+            "en" : "Temporarily suspended"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : {
+      "aloittanutEnnenOppivelvollisuutta" : false,
+      "ulkomaanjaksot" : [ {
+        "alku" : "2023-01-09"
+      } ],
+      "vuosiluokkiinSitoutumatonOpetus" : false
+    },
+    "suoritukset" : [
+      {
+        "koulutusmoduuli" : {
+          "tunniste" : {
+            "koodiarvo" : "9",
+            "nimi" : {
+              "fi" : "9. vuosiluokka",
+              "sv" : "Årskurs 9"
+            },
+            "koodistoUri" : "perusopetuksenluokkaaste",
+            "koodistoVersio" : 1
+          },
+          "perusteenDiaarinumero" : "111/222/3333",
+          "koulutustyyppi" : {
+            "koodiarvo" : "16",
+            "nimi" : {
+              "fi" : "Perusopetus",
+              "sv" : "Grundläggande utbildning"
+            },
+            "lyhytNimi" : {
+              "fi" : "Perusopetus",
+              "sv" : "Grundläggande utbildning"
+            },
+            "koodistoUri" : "koulutustyyppi"
+          }
+        },
+        "luokka" : "12A",
+        "toimipiste" : {
+          "oid" : "1.2.246.562.10.30858013912",
+          "oppilaitosnumero" : {
+            "koodiarvo" : "03667",
+            "nimi" : {
+              "fi" : "Testikoulu",
+              "sv" : "Testikoulu",
+              "en" : "Testikoulu"
+            },
+            "lyhytNimi" : {
+              "fi" : "Testikoulu",
+              "sv" : "Testikoulu",
+              "en" : "Testikoulu"
+            },
+            "koodistoUri" : "oppilaitosnumero",
+            "koodistoVersio" : 1
+          },
+          "nimi" : {
+            "fi" : "Testikoulu",
+            "sv" : "Testikoulu",
+            "en" : "Testikoulu"
+          },
+          "kotipaikka" : {
+            "koodiarvo" : "092",
+            "nimi" : {
+              "fi" : "Vantaa",
+              "sv" : "Vanda"
+            },
+            "koodistoUri" : "kunta",
+            "koodistoVersio" : 2
+          }
+        },
+        "alkamispäivä" : "2022-08-11",
+        "suorituskieli" : {
+          "koodiarvo" : "EN",
+          "nimi" : {
+            "fi" : "englanti",
+            "sv" : "engelska",
+            "en" : "English"
+          },
+          "lyhytNimi" : {
+            "fi" : "englanti",
+            "sv" : "engelska",
+            "en" : "English"
+          },
+          "koodistoUri" : "kieli",
+          "koodistoVersio" : 1
+        },
+        "jääLuokalle" : false,
+        "osasuoritukset" : [ ],
+        "todistuksellaNäkyvätLisätiedot" : {
+          "fi" : ""
+        },
+        "tyyppi" : {
+          "koodiarvo" : "perusopetuksenvuosiluokka",
+          "nimi" : {
+            "fi" : "Perusopetuksen vuosiluokka",
+            "sv" : "Årskurs i grundläggande utbildning",
+            "en" : "Basic education class"
+          },
+          "koodistoUri" : "suorituksentyyppi",
+          "koodistoVersio" : 1
+        }
+      } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetus",
+      "nimi" : {
+        "fi" : "Perusopetus",
+        "sv" : "Grundläggande utbildning"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "organisaatiohistoria" : [ {
+      "muutospäivä" : "2020-08-05",
+      "oppilaitos" : {
+        "oid" : "1.2.246.562.10.47554628967",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "03671",
+          "nimi" : {
+            "fi" : "Testi koulu",
+            "sv" : "Testi koulu",
+            "en" : "Testi koulu"
+          },
+          "lyhytNimi" : {
+            "fi" : "Testi koulu",
+            "sv" : "Testi koulu",
+            "en" : "Testi koulu"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Testi koulu",
+          "sv" : "Testi koulu",
+          "en" : "Testi koulu"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "092",
+          "nimi" : {
+            "fi" : "Vantaa",
+            "sv" : "Vanda"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "koulutustoimija" : {
+        "oid" : "1.2.246.562.10.494695390410",
+        "nimi" : {
+          "fi" : "Vantaan kaupunki",
+          "sv" : "Vanda stad"
+        },
+        "yTunnus" : "0124610-9",
+        "kotipaikka" : {
+          "koodiarvo" : "092",
+          "nimi" : {
+            "fi" : "Vantaa",
+            "sv" : "Vanda"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      }
+    } ],
+    "alkamispäivä" : "2018-03-10"
+  } ]
+}

@@ -137,7 +137,7 @@ object KoskiOpiskeluoikeusjakso {
     "mitatoity" -> "KESKEYTYNYT",
     "peruutettu" -> "KESKEYTYNYT",
     "loma" -> "KESKEN",
-    "valiaikaisestikeskeytynyt" -> "KESKEN",
+    "valiaikaisestikeskeytynyt" -> "KESKEYTYNYT",
     "lasna" -> "KESKEN"
   )
 }
