@@ -89,3 +89,7 @@ db/schema.ddl
 
 suoritusrekisteri-it-db
 src/main/webapp/
+
+.bsp/
+.vscode/
+project/
