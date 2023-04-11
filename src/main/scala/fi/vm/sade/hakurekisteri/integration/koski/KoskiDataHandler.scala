@@ -782,6 +782,7 @@ class KoskiDataHandler(
     koskihenkilöcontainer.opiskeluoikeudet
       .filter(
         _.tila.opiskeluoikeusjaksot
+          .filter(jakso => LocalDate.parse(jakso.alku).compareTo(LocalDate.now()) <= 0)
           .sortBy(jakso => LocalDate.parse(jakso.alku))(Ordering[LocalDate].reverse)
           .head
           .tila

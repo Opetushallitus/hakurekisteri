@@ -2090,6 +2090,47 @@ class KoskiDataHandlerTest
     suoritus.size should equal(0)
   }
 
+  it should "store seiskaKasiJaValmentava with present study status, even when there is a future absent study status" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_7_8_tuleva_ei_lasna.json")
+        .mkString
+        .replaceAll("XXXX-XX-XX", LocalDate.now().plusMonths(1).toString())
+
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    koskiHenkilo should not be null
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
+        ),
+        Option(alaikainenOnrHenkilo)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(1)
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.64818893022")
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
   private def generateTestONRHenkilo(koskiKenkilo: KoskiHenkiloContainer, syntymaAika: String) = {
     val taysiIkainenOnrHenkilo = new Henkilo(
       oidHenkilo = koskiKenkilo.henkilö.oid.get,
