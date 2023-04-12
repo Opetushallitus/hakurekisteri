@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 import java.util.UUID
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 case class SuoritusArvosanat(
   suoritus: VirallinenSuoritus,
@@ -573,7 +573,7 @@ class KoskiDataHandler(
     viimeisimmatSuoritukset: Seq[SuoritusArvosanat],
     personOidsWithAliases: PersonOidsWithAliases,
     params: KoskiSuoritusHakuParams
-  ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
+  ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] =
     fetchExistingSuoritukset(henkiloOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
@@ -612,7 +612,7 @@ class KoskiDataHandler(
           henkilo
         )
       ) {
-        updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer)
+        Await.result(updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer), 5.seconds)
       }
 
       val suorituksetForRemoving = tallennettavatSuoritukset
@@ -690,7 +690,6 @@ class KoskiDataHandler(
         })
       )
     })
-  }
 
   def createSuorituksetJaArvosanatFromKoski(
     henkilo: KoskiHenkiloContainer
