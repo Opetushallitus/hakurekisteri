@@ -230,7 +230,8 @@ class HakemusService(
     henkilot: Map[String, Henkilo],
     hakuOid: String,
     koodisByOid: Map[String, Option[String]],
-    urheilijaLukioOids: Set[String]
+    urheilijaLukioOids: Set[String],
+    urheilijaAmmatillinenOids: Set[String]
   ): Future[List[AtaruHakemusToinenAste]] = {
     def hakukohteenTarjoajaOid(hakukohdeOid: String): Future[String] = for {
       hakukohde <- (hakukohdeAggregatorActor.actor ? HakukohdeQuery(hakukohdeOid))
@@ -302,6 +303,8 @@ class HakemusService(
               None,
               urheilijanLisakysymykset =
                 if (urheilijaLukioOids.contains(hakutoive.oid)) hakemus.urheilijanLisakysymykset
+                else if (urheilijaAmmatillinenOids.contains(hakutoive.oid))
+                  hakemus.urheilijanLisakysymyksetAmmatillinen
                 else None
             )
           }
@@ -537,7 +540,8 @@ class HakemusService(
   private def ataruhakemuksetToinenAste(
     params: AtaruSearchParams,
     koodisByOid: Map[String, Option[String]],
-    urheilijaLukioOids: Set[String]
+    urheilijaLukioOids: Set[String],
+    urheilijaAmmatillinenOids: Set[String]
   ): Future[List[AtaruHakemusToinenAste]] = {
     logger.info(
       s"Haetaan toisen asteen ataruhakemukset ${params.hakukohdeOids.map(hks => hks.size).getOrElse(0)} hakukohteelle : $params"
@@ -581,7 +585,8 @@ class HakemusService(
             ataruHenkilot,
             params.hakuOid.get,
             koodisByOid,
-            urheilijaLukioOids
+            urheilijaLukioOids,
+            urheilijaAmmatillinenOids
           )
         } yield (
           params.organizationOid.fold(ataruHakemukset)(oid =>
@@ -872,6 +877,8 @@ class HakemusService(
       getHakukohdeKoodiarvotForHakukohteet(hks).flatMap(hakukohdekoodiByHakukohdeOid => {
         val oids = hks.map(_.oid).distinct
         val urheilijaLukioHakukohdeOids = hks.filter(hk => hk.isUrheilijaLukio).map(_.oid).toSet
+        val urheilijaAmmatillinenHakukohdeOids =
+          hks.filter(hk => hk.jarjestaaUrheilijanAmmKoulutusta.getOrElse(false)).map(_.oid).toSet
         val hakemukset: Future[List[AtaruHakemusToinenAste]] =
           ataruhakemuksetToinenAste(
             AtaruSearchParams(
@@ -882,7 +889,8 @@ class HakemusService(
               modifiedAfter = None
             ),
             hakukohdekoodiByHakukohdeOid,
-            urheilijaLukioHakukohdeOids
+            urheilijaLukioHakukohdeOids,
+            urheilijaAmmatillinenHakukohdeOids
           )
         //Filtteröidään pois sellaiset hakutoiveet, jotka eivät kuulu haettuihin hakukohteisiin
         hakemukset.map(haks =>

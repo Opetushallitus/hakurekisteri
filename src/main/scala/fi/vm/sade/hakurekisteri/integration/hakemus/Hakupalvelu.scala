@@ -1183,7 +1183,7 @@ object AkkaHakupalvelu {
 
   def convertHarkinnanvaraisuudenSyy(syy: String): String = {
     syy match {
-      case "EI_HARKINNANVARAINEN"                                                    => ""
+      case "EI_HARKINNANVARAINEN" | "EI_HARKINNANVARAINEN_HAKUKOHDE"                 => ""
       case "ATARU_OPPIMISVAIKEUDET"                                                  => "1"
       case "ATARU_SOSIAALISET_SYYT"                                                  => "2"
       case "ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET" | "ATARU_ULKOMAILLA_OPISKELTU" => "3"
@@ -1598,7 +1598,8 @@ case class AtaruHakemusToinenAsteDto(
   tutkintoVuosi: Option[Int],
   tutkintoKieli: Option[String],
   huoltajat: List[GuardianContactInfo],
-  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset]
+  urheilijanLisakysymykset: Option[UrheilijanLisakysymykset],
+  urheilijanLisakysymyksetAmmatillinen: Option[UrheilijanLisakysymykset]
 )
 
 @SerialVersionUID(1)
