@@ -567,12 +567,14 @@ class KoskiDataHandler(
   }
 
   private def overrideExistingSuorituksetWithNewSuorituksetFromKoski(
-    henkilöOid: String,
+    henkilo: Option[Henkilo],
+    koskiHenkiloContainer: KoskiHenkiloContainer,
+    henkiloOid: String,
     viimeisimmatSuoritukset: Seq[SuoritusArvosanat],
     personOidsWithAliases: PersonOidsWithAliases,
     params: KoskiSuoritusHakuParams
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
-    fetchExistingSuoritukset(henkilöOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
+    fetchExistingSuoritukset(henkiloOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
 
@@ -603,6 +605,16 @@ class KoskiDataHandler(
         )
       }
 
+      // Tallennetaan mahdollinen 7-8-valmistava vain silloin, kun valmista ja vahvistettua
+      // perusopetuksen suoritusta ei ollut.
+      if (
+        tallennettavatSuoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
+          henkilo
+        )
+      ) {
+        updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer)
+      }
+
       val suorituksetForRemoving = tallennettavatSuoritukset
 
       if (!params.saveLukio) {
@@ -618,14 +630,14 @@ class KoskiDataHandler(
       checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
         fetchedSuoritukset,
         suorituksetForRemoving,
-        henkilöOid,
+        henkiloOid,
         getAliases(personOidsWithAliases)
       ).recoverWith { case e: Exception =>
         Future.successful(
           Seq(
             Left(
               new RuntimeException(
-                s"Koski-opiskelijan poisto henkilölle $henkilöOid epäonnistui.",
+                s"Koski-opiskelijan poisto henkilölle $henkiloOid epäonnistui.",
                 e
               )
             )
@@ -651,7 +663,7 @@ class KoskiDataHandler(
                 ) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))
               ) {
                 saveSuoritusAndArvosanat(
-                  henkilöOid,
+                  henkiloOid,
                   fetchedSuoritukset,
                   useSuoritus,
                   arvosanat,
@@ -668,7 +680,7 @@ class KoskiDataHandler(
                 Future.successful(
                   Left(
                     new RuntimeException(
-                      s"Koski-suoritusarvosanojen $s tallennus henkilölle $henkilöOid epäonnistui.",
+                      s"Koski-suoritusarvosanojen $s tallennus henkilölle $henkiloOid epäonnistui.",
                       e
                     )
                   )
@@ -809,13 +821,6 @@ class KoskiDataHandler(
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get
     val suoritukset = createSuorituksetJaArvosanatFromKoski(koskihenkilöcontainer).flatten
-    if (
-      suoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
-        henkilo
-      )
-    ) {
-      updateOppilaitosSeiskaKasiJaValmistava(koskihenkilöcontainer)
-    }
     val muidenSuoritukset = suoritukset.filter(_.suoritus.henkilo != henkiloOid)
     if (muidenSuoritukset.nonEmpty) {
       return Future.successful(
@@ -832,6 +837,8 @@ class KoskiDataHandler(
     }
     val suorituksetWithoutDuplicates = filterAndLogSuoritusDuplicates(suoritukset)
     overrideExistingSuorituksetWithNewSuorituksetFromKoski(
+      henkilo,
+      koskihenkilöcontainer,
       henkiloOid,
       suorituksetWithoutDuplicates,
       personOidsWithAliases,
