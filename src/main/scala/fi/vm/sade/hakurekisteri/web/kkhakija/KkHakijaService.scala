@@ -817,6 +817,79 @@ class KkHakijaService(
     sijoitteluTulos: SijoitteluTulos,
     jonotiedot: Seq[ValintatapajononTiedot]
   ): Future[Option[Hakemus]] = h match {
+    case hakemus: FullHakemus =>
+      val hakemusOid = hakemus.oid
+      val hakukohdeOid = toive.koulutusId.getOrElse("")
+      val preferenceEligibilities = hakemus.preferenceEligibilities
+      val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, preferenceEligibilities)
+      for {
+        hakukohteenkoulutukset: HakukohteenKoulutukset <-
+          (hakukohdeAggregator.actor ? HakukohteenKoulutuksetQuery(hakukohdeOid))
+            .mapTo[HakukohteenKoulutukset]
+        kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
+        jononTyyppi: Option[String] <- jononTyyppiForHakemusF(
+          sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
+          sijoitteluTulos.valintatapajono.get(hakemusOid, hakukohdeOid),
+          jonotiedot
+        )
+        lasnaolot: Seq[Lasnaolo] <- getLasnaolot(
+          sijoitteluTulos,
+          hakukohdeOid,
+          hakemusOid,
+          hakukohteenkoulutukset.koulutukset
+        )
+      } yield {
+        if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
+          for {
+            answers <- hakemus.answers
+          } yield Hakemus(
+            haku = hakemus.applicationSystemId,
+            hakuVuosi = haku.vuosi,
+            hakuKausi = kausi,
+            hakemusnumero = hakemusOid,
+            hakemusViimeinenMuokkausAikaleima = None,
+            hakemusJattoAikaleima = None,
+            valinnanAikaleima = None,
+            organisaatio = toive.organizationOid.getOrElse(""),
+            hakukohde = toive.koulutusId.getOrElse(""),
+            hakutoivePrioriteetti = None,
+            hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
+            avoinVayla = None, // TODO valinnoista?
+            valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
+            vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemusOid, hakukohdeOid),
+            valintatapajononTyyppi = jononTyyppi,
+            valintatapajononNimi = None,
+            hyvaksymisenEhto = None,
+            pisteet = None,
+            ilmoittautumiset = lasnaolot,
+            pohjakoulutus = getPohjakoulutukset(answers.koulutustausta.getOrElse(Koulutustausta())),
+            julkaisulupa = Some(hakemus.julkaisulupa),
+            hKelpoisuus = hakukelpoisuus.status,
+            hKelpoisuusLahde = hakukelpoisuus.source,
+            hKelpoisuusMaksuvelvollisuus = hakukelpoisuus.maksuvelvollisuus,
+            lukuvuosimaksu = resolveLukuvuosiMaksu(
+              hakemus,
+              hakukelpoisuus,
+              lukuvuosimaksutByHakukohdeOid,
+              hakukohdeOid
+            ),
+            hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
+              .map(koulutus =>
+                KkHakukohteenkoulutus(
+                  komoOid = koulutus.komoOid,
+                  tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                  kkKoulutusId = koulutus.kkKoulutusId,
+                  koulutuksenAlkamiskausi = None,
+                  koulutuksenAlkamisvuosi = None,
+                  johtaaTutkintoon = koulutus.johtaaTutkintoon
+                )
+              ),
+            liitteet = attachmentToLiite(hakemus.attachmentRequests)
+          )
+        } else {
+          None
+        }
+      }
     case hakemus: AtaruHakemus =>
       for {
         hakukohdeOid <- toive.koulutusId.fold[Future[String]](
@@ -1307,6 +1380,76 @@ class KkHakijaService(
     jonotiedot: Seq[ValintatapajononTiedot],
     ensikertalaisuudet: Future[Map[String, Boolean]]
   )(h: HakijaHakemus): Option[Future[Hakija]] = h match {
+    case hakemus: FullHakemus =>
+      for {
+        answers: HakemusAnswers <- hakemus.answers
+        henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
+        henkiloOid <- hakemus.personOid
+      } yield for {
+        hakemukset <- getHakemuksetV5(
+          haku,
+          hakemus,
+          lukuvuosiMaksutByHenkiloAndHakukohde.getOrElse(henkiloOid, Map()),
+          q,
+          tulokset,
+          hakukohdeOids,
+          jonotiedot
+        )
+        maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
+        toimipaikka <- getToimipaikka(
+          maa,
+          henkilotiedot.Postinumero,
+          henkilotiedot.kaupunkiUlkomaa,
+          koodisto
+        )
+        suoritukset <- (suoritukset ? SuoritysTyyppiQuery(
+          henkilo = henkiloOid,
+          komo = YoTutkinto.yotutkinto
+        )).mapTo[Seq[VirallinenSuoritus]]
+        kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse(""), koodisto)
+        kaksoiskansalaisuus <- getMaakoodi(
+          henkilotiedot.kaksoiskansalaisuus.getOrElse(""),
+          koodisto
+        )
+      } yield Hakija(
+        hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
+        oppijanumero = hakemus.personOid.getOrElse(""),
+        sukunimi = henkilotiedot.Sukunimi.getOrElse(""),
+        etunimet = henkilotiedot.Etunimet.getOrElse(""),
+        kutsumanimi = henkilotiedot.Kutsumanimi.getOrElse(""),
+        lahiosoite = henkilotiedot.lahiosoite
+          .flatMap(_.blankOption)
+          .getOrElse(henkilotiedot.osoiteUlkomaa.getOrElse("")),
+        postinumero = henkilotiedot.Postinumero
+          .flatMap(_.blankOption)
+          .getOrElse(henkilotiedot.postinumeroUlkomaa.getOrElse("")),
+        postitoimipaikka = toimipaikka,
+        maa = maa,
+        kansalaisuus = None,
+        kaksoiskansalaisuus = None,
+        kansalaisuudet =
+          if (
+            henkilotiedot.kaksoiskansalaisuus.isDefined && henkilotiedot.kaksoiskansalaisuus.get.nonEmpty
+          ) Some(List(kansalaisuus, kaksoiskansalaisuus))
+          else Some(List(kansalaisuus)),
+        syntymaaika = henkilotiedot.syntymaaika,
+        matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
+        puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
+        sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
+        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("999"),
+        sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
+        aidinkieli = henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99"),
+        asiointikieli =
+          getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
+        koulusivistyskieli = None,
+        koulusivistyskielet = Some(Seq.empty),
+        koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
+        onYlioppilas = isYlioppilas(suoritukset),
+        yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
+        turvakielto = henkilotiedot.turvakielto.contains("true"),
+        hakemukset = hakemukset,
+        ensikertalainen = None
+      )
     case hakemus: AtaruHakemus =>
       Some(for {
         hakemukset <- getHakemuksetV5(
