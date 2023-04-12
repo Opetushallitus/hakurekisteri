@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.koodisto
 
 import java.util.concurrent.ExecutionException
-
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{AskableActorRef, pipe}
 import fi.vm.sade.hakurekisteri.Config
@@ -163,7 +162,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                 maxRetries
               )
               .map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
-                case None =>
+                case None => {
                   if (q.emptyValueOk) {
                     log.warning(s"Ei löytynyt rinnasteista koodiarvoa: $q")
                     ""
@@ -173,6 +172,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                     )
 
                   }
+                }
                 case Some(k) => k.koodiArvo
               })
             fs.map(Option(_))
@@ -194,7 +194,6 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
     }
   }
 }
-
 case class KoodistoActorRef(actor: AskableActorRef) extends TypedAskableActorRef
 
 class MockKoodistoActor extends Actor {
