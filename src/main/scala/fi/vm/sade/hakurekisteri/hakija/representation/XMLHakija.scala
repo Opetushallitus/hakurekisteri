@@ -122,7 +122,7 @@ object XMLHakemus {
             case Alueittain => "3"
             case Kokonaan   => "6"
           }
-        case "lukio" => "9"
+        case "lukio"          => "9"
         case jatkuvahaku2aste => jatkuvahaku2aste
       }
     case None => "7"
@@ -135,12 +135,12 @@ object XMLHakemus {
         val aNumber: Option[Int] = Some(a._2).filter(_.forall(Character.isDigit)).map(_.toInt)
         val bNumber: Option[Int] = Some(b._2).filter(_.forall(Character.isDigit)).map(_.toInt)
         (aNumber, bNumber) match {
-          case (Some(av), Some(bv)) => av <= bv
+          case (Some(av), Some(bv))       => av <= bv
           case (Some(av), None) if av < 7 => true
           case (Some(av), None) if av > 6 => false
           case (None, Some(bv)) if bv < 7 => false
           case (None, Some(bv)) if bv > 6 => true
-          case _ => a._2.compareTo(b._2) < 0
+          case _                          => a._2.compareTo(b._2) < 0
         }
       })
       .map(_._1)

@@ -7,17 +7,39 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.representation.UrheilijanLisakysymykset
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, Kieli, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, KoodistoActorRef}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  IOppijaNumeroRekisteri,
+  Kieli,
+  PersonOidsWithAliases
+}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{
+  GetRinnasteinenKoodiArvoQuery,
+  KoodistoActorRef
+}
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
-import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, KoskiHenkiloContainer, OppivelvollisuusTieto}
+import fi.vm.sade.hakurekisteri.integration.koski.{
+  IKoskiService,
+  KoskiHenkiloContainer,
+  OppivelvollisuusTieto
+}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{IValintalaskentaTulosService, LaskennanTulosHakemukselle, LaskennanTulosValinnanvaihe}
+import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{
+  IValintalaskentaTulosService,
+  LaskennanTulosHakemukselle,
+  LaskennanTulosValinnanvaihe
+}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, SuoritusQuery, SuoritusQueryWithPersonAliases, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{
+  Komoto,
+  Suoritus,
+  SuoritusQuery,
+  SuoritusQueryWithPersonAliases,
+  VirallinenSuoritus,
+  yksilollistaminen
+}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{DateTime, LocalDate, MonthDay}
@@ -1066,10 +1088,20 @@ object AkkaHakupalvelu {
 
   def getJatkuvaHaku2AsteYksilollistaminen(koodiarvo: Option[String]): yksilollistaminen.Value = {
     koodiarvo match {
-      case Some("POY") => yksilollistaminen.Osittain
+      case Some("POY")  => yksilollistaminen.Osittain
       case Some("PKYO") => yksilollistaminen.Kokonaan
       case Some("PYOT") => yksilollistaminen.Alueittain
-      case _ => yksilollistaminen.Ei
+      case _            => yksilollistaminen.Ei
+    }
+  }
+
+  def is2AsteenJatkuvaHakuPohjaKoulutus(koodiarvo: Option[String]): Boolean = {
+    koodiarvo match {
+      case Some("APT") | Some("ATEAT") | Some("KK") | Some("YO") | Some("EIPT") | Some("PO") | Some(
+            "POY"
+          ) | Some("PKYO") | Some("PYOT") | Some("TUVA10") | Some("UK") =>
+        true
+      case _ => false
     }
   }
 
@@ -1154,7 +1186,7 @@ object AkkaHakupalvelu {
           vahv = false,
           lahde = hakija.getOrElse(Oids.ophOrganisaatioOid)
         )
-      case jatkuvahaku2aste @ Some("APT") | Some("ATEAT") | Some("KK") | Some("YO") | Some("EIPT") | Some("PO") | Some("POY") | Some("PKYO") | Some("PYOT") | Some("TUVA10") | Some("UK") =>
+      case jatkuvahaku2aste: Some[String] if is2AsteenJatkuvaHakuPohjaKoulutus(jatkuvahaku2aste) =>
         VirallinenSuoritus(
           jatkuvahaku2aste.get,
           myontaja,
