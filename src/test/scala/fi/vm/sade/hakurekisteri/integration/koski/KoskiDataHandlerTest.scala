@@ -1278,7 +1278,9 @@ class KoskiDataHandlerTest
 
   it should "parse perusopetus-lasna-valiaikaisestikeskeytynyt-takaisin-lasna.json and map earlier valiaikaisestikeskeytynyt but now lasna to KESKEN" in {
     val json: String =
-      scala.io.Source.fromFile(jsonDir + "perusopetus-lasna-valiaikaisestikeskeytynyt-takaisin-lasna.json").mkString
+      scala.io.Source
+        .fromFile(jsonDir + "perusopetus-lasna-valiaikaisestikeskeytynyt-takaisin-lasna.json")
+        .mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo.opiskeluoikeudet.head.aikaleima shouldEqual Some("2022-12-21T14:44:12.063797")
     henkilo should not be null

@@ -114,12 +114,9 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
       .headOption
   }
   def determineSuoritusTila: String = {
-    val viimeisinTila = opiskeluoikeusjaksot
+    opiskeluoikeusjaksot
       .sortBy(o => LocalDate.parse(o.alku).toDate)
-      .reverse
-      .headOption
-
-    viimeisinTila
+      .lastOption
       .flatMap(t => KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila.get(t.tila.koodiarvo))
       .getOrElse {
         throw new IllegalArgumentException(
@@ -127,7 +124,6 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
             s"$opiskeluoikeusjaksot (mäppäykset: ${KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila})"
         )
       }
-
   }
 }
 
