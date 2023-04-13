@@ -1276,6 +1276,19 @@ class KoskiDataHandlerTest
     result.head.suoritus.tila shouldEqual "KESKEYTYNYT"
   }
 
+  it should "parse perusopetus-lasna-valiaikaisestikeskeytynyt-takaisin-lasna.json and map earlier valiaikaisestikeskeytynyt but now lasna to KESKEN" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "perusopetus-lasna-valiaikaisestikeskeytynyt-takaisin-lasna.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo.opiskeluoikeudet.head.aikaleima shouldEqual Some("2022-12-21T14:44:12.063797")
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val resultgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
+    resultgroup should have length 1
+    val result: Seq[SuoritusArvosanat] = resultgroup.head
+    result.head.suoritus.tila shouldEqual "KESKEN"
+  }
+
   it should "filter valinnaiset aineet from aikuisten_perusopetus_valinnaiset2.json" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "aikuisten_perusopetus_valinnaiset2.json").mkString

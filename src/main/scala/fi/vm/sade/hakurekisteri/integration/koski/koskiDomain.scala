@@ -114,17 +114,20 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
       .headOption
   }
   def determineSuoritusTila: String = {
-    KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila
-      .find { koski2Sure =>
-        opiskeluoikeusjaksot.exists(_.tila.koodiarvo == koski2Sure._1)
-      }
+    val viimeisinTila = opiskeluoikeusjaksot
+      .sortBy(o => LocalDate.parse(o.alku).toDate)
+      .reverse
+      .headOption
+
+    viimeisinTila
+      .flatMap(t => KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila.get(t.tila.koodiarvo))
       .getOrElse {
         throw new IllegalArgumentException(
           s"Ei löytynyt mäppäystä Koski-tilasta Suren suorituksen tilaan:" +
             s"$opiskeluoikeusjaksot (mäppäykset: ${KoskiOpiskeluoikeusjakso.koskiTilaToSureSuoritusTila})"
         )
       }
-      ._2
+
   }
 }
 
@@ -138,7 +141,8 @@ object KoskiOpiskeluoikeusjakso {
     "peruutettu" -> "KESKEYTYNYT",
     "loma" -> "KESKEN",
     "valiaikaisestikeskeytynyt" -> "KESKEYTYNYT",
-    "lasna" -> "KESKEN"
+    "lasna" -> "KESKEN",
+    "kesken" -> "KESKEN"
   )
 }
 
