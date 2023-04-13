@@ -9,19 +9,12 @@ import fi.vm.sade.hakurekisteri.hakija.representation.XMLHakemus.{
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{
-  Ilmoittautumistila,
-  Valintatila,
-  Vastaanottotila
-}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.{Alueittain, Ei, Kokonaan, Osittain}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 
 import scala.util.Try
-import scala.util.matching.Regex
 import scala.xml.Node
 
 case class XMLHakija(
@@ -130,14 +123,26 @@ object XMLHakemus {
             case Kokonaan   => "6"
           }
         case "lukio" => "9"
+        case jatkuvahaku2aste => jatkuvahaku2aste
       }
     case None => "7"
   }
 
   def getRelevantSuoritus(suoritukset: Seq[Suoritus]): Option[VirallinenSuoritus] = {
     suoritukset
-      .collect { case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s)).toInt) }
-      .sortBy(_._2)
+      .collect { case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s))) }
+      .sortWith((a, b) => {
+        val aNumber: Option[Int] = Some(a._2).filter(_.forall(Character.isDigit)).map(_.toInt)
+        val bNumber: Option[Int] = Some(b._2).filter(_.forall(Character.isDigit)).map(_.toInt)
+        (aNumber, bNumber) match {
+          case (Some(av), Some(bv)) => av <= bv
+          case (Some(av), None) if av < 7 => true
+          case (Some(av), None) if av > 6 => false
+          case (None, Some(bv)) if bv < 7 => false
+          case (None, Some(bv)) if bv > 6 => true
+          case _ => a._2.compareTo(b._2) < 0
+        }
+      })
       .map(_._1)
       .headOption
   }
