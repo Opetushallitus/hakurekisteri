@@ -129,16 +129,17 @@ case class KoskiOpiskeluoikeusjakso(opiskeluoikeusjaksot: Seq[KoskiTila]) {
 
 object KoskiOpiskeluoikeusjakso {
   val koskiTilaToSureSuoritusTila: ListMap[String, String] = ListMap(
-    "valmistunut" -> "VALMIS",
     "eronnut" -> "KESKEYTYNYT",
-    "erotettu" -> "KESKEYTYNYT",
+    "hyvaksytystisuoritettu" -> "VALMIS",
     "katsotaaneronneeksi" -> "KESKEYTYNYT",
-    "mitatoity" -> "KESKEYTYNYT",
-    "peruutettu" -> "KESKEYTYNYT",
-    "loma" -> "KESKEN",
-    "valiaikaisestikeskeytynyt" -> "KESKEYTYNYT",
+    "keskeytynyt" -> "KESKEYTYNYT",
     "lasna" -> "KESKEN",
-    "kesken" -> "KESKEN"
+    "loma" -> "KESKEN",
+    "mitatoity" -> "KESKEYTYNYT",
+    "paattynyt" -> "KESKEYTYNYT",
+    "peruutettu" -> "KESKEYTYNYT",
+    "valiaikaisestikeskeytynyt" -> "KESKEYTYNYT",
+    "valmistunut" -> "VALMIS"
   )
 }
 

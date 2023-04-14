@@ -70,18 +70,6 @@
               "koodistoUri": "koskiopiskeluoikeudentila",
               "koodistoVersio": 1
             }
-          },
-          {
-            "alku": "2018-05-09",
-            "tila": {
-              "koodiarvo": "kesken",
-              "nimi": {
-                "fi": "Kesken",
-                "sv": "Utexaminerad"
-              },
-              "koodistoUri": "koskiopiskeluoikeudentila",
-              "koodistoVersio": 1
-            }
           }
         ]
       },
