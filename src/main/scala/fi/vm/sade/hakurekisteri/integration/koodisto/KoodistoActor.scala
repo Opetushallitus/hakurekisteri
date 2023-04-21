@@ -23,7 +23,7 @@ case class GetRinnasteinenKoodiArvoQuery(
   emptyValueOk: Boolean = false
 )
 case class Koodisto(koodistoUri: String, koodistoVersios: Seq[Int])
-case class KoodiMetadata(nimi: String, kieli: String, lyhytNimi: String)
+case class KoodiMetadata(nimi: String, kieli: String, lyhytNimi: Option[String])
 @SerialVersionUID(1) case class Koodi(
   koodiArvo: String,
   versio: Int,
@@ -51,7 +51,10 @@ object KoodistoActor {
     (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.nimi)).toMap)
   }
   def koodiToLyhytName(k: Koodi): (String, Map[String, String]) = {
-    (k.koodiUri, k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi)).toMap)
+    (
+      k.koodiUri,
+      k.metadata.map(kk => (kk.kieli.toLowerCase(), kk.lyhytNimi.getOrElse(kk.nimi))).toMap
+    )
   }
   def kooditToKoodisto(koodistoUri: String, koodit: Seq[Koodi]): KoodistoKoodiArvot = {
     val arvoToNewestKoodi: Map[String, Koodi] =
