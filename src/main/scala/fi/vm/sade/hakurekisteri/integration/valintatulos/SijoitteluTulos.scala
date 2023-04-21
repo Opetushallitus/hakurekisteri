@@ -1,5 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
+import com.github.nscala_time.time.Imports.DateTimeZone
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+
 import scala.util.Try
 
 object Valintatila extends Enumeration {
@@ -119,6 +122,16 @@ case class SijoitteluTulos(
 )
 
 object SijoitteluTulos {
+  private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
+  private val InputFormatter = ISODateTimeFormat.basicDateTime().withZone(DateTimeZone.UTC)
+  private val OutputFormatter =
+    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
+
+  def fromUTCtoLocalDateStr(dateStr: String): String = {
+    val date = InputFormatter.parseDateTime(dateStr)
+    OutputFormatter.print(date)
+  }
+
   def apply(hakuOid: String, valintatulos: ValintaTulos): SijoitteluTulos = {
     new SijoitteluTulos(
       hakuOid,
@@ -159,7 +172,10 @@ object SijoitteluTulos {
         .toMap,
       valintatulos.hakutoiveet
         .filter(h => h.tarjoajaOid.nonEmpty && h.hyvaksyttyJaJulkaistuDate.nonEmpty)
-        .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.hyvaksyttyJaJulkaistuDate.get)
+        .map(h =>
+          (valintatulos.hakemusOid, h.hakukohdeOid) ->
+            fromUTCtoLocalDateStr(h.hyvaksyttyJaJulkaistuDate.get)
+        )
         .toMap
     )
   }
@@ -222,7 +238,10 @@ object SijoitteluTulos {
         .flatMap(valintatulos => {
           valintatulos.hakutoiveet
             .filter(h => h.tarjoajaOid.nonEmpty && h.hyvaksyttyJaJulkaistuDate.nonEmpty)
-            .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.hyvaksyttyJaJulkaistuDate.get)
+            .map(h =>
+              (valintatulos.hakemusOid, h.hakukohdeOid) ->
+                fromUTCtoLocalDateStr(h.hyvaksyttyJaJulkaistuDate.get)
+            )
         })
         .toMap
     )
