@@ -123,7 +123,7 @@ case class SijoitteluTulos(
 
 object SijoitteluTulos {
   private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
-  private val InputFormatter = ISODateTimeFormat.basicDateTime().withZone(DateTimeZone.UTC)
+  private val InputFormatter = ISODateTimeFormat.dateTimeNoMillis().withZone(DateTimeZone.UTC)
   private val OutputFormatter =
     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
 
