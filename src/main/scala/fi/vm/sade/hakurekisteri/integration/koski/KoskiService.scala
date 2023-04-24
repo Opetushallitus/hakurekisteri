@@ -45,12 +45,22 @@ class KoskiService(
   private var oneJobAtATime = Future.successful({})
 
   val aktiiviset2AsteYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
-  def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit =
+  def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset toisen asteen yhteishaut: $hakuOids")
     aktiiviset2AsteYhteisHakuOidit.set(hakuOids)
+  }
 
   val aktiivisetKKYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
-  def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit =
+  def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset KK-yhteishaut haut: $hakuOids")
     aktiivisetKKYhteisHakuOidit.set(hakuOids)
+  }
+
+  val aktiivistenToisenAsteenJatkuvienHakujenOidit = new AtomicReference[Set[String]](Set.empty)
+  def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset toisen asteen jatkuvat haut: $hakuOids")
+    aktiivistenToisenAsteenJatkuvienHakujenOidit.set(hakuOids)
+  }
 
   private val fetchPersonAliases
     : Seq[KoskiHenkiloContainer] => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = {
@@ -203,6 +213,76 @@ class KoskiService(
       )
     })
     logger.info("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis.")
+  }
+
+  override def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit = { () =>
+    val hakuOids: Set[String] = aktiivistenToisenAsteenJatkuvienHakujenOidit.get()
+    logger.info(
+      s"Saatiin tarjonnasta jatkuvia hakuja ${hakuOids.size} kpl: ${hakuOids}, aloitetaan päivitys."
+    )
+    hakuOids.foreach(hakuOid => {
+      logger.info(
+        s"Käynnistetään Koskesta ajastettu päivitys jatkuvalle haulle ${hakuOid}"
+      )
+      Await.result(
+        updateHenkilotNew(
+          hakuOid,
+          KoskiSuoritusHakuParams(
+            saveLukio = true,
+            saveAmmatillinen = false,
+            saveSeiskaKasiJaValmistava = true
+          ),
+          hakuOid => hakemusService.springPersonOidsForJatkuvaHaku(hakuOid)
+        ),
+        5.hours
+      )
+    })
+    logger.info("Aktiivisten toisen asteen jatkuvien hakujen hakijoiden päivitys valmis.")
+  }
+
+
+  def addAliases(personOids: Set[String]) = {
+    oppijaNumeroRekisteri.enrichWithAliases(personOids).map(_.henkiloOidsWithLinkedOids)
+  }
+
+
+  def updateHenkilotNew(hakuOid: String, params: KoskiSuoritusHakuParams, personOidsForHakuFn: String => Future[Set[String]]) = {
+    def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
+      val personOidsWithAliases: PersonOidsWithAliases = Await.result(
+        oppijaNumeroRekisteri.enrichWithAliases(personOidsSet),
+        Duration(1, TimeUnit.MINUTES)
+      )
+      val aliasCount: Int =
+        personOidsWithAliases.henkiloOidsWithLinkedOids.size - personOidsSet.size
+      logger.info(
+        s"Saatiin hakemuspalvelusta ${personOidsSet.size} oppijanumeroa ja ${aliasCount} aliasta haulle $hakuOid"
+      )
+      handleHenkiloUpdate(
+        personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq,
+        params,
+        s"hakuOid: $hakuOid"
+      )
+    }
+
+    val now = System.currentTimeMillis()
+    synchronized {
+      if (oneJobAtATime.isCompleted) {
+        logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}. Params: ${params}")
+        startTimestamp = System.currentTimeMillis()
+        //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
+        oneJobAtATime = Await.ready(
+          personOidsForHakuFn(hakuOid).flatMap(handleUpdate),
+          5.hours
+        )
+        logger.info(s"Päivitys Koskesta haulle ${hakuOid} valmistui.")
+        Future.successful({})
+      } else {
+        val err =
+          s"${TimeUnit.MINUTES.convert(now - startTimestamp, TimeUnit.MILLISECONDS)} minuuttia vanha Koskesta päivittäminen on vielä käynnissä!"
+        logger.error(err)
+        Future.failed(new RuntimeException(err))
+      }
+    }
   }
 
   override def updateHenkilotForHaku(

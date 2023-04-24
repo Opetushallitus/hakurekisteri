@@ -136,6 +136,7 @@ trait IHakemusService {
     organisaatio: Option[String]
   ): Future[Seq[HakijaHakemus]]
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
+  def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]]
   def personOidsForHakukohde(
     hakukohdeOid: String,
     organisaatio: Option[String]
@@ -934,7 +935,7 @@ class HakemusService(
         "haku-app.personoidsbyapplicationsystem",
         organisaatio.orNull
       )(200, Set(hakuOid))
-      ataruHakemukset <- ataruhakemukset(
+      ataruHakemukset: Seq[AtaruHakemus] <- ataruhakemukset(
         AtaruSearchParams(
           hakijaOids = None,
           hakukohdeOids = None,
@@ -944,6 +945,19 @@ class HakemusService(
         )
       )
     } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
+  }
+
+  override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = {
+    //TODO filtteröidään hakemuksista pois muut kuin tämän vuoden kevään aikana jätetyt
+    ataruhakemukset(
+      AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = None,
+        modifiedAfter = None
+      )
+    ).map(_.map(_.oid).toSet)
   }
 
   def personOidsForHakukohde(
@@ -1167,4 +1181,6 @@ class HakemusServiceMock extends IHakemusService {
   override def hetuAndPersonOidForPersonOid(
     personOid: String
   ): Future[Seq[HakemusHakuHetuPersonOid]] = Future.successful(Seq[HakemusHakuHetuPersonOid]())
+
+  override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = Future.successful(Set.empty)
 }

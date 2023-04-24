@@ -82,15 +82,21 @@ class HakuActor(
       val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
       val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
       val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
+      val activeToisenAsteenJatkuvaHakuOids = activeHakus
+        .filter(_.isJatkuvaHaku)
+        .filter(_.toisenAsteenHaku)
+        .map(_.oid).toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
       koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)
+      koskiService.setAktiivisetToisenAsteenJatkuvatHaut(activeToisenAsteenJatkuvaHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
       log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
       log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
       log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
+      log.info(s"active 2.aste jatkuvas hakus: [${activeToisenAsteenJatkuvaHakuOids.size}]")
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
