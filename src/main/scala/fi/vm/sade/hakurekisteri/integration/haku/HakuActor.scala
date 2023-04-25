@@ -85,7 +85,8 @@ class HakuActor(
       val activeToisenAsteenJatkuvaHakuOids = activeHakus
         .filter(_.isJatkuvaHaku)
         .filter(_.toisenAsteenHaku)
-        .map(_.oid).toSet
+        .map(_.oid)
+        .toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)

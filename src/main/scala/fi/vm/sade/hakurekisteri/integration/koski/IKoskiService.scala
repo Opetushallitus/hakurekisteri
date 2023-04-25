@@ -16,7 +16,13 @@ trait IKoskiService {
 
   def updateAktiivisetToisenAsteenHaut(): () => Unit
 
-  def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit]
+  def syncHaunHakijat(
+    hakuOid: String,
+    params: KoskiSuoritusHakuParams,
+    personOidsForHakuFn: String => Future[Set[String]]
+  ): Future[Unit]
+
+  def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit]
 
   def updateHenkilot(
     oppijaOids: Set[String],
@@ -38,6 +44,7 @@ trait IKoskiService {
   )(implicit scheduler: Scheduler): Unit
 
   def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit
+
 }
 
 class KoskiServiceMock extends IKoskiService {
@@ -47,10 +54,6 @@ class KoskiServiceMock extends IKoskiService {
   override def updateAktiivisetKkAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit = () => ()
-  override def updateHenkilotForHaku(
-    hakuOid: String,
-    params: KoskiSuoritusHakuParams
-  ): Future[Unit] = Future.successful(())
   override def updateHenkilot(
     oppijaOids: Set[String],
     params: KoskiSuoritusHakuParams
@@ -72,4 +75,11 @@ class KoskiServiceMock extends IKoskiService {
   override def fetchKoulusivistyskielet(
     oppijaOids: Seq[String]
   ): Future[Map[String, Seq[String]]] = Future.successful(Map[String, Seq[String]]())
+  override def syncHaunHakijat(
+    hakuOid: String,
+    params: KoskiSuoritusHakuParams,
+    personOidsForHakuFn: String => Future[Set[String]]
+  ): Future[Unit] = ???
+
+  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = ???
 }

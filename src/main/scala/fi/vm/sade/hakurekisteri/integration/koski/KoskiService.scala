@@ -176,7 +176,7 @@ class KoskiService(
         s"Käynnistetään Koskesta aktiivisten korkeakouluhakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}"
       )
       Await.result(
-        updateHenkilotForHaku(
+        syncHaunHakijat(
           haku,
           KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
         ),
@@ -201,7 +201,7 @@ class KoskiService(
         s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}"
       )
       Await.result(
-        updateHenkilotForHaku(
+        syncHaunHakijat(
           haku,
           KoskiSuoritusHakuParams(
             saveLukio = true,
@@ -225,7 +225,7 @@ class KoskiService(
         s"Käynnistetään Koskesta ajastettu päivitys jatkuvalle haulle ${hakuOid}"
       )
       Await.result(
-        updateHenkilotNew(
+        syncHaunHakijat(
           hakuOid,
           KoskiSuoritusHakuParams(
             saveLukio = true,
@@ -240,13 +240,11 @@ class KoskiService(
     logger.info("Aktiivisten toisen asteen jatkuvien hakujen hakijoiden päivitys valmis.")
   }
 
-
-  def addAliases(personOids: Set[String]) = {
-    oppijaNumeroRekisteri.enrichWithAliases(personOids).map(_.henkiloOidsWithLinkedOids)
-  }
-
-
-  def updateHenkilotNew(hakuOid: String, params: KoskiSuoritusHakuParams, personOidsForHakuFn: String => Future[Set[String]]) = {
+  override def syncHaunHakijat(
+    hakuOid: String,
+    params: KoskiSuoritusHakuParams,
+    personOidsForHakuFn: String => Future[Set[String]]
+  ) = {
     def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
       val personOidsWithAliases: PersonOidsWithAliases = Await.result(
         oppijaNumeroRekisteri.enrichWithAliases(personOidsSet),
@@ -285,45 +283,8 @@ class KoskiService(
     }
   }
 
-  override def updateHenkilotForHaku(
-    hakuOid: String,
-    params: KoskiSuoritusHakuParams
-  ): Future[Unit] = {
-    def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
-      val personOidsWithAliases: PersonOidsWithAliases = Await.result(
-        oppijaNumeroRekisteri.enrichWithAliases(personOidsSet),
-        Duration(1, TimeUnit.MINUTES)
-      )
-      val aliasCount: Int =
-        personOidsWithAliases.henkiloOidsWithLinkedOids.size - personOidsSet.size
-      logger.info(
-        s"Saatiin hakemuspalvelusta ${personOidsSet.size} oppijanumeroa ja ${aliasCount} aliasta haulle $hakuOid"
-      )
-      handleHenkiloUpdate(
-        personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq,
-        params,
-        s"hakuOid: $hakuOid"
-      )
-    }
-    val now = System.currentTimeMillis()
-    synchronized {
-      if (oneJobAtATime.isCompleted) {
-        logger.info(s"Käynnistetään Koskesta päivittäminen haulle ${hakuOid}. Params: ${params}")
-        startTimestamp = System.currentTimeMillis()
-        //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
-        oneJobAtATime = Await.ready(
-          hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate),
-          5.hours
-        )
-        logger.info(s"Päivitys Koskesta haulle ${hakuOid} valmistui.")
-        Future.successful({})
-      } else {
-        val err =
-          s"${TimeUnit.MINUTES.convert(now - startTimestamp, TimeUnit.MILLISECONDS)} minuuttia vanha Koskesta päivittäminen on vielä käynnissä!"
-        logger.error(err)
-        Future.failed(new RuntimeException(err))
-      }
-    }
+  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams) = {
+    syncHaunHakijat(hakuOid, params, hakuOid => hakemusService.personOidsForHaku(hakuOid, None))
   }
 
   def handleHenkiloUpdate(

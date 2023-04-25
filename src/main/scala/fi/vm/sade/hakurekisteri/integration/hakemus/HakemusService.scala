@@ -33,6 +33,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisa
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.properties.OphProperties
+import org.joda.time.LocalDate
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
@@ -948,7 +949,7 @@ class HakemusService(
   }
 
   override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = {
-    //TODO filtteröidään hakemuksista pois muut kuin tämän vuoden kevään aikana jätetyt
+    val currentYear = new LocalDate(System.currentTimeMillis()).getYear
     ataruhakemukset(
       AtaruSearchParams(
         hakijaOids = None,
@@ -957,7 +958,10 @@ class HakemusService(
         organizationOid = None,
         modifiedAfter = None
       )
-    ).map(_.map(_.oid).toSet)
+    ).map(_.filter(hakemus => {
+      val hakemusCreatedDate = new LocalDate(hakemus.createdTime)
+      currentYear.equals(hakemusCreatedDate.getYear) && hakemusCreatedDate.getMonthOfYear <= 8
+    }).map(_.oid).toSet)
   }
 
   def personOidsForHakukohde(
@@ -1182,5 +1186,6 @@ class HakemusServiceMock extends IHakemusService {
     personOid: String
   ): Future[Seq[HakemusHakuHetuPersonOid]] = Future.successful(Seq[HakemusHakuHetuPersonOid]())
 
-  override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = Future.successful(Set.empty)
+  override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] =
+    Future.successful(Set.empty)
 }

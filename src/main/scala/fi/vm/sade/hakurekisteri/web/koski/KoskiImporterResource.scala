@@ -135,7 +135,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
       Changes.EMPTY
     )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotForHaku(
+      override val is: Future[_] = koskiService.syncHaunHakijat(
         hakuOid,
         KoskiSuoritusHakuParams(
           saveLukio = haeLukio,
