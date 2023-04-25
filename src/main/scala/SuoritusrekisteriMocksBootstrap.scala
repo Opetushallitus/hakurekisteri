@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaService
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.mocks.{HenkiloMock, KoodistoMock, OrganisaatioMock}
+import fi.vm.sade.hakurekisteri.integration.parametrit.ParametritActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
@@ -67,7 +68,8 @@ class SuoritusrekisteriMocksBootstrap extends LifeCycle with HakurekisteriJsonSu
       valintaperusteetService = new ValintaperusteetServiceMock,
       koskiService = new KoskiServiceMock,
       Timeout(1, TimeUnit.MINUTES),
-      ensikertalainenActor = anyActorRef
+      ensikertalainenActor = anyActorRef,
+      parameterActor = new ParametritActorRef(anyActorRef)
     )
     val jono = new Siirtotiedostojono(anyActorRef, kkHakijaService)
     context.mount(new AsiakirjaResource(jono), "/mocks/suoritusrekisteri/asiakirja")

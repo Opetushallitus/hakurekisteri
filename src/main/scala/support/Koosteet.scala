@@ -105,7 +105,8 @@ class BaseKoosteet(
     integrations.valintaperusteetService,
     integrations.koskiService,
     Timeout(config.valintaTulosTimeout),
-    ensikertalainen
+    ensikertalainen,
+    integrations.parametrit
   )(system)
   val siirtotiedostojono = new Siirtotiedostojono(hakijat, kkHakijaService)(system)
 }

@@ -43,6 +43,9 @@ abstract class ParameterActor(config: Config) extends Actor with ActorLogging {
     case IsRestrictionActive(restriction) =>
       isRestrictionActive(restriction) pipeTo sender
 
+    case UsesPriority(haku) =>
+      usesPriority(haku) pipeTo sender
+
   }
 
   private def isSendingEnabled(key: String): Future[Boolean] = {
@@ -61,6 +64,8 @@ abstract class ParameterActor(config: Config) extends Actor with ActorLogging {
   protected def isAnyPeriodEffective(periods: List[SendingPeriod]): Boolean = {
     periods.exists(period => isPeriodEffective(period))
   }
+
+  protected def usesPriority(hakuOid: String): Future[Boolean]
 
   protected def getParams(hakuOid: String): Future[DateTime]
 
@@ -82,16 +87,26 @@ class HttpParameterActor(restClient: VirkailijaRestClient, config: Config)
         .map(Option(_))
     allResponseCache.get(all, loader).flatMap {
       case Some(found) => Future.successful(found)
-      case None        => Future.failed(new RuntimeException("Could not retrieve all paraleters"))
+      case None        => Future.failed(new RuntimeException("Could not retrieve all parameters"))
     }
+  }
+
+  override def usesPriority(hakuOid: String): Future[Boolean] = {
+    val allMap = getAll
+    allMap.map(m =>
+      m.get(hakuOid) match {
+        case Some(KierrosParams(_, Some(usePriority))) => usePriority
+        case _                                         => false
+      }
+    )
   }
 
   override def getParams(hakuOid: String): Future[DateTime] = {
     val allMap = getAll
     allMap.map(m =>
       m.get(hakuOid) match {
-        case Some(KierrosParams(Some(KierrosEndParams(date)))) => new DateTime(date)
-        case _                                                 => throw NoParamFoundException(hakuOid)
+        case Some(KierrosParams(Some(KierrosEndParams(date)), _)) => new DateTime(date)
+        case _                                                    => throw NoParamFoundException(hakuOid)
       }
     )
   }
@@ -138,6 +153,8 @@ class MockParameterActor(active: Boolean = false, config: Config)(implicit val s
 
   override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 
+  override protected def usesPriority(hakuOid: String) = Future { true }
+
   override protected def isEnabledFromRest(key: String) = Future { true }
 
   override protected def isRestrictionActive(restriction: String) = Future.successful(active)
@@ -146,7 +163,11 @@ class MockParameterActor(active: Boolean = false, config: Config)(implicit val s
 
 case class KierrosRequest(haku: String)
 case class KierrosEndParams(date: Long)
-case class KierrosParams(PH_HKP: Option[KierrosEndParams])
+case class KierrosParams(
+  PH_HKP: Option[KierrosEndParams],
+  jarjestetytHakutoiveet: Option[Boolean]
+)
+
 case class HakuParams(end: DateTime)
 
 case class IsSendingEnabled(key: String)
@@ -154,5 +175,6 @@ case class IsRestrictionActive(restriction: String)
 case class SendingPeriod(dateStart: Long, dateEnd: Long)
 case class TiedonsiirtoSendingPeriods(arvosanat: SendingPeriod, perustiedot: SendingPeriod)
 case class RestrictionPeriods(opoUpdateGraduation: List[SendingPeriod])
+case class UsesPriority(haku: String)
 
 case class ParametritActorRef(actor: ActorRef) extends TypedActorRef

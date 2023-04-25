@@ -19,6 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
+import fi.vm.sade.hakurekisteri.integration.parametrit.ParametritActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
@@ -141,6 +142,7 @@ class KkHakijaServiceSpec
   private val hakukohderyhmaServiceMock = Mockito.mock(classOf[HakukohderyhmaService]);
   private val ensikertalaisuusMock = mock[ActorRef]
   private val koskiServiceMock = new KoskiServiceMock
+  private val parametritMock = new ParametritActorRef(mock[ActorRef])
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -199,7 +201,8 @@ class KkHakijaServiceSpec
     valintaperusteetMock,
     koskiServiceMock,
     Timeout(1.minute),
-    ensikertalaisuusMock
+    ensikertalaisuusMock,
+    parametritMock
   )
 
   override def beforeEach() {
@@ -254,7 +257,8 @@ class KkHakijaServiceSpec
       valintaperusteetMock,
       koskiServiceMock,
       Timeout(1.minute),
-      ensikertalaisuusMock
+      ensikertalaisuusMock,
+      parametritMock
     )
     try {
       Await.result(
@@ -767,7 +771,8 @@ class KkHakijaServiceSpec
       valintaperusteetMock,
       koskiServiceMock,
       Timeout(1.minute),
-      ensikertalaisuusMock
+      ensikertalaisuusMock,
+      parametritMock
     )
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), "{}"))

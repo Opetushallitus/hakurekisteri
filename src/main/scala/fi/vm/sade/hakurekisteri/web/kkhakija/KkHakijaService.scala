@@ -1,14 +1,14 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import java.text.{ParseException, SimpleDateFormat}
+import java.text.SimpleDateFormat
 import java.time.Instant
-import java.util.{Calendar, Date}
+import java.util.Date
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
-import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
+import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Lasnaolo}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
   FullHakemus,
   HakemusAnswers,
@@ -23,19 +23,10 @@ import fi.vm.sade.hakurekisteri.integration.hakukohde.{
   HakukohteenKoulutuksetQuery
 }
 import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.IHakukohderyhmaService
-import fi.vm.sade.hakurekisteri.integration.koodisto.{
-  GetKoodi,
-  GetRinnasteinenKoodiArvoQuery,
-  Koodi,
-  KoodistoActorRef
-}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{
-  HakukohteenKoulutukset,
-  Hakukohteenkoulutus,
-  Koulutusohjelma,
-  TarjontaKoodi
-}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{ParametritActorRef, UsesPriority}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
   IValintaperusteetService,
   ValintatapajononTiedot
@@ -47,10 +38,7 @@ import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
   ValintarekisteriActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.{
-  VASTAANOTTANUT,
-  Vastaanottotila
-}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YoTutkinto
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -60,7 +48,7 @@ import org.scalatra.util.RicherString._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 case class KkHakijaQuery(
@@ -281,7 +269,8 @@ class KkHakijaService(
   valintaperusteetService: IValintaperusteetService,
   koskiService: IKoskiService,
   valintaTulosTimeout: Timeout,
-  ensikertalainenActor: ActorRef
+  ensikertalainenActor: ActorRef,
+  parameterActor: ParametritActorRef
 )(implicit system: ActorSystem) {
   implicit val defaultTimeout: Timeout = 120.seconds
   implicit def executor: ExecutionContext = system.dispatcher
@@ -540,6 +529,9 @@ class KkHakijaService(
     val hakemusOid: Option[String] = if (hakemukset.size == 1) Some(hakemukset.last.oid) else None
     val henkiloOids = hakemukset.flatMap(h => h.personOid).toSet
 
+    val usePriority =
+      (parameterActor.actor ? UsesPriority(haku.oid))(60.seconds).mapTo[Boolean]
+
     val ensikertalaisuudet: Future[Map[String, Boolean]] =
       ((ensikertalainenActor ? EnsikertalainenQuery(
         henkiloOids = henkiloOids,
@@ -576,7 +568,8 @@ class KkHakijaService(
                         hakukohdeOids,
                         maksusByHakijaAndHakukohde,
                         jonotiedot,
-                        ensikertalaisuudet
+                        ensikertalaisuudet,
+                        usePriority
                       )
                     )
                   )
@@ -739,7 +732,8 @@ class KkHakijaService(
     q: KkHakijaQuery,
     tulokset: SijoitteluTulos,
     hakukohdeOids: Seq[String],
-    jonotiedot: Seq[ValintatapajononTiedot]
+    jonotiedot: Seq[ValintatapajononTiedot],
+    usePriority: Future[Boolean]
   ): Future[Seq[Hakemus]] = {
     Future
       .sequence(
@@ -751,6 +745,7 @@ class KkHakijaService(
           tulokset,
           hakukohdeOids,
           jonotiedot,
+          usePriority,
           useV5Format = true
         )
       )
@@ -765,6 +760,7 @@ class KkHakijaService(
     sijoitteluTulos: SijoitteluTulos,
     hakukohdeOids: Seq[String],
     jonotiedot: Seq[ValintatapajononTiedot] = Seq.empty,
+    usePriority: Future[Boolean] = Future.successful(false),
     useV5Format: Boolean = false
   ): Seq[Future[Option[Hakemus]]] = {
     (for {
@@ -781,7 +777,8 @@ class KkHakijaService(
             toive,
             haku,
             sijoitteluTulos,
-            jonotiedot
+            jonotiedot,
+            usePriority
           )
         } else {
           extractSingleHakemus(
@@ -815,7 +812,8 @@ class KkHakijaService(
     toive: HakutoiveDTO,
     haku: Haku,
     sijoitteluTulos: SijoitteluTulos,
-    jonotiedot: Seq[ValintatapajononTiedot]
+    jonotiedot: Seq[ValintatapajononTiedot],
+    usePriorityFuture: Future[Boolean]
   ): Future[Option[Hakemus]] = h match {
     case hakemus: FullHakemus =>
       val hakemusOid = hakemus.oid
@@ -910,6 +908,7 @@ class KkHakijaService(
           hakemus.oid,
           hakukohteenkoulutukset.koulutukset
         )
+        usePriority <- usePriorityFuture
       } yield {
         if (matchHakuehto(sijoitteluTulos, hakemus.oid, hakukohdeOid)(q.hakuehto)) {
           val hakukelpoisuus = PreferenceEligibility(
@@ -933,7 +932,7 @@ class KkHakijaService(
               valinnanAikaleima = sijoitteluTulos.valinnanAikaleima.get(hakemus.oid, hakukohdeOid),
               organisaatio = toive.organizationOid.getOrElse(""),
               hakukohde = toive.koulutusId.getOrElse(""),
-              hakutoivePrioriteetti = Some(toive.preferenceNumber),
+              hakutoivePrioriteetti = if (usePriority) Some(toive.preferenceNumber) else None,
               hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
               avoinVayla = None, // TODO valinnoista?
               valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
@@ -1378,7 +1377,8 @@ class KkHakijaService(
     hakukohdeOids: Seq[String],
     lukuvuosiMaksutByHenkiloAndHakukohde: Map[String, Map[String, List[Lukuvuosimaksu]]],
     jonotiedot: Seq[ValintatapajononTiedot],
-    ensikertalaisuudet: Future[Map[String, Boolean]]
+    ensikertalaisuudet: Future[Map[String, Boolean]],
+    usePriority: Future[Boolean]
   )(h: HakijaHakemus): Option[Future[Hakija]] = h match {
     case hakemus: FullHakemus =>
       for {
@@ -1393,7 +1393,8 @@ class KkHakijaService(
           q,
           tulokset,
           hakukohdeOids,
-          jonotiedot
+          jonotiedot,
+          usePriority
         )
         maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
         toimipaikka <- getToimipaikka(
@@ -1459,7 +1460,8 @@ class KkHakijaService(
           q,
           tulokset,
           hakukohdeOids,
-          jonotiedot
+          jonotiedot,
+          usePriority
         )
         suoritukset <- (suoritukset ? SuoritysTyyppiQuery(
           henkilo = hakemus.henkilo.oidHenkilo,
