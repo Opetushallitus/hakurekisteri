@@ -572,6 +572,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
         newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build()
       )
     }
+    if (KoskiUtil.updateJatkuvatHaut) {
+      quartzScheduler.scheduleJob(
+        lambdaJob(koskiService.updateAktiivisetToisenAsteenJatkuvatHaut()),
+        newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build()
+      )
+    }
   } else {
     logger.info("Automatic Koski-integrations has been disabled by env parameters.")
   }

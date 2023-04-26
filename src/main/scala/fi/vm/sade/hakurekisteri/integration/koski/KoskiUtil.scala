@@ -32,6 +32,8 @@ object KoskiUtil {
     OphUrlProperties.getProperty("suoritusrekisteri.koski.update.kkHaut").toBoolean
   lazy val updateToisenAsteenHaut: Boolean =
     OphUrlProperties.getProperty("suoritusrekisteri.koski.update.toisenAsteenHaut").toBoolean
+  lazy val updateJatkuvatHaut: Boolean =
+    OphUrlProperties.getProperty("suoritusrekisteri.koski.update.jatkuvatHaut").toBoolean
 
   def isAfterArvosanatWithNelosiaDeadlineDate(): Boolean = {
     // Neloset halutaan tallentaa suoritusrekisteriin kaksi viikkoa ennen deadline-päivämäärää
