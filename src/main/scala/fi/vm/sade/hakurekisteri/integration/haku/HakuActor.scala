@@ -85,6 +85,7 @@ class HakuActor(
       val activeToisenAsteenJatkuvaKoutaHakuOids = activeHakus
         .filter(_.isJatkuvaHaku)
         .filter(_.toisenAsteenHaku)
+        .filter(_.hakulomakeAtaruId.isDefined)
         .filter(_.oid.length == 35)
         .map(_.oid)
         .toSet
@@ -98,7 +99,9 @@ class HakuActor(
       log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
       log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
       log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
-      log.info(s"active 2.aste jatkuvas hakus: [${activeToisenAsteenJatkuvaKoutaHakuOids.size}]")
+      log.info(
+        s"active 2.aste jatkuvas hakus with atarulomake: [${activeToisenAsteenJatkuvaKoutaHakuOids.size}]"
+      )
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
