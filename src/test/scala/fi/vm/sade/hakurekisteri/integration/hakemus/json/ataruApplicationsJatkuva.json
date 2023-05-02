@@ -1,0 +1,93 @@
+{
+  "applications": [
+    {
+      "createdTime": "CURRENTYEAR-03-21T14:41:14",
+      "oid": "1.2.246.562.11.00000000000000005261",
+      "personOid": "1.2.246.562.24.91842462815",
+      "applicationSystemId": "1.2.246.562.29.31587915971",
+      "kieli": "fi",
+      "hakukohteet": [
+        "1.2.246.562.20.14800254899"
+      ],
+      "paymentObligations": {
+        "1.2.246.562.20.14800254899": "obligated"
+      },
+      "eligibilities": {
+        "1.2.246.562.20.14800254899": "eligible"
+      },
+      "attachments": {
+        "1.2.246.562.20.14800254899": "checked"
+      },
+      "asuinmaa": "Suomi",
+      "email": "lslsl@ldldl.com",
+      "matkapuhelin": "0123123",
+      "postitoimipaikka": "HELSINKI",
+      "postinumero": "00100",
+      "kotikunta": "lsldf",
+      "lahiosoite": "lslsl",
+      "kkPohjakoulutus": [
+        "kk"
+      ],
+      "valintatuloksenJulkaisulupa": true,
+      "koulutusmarkkinointilupa": true
+    },
+    {
+      "oid": "1.2.246.562.11.00000000000000005224",
+      "createdTime": "CURRENTYEAR-11-21T14:41:14",
+      "personOid": "1.2.246.562.24.91842462815",
+      "applicationSystemId": "1.2.246.562.29.64944541586",
+      "kieli": "en",
+      "hakukohteet": [
+        "1.2.246.562.20.44085996724"
+      ],
+      "paymentObligations": {
+        "1.2.246.562.20.14800254899": "unreviewed"
+      },
+      "eligibilities": {
+        "1.2.246.562.20.14800254899": "unreviewed"
+      },
+      "attachments": {
+        "1.2.246.562.20.14800254899": "checked"
+      },
+      "asuinmaa": "Suomi",
+      "email": "lslsl@ldldl.com",
+      "matkapuhelin": "0123123",
+      "postitoimipaikka": "HELSINKI",
+      "postinumero": "00100",
+      "kotikunta": "lsldf",
+      "lahiosoite": "lslsl",
+      "kkPohjakoulutus": [],
+      "valintatuloksenJulkaisulupa": true,
+      "koulutusmarkkinointilupa": true
+    },
+    {
+      "oid": "1.2.246.562.11.00000000000000005266",
+      "createdTime": "LASTYEAR-05-13T10:22:13",
+      "personOid": "1.2.246.562.24.91842463564",
+      "applicationSystemId": "1.2.246.562.29.64944541586",
+      "kieli": "en",
+      "hakukohteet": [
+        "1.2.246.562.20.44085996724"
+      ],
+      "paymentObligations": {
+        "1.2.246.562.20.14800254899": "unreviewed"
+      },
+      "eligibilities": {
+        "1.2.246.562.20.14800254899": "unreviewed"
+      },
+      "attachments": {
+        "1.2.246.562.20.14800254899": "checked"
+      },
+      "asuinmaa": "Suomi",
+      "email": "asedl@sadef.com",
+      "matkapuhelin": "0123123",
+      "postitoimipaikka": "HELSINKI",
+      "postinumero": "00100",
+      "kotikunta": "lsldf",
+      "lahiosoite": "lslsl",
+      "kkPohjakoulutus": [],
+      "valintatuloksenJulkaisulupa": true,
+      "koulutusmarkkinointilupa": true
+    }
+  ]
+}
