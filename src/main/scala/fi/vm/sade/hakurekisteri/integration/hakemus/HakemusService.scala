@@ -33,7 +33,8 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisa
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.properties.OphProperties
-import org.joda.time.LocalDate
+import org.joda.time.{DateTimeZone, LocalDate}
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
@@ -199,6 +200,10 @@ class HakemusService(
   logger.info(s"Using page size $pageSize when fetching modified applications from haku-app.")
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
+
+  private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
+  private val dateTimeFormatter =
+    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
 
   @SerialVersionUID(1)
   case class AllHakemukset(
@@ -959,7 +964,7 @@ class HakemusService(
         modifiedAfter = None
       )
     ).map(_.filter(hakemus => {
-      val hakemusCreatedDate = new LocalDate(hakemus.createdTime)
+      val hakemusCreatedDate = LocalDate.parse(hakemus.createdTime, dateTimeFormatter)
       currentYear.equals(hakemusCreatedDate.getYear) && hakemusCreatedDate.getMonthOfYear <= 8
     }).map(_.oid).toSet)
   }
