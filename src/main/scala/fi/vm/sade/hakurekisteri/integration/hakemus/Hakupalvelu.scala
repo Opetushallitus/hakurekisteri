@@ -699,15 +699,26 @@ object AkkaHakupalvelu {
       val myontaja: String = viimeisinOpiskelutieto.map(o => o.oppilaitosOid).getOrElse("")
 
       val pohjakoulutusKooste = hakijanKoosteData.get("POHJAKOULUTUS")
-      val pohjakoulutusHakemus =
+      val pohjakoulutusHakemus = {
         if (hakemus.pohjakoulutus.nonEmpty) Some(hakemus.pohjakoulutus) else None
+        //if jatkuva haku and 7 use hakemus.pohjakouluus
+      }
       if (pohjakoulutusKooste.isEmpty) {
         println(
           s"Käytetään hakemukselle ${hakemus.oid} hakemuksen pohjakoulutusta $pohjakoulutusHakemus, koska koostepalvelusta ei löytynyt"
         )
       }
+
+      /**
+        * Valintalaskentakoostepalveluun ei ole haluttu tehdä tukea jatkuvan haun pohjakoulutusarvoille, jos sieltä
+        * tulee 7 (keskeytynyt), niin käytetään hakemuksen arvoa
+        */
       val pohjakoulutus =
-        if (pohjakoulutusKooste.isDefined) pohjakoulutusKooste else pohjakoulutusHakemus
+        if (
+          pohjakoulutusKooste.isDefined && !(pohjakoulutusKooste.get == "7" && haku.isJatkuvaHaku)
+        )
+          pohjakoulutusKooste
+        else pohjakoulutusHakemus
 
       val todistusVuosiPK = hakijanKoosteData.get("PK_PAATTOTODISTUSVUOSI")
       val todistusVuosiLK = hakijanKoosteData.get("LK_PAATTOTODISTUSVUOSI")

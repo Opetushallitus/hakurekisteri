@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class HakupalveluSpec extends FlatSpec with Matchers {
 
   it should "use komo koodi for TUVA10" in {
-    val suoritus : VirallinenSuoritus = createSuoritus("TUVA10")
+    val suoritus: VirallinenSuoritus = createSuoritus("TUVA10")
     suoritus.komo should be("TUVA10")
     suoritus.yksilollistaminen should be(yksilollistaminen.Ei)
     suoritus.tila should be("VALMIS")
@@ -68,7 +68,6 @@ class HakupalveluSpec extends FlatSpec with Matchers {
     suoritus.tila should be("VALMIS")
   }
 
-
   it should "use komo koodi for PYOT" in {
     val suoritus: VirallinenSuoritus = createSuoritus("PYOT")
     suoritus.komo should be("PYOT")
@@ -83,9 +82,11 @@ class HakupalveluSpec extends FlatSpec with Matchers {
     suoritus.tila should be("VALMIS")
   }
 
-  def createSuoritus(komo: String) : VirallinenSuoritus = {
-    AkkaHakupalvelu.getSuoritus(Some(komo), "SPEC", null, "SUORITTAJA", "FI",
-      Some("HAKIJA")).get.asInstanceOf[VirallinenSuoritus]
+  def createSuoritus(komo: String): VirallinenSuoritus = {
+    AkkaHakupalvelu
+      .getSuoritus(Some(komo), "SPEC", null, "SUORITTAJA", "FI", Some("HAKIJA"))
+      .get
+      .asInstanceOf[VirallinenSuoritus]
   }
 
 }
