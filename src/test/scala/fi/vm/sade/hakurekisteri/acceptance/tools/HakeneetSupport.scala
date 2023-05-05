@@ -1040,7 +1040,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             1,
             q.koodiUri,
             Koodisto(q.koodistoUri, Seq(1)),
-            Seq(KoodiMetadata(q.koodiUri.capitalize, "FI", "FIN"))
+            Seq(KoodiMetadata(q.koodiUri.capitalize, "FI", Some("FIN")))
           )
         )
       case q: GetKoodistoKoodiArvot =>

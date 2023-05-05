@@ -1,0 +1,462 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.98783827965",
+    "hetu" : "051287-971N",
+    "syntymäaika" : "1987-12-05",
+    "etunimet" : "Titus Testi",
+    "kutsumanimi" : "Titus",
+    "sukunimi" : "Antikainen-Testi",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "kansalaisuus" : [ {
+      "koodiarvo" : "246",
+      "nimi" : {
+        "fi" : "Suomi",
+        "sv" : "Finland",
+        "en" : "Finland"
+      },
+      "lyhytNimi" : {
+        "fi" : "FI",
+        "sv" : "FI",
+        "en" : "FI"
+      },
+      "koodistoUri" : "maatjavaltiot2",
+      "koodistoVersio" : 2
+    } ],
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [ {
+    "oid": "1.2.246.562.15.98195003417",
+    "versionumero": 9,
+    "aikaleima": "2019-01-22T10:29:45.231135",
+    "oppilaitos": {
+      "oid": "1.2.246.562.10.64818893022",
+      "oppilaitosnumero": {
+        "koodiarvo": "05195",
+        "nimi": {
+          "fi": "Teppanan koulu"
+        },
+        "lyhytNimi": {
+          "fi": "Teppanan koulu"
+        },
+        "koodistoUri": "oppilaitosnumero",
+        "koodistoVersio": 1
+      },
+      "nimi": {
+        "fi": "Teppanan koulu"
+      },
+      "kotipaikka": {
+        "koodiarvo": "205",
+        "nimi": {
+          "fi": "Kajaani",
+          "sv": "Kajana"
+        },
+        "koodistoUri": "kunta",
+        "koodistoVersio": 2
+      }
+    },
+    "koulutustoimija": {
+      "oid": "1.2.246.562.10.67019405611",
+      "nimi": {
+        "fi": "Kajaanin kaupunki"
+      },
+      "yTunnus": "0214958-9",
+      "kotipaikka": {
+        "koodiarvo": "205",
+        "nimi": {
+          "fi": "Kajaani",
+          "sv": "Kajana"
+        },
+        "koodistoUri": "kunta",
+        "koodistoVersio": 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-07-11",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2022-10-21",
+        "tila" : {
+          "koodiarvo" : "loma",
+          "nimi" : {
+            "fi" : "Loma",
+            "sv" : "Semester",
+            "en" : "Vacation"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2022-10-27",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2022-12-21",
+        "tila" : {
+          "koodiarvo" : "loma",
+          "nimi" : {
+            "fi" : "Loma",
+            "sv" : "Semester",
+            "en" : "Vacation"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2023-01-12",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2023-02-23",
+        "tila" : {
+          "koodiarvo" : "loma",
+          "nimi" : {
+            "fi" : "Loma",
+            "sv" : "Semester",
+            "en" : "Vacation"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2023-02-25",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "999905",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Undervisning som förebereder för den grundläggande utbildning"
+          },
+          "lyhytNimi" : {
+            "fi" : "Perusopetukseen valmistava opetus"
+          },
+          "koodistoUri" : "koulutus",
+          "koodistoVersio" : 12
+        },
+        "perusteenDiaarinumero" : "57/011/2015",
+        "koulutustyyppi" : {
+          "koodiarvo" : "22",
+          "nimi" : {
+            "fi" : "Perusopetukseen valmistava opetus",
+            "sv" : "Utbildning som förbereder för grundläggande utbildning"
+          },
+          "koodistoUri" : "koulutustyyppi"
+        }
+      },
+      "toimipiste": {
+        "oid": "1.2.246.562.10.64818893022",
+        "oppilaitosnumero": {
+          "koodiarvo": "05195",
+          "nimi": {
+            "fi": "Teppanan koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Teppanan koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Teppanan koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "205",
+          "nimi": {
+            "fi": "Kajaani",
+            "sv": "Kajana"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "osasuoritukset" : [ ],
+      "tyyppi" : {
+        "koodiarvo" : "perusopetukseenvalmistavaopetus",
+        "nimi" : {
+          "fi" : "Perusopetukseen valmistava opetus",
+          "sv" : "Förberedande undervisning för grundläggande utbildning",
+          "en" : "Instruction preparing for basic education"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "perusopetukseenvalmistavaopetus",
+      "nimi" : {
+        "fi" : "Perusopetukseen valmistava opetus",
+        "sv" : "Förberedande undervisning för den grundläggande utbildningen",
+        "en" : "Instruction preparing for basic education"
+      },
+      "lyhytNimi" : {
+        "fi" : "Perusopetukseen valmistava opetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-08-11"
+  }, {
+    "oid" : "1.2.246.562.15.98195003417",
+    "versionumero" : 2,
+    "aikaleima" : "2022-06-24T13:31:55.917835",
+    "lähdejärjestelmänId" : {
+      "id" : "665559",
+      "lähdejärjestelmä" : {
+        "koodiarvo" : "primus",
+        "nimi" : {
+          "fi" : "primus"
+        },
+        "koodistoUri" : "lahdejarjestelma",
+        "koodistoVersio" : 1
+      }
+    },
+    "oppilaitos" : {
+      "oid" : "1.2.246.562.10.81017043621",
+      "oppilaitosnumero" : {
+        "koodiarvo" : "00551",
+        "nimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "lyhytNimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "koodistoUri" : "oppilaitosnumero",
+        "koodistoVersio" : 1
+      },
+      "nimi" : {
+        "fi" : "Helsingin aikuislukio",
+        "sv" : "Helsingin aikuislukio",
+        "en" : "Helsingin aikuislukio"
+      },
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "koulutustoimija" : {
+      "oid" : "1.2.246.562.10.346830761110",
+      "nimi" : {
+        "fi" : "Helsingin kaupunki",
+        "sv" : "Helsingfors stad",
+        "en" : "Helsingin kaupunki"
+      },
+      "yTunnus" : "0201256-6",
+      "kotipaikka" : {
+        "koodiarvo" : "091",
+        "nimi" : {
+          "fi" : "Helsinki",
+          "sv" : "Helsingfors"
+        },
+        "koodistoUri" : "kunta",
+        "koodistoVersio" : 2
+      }
+    },
+    "tila" : {
+      "opiskeluoikeusjaksot" : [ {
+        "alku" : "2022-06-08",
+        "tila" : {
+          "koodiarvo" : "lasna",
+          "nimi" : {
+            "fi" : "Läsnä",
+            "sv" : "Närvarande",
+            "en" : "Present"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        },
+        "opintojenRahoitus" : {
+          "koodiarvo" : "1",
+          "nimi" : {
+            "fi" : "Valtionosuusrahoitteinen koulutus",
+            "sv" : "Statsandelsfinansierad utbildning"
+          },
+          "koodistoUri" : "opintojenrahoitus",
+          "koodistoVersio" : 1
+        }
+      }, {
+        "alku" : "2022-06-25",
+        "tila" : {
+          "koodiarvo" : "eronnut",
+          "nimi" : {
+            "fi" : "Eronnut",
+            "sv" : "Utskriven",
+            "en" : "Discontinued"
+          },
+          "koodistoUri" : "koskiopiskeluoikeudentila",
+          "koodistoVersio" : 1
+        }
+      } ]
+    },
+    "lisätiedot" : { },
+    "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "XX",
+          "nimi" : {
+            "fi" : "Ei tiedossa",
+            "sv" : "Okänd",
+            "en" : "Unknown"
+          },
+          "koodistoUri" : "koskioppiaineetyleissivistava",
+          "koodistoVersio" : 1
+        }
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.81017043621",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00551",
+          "nimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "lyhytNimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppiaineenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppiaineen oppimäärä",
+          "sv" : "Lärokurs i ett läroämne i grundläggande utbildning",
+          "en" : "Basic education Subject syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    } ],
+    "tyyppi" : {
+      "koodiarvo" : "aikuistenperusopetus",
+      "nimi" : {
+        "fi" : "Aikuisten perusopetus",
+        "sv" : "Grundläggande utbildning för vuxna"
+      },
+      "lyhytNimi" : {
+        "fi" : "Aikuisten perusopetus"
+      },
+      "koodistoUri" : "opiskeluoikeudentyyppi",
+      "koodistoVersio" : 1
+    },
+    "alkamispäivä" : "2022-06-08",
+    "päättymispäivä" : "2022-06-25"
+  } ]
+}
