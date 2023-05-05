@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.kkhakija
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
 import dispatch.Future
 import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
@@ -16,8 +16,10 @@ import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.{
 }
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
+import fi.vm.sade.hakurekisteri.integration.parametrit.ParametritActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohteenKoulutukset,
   Hakukohteenkoulutus,
@@ -114,7 +116,8 @@ class KkHakijaServiceSpec
       Some(kausiKoodiS),
       Some(2015),
       None,
-      Some(Koulutusohjelma(Map.empty))
+      Some(Koulutusohjelma(Map.empty)),
+      None
     )
   private val suoritus1 = VirallinenSuoritus(
     YoTutkinto.yotutkinto,
@@ -137,6 +140,9 @@ class KkHakijaServiceSpec
   private val noPaymentRequiredHakukohdeButMaksettu = "1.2.246.562.20.95810998877"
   private val valintaperusteetMock = new ValintaperusteetServiceMock
   private val hakukohderyhmaServiceMock = Mockito.mock(classOf[HakukohderyhmaService]);
+  private val ensikertalaisuusMock = mock[ActorRef]
+  private val koskiServiceMock = new KoskiServiceMock
+  private val parametritMock = new ParametritActorRef(mock[ActorRef])
 
   private val valintaTulosMock = ValintaTulosActorRef(system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -153,6 +159,12 @@ class KkHakijaServiceSpec
                 Valintatila.HYVAKSYTTY,
                 Vastaanottotila.KESKEN,
                 HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
+                None,
+                false,
+                None,
+                None,
+                None,
+                None,
                 None,
                 "1.2.jonoOid",
                 None,
@@ -187,7 +199,10 @@ class KkHakijaServiceSpec
     valintaTulosMock,
     valintaRekisteri,
     valintaperusteetMock,
-    Timeout(1.minute)
+    koskiServiceMock,
+    Timeout(1.minute),
+    ensikertalaisuusMock,
+    parametritMock
   )
 
   override def beforeEach() {
@@ -210,6 +225,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.1"))
@@ -239,7 +255,10 @@ class KkHakijaServiceSpec
       valintaTulosMock,
       valintaRekisteri,
       valintaperusteetMock,
-      Timeout(1.minute)
+      koskiServiceMock,
+      Timeout(1.minute),
+      ensikertalaisuusMock,
+      parametritMock
     )
     try {
       Await.result(
@@ -250,6 +269,7 @@ class KkHakijaServiceSpec
             None,
             None,
             Some("1.2.246.562.28.001"),
+            false,
             Hakuehto.Kaikki,
             4,
             Some(testUser("test", "1.1"))
@@ -278,6 +298,7 @@ class KkHakijaServiceSpec
             None,
             None,
             Some("1.2.246.562.28.001"),
+            false,
             Hakuehto.Kaikki,
             4,
             Some(testUser("test", "1.1"))
@@ -308,6 +329,7 @@ class KkHakijaServiceSpec
           None,
           None,
           Some("ryhma"),
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -337,6 +359,7 @@ class KkHakijaServiceSpec
           None,
           Some("1.2.246.562.20.649956391810"),
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -363,6 +386,7 @@ class KkHakijaServiceSpec
           None,
           Some("1.11.2"),
           None,
+          false,
           Hakuehto.Hyvaksytyt,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -386,6 +410,8 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
       Map.empty,
+      Map.empty,
+      Map.empty,
       Map.empty
     )
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(
@@ -406,6 +432,8 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_SYKSY),
+      Map.empty,
+      Map.empty,
       Map.empty,
       Map.empty
     )
@@ -428,7 +456,8 @@ class KkHakijaServiceSpec
         Some(kausiKoodiS),
         Some(2016),
         None,
-        Some(Koulutusohjelma(Map.empty))
+        Some(Koulutusohjelma(Map.empty)),
+        None
       )
     val hakukohteenKoulutukset: HakukohteenKoulutukset =
       HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
@@ -439,6 +468,8 @@ class KkHakijaServiceSpec
       Map(("", "1.5.1") -> Valintatila.KESKEN),
       Map(("", "1.5.1") -> Vastaanottotila.KESKEN),
       Map(("", "1.5.1") -> Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI),
+      Map.empty,
+      Map.empty,
       Map.empty,
       Map.empty
     )
@@ -464,6 +495,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -490,6 +522,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -516,6 +549,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -542,6 +576,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -568,6 +603,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -594,6 +630,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -620,6 +657,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -648,6 +686,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -657,10 +696,9 @@ class KkHakijaServiceSpec
       15.seconds
     )
 
-    val koulutus: Hakukohteenkoulutus = hakijat.head.hakemukset.head.hakukohteenKoulutukset.head
+    val koulutus: KkHakukohteenkoulutus = hakijat.head.hakemukset.head.hakukohteenKoulutukset.head
     koulutus.koulutuksenAlkamiskausi should be(None)
     koulutus.koulutuksenAlkamisvuosi should be(None)
-    koulutus.koulutuksenAlkamisPvms should be(None)
   }
 
   test("should not return hakemus of expired haku") {
@@ -677,6 +715,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -703,6 +742,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -714,7 +754,7 @@ class KkHakijaServiceSpec
 
     hakijat.last.aidinkieli should be("99")
     hakijat.last.asiointikieli should be("9") // Default is not empty!
-    hakijat.last.koulusivistyskieli should be("99")
+    hakijat.last.koulusivistyskieli should be(Some("99"))
   }
 
   def testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(apiVersion: Int): Assertion = {
@@ -729,7 +769,10 @@ class KkHakijaServiceSpec
       valintaTulosMock,
       valintaRekisteri,
       valintaperusteetMock,
-      Timeout(1.minute)
+      koskiServiceMock,
+      Timeout(1.minute),
+      ensikertalaisuusMock,
+      parametritMock
     )
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), "{}"))
@@ -744,6 +787,7 @@ class KkHakijaServiceSpec
           None,
           None,
           Some("ryhma"),
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -786,6 +830,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -814,6 +859,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))
@@ -867,6 +913,7 @@ class KkHakijaServiceSpec
           None,
           None,
           None,
+          false,
           Hakuehto.Kaikki,
           1,
           Some(testUser("test", "1.2.246.562.10.00000000001"))

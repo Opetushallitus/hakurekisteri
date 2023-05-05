@@ -87,10 +87,10 @@ db/schema.ddl
 *.xls#
 .jvmopts
 
-suoritusrekisteri-it-db
-src/main/webapp/
-
+# IDE specific
 .bsp/
 .vscode/
 project/
 
+suoritusrekisteri-it-db
+src/main/webapp/

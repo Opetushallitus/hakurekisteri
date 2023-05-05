@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   PersonOidsWithAliases
 }
 import org.joda.time.{DateTime, DateTimeZone}
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -29,6 +30,13 @@ class KoskiService(
   pageSize: Int = 200
 )(implicit val system: ActorSystem)
     extends IKoskiService {
+
+  private val koskiKoulusivistyskieliCache: Cache[String, Seq[String]] =
+    Scaffeine()
+      .recordStats()
+      .expireAfterWrite(12.hour)
+      .maximumSize(50000)
+      .build[String, Seq[String]]()
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
   private val logger = Logging.getLogger(system, this)
@@ -334,11 +342,10 @@ class KoskiService(
     updateHenkilot(personOidsWithAliases.henkiloOidsWithLinkedOids, params)
   }
 
-  override def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])] = {
-    val oppijat: Future[Seq[KoskiHenkiloContainer]] = virkailijaRestClient
+  def fetchHenkilot(
+    oppijaOids: Set[String]
+  ): Future[Seq[KoskiHenkiloContainer]] = {
+    virkailijaRestClient
       .postObjectWithCodes[Set[String], Seq[KoskiHenkiloContainer]](
         "koski.sure",
         Seq(200),
@@ -350,6 +357,54 @@ class KoskiService(
         logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
         Future.failed(e)
       }
+  }
+
+  def resolveKoulusivistyskieli(henkilo: KoskiHenkiloContainer): Seq[String] = {
+    val validitSuoritukset = henkilo.opiskeluoikeudet
+      .filter(o => o.tila.determineSuoritusTila == "VALMIS")
+      .flatMap(o => o.suoritukset.filter(s => s.isLukionOrPerusopetuksenoppimaara()))
+
+    validitSuoritukset
+      .flatMap(s => s.koulusivistyskieli.map(k => k.map(_.koodiarvo)))
+      .flatten
+      .distinct
+  }
+
+  private def fetchKoulusivistyskieletForReal(
+    oppijaOids: Seq[String]
+  ): Future[Map[String, Seq[String]]] = {
+    fetchHenkilot(oppijaOids.toSet).map(
+      _.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap
+    )
+  }
+
+  override def fetchKoulusivistyskielet(
+    oppijaOids: Seq[String]
+  ): Future[Map[String, Seq[String]]] = {
+    logger.info(s"Pyydetty Koskesta koulusivistyskieli ${oppijaOids.size} henkilölle.")
+
+    val cached = koskiKoulusivistyskieliCache.getAllPresent(oppijaOids)
+    val missing = oppijaOids.filterNot(cached.keys.toSet.contains(_))
+    logger.info(
+      s"Välimuistista saatu ${cached.keys.size} henkilön koulusivistyskieli, haetaan suoraan Koskesta tiedot ${missing.size} henkilölle."
+    )
+
+    val fetched = fetchKoulusivistyskieletForReal(missing)
+    fetched.foreach { f =>
+      logger.info(
+        s"Koski palautti ${f.keys.size} henkilön koulusivistyskielen, tallennetaan välimuistiin."
+      )
+      koskiKoulusivistyskieliCache.putAll(f)
+    }
+
+    fetched.zipWith(Future.successful(cached))(_ ++ _)
+  }
+
+  override def updateHenkilot(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])] = {
+    val oppijat = fetchHenkilot(oppijaOids)
     oppijat
       .flatMap(fetchPersonAliases)
       .flatMap(res => {

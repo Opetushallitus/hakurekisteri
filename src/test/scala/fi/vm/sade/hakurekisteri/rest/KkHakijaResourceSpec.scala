@@ -10,8 +10,10 @@ import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRe
 import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.HakukohderyhmaService
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
+import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
+import fi.vm.sade.hakurekisteri.integration.parametrit.ParametritActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
@@ -70,6 +72,9 @@ class KkHakijaResourceSpec
   private val valintaRekisteri = new ValintarekisteriActorRef(mock[ActorRef])
   private val koodistoMock = new KoodistoActorRef(mock[ActorRef])
   private val valintaperusteetMock = new ValintaperusteetServiceMock
+  private val ensikertalaisuusMock = mock[ActorRef]
+  private val koskiServiceMock = new KoskiServiceMock
+  private val parametritMock = new ParametritActorRef(mock[ActorRef])
 
   val service = new KkHakijaService(
     hakemusService,
@@ -82,7 +87,10 @@ class KkHakijaResourceSpec
     valintaTulosMock,
     valintaRekisteri,
     valintaperusteetMock,
-    Timeout(1.minute)
+    koskiServiceMock,
+    Timeout(1.minute),
+    ensikertalaisuusMock,
+    parametritMock
   )
   val resource = new KkHakijaResource(service)
   addServlet(resource, "/")

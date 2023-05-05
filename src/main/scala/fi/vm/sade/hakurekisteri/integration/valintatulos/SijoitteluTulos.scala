@@ -1,5 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
+import com.github.nscala_time.time.Imports.DateTimeZone
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+
 import scala.util.Try
 
 object Valintatila extends Enumeration {
@@ -61,6 +64,15 @@ import Vastaanottotila.Vastaanottotila
 import Ilmoittautumistila.Ilmoittautumistila
 
 case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
+
+case class HyvaksymisenEhto(
+  ehdollisestiHyvaksyttavissa: Boolean,
+  ehtoKoodi: Option[String],
+  ehtoFI: Option[String],
+  ehtoSV: Option[String],
+  ehtoEN: Option[String]
+)
+
 case class ValintaTulosJono(
   oid: String,
   nimi: String,
@@ -81,6 +93,12 @@ case class ValintaTulosHakutoive(
   valintatila: Valintatila,
   vastaanottotila: Vastaanottotila,
   ilmoittautumistila: HakutoiveenIlmoittautumistila,
+  hyvaksyttyJaJulkaistuDate: Option[String],
+  ehdollisestiHyvaksyttavissa: Boolean,
+  ehdollisenHyvaksymisenEhtoKoodi: Option[String],
+  ehdollisenHyvaksymisenEhtoFI: Option[String],
+  ehdollisenHyvaksymisenEhtoSV: Option[String],
+  ehdollisenHyvaksymisenEhtoEN: Option[String],
   pisteet: Option[BigDecimal],
   valintatapajonoOid: String,
   varasijanumero: Option[Int],
@@ -90,7 +108,7 @@ case class ValintaTulosHakutoive(
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
 
-@SerialVersionUID(3)
+@SerialVersionUID(4)
 case class SijoitteluTulos(
   hakuOid: String,
   pisteet: Map[(String, String), BigDecimal],
@@ -98,17 +116,29 @@ case class SijoitteluTulos(
   vastaanottotila: Map[(String, String), Vastaanottotila],
   ilmoittautumistila: Map[(String, String), Ilmoittautumistila],
   valintatapajono: Map[(String, String), String],
-  varasijanumero: Map[(String, String), Option[Int]]
+  varasijanumero: Map[(String, String), Option[Int]],
+  hyvaksymisenEhto: Map[(String, String), HyvaksymisenEhto],
+  valinnanAikaleima: Map[(String, String), String]
 )
 
 object SijoitteluTulos {
+  private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
+  private val InputFormatter = ISODateTimeFormat.dateTimeNoMillis().withZone(DateTimeZone.UTC)
+  private val OutputFormatter =
+    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
+
+  def fromUTCtoLocalDateStr(dateStr: String): String = {
+    val date = InputFormatter.parseDateTime(dateStr)
+    OutputFormatter.print(date)
+  }
+
   def apply(hakuOid: String, valintatulos: ValintaTulos): SijoitteluTulos = {
     new SijoitteluTulos(
       hakuOid,
-      valintatulos.hakutoiveet.collect {
-        case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
-          (valintatulos.hakemusOid, oid) -> pisteet
-      }.toMap,
+      valintatulos.hakutoiveet
+        .filter(h => h.hakukohdeOid.nonEmpty && h.pisteet.nonEmpty)
+        .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.pisteet.get)
+        .toMap,
       valintatulos.hakutoiveet
         .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatila)
         .toMap,
@@ -127,6 +157,25 @@ object SijoitteluTulos {
       valintatulos.hakutoiveet
         .filter(h => h.valintatapajonoOid.nonEmpty)
         .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.varasijanumero)
+        .toMap,
+      valintatulos.hakutoiveet
+        .map(h =>
+          (valintatulos.hakemusOid, h.hakukohdeOid) ->
+            HyvaksymisenEhto(
+              ehdollisestiHyvaksyttavissa = h.ehdollisestiHyvaksyttavissa,
+              ehtoKoodi = h.ehdollisenHyvaksymisenEhtoKoodi,
+              ehtoFI = h.ehdollisenHyvaksymisenEhtoFI,
+              ehtoSV = h.ehdollisenHyvaksymisenEhtoSV,
+              ehtoEN = h.ehdollisenHyvaksymisenEhtoEN
+            )
+        )
+        .toMap,
+      valintatulos.hakutoiveet
+        .filter(h => h.tarjoajaOid.nonEmpty && h.hyvaksyttyJaJulkaistuDate.nonEmpty)
+        .map(h =>
+          (valintatulos.hakemusOid, h.hakukohdeOid) ->
+            fromUTCtoLocalDateStr(h.hyvaksyttyJaJulkaistuDate.get)
+        )
         .toMap
     )
   }
@@ -136,10 +185,9 @@ object SijoitteluTulos {
       hakuOid,
       valintatulokset
         .flatMap(valintatulos => {
-          valintatulos.hakutoiveet.collect {
-            case ValintaTulosHakutoive(oid, _, _, _, _, Some(pisteet), _, _, _, _) =>
-              (valintatulos.hakemusOid, oid) -> pisteet
-          }
+          valintatulos.hakutoiveet
+            .filter(h => h.hakukohdeOid.nonEmpty && h.pisteet.nonEmpty)
+            .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.pisteet.get)
         })
         .toMap,
       valintatulokset
@@ -170,7 +218,32 @@ object SijoitteluTulos {
             .map(h => (valintatulos.hakemusOid, h.hakukohdeOid) -> h.valintatapajonoOid)
         })
         .toMap,
-      Map.empty
+      Map.empty,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet
+            .map(h =>
+              (valintatulos.hakemusOid, h.hakukohdeOid) ->
+                HyvaksymisenEhto(
+                  ehdollisestiHyvaksyttavissa = h.ehdollisestiHyvaksyttavissa,
+                  ehtoKoodi = h.ehdollisenHyvaksymisenEhtoKoodi,
+                  ehtoFI = h.ehdollisenHyvaksymisenEhtoFI,
+                  ehtoSV = h.ehdollisenHyvaksymisenEhtoSV,
+                  ehtoEN = h.ehdollisenHyvaksymisenEhtoEN
+                )
+            )
+        })
+        .toMap,
+      valintatulokset
+        .flatMap(valintatulos => {
+          valintatulos.hakutoiveet
+            .filter(h => h.tarjoajaOid.nonEmpty && h.hyvaksyttyJaJulkaistuDate.nonEmpty)
+            .map(h =>
+              (valintatulos.hakemusOid, h.hakukohdeOid) ->
+                fromUTCtoLocalDateStr(h.hyvaksyttyJaJulkaistuDate.get)
+            )
+        })
+        .toMap
     )
   }
 }

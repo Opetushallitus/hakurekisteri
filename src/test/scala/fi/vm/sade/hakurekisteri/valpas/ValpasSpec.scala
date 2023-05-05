@@ -158,7 +158,8 @@ class ValpasSpec
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,
                 k.koulutuksenAlkamisPvms,
-                Some(k.koulutusohjelma)
+                Some(k.koulutusohjelma),
+                Some(true)
               )
             }
             oid match {

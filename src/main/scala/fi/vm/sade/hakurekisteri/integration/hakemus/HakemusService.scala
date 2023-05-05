@@ -465,6 +465,7 @@ class HakemusService(
             personOid = Some(hakemus.personOid),
             applicationSystemId = hakemus.applicationSystemId,
             createdTime = hakemus.createdTime,
+            hakemusFirstSubmittedTime = hakemus.hakemusFirstSubmittedTime,
             hakutoiveet = Some(hakutoiveet),
             henkilo = henkilot(hakemus.personOid),
             asiointiKieli = hakemus.kieli,
@@ -482,6 +483,7 @@ class HakemusService(
             eligibilities = translateAtaruHakukelpoisuus(hakemus),
             liitteetTarkastettu = translateAtaruAttachments(hakemus),
             kkPohjakoulutus = hakemus.kkPohjakoulutus,
+            kkPohjakoulutusLomake = hakemus.kkPohjakoulutusLomake,
             korkeakoulututkintoVuosi = hakemus.korkeakoulututkintoVuosi
           )
         })

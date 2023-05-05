@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.koski
 
 import akka.actor.{Actor, ActorSystem}
 import akka.testkit.TestActorRef
-import fi.vm.sade.hakurekisteri.MockConfig
+import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri

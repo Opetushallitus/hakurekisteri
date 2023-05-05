@@ -103,7 +103,10 @@ class BaseKoosteet(
     integrations.valintaTulos,
     integrations.valintarekisteri,
     integrations.valintaperusteetService,
-    Timeout(config.valintaTulosTimeout)
+    integrations.koskiService,
+    Timeout(config.valintaTulosTimeout),
+    ensikertalainen,
+    integrations.parametrit
   )(system)
   val siirtotiedostojono = new Siirtotiedostojono(hakijat, kkHakijaService)(system)
 }

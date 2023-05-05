@@ -1557,6 +1557,7 @@ case class AtaruHakemusDto(
   personOid: String,
   applicationSystemId: String,
   createdTime: String,
+  hakemusFirstSubmittedTime: String,
   kieli: String,
   hakukohteet: List[String],
   email: String,
@@ -1572,6 +1573,7 @@ case class AtaruHakemusDto(
   attachments: Map[String, String],
   eligibilities: Map[String, String],
   kkPohjakoulutus: List[String],
+  kkPohjakoulutusLomake: List[String],
   korkeakoulututkintoVuosi: Option[Int]
 )
 
@@ -1607,6 +1609,7 @@ case class AtaruHakemus(
   oid: String,
   personOid: Option[String],
   createdTime: String,
+  hakemusFirstSubmittedTime: String,
   applicationSystemId: String,
   hakutoiveet: Option[List[HakutoiveDTO]],
   henkilo: fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo,
@@ -1624,6 +1627,7 @@ case class AtaruHakemus(
   eligibilities: Map[String, String],
   liitteetTarkastettu: Map[String, Option[Boolean]],
   kkPohjakoulutus: List[String],
+  kkPohjakoulutusLomake: List[String],
   korkeakoulututkintoVuosi: Option[Int]
 ) extends HakijaHakemus
     with Serializable {

@@ -112,6 +112,7 @@ class HakemusServiceSpec
       personOid,
       "",
       "",
+      "",
       kieli = asiointiKieliFromHakemus,
       List(),
       "",
@@ -126,6 +127,7 @@ class HakemusServiceSpec
       Map(),
       Map(),
       Map(),
+      List(),
       List(),
       None
     )
@@ -162,6 +164,7 @@ class HakemusServiceSpec
       personOid,
       "",
       "",
+      "",
       kieli = asiointiKieliFromHakemus,
       List("1.2.246.562.20.666", "1.2.246.562.20.667"),
       "",
@@ -176,6 +179,7 @@ class HakemusServiceSpec
       Map(),
       Map(),
       Map(),
+      List(),
       List(),
       None
     )
@@ -328,6 +332,7 @@ class HakemusServiceSpec
         Some("ataruHakijaOid"),
         "hakuOid",
         "",
+        "",
         None,
         ataruHenkilo,
         "fi",
@@ -344,6 +349,7 @@ class HakemusServiceSpec
         Map.empty,
         Map.empty,
         List.empty,
+        List.empty,
         None
       ),
       PersonOidsWithAliases(Set("oid"), Map("oid" -> Set("oid")))
@@ -358,6 +364,7 @@ class HakemusServiceSpec
         "ataruOid",
         None,
         "hakuOid",
+        "",
         "",
         None,
         ataruHenkilo,
@@ -374,6 +381,7 @@ class HakemusServiceSpec
         Map.empty,
         Map.empty,
         Map.empty,
+        List.empty,
         List.empty,
         None
       ),

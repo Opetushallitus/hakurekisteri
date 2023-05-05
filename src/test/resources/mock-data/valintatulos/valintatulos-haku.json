@@ -11,6 +11,7 @@
         "valintatapajonoOid": "",
         "valintatila": "KESKEN",
         "vastaanottotila": "KESKEN",
+        "ehdollisestiHyvaksyttavissa": false,
         "ilmoittautumistila": {
           "ilmoittautumisaika": {},
           "ilmoittautumistila": "EI_TEHTY",

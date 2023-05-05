@@ -149,6 +149,8 @@ case class KoskiOrganisaatio(oid: Option[String])
 
 case class KoskiSuoritustapa(koodiarvo: String)
 
+case class KoskiKoulusivistyskieli(koodiarvo: String)
+
 case class KoskiSuoritus(
   luokka: Option[String],
   koulutusmoduuli: KoskiKoulutusmoduuli,
@@ -167,7 +169,8 @@ case class KoskiSuoritus(
   jääLuokalle: Option[Boolean],
   tutkintonimike: Seq[KoskiKoodi] = Nil,
   tila: Option[KoskiKoodi] = None,
-  suoritustapa: Option[KoskiSuoritustapa]
+  suoritustapa: Option[KoskiSuoritustapa],
+  koulusivistyskieli: Option[Seq[KoskiKoulusivistyskieli]]
 ) {
 
   def isOpistovuosi(): Boolean = {
@@ -180,6 +183,12 @@ case class KoskiSuoritus(
 
   def isTuva(): Boolean = {
     tyyppi.exists(_.koodiarvo == "tuvakoulutuksensuoritus")
+  }
+
+  def isLukionOrPerusopetuksenoppimaara(): Boolean = {
+    tyyppi.exists(_.koodiarvo == "perusopetuksenoppimaara") ||
+    tyyppi.exists(_.koodiarvo == "lukionoppimaara") ||
+    tyyppi.exists(_.koodiarvo == "aikuistenperusopetuksenoppimaara")
   }
 
   def laajuusVahintaan(min: BigDecimal): Boolean = {

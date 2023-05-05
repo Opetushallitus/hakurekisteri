@@ -113,7 +113,8 @@ case class Hakukohteenkoulutus(
   koulutuksenAlkamiskausi: Option[TarjontaKoodi],
   koulutuksenAlkamisvuosi: Option[Int],
   koulutuksenAlkamisPvms: Option[Set[Long]],
-  koulutusohjelma: Option[Koulutusohjelma]
+  koulutusohjelma: Option[Koulutusohjelma],
+  johtaaTutkintoon: Option[Boolean]
 )
 
 case class HakukohteenKoulutukset(
@@ -215,7 +216,8 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                 k.koulutuksenAlkamiskausi,
                 k.koulutuksenAlkamisvuosi,
                 k.koulutuksenAlkamisPvms,
-                Some(k.koulutusohjelma)
+                Some(k.koulutusohjelma),
+                None
               )
             )
             k.kandidaatinKoulutuskoodi
@@ -228,7 +230,8 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config, cacheFacto
                     k.koulutuksenAlkamiskausi,
                     k.koulutuksenAlkamisvuosi,
                     k.koulutuksenAlkamisPvms,
-                    Some(k.koulutusohjelma)
+                    Some(k.koulutusohjelma),
+                    None
                   )
                 )
               )
