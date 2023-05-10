@@ -26,7 +26,7 @@ import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.IHakukohderyhmaServic
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.parametrit.{ParametritActorRef, UsesPriority}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, Hakukohteenkoulutus}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
   IValintaperusteetService,
   ValintatapajononTiedot
@@ -85,7 +85,7 @@ object KkHakijaQuery {
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
 case class InvalidKausiException(m: String) extends Exception(m)
 
-case class KkHakukohteenkoulutus(
+case class KkHakukohteenkoulutusV5(
   komoOid: String,
   tkKoulutuskoodi: String,
   kkKoulutusId: Option[String],
@@ -116,6 +116,29 @@ case class Hakemus(
   hakuVuosi: Int,
   hakuKausi: String,
   hakemusnumero: String,
+  organisaatio: String,
+  hakukohde: String,
+  hakukohdeKkId: Option[String],
+  avoinVayla: Option[Boolean],
+  valinnanTila: Option[Valintatila],
+  valintatapajononTyyppi: Option[String], //Tiedossa vain hyväksytyille hakijoille
+  vastaanottotieto: Option[Vastaanottotila],
+  ilmoittautumiset: Seq[Lasnaolo],
+  pohjakoulutus: Seq[String],
+  julkaisulupa: Option[Boolean],
+  hKelpoisuus: String,
+  hKelpoisuusLahde: Option[String],
+  hKelpoisuusMaksuvelvollisuus: Option[String],
+  lukuvuosimaksu: Option[String],
+  hakukohteenKoulutukset: Seq[Hakukohteenkoulutus],
+  liitteet: Option[Seq[Liite]]
+)
+
+case class HakemusV5(
+  haku: String,
+  hakuVuosi: Int,
+  hakuKausi: String,
+  hakemusnumero: String,
   hakemusViimeinenMuokkausAikaleima: Option[String],
   hakemusJattoAikaleima: Option[String],
   valinnanAikaleima: Option[String],
@@ -137,7 +160,7 @@ case class Hakemus(
   hKelpoisuusLahde: Option[String],
   hKelpoisuusMaksuvelvollisuus: Option[String],
   lukuvuosimaksu: Option[String],
-  hakukohteenKoulutukset: Seq[KkHakukohteenkoulutus],
+  hakukohteenKoulutukset: Seq[KkHakukohteenkoulutusV5],
   liitteet: Option[Seq[Liite]]
 )
 
@@ -162,14 +185,12 @@ case class Hakija(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: Option[String],
-  koulusivistyskielet: Option[Seq[String]],
+  koulusivistyskieli: String,
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
   turvakielto: Boolean,
-  hakemukset: Seq[Hakemus],
-  ensikertalainen: Option[Boolean]
+  hakemukset: Seq[Hakemus]
 )
 
 case class HakijaV3(
@@ -191,7 +212,7 @@ case class HakijaV3(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: Option[String],
+  koulusivistyskieli: String,
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
@@ -218,7 +239,7 @@ case class HakijaV4(
   sukupuoli: String,
   aidinkieli: String,
   asiointikieli: String,
-  koulusivistyskieli: Option[String],
+  koulusivistyskieli: String,
   koulutusmarkkinointilupa: Option[Boolean],
   onYlioppilas: Boolean,
   yoSuoritusVuosi: Option[String],
@@ -814,7 +835,7 @@ class KkHakijaService(
     sijoitteluTulos: SijoitteluTulos,
     jonotiedot: Seq[ValintatapajononTiedot],
     usePriorityFuture: Future[Boolean]
-  ): Future[Option[Hakemus]] = h match {
+  ): Future[Option[HakemusV5]] = h match {
     case hakemus: FullHakemus =>
       val hakemusOid = hakemus.oid
       val hakukohdeOid = toive.koulutusId.getOrElse("")
@@ -840,7 +861,7 @@ class KkHakijaService(
         if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
           for {
             answers <- hakemus.answers
-          } yield Hakemus(
+          } yield HakemusV5(
             haku = hakemus.applicationSystemId,
             hakuVuosi = haku.vuosi,
             hakuKausi = kausi,
@@ -873,7 +894,7 @@ class KkHakijaService(
             ),
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
               .map(koulutus =>
-                KkHakukohteenkoulutus(
+                KkHakukohteenkoulutusV5(
                   komoOid = koulutus.komoOid,
                   tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
                   kkKoulutusId = koulutus.kkKoulutusId,
@@ -922,7 +943,7 @@ class KkHakijaService(
           val jononNimi = jononOid.flatMap(oid => jonotiedot.find(_.oid == oid)).flatMap(_.nimi)
 
           Some(
-            Hakemus(
+            HakemusV5(
               haku = hakemus.applicationSystemId,
               hakuVuosi = haku.vuosi,
               hakuKausi = kausi,
@@ -955,7 +976,7 @@ class KkHakijaService(
               ),
               hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
                 .map(koulutus =>
-                  KkHakukohteenkoulutus(
+                  KkHakukohteenkoulutusV5(
                     komoOid = koulutus.komoOid,
                     tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
                     kkKoulutusId = koulutus.kkKoulutusId,
@@ -1013,20 +1034,13 @@ class KkHakijaService(
             hakuVuosi = haku.vuosi,
             hakuKausi = kausi,
             hakemusnumero = hakemusOid,
-            hakemusViimeinenMuokkausAikaleima = None,
-            hakemusJattoAikaleima = None,
-            valinnanAikaleima = None,
             organisaatio = toive.organizationOid.getOrElse(""),
             hakukohde = toive.koulutusId.getOrElse(""),
-            hakutoivePrioriteetti = None,
             hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = sijoitteluTulos.valintatila.get(hakemusOid, hakukohdeOid),
             vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemusOid, hakukohdeOid),
             valintatapajononTyyppi = jononTyyppi,
-            valintatapajononNimi = None,
-            hyvaksymisenEhto = None,
-            pisteet = None,
             ilmoittautumiset = lasnaolot,
             pohjakoulutus = getPohjakoulutukset(answers.koulutustausta.getOrElse(Koulutustausta())),
             julkaisulupa = Some(hakemus.julkaisulupa),
@@ -1041,13 +1055,11 @@ class KkHakijaService(
             ),
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
               .map(koulutus =>
-                KkHakukohteenkoulutus(
-                  komoOid = koulutus.komoOid,
-                  tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
-                  kkKoulutusId = koulutus.kkKoulutusId,
+                koulutus.copy(
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
-                  johtaaTutkintoon = koulutus.johtaaTutkintoon
+                  koulutuksenAlkamisPvms = None,
+                  koulutusohjelma = None
                 )
               ),
             liitteet = attachmentToLiite(hakemus.attachmentRequests)
@@ -1091,20 +1103,13 @@ class KkHakijaService(
               hakuVuosi = haku.vuosi,
               hakuKausi = kausi,
               hakemusnumero = hakemus.oid,
-              hakemusViimeinenMuokkausAikaleima = None,
-              hakemusJattoAikaleima = None,
-              valinnanAikaleima = None,
               organisaatio = toive.organizationOid.getOrElse(""),
               hakukohde = toive.koulutusId.getOrElse(""),
-              hakutoivePrioriteetti = None,
               hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
               avoinVayla = None, // TODO valinnoista?
               valinnanTila = sijoitteluTulos.valintatila.get(hakemus.oid, hakukohdeOid),
               vastaanottotieto = sijoitteluTulos.vastaanottotila.get(hakemus.oid, hakukohdeOid),
               valintatapajononTyyppi = jononTyyppi,
-              valintatapajononNimi = None,
-              hyvaksymisenEhto = None,
-              pisteet = None,
               ilmoittautumiset = lasnaolot,
               pohjakoulutus = hakemus.kkPohjakoulutus,
               julkaisulupa = Some(hakemus.julkaisulupa),
@@ -1119,13 +1124,11 @@ class KkHakijaService(
               ),
               hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
                 .map(koulutus =>
-                  KkHakukohteenkoulutus(
-                    komoOid = koulutus.komoOid,
-                    tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
-                    kkKoulutusId = koulutus.kkKoulutusId,
+                  koulutus.copy(
                     koulutuksenAlkamiskausi = None,
                     koulutuksenAlkamisvuosi = None,
-                    johtaaTutkintoon = koulutus.johtaaTutkintoon
+                    koulutuksenAlkamisPvms = None,
+                    koulutusohjelma = None
                   )
                 ),
               liitteet = None
@@ -1261,8 +1264,7 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
-        koulusivistyskielet = None,
+          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = None,
@@ -1273,8 +1275,7 @@ class KkHakijaService(
             julkaisulupa = hakemus.julkaisulupa,
             hKelpoisuusMaksuvelvollisuus = None
           )
-        ),
-        ensikertalainen = None
+        )
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1314,14 +1315,12 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = Some("99"),
-          koulusivistyskielet = None,
+          koulusivistyskieli = "99",
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = None,
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset,
-          ensikertalainen = None
+          hakemukset = hakemukset
         )
       })
     case _ => ???
@@ -1379,7 +1378,7 @@ class KkHakijaService(
     jonotiedot: Seq[ValintatapajononTiedot],
     ensikertalaisuudet: Future[Map[String, Boolean]],
     usePriority: Future[Boolean]
-  )(h: HakijaHakemus): Option[Future[Hakija]] = h match {
+  )(h: HakijaHakemus): Option[Future[HakijaV5]] = h match {
     case hakemus: FullHakemus =>
       for {
         answers: HakemusAnswers <- hakemus.answers
@@ -1412,7 +1411,7 @@ class KkHakijaService(
           henkilotiedot.kaksoiskansalaisuus.getOrElse(""),
           koodisto
         )
-      } yield Hakija(
+      } yield HakijaV5(
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
         oppijanumero = hakemus.personOid.getOrElse(""),
         sukunimi = henkilotiedot.Sukunimi.getOrElse(""),
@@ -1426,8 +1425,6 @@ class KkHakijaService(
           .getOrElse(henkilotiedot.postinumeroUlkomaa.getOrElse("")),
         postitoimipaikka = toimipaikka,
         maa = maa,
-        kansalaisuus = None,
-        kaksoiskansalaisuus = None,
         kansalaisuudet =
           if (
             henkilotiedot.kaksoiskansalaisuus.isDefined && henkilotiedot.kaksoiskansalaisuus.get.nonEmpty
@@ -1442,7 +1439,6 @@ class KkHakijaService(
         aidinkieli = henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99"),
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
-        koulusivistyskieli = None,
         koulusivistyskielet = Some(Seq.empty),
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
@@ -1472,7 +1468,7 @@ class KkHakijaService(
         val syntymaaika = hakemus.henkilo.syntymaaika.map(s =>
           new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))
         )
-        Hakija(
+        HakijaV5(
           hetu = getHetu(hakemus.henkilo.hetu, syntymaaika, hakemus.oid),
           oppijanumero = hakemus.henkilo.oidHenkilo,
           sukunimi = hakemus.henkilo.sukunimi.getOrElse(""),
@@ -1482,8 +1478,6 @@ class KkHakijaService(
           postinumero = hakemus.postinumero,
           postitoimipaikka = hakemus.postitoimipaikka.getOrElse(""),
           maa = hakemus.asuinmaa,
-          kansalaisuus = None,
-          kaksoiskansalaisuus = None,
           kansalaisuudet = Some(hakemus.henkilo.kansalaisuus.map(_.kansalaisuusKoodi)),
           syntymaaika = syntymaaika,
           matkapuhelin = Some(hakemus.matkapuhelin),
@@ -1498,7 +1492,6 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = None,
           koulusivistyskielet = Some(Seq.empty),
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
@@ -1550,7 +1543,7 @@ class KkHakijaService(
           henkilotiedot.kaksoiskansalaisuus.getOrElse(""),
           koodisto
         )
-      } yield Hakija(
+      } yield Hakija( // TODO miksei hakijaV4?
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
         oppijanumero = hakemus.personOid.getOrElse(""),
         sukunimi = henkilotiedot.Sukunimi.getOrElse(""),
@@ -1581,14 +1574,12 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
-        koulusivistyskielet = None,
+          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
-        hakemukset = hakemukset,
-        ensikertalainen = None
+        hakemukset = hakemukset
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1635,14 +1626,12 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = Some("99"),
-          koulusivistyskielet = None,
+          koulusivistyskieli = "99",
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset,
-          ensikertalainen = None
+          hakemukset = hakemukset
         )
       })
     case _ => ???
@@ -1685,7 +1674,7 @@ class KkHakijaService(
           henkilotiedot.kaksoiskansalaisuus.getOrElse(""),
           koodisto
         )
-      } yield Hakija(
+      } yield Hakija( // TODO miksi ei HakijaV3??
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
         oppijanumero = hakemus.personOid.getOrElse(""),
         sukunimi = henkilotiedot.Sukunimi.getOrElse(""),
@@ -1716,14 +1705,12 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
-        koulusivistyskielet = None,
+          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
-        hakemukset = hakemukset,
-        ensikertalainen = None
+        hakemukset = hakemukset
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1769,14 +1756,12 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = Some("99"),
-          koulusivistyskielet = None,
+          koulusivistyskieli = "99",
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset,
-          ensikertalainen = None
+          hakemukset = hakemukset
         )
       })
     case _ => ???
@@ -1815,7 +1800,7 @@ class KkHakijaService(
           komo = YoTutkinto.yotutkinto
         )).mapTo[Seq[VirallinenSuoritus]]
         kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse(""), koodisto)
-      } yield Hakija(
+      } yield Hakija( // TODO miksei hakijaV2??
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
         oppijanumero = hakemus.personOid.getOrElse(""),
         sukunimi = henkilotiedot.Sukunimi.getOrElse(""),
@@ -1842,14 +1827,12 @@ class KkHakijaService(
         asiointikieli =
           getAsiointikieli(answers.lisatiedot.getOrElse(Map()).get("asiointikieli").getOrElse("9")),
         koulusivistyskieli =
-          Some(henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99")),
-        koulusivistyskielet = None,
+          henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
         koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
         onYlioppilas = isYlioppilas(suoritukset),
         yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
-        hakemukset = hakemukset,
-        ensikertalainen = None
+        hakemukset = hakemukset
       )
     case hakemus: AtaruHakemus =>
       Some(for {
@@ -1896,14 +1879,12 @@ class KkHakijaService(
             case "en" => "3"
             case _    => "9"
           },
-          koulusivistyskieli = Some("99"),
-          koulusivistyskielet = None,
+          koulusivistyskieli = "99",
           koulutusmarkkinointilupa = Some(hakemus.markkinointilupa),
           onYlioppilas = isYlioppilas(suoritukset),
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
-          hakemukset = hakemukset,
-          ensikertalainen = None
+          hakemukset = hakemukset
         )
       })
     case _ => ???
