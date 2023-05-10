@@ -475,7 +475,11 @@ class KoskiService(
                 henkilot.get(henkilo.henkilö.oid.get)
               )
             } catch {
-              case e: Exception => Future.successful(Seq(Left(e)))
+              case e: Exception =>
+                logger.error(
+                  s"Koskitietojen päivitys henkilölle ${henkilo.henkilö.oid} epäonnistui: $e"
+                )
+                Future.successful(Seq(Left(e)))
             }).map(results => {
               val es = results.collect { case Left(e) => e }
               es.foreach(e =>
