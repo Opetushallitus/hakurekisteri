@@ -811,10 +811,10 @@ class KoskiDataHandler(
         _.tila.opiskeluoikeusjaksot
           .filter(jakso => LocalDate.parse(jakso.alku).compareTo(LocalDate.now()) <= 0)
           .sortBy(jakso => LocalDate.parse(jakso.alku))(Ordering[LocalDate].reverse)
-          .head
-          .tila
-          .koodiarvo
-          .equals("lasna")
+          .headOption
+          .map(_.tila)
+          .map(_.koodiarvo)
+          .exists(_.equals("lasna"))
       )
       .filter(opiskeluoikeus =>
         opiskeluoikeus.tyyppi.exists(
