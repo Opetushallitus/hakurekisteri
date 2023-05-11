@@ -1047,7 +1047,7 @@ class KkHakijaService(
                   kkKoulutusId = koulutus.kkKoulutusId,
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
-                  johtaaTutkintoon = koulutus.johtaaTutkintoon
+                  johtaaTutkintoon = None
                 )
               ),
             liitteet = attachmentToLiite(hakemus.attachmentRequests)
@@ -1125,7 +1125,7 @@ class KkHakijaService(
                     kkKoulutusId = koulutus.kkKoulutusId,
                     koulutuksenAlkamiskausi = None,
                     koulutuksenAlkamisvuosi = None,
-                    johtaaTutkintoon = koulutus.johtaaTutkintoon
+                    johtaaTutkintoon = None
                   )
                 ),
               liitteet = None
