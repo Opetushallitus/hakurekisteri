@@ -224,7 +224,7 @@ case class KoskiSuoritus(
         } else {
           k.koodiarvo match {
             case "perusopetuksenoppimaara" | "perusopetuksenoppiaineenoppimaara" |
-                "aikuistenperusopetuksenoppimaara" =>
+                "nuortenperusopetuksenoppiaineenoppimaara" | "aikuistenperusopetuksenoppimaara" =>
               Oids.perusopetusKomoOid
             case "perusopetuksenvuosiluokka"             => Oids.perusopetusLuokkaKomoOid
             case "valma"                                 => Oids.valmaKomoOid
