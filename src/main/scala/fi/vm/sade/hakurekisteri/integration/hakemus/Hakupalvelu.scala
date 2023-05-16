@@ -41,6 +41,7 @@ import fi.vm.sade.hakurekisteri.suoritus.{
   yksilollistaminen
 }
 import fi.vm.sade.hakurekisteri.{Config, Oids}
+import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
 
@@ -698,15 +699,26 @@ object AkkaHakupalvelu {
       val myontaja: String = viimeisinOpiskelutieto.map(o => o.oppilaitosOid).getOrElse("")
 
       val pohjakoulutusKooste = hakijanKoosteData.get("POHJAKOULUTUS")
-      val pohjakoulutusHakemus =
+      val pohjakoulutusHakemus = {
         if (hakemus.pohjakoulutus.nonEmpty) Some(hakemus.pohjakoulutus) else None
+        //if jatkuva haku and 7 use hakemus.pohjakouluus
+      }
       if (pohjakoulutusKooste.isEmpty) {
         println(
           s"Käytetään hakemukselle ${hakemus.oid} hakemuksen pohjakoulutusta $pohjakoulutusHakemus, koska koostepalvelusta ei löytynyt"
         )
       }
+
+      /**
+        * Valintalaskentakoostepalveluun ei ole haluttu tehdä tukea jatkuvan haun pohjakoulutusarvoille, jos sieltä
+        * tulee 7 (keskeytynyt), niin käytetään hakemuksen arvoa
+        */
       val pohjakoulutus =
-        if (pohjakoulutusKooste.isDefined) pohjakoulutusKooste else pohjakoulutusHakemus
+        if (
+          pohjakoulutusKooste.isDefined && !(pohjakoulutusKooste.get == "7" && haku.isJatkuvaHaku)
+        )
+          pohjakoulutusKooste
+        else pohjakoulutusHakemus
 
       val todistusVuosiPK = hakijanKoosteData.get("PK_PAATTOTODISTUSVUOSI")
       val todistusVuosiLK = hakijanKoosteData.get("LK_PAATTOTODISTUSVUOSI")
@@ -1085,6 +1097,25 @@ object AkkaHakupalvelu {
       ??? //Atarusta haetut toisen asteen hakemukset käsitellään toisaalla, kts AtaruHakemusToinenAste
   }
 
+  def getJatkuvaHaku2AsteYksilollistaminen(koodiarvo: Option[String]): yksilollistaminen.Value = {
+    koodiarvo match {
+      case Some("POY")  => yksilollistaminen.Osittain
+      case Some("PKYO") => yksilollistaminen.Kokonaan
+      case Some("PYOT") => yksilollistaminen.Alueittain
+      case _            => yksilollistaminen.Ei
+    }
+  }
+
+  def is2AsteenJatkuvaHakuPohjaKoulutus(koodiarvo: Option[String]): Boolean = {
+    koodiarvo match {
+      case Some("APT") | Some("ATEAT") | Some("KK") | Some("YO") | Some("EIPT") | Some("PO") | Some(
+            "POY"
+          ) | Some("PKYO") | Some("PYOT") | Some("TUVA10") | Some("UK") =>
+        true
+      case _ => false
+    }
+  }
+
   def getSuoritus(
     pohjakoulutus: Option[String],
     myontaja: String,
@@ -1093,7 +1124,7 @@ object AkkaHakupalvelu {
     kieli: String,
     hakija: Option[String]
   ): Option[Suoritus] = {
-    Seq(pohjakoulutus).collect {
+    Seq(pohjakoulutus).collectFirst {
       case Some("0") =>
         VirallinenSuoritus(
           "ulkomainen",
@@ -1166,7 +1197,19 @@ object AkkaHakupalvelu {
           vahv = false,
           lahde = hakija.getOrElse(Oids.ophOrganisaatioOid)
         )
-    }.headOption
+      case jatkuvahaku2aste: Some[String] if is2AsteenJatkuvaHakuPohjaKoulutus(jatkuvahaku2aste) =>
+        VirallinenSuoritus(
+          jatkuvahaku2aste.get,
+          myontaja,
+          if (jatkuvahaku2aste.get.equals("EIPT")) "KESKEN" else "VALMIS",
+          valmistuminen,
+          suorittaja,
+          getJatkuvaHaku2AsteYksilollistaminen(jatkuvahaku2aste),
+          kieli,
+          vahv = false,
+          lahde = hakija.getOrElse(Oids.ophOrganisaatioOid)
+        )
+    }
   }
 
   def findEnsimmainenAmmatillinenKielinenHakukohde(
