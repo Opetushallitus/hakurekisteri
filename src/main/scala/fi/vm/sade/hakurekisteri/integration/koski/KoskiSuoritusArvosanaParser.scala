@@ -439,9 +439,12 @@ class KoskiSuoritusArvosanaParser {
           var s: Seq[KoskiOsasuoritus] = suoritus.osasuoritukset
           // Tallennetaan vain vahvistetut perusopetuksen oppiaineen oppimäärän suoritusten arvosanat, ei kurssiarvosanoja.
           if (
-            suoritus.tyyppi.contains(
+            (suoritus.tyyppi.contains(
               KoskiKoodi("perusopetuksenoppiaineenoppimaara", "suorituksentyyppi")
-            ) && suoritus.vahvistus.isDefined
+            ) || suoritus.tyyppi.contains(
+              KoskiKoodi("nuortenperusopetuksenoppiaineenoppimaara", "suorituksentyyppi")
+            ))
+            && suoritus.vahvistus.isDefined
           ) {
             s = s :+ KoskiOsasuoritus(
               suoritus.koulutusmoduuli,

@@ -4265,6 +4265,36 @@ class KoskiDataHandlerTest
 
   }
 
+  it should "import arvosanat for nuorten perusopetuksen oppiaineen oppimäärä" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_tuva_arvosana_korotus.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)
+      ),
+      5.seconds
+    )
+
+    val maantietoArvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine = 'GE'"
+          .as[String]
+      )
+    )
+    maantietoArvosanat.head should equal("2")
+
+  }
+
   it should "store full aikuisten perusopetuksen oppimäärä even when there is a newer aikuisten perusopetuksen oppiaineen oppimäärä present" in {
     val json: String =
       scala.io.Source

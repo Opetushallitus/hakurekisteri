@@ -713,6 +713,13 @@ class KoskiDataHandler(
     henkilo: KoskiHenkiloContainer
   ): Seq[Seq[SuoritusArvosanat]] = {
     val henkiloOid = henkilo.henkilö.oid.get
+    val temp =
+      halututOpiskeluoikeudetJaSuoritukset(henkiloOid, henkilo.opiskeluoikeudet)
+    val parsitutSuorituksetJaArvosanat =
+      suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(
+        henkiloOid,
+        halututOpiskeluoikeudetJaSuoritukset(henkiloOid, henkilo.opiskeluoikeudet)
+      )
     suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(
       henkiloOid,
       halututOpiskeluoikeudetJaSuoritukset(henkiloOid, henkilo.opiskeluoikeudet)
