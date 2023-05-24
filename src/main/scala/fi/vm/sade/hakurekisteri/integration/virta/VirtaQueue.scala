@@ -94,8 +94,8 @@ class VirtaQueue(
             }
           case Failure(e) =>
             log.error(
-              s"Henkilön ${r.oppijaOid} tietojen haku oppijanumerorekisteristä epäonnistui!",
-              e
+              e,
+              s"Henkilön ${r.oppijaOid} tietojen haku oppijanumerorekisteristä epäonnistui!"
             )
         }
 
@@ -120,7 +120,7 @@ class VirtaQueue(
                     self ! q
                   })
                 )
-              case Failure(e) => log.error(s"Haun $hakuOid hakemusten haku epäonnistui!", e)
+              case Failure(e) => log.error(e, s"Haun $hakuOid hakemusten haku epäonnistui!")
             }
           } else {
             log.warning(
