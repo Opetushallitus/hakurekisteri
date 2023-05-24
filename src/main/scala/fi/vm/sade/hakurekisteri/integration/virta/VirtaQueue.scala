@@ -76,6 +76,7 @@ class VirtaQueue(
         .map(henkilot => {
           val hetu = henkilot.headOption.map(_._2).flatMap(h => h.hetu)
           val q = VirtaQuery(r.oppijaOid, hetu)
+          log.info(s"Yhden henkilön rajapinnan Virta-kysely $q")
           if (processing) {
             log.info(
               "Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue",
@@ -107,7 +108,11 @@ class VirtaQueue(
                   s"Päivitetään ${hakemukset.size} henkilön tiedot Virta-järjestelmästä haulle $hakuOid"
                 )
                 hakemukset.foreach(hakemus =>
-                  hakemus.personOid.map(personOid => self ! VirtaQuery(personOid, hakemus.hetu))
+                  hakemus.personOid.map(personOid => {
+                    val q = VirtaQuery(personOid, hakemus.hetu)
+                    log.info(s"Koko haun päivityksen rajapinnan Virta-kysely $q")
+                    self ! q
+                  })
                 )
               })
           } else {
