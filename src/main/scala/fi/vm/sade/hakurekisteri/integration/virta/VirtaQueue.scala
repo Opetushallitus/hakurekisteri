@@ -71,20 +71,25 @@ class VirtaQueue(
       virtaQueue.add(q)
 
     case r: RefreshOppijaFromVirta =>
-      val q = VirtaQuery(r.oppijaOid, None)
-      if (processing) {
-        log.info(
-          "Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue",
-          r.oppijaOid
-        )
-        virtaQueue.add(q)
-      } else {
-        log.info(
-          "Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ",
-          r.oppijaOid
-        )
-        virtaActor.actor ! q
-      }
+      oppijaNumeroRekisteri
+        .getByOids(Set(r.oppijaOid))
+        .map(henkilot => {
+          val hetu = henkilot.headOption.map(_._2).flatMap(h => h.hetu)
+          val q = VirtaQuery(r.oppijaOid, hetu)
+          if (processing) {
+            log.info(
+              "Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue",
+              r.oppijaOid
+            )
+            virtaQueue.add(q)
+          } else {
+            log.info(
+              "Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ",
+              r.oppijaOid
+            )
+            virtaActor.actor ! q
+          }
+        })
 
     case r: RefreshHakuFromVirta =>
       val hakuOid = r.hakuOid
@@ -96,17 +101,14 @@ class VirtaQueue(
               s"Aloitetaan haun $hakuOid hakijoiden tietojen päivittäminen Virta-järjestelmästä."
             )
             hakemusService
-              .personOidsForHaku(hakuOid, None)
-              .map(personOids => {
-                oppijaNumeroRekisteri
-                  .enrichWithAliases(personOids)
-                  .map(personOidsWithAliases => {
-                    log.info(
-                      s"Päivitetään ${personOidsWithAliases.henkiloOidsWithLinkedOids.size} henkilön tiedot Virta-järjestelmästä haulle $hakuOid"
-                    )
-                    personOidsWithAliases.henkiloOidsWithLinkedOids
-                      .foreach(personOid => self ! VirtaQuery(personOid, None))
-                  })
+              .hakemuksetForHaku(hakuOid, None)
+              .map(hakemukset => {
+                log.info(
+                  s"Päivitetään ${hakemukset.size} henkilön tiedot Virta-järjestelmästä haulle $hakuOid"
+                )
+                hakemukset.foreach(hakemus =>
+                  hakemus.personOid.map(personOid => self ! VirtaQuery(personOid, hakemus.hetu))
+                )
               })
           } else {
             log.warning(
