@@ -16,6 +16,7 @@ import org.joda.time.DateTime
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class KomoNotFoundException(message: String) extends Exception(message)
@@ -73,24 +74,30 @@ class VirtaQueue(
     case r: RefreshOppijaFromVirta =>
       oppijaNumeroRekisteri
         .getByOids(Set(r.oppijaOid))
-        .map(henkilot => {
-          val hetu = henkilot.headOption.map(_._2).flatMap(h => h.hetu)
-          val q = VirtaQuery(r.oppijaOid, hetu)
-          log.info(s"Yhden henkilön rajapinnan Virta-kysely $q")
-          if (processing) {
-            log.info(
-              "Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue",
-              r.oppijaOid
+        .onComplete {
+          case Success(henkilot) =>
+            val hetu = henkilot.headOption.map(_._2).flatMap(h => h.hetu)
+            val q = VirtaQuery(r.oppijaOid, hetu)
+            log.info(s"Yhden henkilön rajapinnan Virta-kysely $q")
+            if (processing) {
+              log.info(
+                "Fetching data from Virta for oppija {}, manual refresh. Virtaqueue processing already underway, adding to queue",
+                r.oppijaOid
+              )
+              virtaQueue.add(q)
+            } else {
+              log.info(
+                "Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ",
+                r.oppijaOid
+              )
+              virtaActor.actor ! q
+            }
+          case Failure(e) =>
+            log.error(
+              s"Henkilön ${r.oppijaOid} tietojen haku oppijanumerorekisteristä epäonnistui!",
+              e
             )
-            virtaQueue.add(q)
-          } else {
-            log.info(
-              "Fetching data from Virta for oppija {}, manual refresh. Processing not active, updating right away ",
-              r.oppijaOid
-            )
-            virtaActor.actor ! q
-          }
-        })
+        }
 
     case r: RefreshHakuFromVirta =>
       val hakuOid = r.hakuOid
@@ -101,9 +108,8 @@ class VirtaQueue(
             log.info(
               s"Aloitetaan haun $hakuOid hakijoiden tietojen päivittäminen Virta-järjestelmästä."
             )
-            hakemusService
-              .hakemuksetForHaku(hakuOid, None)
-              .map(hakemukset => {
+            hakemusService.hakemuksetForHaku(hakuOid, None).onComplete {
+              case Success(hakemukset) =>
                 log.info(
                   s"Päivitetään ${hakemukset.size} henkilön tiedot Virta-järjestelmästä haulle $hakuOid"
                 )
@@ -114,7 +120,8 @@ class VirtaQueue(
                     self ! q
                   })
                 )
-              })
+              case Failure(e) => log.error(s"Haun $hakuOid hakemusten haku epäonnistui!", e)
+            }
           } else {
             log.warning(
               s"Haku ${hakuOid} ei ole kk-haku. Ei päivitetä haun hakijoiden tietoja Virta-järjestelmästä."
