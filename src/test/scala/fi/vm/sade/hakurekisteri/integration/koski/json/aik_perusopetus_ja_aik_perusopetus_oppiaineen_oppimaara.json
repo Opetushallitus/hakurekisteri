@@ -1202,17 +1202,22 @@
       },
       "lisätiedot" : { },
       "suoritukset" : [ {
-        "koulutusmoduuli" : {
-          "tunniste" : {
-            "koodiarvo" : "XX",
-            "nimi" : {
-              "fi" : "Ei tiedossa",
-              "sv" : "Okänd",
-              "en" : "Unknown"
+        "koulutusmoduuli": {
+          "tunniste": {
+            "koodiarvo": "BI",
+            "nimi": {
+              "fi": "Biologia",
+              "sv": "Biologi"
             },
-            "koodistoUri" : "koskioppiaineetyleissivistava",
-            "koodistoVersio" : 1
-          }
+            "lyhytNimi": {
+              "fi": "Biologia",
+              "sv": "Biologi"
+            },
+            "koodistoUri": "koskioppiaineetyleissivistava",
+            "koodistoVersio": 1
+          },
+          "pakollinen": true,
+          "perusteenDiaarinumero": "OPH-1280-2017"
         },
         "toimipiste" : {
           "oid" : "1.2.246.562.10.55355715099",
@@ -1231,6 +1236,23 @@
             "koodistoVersio" : 2
           }
         },
+        "arviointi": [
+          {
+            "arvosana": {
+              "koodiarvo": "7",
+              "nimi": {
+                "fi": "tyydyttävä",
+                "sv": "nöjaktig"
+              },
+              "lyhytNimi": {
+                "fi": "7"
+              },
+              "koodistoUri": "arviointiasteikkoyleissivistava",
+              "koodistoVersio": 1
+            },
+            "hyväksytty": true
+          }
+        ],
         "suoritustapa" : {
           "koodiarvo" : "koulutus",
           "nimi" : {
