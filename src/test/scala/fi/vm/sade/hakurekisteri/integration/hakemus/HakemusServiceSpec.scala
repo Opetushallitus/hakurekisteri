@@ -110,6 +110,7 @@ class HakemusServiceSpec
     val personOids =
       Await.result(hakemusService.springPersonOidsForJatkuvaHaku("1.2.3"), 10.seconds)
     personOids.size should be(1)
+    personOids.contains("1.2.246.562.24.91842462815") should be(true)
   }
 
   behavior of "enrichAtaruHakemukset"

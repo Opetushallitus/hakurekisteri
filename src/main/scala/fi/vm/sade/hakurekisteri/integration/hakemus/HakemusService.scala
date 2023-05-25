@@ -966,7 +966,7 @@ class HakemusService(
     ).map(_.filter(hakemus => {
       val hakemusCreatedDate = LocalDate.parse(hakemus.createdTime, dateTimeFormatter)
       currentYear.equals(hakemusCreatedDate.getYear) && hakemusCreatedDate.getMonthOfYear <= 8
-    }).map(_.oid).toSet)
+    }).map(_.personOid).filter(_.isDefined).flatten.toSet)
   }
 
   def personOidsForHakukohde(
