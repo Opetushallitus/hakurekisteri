@@ -84,14 +84,16 @@ class VirtaClient(
 
   def getOpiskelijanTiedot(
     oppijanumero: String,
-    hetu: Option[String] = None
+    hetu: Option[String] = None,
+    logXml: Boolean = false
   ): Future[Option[VirtaResult]] = {
     val retryCount = new AtomicInteger(1)
     tryPost(
       config.serviceUrl,
       wrapSoapEnvelope(getSoapOperationEnvelope(oppijanumero, hetu)),
       oppijanumero,
-      retryCount
+      retryCount,
+      logXml
     )
   }
 
@@ -115,7 +117,8 @@ class VirtaClient(
     requestUrl: String,
     requestEnvelope: String,
     oppijanumero: String,
-    retryCount: AtomicInteger
+    retryCount: AtomicInteger,
+    logXml: Boolean
   ): Future[Option[VirtaResult]] = {
     val t0 = Platform.currentTime
 
@@ -124,6 +127,9 @@ class VirtaClient(
 
         if (response.getStatusCode == 200) {
           val responseEnvelope: Elem = SafeXML.loadString(response.getResponseBody)
+          if (logXml) {
+            logger.info(s"Saatiin Virta-vastaus osoitteesta $requestUrl. Xml: $responseEnvelope")
+          }
 
           val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
           val tutkinnot = getTutkinnot(responseEnvelope)

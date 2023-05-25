@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-case class VirtaQuery(oppijanumero: String, hetu: Option[String])
+case class VirtaQuery(oppijanumero: String, hetu: Option[String], logXml: Boolean = false)
 case class KomoNotFoundException(message: String) extends Exception(message)
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
 case class VirtaStatus(
@@ -28,7 +28,7 @@ case class VirtaStatus(
   status: Status
 )
 case class QueryProsessed(q: VirtaQuery)
-case class RefreshOppijaFromVirta(oppijaOid: String)
+case class RefreshOppijaFromVirta(oppijaOid: String, logXml: Boolean)
 case class RefreshHakuFromVirta(hakuOid: String)
 
 object RescheduleVirtaProcessing
@@ -72,12 +72,13 @@ class VirtaQueue(
       virtaQueue.add(q)
 
     case r: RefreshOppijaFromVirta =>
+      log.info(s"Received query for RefreshOppijaFromVirta: $r")
       oppijaNumeroRekisteri
         .getByOids(Set(r.oppijaOid))
         .onComplete {
           case Success(henkilot) =>
             val hetu = henkilot.headOption.map(_._2).flatMap(h => h.hetu)
-            val q = VirtaQuery(r.oppijaOid, hetu)
+            val q = VirtaQuery(r.oppijaOid, hetu, r.logXml)
             log.info(s"Yhden henkilön rajapinnan Virta-kysely $q")
             if (processing) {
               log.info(
@@ -100,6 +101,7 @@ class VirtaQueue(
         }
 
     case r: RefreshHakuFromVirta =>
+      log.info(s"Received query for RefreshHakuFromVirta: $r")
       val hakuOid = r.hakuOid
       (hakuActor ? GetHaku(hakuOid))(1.hour)
         .mapTo[Haku]
