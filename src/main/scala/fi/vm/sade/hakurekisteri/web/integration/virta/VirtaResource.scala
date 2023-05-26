@@ -89,7 +89,7 @@ class VirtaResource(virtaQueue: ActorRef)(implicit
     }
   }
 
-  get("/refresh/:hakuOid", operation(refreshHaku)) {
+  get("/refresh/haku/:hakuOid", operation(refreshHaku)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {
       val hakuOid = params("hakuOid")
