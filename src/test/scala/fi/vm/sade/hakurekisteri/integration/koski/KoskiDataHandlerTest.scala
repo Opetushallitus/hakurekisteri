@@ -4297,7 +4297,7 @@ class KoskiDataHandlerTest
   it should "not import arvosanat for incomplete nuorten perusopetuksen oppiaineen oppimäärä" in {
     val json: String =
       scala.io.Source
-        .fromFile(jsonDir + "koskidata_tuva_arvosana_korotus_eivalmis.json")
+        .fromFile(jsonDir + "koskidata_tuva_arvosana_korotus_eiarvosanaa.json")
         .mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -4330,7 +4330,7 @@ class KoskiDataHandlerTest
   it should "not import arvosanat for incomplete aikuisten perusopetuksen oppiaineen oppimäärä" in {
     val json: String =
       scala.io.Source
-        .fromFile(jsonDir + "koskidata_aikuisten_perusopetuksen_oppiaine_eivalmis.json")
+        .fromFile(jsonDir + "koskidata_aikuisten_perusopetuksen_oppiaine_eiarvosanaa.json")
         .mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -4358,6 +4358,46 @@ class KoskiDataHandlerTest
     )
     enkkuArvosanat.head should equal("1")
 
+  }
+
+  it should "import arvosanat for vahvistettu oppiaine but not for oppiaine without arvosanatin aikuisten perusopetuksen oppiaineen oppimäärä" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_aikuisten_perusopetus_poo_kesken_yksivahvistettu.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)
+      ),
+      5.seconds
+    )
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("2")
+
+    val enkkuArvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine = 'A1'"
+          .as[String]
+      )
+    )
+    enkkuArvosanat.head should equal("2")
+
+    val bilsaArvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine = 'BI'"
+          .as[String]
+      )
+    )
+    bilsaArvosanat.head should equal("1")
   }
 
   it should "store full aikuisten perusopetuksen oppimäärä even when there is a newer aikuisten perusopetuksen oppiaineen oppimäärä present" in {
@@ -4452,6 +4492,13 @@ class KoskiDataHandlerTest
       )
     )
     arvosanat.head should equal("1")
+    val numero = run(
+      database.run(
+        sql"select arvosana from arvosana where aine like 'HI%' and suoritus != $perusopetuksenSuoritus"
+          .as[String]
+      )
+    )
+    numero.head should equal("9")
   }
 
   it should "store latest aikuisten perusopetus with separate perusopetuksen oppiaineen oppimääräs" in {

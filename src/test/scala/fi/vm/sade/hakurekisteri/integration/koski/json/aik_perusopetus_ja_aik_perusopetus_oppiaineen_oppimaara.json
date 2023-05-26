@@ -1253,6 +1253,90 @@
             "hyväksytty": true
           }
         ],
+        "vahvistus": {
+          "päivä": "2023-05-26",
+          "paikkakunta": {
+            "koodiarvo": "091",
+            "nimi": {
+              "fi": "Helsinki",
+              "sv": "Helsingfors"
+            },
+            "koodistoUri": "kunta",
+            "koodistoVersio": 2
+          },
+          "myöntäjäOrganisaatio": {
+            "oid": "1.2.246.562.10.52251067890",
+            "oppilaitosnumero": {
+              "koodiarvo": "10105",
+              "nimi": {
+                "fi": "Stadin ammatti- ja aikuisopisto",
+                "sv": "Stadin ammatti- ja aikuisopisto",
+                "en": "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Stadin ammatti- ja aikuisopisto",
+                "sv": "Stadin ammatti- ja aikuisopisto",
+                "en": "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Stadin ammatti- ja aikuisopisto",
+              "sv": "Stadin ammatti- ja aikuisopisto",
+              "en": "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "myöntäjäHenkilöt": [
+            {
+              "nimi": "katti",
+              "titteli": {
+                "fi": "matti"
+              },
+              "organisaatio": {
+                "oid": "1.2.246.562.10.52251067890",
+                "oppilaitosnumero": {
+                  "koodiarvo": "10105",
+                  "nimi": {
+                    "fi": "Stadin ammatti- ja aikuisopisto",
+                    "sv": "Stadin ammatti- ja aikuisopisto",
+                    "en": "Stadin ammatti- ja aikuisopisto"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Stadin ammatti- ja aikuisopisto",
+                    "sv": "Stadin ammatti- ja aikuisopisto",
+                    "en": "Stadin ammatti- ja aikuisopisto"
+                  },
+                  "koodistoUri": "oppilaitosnumero",
+                  "koodistoVersio": 1
+                },
+                "nimi": {
+                  "fi": "Stadin ammatti- ja aikuisopisto",
+                  "sv": "Stadin ammatti- ja aikuisopisto",
+                  "en": "Stadin ammatti- ja aikuisopisto"
+                },
+                "kotipaikka": {
+                  "koodiarvo": "091",
+                  "nimi": {
+                    "fi": "Helsinki",
+                    "sv": "Helsingfors"
+                  },
+                  "koodistoUri": "kunta",
+                  "koodistoVersio": 2
+                }
+              }
+            }
+          ]
+        },
         "suoritustapa" : {
           "koodiarvo" : "koulutus",
           "nimi" : {
