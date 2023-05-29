@@ -1500,8 +1500,8 @@
     "päättymispäivä" : "2023-05-24"
   }, {
     "oid" : "1.2.246.562.15.83126825278",
-    "versionumero" : 4,
-    "aikaleima" : "2023-05-26T09:34:19.735873",
+    "versionumero" : 5,
+    "aikaleima" : "2023-05-29T11:18:28.600350",
     "oppilaitos" : {
       "oid" : "1.2.246.562.10.81017043621",
       "oppilaitosnumero" : {
@@ -1578,6 +1578,92 @@
       } ]
     },
     "suoritukset" : [ {
+      "koulutusmoduuli" : {
+        "tunniste" : {
+          "koodiarvo" : "BI",
+          "nimi" : {
+            "fi" : "Biologia",
+            "sv" : "Biologi",
+            "en" : "Biology"
+          },
+          "lyhytNimi" : {
+            "fi" : "Biologia",
+            "sv" : "Biologi"
+          },
+          "koodistoUri" : "koskioppiaineetyleissivistava",
+          "koodistoVersio" : 1
+        },
+        "pakollinen" : true,
+        "perusteenDiaarinumero" : "OPH-1280-2017"
+      },
+      "toimipiste" : {
+        "oid" : "1.2.246.562.10.81017043621",
+        "oppilaitosnumero" : {
+          "koodiarvo" : "00551",
+          "nimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "lyhytNimi" : {
+            "fi" : "Helsingin aikuislukio",
+            "sv" : "Helsingin aikuislukio",
+            "en" : "Helsingin aikuislukio"
+          },
+          "koodistoUri" : "oppilaitosnumero",
+          "koodistoVersio" : 1
+        },
+        "nimi" : {
+          "fi" : "Helsingin aikuislukio",
+          "sv" : "Helsingin aikuislukio",
+          "en" : "Helsingin aikuislukio"
+        },
+        "kotipaikka" : {
+          "koodiarvo" : "091",
+          "nimi" : {
+            "fi" : "Helsinki",
+            "sv" : "Helsingfors"
+          },
+          "koodistoUri" : "kunta",
+          "koodistoVersio" : 2
+        }
+      },
+      "suoritustapa" : {
+        "koodiarvo" : "koulutus",
+        "nimi" : {
+          "fi" : "Koulutus",
+          "sv" : "Utbildning",
+          "en" : "Education"
+        },
+        "koodistoUri" : "perusopetuksensuoritustapa",
+        "koodistoVersio" : 1
+      },
+      "suorituskieli" : {
+        "koodiarvo" : "FI",
+        "nimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "lyhytNimi" : {
+          "fi" : "suomi",
+          "sv" : "finska",
+          "en" : "Finnish"
+        },
+        "koodistoUri" : "kieli",
+        "koodistoVersio" : 1
+      },
+      "tyyppi" : {
+        "koodiarvo" : "perusopetuksenoppiaineenoppimaara",
+        "nimi" : {
+          "fi" : "Perusopetuksen oppiaineen oppimäärä",
+          "sv" : "Lärokurs i ett läroämne i grundläggande utbildning",
+          "en" : "Basic education Subject syllabus"
+        },
+        "koodistoUri" : "suorituksentyyppi",
+        "koodistoVersio" : 1
+      }
+    }, {
       "koulutusmoduuli" : {
         "tunniste" : {
           "koodiarvo" : "A1",
@@ -1779,15 +1865,15 @@
     }, {
       "koulutusmoduuli" : {
         "tunniste" : {
-          "koodiarvo" : "BI",
+          "koodiarvo" : "FY",
           "nimi" : {
-            "fi" : "Biologia",
-            "sv" : "Biologi",
-            "en" : "Biology"
+            "fi" : "Fysiikka",
+            "sv" : "Fysik",
+            "en" : "Physics"
           },
           "lyhytNimi" : {
-            "fi" : "Biologia",
-            "sv" : "Biologi"
+            "fi" : "Fysiikka",
+            "sv" : "Fysik"
           },
           "koodistoUri" : "koskioppiaineetyleissivistava",
           "koodistoVersio" : 1
@@ -1827,6 +1913,22 @@
           "koodistoVersio" : 2
         }
       },
+      "arviointi" : [ {
+        "arvosana" : {
+          "koodiarvo" : "8",
+          "nimi" : {
+            "fi" : "hyvä",
+            "sv" : "god",
+            "en" : "good"
+          },
+          "lyhytNimi" : {
+            "fi" : "8"
+          },
+          "koodistoUri" : "arviointiasteikkoyleissivistava",
+          "koodistoVersio" : 1
+        },
+        "hyväksytty" : true
+      } ],
       "suoritustapa" : {
         "koodiarvo" : "koulutus",
         "nimi" : {

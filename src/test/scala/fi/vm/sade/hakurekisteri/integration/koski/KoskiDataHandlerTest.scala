@@ -4360,7 +4360,7 @@ class KoskiDataHandlerTest
 
   }
 
-  it should "import arvosanat for vahvistettu oppiaine but not for oppiaine without arvosanatin aikuisten perusopetuksen oppiaineen oppimäärä" in {
+  it should "import suoritukset for oppiaine with arvosana but not for oppiaine without arvosana in aikuisten perusopetuksen oppiaineen oppimäärä" in {
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_aikuisten_perusopetus_poo_kesken_yksivahvistettu.json")
@@ -4398,6 +4398,14 @@ class KoskiDataHandlerTest
       )
     )
     bilsaArvosanat.head should equal("1")
+
+    val fyssaArvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine = 'FY'"
+          .as[String]
+      )
+    )
+    fyssaArvosanat.head should equal("2")
   }
 
   it should "store full aikuisten perusopetuksen oppimäärä even when there is a newer aikuisten perusopetuksen oppiaineen oppimäärä present" in {
@@ -4433,7 +4441,7 @@ class KoskiDataHandlerTest
 
   }
 
-  it should "store 2 separate opiskeluoikeutta and valmis tilaiset arvosanat when perusopetuksen oppiaineen oppimäärä and tila equals läsnä" in {
+  it should "store 2 separate opiskeluoikeutta and all suoritukset with arvosanat when perusopetuksen oppiaineen oppimäärä and tila equals läsnä" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "koskidata_aik_perusopetus_poo.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -4475,7 +4483,7 @@ class KoskiDataHandlerTest
             .as[String]
         )
       )
-    arvosanat.head should equal("2")
+    arvosanat.head should equal("5") // tuodaan myös ei-vahvistetut
 
     arvosanat = run(
       database.run(
