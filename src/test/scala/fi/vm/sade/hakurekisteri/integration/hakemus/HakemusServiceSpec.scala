@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
+import org.joda.time.LocalDate
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.mockito.MockitoSugar
@@ -86,6 +87,30 @@ class HakemusServiceSpec
 
     hakemukset.size should be(2)
     hakemukset.forall(_.personOid == Some(expectedPersonOid)) should be(true)
+  }
+
+  it should "return applications applications that were submitted between january and august this year" in {
+
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), "{}"))
+
+    val currentYear = new LocalDate(System.currentTimeMillis()).getYear
+    when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
+      .thenReturn(
+        (
+          200,
+          List(),
+          getJsonWithReplaces(
+            "ataruApplicationsJatkuva",
+            Map("CURRENTYEAR" -> currentYear.toString, "LASTYEAR" -> (currentYear - 1).toString)
+          )
+        )
+      )
+
+    val personOids =
+      Await.result(hakemusService.springPersonOidsForJatkuvaHaku("1.2.3"), 10.seconds)
+    personOids.size should be(1)
+    personOids.contains("1.2.246.562.24.91842462815") should be(true)
   }
 
   behavior of "enrichAtaruHakemukset"

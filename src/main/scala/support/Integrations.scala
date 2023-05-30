@@ -556,6 +556,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     logger.info(
       s"Enabled automatic Koski-integrations: updateKkHaut=${KoskiUtil.updateKkHaut}, "
         + s"updateToisenAsteenHaut=${KoskiUtil.updateToisenAsteenHaut}"
+        + s"updateJatkuvatHaut=${KoskiUtil.updateJatkuvatHaut}"
     )
     val koskiCronJob = OphUrlProperties.getProperty("suoritusrekisteri.koski.update.cronJob")
     if (KoskiUtil.updateKkHaut) {
@@ -569,6 +570,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       koskiService.refreshChangedOppijasFromKoski()
       quartzScheduler.scheduleJob(
         lambdaJob(koskiService.updateAktiivisetToisenAsteenHaut()),
+        newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build()
+      )
+    }
+    if (KoskiUtil.updateJatkuvatHaut) {
+      quartzScheduler.scheduleJob(
+        lambdaJob(koskiService.updateAktiivisetToisenAsteenJatkuvatHaut()),
         newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build()
       )
     }

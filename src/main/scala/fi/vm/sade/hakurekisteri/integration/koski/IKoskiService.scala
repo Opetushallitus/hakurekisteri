@@ -7,14 +7,28 @@ import scala.concurrent.duration._
 
 trait IKoskiService {
   def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit
+
   def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit
+
+  def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit
+
   def updateAktiivisetKkAsteenHaut(): () => Unit
+
   def updateAktiivisetToisenAsteenHaut(): () => Unit
-  def updateHenkilotForHaku(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit]
+
+  def syncHaunHakijat(
+    hakuOid: String,
+    params: KoskiSuoritusHakuParams,
+    personOidsForHakuFn: String => Future[Set[String]]
+  ): Future[Unit]
+
+  def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit]
+
   def updateHenkilot(
     oppijaOids: Set[String],
     params: KoskiSuoritusHakuParams
   ): Future[(Seq[String], Seq[String])]
+
   def updateHenkilotWithAliases(
     oppijaOids: Set[String],
     params: KoskiSuoritusHakuParams
@@ -28,17 +42,18 @@ trait IKoskiService {
     cursor: Option[String] = None,
     timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
   )(implicit scheduler: Scheduler): Unit
+
+  def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit
+
 }
 
 class KoskiServiceMock extends IKoskiService {
   override def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = None
   override def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = None
+  override def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit = None
   override def updateAktiivisetKkAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenHaut(): () => Unit = () => ()
-  override def updateHenkilotForHaku(
-    hakuOid: String,
-    params: KoskiSuoritusHakuParams
-  ): Future[Unit] = Future.successful(())
+  override def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit = () => ()
   override def updateHenkilot(
     oppijaOids: Set[String],
     params: KoskiSuoritusHakuParams
@@ -60,4 +75,11 @@ class KoskiServiceMock extends IKoskiService {
   override def fetchKoulusivistyskielet(
     oppijaOids: Seq[String]
   ): Future[Map[String, Seq[String]]] = Future.successful(Map[String, Seq[String]]())
+  override def syncHaunHakijat(
+    hakuOid: String,
+    params: KoskiSuoritusHakuParams,
+    personOidsForHakuFn: String => Future[Set[String]]
+  ): Future[Unit] = ???
+
+  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = ???
 }

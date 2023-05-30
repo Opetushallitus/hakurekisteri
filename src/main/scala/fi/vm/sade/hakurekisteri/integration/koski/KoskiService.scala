@@ -45,12 +45,22 @@ class KoskiService(
   private var oneJobAtATime = Future.successful({})
 
   val aktiiviset2AsteYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
-  def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit =
+  def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset toisen asteen yhteishaut: $hakuOids")
     aktiiviset2AsteYhteisHakuOidit.set(hakuOids)
+  }
 
   val aktiivisetKKYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
-  def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit =
+  def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset KK-yhteishaut haut: $hakuOids")
     aktiivisetKKYhteisHakuOidit.set(hakuOids)
+  }
+
+  val aktiivistenToisenAsteenJatkuvienHakujenOidit = new AtomicReference[Set[String]](Set.empty)
+  def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset toisen asteen jatkuvat haut: $hakuOids")
+    aktiivistenToisenAsteenJatkuvienHakujenOidit.set(hakuOids)
+  }
 
   private val fetchPersonAliases
     : Seq[KoskiHenkiloContainer] => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = {
@@ -166,7 +176,7 @@ class KoskiService(
         s"Käynnistetään Koskesta aktiivisten korkeakouluhakujen ammatillisten suoritusten ajastettu päivitys haulle ${haku}"
       )
       Await.result(
-        updateHenkilotForHaku(
+        syncHaunHakijat(
           haku,
           KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
         ),
@@ -191,7 +201,7 @@ class KoskiService(
         s"Käynnistetään Koskesta aktiivisten toisen asteen hakujen lukiosuoritusten ajastettu päivitys haulle ${haku}"
       )
       Await.result(
-        updateHenkilotForHaku(
+        syncHaunHakijat(
           haku,
           KoskiSuoritusHakuParams(
             saveLukio = true,
@@ -205,10 +215,36 @@ class KoskiService(
     logger.info("Aktiivisten toisen asteen yhteishakujen lukiosuoritusten päivitys valmis.")
   }
 
-  override def updateHenkilotForHaku(
+  override def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit = { () =>
+    val hakuOids: Set[String] = aktiivistenToisenAsteenJatkuvienHakujenOidit.get()
+    logger.info(
+      s"Saatiin tarjonnasta jatkuvia hakuja ${hakuOids.size} kpl: ${hakuOids}, aloitetaan päivitys."
+    )
+    hakuOids.foreach(hakuOid => {
+      logger.info(
+        s"Käynnistetään Koskesta ajastettu päivitys jatkuvalle haulle ${hakuOid}"
+      )
+      Await.result(
+        syncHaunHakijat(
+          hakuOid,
+          KoskiSuoritusHakuParams(
+            saveLukio = true,
+            saveAmmatillinen = false,
+            saveSeiskaKasiJaValmistava = true
+          ),
+          hakuOid => hakemusService.springPersonOidsForJatkuvaHaku(hakuOid)
+        ),
+        5.hours
+      )
+    })
+    logger.info("Aktiivisten toisen asteen jatkuvien hakujen hakijoiden päivitys valmis.")
+  }
+
+  override def syncHaunHakijat(
     hakuOid: String,
-    params: KoskiSuoritusHakuParams
-  ): Future[Unit] = {
+    params: KoskiSuoritusHakuParams,
+    personOidsForHakuFn: String => Future[Set[String]]
+  ) = {
     def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
       val personOidsWithAliases: PersonOidsWithAliases = Await.result(
         oppijaNumeroRekisteri.enrichWithAliases(personOidsSet),
@@ -225,6 +261,7 @@ class KoskiService(
         s"hakuOid: $hakuOid"
       )
     }
+
     val now = System.currentTimeMillis()
     synchronized {
       if (oneJobAtATime.isCompleted) {
@@ -232,7 +269,7 @@ class KoskiService(
         startTimestamp = System.currentTimeMillis()
         //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
         oneJobAtATime = Await.ready(
-          hakemusService.personOidsForHaku(hakuOid, None).flatMap(handleUpdate),
+          personOidsForHakuFn(hakuOid).flatMap(handleUpdate),
           5.hours
         )
         logger.info(s"Päivitys Koskesta haulle ${hakuOid} valmistui.")
@@ -244,6 +281,10 @@ class KoskiService(
         Future.failed(new RuntimeException(err))
       }
     }
+  }
+
+  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams) = {
+    syncHaunHakijat(hakuOid, params, hakuOid => hakemusService.personOidsForHaku(hakuOid, None))
   }
 
   def handleHenkiloUpdate(

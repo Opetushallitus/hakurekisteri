@@ -82,15 +82,26 @@ class HakuActor(
       val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
       val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
       val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
+      val activeToisenAsteenJatkuvaKoutaHakuOids = activeHakus
+        .filter(_.isJatkuvaHaku)
+        .filter(_.toisenAsteenHaku)
+        .filter(_.hakulomakeAtaruId.isDefined)
+        .filter(_.oid.length == 35)
+        .map(_.oid)
+        .toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
       ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
       koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)
+      koskiService.setAktiivisetToisenAsteenJatkuvatHaut(activeToisenAsteenJatkuvaKoutaHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
       log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
       log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
       log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
+      log.info(
+        s"active 2.aste jatkuvas hakus with atarulomake: [${activeToisenAsteenJatkuvaKoutaHakuOids.size}]"
+      )
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")

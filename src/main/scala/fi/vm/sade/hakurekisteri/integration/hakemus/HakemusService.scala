@@ -33,6 +33,8 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisa
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.properties.OphProperties
+import org.joda.time.{DateTimeZone, LocalDate}
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.write
 
@@ -136,6 +138,7 @@ trait IHakemusService {
     organisaatio: Option[String]
   ): Future[Seq[HakijaHakemus]]
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
+  def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]]
   def personOidsForHakukohde(
     hakukohdeOid: String,
     organisaatio: Option[String]
@@ -197,6 +200,10 @@ class HakemusService(
   logger.info(s"Using page size $pageSize when fetching modified applications from haku-app.")
   var triggers: Seq[Trigger] = Seq()
   implicit val defaultTimeout: Timeout = 120.seconds
+
+  private val HelsinkiTimeZone = DateTimeZone.forID("Europe/Helsinki")
+  private val dateTimeFormatter =
+    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(HelsinkiTimeZone)
 
   @SerialVersionUID(1)
   case class AllHakemukset(
@@ -934,7 +941,7 @@ class HakemusService(
         "haku-app.personoidsbyapplicationsystem",
         organisaatio.orNull
       )(200, Set(hakuOid))
-      ataruHakemukset <- ataruhakemukset(
+      ataruHakemukset: Seq[AtaruHakemus] <- ataruhakemukset(
         AtaruSearchParams(
           hakijaOids = None,
           hakukohdeOids = None,
@@ -944,6 +951,22 @@ class HakemusService(
         )
       )
     } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
+  }
+
+  override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = {
+    val currentYear = new LocalDate(System.currentTimeMillis()).getYear
+    ataruhakemukset(
+      AtaruSearchParams(
+        hakijaOids = None,
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid),
+        organizationOid = None,
+        modifiedAfter = None
+      )
+    ).map(_.filter(hakemus => {
+      val hakemusCreatedDate = LocalDate.parse(hakemus.createdTime, dateTimeFormatter)
+      currentYear.equals(hakemusCreatedDate.getYear) && hakemusCreatedDate.getMonthOfYear <= 8
+    }).map(_.personOid).filter(_.isDefined).flatten.toSet)
   }
 
   def personOidsForHakukohde(
@@ -1167,4 +1190,7 @@ class HakemusServiceMock extends IHakemusService {
   override def hetuAndPersonOidForPersonOid(
     personOid: String
   ): Future[Seq[HakemusHakuHetuPersonOid]] = Future.successful(Seq[HakemusHakuHetuPersonOid]())
+
+  override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] =
+    Future.successful(Set.empty)
 }
