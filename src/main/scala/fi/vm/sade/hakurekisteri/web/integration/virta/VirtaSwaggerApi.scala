@@ -21,6 +21,13 @@ trait VirtaSwaggerApi extends SwaggerSupport with VirtaSwaggerModel {
         .description("oppijanumero")
         .required
     )
+    .parameter(
+      queryParam[Option[Boolean]]("logXml")
+        .description(
+          "Lokitetaanko Virrasta palautuva XML"
+        )
+        .optional
+    )
     .tags("virta")
 
   val refreshHaku = apiOperation[VirtaStatus]("päivitäHaunOppijoidenTiedot")

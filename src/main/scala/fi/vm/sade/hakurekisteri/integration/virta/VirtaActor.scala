@@ -51,7 +51,7 @@ class VirtaActor(
   def receive: Receive = {
     case q: VirtaQuery =>
       val from = sender()
-      val tiedot = getOpiskelijanTiedot(q.oppijanumero, q.hetu)
+      val tiedot = getOpiskelijanTiedot(q.oppijanumero, q.hetu, q.logXml)
       tiedot.onComplete(t => from ! QueryProsessed(q))
       tiedot.pipeTo(self)(ActorRef.noSender)
 
@@ -67,9 +67,10 @@ class VirtaActor(
 
   def getOpiskelijanTiedot(
     oppijanumero: String,
-    hetu: Option[String]
+    hetu: Option[String],
+    logXml: Boolean
   ): Future[Option[VirtaResult]] =
-    virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu)
+    virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu, logXml)
 
   def getKoulutusUri(koulutuskoodi: Option[String]): String =
     s"koulutus_${resolveKoulutusKoodiOrUnknown(koulutuskoodi)}"

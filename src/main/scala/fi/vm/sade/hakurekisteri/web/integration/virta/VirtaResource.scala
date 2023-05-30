@@ -80,15 +80,16 @@ class VirtaResource(virtaQueue: ActorRef)(implicit
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {
       val oppijaOid = params("oppijaOid")
+      val logXml = params("logXml").toBoolean
       new AsyncResult() {
         override implicit def timeout: Duration = 120.seconds
-        virtaQueue ! RefreshOppijaFromVirta(oppijaOid)
+        virtaQueue ! RefreshOppijaFromVirta(oppijaOid, logXml)
         override val is = virtaStatus
       }
     }
   }
 
-  get("/refresh/:hakuOid", operation(refreshHaku)) {
+  get("/refresh/haku/:hakuOid", operation(refreshHaku)) {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {
       val hakuOid = params("hakuOid")
