@@ -6,7 +6,6 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, PersonOidsWithAliases}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -237,12 +236,15 @@ class KoskiDataHandler(
             case _ => Seq()
           }
         case (Some(_), os: Seq[KoskiOpiskeluoikeus]) =>
-          viimeisinOpiskeluoikeus(os) match {
+          // ei huomioida oppiaineen arvosanakorotuksia viimeisintä opiskeluoikeutta poimiessa
+          val (nuortenPerusopetuksenOppiaineenOppimaara, muutOppimaarat) =
+            os.partition(_.hasNuortenPerusopetuksenOppiaineenOppimaara)
+          viimeisinOpiskeluoikeus(muutOppimaarat) match {
             case Some((viimeisin, muut)) =>
-              muut.filter(
+              (muut.filter(
                 _.suoritukset
                   .exists(_.tyyppi.exists(_.koodiarvo == "perusopetuksenoppiaineenoppimaara"))
-              ) :+ viimeisin
+              ) :+ viimeisin) ++ nuortenPerusopetuksenOppiaineenOppimaara
             case None =>
               Seq()
           }
@@ -620,6 +622,10 @@ class KoskiDataHandler(
           Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
         )
       }
+      // Ei tallenneta peruskoulun oppiaineen oppimäärän suorituksia joilla ei ole arvosanaa
+      tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
+        Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo) && s.arvosanat.isEmpty
+      )
 
       // Tallennetaan mahdollinen 7-8-valmistava vain silloin, kun valmista ja vahvistettua
       // perusopetuksen suoritusta ei ollut.

@@ -81,6 +81,11 @@ case class KoskiOpiskeluoikeus(
       _.tyyppi.exists(_.koodiarvo == "perusopetuksenoppiaineenoppimaara")
     )
 
+  def hasNuortenPerusopetuksenOppiaineenOppimaara: Boolean =
+    suoritukset.exists(
+      _.tyyppi.exists(_.koodiarvo == "nuortenperusopetuksenoppiaineenoppimaara")
+    )
+
   def isKotiopetuslainen: Boolean = {
     getYsiluokanAlkamispaiva match {
       case Some(alkamispaiva) =>
@@ -226,6 +231,8 @@ case class KoskiSuoritus(
             case "perusopetuksenoppimaara" | "perusopetuksenoppiaineenoppimaara" |
                 "aikuistenperusopetuksenoppimaara" =>
               Oids.perusopetusKomoOid
+            case "nuortenperusopetuksenoppiaineenoppimaara" =>
+              Oids.perusopetuksenOppiaineenOppimaaraOid
             case "perusopetuksenvuosiluokka"             => Oids.perusopetusLuokkaKomoOid
             case "valma"                                 => Oids.valmaKomoOid
             case "telma"                                 => Oids.telmaKomoOid
