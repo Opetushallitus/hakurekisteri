@@ -532,13 +532,21 @@ class KkHakijaService(
     val usePriority =
       (parameterActor.actor ? UsesPriority(haku.oid))(60.seconds).mapTo[Boolean]
 
-    val ensikertalaisuudet: Future[Map[String, Boolean]] =
-      ((ensikertalainenActor ? EnsikertalainenQuery(
-        henkiloOids = henkiloOids,
-        hakuOid = haku.oid
-      )))(60.seconds)
-        .mapTo[Seq[Ensikertalainen]]
-        .map(_.groupBy(_.henkiloOid).mapValues(_(0).ensikertalainen))
+    val ensikertalaisuudet: Future[Map[String, Boolean]] = Future
+      .sequence(
+        henkiloOids
+          .grouped(10000)
+          .map(oidBatch =>
+            (ensikertalainenActor ? EnsikertalainenQuery(
+              henkiloOids = oidBatch,
+              hakuOid = haku.oid
+            ))(
+              5.minutes
+            ).mapTo[Seq[Ensikertalainen]]
+              .map(_.groupBy(_.henkiloOid).mapValues(_.head.ensikertalainen))
+          )
+      )
+      .map(_.reduce((a: Map[String, Boolean], b: Map[String, Boolean]) => a ++ b))
 
     val maksuvelvollisuudet: Set[String] = hakemukset
       .flatMap(_ match {
