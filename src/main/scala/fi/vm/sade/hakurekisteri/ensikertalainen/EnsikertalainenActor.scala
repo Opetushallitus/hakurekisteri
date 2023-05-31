@@ -163,28 +163,53 @@ class EnsikertalainenActor(
   }
 
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
+    val logId = q.hakuOid + "_" + UUID.randomUUID().toString
+    def timed[A](msg: String, f: Future[A]): Future[A] =
+      DurationHelper.timed[A](log, Duration(0, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
+
     if (q.henkiloOids.isEmpty) {
       log.info("henkiloOids is empty, skipping ensikertalaisuus check")
       Future(Seq.empty)
     } else {
+      log.info(
+        s"Lasketaan ensikertalaisuudet ${q.henkiloOids.size} henkilölle haun ${q.hakuOid} hakukohteessa ${q.hakukohdeOid}"
+      )
       for {
-        haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
-        personOidsWithAliases <- oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
-        tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(
-          personOidsWithAliases.henkiloOidsWithLinkedOids,
-          q.hakuOid,
-          q.hakukohdeOid
+        haku <- timed(
+          "laskeHaunEnsikertalaiset: Haun tietojen haku",
+          (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
         )
-        valmistumishetket <- valmistumiset(
-          personOidsWithAliases,
-          q.suoritukset.getOrElse(Seq())
+        personOidsWithAliases <- timed(
+          "laskeHaunEnsikertalaiset: personOidsWithAliases",
+          oppijaNumeroRekisteri.enrichWithAliases(q.henkiloOids)
         )
-        opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-          personOidsWithAliases,
-          q.opiskeluoikeudet.getOrElse(Seq())
+        tutkintovuodetHakemuksilta <- timed(
+          "laskeHaunEnsikertalaiset: tutkintovuodetHakemuksilta",
+          tutkinnotHakemuksilta(
+            personOidsWithAliases.henkiloOidsWithLinkedOids,
+            q.hakuOid,
+            q.hakukohdeOid
+          )
         )
-        vastaanottohetket <- vastaanotot(
-          personOidsWithAliases
+        valmistumishetket <- timed(
+          "laskeHaunEnsikertalaiset: valmistumishetket",
+          valmistumiset(
+            personOidsWithAliases,
+            q.suoritukset.getOrElse(Seq())
+          )
+        )
+        opiskeluoikeuksienAlkamiset <- timed(
+          "laskeHaunEnsikertalaiset: opiskeluoikeuksienAlkamiset",
+          opiskeluoikeudetAlkaneet(
+            personOidsWithAliases,
+            q.opiskeluoikeudet.getOrElse(Seq())
+          )
+        )
+        vastaanottohetket <- timed(
+          "laskeHaunEnsikertalaiset: vastaanottoHetket",
+          vastaanotot(
+            personOidsWithAliases
+          )
         )
       } yield {
         q.henkiloOids.toSeq.flatMap(henkilo => {
