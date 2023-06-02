@@ -34,8 +34,16 @@ case class KoskiOpiskeluoikeus(
   def opiskeluoikeusSisaltaaErityisentutkinnon: Boolean =
     suoritukset.exists(_.isErityinentutkinto())
 
+  def opiskeluoikeusSisaltaaPeruskoulunLuokkaAsteen: Boolean =
+    suoritukset.exists(
+      _.koulutusmoduuli.tunniste.exists(_.koodistoUri == "perusopetuksenluokkaaste")
+    )
+
   def opiskeluoikeusSisaltaaYsisuorituksen: Boolean =
     suoritukset.exists(_.koulutusmoduuli.tunniste.exists(_.koodiarvo == "9"))
+
+  def opiskeluoikeusSisaltaaPerusopetuksenOppiaineenOppimaaran: Boolean =
+    (hasPerusopetuksenOppiaineenOppimaara || hasNuortenPerusopetuksenOppiaineenOppimaara) && !opiskeluoikeusSisaltaaPeruskoulunLuokkaAsteen
 
   def getLatestYsiSuoritus: KoskiSuoritus = suoritukset
     .filter(s => s.koulutusmoduuli.tunniste.getOrElse(null).koodiarvo.equals("9"))
