@@ -1259,7 +1259,7 @@ class KoskiDataHandlerTest
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
 
     val resultgroup = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo)
-    resultgroup should have length 1
+    resultgroup should have length 2
     val result: Seq[SuoritusArvosanat] = resultgroup.head
     result should have length 2
     val arvosanat = result.head
@@ -1267,6 +1267,8 @@ class KoskiDataHandlerTest
     val aomArvosana = arvosanat.arvosanat(16)
     aomArvosana.lisatieto shouldEqual Some("SV")
     aomArvosana.aine shouldEqual "A1"
+    // bonus check arvosanakorotukselle
+    resultgroup.tail.head.head.arvosanat.head.aine shouldEqual "GE"
   }
 
   it should "parse 1.2.345.678.15.12345678901.json and map valiaikaisestikeskeytynyt to KESKEYTYNYT" in {
@@ -4339,6 +4341,53 @@ class KoskiDataHandlerTest
       )
     )
     historiaArvosanat.head should equal("2")
+
+  }
+
+  it should "import arvosanat for kesken-tilainen nuorten perusopetuksen oppiaineen oppimäärä without erityinen suoritustapa" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_tuva_korotus_ei_erityinen_suoritustapa.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    henkilo.opiskeluoikeudet
+      .filter(o => o.hasNuortenPerusopetuksenOppiaineenOppimaara)
+      .head
+      .suoritukset
+      .head
+      .koulutusmoduuli
+      .tunniste
+      .get
+      .koodiarvo should equal("TE")
+    henkilo.opiskeluoikeudet
+      .filter(o => o.hasNuortenPerusopetuksenOppiaineenOppimaara)
+      .head
+      .suoritukset
+      .head
+      .arviointi shouldBe defined
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)
+      ),
+      5.seconds
+    )
+
+    val opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelija.head should equal("3")
+
+    val terveystietoArvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine = 'TE'"
+          .as[String]
+      )
+    )
+    terveystietoArvosanat.head should equal("2")
 
   }
 
