@@ -5418,6 +5418,41 @@ class KoskiDataHandlerTest
       suoritukset.head should equal("1")
     }
 
+  it should "combine arvosanas from multiple perusopetuksen oppiaineen oppimääräs under different opiskeluoikeutes in the same organisation" in {
+    val json: String =
+      scala.io.Source.fromFile(jsonDir + "POO_under_multiple_opiskeluoikeudes.json").mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+      ),
+      5.seconds
+    )
+
+    val arvosanat = run(
+      database.run(
+        sql"select count(*) from suoritus s join arvosana a on s.resource_id = a.suoritus where s.komo = 'TODO perusopetuksenOppiaineenOppimäärä' and s.current and a.current"
+          .as[String]
+      )
+    )
+    arvosanat.head should equal("2")
+
+    val historianArvosana = run(
+      database.run(
+        sql"select a.arvosana from suoritus s join arvosana a on s.resource_id = a.suoritus where s.komo = 'TODO perusopetuksenOppiaineenOppimäärä' and s.current and a.current and a.aine = 'HI'"
+          .as[String]
+      )
+    )
+    historianArvosana.head should equal("9")
+
+  }
+
   it should "Save suoritus as keskeytynyt if it is vahvistettu after deadline and now is after deadline" in {
     val json: String =
       scala.io.Source

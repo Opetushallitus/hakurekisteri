@@ -729,20 +729,43 @@ class KoskiDataHandler(
     )
   }
 
+  //Kerätään kaikkien aineiden viimeisimmät arvosanat suorituksen päivämäärän mukaan
+  private def combineArvosanasFromMultipleSuoritukses(
+    suoritusArvosanat: Seq[SuoritusArvosanat]
+  ): Seq[Arvosana] = {
+    val kaikkiArvosanat: Seq[(LocalDate, Seq[Arvosana])] =
+      suoritusArvosanat.map(s => (s.lasnadate, s.arvosanat))
+    val arvosanatWithSuorituksenPaivamaara: Seq[(LocalDate, Arvosana)] =
+      kaikkiArvosanat.flatMap(a => a._2.map(aa => (a._1, aa)))
+    val arvosanatByAine: Map[String, Seq[(LocalDate, Arvosana)]] =
+      arvosanatWithSuorituksenPaivamaara.groupBy(a => a._2.aine)
+    arvosanatByAine.map(aa => aa._1 -> aa._2.maxBy(aaa => aaa._1)._2).values.toSeq
+  }
+
   private def filterAndLogSuoritusDuplicates(
     suoritukset: Seq[SuoritusArvosanat]
   ): Seq[SuoritusArvosanat] = {
 
     suoritukset
       .groupBy(_.suoritus.core)
-      .map(s => {
-        val latest = s._2.maxBy(s => s.lasnadate)
+      .map((s: (VirallinenSisalto, Seq[SuoritusArvosanat])) => {
+        var latest = s._2.maxBy(s => s.lasnadate)
         if (s._2.size > 1) {
-          logger.warn(
-            s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja " +
-              s"suorituksia komolle ${s._1.komo}. Tallennetaan vain niistä tuorein, " +
-              s"lasnaDate ${latest.lasnadate}. Vanhin ${s._2.minBy(s => s.lasnadate).lasnadate}."
-          )
+          if (latest.suoritus.komo.equals(Oids.perusopetuksenOppiaineenOppimaaraOid)) {
+            val yhdistetytArvosanat = combineArvosanasFromMultipleSuoritukses(s._2)
+            logger.warn(
+              s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja perusopetuksen oppiaineen oppimäärän suorituksia. " +
+                s"Kerätään niistä arvosanat yhden suorituksen alle ja tallennetaan tuorein. Kaikki arvosanat ${s._2
+                  .flatMap(sa => sa.arvosanat)}, yhdistetyt arvosanat: ${yhdistetytArvosanat.toList}"
+            )
+            latest = latest.copy(arvosanat = yhdistetytArvosanat)
+          } else {
+            logger.warn(
+              s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja " +
+                s"suorituksia komolle ${s._1.komo}. Tallennetaan vain niistä tuorein, " +
+                s"lasnaDate ${latest.lasnadate}. Vanhin ${s._2.minBy(s => s.lasnadate).lasnadate}."
+            )
+          }
         }
         latest
       })
