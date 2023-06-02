@@ -159,7 +159,7 @@ class KoskiDataHandler(
   ): Boolean = {
     if (opiskeluoikeus.suoritukset.isEmpty) {
       logger.info(
-        s"Filtteröitiin henkilöltä $henkiloOid opiskeluoikeus joka ei sisällä suorituksia."
+        s"Filtteröitiin henkilöltä $henkiloOid opiskeluoikeus ${opiskeluoikeus.oid}, joka ei sisällä suorituksia."
       )
       return false
     }
@@ -171,25 +171,25 @@ class KoskiDataHandler(
     ) {
       if (opiskeluoikeus.isKotiopetuslainen) {
         logger.info(
-          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta ${opiskeluoikeus.oid}, " +
             s"koska oo sisälsi kotiopetusjakson."
         )
         return true
       } else if (opiskeluoikeus.opiskeluoikeusSisaltaaErityisentutkinnon) {
         logger.info(
-          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta ${opiskeluoikeus.oid}, " +
             s"koska oo sisälsi erityisen tutkinnon."
         )
         return true
       } else if (opiskeluoikeus.opiskeluoikeusSisaltaaPerusopetuksenOppiaineenOppimaaran) {
         logger.info(
-          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta ${opiskeluoikeus.oid}, " +
             s"koska oo sisälsi perusopetuksen oppiaineen oppimäärän."
         )
         return true
       } else {
         logger.info(
-          s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus joka ei sisällä 9. luokan suoritusta."
+          s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus ${opiskeluoikeus.oid}, joka ei sisällä 9. luokan suoritusta."
         )
         return false
       }
@@ -729,20 +729,48 @@ class KoskiDataHandler(
     )
   }
 
+  //Kerätään kaikkien aineiden korkeimmat arvosanat
+  private def combineArvosanasFromMultipleSuoritukses(
+    suoritusArvosanat: Seq[SuoritusArvosanat]
+  ): Seq[Arvosana] = {
+    val kaikkiArvosanat = suoritusArvosanat.flatMap(s => s.arvosanat)
+    val arvosanatByAine: Map[String, Seq[Arvosana]] = kaikkiArvosanat.groupBy(a => a.aine)
+    val aineidenKorkeimmatArvosanat = arvosanatByAine.values
+      .map((arvosanat: Seq[Arvosana]) =>
+        arvosanat.maxBy(arvosana =>
+          arvosana.arvio match {
+            case a: Arvio410 => a.arvosana
+            case _           => "0"
+          }
+        )
+      )
+    aineidenKorkeimmatArvosanat.toSeq
+  }
+
   private def filterAndLogSuoritusDuplicates(
     suoritukset: Seq[SuoritusArvosanat]
   ): Seq[SuoritusArvosanat] = {
 
     suoritukset
       .groupBy(_.suoritus.core)
-      .map(s => {
-        val latest = s._2.maxBy(s => s.lasnadate)
+      .map((s: (VirallinenSisalto, Seq[SuoritusArvosanat])) => {
+        var latest = s._2.maxBy(s => s.lasnadate)
         if (s._2.size > 1) {
-          logger.warn(
-            s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja " +
-              s"suorituksia komolle ${s._1.komo}. Tallennetaan vain niistä tuorein, " +
-              s"lasnaDate ${latest.lasnadate}. Vanhin ${s._2.minBy(s => s.lasnadate).lasnadate}."
-          )
+          if (latest.suoritus.komo.equals(Oids.perusopetuksenOppiaineenOppimaaraOid)) {
+            val yhdistetytArvosanat = combineArvosanasFromMultipleSuoritukses(s._2)
+            logger.warn(
+              s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja perusopetuksen oppiaineen oppimäärän suorituksia. " +
+                s"Kerätään niistä arvosanat yhden suorituksen alle, tallennetaan kunkin aineen korkein löytyvä arvosana. Kaikki arvosanat ${s._2
+                  .flatMap(sa => sa.arvosanat)}, yhdistetyt arvosanat: ${yhdistetytArvosanat.toList}"
+            )
+            latest = latest.copy(arvosanat = yhdistetytArvosanat)
+          } else {
+            logger.warn(
+              s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja " +
+                s"suorituksia komolle ${s._1.komo}. Tallennetaan vain niistä tuorein, " +
+                s"lasnaDate ${latest.lasnadate}. Vanhin ${s._2.minBy(s => s.lasnadate).lasnadate}."
+            )
+          }
         }
         latest
       })
