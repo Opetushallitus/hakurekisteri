@@ -159,7 +159,7 @@ class KoskiDataHandler(
   ): Boolean = {
     if (opiskeluoikeus.suoritukset.isEmpty) {
       logger.info(
-        s"Filtteröitiin henkilöltä $henkiloOid opiskeluoikeus joka ei sisällä suorituksia."
+        s"Filtteröitiin henkilöltä $henkiloOid opiskeluoikeus ${opiskeluoikeus.oid}, joka ei sisällä suorituksia."
       )
       return false
     }
@@ -171,25 +171,25 @@ class KoskiDataHandler(
     ) {
       if (opiskeluoikeus.isKotiopetuslainen) {
         logger.info(
-          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta ${opiskeluoikeus.oid}, " +
             s"koska oo sisälsi kotiopetusjakson."
         )
         return true
       } else if (opiskeluoikeus.opiskeluoikeusSisaltaaErityisentutkinnon) {
         logger.info(
-          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta ${opiskeluoikeus.oid}, " +
             s"koska oo sisälsi erityisen tutkinnon."
         )
         return true
       } else if (opiskeluoikeus.opiskeluoikeusSisaltaaPerusopetuksenOppiaineenOppimaaran) {
         logger.info(
-          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta ${opiskeluoikeus.oid}, " +
             s"koska oo sisälsi perusopetuksen oppiaineen oppimäärän."
         )
         return true
       } else {
         logger.info(
-          s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus joka ei sisällä 9. luokan suoritusta."
+          s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus ${opiskeluoikeus.oid}, joka ei sisällä 9. luokan suoritusta."
         )
         return false
       }
@@ -729,17 +729,22 @@ class KoskiDataHandler(
     )
   }
 
-  //Kerätään kaikkien aineiden viimeisimmät arvosanat suorituksen päivämäärän mukaan
+  //Kerätään kaikkien aineiden korkeimmat arvosanat
   private def combineArvosanasFromMultipleSuoritukses(
     suoritusArvosanat: Seq[SuoritusArvosanat]
   ): Seq[Arvosana] = {
-    val kaikkiArvosanat: Seq[(LocalDate, Seq[Arvosana])] =
-      suoritusArvosanat.map(s => (s.lasnadate, s.arvosanat))
-    val arvosanatWithSuorituksenPaivamaara: Seq[(LocalDate, Arvosana)] =
-      kaikkiArvosanat.flatMap(a => a._2.map(aa => (a._1, aa)))
-    val arvosanatByAine: Map[String, Seq[(LocalDate, Arvosana)]] =
-      arvosanatWithSuorituksenPaivamaara.groupBy(a => a._2.aine)
-    arvosanatByAine.map(aa => aa._1 -> aa._2.maxBy(aaa => aaa._1)._2).values.toSeq
+    val kaikkiArvosanat = suoritusArvosanat.flatMap(s => s.arvosanat)
+    val arvosanatByAine: Map[String, Seq[Arvosana]] = kaikkiArvosanat.groupBy(a => a.aine)
+    val aineidenKorkeimmatArvosanat = arvosanatByAine.values
+      .map((arvosanat: Seq[Arvosana]) =>
+        arvosanat.maxBy(arvosana =>
+          arvosana.arvio match {
+            case a: Arvio410 => a.arvosana
+            case _           => "0"
+          }
+        )
+      )
+    aineidenKorkeimmatArvosanat.toSeq
   }
 
   private def filterAndLogSuoritusDuplicates(
@@ -755,7 +760,7 @@ class KoskiDataHandler(
             val yhdistetytArvosanat = combineArvosanasFromMultipleSuoritukses(s._2)
             logger.warn(
               s"Henkilön ${s._1.henkilo} Koskitiedoista syntyi useita samoja perusopetuksen oppiaineen oppimäärän suorituksia. " +
-                s"Kerätään niistä arvosanat yhden suorituksen alle ja tallennetaan tuorein. Kaikki arvosanat ${s._2
+                s"Kerätään niistä arvosanat yhden suorituksen alle, tallennetaan kunkin aineen korkein löytyvä arvosana. Kaikki arvosanat ${s._2
                   .flatMap(sa => sa.arvosanat)}, yhdistetyt arvosanat: ${yhdistetytArvosanat.toList}"
             )
             latest = latest.copy(arvosanat = yhdistetytArvosanat)
