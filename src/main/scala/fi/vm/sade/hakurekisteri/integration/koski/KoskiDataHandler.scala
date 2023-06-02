@@ -181,6 +181,12 @@ class KoskiDataHandler(
             s"koska oo sisälsi erityisen tutkinnon."
         )
         return true
+      } else if (opiskeluoikeus.opiskeluoikeusSisaltaaPerusopetuksenOppiaineenOppimaaran) {
+        logger.info(
+          s"Ei filtteröity henkilöltä $henkiloOid ysiluokatonta perusopetuksen opiskeluoikeutta, " +
+            s"koska oo sisälsi perusopetuksen oppiaineen oppimäärän."
+        )
+        return true
       } else {
         logger.info(
           s"Filtteröitiin henkilöltä $henkiloOid perusopetuksen opiskeluoikeus joka ei sisällä 9. luokan suoritusta."
@@ -210,6 +216,11 @@ class KoskiDataHandler(
     henkiloOid: String,
     opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
   ): Seq[KoskiOpiskeluoikeus] = {
+    val temp = opiskeluoikeudet
+      .map(o => o.copy(suoritukset = o.suoritukset.filter(shouldSaveSuoritus(henkiloOid, _, o))))
+    val temp2 = opiskeluoikeudet
+      .map(o => o.copy(suoritukset = o.suoritukset.filter(shouldSaveSuoritus(henkiloOid, _, o))))
+      .filter(shouldSaveOpiskeluoikeus(henkiloOid, _))
     opiskeluoikeudet
       .map(o => o.copy(suoritukset = o.suoritukset.filter(shouldSaveSuoritus(henkiloOid, _, o))))
       .filter(shouldSaveOpiskeluoikeus(henkiloOid, _))
@@ -717,6 +728,7 @@ class KoskiDataHandler(
     henkilo: KoskiHenkiloContainer
   ): Seq[Seq[SuoritusArvosanat]] = {
     val henkiloOid = henkilo.henkilö.oid.get
+    val temp = halututOpiskeluoikeudetJaSuoritukset(henkiloOid, henkilo.opiskeluoikeudet)
     suoritusArvosanaParser.getSuoritusArvosanatFromOpiskeluoikeudes(
       henkiloOid,
       halututOpiskeluoikeudetJaSuoritukset(henkiloOid, henkilo.opiskeluoikeudet)
