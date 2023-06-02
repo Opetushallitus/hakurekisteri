@@ -4347,7 +4347,7 @@ class KoskiDataHandlerTest
   it should "import arvosanat for kesken-tilainen nuorten perusopetuksen oppiaineen oppimäärä without erityinen suoritustapa" in {
     val json: String =
       scala.io.Source
-        .fromFile(jsonDir + "koskidata_tuva_valissa_keskeytynyt.json")
+        .fromFile(jsonDir + "koskidata_tuva_korotus_ei_erityinen_suoritustapa.json")
         .mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
