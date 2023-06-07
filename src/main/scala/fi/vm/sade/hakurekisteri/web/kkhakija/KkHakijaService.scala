@@ -26,7 +26,7 @@ import fi.vm.sade.hakurekisteri.integration.hakukohderyhma.IHakukohderyhmaServic
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, Koodi, KoodistoActorRef}
 import fi.vm.sade.hakurekisteri.integration.koski.IKoskiService
 import fi.vm.sade.hakurekisteri.integration.parametrit.{ParametritActorRef, UsesPriority}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, Hakukohteenkoulutus}
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.{
   IValintaperusteetService,
   ValintatapajononTiedot
@@ -883,7 +883,7 @@ class KkHakijaService(
               .map(koulutus =>
                 KkHakukohteenkoulutus(
                   komoOid = koulutus.komoOid,
-                  tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                  tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
                   kkKoulutusId = koulutus.kkKoulutusId,
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
@@ -965,7 +965,7 @@ class KkHakijaService(
                 .map(koulutus =>
                   KkHakukohteenkoulutus(
                     komoOid = koulutus.komoOid,
-                    tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                    tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
                     kkKoulutusId = koulutus.kkKoulutusId,
                     koulutuksenAlkamiskausi = koulutus.koulutuksenAlkamiskausi.flatMap(_.arvo),
                     koulutuksenAlkamisvuosi = koulutus.koulutuksenAlkamisvuosi,
@@ -980,6 +980,11 @@ class KkHakijaService(
         }
       }
     case _ => ???
+  }
+
+  private def filterTkKoulutuskoodi(koulutus: Hakukohteenkoulutus): String = {
+    if (koulutus.johtaaTutkintoon.getOrElse(false) && koulutus.tkKoulutuskoodi.equals("999999")) ""
+    else koulutus.tkKoulutuskoodi
   }
 
   private def extractSingleHakemus(
@@ -1051,7 +1056,7 @@ class KkHakijaService(
               .map(koulutus =>
                 KkHakukohteenkoulutus(
                   komoOid = koulutus.komoOid,
-                  tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                  tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
                   kkKoulutusId = koulutus.kkKoulutusId,
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
@@ -1129,7 +1134,7 @@ class KkHakijaService(
                 .map(koulutus =>
                   KkHakukohteenkoulutus(
                     komoOid = koulutus.komoOid,
-                    tkKoulutuskoodi = koulutus.tkKoulutuskoodi,
+                    tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
                     kkKoulutusId = koulutus.kkKoulutusId,
                     koulutuksenAlkamiskausi = None,
                     koulutuksenAlkamisvuosi = None,
