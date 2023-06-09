@@ -99,6 +99,7 @@ class BaseKoosteet(
     integrations.hakukohdeAggregator,
     integrations.haut,
     integrations.koodisto,
+    integrations.oppijaNumeroRekisteri,
     registers.suoritusRekisteri,
     integrations.valintaTulos,
     integrations.valintarekisteri,

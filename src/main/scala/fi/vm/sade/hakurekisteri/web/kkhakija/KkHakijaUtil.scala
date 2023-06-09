@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.web.kkhakija
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.{Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
 import fi.vm.sade.hakurekisteri.integration.hakemus.Koulutustausta
+import fi.vm.sade.hakurekisteri.integration.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetKoodi,
   GetRinnasteinenKoodiArvoQuery,
@@ -57,6 +58,13 @@ object KkHakijaUtil {
 
         }
     }
+
+  def getAidinkieli(aidinkieli: Option[Kieli]): String = {
+    aidinkieli match {
+      case Some(aidinkieli) => aidinkieli.kieliKoodi
+      case None             => "99"
+    }
+  }
 
   def getAsiointikieli(kielikoodi: String): String = kielikoodi match {
     case "suomi"    => "1"
