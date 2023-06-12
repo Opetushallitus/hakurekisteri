@@ -71,6 +71,11 @@ trait EnsikertalainenSwaggerApi
         "Palauttaa haun hakijoiden oidit sekä mahdolliset ensikertalaisuuden menettämisen syyt. Jos menettämisen syytä ei ole, ko. hakija on ensikertalainen."
       )
       .parameter(pathParam[String]("haku").description("haun oid").required)
+      .parameter(
+        queryParam[String]("useCache")
+          .description("palautetaanko mahdollisesti cachesta löytyvä tulos")
+          .defaultValue("false")
+      )
       .responseMessage(ModelResponseMessage(400, "parameter haku missing"))
       .responseMessage(ModelResponseMessage(404, "haku not found"))
       .responseMessage(ModelResponseMessage(500, "back-end service timed out"))

@@ -79,6 +79,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
   get("/haku/:haku", operation(hakuQuery)) {
     val t0 = Platform.currentTime
     val hakuOid = params("haku")
+    val useCache: Boolean = params.get("useCache").exists(_.toBoolean)
     audit.log(
       auditUser,
       KaikkiHaunEnsikertalaiset,
@@ -87,8 +88,9 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     )
     new AsyncResult() {
       override implicit def timeout: Duration = 30.minutes
-      override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(30.minutes)
-        .mapTo[Seq[Ensikertalainen]]
+      override val is =
+        (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid, useCache))(30.minutes)
+          .mapTo[Seq[Ensikertalainen]]
       logQuery(Map("haku" -> hakuOid), t0, is)
     }
   }
