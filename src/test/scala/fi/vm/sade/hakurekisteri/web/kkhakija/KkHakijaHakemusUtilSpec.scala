@@ -28,6 +28,17 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
     Some(false)
   )
 
+  val tutkintoonJohtamatonKoulutusNullTkKoodi = Hakukohteenkoulutus(
+    "",
+    "",
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some(false)
+  )
+
   val koulutusJossaTutkintoonJohtamatonTietoTyhja = Hakukohteenkoulutus(
     "",
     "123456",
@@ -63,23 +74,26 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   behavior of "Tutkintoon johtamaton koulutustyyppi"
 
-  it should "filter tuntematon tkKoulutuskoodi as empty for tutkintoon johtamaton" in {
-    filterTkKoulutuskoodi(tutkintoonJohtamatonKoulutusTuntematonTkKoodi) should be("")
+  it should "return tuntematon tkKoulutuskoodi as tuntematon for tutkintoon johtamaton" in {
+    filterTkKoulutuskoodi(tutkintoonJohtamatonKoulutusTuntematonTkKoodi) should be("999999")
   }
 
-  it should "filter empty tkKoulutuskoodi as empty for tutkintoon johtamaton" in {
+  it should "return empty tkKoulutuskoodi as empty for tutkintoon johtamaton" in {
     filterTkKoulutuskoodi(tutkintoonJohtamatonKoulutusTyhjaTkKoodi) should be("")
   }
 
-  it should "filter empty tkKoulutuskoodi if johtaaTutkintoon is None" in {
-    filterTkKoulutuskoodi(koulutusJossaTutkintoonJohtamatonTietoTyhja) should be("")
+  it should "return null tkKoulutuskoodi as empty for tutkintoon johtamaton" in {
+    filterTkKoulutuskoodi(tutkintoonJohtamatonKoulutusNullTkKoodi) should be("")
+  }
+  it should "return tkKoulutuskoodi if johtaaTutkintoon is None" in {
+    filterTkKoulutuskoodi(koulutusJossaTutkintoonJohtamatonTietoTyhja) should be("123456")
   }
 
-  it should "filter tuntematon tkKoulutuskoodi for tutkintoon johtava" in {
+  it should "return tuntematon tkKoulutuskoodi for tutkintoon johtava" in {
     filterTkKoulutuskoodi(tutkintoonJohtavaKoulutusTuntematonTkKoodi) should be("999999")
   }
 
-  it should "filter tkKoulutuskoodi for tutkintoon johtava" in {
+  it should "return tkKoulutuskoodi for tutkintoon johtava" in {
     filterTkKoulutuskoodi(tutkintoonJohtavaKoulutusNormaaliTkKoodi) should be("123456")
   }
 }

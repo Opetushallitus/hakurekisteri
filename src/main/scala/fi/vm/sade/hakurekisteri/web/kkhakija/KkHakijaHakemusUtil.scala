@@ -260,11 +260,8 @@ object KkHakijaHakemusUtil {
   }
 
   def filterTkKoulutuskoodi(koulutus: Hakukohteenkoulutus): String = {
-    koulutus.johtaaTutkintoon match {
-      case Some(true) =>
-        koulutus.tkKoulutuskoodi
-      case _ => ""
-    }
+    if (koulutus.tkKoulutuskoodi == null) ""
+    else koulutus.tkKoulutuskoodi
   }
 
   def resolveLukuvuosiMaksu(
