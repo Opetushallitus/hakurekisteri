@@ -259,8 +259,8 @@ object KkHakijaHakemusUtil {
     valintaTulos.valintatila.get(hakemusOid, hakukohdeOid).exists(isHyvaksytty)
   }
 
-  def filterTkKoulutuskoodi(koulutus: Hakukohteenkoulutus): String = {
-    if (koulutus.tkKoulutuskoodi == null) ""
+  def getTkKoulutuskoodi(koulutus: Hakukohteenkoulutus): String = {
+    if (koulutus.tkKoulutuskoodi == null) "" // just in case
     else koulutus.tkKoulutuskoodi
   }
 

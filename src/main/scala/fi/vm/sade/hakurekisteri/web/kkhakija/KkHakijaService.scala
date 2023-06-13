@@ -637,7 +637,7 @@ class KkHakijaService(
               .map(koulutus =>
                 KkHakukohteenkoulutus(
                   komoOid = koulutus.komoOid,
-                  tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
+                  tkKoulutuskoodi = getTkKoulutuskoodi(koulutus),
                   kkKoulutusId = koulutus.kkKoulutusId,
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
@@ -719,7 +719,7 @@ class KkHakijaService(
                 .map(koulutus =>
                   KkHakukohteenkoulutus(
                     komoOid = koulutus.komoOid,
-                    tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
+                    tkKoulutuskoodi = getTkKoulutuskoodi(koulutus),
                     kkKoulutusId = koulutus.kkKoulutusId,
                     koulutuksenAlkamiskausi = koulutus.koulutuksenAlkamiskausi.flatMap(_.arvo),
                     koulutuksenAlkamisvuosi = koulutus.koulutuksenAlkamisvuosi,
@@ -805,7 +805,7 @@ class KkHakijaService(
               .map(koulutus =>
                 KkHakukohteenkoulutus(
                   komoOid = koulutus.komoOid,
-                  tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
+                  tkKoulutuskoodi = getTkKoulutuskoodi(koulutus),
                   kkKoulutusId = koulutus.kkKoulutusId,
                   koulutuksenAlkamiskausi = None,
                   koulutuksenAlkamisvuosi = None,
@@ -883,7 +883,7 @@ class KkHakijaService(
                 .map(koulutus =>
                   KkHakukohteenkoulutus(
                     komoOid = koulutus.komoOid,
-                    tkKoulutuskoodi = filterTkKoulutuskoodi(koulutus),
+                    tkKoulutuskoodi = getTkKoulutuskoodi(koulutus),
                     kkKoulutusId = koulutus.kkKoulutusId,
                     koulutuksenAlkamiskausi = None,
                     koulutuksenAlkamisvuosi = None,
