@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.ensikertalainen
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import com.github.blemale.scaffeine.Scaffeine
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
@@ -41,7 +42,7 @@ case class EnsikertalainenQuery(
   opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None
 )
 
-case class HaunEnsikertalaisetQuery(hakuOid: String)
+case class HaunEnsikertalaisetQuery(hakuOid: String, useCache: Boolean = false)
 
 object QueryCount
 
@@ -97,15 +98,29 @@ class EnsikertalainenActor(
     getClass.getSimpleName
   )
 
+  private val haunEnsikertalaisetCache = Scaffeine()
+    .expireAfterWrite(2.hours)
+    .buildAsyncFuture[String, Seq[Ensikertalainen]](haunEnsikertalaiset)
+
   log.info(s"started ensikertalaisuus actor: $self")
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
       laskeEnsikertalaisuudet(q) pipeTo sender
-    case HaunEnsikertalaisetQuery(hakuOid) =>
-      haunEnsikertalaiset(hakuOid) pipeTo sender
+    case HaunEnsikertalaisetQuery(hakuOid, useCache) =>
+      log.info(s"Haetaan haun $hakuOid ensikertalaiset, useCache=$useCache")
+      val result = if (useCache) {
+        haunEnsikertalaisetCached(hakuOid)
+      } else {
+        haunEnsikertalaiset(hakuOid)
+      }
+      result pipeTo sender
     case QueryCount =>
       sender ! QueriesRunning(Map[String, Int]())
+  }
+
+  private def haunEnsikertalaisetCached(hakuOid: String): Future[Seq[Ensikertalainen]] = {
+    haunEnsikertalaisetCache.get(hakuOid)
   }
 
   private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = {
