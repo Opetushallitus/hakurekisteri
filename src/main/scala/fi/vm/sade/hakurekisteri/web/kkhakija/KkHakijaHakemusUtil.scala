@@ -174,14 +174,14 @@ case class InvalidKausiException(m: String) extends Exception(m)
 
 case class KkHakukohteenkoulutus(
   komoOid: String,
-  tkKoulutuskoodi: String,
+  tkKoulutuskoodi: Option[String],
   kkKoulutusId: Option[String],
   koulutuksenAlkamiskausi: Option[String],
   koulutuksenAlkamisvuosi: Option[Int],
   johtaaTutkintoon: Option[Boolean]
 ) {
   def toExcelString: String =
-    s"Koulutus(${komoOid},${tkKoulutuskoodi},${kkKoulutusId.getOrElse("")}," +
+    s"Koulutus(${komoOid},${tkKoulutuskoodi.getOrElse("")},${kkKoulutusId.getOrElse("")}," +
       s"${koulutuksenAlkamisvuosi.getOrElse("")},${koulutuksenAlkamiskausi.getOrElse("")}," +
       s"${johtaaTutkintoon.getOrElse("")})"
 }
@@ -257,11 +257,6 @@ object KkHakijaHakemusUtil {
     hakukohdeOid: String
   ): Boolean = {
     valintaTulos.valintatila.get(hakemusOid, hakukohdeOid).exists(isHyvaksytty)
-  }
-
-  def getTkKoulutuskoodi(koulutus: Hakukohteenkoulutus): String = {
-    if (koulutus.tkKoulutuskoodi == null) "" // just in case
-    else koulutus.tkKoulutuskoodi.getOrElse("")
   }
 
   def resolveLukuvuosiMaksu(
