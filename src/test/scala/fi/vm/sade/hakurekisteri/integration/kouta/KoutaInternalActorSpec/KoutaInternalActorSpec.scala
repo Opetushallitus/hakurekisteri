@@ -83,7 +83,7 @@ class KoutaInternalActorSpec
         Seq(
           Hakukohteenkoulutus(
             "1.2.246.562.13.00000000000000003172",
-            "999999",
+            None,
             None,
             Some(TarjontaKoodi(Some("K"))),
             Some(2023),

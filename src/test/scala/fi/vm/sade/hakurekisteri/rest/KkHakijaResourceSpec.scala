@@ -83,6 +83,7 @@ class KkHakijaResourceSpec
     hakukohdeAggregatorMock,
     hakuMock,
     koodistoMock,
+    MockOppijaNumeroRekisteri,
     suoritusMock,
     valintaTulosMock,
     valintaRekisteri,
