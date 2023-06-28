@@ -97,11 +97,12 @@ class KoutaInternalActor(
 
   private def toHakukohteenKoulutus(
     koulutus: KoutaInternalKoulutus,
-    hakukohde: KoutaInternalHakukohde
-  )(koodi: String) =
+    hakukohde: KoutaInternalHakukohde,
+    koulutusKoodi: Option[String]
+  ) =
     Hakukohteenkoulutus(
       komoOid = koulutus.oid,
-      tkKoulutuskoodi = koodi,
+      tkKoulutuskoodi = koulutusKoodi,
       kkKoulutusId = None,
       koulutuksenAlkamiskausi = hakukohde.paateltyAlkamiskausi.map {
         case kausi if kausi.kausiUri.startsWith("kausi_k") => TarjontaKoodi(Some("K"))
@@ -128,10 +129,11 @@ class KoutaInternalActor(
       ulkoinenTunniste = hakukohde.externalId,
       koulutukset = (koodit, koulutus.johtaaTutkintoon) match {
         case (k, _) if k.nonEmpty =>
-          k.map(toHakukohteenKoulutus(koulutus, hakukohde)).toSeq
-        case (_, Some(false)) =>
+          k.map(koodi => toHakukohteenKoulutus(koulutus, hakukohde, Some(koodi))).toSeq
+        case (k, Some(false)) if k.isEmpty =>
           // tutkintoon johtamattomalla ei välttämättä ole koulutuskoodeja koutassa
-          Seq(toHakukohteenKoulutus(koulutus, hakukohde)("999999"))
+          // palautetaan silti (yksi) HakukohteenKoulutus-objekti
+          Seq(toHakukohteenKoulutus(koulutus, hakukohde, None))
         case _ =>
           Seq()
       }

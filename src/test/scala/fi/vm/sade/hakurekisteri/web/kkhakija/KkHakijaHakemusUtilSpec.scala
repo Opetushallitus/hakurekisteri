@@ -8,7 +8,7 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   val tutkintoonJohtamatonKoulutusTuntematonTkKoodi = Hakukohteenkoulutus(
     "",
-    "999999",
+    Some("999999"),
     None,
     None,
     None,
@@ -19,7 +19,7 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   val tutkintoonJohtamatonKoulutusTyhjaTkKoodi = Hakukohteenkoulutus(
     "",
-    "",
+    Some(""),
     None,
     None,
     None,
@@ -30,7 +30,7 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   val tutkintoonJohtamatonKoulutusNullTkKoodi = Hakukohteenkoulutus(
     "",
-    "",
+    Some(""),
     None,
     None,
     None,
@@ -41,7 +41,7 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   val koulutusJossaTutkintoonJohtamatonTietoTyhja = Hakukohteenkoulutus(
     "",
-    "123456",
+    Some("123456"),
     None,
     None,
     None,
@@ -52,7 +52,7 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   val tutkintoonJohtavaKoulutusTuntematonTkKoodi = Hakukohteenkoulutus(
     "",
-    "999999",
+    Some("999999"),
     None,
     None,
     None,
@@ -63,7 +63,7 @@ class KkHakijaHakemusUtilSpec extends FlatSpec with Matchers {
 
   val tutkintoonJohtavaKoulutusNormaaliTkKoodi = Hakukohteenkoulutus(
     "",
-    "123456",
+    Some("123456"),
     None,
     None,
     None,

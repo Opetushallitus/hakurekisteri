@@ -261,7 +261,7 @@ object KkHakijaHakemusUtil {
 
   def getTkKoulutuskoodi(koulutus: Hakukohteenkoulutus): String = {
     if (koulutus.tkKoulutuskoodi == null) "" // just in case
-    else koulutus.tkKoulutuskoodi
+    else koulutus.tkKoulutuskoodi.getOrElse("")
   }
 
   def resolveLukuvuosiMaksu(

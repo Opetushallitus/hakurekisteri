@@ -381,7 +381,7 @@ class ValpasIntergration(
         hakukohdeOid = hakukohdeOid,
         //TODO: Valpas-palvelulle pitäisi palauttaa kaikki koulutuskoodit
         hakukohdeKoulutuskoodi = koulutus
-          .map(_.tkKoulutuskoodi)
+          .flatMap(_.tkKoulutuskoodi)
           .map(koulutusKoodiToValpasKoodi),
         varasijanumero = hakutoiveenTulos.flatMap(_.varasijanumero),
         // tieto siitä, onko kutsuttu pääsy- ja soveltuvuuskokeeseen
