@@ -419,11 +419,7 @@ class KoskiService(
     if (oidBatches.isEmpty) {
       Future(acc.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap)
     } else {
-      logger.info(s"Haetaan Koskesta tiedot ${oidBatches.head.size} oppijalle")
       fetchHenkilot(oidBatches.head).flatMap((result: Seq[KoskiHenkiloContainer]) => {
-        logger.info(
-          s"Kysyttiin Koskesta ${oidBatches.head.size} oppijalle, saatiin ${result.size} tulosta"
-        )
         fetchKoulusivistyskieletInBatches(oidBatches.tail, acc ++ result)
       })
     }
