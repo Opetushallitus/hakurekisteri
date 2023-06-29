@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
 import org.joda.time.{DateTime, DateTimeZone}
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 
+import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{FiniteDuration, _}
@@ -411,12 +412,31 @@ class KoskiService(
       .distinct
   }
 
+  private def fetchKoulusivistyskieletInBatches(
+    oidBatches: Seq[Set[String]],
+    acc: Seq[KoskiHenkiloContainer]
+  ): Future[Map[String, Seq[String]]] = {
+    if (oidBatches.isEmpty) {
+      Future(acc.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap)
+    } else {
+      logger.info(s"Haetaan Koskesta tiedot ${oidBatches.head.size} oppijalle")
+      fetchHenkilot(oidBatches.head).flatMap((result: Seq[KoskiHenkiloContainer]) => {
+        logger.info(
+          s"Kysyttiin Koskesta ${oidBatches.head.size} oppijalle, saatiin ${result.size} tulosta"
+        )
+        fetchKoulusivistyskieletInBatches(oidBatches.tail, acc ++ result)
+      })
+    }
+  }
+
   private def fetchKoulusivistyskieletForReal(
     oppijaOids: Seq[String]
   ): Future[Map[String, Seq[String]]] = {
-    fetchHenkilot(oppijaOids.toSet).map(
-      _.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap
+    val grouped = oppijaOids.toSet.grouped(10).toSeq
+    logger.info(
+      s"Haetaan oikeasti kolusivistyskieli ${oppijaOids.size} oppijalle ${grouped.size} erässä Koskesta"
     )
+    fetchKoulusivistyskieletInBatches(grouped, Seq.empty)
   }
 
   override def fetchKoulusivistyskielet(
