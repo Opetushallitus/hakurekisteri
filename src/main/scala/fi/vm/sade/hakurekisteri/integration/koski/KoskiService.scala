@@ -432,7 +432,7 @@ class KoskiService(
   private def fetchKoulusivistyskieletForReal(
     oppijaOids: Seq[String]
   ): Future[Map[String, Seq[String]]] = {
-    val grouped = oppijaOids.toSet.grouped(10).toSeq
+    val grouped = oppijaOids.toSet.grouped(1000).toSeq
     logger.info(
       s"Haetaan oikeasti kolusivistyskieli ${oppijaOids.size} oppijalle ${grouped.size} erässä Koskesta"
     )
