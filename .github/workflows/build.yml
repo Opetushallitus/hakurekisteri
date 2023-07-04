@@ -30,9 +30,10 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@latest
 
-      - uses: dcodeIO/setup-node-nvm@master
+      - uses: actions/setup-node@v3
         with:
-          node-version: v12.9.1
+          node-version: 12.9.1
+          cache: 'npm'
 
       - name: Run NPM
         run: |
