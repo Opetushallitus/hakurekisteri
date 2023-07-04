@@ -1102,8 +1102,11 @@ class KkHakijaService(
         masterHenkilot <- masterHenkilosForFullHakemukses
       } yield {
         val masterHenkilo: Henkilo = getMasterHenkilo(h, masterHenkilot)
+        val syntymaaika = masterHenkilo.syntymaaika.map(s =>
+          new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))
+        )
         Hakija(
-          hetu = getHetu(masterHenkilo.hetu, masterHenkilo.syntymaaika, hakemus.oid),
+          hetu = getHetu(masterHenkilo.hetu, syntymaaika, hakemus.oid),
           oppijanumero = masterHenkilo.oidHenkilo,
           sukunimi = masterHenkilo.sukunimi.getOrElse(""),
           etunimet = masterHenkilo.etunimet.getOrElse(""),
@@ -1251,8 +1254,11 @@ class KkHakijaService(
         masterHenkilot <- masterHenkilosForFullHakemukses
       } yield {
         val masterHenkilo: Henkilo = getMasterHenkilo(h, masterHenkilot)
+        val syntymaaika = masterHenkilo.syntymaaika.map(s =>
+          new SimpleDateFormat("dd.MM.yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(s))
+        )
         Hakija(
-          hetu = getHetu(masterHenkilo.hetu, masterHenkilo.syntymaaika, hakemus.oid),
+          hetu = getHetu(masterHenkilo.hetu, syntymaaika, hakemus.oid),
           oppijanumero = masterHenkilo.oidHenkilo,
           sukunimi = masterHenkilo.sukunimi.getOrElse(""),
           etunimet = masterHenkilo.etunimet.getOrElse(""),
