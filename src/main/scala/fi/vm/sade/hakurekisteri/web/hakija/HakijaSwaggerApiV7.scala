@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.web.hakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
-import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV6
+import fi.vm.sade.hakurekisteri.hakija.representation.{JSONHakijatV6, JSONHakijatV7}
 import fi.vm.sade.hakurekisteri.web.rest.support.{
   ApiFormat,
   IncidentReportSwaggerModel,
@@ -147,13 +147,13 @@ trait HakijaSwaggerApiV7
     ModelField(
       "hakijat",
       null,
-      ContainerDataType("List", Some(ValueDataType("JSONHakijaV6", None, Some("JSONHakijaV6"))))
+      ContainerDataType("List", Some(ValueDataType("JSONHakijaV7", None, Some("JSONHakijaV6"))))
     )
   )
 
   registerModel(Model("JSONHuoltaja", "Huoltaja", huoltajaFields.map { t => (t.name, t) }.toMap))
-  registerModel(Model("JSONHakijatV6", "Hakijat", hakijatFieldsV6.map { t => (t.name, t) }.toMap))
-  registerModel(Model("JSONHakijaV6", "Hakija", hakijaFieldsV6.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijatV7", "Hakijat", hakijatFieldsV6.map { t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakijaV7", "Hakija", hakijaFieldsV6.map { t => (t.name, t) }.toMap))
   registerModel(
     Model("JSONLisakysymysV6", "Lisakysymys", lisakysymysFields.map { t => (t.name, t) }.toMap)
   )
@@ -165,7 +165,7 @@ trait HakijaSwaggerApiV7
     )
   )
 
-  val queryV6: OperationBuilder = apiOperation[JSONHakijatV6]("haeHakijatV6")
+  val queryV7: OperationBuilder = apiOperation[JSONHakijatV7]("haeHakijatV6")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."

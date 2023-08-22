@@ -6,7 +6,7 @@ import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import fi.vm.sade.auditlog.Changes
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV6
+import fi.vm.sade.hakurekisteri.hakija.representation.JSONHakijatV7
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
@@ -25,14 +25,14 @@ class HakijaResourceV7(hakijaActor: ActorRef)(implicit
   system: ActorSystem,
   sw: Swagger,
   val security: Security,
-  val ct: ClassTag[JSONHakijatV6]
+  val ct: ClassTag[JSONHakijatV7]
 ) extends HakuJaValintarekisteriStack
     with HakijaSwaggerApiV7
     with HakurekisteriJsonSupport
     with JacksonJsonSupport
     with FutureSupport
     with SecuritySupport
-    with ExcelSupport[JSONHakijatV6]
+    with ExcelSupport[JSONHakijatV7]
     with DownloadSupport
     with QueryLogging
     with HakijaResourceSupport {
@@ -47,11 +47,11 @@ class HakijaResourceV7(hakijaActor: ActorRef)(implicit
 
   override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
 
-  override val streamingRender: (OutputStream, JSONHakijatV6) => Unit = (out, hakijat) => {
-    ExcelUtilV6.write(out, hakijat)
+  override val streamingRender: (OutputStream, JSONHakijatV7) => Unit = (out, hakijat) => {
+    ExcelUtilV7.write(out, hakijat)
   }
 
-  get("/", operation(queryV6)) {
+  get("/", operation(queryV7)) {
     val q = HakijaQuery(params, currentUser, 7)
     if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
     val tyyppi = getFormatFromTypeParam()
