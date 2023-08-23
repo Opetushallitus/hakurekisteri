@@ -7,25 +7,12 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
-import fi.vm.sade.hakurekisteri.web.hakija.{
-  HakijaResource,
-  HakijaResourceV2,
-  HakijaResourceV3,
-  HakijaResourceV4,
-  HakijaResourceV5,
-  HakijaResourceV6
-}
+import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2, HakijaResourceV3, HakijaResourceV4, HakijaResourceV5, HakijaResourceV6, HakijaResourceV7}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.jonotus.{AsiakirjaResource, SiirtotiedostojonoResource}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{
-  KkHakijaResource,
-  KkHakijaResourceV2,
-  KkHakijaResourceV3,
-  KkHakijaResourceV4,
-  KkHakijaResourceV5
-}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaResourceV2, KkHakijaResourceV3, KkHakijaResourceV4, KkHakijaResourceV5}
 import fi.vm.sade.hakurekisteri.web.koski.KoskiImporterResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaResource
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusResource
@@ -155,6 +142,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v4/hakijat", "rest/v4/hakijat") -> new HakijaResourceV4(koosteet.hakijat),
     ("/rest/v5/hakijat", "rest/v5/hakijat") -> new HakijaResourceV5(koosteet.hakijat),
     ("/rest/v6/hakijat", "rest/v6/hakijat") -> new HakijaResourceV6(koosteet.hakijat),
+    ("/rest/v7/hakijat", "rest/v7/hakijat") -> new HakijaResourceV7(koosteet.hakijat),
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(koosteet.kkHakijaService),
     ("/rest/v2/kkhakijat", "rest/v2/kkhakijat") -> new KkHakijaResourceV2(
       koosteet.kkHakijaService,
