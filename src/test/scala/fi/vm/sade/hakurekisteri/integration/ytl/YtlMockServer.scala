@@ -72,26 +72,20 @@ class YtlMockServlet extends HttpServlet {
         val json = s"""{"operationUuid": "$uuid"}"""
         resp.getWriter().print(s"$json\n")
       case y if y == fetchOne =>
-        val uuid = UUID.randomUUID().toString
-        fakeProsesses.put(uuid, 0)
-        val json = s"""{"operationUuid": "$uuid"}"""
+        val json = scala.io.Source
+          .fromFile(getClass.getResource("/ytl-student.json").getFile)
+          .getLines
+          .mkString
         resp.getWriter().print(s"$json\n")
       case _ => resp.sendError(500)
     }
   }
   override protected def doGet(req: HttpServletRequest, resp: HttpServletResponse) {
     val uri = req.getRequestURI
-    val fetchOne = "/api/oph-transfer/student/(.*)".r
     val pollBulk = "/api/oph-transfer/status/(.*)".r
     val downloadBulk = "/api/oph-transfer/bulk/(.*)".r
 
     uri match {
-      case fetchOne(hetu) =>
-        val json = scala.io.Source
-          .fromFile(getClass.getResource("/ytl-student.json").getFile)
-          .getLines
-          .mkString
-        resp.getWriter().print(s"$json\n")
       case pollBulk(uuid) =>
         val json = """{
         "created": "2016-09-05T12:44:12.707557+03:00",
