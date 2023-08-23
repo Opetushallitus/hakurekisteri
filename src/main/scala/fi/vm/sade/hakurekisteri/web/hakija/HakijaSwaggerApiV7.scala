@@ -80,7 +80,8 @@ trait HakijaSwaggerApiV7
   registerModel(Model("HakijaV6Hakemus", "Hakemus", hakemusFields.map { t => (t.name, t) }.toMap))
 
   val huoltajaFields = Seq(
-    ModelField("nimi", null, DataType.String, required = false),
+    ModelField("etunimi", null, DataType.String, required = false),
+    ModelField("sukunimi", null, DataType.String, required = false),
     ModelField("puhelinnumero", null, DataType.String, required = false),
     ModelField("sahkoposti", null, DataType.String, required = false)
   )
