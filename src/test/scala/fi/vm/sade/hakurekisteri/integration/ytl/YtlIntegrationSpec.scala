@@ -191,7 +191,7 @@ class YtlIntegrationSpec
         )
       )
     Mockito
-      .when(ytlHttpClient.fetchOne(mockito.ArgumentMatchers.any(classOf[String])))
+      .when(ytlHttpClient.fetchOne(mockito.ArgumentMatchers.any(classOf[YtlHetuPostData])))
       .thenReturn(Some("{}", Student(ssn, "surname", "name", language = "fi", exams = Seq())))
   }
 
@@ -689,7 +689,7 @@ class YtlIntegrationSpec
       .when(
         ytlHttpClientThatReturnsThrowables.fetch(
           mockito.ArgumentMatchers.any(classOf[String]),
-          mockito.ArgumentMatchers.any(classOf[Seq[String]])
+          mockito.ArgumentMatchers.any(classOf[Seq[YtlHetuPostData]])
         )
       )
       .thenReturn(lefts.toIterator)
@@ -716,7 +716,7 @@ class YtlIntegrationSpec
       .when(
         ytlHttpClientThatThrows.fetch(
           mockito.ArgumentMatchers.any(classOf[String]),
-          mockito.ArgumentMatchers.any(classOf[Seq[String]])
+          mockito.ArgumentMatchers.any(classOf[Seq[YtlHetuPostData]])
         )
       )
       .thenThrow(new RuntimeException("mocked failure"))

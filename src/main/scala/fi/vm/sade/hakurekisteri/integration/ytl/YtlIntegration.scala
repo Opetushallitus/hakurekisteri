@@ -42,7 +42,7 @@ class YtlIntegration(
     personOidsWithAliases: PersonOidsWithAliases
   ): Try[Kokelas] = {
     logger.debug(s"Syncronizing hakemus ${hakemusOid} with YTL")
-    ytlHttpClient.fetchOne(hetu) match {
+    ytlHttpClient.fetchOne(YtlHetuPostData(hetu, None)) match {
       case None =>
         val noData = s"No YTL data for hakemus ${hakemusOid}"
         logger.debug(noData)
@@ -161,38 +161,41 @@ class YtlIntegration(
         .ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
         .toInt
       val futures: Iterator[Future[Unit]] =
-        ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.map {
-          case (Left(e: Throwable), index) =>
-            logger
-              .error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
-            AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
-            Future.failed(e)
-          case (Right((zip, students)), index) =>
-            try {
-              logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
+        ytlHttpClient
+          .fetch(groupUuid, hetuToPersonOid.keys.toSeq.map(YtlHetuPostData(_, None)))
+          .zipWithIndex
+          .map {
+            case (Left(e: Throwable), index) =>
+              logger
+                .error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
+              AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+              Future.failed(e)
+            case (Right((zip, students)), index) =>
+              try {
+                logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
 
-              val kokelaksetToPersist = getKokelaksetToPersist(students, hetuToPersonOid)
-              persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
-                .andThen {
-                  case Success(_) =>
-                    logger.info(
-                      s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!"
-                    )
-                    val latestStatus =
-                      AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
-                    logger.info(s"Latest status after update: ${latestStatus}")
-                  case Failure(e) =>
-                    logger.error(
-                      s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count",
-                      e
-                    )
-                    AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
-                }
-            } finally {
-              logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
-              IOUtils.closeQuietly(zip)
-            }
-        }
+                val kokelaksetToPersist = getKokelaksetToPersist(students, hetuToPersonOid)
+                persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
+                  .andThen {
+                    case Success(_) =>
+                      logger.info(
+                        s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!"
+                      )
+                      val latestStatus =
+                        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
+                      logger.info(s"Latest status after update: ${latestStatus}")
+                    case Failure(e) =>
+                      logger.error(
+                        s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count",
+                        e
+                      )
+                      AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+                  }
+              } finally {
+                logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
+                IOUtils.closeQuietly(zip)
+              }
+          }
 
       Future.sequence(futures.toSeq).onComplete { _ =>
         AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)

@@ -24,7 +24,7 @@ trait YtlMockFixture extends TestSuiteMixin {
   def statusUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/status/$1"
   def bulkUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/bulk"
   def downloadUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/bulk/$1"
-  def fetchOneUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/student/$1"
+  def fetchOneUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/student"
   def username = ytlMockServer.username
   def password = ytlMockServer.password
   def ytlProperties = new OphProperties()
@@ -59,11 +59,19 @@ class YtlMockServlet extends HttpServlet {
         s"Itse aiheutettu virhe, vielä $postFailureCounter virheellistä vastausta tulossa"
       )
     }
+
+    val fetchOne = "/api/oph-transfer/student"
     val fetchBulk = "/api/oph-transfer/bulk"
+
     val uri = req.getRequestURI
     consumeBodySoThatClientCanWriteEverythingItWants(req)
     uri match {
       case x if x == fetchBulk =>
+        val uuid = UUID.randomUUID().toString
+        fakeProsesses.put(uuid, 0)
+        val json = s"""{"operationUuid": "$uuid"}"""
+        resp.getWriter().print(s"$json\n")
+      case y if y == fetchOne =>
         val uuid = UUID.randomUUID().toString
         fakeProsesses.put(uuid, 0)
         val json = s"""{"operationUuid": "$uuid"}"""

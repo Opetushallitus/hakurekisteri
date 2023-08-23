@@ -49,7 +49,7 @@ class YtlHttpS3FetchSpec extends ScalatraFunSuite with YtlMockFixture {
   test("Fetch many as zip") {
     val groupUuid = UUID.randomUUID().toString
     val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
-      ytlHttpFetchWithMockedS3.fetch(groupUuid, List("050996-9574"))
+      ytlHttpFetchWithMockedS3.fetch(groupUuid, Seq(YtlHetuPostData("050996-9574", None)))
 
     val (zip, stream) = students.map {
       case Right(x) => x
