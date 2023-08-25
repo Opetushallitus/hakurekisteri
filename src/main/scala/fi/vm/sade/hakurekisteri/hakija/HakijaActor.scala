@@ -130,6 +130,7 @@ class HakijaActor(
         case 4 => JSONQueryV4(q) pipeTo sender
         case 5 => JSONQueryV5(q) pipeTo sender
         case 6 => JSONQueryV6(q) pipeTo sender
+        case 7 => JSONQueryV7(q) pipeTo sender
       }) match {
         case Failure(fail) =>
           log.error(s"Unexpected failure ${fail}")
@@ -316,6 +317,10 @@ class HakijaActor(
     getHakijaV6Hakemus(hakija).map(data2JsonHakijaV6(hakija))
   }
 
+  def hakija2JSONHakijaV7(hakija: Hakija): Future[JSONHakijaV7] = {
+    getHakijaV6Hakemus(hakija).map(data2JsonHakijaV7(hakija))
+  }
+
   def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
     val hakutoiveet2 = hakemus.hakutoiveet.map(toive => toive.copy(koulutuksenKieli = None))
     val hakemus2 = hakemus.copy(osaaminen = None, hakutoiveet = hakutoiveet2)
@@ -336,6 +341,10 @@ class HakijaActor(
 
   def data2JsonHakijaV6(hakija: Hakija)(hakemus: HakijaV6Hakemus) = {
     JSONHakijaV6(hakija, hakemus)
+  }
+
+  def data2JsonHakijaV7(hakija: Hakija)(hakemus: HakijaV6Hakemus) = {
+    JSONHakijaV7(hakija, hakemus)
   }
 
   def data2JsonHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
@@ -361,6 +370,9 @@ class HakijaActor(
 
   def hakijat2JsonHakijatV6(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV6]] =
     hakijat.map(hakija2JSONHakijaV6).join
+
+  def hakijat2JsonHakijatV7(hakijat: Seq[Hakija]): Future[Seq[JSONHakijaV7]] =
+    hakijat.map(hakija2JSONHakijaV7).join
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
     hakijas
@@ -606,6 +618,9 @@ class HakijaActor(
     getHakijat(q).flatMap(hakijat2JsonHakijatV5).map(JSONHakijatV5)
   def JSONQueryV6(q: HakijaQuery): Future[JSONHakijatV6] =
     getHakijat(q).flatMap(hakijat2JsonHakijatV6).map(JSONHakijatV6)
+
+  def JSONQueryV7(q: HakijaQuery): Future[JSONHakijatV7] =
+    getHakijat(q).flatMap(hakijat2JsonHakijatV7).map(JSONHakijatV7)
 
 }
 

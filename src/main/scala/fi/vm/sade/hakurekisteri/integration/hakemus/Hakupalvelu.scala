@@ -1696,10 +1696,16 @@ case class HakurekisteriHakukohde(
 )
 
 case class GuardianContactInfo(
-  nimi: Option[String],
+  etunimi: Option[String],
+  sukunimi: Option[String],
   matkapuhelin: Option[String],
   email: Option[String]
-)
+) {
+  def nimi: Option[String] =
+    if (etunimi.isDefined || sukunimi.isDefined)
+      Some(etunimi.getOrElse("").concat(" ").concat(sukunimi.getOrElse("")).trim)
+    else None
+}
 
 @SerialVersionUID(1)
 case class AtaruHakemusToinenAste(
