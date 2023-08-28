@@ -182,6 +182,7 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
       oid -> Henkilo(
         oidHenkilo = oid,
         hetu = Some(s"Hetu$i"),
+        kaikkiHetut = Some(List(s"Hetu$i")),
         henkiloTyyppi = "OPPIJA",
         etunimet = Some(s"Etunimi$i"),
         kutsumanimi = Some(s"Kutsumanimi$i"),

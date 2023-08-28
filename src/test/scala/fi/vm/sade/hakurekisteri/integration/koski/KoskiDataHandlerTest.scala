@@ -2211,6 +2211,7 @@ class KoskiDataHandlerTest
     val taysiIkainenOnrHenkilo = new Henkilo(
       oidHenkilo = koskiKenkilo.henkilö.oid.get,
       hetu = None,
+      kaikkiHetut = None,
       henkiloTyyppi = "whatever",
       etunimet = None,
       kutsumanimi = None,

@@ -122,6 +122,7 @@ class HakemusServiceSpec
     val ataruHenkilo = henkilo.Henkilo(
       "ataruHenkiloOid",
       Some("ataruHetu"),
+      Some(List("ataruHetu")),
       "OPPIJA",
       None,
       None,
@@ -174,6 +175,7 @@ class HakemusServiceSpec
     val ataruHenkilo = henkilo.Henkilo(
       "ataruHenkiloOid",
       Some("ataruHetu"),
+      Some(List("ataruHetu")),
       "OPPIJA",
       None,
       None,
@@ -326,6 +328,7 @@ class HakemusServiceSpec
     val ataruHenkilo = henkilo.Henkilo(
       "ataruHenkiloOid",
       Some("ataruHetu"),
+      Some(List("ataruHetu")),
       "OPPIJA",
       None,
       None,

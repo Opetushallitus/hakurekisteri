@@ -138,6 +138,7 @@ case class CreateHenkilo(
 case class Henkilo(
   oidHenkilo: String,
   hetu: Option[String],
+  kaikkiHetut: Option[Seq[String]],
   henkiloTyyppi: String,
   etunimet: Option[String],
   kutsumanimi: Option[String],

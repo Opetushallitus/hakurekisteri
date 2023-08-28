@@ -141,7 +141,7 @@ class YtlHttpFetch(
 
   @tailrec
   private def fetchStatus(uuid: String): Either[Throwable, Status] = {
-    log.debug(s"Fetching with opertationUuid $uuid")
+    log.debug(s"Fetching with operationUuid $uuid")
     implicit val formats = new DefaultFormats {
       override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     } + StatusDeserializer
