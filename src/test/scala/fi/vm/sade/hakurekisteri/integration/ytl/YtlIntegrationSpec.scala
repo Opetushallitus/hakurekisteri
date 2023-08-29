@@ -17,7 +17,13 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakemusService,
   HetuPersonOid
 }
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  IOppijaNumeroRekisteri,
+  Kansalaisuus,
+  Kieli,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
@@ -257,6 +263,17 @@ class YtlIntegrationSpec
 
   trait HakemusServiceTenEntries {
     Mockito
+      .when(
+        oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      )
+      .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
+        override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
+          Future.successful(
+            tenEntries.map(h => h.personOid -> createTestHenkilo(h.personOid, h.hetu)).toMap
+          )
+        }
+      })
+    Mockito
       .when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid))
       .thenReturn(Future.successful(tenEntries))
     val jsonStringFromFile =
@@ -279,6 +296,28 @@ class YtlIntegrationSpec
 
   override protected def beforeEach(): Unit = {
     Mockito.reset(hakemusService, oppijaNumeroRekisteri, failureEmailSenderMock, ytlHttpClient)
+    Mockito
+      .when(
+        oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      )
+      .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
+        override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
+          val henkiloOids = invocation.getArgument[Set[String]](0)
+          Future.successful(
+            henkiloOids.map(oid => oid -> createTestHenkilo(testHenkiloOid = oid)).toMap
+          )
+        }
+      })
+    Mockito
+      .when(
+        oppijaNumeroRekisteri.getByHetu(mockito.ArgumentMatchers.any(classOf[String]))
+      )
+      .thenAnswer(new Answer[Future[Henkilo]] {
+        override def answer(invocation: InvocationOnMock): Future[Henkilo] = {
+          val hetu = invocation.getArgument[String](0)
+          Future.successful(createTestHenkilo(testHetu = hetu))
+        }
+      })
     Mockito
       .when(
         oppijaNumeroRekisteri.enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
@@ -319,6 +358,21 @@ class YtlIntegrationSpec
     lahdeArvot = Map("hasCompletedMandatoryExams" -> "false"),
     valmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime("2018-12-21").toLocalDate
   )
+  def createTestHenkilo(testHenkiloOid: String = henkiloOid, testHetu: String = "010105A9158") =
+    Henkilo(
+      oidHenkilo = testHenkiloOid,
+      hetu = Some(testHetu),
+      kaikkiHetut = Some(List(testHetu)),
+      henkiloTyyppi = "OPPIJA",
+      etunimet = Some("Tessa"),
+      kutsumanimi = Some("Tessa"),
+      sukunimi = Some("Testihenkilö"),
+      aidinkieli = Some(Kieli("FI")),
+      kansalaisuus = List(Kansalaisuus("246")),
+      syntymaaika = Some("1989-09-24"),
+      sukupuoli = Some("1"),
+      turvakielto = Some(false)
+    )
 
   behavior of "YoSuoritusUpdateActor's ask pattern"
 
@@ -639,6 +693,9 @@ class YtlIntegrationSpec
       Mockito
         .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
         .enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      Mockito
+        .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
+        .getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
       Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
 
       Mockito

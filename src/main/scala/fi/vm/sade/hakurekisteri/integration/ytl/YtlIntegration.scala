@@ -40,28 +40,32 @@ class YtlIntegration(
     hetu: String,
     personOid: String,
     personOidsWithAliases: PersonOidsWithAliases
-  ): Try[Kokelas] = {
+  ): Future[Try[Kokelas]] = {
+    val hetus = oppijaNumeroRekisteri.getByHetu(hetu).map(_.kaikkiHetut)
+
     logger.debug(s"Syncronizing hakemus ${hakemusOid} with YTL")
-    ytlHttpClient.fetchOne(YtlHetuPostData(hetu, None)) match {
-      case None =>
-        val noData = s"No YTL data for hakemus ${hakemusOid}"
-        logger.debug(noData)
-        Failure(new RuntimeException(noData))
-      case Some((_, student)) =>
-        val kokelas = StudentToKokelas.convert(personOid, student)
-        val persistKokelasStatus = ytlKokelasPersister.persistSingle(
-          KokelasWithPersonAliases(kokelas, personOidsWithAliases)
-        )
-        try {
-          Await.result(
-            persistKokelasStatus,
-            config.ytlSyncTimeout.duration + 10.seconds
+    for (allHetus <- hetus) yield {
+      ytlHttpClient.fetchOne(YtlHetuPostData(hetu, allHetus)) match {
+        case None =>
+          val noData = s"No YTL data for hakemus ${hakemusOid}"
+          logger.debug(noData)
+          Failure(new RuntimeException(noData))
+        case Some((_, student)) =>
+          val kokelas = StudentToKokelas.convert(personOid, student)
+          val persistKokelasStatus = ytlKokelasPersister.persistSingle(
+            KokelasWithPersonAliases(kokelas, personOidsWithAliases)
           )
-          Success(kokelas)
-        } catch {
-          case e: Throwable =>
-            Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
-        }
+          try {
+            Await.result(
+              persistKokelasStatus,
+              config.ytlSyncTimeout.duration + 10.seconds
+            )
+            Success(kokelas)
+          } catch {
+            case e: Throwable =>
+              Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
+          }
+      }
     }
   }
 
@@ -79,7 +83,7 @@ class YtlIntegration(
               )
               Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
             } else {
-              Future.successful(allHakemuses.map {
+              Future.sequence(allHakemuses.map {
                 case HakemusHakuHetuPersonOid(hakemusOid, _, hetu, personOid) =>
                   syncWithHetuAndPersonOid(hakemusOid, hetu, personOid, aliases)
               })
@@ -137,9 +141,28 @@ class YtlIntegration(
     persons: Set[HetuPersonOid],
     failureEmailSender: FailureEmailSender
   ): Unit = {
-    val hetuToPersonOid: Map[String, String] =
-      persons.map(person => person.hetu -> person.personOid).toMap
+    val personOidToHetu: Map[String, String] =
+      persons.map(person => person.personOid -> person.hetu).toMap
+
+    logger.info(s"Get possible additional hetus for ${persons.size} persons")
+    val onrPersons =
+      Await.result(oppijaNumeroRekisteri.getByOids(persons.map(_.personOid)), 60.seconds)
+    val hetuToAllHetus =
+      onrPersons.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut)
+
+    // Now that we query with possible previous hetus as well, we also have to match response data with them.
+    val allHetusToPersonOids: Map[String, String] = persons
+      .flatMap(person => {
+        val hetus = hetuToAllHetus.getOrElse(person.hetu, Some(List(person.hetu))) match {
+          case Some(h) => h
+          case None    => List(person.hetu)
+        }
+        hetus.map(hetu => hetu -> person.personOid)
+      })
+      .toMap
+
     val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+
     logger.info(s"Handle hakemukset for ${persons.size} persons")
     val personOidsWithAliases = personsGrouped
       .map(ps =>
@@ -158,11 +181,11 @@ class YtlIntegration(
     try {
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
       val count: Int = Math
-        .ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
+        .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
         .toInt
       val futures: Iterator[Future[Unit]] =
         ytlHttpClient
-          .fetch(groupUuid, hetuToPersonOid.keys.toSeq.map(YtlHetuPostData(_, None)))
+          .fetch(groupUuid, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
           .zipWithIndex
           .map {
             case (Left(e: Throwable), index) =>
@@ -174,7 +197,7 @@ class YtlIntegration(
               try {
                 logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
 
-                val kokelaksetToPersist = getKokelaksetToPersist(students, hetuToPersonOid)
+                val kokelaksetToPersist = getKokelaksetToPersist(students, allHetusToPersonOids)
                 persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
                   .andThen {
                     case Success(_) =>
