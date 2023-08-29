@@ -269,7 +269,9 @@ class YtlIntegrationSpec
       .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
         override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
           Future.successful(
-            tenEntries.map(h => h.personOid -> createTestHenkilo(h.personOid, h.hetu)).toMap
+            tenEntries
+              .map(h => h.personOid -> createTestHenkilo(h.personOid, h.hetu, List(h.hetu)))
+              .toMap
           )
         }
       })
@@ -315,7 +317,7 @@ class YtlIntegrationSpec
       .thenAnswer(new Answer[Future[Henkilo]] {
         override def answer(invocation: InvocationOnMock): Future[Henkilo] = {
           val hetu = invocation.getArgument[String](0)
-          Future.successful(createTestHenkilo(testHetu = hetu))
+          Future.successful(createTestHenkilo(testHetu = hetu, testKaikkiHetut = List(hetu)))
         }
       })
     Mockito
@@ -358,11 +360,15 @@ class YtlIntegrationSpec
     lahdeArvot = Map("hasCompletedMandatoryExams" -> "false"),
     valmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime("2018-12-21").toLocalDate
   )
-  def createTestHenkilo(testHenkiloOid: String = henkiloOid, testHetu: String = "010105A9158") =
+  def createTestHenkilo(
+    testHenkiloOid: String = henkiloOid,
+    testHetu: String = ssn,
+    testKaikkiHetut: List[String] = List(ssn)
+  ) =
     Henkilo(
       oidHenkilo = testHenkiloOid,
       hetu = Some(testHetu),
-      kaikkiHetut = Some(List(testHetu)),
+      kaikkiHetut = Some(testKaikkiHetut),
       henkiloTyyppi = "OPPIJA",
       etunimet = Some("Tessa"),
       kutsumanimi = Some("Tessa"),
@@ -593,6 +599,14 @@ class YtlIntegrationSpec
       findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
     suoritukset should have size 1
     suoritukset.head.komo should equal(komo)
+
+    Mockito
+      .verify(oppijaNumeroRekisteri, Mockito.times(1))
+      .getByHetu(mockito.ArgumentMatchers.matches(ssn))
+
+    Mockito
+      .verify(ytlHttpClient, Mockito.times(1))
+      .fetchOne(mockito.ArgumentMatchers.eq(YtlHetuPostData(ssn, Some(List(ssn)))))
   }
 
   it should "return failure if does not succeed in updating ytl (ytl persister gets stuck)" in new UseYtlKokelasPersister
@@ -689,14 +703,23 @@ class YtlIntegrationSpec
       )
       allArvosanasFromDatabase.head should be(arvosanaToExpect)
 
+      val tenOids = tenEntries.map(_.personOid).toSet
+
       val expectedNumberOfOnrCalls = 1
       Mockito
         .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
         .enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
       Mockito
         .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
-        .getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+        .getByOids(mockito.ArgumentMatchers.eq(tenOids))
       Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
+
+      Mockito
+        .verify(ytlHttpClient, Mockito.times(expectedNumberOfOnrCalls))
+        .fetch(
+          mockito.ArgumentMatchers.any(classOf[String]),
+          mockito.ArgumentMatchers.any(classOf[Vector[YtlHetuPostData]])
+        )
 
       Mockito
         .verify(failureEmailSenderMock, Mockito.never())
