@@ -141,56 +141,70 @@ class YtlIntegration(
     persons: Set[HetuPersonOid],
     failureEmailSender: FailureEmailSender
   ): Unit = {
-    val personOidToHetu: Map[String, String] =
-      persons.map(person => person.personOid -> person.hetu).toMap
-
-    logger.info(s"Get possible additional hetus for ${persons.size} persons")
-    val onrPersons =
-      Await.result(oppijaNumeroRekisteri.getByOids(persons.map(_.personOid)), 60.seconds)
-    val hetuToAllHetus =
-      onrPersons.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut)
-
-    // Now that we query with possible previous hetus as well, we also have to match response data with them.
-    val allHetusToPersonOids: Map[String, String] = persons
-      .flatMap(person => {
-        val hetus = hetuToAllHetus.getOrElse(person.hetu, Some(List(person.hetu))) match {
-          case Some(h) => h
-          case None    => List(person.hetu)
-        }
-        hetus.map(hetu => hetu -> person.personOid)
-      })
-      .toMap
-
-    val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
-
-    logger.info(s"Handle hakemukset for ${persons.size} persons")
-    val personOidsWithAliases = personsGrouped
-      .map(ps =>
-        Await.result(
-          oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)),
-          Duration(5, TimeUnit.MINUTES)
-        )
-      )
-      .reduce((a, b) =>
-        PersonOidsWithAliases(
-          a.henkiloOids ++ b.henkiloOids,
-          a.aliasesByPersonOids ++ b.aliasesByPersonOids
-        )
-      )
 
     try {
+      logger.info(s"About to fetch possible additional hetus for ${persons.size} persons")
+      val personOidToHetu: Map[String, String] =
+        persons.map(person => person.personOid -> person.hetu).toMap
+
+      val futureOnrPersons = oppijaNumeroRekisteri.getByOids(persons.map(_.personOid))
+
+      val futureHetuToAllHetus =
+        futureOnrPersons.map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+
+      // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
+      val futureHetusToPersonOids = Future
+        .sequence(
+          persons
+            .map(person => {
+              val futureHetus =
+                futureHetuToAllHetus.map(_.getOrElse(person.hetu, Some(List(person.hetu))) match {
+                  case Some(h) => h
+                  case None    => List(person.hetu)
+                })
+              futureHetus.map(_.map(hetu => hetu -> person.personOid).toMap)
+            })
+        )
+        .map(_.flatten.toMap)
+
+      val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+
+      logger.info(s"About to fetch person aliases for ${persons.size} persons")
+      val futurePersonOidsWithAliases = personsGrouped
+        .map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
+        .reduceLeft((futureA, futureB) =>
+          for {
+            a <- futureA
+            b <- futureB
+          } yield {
+            PersonOidsWithAliases(
+              a.henkiloOids ++ b.henkiloOids,
+              a.aliasesByPersonOids ++ b.aliasesByPersonOids
+            )
+          }
+        )
+
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
-      val count: Int = Math
-        .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
-        .toInt
-      val futures: Iterator[Future[Unit]] =
-        ytlHttpClient
+
+      val result = for {
+        allHetusToPersonOids <- futureHetusToPersonOids
+        hetuToAllHetus <- futureHetuToAllHetus
+        personOidsWithAliases <- futurePersonOidsWithAliases
+      } yield {
+        val count: Int = Math
+          .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
+          .toInt
+
+        val futures: Iterator[Future[Unit]] = ytlHttpClient
           .fetch(groupUuid, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
           .zipWithIndex
           .map {
             case (Left(e: Throwable), index) =>
               logger
-                .error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
+                .error(
+                  s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}",
+                  e
+                )
               AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
               Future.failed(e)
             case (Right((zip, students)), index) =>
@@ -220,14 +234,21 @@ class YtlIntegration(
               }
           }
 
-      Future.sequence(futures.toSeq).onComplete { _ =>
-        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
-        val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
-        logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
-        if (hasFailuresOpt.getOrElse(false))
-          failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
-
+        Future.sequence(futures.toSeq).onComplete { _ =>
+          AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
+          val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
+          logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+          if (hasFailuresOpt.getOrElse(false))
+            failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+        }
       }
+
+      result.recover { case e: Throwable =>
+        AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
+        logger.error(s"YTL syncAll failed!", e)
+        failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
+      }
+
     } catch {
       case e: Throwable =>
         AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
