@@ -153,19 +153,18 @@ class YtlIntegration(
         futureOnrPersons.map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
 
       // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
-      val futureHetusToPersonOids = Future
-        .sequence(
+      val futureHetusToPersonOids: Future[Map[String, String]] =
+        futureHetuToAllHetus.map(futureHetuResult =>
           persons
-            .map(person => {
-              val futureHetus =
-                futureHetuToAllHetus.map(_.getOrElse(person.hetu, Some(List(person.hetu))) match {
-                  case Some(h) => h
-                  case None    => List(person.hetu)
-                })
-              futureHetus.map(_.map(hetu => hetu -> person.personOid).toMap)
+            .flatMap(person => {
+              val hetut = futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
+                case Some(h) => h
+                case None    => List(person.hetu)
+              }
+              hetut.map(hetu => hetu -> person.personOid)
             })
+            .toMap
         )
-        .map(_.flatten.toMap)
 
       val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
 
