@@ -147,10 +147,10 @@ class YtlIntegration(
       val personOidToHetu: Map[String, String] =
         persons.map(person => person.personOid -> person.hetu).toMap
 
-      val futureOnrPersons = oppijaNumeroRekisteri.getByOids(persons.map(_.personOid))
-
       val futureHetuToAllHetus =
-        futureOnrPersons.map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+        oppijaNumeroRekisteri
+          .getByOids(persons.map(_.personOid))
+          .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
 
       // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
       val futureHetusToPersonOids: Future[Map[String, String]] =
@@ -169,18 +169,17 @@ class YtlIntegration(
       val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
 
       logger.info(s"About to fetch person aliases for ${persons.size} persons")
-      val futurePersonOidsWithAliases = personsGrouped
-        .map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
-        .reduceLeft((futureA, futureB) =>
-          for {
-            a <- futureA
-            b <- futureB
-          } yield {
+      val futurePersonOidsWithAliases = Future
+        .sequence(
+          personsGrouped.map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
+        )
+        .map(result =>
+          result.reduce((a, b) =>
             PersonOidsWithAliases(
               a.henkiloOids ++ b.henkiloOids,
               a.aliasesByPersonOids ++ b.aliasesByPersonOids
             )
-          }
+          )
         )
 
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
