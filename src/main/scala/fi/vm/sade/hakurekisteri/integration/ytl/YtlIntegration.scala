@@ -142,118 +142,114 @@ class YtlIntegration(
     failureEmailSender: FailureEmailSender
   ): Unit = {
 
-    try {
-      logger.info(s"About to fetch possible additional hetus for ${persons.size} persons")
-      val personOidToHetu: Map[String, String] =
-        persons.map(person => person.personOid -> person.hetu).toMap
+    logger.info(s"About to fetch possible additional hetus for ${persons.size} persons")
+    val personOidToHetu: Map[String, String] =
+      persons.map(person => person.personOid -> person.hetu).toMap
 
-      val futureHetuToAllHetus =
-        oppijaNumeroRekisteri
-          .getByOids(persons.map(_.personOid))
-          .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+    val futureHetuToAllHetus =
+      oppijaNumeroRekisteri
+        .getByOids(persons.map(_.personOid))
+        .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
 
-      // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
-      val futureHetusToPersonOids: Future[Map[String, String]] =
-        futureHetuToAllHetus.map(futureHetuResult =>
-          persons
-            .flatMap(person => {
-              val hetut = futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
-                case Some(h) => h
-                case None    => List(person.hetu)
-              }
-              hetut.map(hetu => hetu -> person.personOid)
-            })
-            .toMap
-        )
+    // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
+    val futureHetusToPersonOids: Future[Map[String, String]] =
+      futureHetuToAllHetus.map(futureHetuResult =>
+        persons
+          .flatMap(person => {
+            val hetut = futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
+              case Some(h) => h
+              case None    => List(person.hetu)
+            }
+            hetut.map(hetu => hetu -> person.personOid)
+          })
+          .toMap
+      )
 
-      val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+    val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
 
-      logger.info(s"About to fetch person aliases for ${persons.size} persons")
-      val futurePersonOidsWithAliases = Future
-        .sequence(
-          personsGrouped.map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
-        )
-        .map(result =>
-          result.reduce((a, b) =>
-            PersonOidsWithAliases(
-              a.henkiloOids ++ b.henkiloOids,
-              a.aliasesByPersonOids ++ b.aliasesByPersonOids
-            )
+    logger.info(s"About to fetch person aliases for ${persons.size} persons")
+    val futurePersonOidsWithAliases = Future
+      .sequence(
+        personsGrouped.map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
+      )
+      .map(result =>
+        result.reduce((a, b) =>
+          PersonOidsWithAliases(
+            a.henkiloOids ++ b.henkiloOids,
+            a.aliasesByPersonOids ++ b.aliasesByPersonOids
           )
         )
+      )
 
-      logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
+    logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
 
-      val result = for {
-        allHetusToPersonOids <- futureHetusToPersonOids
-        hetuToAllHetus <- futureHetuToAllHetus
-        personOidsWithAliases <- futurePersonOidsWithAliases
-      } yield {
-        val count: Int = Math
-          .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
-          .toInt
+    val futureResult = for {
+      allHetusToPersonOids <- futureHetusToPersonOids
+      hetuToAllHetus <- futureHetuToAllHetus
+      personOidsWithAliases <- futurePersonOidsWithAliases
+    } yield {
+      val count: Int = Math
+        .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
+        .toInt
 
-        val futures: Iterator[Future[Unit]] = ytlHttpClient
-          .fetch(groupUuid, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
-          .zipWithIndex
-          .map {
-            case (Left(e: Throwable), index) =>
-              logger
-                .error(
-                  s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}",
-                  e
-                )
-              AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
-              Future.failed(e)
-            case (Right((zip, students)), index) =>
-              try {
-                logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
+      val futures: Iterator[Future[Unit]] = ytlHttpClient
+        .fetch(groupUuid, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
+        .zipWithIndex
+        .map {
+          case (Left(e: Throwable), index) =>
+            logger
+              .error(
+                s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}",
+                e
+              )
+            AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+            Future.failed(e)
+          case (Right((zip, students)), index) =>
+            try {
+              logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
 
-                val kokelaksetToPersist = getKokelaksetToPersist(students, allHetusToPersonOids)
-                persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
-                  .andThen {
-                    case Success(_) =>
-                      logger.info(
-                        s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!"
-                      )
-                      val latestStatus =
-                        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
-                      logger.info(s"Latest status after update: ${latestStatus}")
-                    case Failure(e) =>
-                      logger.error(
-                        s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count",
-                        e
-                      )
-                      AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
-                  }
-              } finally {
-                logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
-                IOUtils.closeQuietly(zip)
-              }
-          }
-
-        Future.sequence(futures.toSeq).onComplete { _ =>
-          AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
-          val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
-          logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
-          if (hasFailuresOpt.getOrElse(false))
-            failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+              val kokelaksetToPersist = getKokelaksetToPersist(students, allHetusToPersonOids)
+              persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
+                .andThen {
+                  case Success(_) =>
+                    logger.info(
+                      s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!"
+                    )
+                    val latestStatus =
+                      AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
+                    logger.info(s"Latest status after update: ${latestStatus}")
+                  case Failure(e) =>
+                    logger.error(
+                      s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count",
+                      e
+                    )
+                    AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+                }
+            } finally {
+              logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
+              IOUtils.closeQuietly(zip)
+            }
         }
-      }
 
-      result.recover { case e: Throwable =>
+      Future.sequence(futures.toSeq).onComplete { _ =>
+        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
+        val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
+        logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+        if (hasFailuresOpt.getOrElse(false))
+          failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
+      }
+    }
+
+    futureResult.onComplete {
+      case Success(_) => {
+        logger.info(s"Finished YTL syncAll")
+      }
+      case Failure(e) => {
         AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
         logger.error(s"YTL syncAll failed!", e)
         failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
+        logger.info(s"Finished YTL syncAll")
       }
-
-    } catch {
-      case e: Throwable =>
-        AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
-        logger.error(s"YTL syncAll failed!", e)
-        failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
-    } finally {
-      logger.info(s"Finished YTL syncAll")
     }
   }
 
