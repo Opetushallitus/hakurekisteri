@@ -544,13 +544,18 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     quartzScheduler.start()
   }
 
+  val ytlSyncAllEnabled = OphUrlProperties.getProperty("ytl.http.syncAllEnabled").toBoolean
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
   val rerunSync = YtlRerunPolicy.rerunPolicy(syncAllCronExpression, ytlIntegration)
-  quartzScheduler.scheduleJob(
-    lambdaJob(rerunSync),
-    newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build()
-  );
-  logger.info(s"Scheduled syncAll jobs (cron expression=$syncAllCronExpression)")
+  if (ytlSyncAllEnabled) {
+    quartzScheduler.scheduleJob(
+      lambdaJob(rerunSync),
+      newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build()
+    )
+    logger.info(s"Scheduled Ytl syncAll jobs (cron expression=$syncAllCronExpression)")
+  } else {
+    logger.info(s"Not scheduled syncAll jobs because it is not enabled")
+  }
 
   if (KoskiUtil.updateKkHaut || KoskiUtil.updateToisenAsteenHaut) {
     logger.info(
