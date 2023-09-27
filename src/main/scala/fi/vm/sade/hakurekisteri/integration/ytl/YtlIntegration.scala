@@ -40,28 +40,32 @@ class YtlIntegration(
     hetu: String,
     personOid: String,
     personOidsWithAliases: PersonOidsWithAliases
-  ): Try[Kokelas] = {
+  ): Future[Try[Kokelas]] = {
+    val hetus = oppijaNumeroRekisteri.getByHetu(hetu).map(_.kaikkiHetut)
+
     logger.debug(s"Syncronizing hakemus ${hakemusOid} with YTL")
-    ytlHttpClient.fetchOne(hetu) match {
-      case None =>
-        val noData = s"No YTL data for hakemus ${hakemusOid}"
-        logger.debug(noData)
-        Failure(new RuntimeException(noData))
-      case Some((_, student)) =>
-        val kokelas = StudentToKokelas.convert(personOid, student)
-        val persistKokelasStatus = ytlKokelasPersister.persistSingle(
-          KokelasWithPersonAliases(kokelas, personOidsWithAliases)
-        )
-        try {
-          Await.result(
-            persistKokelasStatus,
-            config.ytlSyncTimeout.duration + 10.seconds
+    for (allHetus <- hetus) yield {
+      ytlHttpClient.fetchOne(YtlHetuPostData(hetu, allHetus)) match {
+        case None =>
+          val noData = s"No YTL data for hakemus ${hakemusOid}"
+          logger.debug(noData)
+          Failure(new RuntimeException(noData))
+        case Some((_, student)) =>
+          val kokelas = StudentToKokelas.convert(personOid, student)
+          val persistKokelasStatus = ytlKokelasPersister.persistSingle(
+            KokelasWithPersonAliases(kokelas, personOidsWithAliases)
           )
-          Success(kokelas)
-        } catch {
-          case e: Throwable =>
-            Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
-        }
+          try {
+            Await.result(
+              persistKokelasStatus,
+              config.ytlSyncTimeout.duration + 10.seconds
+            )
+            Success(kokelas)
+          } catch {
+            case e: Throwable =>
+              Failure(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
+          }
+      }
     }
   }
 
@@ -79,7 +83,7 @@ class YtlIntegration(
               )
               Future.failed(new RuntimeException(s"Hakemus not found with person OID $personOid!"))
             } else {
-              Future.successful(allHakemuses.map {
+              Future.sequence(allHakemuses.map {
                 case HakemusHakuHetuPersonOid(hakemusOid, _, hetu, personOid) =>
                   syncWithHetuAndPersonOid(hakemusOid, hetu, personOid, aliases)
               })
@@ -137,71 +141,112 @@ class YtlIntegration(
     persons: Set[HetuPersonOid],
     failureEmailSender: FailureEmailSender
   ): Unit = {
-    val hetuToPersonOid: Map[String, String] =
-      persons.map(person => person.hetu -> person.personOid).toMap
-    val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
-    logger.info(s"Handle hakemukset for ${persons.size} persons")
-    val personOidsWithAliases = personsGrouped
-      .map(ps =>
-        Await.result(
-          oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)),
-          Duration(5, TimeUnit.MINUTES)
-        )
-      )
-      .reduce((a, b) =>
-        PersonOidsWithAliases(
-          a.henkiloOids ++ b.henkiloOids,
-          a.aliasesByPersonOids ++ b.aliasesByPersonOids
-        )
-      )
 
     try {
+      logger.info(s"About to fetch possible additional hetus for ${persons.size} persons")
+      val personOidToHetu: Map[String, String] =
+        persons.map(person => person.personOid -> person.hetu).toMap
+
+      val futureHetuToAllHetus =
+        oppijaNumeroRekisteri
+          .getByOids(persons.map(_.personOid))
+          .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+
+      // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
+      val futureHetusToPersonOids: Future[Map[String, String]] =
+        futureHetuToAllHetus.map(futureHetuResult =>
+          persons
+            .flatMap(person => {
+              val hetut = futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
+                case Some(h) => h
+                case None    => List(person.hetu)
+              }
+              hetut.map(hetu => hetu -> person.personOid)
+            })
+            .toMap
+        )
+
+      val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+
+      logger.info(s"About to fetch person aliases for ${persons.size} persons")
+      val futurePersonOidsWithAliases = Future
+        .sequence(
+          personsGrouped.map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
+        )
+        .map(result =>
+          result.reduce((a, b) =>
+            PersonOidsWithAliases(
+              a.henkiloOids ++ b.henkiloOids,
+              a.aliasesByPersonOids ++ b.aliasesByPersonOids
+            )
+          )
+        )
+
       logger.info(s"Begin fetching YTL data for group UUID $groupUuid")
-      val count: Int = Math
-        .ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
-        .toInt
-      val futures: Iterator[Future[Unit]] =
-        ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.map {
-          case (Left(e: Throwable), index) =>
-            logger
-              .error(s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}", e)
-            AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
-            Future.failed(e)
-          case (Right((zip, students)), index) =>
-            try {
-              logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
 
-              val kokelaksetToPersist = getKokelaksetToPersist(students, hetuToPersonOid)
-              persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
-                .andThen {
-                  case Success(_) =>
-                    logger.info(
-                      s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!"
-                    )
-                    val latestStatus =
-                      AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
-                    logger.info(s"Latest status after update: ${latestStatus}")
-                  case Failure(e) =>
-                    logger.error(
-                      s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count",
-                      e
-                    )
-                    AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
-                }
-            } finally {
-              logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
-              IOUtils.closeQuietly(zip)
-            }
+      val result = for {
+        allHetusToPersonOids <- futureHetusToPersonOids
+        hetuToAllHetus <- futureHetuToAllHetus
+        personOidsWithAliases <- futurePersonOidsWithAliases
+      } yield {
+        val count: Int = Math
+          .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
+          .toInt
+
+        val futures: Iterator[Future[Unit]] = ytlHttpClient
+          .fetch(groupUuid, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
+          .zipWithIndex
+          .map {
+            case (Left(e: Throwable), index) =>
+              logger
+                .error(
+                  s"failed to fetch YTL data (batch ${index + 1}/$count): ${e.getMessage}",
+                  e
+                )
+              AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+              Future.failed(e)
+            case (Right((zip, students)), index) =>
+              try {
+                logger.info(s"Fetch succeeded on YTL data batch ${index + 1}/$count!")
+
+                val kokelaksetToPersist = getKokelaksetToPersist(students, allHetusToPersonOids)
+                persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
+                  .andThen {
+                    case Success(_) =>
+                      logger.info(
+                        s"Finished persisting YTL data batch ${index + 1}/$count! All kokelakset succeeded!"
+                      )
+                      val latestStatus =
+                        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
+                      logger.info(s"Latest status after update: ${latestStatus}")
+                    case Failure(e) =>
+                      logger.error(
+                        s"Failed to persist all kokelas on YTL data batch ${index + 1}/$count",
+                        e
+                      )
+                      AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+                  }
+              } finally {
+                logger.info(s"Closing zip file on YTL data batch ${index + 1}/$count")
+                IOUtils.closeQuietly(zip)
+              }
+          }
+
+        Future.sequence(futures.toSeq).onComplete { _ =>
+          AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
+          val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
+          logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
+          if (hasFailuresOpt.getOrElse(false))
+            failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
         }
-
-      Future.sequence(futures.toSeq).onComplete { _ =>
-        AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = true)
-        val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
-        logger.info(s"Completed YTL syncAll with hasFailures=${hasFailuresOpt}")
-        if (hasFailuresOpt.getOrElse(false))
-          failureEmailSender.sendFailureEmail(s"Finished sync all with failing batches!")
-
       }
+
+      result.recover { case e: Throwable =>
+        AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
+        logger.error(s"YTL syncAll failed!", e)
+        failureEmailSender.sendFailureEmail(s"Error during YTL syncAll")
+      }
+
     } catch {
       case e: Throwable =>
         AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)

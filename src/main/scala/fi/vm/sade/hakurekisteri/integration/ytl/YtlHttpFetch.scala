@@ -30,6 +30,11 @@ class PreemptiveAuthInterceptor(creds: UsernamePasswordCredentials) extends Http
     request.addHeader(new BasicScheme().authenticate(creds, request, context))
 }
 
+case class YtlHetuPostData(
+  ssn: String,
+  previousSsns: Option[Seq[String]]
+)
+
 class YtlHttpFetch(
   config: OphProperties,
   fileSystem: YtlFileSystem,
@@ -94,9 +99,16 @@ class YtlHttpFetch(
     }
   }
 
-  def fetchOne(hetu: String): Option[(String, Student)] =
+  def fetchOne(hetu: YtlHetuPostData): Option[(String, Student)] = {
     client
-      .get("ytl.http.host.fetchone", hetu)
+      .post("ytl.http.host.fetchone")
+      .dataWriter(
+        "application/json",
+        "UTF-8",
+        new OphRequestPostWriter() {
+          override def writeTo(writer: io.Writer): Unit = writer.write(write(hetu))
+        }
+      )
       .expectStatus(200, 404)
       .execute((r: OphHttpResponse) => {
         r.getStatusCode match {
@@ -106,10 +118,11 @@ class YtlHttpFetch(
             Some(json, parse(json).extract[Student])
         }
       })
+  }
 
   private def internalFetch(
     groupUuid: String
-  )(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
+  )(hetus: Seq[YtlHetuPostData]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
@@ -122,13 +135,13 @@ class YtlHttpFetch(
 
   def fetch(
     groupUuid: String,
-    hetus: Seq[String]
+    hetus: Seq[YtlHetuPostData]
   ): Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
     hetus.grouped(chunkSize).map(internalFetch(groupUuid))
 
   @tailrec
   private def fetchStatus(uuid: String): Either[Throwable, Status] = {
-    log.debug(s"Fetching with opertationUuid $uuid")
+    log.debug(s"Fetching with operationUuid $uuid")
     implicit val formats = new DefaultFormats {
       override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     } + StatusDeserializer
@@ -170,7 +183,7 @@ class YtlHttpFetch(
     }.toEither
   }
 
-  def fetchOperation(hetus: Seq[String]): Either[Throwable, Operation] = {
+  def fetchOperation(hetus: Seq[YtlHetuPostData]): Either[Throwable, Operation] = {
     Try[Operation](
       client
         .post("ytl.http.host.bulk")

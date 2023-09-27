@@ -17,7 +17,13 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakemusService,
   HetuPersonOid
 }
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  IOppijaNumeroRekisteri,
+  Kansalaisuus,
+  Kieli,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
@@ -191,7 +197,7 @@ class YtlIntegrationSpec
         )
       )
     Mockito
-      .when(ytlHttpClient.fetchOne(mockito.ArgumentMatchers.any(classOf[String])))
+      .when(ytlHttpClient.fetchOne(mockito.ArgumentMatchers.any(classOf[YtlHetuPostData])))
       .thenReturn(Some("{}", Student(ssn, "surname", "name", language = "fi", exams = Seq())))
   }
 
@@ -257,6 +263,19 @@ class YtlIntegrationSpec
 
   trait HakemusServiceTenEntries {
     Mockito
+      .when(
+        oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      )
+      .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
+        override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
+          Future.successful(
+            tenEntries
+              .map(h => h.personOid -> createTestHenkilo(h.personOid, h.hetu, List(h.hetu)))
+              .toMap
+          )
+        }
+      })
+    Mockito
       .when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid))
       .thenReturn(Future.successful(tenEntries))
     val jsonStringFromFile =
@@ -279,6 +298,28 @@ class YtlIntegrationSpec
 
   override protected def beforeEach(): Unit = {
     Mockito.reset(hakemusService, oppijaNumeroRekisteri, failureEmailSenderMock, ytlHttpClient)
+    Mockito
+      .when(
+        oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      )
+      .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
+        override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
+          val henkiloOids = invocation.getArgument[Set[String]](0)
+          Future.successful(
+            henkiloOids.map(oid => oid -> createTestHenkilo(testHenkiloOid = oid)).toMap
+          )
+        }
+      })
+    Mockito
+      .when(
+        oppijaNumeroRekisteri.getByHetu(mockito.ArgumentMatchers.any(classOf[String]))
+      )
+      .thenAnswer(new Answer[Future[Henkilo]] {
+        override def answer(invocation: InvocationOnMock): Future[Henkilo] = {
+          val hetu = invocation.getArgument[String](0)
+          Future.successful(createTestHenkilo(testHetu = hetu, testKaikkiHetut = List(hetu)))
+        }
+      })
     Mockito
       .when(
         oppijaNumeroRekisteri.enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
@@ -319,6 +360,25 @@ class YtlIntegrationSpec
     lahdeArvot = Map("hasCompletedMandatoryExams" -> "false"),
     valmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime("2018-12-21").toLocalDate
   )
+  def createTestHenkilo(
+    testHenkiloOid: String = henkiloOid,
+    testHetu: String = ssn,
+    testKaikkiHetut: List[String] = List(ssn)
+  ) =
+    Henkilo(
+      oidHenkilo = testHenkiloOid,
+      hetu = Some(testHetu),
+      kaikkiHetut = Some(testKaikkiHetut),
+      henkiloTyyppi = "OPPIJA",
+      etunimet = Some("Tessa"),
+      kutsumanimi = Some("Tessa"),
+      sukunimi = Some("Testihenkilö"),
+      aidinkieli = Some(Kieli("FI")),
+      kansalaisuus = List(Kansalaisuus("246")),
+      syntymaaika = Some("1989-09-24"),
+      sukupuoli = Some("1"),
+      turvakielto = Some(false)
+    )
 
   behavior of "YoSuoritusUpdateActor's ask pattern"
 
@@ -539,6 +599,14 @@ class YtlIntegrationSpec
       findAllSuoritusFromDatabase.filter(_.henkilo == henkiloOid)
     suoritukset should have size 1
     suoritukset.head.komo should equal(komo)
+
+    Mockito
+      .verify(oppijaNumeroRekisteri, Mockito.times(1))
+      .getByHetu(mockito.ArgumentMatchers.matches(ssn))
+
+    Mockito
+      .verify(ytlHttpClient, Mockito.times(1))
+      .fetchOne(mockito.ArgumentMatchers.eq(YtlHetuPostData(ssn, Some(List(ssn)))))
   }
 
   it should "return failure if does not succeed in updating ytl (ytl persister gets stuck)" in new UseYtlKokelasPersister
@@ -635,11 +703,23 @@ class YtlIntegrationSpec
       )
       allArvosanasFromDatabase.head should be(arvosanaToExpect)
 
+      val tenOids = tenEntries.map(_.personOid).toSet
+
       val expectedNumberOfOnrCalls = 1
       Mockito
         .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
         .enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      Mockito
+        .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
+        .getByOids(mockito.ArgumentMatchers.eq(tenOids))
       Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
+
+      Mockito
+        .verify(ytlHttpClient, Mockito.times(expectedNumberOfOnrCalls))
+        .fetch(
+          mockito.ArgumentMatchers.any(classOf[String]),
+          mockito.ArgumentMatchers.any(classOf[Vector[YtlHetuPostData]])
+        )
 
       Mockito
         .verify(failureEmailSenderMock, Mockito.never())
@@ -689,7 +769,7 @@ class YtlIntegrationSpec
       .when(
         ytlHttpClientThatReturnsThrowables.fetch(
           mockito.ArgumentMatchers.any(classOf[String]),
-          mockito.ArgumentMatchers.any(classOf[Seq[String]])
+          mockito.ArgumentMatchers.any(classOf[Seq[YtlHetuPostData]])
         )
       )
       .thenReturn(lefts.toIterator)
@@ -716,7 +796,7 @@ class YtlIntegrationSpec
       .when(
         ytlHttpClientThatThrows.fetch(
           mockito.ArgumentMatchers.any(classOf[String]),
-          mockito.ArgumentMatchers.any(classOf[Seq[String]])
+          mockito.ArgumentMatchers.any(classOf[Seq[YtlHetuPostData]])
         )
       )
       .thenThrow(new RuntimeException("mocked failure"))

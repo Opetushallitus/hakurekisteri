@@ -111,6 +111,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
           Henkilo(
             oidHenkilo = "1.2.4",
             hetu = Some("111111-1975"),
+            kaikkiHetut = Some(List("111111-1975")),
             henkiloTyyppi = "OPPIJA",
             etunimet = None,
             kutsumanimi = None,
@@ -127,6 +128,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
           Henkilo(
             oidHenkilo = "1.2.4",
             hetu = Some("111111-1976"),
+            kaikkiHetut = Some(List("111111-1976")),
             henkiloTyyppi = "OPPIJA",
             etunimet = None,
             kutsumanimi = None,
@@ -148,6 +150,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
           Henkilo(
             oidHenkilo = "1.2.3",
             hetu = Some("111111-1975"),
+            kaikkiHetut = Some(List("111111-1975")),
             henkiloTyyppi = "OPPIJA",
             etunimet = None,
             kutsumanimi = None,

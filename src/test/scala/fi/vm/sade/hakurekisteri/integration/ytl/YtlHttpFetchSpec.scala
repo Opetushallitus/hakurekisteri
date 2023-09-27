@@ -42,7 +42,8 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
 
   test("Fetch one with basic auth") {
 
-    val Some((_, student)) = ytlHttpFetch.fetchOne("050996-9574")
+    val Some((_, student)) =
+      ytlHttpFetch.fetchOne(YtlHetuPostData("050996-9574", Some(List("050996-9574", "FOO"))))
     student.lastname should equal("Vasala")
     student.firstnames should equal("Sampsa")
   }
@@ -51,7 +52,8 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     1.to(10).foreach { n =>
       val groupUuid = UUID.randomUUID().toString
       val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
-        ytlHttpFetch.fetch(groupUuid, List("050996-9574"))
+        ytlHttpFetch
+          .fetch(groupUuid, Seq(YtlHetuPostData("050996-9574", Some(List("050996-9574", "FOO")))))
 
       val (zip, stream) = students.map {
         case Right(x) => x
@@ -77,7 +79,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   test("Single failure is retried") {
     makePostFail(1)
     val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
-      ytlHttpFetch.fetch("1", List("050996-9574"))
+      ytlHttpFetch.fetch("1", Seq(YtlHetuPostData("050996-9574", None)))
     val student = students.next().right.map(_._2.next()).right.get
     student.lastname should equal("Testinen")
     student.firstnames should equal("Jussi Johannes")

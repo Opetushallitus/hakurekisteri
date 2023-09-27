@@ -24,7 +24,7 @@ trait YtlMockFixture extends TestSuiteMixin {
   def statusUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/status/$1"
   def bulkUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/bulk"
   def downloadUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/bulk/$1"
-  def fetchOneUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/student/$1"
+  def fetchOneUrl = "http://localhost:" + ytlMockServer.port + "/api/oph-transfer/student"
   def username = ytlMockServer.username
   def password = ytlMockServer.password
   def ytlProperties = new OphProperties()
@@ -59,7 +59,10 @@ class YtlMockServlet extends HttpServlet {
         s"Itse aiheutettu virhe, vielä $postFailureCounter virheellistä vastausta tulossa"
       )
     }
+
+    val fetchOne = "/api/oph-transfer/student"
     val fetchBulk = "/api/oph-transfer/bulk"
+
     val uri = req.getRequestURI
     consumeBodySoThatClientCanWriteEverythingItWants(req)
     uri match {
@@ -68,22 +71,21 @@ class YtlMockServlet extends HttpServlet {
         fakeProsesses.put(uuid, 0)
         val json = s"""{"operationUuid": "$uuid"}"""
         resp.getWriter().print(s"$json\n")
-      case _ => resp.sendError(500)
-    }
-  }
-  override protected def doGet(req: HttpServletRequest, resp: HttpServletResponse) {
-    val uri = req.getRequestURI
-    val fetchOne = "/api/oph-transfer/student/(.*)".r
-    val pollBulk = "/api/oph-transfer/status/(.*)".r
-    val downloadBulk = "/api/oph-transfer/bulk/(.*)".r
-
-    uri match {
-      case fetchOne(hetu) =>
+      case y if y == fetchOne =>
         val json = scala.io.Source
           .fromFile(getClass.getResource("/ytl-student.json").getFile)
           .getLines
           .mkString
         resp.getWriter().print(s"$json\n")
+      case _ => resp.sendError(500)
+    }
+  }
+  override protected def doGet(req: HttpServletRequest, resp: HttpServletResponse) {
+    val uri = req.getRequestURI
+    val pollBulk = "/api/oph-transfer/status/(.*)".r
+    val downloadBulk = "/api/oph-transfer/bulk/(.*)".r
+
+    uri match {
       case pollBulk(uuid) =>
         val json = """{
         "created": "2016-09-05T12:44:12.707557+03:00",
