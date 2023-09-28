@@ -1,6 +1,6 @@
 #
 # TÄHÄN TIEDOSTOON EI SAA TALLENTAA YMPÄRISTÖKOHTAISIA ARVOJA MUUTOIN KUIN MUUTTUJINA!!!
-# 
+#
 # Tämä tiedosto toimii pohjana oph-configuration/common.properties tiedostolle,
 # joka asettaa tomcatin ympäristökohtaiset arvot.
 #
@@ -151,6 +151,7 @@ ytl.http.host.fetchone={{suoritusrekisteri_ytl_http_host}}/api/oph-transfer/stud
 ytl.http.host.status={{suoritusrekisteri_ytl_http_host}}/api/oph-transfer/status/$1
 ytl.http.username={{suoritusrekisteri_ytl_http_username}}
 ytl.http.password={{suoritusrekisteri_ytl_http_password}}
+ytl.http.syncAllEnabled={{ suoritusrekisteri_ytl_http_syncallenabled | default('true') }}
 #ytl.http.syncAllCronJob=0 0/5 01-02 * * ?
 ytl.http.syncAllCronJob={{ suoritusrekisteri_ytl_http_syncallcronjob | default('0 0/5 01-02 * * ?') }}
 ytl.http.chunksize={{ suoritusrekisteri_ytl_http_chunksize | default('50000') }}
