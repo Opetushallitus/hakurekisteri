@@ -20,7 +20,7 @@
         <slick.version>3.3.0</slick.version>
         <json4s.version>3.4.2</json4s.version>
         <netty.version>4.1.35.Final</netty.version>
-        <jetty.version>9.4.43.v20210629</jetty.version>
+        <jetty.version>9.4.52.v20230823</jetty.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -1712,12 +1712,10 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>reference.conf</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>fi.vm.sade.hakurekisteri.SureStandaloneJetty</Main-Class>
                                     </manifestEntries>
