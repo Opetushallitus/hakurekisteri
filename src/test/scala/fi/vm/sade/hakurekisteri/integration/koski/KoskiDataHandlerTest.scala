@@ -6,7 +6,12 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.{MockConfig, Oids}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, IOppijaNumeroRekisteri, MockPersonAliasesProvider, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  IOppijaNumeroRekisteri,
+  MockPersonAliasesProvider,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.hakurekisteri.integration.koski.KoskiUtil._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
@@ -4347,7 +4352,8 @@ class KoskiDataHandlerTest
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_tuva_korotus_ei_erityinen_suoritustapa.json")
-        .mkString.replaceFirst("PLACEHOLDER", dateStr)
+        .mkString
+        .replaceFirst("PLACEHOLDER", dateStr)
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
@@ -5738,7 +5744,8 @@ class KoskiDataHandlerTest
       .fromFile(
         jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
       )
-      .mkString.replaceFirst("PLACEHOLDER", dateStr)
+      .mkString
+      .replaceFirst("PLACEHOLDER", dateStr)
 
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -5778,7 +5785,8 @@ class KoskiDataHandlerTest
       .fromFile(
         jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
       )
-      .mkString.replaceFirst("PLACEHOLDER", dateStr)
+      .mkString
+      .replaceFirst("PLACEHOLDER", dateStr)
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
@@ -5817,7 +5825,8 @@ class KoskiDataHandlerTest
       .fromFile(
         jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
       )
-      .mkString.replaceFirst("PLACEHOLDER", dateStr)
+      .mkString
+      .replaceFirst("PLACEHOLDER", dateStr)
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
     henkilo.opiskeluoikeudet.head.tyyppi should not be empty
