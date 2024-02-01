@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
@@ -16,10 +15,8 @@ object KoskiUtil {
     OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date")
   )
 
-  val tuvaStartDate: LocalDate = {
-    val year = deadlineDate.year().get() - 1
-    val dateString = year + "-08-01"
-    LocalDate.parse(dateString)
+  lazy val tuvaStartDate: LocalDate = {
+    new LocalDate(deadlineDate.year().get() - 1, 8, 1)
   }
 
   //format "2020-06-01T00:00:00+02:00"

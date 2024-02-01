@@ -94,7 +94,7 @@
     },
     "tila" : {
       "opiskeluoikeusjaksot" : [ {
-        "alku" : "2022-08-03",
+        "alku" : "PLACEHOLDER",
         "tila" : {
           "koodiarvo" : "lasna",
           "nimi" : {
