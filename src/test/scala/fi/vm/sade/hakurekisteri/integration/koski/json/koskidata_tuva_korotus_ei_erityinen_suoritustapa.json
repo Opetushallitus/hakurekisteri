@@ -8219,7 +8219,7 @@
     "arvioituPäättymispäivä" : "2024-04-10",
     "tila" : {
       "opiskeluoikeusjaksot" : [ {
-        "alku" : "2023-04-11",
+        "alku" : "PLACEHOLDER",
         "tila" : {
           "koodiarvo" : "lasna",
           "nimi" : {

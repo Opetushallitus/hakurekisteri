@@ -142,9 +142,9 @@ class KoskiDataHandler(
         )
         return false
       }
-      if (KoskiUtil.isBeforeTuvaStartDate(lasnaDate.get)) {
+      if (!suoritus.laajuusVahintaan(19) && KoskiUtil.isBeforeTuvaStartDate(lasnaDate.get)) {
         logger.info(
-          s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka on alkanut ennen 1.8.2022."
+          s"Filtteröitiin henkilöltä $henkiloOid keskeneräinen tuva-suoritus, joka on alkanut ennen viime vuoden elokuun ensimmäistä päivää."
         )
         return false
       }

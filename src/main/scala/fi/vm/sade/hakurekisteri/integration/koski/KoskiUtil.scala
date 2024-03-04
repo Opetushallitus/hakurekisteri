@@ -15,7 +15,9 @@ object KoskiUtil {
     OphUrlProperties.getProperty("suoritusrekisteri.koski.deadline.date")
   )
 
-  val tuvaStartDate: LocalDate = LocalDate.parse("2022-08-01")
+  lazy val tuvaStartDate: LocalDate = {
+    new LocalDate(deadlineDate.year().get() - 1, 8, 1)
+  }
 
   //format "2020-06-01T00:00:00+02:00"
   lazy val koskiFetchStartTime: String =
