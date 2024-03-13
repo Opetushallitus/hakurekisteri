@@ -331,7 +331,11 @@ case class KoskiKoulutusmoduuli(
   koulutustyyppi: Option[KoskiKoodi],
   laajuus: Option[KoskiValmaLaajuus],
   pakollinen: Option[Boolean]
-)
+) {
+  def isNinthGrade(): Boolean = {
+    tunniste.exists(_.koodiarvo == "9")
+  }
+}
 
 case class KoskiValmaLaajuus(arvo: Option[BigDecimal], yksikkö: KoskiKoodi)
 

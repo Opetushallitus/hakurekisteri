@@ -330,7 +330,7 @@ class KoskiSuoritusArvosanaParser {
   }
 
   private def isFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]): Boolean = {
-    val ysiluokat = suoritukset.filter(_.luokka.getOrElse("").startsWith("9"))
+    val ysiluokat = suoritukset.filter(_.koulutusmoduuli.isNinthGrade())
     val failed = ysiluokat.exists(_.jääLuokalle.getOrElse(false))
     val succeeded = ysiluokat.exists(_.jääLuokalle.getOrElse(false) == false)
     failed && !succeeded
