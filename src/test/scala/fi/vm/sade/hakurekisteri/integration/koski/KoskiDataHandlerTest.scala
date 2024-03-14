@@ -1087,14 +1087,14 @@ class KoskiDataHandlerTest
   }
 
   it should "get correct end date from last ysiluokka" in {
-    val koskikomo = KoskiKoulutusmoduuli(None, None, None, None, None)
+    val koskikomo = KoskiKoulutusmoduuli(Some(KoskiKoodi("9", "")), None, None, None, None)
 
     val vahvistus = KoskiVahvistus("2000-04-01", KoskiOrganisaatio(Some("")))
     val vahvistus2 = KoskiVahvistus("2000-05-03", KoskiOrganisaatio(Some("")))
     val vahvistus3 = KoskiVahvistus("2000-05-02", KoskiOrganisaatio(Some("")))
 
     val ks1 = KoskiSuoritus(
-      luokka = Some("9"),
+      luokka = None,
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
@@ -1122,7 +1122,7 @@ class KoskiDataHandlerTest
   }
 
   it should "get correct end date from last ysiluokka with empty vahvistus date or vahvistus is none" in {
-    val koskikomo = KoskiKoulutusmoduuli(None, None, None, None, None)
+    val koskikomo = KoskiKoulutusmoduuli(Some(KoskiKoodi("9", "")), None, None, None, None)
 
     val vahvistus = KoskiVahvistus("2000-04-01", KoskiOrganisaatio(Some("")))
     val vahvistus2 = KoskiVahvistus("2000-05-03", KoskiOrganisaatio(Some("")))
@@ -1130,7 +1130,7 @@ class KoskiDataHandlerTest
     val vahvistus4 = KoskiVahvistus("", KoskiOrganisaatio(Some("")))
 
     val ks1 = KoskiSuoritus(
-      luokka = Some("9"),
+      luokka = None,
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
@@ -1149,7 +1149,7 @@ class KoskiDataHandlerTest
     )
 
     val ks2 = KoskiSuoritus(
-      luokka = Some("9"),
+      luokka = None,
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
@@ -1168,7 +1168,7 @@ class KoskiDataHandlerTest
     )
 
     val ks3 = KoskiSuoritus(
-      luokka = Some("9"),
+      luokka = None,
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
@@ -1187,7 +1187,7 @@ class KoskiDataHandlerTest
     )
 
     val ks4 = KoskiSuoritus(
-      luokka = Some("9"),
+      luokka = None,
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
@@ -1206,7 +1206,7 @@ class KoskiDataHandlerTest
     )
 
     val ks5 = KoskiSuoritus(
-      luokka = Some("9"),
+      luokka = None,
       koulutusmoduuli = koskikomo,
       tyyppi = None,
       kieli = None,
@@ -5857,7 +5857,7 @@ class KoskiDataHandlerTest
 
   def getYsiluokat(arvosanat: Seq[SuoritusArvosanat]): Seq[SuoritusArvosanat] = {
     val luokat =
-      arvosanat.filter(a => a.suoritus.komo.contentEquals("luokka") && a.luokka.startsWith("9"))
+      arvosanat.filter(a => a.suoritus.komo.contentEquals("luokka") && a.luokkataso.contains("9"))
     luokat
   }
 
