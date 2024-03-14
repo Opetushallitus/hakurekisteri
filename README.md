@@ -1,12 +1,14 @@
 # Suoritusrekisteri #
 
+## Ajoympäristöjen versiot
+
+ - Java 11
+ - Scala 2.12
+ - Node.js 12 & NPM 6
 
 ## Fronttidevaus ja mocha-testit
 
 Setup:
-
-Projekti ei näytä toimivan Node 6:tta uudemmilla versioilla (tulee `Error: Cannot find module 'internal/fs'`).
-Asenna Node 6 [N-työkalulla](https://www.npmjs.com/package/n) (asenna se globaalisti npm:llä). 
 
 1. Laita fronttikäännös pyörimään: `npm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
 2. Käynnistä serveri IDEAsta: `SureTestJettyWithMocks`, jolloin serveri toimii ilman ulkoisia depsuja
@@ -94,7 +96,3 @@ Korjattua nämä saa ajamalla
 `mvn spotless:apply`
 
 Lisätietoa https://github.com/diffplug/spotless/tree/master/plugin-maven
-
-## Java-versio
-
-Käytössä oleva Java-versio on 11

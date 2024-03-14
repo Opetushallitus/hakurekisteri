@@ -309,7 +309,7 @@ class KoskiSuoritusArvosanaParser {
 
   def getEndDateFromLastNinthGrade(suoritukset: Seq[KoskiSuoritus]): Option[LocalDate] = {
     val mostrecent = suoritukset
-      .filter(s => s.luokka.getOrElse("").startsWith("9"))
+      .filter(_.koulutusmoduuli.isNinthGrade())
       .filterNot(s1 => s1.vahvistus.isEmpty)
       .filterNot(s2 => s2.vahvistus.get.päivä.isEmpty)
       .sortWith((a, b) => {
@@ -330,7 +330,7 @@ class KoskiSuoritusArvosanaParser {
   }
 
   private def isFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]): Boolean = {
-    val ysiluokat = suoritukset.filter(_.luokka.getOrElse("").startsWith("9"))
+    val ysiluokat = suoritukset.filter(_.koulutusmoduuli.isNinthGrade())
     val failed = ysiluokat.exists(_.jääLuokalle.getOrElse(false))
     val succeeded = ysiluokat.exists(_.jääLuokalle.getOrElse(false) == false)
     failed && !succeeded
@@ -692,8 +692,7 @@ class KoskiSuoritusArvosanaParser {
       })
 
     val hasNinthGrade: Boolean = result.exists(s => {
-      val luokka = s.luokkataso
-      luokka.contains("9") || s.luokka.startsWith("9")
+      s.luokkataso.contains("9") || s.luokka.startsWith("9")
     })
 
     //Postprocessing
