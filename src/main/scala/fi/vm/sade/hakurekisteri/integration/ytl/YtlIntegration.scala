@@ -112,14 +112,8 @@ class YtlIntegration(
             .map(_.flatten)
         }
 
-        val hakuOidsChunkSize = 10
-        hakuOids.zipWithIndex.grouped(hakuOidsChunkSize).foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
-          case (result, chunkWithIndex) => {
-            val chunk = chunkWithIndex.map(_._1)
-            val firstIndex = chunkWithIndex.map(_._2).head
-            logger.info(s"Fetching hakuOid chunk. First hakuOid is ${firstIndex}/${hakuOids.size} (Chunk size is ${hakuOidsChunkSize} and hakuOids are ${chunk})")
-            result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
-          }
+        hakuOids.grouped(10).foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
+          case (result, chunk) => result.flatMap(rs => fetchChunk(chunk).map(rs ++ _))
         }
       }
 
