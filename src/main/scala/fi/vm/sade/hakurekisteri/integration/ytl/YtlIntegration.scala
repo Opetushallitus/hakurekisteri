@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.{ExecutorService, Executors, ForkJoinPool, TimeUnit}
+import java.util.concurrent.{Executors}
 import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 import fi.vm.sade.hakurekisteri._
@@ -15,7 +15,7 @@ import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Future, _}
+import scala.concurrent._
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -160,9 +160,10 @@ class YtlIntegration(
       logger.error(message)
       throw new RuntimeException(message)
     } else {
-      val hakuOids = activeKKHakuOids.get()
+      val hakuOidsRaw = activeKKHakuOids.get()
+      val hakuOids = hakuOidsRaw.filter(_.length == 35) //Only ever process kouta-hakus
       val groupUuid = currentStatus.uuid
-      logger.info(s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} hakus!")
+      logger.info(s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} kouta-hakus!")
 
       val results = hakuOids
         .foldLeft(Future.successful(List[(String, Option[Throwable])]())) {
@@ -170,7 +171,11 @@ class YtlIntegration(
             accResults.flatMap(rs => {
               try {
                 val resultForSingleHaku: Future[Option[Throwable]] =
-                  fetchAndHandleHakemuksetForSingleHakuF(hakuOid, currentStatus.uuid)
+                  fetchAndHandleHakemuksetForSingleHakuF(hakuOid, currentStatus.uuid).recoverWith {
+                    case t: Throwable =>
+                      logger.error(s"($groupUuid) Handling hakemukset failed for haku $hakuOid:", t)
+                      Future.successful(Some(t))
+                  }
                 resultForSingleHaku.map(errorOpt => {
                   logger.info(
                     s"($groupUuid) Result for single haku, error: ${errorOpt.map(_.getMessage)}"
