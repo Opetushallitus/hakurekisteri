@@ -194,11 +194,16 @@ class YtlIntegration(
 
       results.onComplete {
         case Success(res: Seq[(String, Option[Throwable])]) =>
-          val failedHakus = res.filter(r => r._2.isDefined).map(_._1)
+          val failed = res.filter(r => r._2.isDefined)
+          val failedHakuOids = failed.map(_._1)
+          failed.foreach(f => {
+            logger.error(s"($groupUuid) YTL Sync failed for haku ${f._1}:", f._2)
+          })
           logger.info(
-            s"($groupUuid) Sync all one haku at a time finished. Failed hakus: $failedHakus."
+            s"($groupUuid) Sync all one haku at a time finished. Failed hakus: $failedHakuOids."
           )
-          AtomicStatus.updateHasFailures(failedHakus.nonEmpty, hasEnded = true)
+
+          AtomicStatus.updateHasFailures(failedHakuOids.nonEmpty, hasEnded = true)
         case Failure(t: Throwable) =>
           logger.error(s"($groupUuid) Sync all one haku at a time went very wrong somehow: ", t)
           AtomicStatus.updateHasFailures(true, hasEnded = true)
