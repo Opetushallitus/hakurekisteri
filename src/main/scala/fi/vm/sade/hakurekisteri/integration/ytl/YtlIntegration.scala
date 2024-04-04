@@ -163,7 +163,9 @@ class YtlIntegration(
       val hakuOidsRaw = activeKKHakuOids.get()
       val hakuOids = hakuOidsRaw.filter(_.length == 35) //Only ever process kouta-hakus
       val groupUuid = currentStatus.uuid
-      logger.info(s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} kouta-hakus!")
+      logger.info(
+        s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} kouta-hakus!"
+      )
 
       val results = hakuOids
         .foldLeft(Future.successful(List[(String, Option[Throwable])]())) {
