@@ -67,6 +67,8 @@ class YtlIntegrationSpec
   private val journals: DbJournals = new DbJournals(config)
 
   private val activeHakuOid = "1.2.246.562.29.26435854158"
+  private val anotherActiveHakuOid = "1.2.246.562.29.26435854159"
+
   private val henkiloOid = "1.2.246.562.24.58341904891"
   private val ssn = "091001A941F"
 
@@ -129,6 +131,21 @@ class YtlIntegrationSpec
         config
       )
       ytlIntegration.setAktiivisetKKHaut(Set(activeHakuOid))
+      ytlIntegration
+    }
+  }
+
+  trait UseYtlIntegrationThreeHakus {
+    def createTestYtlIntegration(testYtlKokelasPersister: YtlKokelasPersister): YtlIntegration = {
+      val ytlIntegration = new YtlIntegration(
+        ophProperties,
+        ytlHttpClient,
+        hakemusService,
+        oppijaNumeroRekisteri,
+        testYtlKokelasPersister,
+        config
+      )
+      ytlIntegration.setAktiivisetKKHaut(Set(activeHakuOid, anotherActiveHakuOid, "1.2.3"))
       ytlIntegration
     }
   }
@@ -294,6 +311,49 @@ class YtlIntegrationSpec
           .fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any())
       )
       .thenReturn(zipResults)
+  }
+
+  trait HakemusServiceThreeHakus {
+    Mockito
+      .when(
+        oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      )
+      .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
+        override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
+          Future.successful(
+            tenEntries
+              .map(h => h.personOid -> createTestHenkilo(h.personOid, h.hetu, List(h.hetu)))
+              .toMap
+          )
+        }
+      })
+    Mockito
+      .when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid))
+      .thenReturn(Future.successful(tenEntries))
+    Mockito
+      .when(hakemusService.hetuAndPersonOidForHaku(anotherActiveHakuOid))
+      .thenReturn(Future.successful(tenEntries))
+    Mockito
+      .when(hakemusService.hetuAndPersonOidForHaku("1.2.3"))
+      .thenReturn(Future.successful(Seq()))
+    val jsonStringFromFile =
+      ClassPathUtil.readFileFromClasspath(getClass, "student-results-from-ytl.json")
+    implicit val formats: Formats = Student.formatsStudent
+    val studentsFromYtlTestData: Seq[Student] =
+      JsonMethods.parse(jsonStringFromFile).extract[Seq[Student]]
+
+    val zipResultsRaw = Seq(
+      Right((mock[ZipInputStream], studentsFromYtlTestData.iterator))
+    )
+
+    Mockito
+      .when(
+        ytlHttpClient
+          .fetch(mockito.ArgumentMatchers.any(classOf[String]), mockito.ArgumentMatchers.any())
+      )
+      .thenReturn(zipResultsRaw.iterator)
+      .thenReturn(zipResultsRaw.iterator)
+      .thenReturn(zipResultsRaw.iterator)
   }
 
   override protected def beforeEach(): Unit = {
@@ -665,7 +725,7 @@ class YtlIntegrationSpec
       val mustBeReadyUntil = new LocalDateTime().plusMinutes(1)
       while (
         new LocalDateTime().isBefore(mustBeReadyUntil) &&
-        (findAllSuoritusFromDatabase.size < 10 || findAllArvosanasFromDatabase.size < 89)
+        (findAllSuoritusFromDatabase.size < 10 || findAllArvosanasFromDatabase.size < 27)
       ) {
         Thread.sleep(50)
       }
@@ -706,6 +766,81 @@ class YtlIntegrationSpec
       val tenOids = tenEntries.map(_.personOid).toSet
 
       val expectedNumberOfOnrCalls = 1
+      Mockito
+        .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
+        .enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+      Mockito
+        .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
+        .getByOids(mockito.ArgumentMatchers.eq(tenOids))
+      Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
+
+      Mockito
+        .verify(ytlHttpClient, Mockito.times(expectedNumberOfOnrCalls))
+        .fetch(
+          mockito.ArgumentMatchers.any(classOf[String]),
+          mockito.ArgumentMatchers.any(classOf[Vector[YtlHetuPostData]])
+        )
+
+      Mockito
+        .verify(failureEmailSenderMock, Mockito.never())
+        .sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
+    }
+
+  it should "Fetch YTL data for hakijas in three hakus one at a time" in
+    new UseYtlKokelasPersister with UseYtlIntegrationThreeHakus with HakemusServiceThreeHakus {
+      findAllSuoritusFromDatabase should be(Nil)
+      findAllArvosanasFromDatabase should be(Nil)
+      val realKokelasPersister = createTestYtlKokelasPersister()
+      val ytlIntegration = createTestYtlIntegration(realKokelasPersister)
+
+      ytlIntegration.syncAllOneHakuAtATime(failureEmailSender = failureEmailSenderMock)
+
+      Thread.sleep(500)
+
+      val mustBeReadyUntil = new LocalDateTime().plusSeconds(25)
+      while (
+        new LocalDateTime().isBefore(mustBeReadyUntil) &&
+        (findAllSuoritusFromDatabase.size < 10 || findAllArvosanasFromDatabase.size < 27)
+      ) {
+        Thread.sleep(50)
+      }
+      val allSuoritusFromDatabase = findAllSuoritusFromDatabase.sortBy(_.henkilo)
+      val allArvosanasFromDatabase =
+        findAllArvosanasFromDatabase.sortBy(a => (a.aine, a.lisatieto, a.arvio.toString))
+      allSuoritusFromDatabase should have size 10
+      allArvosanasFromDatabase should have size 27
+
+      val virallinenSuoritusToExpect = VirallinenSuoritus(
+        komo = "1.2.246.562.5.2013061010184237348007",
+        myontaja = "1.2.246.562.10.43628088406",
+        tila = "VALMIS",
+        valmistuminen = new LocalDate(2012, 6, 1),
+        henkilo = "1.2.246.562.24.26258799406",
+        yksilollistaminen = fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Ei,
+        suoritusKieli = "FI",
+        opiskeluoikeus = None,
+        vahv = true,
+        lahde = "1.2.246.562.10.43628088406",
+        lahdeArvot = Map.empty
+      )
+      allSuoritusFromDatabase.head should be(virallinenSuoritusToExpect)
+
+      val arvosanaToExpect = Arvosana(
+        suoritus = allArvosanasFromDatabase.head.suoritus,
+        arvio = ArvioYo("C", Some(216)),
+        aine = "A",
+        lisatieto = Some("EN"),
+        valinnainen = true,
+        myonnetty = Some(new LocalDate(2012, 6, 1)),
+        source = "1.2.246.562.10.43628088406",
+        lahdeArvot = Map("koetunnus" -> "EA"),
+        jarjestys = None
+      )
+      allArvosanasFromDatabase.head should be(arvosanaToExpect)
+
+      val tenOids = tenEntries.map(_.personOid).toSet
+
+      val expectedNumberOfOnrCalls = 2
       Mockito
         .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
         .enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))

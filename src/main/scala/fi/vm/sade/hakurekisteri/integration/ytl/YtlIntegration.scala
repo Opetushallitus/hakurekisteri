@@ -1,21 +1,21 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.util.concurrent.atomic.{AtomicReference}
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.{ExecutorService, Executors, ForkJoinPool, TimeUnit}
 import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
-
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.properties.OphProperties
+
 import javax.mail.Message.RecipientType
 import javax.mail.Session
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
-import scala.concurrent._
+import scala.concurrent.{Future, _}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -41,9 +41,8 @@ class YtlIntegration(
     personOid: String,
     personOidsWithAliases: PersonOidsWithAliases
   ): Future[Try[Kokelas]] = {
+    logger.info(s"Syncronizing hakemus ${hakemusOid} with YTL")
     val hetus = oppijaNumeroRekisteri.getByHetu(hetu).map(_.kaikkiHetut)
-
-    logger.debug(s"Syncronizing hakemus ${hakemusOid} with YTL")
     for (allHetus <- hetus) yield {
       ytlHttpClient.fetchOne(YtlHetuPostData(hetu, allHetus)) match {
         case None =>
@@ -51,6 +50,7 @@ class YtlIntegration(
           logger.debug(noData)
           Failure(new RuntimeException(noData))
         case Some((_, student)) =>
+          logger.info(s"Found YTL data for hakemus $hakemusOid. Converting and persisting...")
           val kokelas = StudentToKokelas.convert(personOid, student)
           val persistKokelasStatus = ytlKokelasPersister.persistSingle(
             KokelasWithPersonAliases(kokelas, personOidsWithAliases)
@@ -70,12 +70,16 @@ class YtlIntegration(
   }
 
   def sync(personOid: String): Future[Seq[Try[Kokelas]]] = {
-    val allHakemuksetForOid = hakemusService.hetuAndPersonOidForPersonOid(personOid)
+    val allHakemuksetForOid: Future[Seq[HakemusHakuHetuPersonOid]] =
+      hakemusService.hetuAndPersonOidForPersonOid(personOid)
     oppijaNumeroRekisteri
       .enrichWithAliases(Set(personOid))
       .flatMap(aliases =>
         allHakemuksetForOid
-          .map(h => h.filter(hh => activeKKHakuOids.get().contains(hh.haku)))
+          .map(h => {
+            logger.info(s"Saatiin ${h.size} hakemusta henkilölle $personOid")
+            h.filter(hh => activeKKHakuOids.get().contains(hh.haku))
+          })
           .flatMap(allHakemuses =>
             if (allHakemuses.isEmpty) {
               logger.error(
@@ -117,7 +121,7 @@ class YtlIntegration(
           .grouped(hakuOidsChunkSize)
           .foldLeft(Future.successful(Set.empty[HetuPersonOid])) {
             case (result, chunkWithIndex) => {
-              val chunk = chunkWithIndex.map(_._1)
+              val chunk: Set[String] = chunkWithIndex.map(_._1)
               val firstIndex = chunkWithIndex.map(_._2).head
               logger.info(
                 s"Fetching hakuOid chunk. First hakuOid is ${firstIndex}/${hakuOids.size} (Chunk size is ${hakuOidsChunkSize} and hakuOids are ${chunk})"
@@ -143,6 +147,205 @@ class YtlIntegration(
           AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
           throw e
       }
+    }
+  }
+
+  def syncAllOneHakuAtATime(
+    failureEmailSender: FailureEmailSender = new RealFailureEmailSender
+  ): Unit = {
+    val (currentStatus, isAlreadyRunningAtomic) =
+      AtomicStatus.getNewOrExistingStatusAndIsAlreadyRunning()
+    if (isAlreadyRunningAtomic) {
+      val message = s"syncAll is already running! $currentStatus"
+      logger.error(message)
+      throw new RuntimeException(message)
+    } else {
+      val hakuOids = activeKKHakuOids.get()
+      val groupUuid = currentStatus.uuid
+      logger.info(s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} hakus!")
+
+      val results = hakuOids
+        .foldLeft(Future.successful(List[(String, Option[Throwable])]())) {
+          case (accResults: Future[List[(String, Option[Throwable])]], hakuOid) =>
+            accResults.flatMap(rs => {
+              try {
+                val resultForSingleHaku: Future[Option[Throwable]] =
+                  fetchAndHandleHakemuksetForSingleHakuF(hakuOid, currentStatus.uuid)
+                resultForSingleHaku.map(errorOpt => {
+                  logger.info(
+                    s"($groupUuid) Result for single haku, error: ${errorOpt.map(_.getMessage)}"
+                  )
+                  (hakuOid, errorOpt) :: rs
+                })
+              } catch {
+                case t: Throwable =>
+                  logger.error(s"($groupUuid) Jotain meni vikaan haun $hakuOid käsittelyssä", t)
+                  Future.successful(Some(t)).map(errorOpt => (hakuOid, errorOpt) :: rs)
+              }
+            })
+        }
+
+      results.onComplete {
+        case Success(res: Seq[(String, Option[Throwable])]) =>
+          val failedHakus = res.filter(r => r._2.isDefined).map(_._1)
+          logger.info(
+            s"($groupUuid) Sync all one haku at a time finished. Failed hakus: $failedHakus."
+          )
+          AtomicStatus.updateHasFailures(failedHakus.nonEmpty, hasEnded = true)
+        case Failure(t: Throwable) =>
+          logger.error(s"($groupUuid) Sync all one haku at a time went very wrong somehow: ", t)
+          AtomicStatus.updateHasFailures(true, hasEnded = true)
+      }
+    }
+  }
+
+  private def fetchAndHandleHakemuksetForSingleHakuFMock(
+    hakuOid: String,
+    groupUuid: String
+  ): Future[Option[Throwable]] = {
+    val resultF = Future {
+      logger.info(s"Doing something for haku $hakuOid")
+      Thread.sleep(5000)
+      if ("1.2.3".equals(hakuOid)) {
+        Some(new Throwable("aaa"))
+      } else None
+    }
+    resultF
+  }
+
+  private def fetchAndHandleHakemuksetForSingleHakuF(
+    hakuOid: String,
+    groupUuid: String
+  ): Future[Option[Throwable]] = {
+    try {
+      logger.info(
+        s"About to fetch hakemukses and possible additional hetus for persons in haku $hakuOid"
+      )
+      hakemusService
+        .hetuAndPersonOidForHaku(hakuOid)
+        .map(_.toSet)
+        .flatMap(persons => {
+          if (persons.nonEmpty) {
+            logger.info(s"($groupUuid) Got ${persons.size} persons for haku $hakuOid")
+            val personOidToHetu: Map[String, String] =
+              persons.map(person => person.personOid -> person.hetu).toMap
+
+            val futureHetuToAllHetus =
+              oppijaNumeroRekisteri
+                .getByOids(persons.map(_.personOid))
+                .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+
+            // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
+            val futureHetusToPersonOids: Future[Map[String, String]] =
+              futureHetuToAllHetus.map(futureHetuResult =>
+                persons
+                  .flatMap(person => {
+                    val hetut =
+                      futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
+                        case Some(h) => h
+                        case None    => List(person.hetu)
+                      }
+                    hetut.map(hetu => hetu -> person.personOid)
+                  })
+                  .toMap
+              )
+
+            val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+
+            logger.info(s"($groupUuid) About to fetch person aliases for ${persons.size} persons")
+            val futurePersonOidsWithAliases = Future
+              .sequence(
+                personsGrouped
+                  .map(ps => oppijaNumeroRekisteri.enrichWithAliases(ps.map(_.personOid)))
+              )
+              .map(result =>
+                result.reduce((a, b) =>
+                  PersonOidsWithAliases(
+                    a.henkiloOids ++ b.henkiloOids,
+                    a.aliasesByPersonOids ++ b.aliasesByPersonOids
+                  )
+                )
+              )
+
+            val result: Future[Unit] = for {
+              allHetusToPersonOids <- futureHetusToPersonOids
+              hetuToAllHetus <- futureHetuToAllHetus
+              personOidsWithAliases <- futurePersonOidsWithAliases
+            } yield {
+              logger.info(
+                s"($groupUuid) Hetus and aliases fetched for haku $hakuOid. Will fetch YTL data shortly!"
+              )
+              val count: Int = Math
+                .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
+                .toInt
+
+              val futures: Iterator[Future[Unit]] = ytlHttpClient
+                .fetch(groupUuid, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
+                .zipWithIndex
+                .map {
+                  case (Left(e: Throwable), index) =>
+                    logger
+                      .error(
+                        s"($groupUuid) failed to fetch YTL data for index $index / haku $hakuOid: ${e.getMessage}",
+                        e
+                      )
+                    Future.failed(e)
+                  case (Right((zip, students)), index) =>
+                    try {
+                      logger.info(
+                        s"($groupUuid) Fetch succeeded on YTL data batch ${index + 1}/$count for haku $hakuOid!"
+                      )
+
+                      val kokelaksetToPersist =
+                        getKokelaksetToPersist(students, allHetusToPersonOids)
+                      persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
+                        .andThen {
+                          case Success(_) =>
+                            logger.info(
+                              s"($groupUuid) Finished persisting YTL data batch ${index + 1}/$count for haku $hakuOid! All kokelakset succeeded!"
+                            )
+                            val latestStatus =
+                              AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
+                            logger.info(s"($groupUuid) Latest status after update: ${latestStatus}")
+                          case Failure(e) =>
+                            logger.error(
+                              s"($groupUuid) Failed to persist all kokelas on YTL data batch ${index + 1}/$count for haku $hakuOid",
+                              e
+                            )
+                            AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = false)
+                        }
+                    } finally {
+                      logger.info(
+                        s"($groupUuid) Closing zip file on YTL data batch ${index + 1}/$count for haku $hakuOid"
+                      )
+                      IOUtils.closeQuietly(zip)
+                    }
+                }
+
+              Future.sequence(futures.toSeq).onComplete { _ =>
+                logger.info(s"($groupUuid) Futures complete! Haku $hakuOid")
+                AtomicStatus.updateHasFailures(hasFailures = false, hasEnded = false)
+                val hasFailuresOpt: Option[Boolean] = AtomicStatus.getLastStatusHasFailures
+                logger
+                  .info(
+                    s"($groupUuid) Completed YTL syncAll for haku $hakuOid with hasFailures=${hasFailuresOpt}"
+                  )
+              }
+            }
+            result.map(r => {
+              logger.info(s"($groupUuid) $r Future finished, returning none")
+              None
+            })
+          } else {
+            logger.info(s"($groupUuid) Ei löydetty henkilöitä haulle $hakuOid")
+            Future.successful(None)
+          }
+
+        })
+    } catch {
+      case e: Throwable =>
+        logger.error(s"Fetching YTL data failed for haku $hakuOid!", e)
+        Future.successful(Some(e))
     }
   }
 

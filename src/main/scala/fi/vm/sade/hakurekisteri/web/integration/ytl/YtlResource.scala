@@ -47,6 +47,13 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     ytlIntegration.syncAll()
     Accepted("YTL sync started")
   }
+  post("/http_request_byhaku") {
+    shouldBeAdmin
+    logger.info("Fetching YTL data for everybody")
+    audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
+    ytlIntegration.syncAllOneHakuAtATime()
+    Accepted("YTL sync started")
+  }
   get("/http_request/:personOid", operation(syncPerson)) {
     shouldBeAdmin
     val personOid = params("personOid")
