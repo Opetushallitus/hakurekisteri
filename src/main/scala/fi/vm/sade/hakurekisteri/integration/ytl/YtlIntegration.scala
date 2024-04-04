@@ -180,7 +180,7 @@ class YtlIntegration(
                   }
                 resultForSingleHaku.map(errorOpt => {
                   logger.info(
-                    s"($groupUuid) Result for single haku, error: ${errorOpt.map(_.getMessage)}"
+                    s"($groupUuid) Result for single haku $hakuOid, error: ${errorOpt.map(_.getMessage)}"
                   )
                   (hakuOid, errorOpt) :: rs
                 })
