@@ -30,6 +30,7 @@ class YtlIntegration(
   private val logger = LoggerFactory.getLogger(getClass)
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
+  val ecbyhaku = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
   private val audit = SuoritusAuditBackend.audit
 
@@ -177,19 +178,19 @@ class YtlIntegration(
                     case t: Throwable =>
                       logger.error(s"($groupUuid) Handling hakemukset failed for haku $hakuOid:", t)
                       Future.successful(Some(t))
-                  }
+                  }(ecbyhaku)
                 resultForSingleHaku.map(errorOpt => {
                   logger.info(
                     s"($groupUuid) Result for single haku $hakuOid, error: ${errorOpt.map(_.getMessage)}"
                   )
                   (hakuOid, errorOpt) :: rs
-                })
+                })(ecbyhaku)
               } catch {
                 case t: Throwable =>
                   logger.error(s"($groupUuid) Jotain meni vikaan haun $hakuOid käsittelyssä", t)
-                  Future.successful(Some(t)).map(errorOpt => (hakuOid, errorOpt) :: rs)
+                  Future.successful(Some(t)).map(errorOpt => (hakuOid, errorOpt) :: rs)(ecbyhaku)
               }
-            })
+            })(ecbyhaku)
         }
 
       results.onComplete {
@@ -207,7 +208,7 @@ class YtlIntegration(
         case Failure(t: Throwable) =>
           logger.error(s"($groupUuid) Sync all one haku at a time went very wrong somehow: ", t)
           AtomicStatus.updateHasFailures(true, hasEnded = true)
-      }
+      }(ecbyhaku)
     }
   }
 
