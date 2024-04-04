@@ -66,8 +66,8 @@ class YtlIntegrationSpec
   private val config: MockConfig = new MockConfig
   private val journals: DbJournals = new DbJournals(config)
 
-  private val activeHakuOid = "1.2.246.562.29.26435854158"
-  private val anotherActiveHakuOid = "1.2.246.562.29.26435854159"
+  private val activeHakuOid = "1.2.246.562.29.26435854158875629284"
+  private val anotherActiveHakuOid = "1.2.246.562.29.26435854158875629285"
 
   private val henkiloOid = "1.2.246.562.24.58341904891"
   private val ssn = "091001A941F"
