@@ -22,7 +22,7 @@ class SureStandaloneJetty(config: Config = Config.globalConfig) {
 
   private val port: Int = OphUrlProperties.require("suoritusrekisteri.port").toInt
 
-  val threadPool: ThreadPool = new QueuedThreadPool(100, 10, 60000)
+  val threadPool: ThreadPool = new QueuedThreadPool(200, 10, 60000)
   val server = new Server(threadPool)
 
   server.setHandler(suoritusrekisteriApp)
