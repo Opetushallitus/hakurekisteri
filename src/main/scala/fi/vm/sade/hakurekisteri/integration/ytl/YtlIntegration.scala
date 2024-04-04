@@ -226,7 +226,7 @@ class YtlIntegration(
   ): Future[Option[Throwable]] = {
     try {
       logger.info(
-        s"About to fetch hakemukses and possible additional hetus for persons in haku $hakuOid"
+        s"($groupUuid) About to fetch hakemukses and possible additional hetus for persons in haku $hakuOid"
       )
       hakemusService
         .hetuAndPersonOidForHaku(hakuOid)
@@ -351,7 +351,7 @@ class YtlIntegration(
         })
     } catch {
       case e: Throwable =>
-        logger.error(s"Fetching YTL data failed for haku $hakuOid!", e)
+        logger.error(s"($groupUuid) Fetching YTL data failed for haku $hakuOid!", e)
         Future.successful(Some(e))
     }
   }
