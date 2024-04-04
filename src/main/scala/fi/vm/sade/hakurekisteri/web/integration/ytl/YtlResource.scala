@@ -54,6 +54,14 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     ytlIntegration.syncAllOneHakuAtATime()
     Accepted("YTL sync started")
   }
+  get("/http_request_byhaku/:hakuOid") {
+    shouldBeAdmin
+    val hakuOid = params("hakuOid")
+    logger.info(s"Syncing YTL data for haku $hakuOid")
+    audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
+    val tunniste = ytlIntegration.syncOneHaku(hakuOid)
+    Accepted(s"YTL sync started for haku $hakuOid, tunniste $tunniste")
+  }
   get("/http_request/:personOid", operation(syncPerson)) {
     shouldBeAdmin
     val personOid = params("personOid")

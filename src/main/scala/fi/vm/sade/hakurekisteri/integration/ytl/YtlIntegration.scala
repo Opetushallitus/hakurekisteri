@@ -151,6 +151,22 @@ class YtlIntegration(
     }
   }
 
+  def syncOneHaku(hakuOid: String): String = {
+    val tunniste = "manual_sync_for_haku_" + hakuOid
+    val result = fetchAndHandleHakemuksetForSingleHakuF(hakuOid, tunniste)
+    result.onComplete {
+      case Success(errorOpt) =>
+        if (errorOpt.isDefined) {
+          logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid")
+        } else {
+          logger.info(s"($tunniste) Onnistui!")
+        }
+      case Failure(t: Throwable) =>
+        logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid: ", t)
+    }
+    tunniste
+  }
+
   def syncAllOneHakuAtATime(
     failureEmailSender: FailureEmailSender = new RealFailureEmailSender
   ): Unit = {
