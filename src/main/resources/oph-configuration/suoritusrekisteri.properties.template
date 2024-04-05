@@ -126,6 +126,7 @@ suoritusrekisteri.koski.update.cronJob={{ suoritusrekisteri_koski_update_cronjob
 suoritusrekisteri.koski.update.kkHaut={{ suoritusrekisteri_koski_update_kkHaut | default('false') }}
 suoritusrekisteri.koski.update.toisenAsteenHaut={{ suoritusrekisteri_koski_update_toisenAsteenHaut | default('false') }}
 suoritusrekisteri.koski.update.jatkuvatHaut={{ suoritusrekisteri_koski_update_jatkuvatHaut | default('false') }}
+suoritusrekisteri.modifiedhakemukset.backtrack.days={{ suoritusrekisteri_modifiedhakemukset_backtrack_days | default('2')}}
 suoritusrekisteri.oppijanumerorekisteri-service.max-connections={{ suoritusrekisteri_oppijanumerorekisteriservice_max_connections | default('50')}}
 suoritusrekisteri.oppijanumerorekisteri-service.max-connection-queue-ms={{ suoritusrekisteri_oppijanumerorekisteriservice_max_connection_queue_ms | default('60000')}}
 suoritusrekisteri.oppijanumerorekisteri-service.max.oppijat.batch.size={{ suoritusrekisteri_oppijanumerorekisteriservice_max_oppijat_batch_size | default('5000')}}

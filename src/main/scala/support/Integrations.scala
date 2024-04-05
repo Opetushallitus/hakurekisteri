@@ -84,6 +84,8 @@ import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlRerunPolicy
 
+import java.util.Date
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -536,8 +538,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   hakemusService.addTrigger(arvosanaTrigger)
   hakemusService.addTrigger(ytlTrigger)
 
+  val daysToBacktrack: Int =
+    OphUrlProperties.getProperty("suoritusrekisteri.modifiedhakemukset.backtrack.days").toInt
   implicit val scheduler = system.scheduler
-  hakemusService.processModifiedHakemukset()
+  hakemusService.processModifiedHakemukset(modifiedAfter =
+    new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(daysToBacktrack))
+  )
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   if (!quartzScheduler.isStarted) {
