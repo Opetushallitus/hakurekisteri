@@ -313,7 +313,7 @@ class YtlIntegrationSpec
       .thenReturn(zipResults)
   }
 
-  trait HakemusServiceThreeHakus {
+  trait HakemusServiceLiteThreeHakus {
     Mockito
       .when(
         oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
@@ -328,13 +328,13 @@ class YtlIntegrationSpec
         }
       })
     Mockito
-      .when(hakemusService.hetuAndPersonOidForHaku(activeHakuOid))
+      .when(hakemusService.hetuAndPersonOidForHakuLite(activeHakuOid))
       .thenReturn(Future.successful(tenEntries))
     Mockito
-      .when(hakemusService.hetuAndPersonOidForHaku(anotherActiveHakuOid))
+      .when(hakemusService.hetuAndPersonOidForHakuLite(anotherActiveHakuOid))
       .thenReturn(Future.successful(tenEntries))
     Mockito
-      .when(hakemusService.hetuAndPersonOidForHaku("1.2.3"))
+      .when(hakemusService.hetuAndPersonOidForHakuLite("1.2.3"))
       .thenReturn(Future.successful(Seq()))
     val jsonStringFromFile =
       ClassPathUtil.readFileFromClasspath(getClass, "student-results-from-ytl.json")
@@ -787,7 +787,7 @@ class YtlIntegrationSpec
     }
 
   it should "Fetch YTL data for hakijas in three hakus one at a time" in
-    new UseYtlKokelasPersister with UseYtlIntegrationThreeHakus with HakemusServiceThreeHakus {
+    new UseYtlKokelasPersister with UseYtlIntegrationThreeHakus with HakemusServiceLiteThreeHakus {
       findAllSuoritusFromDatabase should be(Nil)
       findAllArvosanasFromDatabase should be(Nil)
       val realKokelasPersister = createTestYtlKokelasPersister()
