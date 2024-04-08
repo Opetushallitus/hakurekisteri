@@ -251,7 +251,7 @@ class YtlIntegration(
         s"($groupUuid) About to fetch hakemukses and possible additional hetus for persons in haku $hakuOid"
       )
       hakemusService
-        .hetuAndPersonOidForHaku(hakuOid)
+        .hetuAndPersonOidForHakuLite(hakuOid)
         .map(_.toSet)
         .flatMap(persons => {
           if (persons.nonEmpty) {
