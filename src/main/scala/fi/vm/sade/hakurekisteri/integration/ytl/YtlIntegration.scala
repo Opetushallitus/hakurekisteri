@@ -117,8 +117,11 @@ class YtlIntegration(
     val henkiloForOid = oppijaNumeroRekisteri.getByOids(Set(personOid)).map(_.get(personOid))
     henkiloForOid.flatMap(henkilo => {
       if (henkilo.isEmpty) {
-        Future.failed(new RuntimeException(s"Henkilo not found from onr for oid $personOid"))
+        val errorStr = s"Henkilo not found from onr for oid $personOid"
+        logger.error(errorStr)
+        Future.failed(new RuntimeException(errorStr))
       } else {
+        logger.info(s"Found Henkilo for personOid $personOid, fetching aliases and syncing.")
         oppijaNumeroRekisteri
           .enrichWithAliases(Set(personOid))
           .flatMap(aliases => {
