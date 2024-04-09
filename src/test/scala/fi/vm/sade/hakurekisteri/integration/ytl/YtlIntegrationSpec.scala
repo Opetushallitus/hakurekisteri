@@ -788,14 +788,15 @@ class YtlIntegrationSpec
         .sendFailureEmail(mockito.ArgumentMatchers.any(classOf[String]))
     }
 
-  it should "Fetch YTL data for hakijas in three hakus one at a time" in
+  it should "Fetch YTL data for hakijas in two hakus one at a time" in
     new UseYtlKokelasPersister with UseYtlIntegrationThreeHakus with HakemusServiceLiteThreeHakus {
       findAllSuoritusFromDatabase should be(Nil)
       findAllArvosanasFromDatabase should be(Nil)
       val realKokelasPersister = createTestYtlKokelasPersister()
       val ytlIntegration = createTestYtlIntegration(realKokelasPersister)
 
-      ytlIntegration.syncAllOneHakuAtATime(failureEmailSender = failureEmailSenderMock)
+      val tunniste =
+        ytlIntegration.syncAllOneHakuAtATime(failureEmailSender = failureEmailSenderMock)
 
       Thread.sleep(500)
 
