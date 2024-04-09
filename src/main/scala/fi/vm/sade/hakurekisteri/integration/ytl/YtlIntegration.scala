@@ -230,6 +230,7 @@ class YtlIntegration(
       }
       Await.result(result, 15.minutes)
     }
+    ecbyhaku.submit(syncYtl)
     tunniste
   }
 
