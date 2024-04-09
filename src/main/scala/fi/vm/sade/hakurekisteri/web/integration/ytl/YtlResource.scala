@@ -12,7 +12,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -24,11 +24,13 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     with HakurekisteriJsonSupport
     with JacksonJsonSupport
     with SecuritySupport
-    with YtlSwaggerApi {
+    with YtlSwaggerApi
+    with FutureSupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected def applicationDescription: String = "Ytl-Resource"
+  override protected implicit def executor: ExecutionContext = system.dispatcher
 
   before() {
     contentType = formats("json")
