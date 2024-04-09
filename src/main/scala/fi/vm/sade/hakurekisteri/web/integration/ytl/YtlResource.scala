@@ -51,8 +51,8 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     shouldBeAdmin
     logger.info("Fetching YTL data for everybody")
     audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
-    ytlIntegration.syncAllOneHakuAtATime()
-    Accepted("YTL sync started")
+    val tunniste = ytlIntegration.syncAllOneHakuAtATime()
+    Accepted("YTL sync started, tunniste $tunniste")
   }
   get("/http_request_byhaku/:hakuOid") {
     shouldBeAdmin
