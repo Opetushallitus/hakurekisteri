@@ -35,6 +35,7 @@ import org.joda.time.{LocalDate, LocalDateTime}
 import org.json4s.Formats
 import org.json4s.jackson.JsonMethods
 import org.mockito
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
