@@ -1,12 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.{Executors}
+import java.util.concurrent.Executors
 import java.util.function.UnaryOperator
 import java.util.{Date, UUID}
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  Henkilo,
+  IOppijaNumeroRekisteri,
+  PersonOidsWithAliases
+}
 import fi.vm.sade.properties.OphProperties
 
 import javax.mail.Message.RecipientType
@@ -14,6 +18,7 @@ import javax.mail.Session
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
+import scalaz.Scalaz.ToFunctorOpsUnapply
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -253,35 +258,40 @@ class YtlIntegration(
       hakemusService
         .hetuAndPersonOidForHakuLite(hakuOid)
         .map(_.toSet)
-        .flatMap(persons => {
+        .flatMap((persons: Set[HetuPersonOid]) => {
           if (persons.nonEmpty) {
-            logger.info(s"($groupUuid) Got ${persons.size} persons for haku $hakuOid")
-            val personOidToHetu: Map[String, String] =
-              persons.map(person => person.personOid -> person.hetu).toMap
+            logger.info(
+              s"($groupUuid) Got ${persons.size} persons for haku $hakuOid from hakemukses. Fetching masterhenkilos!"
+            )
 
-            val futureHetuToAllHetus =
-              oppijaNumeroRekisteri
-                .getByOids(persons.map(_.personOid))
-                .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+            //Tässä on map hakemuksenHenkilöoid -> henkilö, joka sisältää sekä masterOidin sekä hetun
+            val futureHenkilosWithHetus: Future[Map[String, Henkilo]] = oppijaNumeroRekisteri
+              .getByOids(persons.map(_.personOid))
+              .map(_.filter(_._2.hetu.isDefined))
 
-            // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
-            val futureHetusToPersonOids: Future[Map[String, String]] =
-              futureHetuToAllHetus.map(futureHetuResult =>
-                persons
-                  .flatMap(person => {
-                    val hetut =
-                      futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
-                        case Some(h) => h
-                        case None    => List(person.hetu)
-                      }
-                    hetut.map(hetu => hetu -> person.personOid)
-                  })
+            val hetuToMasterOidF = futureHenkilosWithHetus
+              .map(_.values)
+              .map(_.toSet)
+              .map((henkilot: Set[Henkilo]) => {
+                val hetuToMasterOid = henkilot
+                  .flatMap(henkilo =>
+                    (List(henkilo.hetu.get) ++ henkilo.kaikkiHetut.getOrElse(List.empty))
+                      .map(hetu => hetu -> henkilo.oidHenkilo)
+                  )
                   .toMap
+                logger.info(
+                  s"($groupUuid) Muodostettiin ${hetuToMasterOid.size} hetu+masteroid-paria ${henkilot.size} henkilölle"
+                )
+                hetuToMasterOid
+              })
+
+            val futureHetuToAllHetus = futureHenkilosWithHetus
+              .map(
+                _.map((person: (String, Henkilo)) => person._2.hetu.get -> person._2.kaikkiHetut)
               )
 
             val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
 
-            logger.info(s"($groupUuid) About to fetch person aliases for ${persons.size} persons")
             val futurePersonOidsWithAliases = Future
               .sequence(
                 personsGrouped
@@ -297,12 +307,12 @@ class YtlIntegration(
               )
 
             val result: Future[Unit] = for {
-              allHetusToPersonOids <- futureHetusToPersonOids
+              allHetusToPersonOids: Map[String, String] <- hetuToMasterOidF
               hetuToAllHetus <- futureHetuToAllHetus
               personOidsWithAliases <- futurePersonOidsWithAliases
             } yield {
               logger.info(
-                s"($groupUuid) Hetus and aliases fetched for haku $hakuOid. Will fetch YTL data shortly!"
+                s"($groupUuid) Hetus (${allHetusToPersonOids.size} total) and aliases fetched for haku $hakuOid. Will fetch YTL data shortly!"
               )
               val count: Int = Math
                 .ceil(hetuToAllHetus.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble)
@@ -392,13 +402,17 @@ class YtlIntegration(
       val futureHetuToAllHetus =
         oppijaNumeroRekisteri
           .getByOids(persons.map(_.personOid))
-          .map(_.map(person => personOidToHetu(person._1) -> person._2.kaikkiHetut))
+          .map(
+            _.map((person: (String, Henkilo)) =>
+              personOidToHetu(person._1) -> person._2.kaikkiHetut
+            )
+          )
 
       // Now that we query with previous hetus as well, we also have to have a way to match response data with them.
       val futureHetusToPersonOids: Future[Map[String, String]] =
         futureHetuToAllHetus.map(futureHetuResult =>
           persons
-            .flatMap(person => {
+            .flatMap((person: HetuPersonOid) => {
               val hetut = futureHetuResult.getOrElse(person.hetu, Some(List(person.hetu))) match {
                 case Some(h) => h
                 case None    => List(person.hetu)
