@@ -1033,16 +1033,21 @@ class HakemusService(
   }
 
   def hetuAndPersonOidForHakuLite(hakuOid: String): Future[Seq[HetuPersonOid]] = {
-    for {
-      hakemustenHenkilot: Seq[AtaruHakemuksenHenkilotiedot] <- ataruhakemustenHenkilot(
-        AtaruHenkiloSearchParams(
-          hakukohdeOids = None,
-          hakuOid = Some(hakuOid)
-        )
+    ataruhakemustenHenkilot(
+      AtaruHenkiloSearchParams(
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid)
       )
-    } yield hakemustenHenkilot.collect({
-      case AtaruHakemuksenHenkilotiedot(_, Some(personOid), Some(ssn)) =>
-        HetuPersonOid(ssn, personOid)
+    ).map(result => {
+      logger.info(s"Saatiin atarusta henkilötiedot ${result.size} hakemukselta")
+      val hetuJaPersonOidTiedossa: Seq[HetuPersonOid] =
+        result.collect({ case AtaruHakemuksenHenkilotiedot(_, Some(personOid), Some(ssn)) =>
+          HetuPersonOid(ssn, personOid)
+        })
+      logger.info(
+        s"Hetu ja personOid tiedossa ${hetuJaPersonOidTiedossa.size} hakemukselle ${result.size} hakemuksesta"
+      )
+      hetuJaPersonOidTiedossa
     })
   }
 
