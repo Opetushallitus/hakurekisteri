@@ -24,7 +24,8 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     with HakurekisteriJsonSupport
     with JacksonJsonSupport
     with SecuritySupport
-    with YtlSwaggerApi {
+    with YtlSwaggerApi
+    with FutureSupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   override protected implicit def swagger: SwaggerEngine[_] = sw
