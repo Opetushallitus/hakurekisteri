@@ -86,7 +86,7 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     } catch {
       case t: Throwable =>
         val errorStr = s"Failure in syncing YTL data for single person $personOid"
-        logger.error(errorStr, t)
+        logger.error(t, errorStr)
         InternalServerError(errorStr)
     }
   }
