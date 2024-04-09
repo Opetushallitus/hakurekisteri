@@ -41,6 +41,44 @@ class YtlIntegration(
 
   def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
 
+  def syncHenkiloWithYtl(
+    henkilo: Henkilo,
+    personOidsWithAliases: PersonOidsWithAliases
+  ): Future[Try[Kokelas]] = {
+    if (henkilo.hetu.isEmpty) {
+      logger.warn(s"Henkilo $henkilo does not have ssn. Cannot sync with YTL.")
+      Future.failed(
+        new RuntimeException(s"Henkilo $henkilo does not have ssn. Cannot sync with YTL.")
+      )
+    } else {
+      logger.info(s"Syncronizing henkilo ${henkilo.oidHenkilo} with YTL")
+      ytlHttpClient.fetchOne(YtlHetuPostData(henkilo.hetu.get, henkilo.kaikkiHetut)) match {
+        case None =>
+          val noData = s"No YTL data for henkilo ${henkilo.oidHenkilo}"
+          logger.debug(noData)
+          Future.failed(new RuntimeException(noData))
+        case Some((_, student)) =>
+          logger.info(
+            s"Found YTL data for henkilo ${henkilo.oidHenkilo}. Converting and persisting..."
+          )
+          val kokelas = StudentToKokelas.convert(henkilo.oidHenkilo, student)
+          val persistKokelasStatus = ytlKokelasPersister.persistSingle(
+            KokelasWithPersonAliases(kokelas, personOidsWithAliases)
+          )
+          try {
+            Await.result(
+              persistKokelasStatus,
+              config.ytlSyncTimeout.duration + 10.seconds
+            )
+            Future.successful(Success(kokelas))
+          } catch {
+            case e: Throwable =>
+              Future.failed(new RuntimeException(s"Persist kokelas ${kokelas.oid} failed", e))
+          }
+      }
+    }
+  }
+
   def syncWithHetuAndPersonOid(
     hakemusOid: String,
     hetu: String,
@@ -75,6 +113,22 @@ class YtlIntegration(
     }
   }
 
+  def syncSingle(personOid: String): Future[Try[Kokelas]] = {
+    val henkiloForOid = oppijaNumeroRekisteri.getByOids(Set(personOid)).map(_.get(personOid))
+    henkiloForOid.flatMap(henkilo => {
+      if (henkilo.isEmpty) {
+        Future.failed(new RuntimeException(s"Henkilo not found from onr for oid $personOid"))
+      } else {
+        oppijaNumeroRekisteri
+          .enrichWithAliases(Set(personOid))
+          .flatMap(aliases => {
+            syncHenkiloWithYtl(henkilo.get, aliases)
+          })
+      }
+    })
+  }
+
+  //Todo,update tests to use above implementation
   def sync(personOid: String): Future[Seq[Try[Kokelas]]] = {
     val allHakemuksetForOid: Future[Seq[HakemusHakuHetuPersonOid]] =
       hakemusService.hetuAndPersonOidForPersonOid(personOid)
@@ -266,7 +320,7 @@ class YtlIntegration(
 
             //Tässä on map hakemuksenHenkilöoid -> henkilö, joka sisältää sekä masterOidin sekä hetun
             val futureHenkilosWithHetus: Future[Map[String, Henkilo]] = oppijaNumeroRekisteri
-              .getByOids(persons.map(_.personOid))
+              .fetchHenkilotInBatches(persons.map(_.personOid))
               .map(_.filter(_._2.hetu.isDefined))
 
             val hetuToMasterOidF = futureHenkilosWithHetus
