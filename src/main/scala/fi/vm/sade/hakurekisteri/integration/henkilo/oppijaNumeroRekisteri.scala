@@ -43,7 +43,7 @@ trait IOppijaNumeroRekisteri {
   }
 
   def getByHetu(hetu: String): Future[Henkilo]
-
+  def fetchHenkilotInBatches(henkiloOids: Set[String]): Future[Map[String, Henkilo]]
   def getByOids(oids: Set[String]): Future[Map[String, Henkilo]]
 }
 
@@ -134,6 +134,30 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     )
   }
 
+  def fetchHenkilotInBatches(henkiloOids: Set[String]) = {
+    val started = System.currentTimeMillis()
+    val batches: Seq[(Set[String], Int)] = henkiloOids
+      .grouped(config.integrations.oppijaNumeroRekisteriMaxOppijatBatchSize)
+      .zipWithIndex
+      .toList
+    logger.info(
+      s"fetch Henkilot in ${batches.size} batches for ${henkiloOids.size} henkilos"
+    )
+    batches.foldLeft(Future(Map[String, Henkilo]())) {
+      case (result: Future[Map[String, Henkilo]], chunk: (Set[String], Int)) =>
+        result.flatMap(rs => {
+          logger.info(
+            s"Querying onr for Henkilo batch: ${chunk._1.size} oids, batch ${chunk._2 + 1 + "/" + batches.size}, started ${started}"
+          )
+          val chunkResult: Future[Map[String, Henkilo]] =
+            client.postObject[Set[String], Map[String, Henkilo]](
+              "oppijanumerorekisteri-service.henkilotByOids"
+            )(resource = chunk._1, acceptedResponseCode = 200)
+          chunkResult.map(cr => rs ++ cr)
+        })
+    }
+  }
+  //hmm
   override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = {
     if (oids.isEmpty) {
       Future.successful(Map.empty)
@@ -179,6 +203,26 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
 
   def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] =
     Future.successful(oids.zipWithIndex.map { case (oid, i) =>
+      oid -> Henkilo(
+        oidHenkilo = oid,
+        hetu = Some(s"Hetu$i"),
+        kaikkiHetut = Some(List(s"Hetu$i")),
+        henkiloTyyppi = "OPPIJA",
+        etunimet = Some(s"Etunimi$i"),
+        kutsumanimi = Some(s"Kutsumanimi$i"),
+        sukunimi = Some(s"Sukunimi$i"),
+        aidinkieli = Some(Kieli("fi")),
+        kansalaisuus = List(Kansalaisuus("246")),
+        syntymaaika = Some("1989-09-24"),
+        sukupuoli = Some("1"),
+        turvakielto = Some(false)
+      )
+    }.toMap)
+
+  override def fetchHenkilotInBatches(
+    henkiloOids: Set[String]
+  ): Future[Map[String, Henkilo]] =
+    Future.successful(henkiloOids.zipWithIndex.map { case (oid, i) =>
       oid -> Henkilo(
         oidHenkilo = oid,
         hetu = Some(s"Hetu$i"),

@@ -97,6 +97,9 @@ class OppijaResourceSpec
 
     override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] =
       Future.successful(Map.empty)
+
+    override def fetchHenkilotInBatches(henkiloOids: Set[String]): Future[Map[String, Henkilo]] =
+      Future.successful(Map.empty)
   }
 
   val linkedPersonsSuoritus = VirallinenSuoritus(

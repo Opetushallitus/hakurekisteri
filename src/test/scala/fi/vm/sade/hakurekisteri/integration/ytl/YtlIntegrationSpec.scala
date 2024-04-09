@@ -316,7 +316,9 @@ class YtlIntegrationSpec
   trait HakemusServiceLiteThreeHakus {
     Mockito
       .when(
-        oppijaNumeroRekisteri.getByOids(mockito.ArgumentMatchers.any(classOf[Set[String]]))
+        oppijaNumeroRekisteri.fetchHenkilotInBatches(
+          mockito.ArgumentMatchers.any(classOf[Set[String]])
+        )
       )
       .thenAnswer(new Answer[Future[Map[String, Henkilo]]] {
         override def answer(invocation: InvocationOnMock): Future[Map[String, Henkilo]] = {
@@ -846,7 +848,7 @@ class YtlIntegrationSpec
         .enrichWithAliases(mockito.ArgumentMatchers.any(classOf[Set[String]]))
       Mockito
         .verify(oppijaNumeroRekisteri, Mockito.times(expectedNumberOfOnrCalls))
-        .getByOids(mockito.ArgumentMatchers.eq(tenOids))
+        .fetchHenkilotInBatches(mockito.ArgumentMatchers.eq(tenOids))
       Mockito.verifyNoMoreInteractions(oppijaNumeroRekisteri)
 
       Mockito
