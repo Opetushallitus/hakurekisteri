@@ -67,20 +67,27 @@ class YtlResource(ytlIntegration: YtlIntegration)(implicit
     val personOid = params("personOid")
     logger.info(s"Fetching YTL data for person OID $personOid")
     audit.log(auditUser, YTLSyncForPerson, AuditUtil.targetFromParams(params).build, Changes.EMPTY)
-    val done: Try[Kokelas] = Await.result(ytlIntegration.syncSingle(personOid), 30.seconds)
-    val success = done match {
-      case Success(s) => true
-      case Failure(e) =>
-        logger.error(e, s"Failure in syncing YTL data for person OID $personOid . Results: $done")
-        false
-    }
-    if (success) {
-      Accepted()
-    } else {
-      val message =
-        s"Failure in syncing YTL data for person OID $personOid."
-      logger.error(message)
-      BadRequest(message)
+    try {
+      val done: Try[Kokelas] = Await.result(ytlIntegration.syncSingle(personOid), 30.seconds)
+      val success = done match {
+        case Success(s) => true
+        case Failure(e) =>
+          logger.error(e, s"Failure in syncing YTL data for person OID $personOid . Results: $done")
+          false
+      }
+      if (success) {
+        Accepted()
+      } else {
+        val message =
+          s"Failure in syncing YTL data for single person $personOid."
+        logger.error(message)
+        BadRequest(message)
+      }
+    } catch {
+      case t: Throwable =>
+        val errorStr = s"Failure in syncing YTL data for single person $personOid"
+        logger.error(errorStr, t)
+        InternalServerError(errorStr)
     }
   }
 }
