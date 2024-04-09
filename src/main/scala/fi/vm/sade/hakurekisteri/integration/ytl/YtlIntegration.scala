@@ -35,7 +35,7 @@ class YtlIntegration(
   private val logger = LoggerFactory.getLogger(getClass)
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
-  val ecbyhaku = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
+  private val ecbyhaku = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
   private val audit = SuoritusAuditBackend.audit
 
@@ -314,8 +314,7 @@ class YtlIntegration(
       )
       hakemusService
         .hetuAndPersonOidForHakuLite(hakuOid)
-        .map(_.toSet)
-        .flatMap((persons: Set[HetuPersonOid]) => {
+        .flatMap((persons: Seq[HetuPersonOid]) => {
           if (persons.nonEmpty) {
             logger.info(
               s"($groupUuid) Got ${persons.size} persons for haku $hakuOid from hakemukses. Fetching masterhenkilos!"
@@ -323,7 +322,7 @@ class YtlIntegration(
 
             //Tässä on map hakemuksenHenkilöoid -> henkilö, joka sisältää sekä masterOidin sekä hetun
             val futureHenkilosWithHetus: Future[Map[String, Henkilo]] = oppijaNumeroRekisteri
-              .fetchHenkilotInBatches(persons.map(_.personOid))
+              .fetchHenkilotInBatches(persons.map(_.personOid).toSet)
               .map(_.filter(_._2.hetu.isDefined))
 
             val hetuToMasterOidF = futureHenkilosWithHetus
@@ -347,7 +346,7 @@ class YtlIntegration(
                 _.map((person: (String, Henkilo)) => person._2.hetu.get -> person._2.kaikkiHetut)
               )
 
-            val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.grouped(10000)
+            val personsGrouped: Iterator[Set[HetuPersonOid]] = persons.toSet.grouped(10000)
 
             val futurePersonOidsWithAliases = Future
               .sequence(
