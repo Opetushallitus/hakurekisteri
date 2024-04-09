@@ -228,8 +228,8 @@ class YtlIntegration(
         case Failure(t: Throwable) =>
           logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid: ", t)
       }
+      Await.result(result, 15.minutes)
     }
-    ecbyhaku.submit(syncYtl)
     tunniste
   }
 
@@ -294,6 +294,7 @@ class YtlIntegration(
             logger.error(s"($groupUuid) Sync all one haku at a time went very wrong somehow: ", t)
             AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
         }
+        Await.result(results, 1.hour)
       }
       ecbyhaku.submit(syncYtl)
       groupUuid
