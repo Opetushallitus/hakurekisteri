@@ -215,23 +215,27 @@ class YtlIntegration(
 
   def syncOneHaku(hakuOid: String): String = {
     val tunniste = "manual_sync_for_haku_" + hakuOid
-    val result = fetchAndHandleHakemuksetForSingleHakuF(hakuOid, tunniste)
-    result.onComplete {
-      case Success(errorOpt) =>
-        if (errorOpt.isDefined) {
-          logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid")
-        } else {
-          logger.info(s"($tunniste) Onnistui!")
-        }
-      case Failure(t: Throwable) =>
-        logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid: ", t)
+    def syncYtl: Runnable = () => {
+      logger.info(s"($tunniste) Starting manual sync for haku $hakuOid")
+      val result = fetchAndHandleHakemuksetForSingleHakuF(hakuOid, tunniste)
+      result.onComplete {
+        case Success(errorOpt) =>
+          if (errorOpt.isDefined) {
+            logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid")
+          } else {
+            logger.info(s"($tunniste) Onnistui!")
+          }
+        case Failure(t: Throwable) =>
+          logger.error(s"($tunniste) Jotain meni vikaan synkattaessa hakua $hakuOid: ", t)
+      }
     }
+    ecbyhaku.submit(syncYtl)
     tunniste
   }
 
   def syncAllOneHakuAtATime(
     failureEmailSender: FailureEmailSender = new RealFailureEmailSender
-  ): Unit = {
+  ): String = {
     val (currentStatus, isAlreadyRunningAtomic) =
       AtomicStatus.getNewOrExistingStatusAndIsAlreadyRunning()
     if (isAlreadyRunningAtomic) {
@@ -242,51 +246,57 @@ class YtlIntegration(
       val hakuOidsRaw = activeKKHakuOids.get()
       val hakuOids = hakuOidsRaw.filter(_.length == 35) //Only ever process kouta-hakus
       val groupUuid = currentStatus.uuid
-      logger.info(
-        s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} kouta-hakus!"
-      )
+      def syncYtl: Runnable = () => {
+        logger.info(
+          s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} kouta-hakus!"
+        )
+        val results = hakuOids
+          .foldLeft(Future.successful(List[(String, Option[Throwable])]())) {
+            case (accResults: Future[List[(String, Option[Throwable])]], hakuOid) =>
+              accResults.flatMap(rs => {
+                try {
+                  val resultForSingleHaku: Future[Option[Throwable]] =
+                    fetchAndHandleHakemuksetForSingleHakuF(hakuOid, currentStatus.uuid)
+                      .recoverWith { case t: Throwable =>
+                        logger.error(
+                          s"($groupUuid) Handling hakemukset failed for haku $hakuOid:",
+                          t
+                        )
+                        Future.successful(Some(t))
+                      }
+                  resultForSingleHaku.map(errorOpt => {
+                    logger.info(
+                      s"($groupUuid) Result for single haku $hakuOid, error: ${errorOpt.map(_.getMessage)}"
+                    )
+                    (hakuOid, errorOpt) :: rs
+                  })
+                } catch {
+                  case t: Throwable =>
+                    logger.error(s"($groupUuid) Jotain meni vikaan haun $hakuOid käsittelyssä", t)
+                    Future.successful(Some(t)).map(errorOpt => (hakuOid, errorOpt) :: rs)
+                }
+              })
+          }
 
-      val results = hakuOids
-        .foldLeft(Future.successful(List[(String, Option[Throwable])]())) {
-          case (accResults: Future[List[(String, Option[Throwable])]], hakuOid) =>
-            accResults.flatMap(rs => {
-              try {
-                val resultForSingleHaku: Future[Option[Throwable]] =
-                  fetchAndHandleHakemuksetForSingleHakuF(hakuOid, currentStatus.uuid).recoverWith {
-                    case t: Throwable =>
-                      logger.error(s"($groupUuid) Handling hakemukset failed for haku $hakuOid:", t)
-                      Future.successful(Some(t))
-                  }(ecbyhaku)
-                resultForSingleHaku.map(errorOpt => {
-                  logger.info(
-                    s"($groupUuid) Result for single haku $hakuOid, error: ${errorOpt.map(_.getMessage)}"
-                  )
-                  (hakuOid, errorOpt) :: rs
-                })(ecbyhaku)
-              } catch {
-                case t: Throwable =>
-                  logger.error(s"($groupUuid) Jotain meni vikaan haun $hakuOid käsittelyssä", t)
-                  Future.successful(Some(t)).map(errorOpt => (hakuOid, errorOpt) :: rs)(ecbyhaku)
-              }
-            })(ecbyhaku)
+        results.onComplete {
+          case Success(res: Seq[(String, Option[Throwable])]) =>
+            val failed = res.filter(r => r._2.isDefined)
+            val failedHakuOids = failed.map(_._1)
+            failed.foreach(f => {
+              logger.error(s"($groupUuid) YTL Sync failed for haku ${f._1}:", f._2)
+            })
+            logger.info(
+              s"($groupUuid) Sync all one haku at a time finished. Failed hakus: $failedHakuOids."
+            )
+
+            AtomicStatus.updateHasFailures(failedHakuOids.nonEmpty, hasEnded = true)
+          case Failure(t: Throwable) =>
+            logger.error(s"($groupUuid) Sync all one haku at a time went very wrong somehow: ", t)
+            AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
         }
-
-      results.onComplete {
-        case Success(res: Seq[(String, Option[Throwable])]) =>
-          val failed = res.filter(r => r._2.isDefined)
-          val failedHakuOids = failed.map(_._1)
-          failed.foreach(f => {
-            logger.error(s"($groupUuid) YTL Sync failed for haku ${f._1}:", f._2)
-          })
-          logger.info(
-            s"($groupUuid) Sync all one haku at a time finished. Failed hakus: $failedHakuOids."
-          )
-
-          AtomicStatus.updateHasFailures(failedHakuOids.nonEmpty, hasEnded = true)
-        case Failure(t: Throwable) =>
-          logger.error(s"($groupUuid) Sync all one haku at a time went very wrong somehow: ", t)
-          AtomicStatus.updateHasFailures(true, hasEnded = true)
-      }(ecbyhaku)
+      }
+      ecbyhaku.submit(syncYtl)
+      groupUuid
     }
   }
 
