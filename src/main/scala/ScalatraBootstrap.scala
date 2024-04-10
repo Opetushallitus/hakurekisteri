@@ -224,7 +224,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/virta", "virta") -> new VirtaResource(
       koosteet.virtaQueue
     ), // Continuous Virta queue processing
-    ("/ytl", "ytl") -> new YtlResource(integrations.ytlIntegration),
+    ("/ytl", "ytl") -> new YtlResource(integrations.ytlIntegration, integrations.ytlFetchActor),
     ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(
       integrations.proxies.vastaanottotiedot,
       system,
