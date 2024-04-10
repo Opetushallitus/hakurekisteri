@@ -279,8 +279,8 @@ class YtlFetchActor(
                   case (Left(e: Throwable), index) =>
                     log
                       .error(
-                        s"($tunniste) failed to fetch YTL data for index $index / haku $hakuOid: ${e.getMessage}",
-                        e
+                        e,
+                        s"($tunniste) failed to fetch YTL data for index $index / haku $hakuOid: ${e.getMessage}"
                       )
                     Future.failed(e)
                   case (Right((zip, students)), index) =>
@@ -300,8 +300,8 @@ class YtlFetchActor(
                             )
                           case Failure(e) =>
                             log.error(
-                              s"($tunniste) Failed to persist all kokelas on YTL data batch ${index + 1}/$count for haku $hakuOid",
-                              e
+                              e,
+                              s"($tunniste) Failed to persist all kokelas on YTL data batch ${index + 1}/$count for haku $hakuOid"
                             )
                             hasErrors.compareAndSet(false, true)
                         }
@@ -348,8 +348,8 @@ class YtlFetchActor(
             case Success(candidate) => Some(candidate)
             case Failure(exception) =>
               log.error(
-                s"($tunniste) Skipping student with SSN = ${student.ssn} because ${exception.getMessage}",
-                exception
+                exception,
+                s"($tunniste) Skipping student with SSN = ${student.ssn} because ${exception.getMessage}"
               )
               None
           }
