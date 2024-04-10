@@ -119,6 +119,7 @@ trait Integrations {
   val pistesyottoService: PistesyottoService
   val hakukohderyhmaService: IHakukohderyhmaService
   val valintalaskentaTulosService: IValintalaskentaTulosService
+  val ytlFetchActor: YtlFetchActorRef
 }
 
 object Integrations {
@@ -179,6 +180,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       new MockHakukohdeAggregatorActor(tarjonta, koutaInternal, config)
     )
   )
+
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytlKokelasPersister = new YtlKokelasPersister(
     system,
@@ -199,9 +201,23 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config
   )
 
+  override val ytlFetchActor: YtlFetchActorRef = new YtlFetchActorRef(
+    mockActor(
+      "ytlFetchActor",
+      new YtlFetchActor(
+        properties = OphUrlProperties,
+        ytlHttp,
+        hakemusService,
+        oppijaNumeroRekisteri,
+        ytlKokelasPersister,
+        config
+      )
+    )
+  )
+
   val haut: ActorRef = system.actorOf(
     Props(
-      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, config)
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, ytlFetchActor, config)
     ),
     "haut"
   )
@@ -449,9 +465,25 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     config
   )
 
+  val ytlFetchActor = YtlFetchActorRef(
+    system.actorOf(
+      Props(
+        new YtlFetchActor(
+          properties = OphUrlProperties,
+          ytlHttp,
+          hakemusService,
+          oppijaNumeroRekisteri,
+          ytlKokelasPersister,
+          config
+        )
+      ),
+      "ytlFetchActor"
+    )
+  )
+
   val haut: ActorRef = system.actorOf(
     Props(
-      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, config)
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, ytlFetchActor, config)
     ),
     "haut"
   )
