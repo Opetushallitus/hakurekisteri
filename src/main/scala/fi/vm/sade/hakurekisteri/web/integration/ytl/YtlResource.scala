@@ -86,7 +86,9 @@ class YtlResource(ytlIntegration: YtlIntegration, ytlFetchActor: YtlFetchActorRe
       val resultF = ytlFetchActor.actor ? YtlSyncSingle(personOid, tunniste = "sync") recoverWith {
         case t: Throwable =>
           logger.error(t, s"Error while ytl-syncing $personOid")
-          Future.failed(new RuntimeException(s"Error while ytl-syncing $personOid"))
+          Future.failed(
+            new RuntimeException(s"Error while ytl-syncing $personOid: ${t.getMessage}")
+          )
       }
       logger.info(s"Waiting for result for YTL data for person OID $personOid")
       val result = Await.result(resultF, 30.seconds)
