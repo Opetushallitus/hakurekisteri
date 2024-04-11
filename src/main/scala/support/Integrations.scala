@@ -584,7 +584,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val ytlSyncAllEnabled = OphUrlProperties.getProperty("ytl.http.syncAllEnabled").toBoolean
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
-  val rerunSync = YtlRerunPolicy.rerunPolicy(syncAllCronExpression, ytlIntegration)
+  val rerunSync = YtlRerunPolicy.rerunPolicy(syncAllCronExpression, ytlFetchActor)
   if (ytlSyncAllEnabled) {
     quartzScheduler.scheduleJob(
       lambdaJob(rerunSync),

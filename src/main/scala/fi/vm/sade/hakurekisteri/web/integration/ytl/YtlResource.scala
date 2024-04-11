@@ -62,7 +62,7 @@ class YtlResource(ytlIntegration: YtlIntegration, ytlFetchActor: YtlFetchActorRe
     shouldBeAdmin
     logger.info("Fetching YTL data for everybody")
     audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
-    val tunniste = "manual_sync_for_all_hakus_" + System.currentTimeMillis()
+    val tunniste = "manual_sync_for_all_hakus" + System.currentTimeMillis()
     ytlFetchActor.actor ! YtlSyncAllHaut(tunniste)
     Accepted(s"YTL sync started, tunniste $tunniste")
   }
@@ -83,12 +83,14 @@ class YtlResource(ytlIntegration: YtlIntegration, ytlFetchActor: YtlFetchActorRe
     logger.info(s"Fetching YTL data for person OID $personOid")
     audit.log(auditUser, YTLSyncForPerson, AuditUtil.targetFromParams(params).build, Changes.EMPTY)
     try {
-      val resultF = ytlFetchActor.actor ? YtlSyncSingle(personOid, tunniste = "sync") recoverWith {
-        case t: Throwable =>
-          logger.error(t, s"Error while ytl-syncing $personOid")
-          Future.failed(
-            new RuntimeException(s"Error while ytl-syncing $personOid: ${t.getMessage}")
-          )
+      val resultF = ytlFetchActor.actor ? YtlSyncSingle(
+        personOid,
+        tunniste = s"manual_sync_for_person_${personOid}"
+      ) recoverWith { case t: Throwable =>
+        logger.error(t, s"Error while ytl-syncing $personOid")
+        Future.failed(
+          new RuntimeException(s"Error while ytl-syncing $personOid: ${t.getMessage}")
+        )
       }
       logger.info(s"Waiting for result for YTL data for person OID $personOid")
       val result = Await.result(resultF, 30.seconds)
