@@ -14,9 +14,10 @@ import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import scalaz.concurrent.Task
 import support.TypedActorRef
-import scala.concurrent.duration._
 
-import java.util.UUID
+import java.time.LocalDate
+import scala.concurrent.duration._
+import java.util.{Date, UUID}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -24,6 +25,7 @@ import scala.util.{Failure, Success, Try}
 case class YtlSyncHaku(hakuOid: String, tunniste: String)
 
 case class YtlSyncAllHaut(tunniste: String)
+case class YtlSyncAllHautNightly(tunniste: String)
 case class YtlSyncSingle(personOid: String, tunniste: String)
 case class ActiveKkHakuOids(hakuOids: Set[String])
 case class YtlFetchActorRef(actor: ActorRef) extends TypedActorRef
@@ -40,6 +42,10 @@ class YtlFetchActor(
 
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
 
+  //val lastSyncStart = new AtomicReference[Option[LocalDate]](None)
+  val lastSyncStart = new AtomicReference[Long](0)
+  val minIntervalBetween = 1000 * 60 * 22 //At least 22 hours between nightly syncs
+
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
     config.integrations.asyncOperationThreadPoolSize,
     getClass.getSimpleName
@@ -47,8 +53,26 @@ class YtlFetchActor(
 
   def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
   override def receive: Receive = {
+    case ah: YtlSyncAllHautNightly =>
+      val tunniste = ah.tunniste
+      val now = System.currentTimeMillis()
+      val lss = lastSyncStart.get()
+      val timeToStartNewSync = (lss + minIntervalBetween) < now
+      if (timeToStartNewSync) {
+        log.info(s"Starting nightly sync for all hakus. Previous run was $lss")
+        lastSyncStart.set(now)
+        val resultF = syncAllOneHakuAtATime(tunniste)
+        resultF.onComplete {
+          case Success(_) =>
+            log.info(s"($tunniste) Nightly sync for all hakus success!")
+          case Failure(t) =>
+            log.error(t, s"($tunniste) Nightly sync for all hakus failed...")
+        }
+      } else {
+        log.warning(s"Not starting nightly sync for all hakus as the previous run was on $lss")
+      }
     case ah: YtlSyncAllHaut =>
-      val tunniste = "manual_sync_for_all_hakus_" + System.currentTimeMillis()
+      val tunniste = ah.tunniste
       val resultF = syncAllOneHakuAtATime(tunniste)
       resultF.onComplete {
         case Success(_) =>
@@ -58,7 +82,7 @@ class YtlFetchActor(
       }
       sender ! tunniste
     case s: YtlSyncHaku =>
-      val tunniste = System.currentTimeMillis() + "_manual_sync_for_haku_" + s.hakuOid
+      val tunniste = s.tunniste
       val resultF = fetchAndHandleHakemuksetForSingleHakuF(hakuOid = s.hakuOid, s.tunniste)
       resultF.onComplete {
         case Success(_) =>
@@ -69,7 +93,7 @@ class YtlFetchActor(
       log.info(s"Ytl-sync käynnistetty haulle ${s.hakuOid} tunnisteella $tunniste")
       resultF pipeTo sender
     case s: YtlSyncSingle =>
-      val tunniste = System.currentTimeMillis() + "_manual_sync_for_person_" + s.personOid
+      val tunniste = s.tunniste
       val resultF = syncSingle(s.personOid)
       resultF.onComplete {
         case Success(_) =>
