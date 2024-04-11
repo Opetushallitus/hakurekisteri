@@ -338,7 +338,6 @@ class YtlFetchActor(
                 }
 
               Future.sequence(futures.toSeq).onComplete { _ =>
-                log.info(s"($tunniste) Futures complete! Haku $hakuOid")
                 log
                   .info(
                     s"($tunniste) Completed YTL syncAll for haku $hakuOid with hasErrors=${hasErrors.get()}"
@@ -347,7 +346,11 @@ class YtlFetchActor(
             }
             result.map(r => {
               log.info(s"($tunniste) $r Future finished, returning none")
-              None
+              if (hasErrors.get()) {
+                Some(new Throwable(s"($tunniste) sync for haku $hakuOid had errors"))
+              } else {
+                None
+              }
             })
           }
         })
