@@ -54,8 +54,8 @@ class YtlFetchActor(
   def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = activeKKHakuOids.set(hakuOids)
   override def receive: Receive = {
     case ah: YtlSyncAllHautNightly =>
-      val tunniste = ah.tunniste
       val now = System.currentTimeMillis()
+      val tunniste = ah.tunniste + "_" + now
       val lss = lastSyncStart.get()
       val timeToStartNewSync = (lss + minIntervalBetween) < now
       if (timeToStartNewSync) {
@@ -224,7 +224,8 @@ class YtlFetchActor(
     hakuOid: String,
     tunniste: String
   ): Future[Option[Throwable]] = {
-    val hasErrors = new AtomicBoolean(false)
+    //val hasErrors = new AtomicBoolean(false)
+    val errors = new AtomicReference[List[Throwable]]()
     val hasEnded = new AtomicBoolean(false)
 
     try {
@@ -300,13 +301,14 @@ class YtlFetchActor(
                 .fetch(tunniste, hetuToAllHetus.toSeq.map(h => YtlHetuPostData(h._1, h._2)))
                 .zipWithIndex
                 .map {
-                  case (Left(e: Throwable), index) =>
+                  case (Left(t: Throwable), index) =>
                     log
                       .error(
-                        e,
-                        s"($tunniste) failed to fetch YTL data for index $index / haku $hakuOid: ${e.getMessage}"
+                        t,
+                        s"($tunniste) failed to fetch YTL data for index $index / haku $hakuOid: ${t.getMessage}"
                       )
-                    Future.failed(e)
+                    errors.updateAndGet(previousErrors => t :: previousErrors)
+                    Future.failed(t)
                   case (Right((zip, students)), index) =>
                     try {
                       log.info(
@@ -319,15 +321,16 @@ class YtlFetchActor(
                         .andThen {
                           case Success(_) =>
                             log.info(
-                              s"($tunniste) Finished persisting YTL data batch ${index + 1}/$count for haku $hakuOid! All kokelakset succeeded! hasErrors: ${hasErrors
-                                .get()}, hasEnded ${hasEnded.get()}"
+                              s"($tunniste) Finished persisting YTL data batch ${index + 1}/$count for haku $hakuOid! All kokelakset succeeded! hasErrors: ${errors
+                                .get()
+                                .nonEmpty}, hasEnded ${hasEnded.get()}"
                             )
-                          case Failure(e) =>
+                          case Failure(t: Throwable) =>
                             log.error(
-                              e,
+                              t,
                               s"($tunniste) Failed to persist all kokelas on YTL data batch ${index + 1}/$count for haku $hakuOid"
                             )
-                            hasErrors.compareAndSet(false, true)
+                            errors.updateAndGet(previousErrors => t :: previousErrors)
                         }
                     } finally {
                       log.info(
@@ -340,25 +343,25 @@ class YtlFetchActor(
               Future.sequence(futures.toSeq).onComplete { _ =>
                 log
                   .info(
-                    s"($tunniste) Completed YTL syncAll for haku $hakuOid with hasErrors=${hasErrors.get()}"
+                    s"($tunniste) Completed YTL syncAll for haku $hakuOid with hasErrors=${errors.get().nonEmpty}"
                   )
               }
             }
             result.map(r => {
               log.info(s"($tunniste) $r Future finished, returning none")
-              if (hasErrors.get()) {
-                Some(new Throwable(s"($tunniste) sync for haku $hakuOid had errors"))
-              } else {
-                None
-              }
+              val throwablesEncountered: List[Throwable] = errors.get()
+              throwablesEncountered.foreach(t => {
+                log.error(t, s"($tunniste) Error while ytl-syncing haku $hakuOid")
+              })
+              throwablesEncountered.headOption
             })
           }
         })
 
     } catch {
-      case e: Throwable =>
-        log.error(e, s"($tunniste) Fetching YTL data failed for haku $hakuOid!")
-        Future.successful(Some(e))
+      case t: Throwable =>
+        log.error(t, s"($tunniste) Fetching YTL data failed for haku $hakuOid!")
+        Future.successful(Some(t))
     }
   }
 
