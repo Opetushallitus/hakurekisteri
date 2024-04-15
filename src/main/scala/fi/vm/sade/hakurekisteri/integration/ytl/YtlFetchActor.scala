@@ -44,7 +44,7 @@ class YtlFetchActor(
 
   //val lastSyncStart = new AtomicReference[Option[LocalDate]](None)
   val lastSyncStart = new AtomicReference[Long](0)
-  val minIntervalBetween = 1000 * 60 * 22 //At least 22 hours between nightly syncs
+  val minIntervalBetween = 1000 * 60 * 60 * 22 //At least 22 hours between nightly syncs
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
     config.integrations.asyncOperationThreadPoolSize,
