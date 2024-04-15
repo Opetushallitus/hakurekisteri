@@ -224,8 +224,7 @@ class YtlFetchActor(
     hakuOid: String,
     tunniste: String
   ): Future[Option[Throwable]] = {
-    //val hasErrors = new AtomicBoolean(false)
-    val errors = new AtomicReference[List[Throwable]]()
+    val errors = new AtomicReference[List[Throwable]](List.empty)
     val hasEnded = new AtomicBoolean(false)
 
     try {
