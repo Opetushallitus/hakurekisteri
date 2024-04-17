@@ -26,7 +26,11 @@ case class YtlSyncHaku(hakuOid: String, tunniste: String)
 
 case class YtlSyncAllHaut(tunniste: String)
 case class YtlSyncAllHautNightly(tunniste: String)
-case class YtlSyncSingle(personOid: String, tunniste: String)
+case class YtlSyncSingle(
+  personOid: String,
+  tunniste: String,
+  needsToBeActiveKkHakuOid: Option[String] = None
+)
 case class ActiveKkHakuOids(hakuOids: Set[String])
 case class YtlFetchActorRef(actor: ActorRef) extends TypedActorRef
 
@@ -36,6 +40,7 @@ class YtlFetchActor(
   hakemusService: IHakemusService,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
   ytlKokelasPersister: KokelasPersister,
+  failureEmailSender: FailureEmailSender,
   config: Config
 ) extends Actor
     with ActorLogging {
@@ -66,7 +71,10 @@ class YtlFetchActor(
           case Success(_) =>
             log.info(s"($tunniste) Nightly sync for all hakus success!")
           case Failure(t) =>
-            log.error(t, s"($tunniste) Nightly sync for all hakus failed...")
+            log.error(t, s"($tunniste) Nightly sync for all hakus failed:")
+            failureEmailSender.sendFailureEmail(
+              s"($tunniste) Nightly sync for all hakus failed: ${t.getMessage}"
+            )
         }
       } else {
         log.warning(s"Not starting nightly sync for all hakus as the previous run was on $lss")
@@ -93,23 +101,28 @@ class YtlFetchActor(
       log.info(s"Ytl-sync käynnistetty haulle ${s.hakuOid} tunnisteella $tunniste")
       resultF pipeTo sender
     case s: YtlSyncSingle =>
-      val tunniste = s.tunniste
-      val resultF = syncSingle(s.personOid)
-      resultF.onComplete {
-        case Success(_) =>
-          log.info(s"($tunniste) Manual sync for person ${s.personOid} success!")
-        case Failure(t) =>
-          log.error(t, s"($tunniste) Manual cync for person ${s.personOid} failed...")
+      if (s.needsToBeActiveKkHakuOid.forall(oid => activeKKHakuOids.get().contains(oid))) {
+        val tunniste = s.tunniste
+        val resultF = syncSingle(s.personOid)
+        resultF.onComplete {
+          case Success(_) =>
+            log.info(s"($tunniste) Manual sync for person ${s.personOid} success!")
+          case Failure(t) =>
+            log.error(t, s"($tunniste) Manual sync for person ${s.personOid} failed...")
+        }
+        log.info(s"Ytl-sync käynnistetty haulle ${s.personOid} tunnisteella $tunniste")
+        resultF pipeTo sender
+      } else {
+        val infoStr = s"Not ytl-syncing $s because the haku is not an active kk-haku"
+        log.info(infoStr)
+        Future.successful(false) pipeTo sender
       }
-      log.info(s"Ytl-sync käynnistetty haulle ${s.personOid} tunnisteella $tunniste")
-      resultF pipeTo sender
+
     case a: ActiveKkHakuOids =>
       setAktiivisetKKHaut(a.hakuOids)
       log.info(s"Asetettiin ${a.hakuOids.size} aktiivista ytl-hakua (${activeKKHakuOids.get()})")
       sender ! "ok"
   }
-
-  case class YtlFetchStatus(hasErrors: Boolean, hasEnded: Boolean, tunniste: String)
 
   def syncAllOneHakuAtATime(
     tunniste: String
@@ -122,7 +135,7 @@ class YtlFetchActor(
     log.info(
       s"($groupUuid) Starting sync all one haku at a time for ${hakuOids.size} kouta-hakus!"
     )
-    val results = hakuOids
+    val resultsByHakuF = hakuOids
       .foldLeft(Future.successful(List[(String, Option[Throwable])]())) {
         case (accResults: Future[List[(String, Option[Throwable])]], hakuOid) =>
           accResults.flatMap(rs => {
@@ -135,7 +148,7 @@ class YtlFetchActor(
                   }
               resultForSingleHaku.map(errorOpt => {
                 log.info(
-                  s"($groupUuid) Result for single haku $hakuOid, error: ${errorOpt.map(_.getMessage)}"
+                  s"($groupUuid) Result for single haku $hakuOid, error: ${errorOpt}"
                 )
                 (hakuOid, errorOpt) :: rs
               })
@@ -147,7 +160,7 @@ class YtlFetchActor(
           })
       }
 
-    results.onComplete {
+    resultsByHakuF.onComplete {
       case Success(res: Seq[(String, Option[Throwable])]) =>
         val failed = res.filter(r => r._2.isDefined)
         val failedHakuOids = failed.map(_._1)
@@ -157,12 +170,21 @@ class YtlFetchActor(
         log.info(
           s"($groupUuid) Sync all one haku at a time finished. Failed hakus: $failedHakuOids."
         )
-      //AtomicStatus.updateHasFailures(failedHakuOids.nonEmpty, hasEnded = true)
       case Failure(t: Throwable) =>
         log.error(t, s"($groupUuid) Sync all one haku at a time went very wrong somehow: ")
-      //AtomicStatus.updateHasFailures(hasFailures = true, hasEnded = true)
     }
-    results
+
+    resultsByHakuF.flatMap((res: Seq[(String, Option[Throwable])]) => {
+      val errored = res.filter(_._2.isDefined)
+      val result =
+        if (errored.nonEmpty) {
+          log.error(s"($groupUuid) Errors found in YtlSyncAll: $errored")
+          Future.failed(new RuntimeException(s"FailedHakus (5 first): ${errored.take(5)}"))
+        } else {
+          Future.successful(s"($groupUuid) Sync succeeded with no errors!")
+        }
+      result
+    })
   }
 
   def syncSingle(personOid: String): Future[Boolean] = {
@@ -316,21 +338,28 @@ class YtlFetchActor(
 
                       val kokelaksetToPersist =
                         getKokelaksetToPersist(students.toSeq, allHetusToPersonOids, tunniste)
-                      persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
-                        .andThen {
-                          case Success(_) =>
-                            log.info(
-                              s"($tunniste) Finished persisting YTL data batch ${index + 1}/$count for haku $hakuOid! All kokelakset succeeded! hasErrors: ${errors
-                                .get()
-                                .nonEmpty}, hasEnded ${hasEnded.get()}"
-                            )
-                          case Failure(t: Throwable) =>
-                            log.error(
-                              t,
-                              s"($tunniste) Failed to persist all kokelas on YTL data batch ${index + 1}/$count for haku $hakuOid"
-                            )
-                            errors.updateAndGet(previousErrors => t :: previousErrors)
-                        }
+                      val pResult =
+                        persistKokelaksetInBatches(kokelaksetToPersist, personOidsWithAliases)
+                      pResult.onComplete {
+                        case Success(_) =>
+                          log.info(
+                            s"($tunniste) Finished persisting YTL data batch ${index + 1}/$count for haku $hakuOid! All kokelakset succeeded! hasErrors: ${errors
+                              .get()
+                              .nonEmpty}, hasEnded ${hasEnded.get()}"
+                          )
+                        case Failure(t) =>
+                          log.error(
+                            t,
+                            s"($tunniste) Failed to persist all kokelas on YTL data batch ${index + 1}/$count for haku $hakuOid"
+                          )
+                          errors.updateAndGet(previousErrors => t :: previousErrors)
+                      }
+                      pResult
+                    } catch {
+                      case t: Throwable =>
+                        log.error(t, s"($tunniste) Failure while persisting")
+                        errors.updateAndGet(previousErrors => t :: previousErrors)
+                        Future.failed(t)
                     } finally {
                       log.info(
                         s"($tunniste) Closing zip file on YTL data batch ${index + 1}/$count for haku $hakuOid"
@@ -347,16 +376,17 @@ class YtlFetchActor(
               }
             }
             result.map(r => {
-              log.info(s"($tunniste) $r Future finished, returning none")
               val throwablesEncountered: List[Throwable] = errors.get()
               throwablesEncountered.foreach(t => {
                 log.error(t, s"($tunniste) Error while ytl-syncing haku $hakuOid")
               })
+              log.info(
+                s"($tunniste) $r Future for haku $hakuOid finished, returning ${throwablesEncountered.headOption}"
+              )
               throwablesEncountered.headOption
             })
           }
         })
-
     } catch {
       case t: Throwable =>
         log.error(t, s"($tunniste) Fetching YTL data failed for haku $hakuOid!")
@@ -403,5 +433,4 @@ class YtlFetchActor(
       }
     )
   }
-
 }

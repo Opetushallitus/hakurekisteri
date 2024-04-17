@@ -104,7 +104,6 @@ trait Integrations {
   val haut: ActorRef
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
-  val ytlIntegration: YtlIntegration
   val valpasIntegration: ValpasIntergration
   val ytlHttp: YtlHttpFetch
   val parametrit: ParametritActorRef
@@ -192,14 +191,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  override val ytlIntegration = new YtlIntegration(
-    OphUrlProperties,
-    ytlHttp,
-    hakemusService,
-    oppijaNumeroRekisteri,
-    ytlKokelasPersister,
-    config
-  )
+  val mockFailureEmailSender = new MockFailureEmailSender
 
   override val ytlFetchActor: YtlFetchActorRef = new YtlFetchActorRef(
     mockActor(
@@ -210,6 +202,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
         hakemusService,
         oppijaNumeroRekisteri,
         ytlKokelasPersister,
+        mockFailureEmailSender,
         config
       )
     )
@@ -217,7 +210,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val haut: ActorRef = system.actorOf(
     Props(
-      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, ytlFetchActor, config)
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlFetchActor, config)
     ),
     "haut"
   )
@@ -456,14 +449,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  val ytlIntegration = new YtlIntegration(
-    OphUrlProperties,
-    ytlHttp,
-    hakemusService,
-    oppijaNumeroRekisteri,
-    ytlKokelasPersister,
-    config
-  )
+  val realFailureEmailSender = new RealFailureEmailSender(config)
 
   val ytlFetchActor = YtlFetchActorRef(
     system.actorOf(
@@ -474,6 +460,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
           hakemusService,
           oppijaNumeroRekisteri,
           ytlKokelasPersister,
+          realFailureEmailSender,
           config
         )
       ),
@@ -483,7 +470,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val haut: ActorRef = system.actorOf(
     Props(
-      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, ytlFetchActor, config)
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlFetchActor, config)
     ),
     "haut"
   )
@@ -543,25 +530,18 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val ytlTrigger: Trigger = Trigger {
     (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) =>
-      if (
-        hakemus.stateValid && ytlIntegration.activeKKHakuOids
-          .get()
-          .contains(hakemus.applicationSystemId)
-      ) {
+      {
         (hakemus.hetu, hakemus.personOid) match {
           case (Some(hetu), Some(personOid)) =>
-            Try(
-              ytlIntegration.syncWithHetuAndPersonOid(
-                hakemus.oid,
-                hetu,
-                personOid,
-                personOidsWithAliases.intersect(hakemus.personOid.toSet)
-              )
+            ytlFetchActor.actor ! YtlSyncSingle(
+              personOid,
+              "ytlTrigger_" + hakemus.oid,
+              Some(hakemus.applicationSystemId)
             )
           case _ =>
             val noOid =
               s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID and/or SSN!"
-            logger.error(noOid)
+            logger.warn(noOid)
         }
 
       }

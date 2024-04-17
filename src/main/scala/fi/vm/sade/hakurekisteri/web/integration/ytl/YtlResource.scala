@@ -9,7 +9,6 @@ import fi.vm.sade.hakurekisteri.{AuditUtil, YTLSyncForAll, YTLSyncForPerson}
 import fi.vm.sade.hakurekisteri.integration.ytl.{
   Kokelas,
   YtlFetchActorRef,
-  YtlIntegration,
   YtlSyncAllHaut,
   YtlSyncHaku,
   YtlSyncSingle
@@ -25,7 +24,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class YtlResource(ytlIntegration: YtlIntegration, ytlFetchActor: YtlFetchActorRef)(implicit
+class YtlResource(ytlFetchActor: YtlFetchActorRef)(implicit
   val system: ActorSystem,
   val security: Security,
   sw: Swagger
@@ -47,18 +46,7 @@ class YtlResource(ytlIntegration: YtlIntegration, ytlFetchActor: YtlFetchActorRe
 
   def shouldBeAdmin = if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
 
-  get("/request") {
-    shouldBeAdmin
-    Accepted()
-  }
   post("/http_request") {
-    shouldBeAdmin
-    logger.info("Fetching YTL data for everybody")
-    audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
-    ytlIntegration.syncAll()
-    Accepted("YTL sync started")
-  }
-  post("/http_request_byhaku") {
     shouldBeAdmin
     logger.info("Fetching YTL data for everybody")
     audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)

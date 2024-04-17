@@ -36,17 +36,7 @@ class YtlResourceSpec
     .persistSingle(_: KokelasWithPersonAliases)(_: ExecutionContext))
     .expects(*, *)
     .returns(Future.unit)
-
-  val ytlIntegration = new YtlIntegration(
-    ytlProperties,
-    ytlHttpFetch,
-    hakemusService,
-    MockOppijaNumeroRekisteri,
-    successfulYtlKokelasPersister,
-    config
-  )
   val someKkHaku = "kkhaku"
-  ytlIntegration.setAktiivisetKKHaut(Set(someKkHaku))
 
   val answers =
     HakemusAnswers(henkilotiedot = Some(HakemusHenkilotiedot(Henkilotunnus = Some("050996-9574"))))
@@ -75,6 +65,7 @@ class YtlResourceSpec
           hakemusService,
           MockOppijaNumeroRekisteri,
           successfulYtlKokelasPersister,
+          new MockFailureEmailSender,
           config
         )
       ),
@@ -82,7 +73,7 @@ class YtlResourceSpec
     )
   )
 
-  addServlet(new YtlResource(ytlIntegration, ytlFetchActor), "/*")
+  addServlet(new YtlResource(ytlFetchActor), "/*")
   ytlFetchActor.actor ! ActiveKkHakuOids(Set(someKkHaku, "another_kk_haku"))
   val endPoint = mock[Endpoint]
 
@@ -115,7 +106,7 @@ class YtlResourceSpec
     hakemusService.hetuAndPersonOidForHakuLite _ when (*) returns Future.successful(
       Seq(HetuPersonOid("hetu", "personOid"))
     )
-    post("/http_request_byhaku") {
+    post("/http_request") {
       status should be(202)
     }
     Thread.sleep(5000)
