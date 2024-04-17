@@ -86,7 +86,7 @@ class YtlFetchActor(
         case Success(_) =>
           log.info(s"($tunniste) Manual sync for all hakus success!")
         case Failure(t) =>
-          log.error(t, s"($tunniste) Manual cync for all hakus failed...")
+          log.error(t, s"($tunniste) Manual sync for all hakus failed...")
       }
       sender ! tunniste
     case s: YtlSyncHaku =>
@@ -96,7 +96,7 @@ class YtlFetchActor(
         case Success(_) =>
           log.info(s"($tunniste) Manual sync for haku ${s.hakuOid} success!")
         case Failure(t) =>
-          log.error(t, s"($tunniste) Manual cync for haku ${s.hakuOid} failed...")
+          log.error(t, s"($tunniste) Manual sync for haku ${s.hakuOid} failed...")
       }
       log.info(s"Ytl-sync käynnistetty haulle ${s.hakuOid} tunnisteella $tunniste")
       resultF pipeTo sender
@@ -247,7 +247,6 @@ class YtlFetchActor(
     tunniste: String
   ): Future[Option[Throwable]] = {
     val errors = new AtomicReference[List[Throwable]](List.empty)
-    val hasEnded = new AtomicBoolean(false)
 
     try {
       log.info(
@@ -345,7 +344,7 @@ class YtlFetchActor(
                           log.info(
                             s"($tunniste) Finished persisting YTL data batch ${index + 1}/$count for haku $hakuOid! All kokelakset succeeded! hasErrors: ${errors
                               .get()
-                              .nonEmpty}, hasEnded ${hasEnded.get()}"
+                              .nonEmpty}"
                           )
                         case Failure(t) =>
                           log.error(
