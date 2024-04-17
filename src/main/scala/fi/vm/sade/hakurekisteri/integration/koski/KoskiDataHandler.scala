@@ -628,9 +628,11 @@ class KoskiDataHandler(
           Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo)
         )
       }
-      // Ei tallenneta peruskoulun oppiaineen oppimäärän suorituksia joilla ei ole arvosanaa
+      // Ei tallenneta peruskoulun oppiaineen oppimäärän suorituksia joilla ei ole arvosanaa tai joiden arvosana on 4
       tallennettavatSuoritukset = tallennettavatSuoritukset.filterNot(s =>
-        Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo) && s.arvosanat.isEmpty
+        Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo) && (s.arvosanat.isEmpty || s.arvosanat.exists(
+          a => a.arvio.equals(Arvio410("4"))
+        ))
       )
 
       // Tallennetaan mahdollinen 7-8-valmistava vain silloin, kun valmista ja vahvistettua
