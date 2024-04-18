@@ -460,6 +460,9 @@ class KoskiSuoritusArvosanaParser {
                 .koodistoUri
                 .contentEquals("koskioppiaineetyleissivistava")
             )
+            // Filtteröidään hylätyt
+            s = s.filter(osaSuoritus =>
+              osaSuoritus.arviointi.exists(a => a.hyväksytty.isDefined && a.hyväksytty.get))
             osasuoritusToArvosana(
               personOid,
               komoOid,

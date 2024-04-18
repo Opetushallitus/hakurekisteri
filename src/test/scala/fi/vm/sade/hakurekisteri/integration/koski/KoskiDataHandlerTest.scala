@@ -4466,6 +4466,36 @@ class KoskiDataHandlerTest
 
   }
 
+  it should "import hyväksytty suoritus even if there is arvosana 4 for nuorten perusopetuksen oppiaineen oppimäärä" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koski_perusopituksen_oppiaine_4_ja_hyvaksytty.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
+
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        henkilo,
+        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)
+      ),
+      5.seconds
+    )
+
+    val matikkaArvosanat = run(
+      database.run(
+        sql"select count(*) from arvosana where aine = 'MA'"
+          .as[String]
+      )
+    )
+    matikkaArvosanat.head should equal("2")
+
+  }
+
   it should "not import arvosanat for aikuisten perusopetuksen oppiaineen oppimäärä without arvosana" in {
     val json: String =
       scala.io.Source
