@@ -3424,7 +3424,7 @@ class KoskiDataHandlerTest
     suoritukset.head should equal("1")
   }
 
-  it should "store alle 30 opintopisteen valma-suoritus as KESKEN before deadline date" in {
+  it should "not store alle 30 opintopisteen valma-suoritus in valmis state" in {
     val json: String =
       scala.io.Source.fromFile(jsonDir + "koskidata_valma_valmis_alle_30_op.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -3443,37 +3443,9 @@ class KoskiDataHandlerTest
     )
 
     var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("1")
+    opiskelija.head should equal("0")
     var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("1")
-    var suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
-    suoritusTilat.head should equal("KESKEN")
-  }
-
-  it should "store alle 30 opintopisteen valma-suoritus as KESKEYTYNYT after deadline date" in {
-    val json: String =
-      scala.io.Source.fromFile(jsonDir + "koskidata_valma_valmis_alle_30_op.json").mkString
-    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
-    henkilo should not be null
-    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
-
-    KoskiUtil.deadlineDate = LocalDate.now().minusDays(30)
-
-    Await.result(
-      koskiDatahandler.processHenkilonTiedotKoskesta(
-        henkilo,
-        PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
-        new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = true)
-      ),
-      5.seconds
-    )
-
-    var opiskelija = run(database.run(sql"select count(*) from opiskelija".as[String]))
-    opiskelija.head should equal("1")
-    var suoritukset = run(database.run(sql"select count(*) from suoritus".as[String]))
-    suoritukset.head should equal("1")
-    var suoritusTilat = run(database.run(sql"select tila from suoritus".as[String]))
-    suoritusTilat.head should equal("KESKEYTYNYT")
+    suoritukset.head should equal("0")
   }
 
   it should "set correct luokkatieto when detecting oppilaitos and luokka" in {

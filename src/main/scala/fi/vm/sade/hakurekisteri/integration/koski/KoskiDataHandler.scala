@@ -108,11 +108,11 @@ class KoskiDataHandler(
       suoritus.tyyppi.exists(_.koodiarvo == "valma")
       && !suoritus.laajuusVahintaan(30)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
-        .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+        .exists(ooj => KoskiUtil.eiHalututAlle30opValmaTilat.contains(ooj.tila.koodiarvo))
     ) {
       logger.info(
         s"Filtteröitiin henkilöltä $henkiloOid valma-suoritus, joka sisälsi alle 30 osp ja " +
-          s"kuului eronneeseen rinnastettaviin tiloihin."
+          s"kuului eronneeseen rinnastettaviin tiloihin tai oli valmis."
       )
       return false
     }

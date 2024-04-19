@@ -91,6 +91,7 @@ db/schema.ddl
 .bsp/
 .vscode/
 project/
+.metals/
 
 suoritusrekisteri-it-db
 src/main/webapp/
