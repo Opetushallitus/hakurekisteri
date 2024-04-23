@@ -21,6 +21,7 @@
         <json4s.version>3.4.2</json4s.version>
         <netty.version>4.1.35.Final</netty.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
+        <dokumenttipalvelu.version>6.12-SNAPSHOT</dokumenttipalvelu.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -682,6 +683,11 @@
             <groupId>fi.vm.sade.java-utils</groupId>
             <artifactId>opintopolku-cas-servlet-filter</artifactId>
             <version>0.1.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
+            <artifactId>dokumenttipalvelu</artifactId>
+            <version>${dokumenttipalvelu.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

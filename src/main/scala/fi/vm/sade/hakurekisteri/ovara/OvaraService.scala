@@ -9,7 +9,9 @@ trait IOvaraService {
   def formSiirtotiedostotPaged(start: Long, end: Long)
 }
 
-class OvaraService(db: OvaraDbRepository) extends IOvaraService with Logging {
+class OvaraService(db: OvaraDbRepository, s3Client: SiirtotiedostoClient, pageSize: Int)
+    extends IOvaraService
+    with Logging {
 
   @tailrec
   private def saveInSiirtotiedostoPaged[T](
@@ -23,7 +25,7 @@ class OvaraService(db: OvaraDbRepository) extends IOvaraService with Logging {
       logger.info(
         s"Saatiin sivu (${pageResults.size}) $params, tallennetaan siirtotiedosto ennen seuraavan sivun hakemista"
       )
-      //siirtotiedostoClient.saveSiirtotiedosto[T](params.tyyppi, pageResults)
+      s3Client.saveSiirtotiedosto[T](params.tyyppi, pageResults)
       saveInSiirtotiedostoPaged(
         params.copy(offset = params.offset + pageResults.size),
         pageFunction
@@ -50,7 +52,7 @@ class OvaraService(db: OvaraDbRepository) extends IOvaraService with Logging {
     //lukitaan aikaikkunan loppuhetki korkeintaan nykyhetkeen, jolloin ei tarvitse huolehtia tämän jälkeen kantaan mahdollisesti tulevista muutoksista,
     //ja eri tyyppiset tiedostot muodostetaan samalle aikaikkunalle.
     val baseParams =
-      SiirtotiedostoPagingParams("", start, math.min(System.currentTimeMillis(), end), 0, 50000)
+      SiirtotiedostoPagingParams("", start, math.min(System.currentTimeMillis(), end), 0, pageSize)
 
     val suoritusException = formSiirtotiedosto[SiirtotiedostoSuoritus](
       baseParams.copy(tyyppi = "suoritus"),
