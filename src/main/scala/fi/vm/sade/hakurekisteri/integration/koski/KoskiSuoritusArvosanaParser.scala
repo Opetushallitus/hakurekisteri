@@ -462,8 +462,10 @@ class KoskiSuoritusArvosanaParser {
             )
             // Filtteröidään neloset
             s = s.filterNot(osaSuoritus =>
-              osaSuoritus.arviointi.exists(a => a.arvosana.koodiarvo != "H"
-                && Arvio410(a.arvosana.koodiarvo).arvosana.contentEquals("4"))
+              osaSuoritus.arviointi.exists(a =>
+                a.arvosana.koodiarvo != "H"
+                  && Arvio410(a.arvosana.koodiarvo).arvosana.contentEquals("4")
+              )
             )
             osasuoritusToArvosana(
               personOid,
