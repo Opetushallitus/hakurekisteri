@@ -2,7 +2,6 @@ package support
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanatQuery}
@@ -18,6 +17,7 @@ import fi.vm.sade.hakurekisteri.organization.{
   FutureOrganizationHierarchy,
   OrganizationHierarchy
 }
+import fi.vm.sade.hakurekisteri.ovara.{OvaraDbRepository, OvaraDbRepositoryImpl}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -59,6 +59,7 @@ class BareRegisters(
     system.actorOf(Props(new ImportBatchActor(journals.eraJournal, 5, config)), "erat")
   override val eraOrgRekisteri: ActorRef =
     system.actorOf(Props(new ImportBatchOrgActor(db, config)), "era-orgs")
+  override val ovaraDbRepository: OvaraDbRepository = new OvaraDbRepositoryImpl(db)
 }
 
 class AuthorizedRegisters(
@@ -233,6 +234,7 @@ class AuthorizedRegisters(
   override val eraOrgRekisteri: ActorRef = unauthorized.eraOrgRekisteri
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null
+  override val ovaraDbRepository: OvaraDbRepository = null
 }
 
 object AuthorizedRegisters {
