@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.ovara.{OvaraDbRepositoryImpl, OvaraResource, OvaraService}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
@@ -149,6 +150,9 @@ class ScalatraBootstrap extends LifeCycle {
     ("/asiakirja", "asiakirja") -> new AsiakirjaResource(koosteet.siirtotiedostojono),
     ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(
       koosteet.siirtotiedostojono
+    ),
+    ("/ovara", "siirtotiedostojono") -> new OvaraResource(
+      new OvaraService(registers.ovaraDbRepository)
     ),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
     ("/rest/v2/hakijat", "rest/v2/hakijat") -> new HakijaResourceV2(koosteet.hakijat),
