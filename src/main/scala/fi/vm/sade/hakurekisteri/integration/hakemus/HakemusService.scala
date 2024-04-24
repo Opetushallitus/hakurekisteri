@@ -161,9 +161,14 @@ trait IHakemusService {
   def addTrigger(trigger: Trigger): Unit
   def reprocessHaunHakemukset(hakuOid: String): Unit
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
+  def hetuAndPersonOidForHakuLite(hakuOid: String): Future[Seq[HetuPersonOid]]
   def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]]
 }
 
+case class AtaruHenkiloSearchParams(
+  hakukohdeOids: Option[List[String]],
+  hakuOid: Option[String]
+)
 case class AtaruSearchParams(
   hakijaOids: Option[List[String]],
   hakukohdeOids: Option[List[String]],
@@ -495,6 +500,43 @@ class HakemusService(
           )
         })
       )
+  }
+
+  private def ataruhakemustenHenkilot(
+    params: AtaruHenkiloSearchParams
+  ): Future[List[AtaruHakemuksenHenkilotiedot]] = {
+    val p = params.hakuOid.fold[Map[String, Any]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
+      params.hakukohdeOids.fold[Map[String, Any]](Map.empty)(hakukohdeOids =>
+        Map("hakukohdeOids" -> hakukohdeOids)
+      )
+
+    def page(
+      offset: Option[String]
+    ): Future[(List[AtaruHakemuksenHenkilotiedot], Option[String])] = {
+      logger.info(s"Haetaan sivu henkilöitä, $params, offset $offset")
+      ataruHakemusClient
+        .postObjectWithCodes[Map[String, Any], AtaruResponseHenkilot](
+          uriKey = "ataru.applications.henkilotiedot",
+          acceptedResponseCodes = List(200),
+          maxRetries = 2,
+          resource = offset.fold(p)(o => p + ("offset" -> o)),
+          basicAuth = false
+        )
+        .map(result => {
+          logger.info(s"Saatiin ${result.applications.size} henkilötietoa parametreilla $params")
+          (result.applications, result.offset)
+        })
+    }
+
+    def allPages(
+      offset: Option[String],
+      acc: Future[List[AtaruHakemuksenHenkilotiedot]]
+    ): Future[List[AtaruHakemuksenHenkilotiedot]] = page(offset).flatMap {
+      case (applicationPersons, None)      => acc.map(_ ++ applicationPersons)
+      case (applicationPersons, newOffset) => allPages(newOffset, acc.map(_ ++ applicationPersons))
+    }
+
+    allPages(None, Future.successful(List.empty))
   }
 
   private def ataruhakemukset(
@@ -990,6 +1032,25 @@ class HakemusService(
     } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
   }
 
+  def hetuAndPersonOidForHakuLite(hakuOid: String): Future[Seq[HetuPersonOid]] = {
+    ataruhakemustenHenkilot(
+      AtaruHenkiloSearchParams(
+        hakukohdeOids = None,
+        hakuOid = Some(hakuOid)
+      )
+    ).map(result => {
+      logger.info(s"Saatiin atarusta henkilötiedot ${result.size} hakemukselta")
+      val hetuJaPersonOidTiedossa: Seq[HetuPersonOid] =
+        result.collect({ case AtaruHakemuksenHenkilotiedot(_, Some(personOid), Some(ssn)) =>
+          HetuPersonOid(ssn, personOid)
+        })
+      logger.info(
+        s"Hetu ja personOid tiedossa ${hetuJaPersonOidTiedossa.size} hakemukselle ${result.size} hakemuksesta"
+      )
+      hetuJaPersonOidTiedossa
+    })
+  }
+
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]] = {
     for {
       ataruHakemukset <- ataruhakemukset(
@@ -1187,10 +1248,14 @@ class HakemusServiceMock extends IHakemusService {
 
   override def hetuAndPersonOidForHaku(hakuOid: String) = Future.successful(Seq[HetuPersonOid]())
 
+  override def hetuAndPersonOidForHakuLite(hakuOid: String): Future[Seq[HetuPersonOid]] =
+    Future.successful(Seq[HetuPersonOid]())
+
   override def hetuAndPersonOidForPersonOid(
     personOid: String
   ): Future[Seq[HakemusHakuHetuPersonOid]] = Future.successful(Seq[HakemusHakuHetuPersonOid]())
 
   override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] =
     Future.successful(Set.empty)
+
 }

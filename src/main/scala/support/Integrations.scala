@@ -84,6 +84,8 @@ import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlRerunPolicy
 
+import java.util.Date
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -102,7 +104,6 @@ trait Integrations {
   val haut: ActorRef
   val koodisto: KoodistoActorRef
   val ytlKokelasPersister: YtlKokelasPersister
-  val ytlIntegration: YtlIntegration
   val valpasIntegration: ValpasIntergration
   val ytlHttp: YtlHttpFetch
   val parametrit: ParametritActorRef
@@ -117,6 +118,7 @@ trait Integrations {
   val pistesyottoService: PistesyottoService
   val hakukohderyhmaService: IHakukohderyhmaService
   val valintalaskentaTulosService: IValintalaskentaTulosService
+  val ytlFetchActor: YtlFetchActorRef
 }
 
 object Integrations {
@@ -177,6 +179,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       new MockHakukohdeAggregatorActor(tarjonta, koutaInternal, config)
     )
   )
+
   override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   override val ytlKokelasPersister = new YtlKokelasPersister(
     system,
@@ -188,18 +191,26 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  override val ytlIntegration = new YtlIntegration(
-    OphUrlProperties,
-    ytlHttp,
-    hakemusService,
-    oppijaNumeroRekisteri,
-    ytlKokelasPersister,
-    config
+  val mockFailureEmailSender = new MockFailureEmailSender
+
+  override val ytlFetchActor: YtlFetchActorRef = new YtlFetchActorRef(
+    mockActor(
+      "ytlFetchActor",
+      new YtlFetchActor(
+        properties = OphUrlProperties,
+        ytlHttp,
+        hakemusService,
+        oppijaNumeroRekisteri,
+        ytlKokelasPersister,
+        mockFailureEmailSender,
+        config
+      )
+    )
   )
 
   val haut: ActorRef = system.actorOf(
     Props(
-      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, config)
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlFetchActor, config)
     ),
     "haut"
   )
@@ -438,18 +449,28 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )
   val ytlFileSystem = YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  val ytlIntegration = new YtlIntegration(
-    OphUrlProperties,
-    ytlHttp,
-    hakemusService,
-    oppijaNumeroRekisteri,
-    ytlKokelasPersister,
-    config
+  val realFailureEmailSender = new RealFailureEmailSender(config)
+
+  val ytlFetchActor = YtlFetchActorRef(
+    system.actorOf(
+      Props(
+        new YtlFetchActor(
+          properties = OphUrlProperties,
+          ytlHttp,
+          hakemusService,
+          oppijaNumeroRekisteri,
+          ytlKokelasPersister,
+          realFailureEmailSender,
+          config
+        )
+      ),
+      "ytlFetchActor"
+    )
   )
 
   val haut: ActorRef = system.actorOf(
     Props(
-      new HakuActor(hakuAggregator, koskiService, parametrit, ytlIntegration, config)
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlFetchActor, config)
     ),
     "haut"
   )
@@ -509,25 +530,18 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val ytlTrigger: Trigger = Trigger {
     (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) =>
-      if (
-        hakemus.stateValid && ytlIntegration.activeKKHakuOids
-          .get()
-          .contains(hakemus.applicationSystemId)
-      ) {
+      {
         (hakemus.hetu, hakemus.personOid) match {
           case (Some(hetu), Some(personOid)) =>
-            Try(
-              ytlIntegration.syncWithHetuAndPersonOid(
-                hakemus.oid,
-                hetu,
-                personOid,
-                personOidsWithAliases.intersect(hakemus.personOid.toSet)
-              )
+            ytlFetchActor.actor ! YtlSyncSingle(
+              personOid,
+              "ytlTrigger_" + hakemus.oid,
+              Some(hakemus.applicationSystemId)
             )
           case _ =>
             val noOid =
               s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID and/or SSN!"
-            logger.error(noOid)
+            logger.warn(noOid)
         }
 
       }
@@ -536,8 +550,12 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   hakemusService.addTrigger(arvosanaTrigger)
   hakemusService.addTrigger(ytlTrigger)
 
+  val daysToBacktrack: Int =
+    OphUrlProperties.getProperty("suoritusrekisteri.modifiedhakemukset.backtrack.days").toInt
   implicit val scheduler = system.scheduler
-  hakemusService.processModifiedHakemukset()
+  hakemusService.processModifiedHakemukset(modifiedAfter =
+    new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(daysToBacktrack))
+  )
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
   if (!quartzScheduler.isStarted) {
@@ -546,7 +564,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val ytlSyncAllEnabled = OphUrlProperties.getProperty("ytl.http.syncAllEnabled").toBoolean
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
-  val rerunSync = YtlRerunPolicy.rerunPolicy(syncAllCronExpression, ytlIntegration)
+  val rerunSync = YtlRerunPolicy.rerunPolicy(syncAllCronExpression, ytlFetchActor)
   if (ytlSyncAllEnabled) {
     quartzScheduler.scheduleJob(
       lambdaJob(rerunSync),
