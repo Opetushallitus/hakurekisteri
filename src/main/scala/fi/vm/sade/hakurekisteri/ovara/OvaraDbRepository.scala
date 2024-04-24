@@ -39,7 +39,7 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
   ): Seq[SiirtotiedostoSuoritus] = {
     val query =
       sql"""select resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollistaminen,
-       suoritus_kieli, inserted, deleted, source, kuvaus, vuosi, tyyppi, index, vahvistettu, current, lahde_arvot
+       suoritus_kieli, inserted, deleted, source, kuvaus, vuosi, tyyppi, index, vahvistettu, lahde_arvot
            from suoritus where current and inserted >= ${params.start} and inserted <= ${params.end}
                          order by inserted desc limit ${params.pageSize} offset ${params.offset}"""
         .as[SiirtotiedostoSuoritus]
@@ -48,15 +48,35 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
 
   override def getChangedArvosanat(
     params: SiirtotiedostoPagingParams
-  ): Seq[SiirtotiedostoArvosana] = ???
+  ): Seq[SiirtotiedostoArvosana] = {
+    val query =
+      sql"""select resource_id, suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted, deleted, pisteet, myonnetty, source, jarjestys, lahde_arvot, current, lahde_arvot
+           from arvosana where current and inserted >= ${params.start} and inserted <= ${params.end}
+                         order by inserted desc limit ${params.pageSize} offset ${params.offset}"""
+        .as[SiirtotiedostoArvosana]
+    runBlocking(query)
+  }
 
   override def getChangedOpiskelijat(
     params: SiirtotiedostoPagingParams
-  ): Seq[SiirtotiedostoOpiskelija] = ???
-
+  ): Seq[SiirtotiedostoOpiskelija] = {
+    val query =
+      sql"""select resource_id, oppilaitos_oid, luokkataso, luokka, henkilo_oid, alku_paiva, loppu_paiva, inserted, deleted, source
+           from opiskelija where current and inserted >= ${params.start} and inserted <= ${params.end}
+                         order by inserted desc limit ${params.pageSize} offset ${params.offset}"""
+        .as[SiirtotiedostoOpiskelija]
+    runBlocking(query)
+  }
   override def getChangedOpiskeluoikeudet(
     params: SiirtotiedostoPagingParams
-  ): Seq[SiirtotiedostoOpiskeluoikeus] = ???
+  ): Seq[SiirtotiedostoOpiskeluoikeus] = {
+    val query =
+      sql"""select resource_id, alku_paiva, loppu_paiva, henkilo_oid, komo, myontaja, source, inserted, deleted
+           from opiskeluoikeus where current and inserted >= ${params.start} and inserted <= ${params.end}
+                         order by inserted desc limit ${params.pageSize} offset ${params.offset}"""
+        .as[SiirtotiedostoOpiskeluoikeus]
+    runBlocking(query)
+  }
 
   def runBlocking[R](operations: DBIO[R], timeout: Duration = 10.minutes): R = {
     Await.result(
@@ -69,32 +89,68 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
     )
   }
 }
-
 //Todo, varmista oikeasti optionaaliset kentät
 case class SiirtotiedostoSuoritus(
-  resource_id: String,
+  resourceId: String,
   komo: String,
   myontaja: String,
   tila: String,
   valmistuminen: String,
-  henkilo_oid: String,
+  henkiloOid: String,
   yksilollistaminen: String,
-  suoritus_kieli: String,
+  suoritusKieli: Option[String],
+  inserted: Long,
+  deleted: Option[Boolean],
   source: String,
   kuvaus: Option[String],
   vuosi: Option[String],
   tyyppi: Option[String],
   index: Option[String],
   vahvistettu: Boolean,
-  current: Boolean, //Käytännössä aina true, koska ei-currenteja ei ladota siirtotiedostoihin
-  lahde_arvot: Map[String, String]
+  lahdeArvot: Map[String, String]
 )
 
-case class SiirtotiedostoArvosana()
+case class SiirtotiedostoArvosana(
+  resourceId: String,
+  suoritus: String,
+  arvosana: Option[String], //todo varmista onko tyhjänä "" vai null
+  asteikko: Option[String],
+  aine: Option[String],
+  lisatieto: Option[String],
+  valinnainen: Boolean,
+  inserted: Long,
+  deleted: Boolean,
+  pisteet: Option[String],
+  myonnetty: Option[String],
+  source: String,
+  jarjestys: Option[String],
+  lahdeArvot: Map[String, String]
+)
 
-case class SiirtotiedostoOpiskelija()
+case class SiirtotiedostoOpiskelija(
+  resourceId: String,
+  oppilaitosOid: String,
+  luokkataso: String,
+  luokka: String,
+  henkiloOid: String,
+  alkuPaiva: Long,
+  loppuPaiva: Option[Long],
+  inserted: Long,
+  deleted: Boolean,
+  source: String
+)
 
-case class SiirtotiedostoOpiskeluoikeus()
+case class SiirtotiedostoOpiskeluoikeus(
+  resourceId: String,
+  alkuPaiva: Long,
+  loppuPaiva: Option[Long],
+  henkiloOid: String,
+  komo: String,
+  myontaja: String,
+  source: String,
+  inserted: Long,
+  deleted: Boolean
+)
 
 case class SiirtotiedostoPagingParams(
   tyyppi: String,
