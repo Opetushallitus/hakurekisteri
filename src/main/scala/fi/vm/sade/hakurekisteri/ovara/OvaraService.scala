@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 trait IOvaraService {
   //Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
   //Tiedostot tallennetaan s3:seen.
-  def formSiirtotiedostotPaged(start: Long, end: Long)
+  def formSiirtotiedostotPaged(start: Long, end: Long): Boolean
 }
 
 class OvaraService(db: OvaraDbRepository, s3Client: SiirtotiedostoClient, pageSize: Int)
@@ -48,22 +48,34 @@ class OvaraService(db: OvaraDbRepository, s3Client: SiirtotiedostoClient, pageSi
     }
   }
 
-  def formSiirtotiedostotPaged(start: Long, end: Long) = {
+  def formSiirtotiedostotPaged(start: Long, end: Long): Boolean = {
     //lukitaan aikaikkunan loppuhetki korkeintaan nykyhetkeen, jolloin ei tarvitse huolehtia tämän jälkeen kantaan mahdollisesti tulevista muutoksista,
     //ja eri tyyppiset tiedostot muodostetaan samalle aikaikkunalle.
     val baseParams =
       SiirtotiedostoPagingParams("", start, math.min(System.currentTimeMillis(), end), 0, pageSize)
 
-    val suoritusException = formSiirtotiedosto[SiirtotiedostoSuoritus](
+    val suoritusResult = formSiirtotiedosto[SiirtotiedostoSuoritus](
       baseParams.copy(tyyppi = "suoritus"),
       params => db.getChangedSuoritukset(params)
     )
-    //todo arvosana, opiskelija, opiskeluoikeus
-    Seq(suoritusException)
+    val arvosanaResult = formSiirtotiedosto[SiirtotiedostoArvosana](
+      baseParams.copy(tyyppi = "arvosana"),
+      params => db.getChangedArvosanat(params)
+    )
+    val opiskelijaResult = formSiirtotiedosto[SiirtotiedostoOpiskelija](
+      baseParams.copy(tyyppi = "opiskelija"),
+      params => db.getChangedOpiskelijat(params)
+    )
+    val opiskeluoikeusResult = formSiirtotiedosto[SiirtotiedostoOpiskeluoikeus](
+      baseParams.copy(tyyppi = "opiskeluoikeus"),
+      params => db.getChangedOpiskeluoikeudet(params)
+    )
+    val errors = Seq(suoritusResult, arvosanaResult, opiskelijaResult, opiskeluoikeusResult)
       .filter(_.isDefined)
-      .foreach(t => {
-        logger.error(s"Virhe siirtotiedoston muodostamisessa:", t)
-      })
+    errors.foreach(t => {
+      logger.error(s"Virhe siirtotiedoston muodostamisessa:", t)
+    })
+    errors.isEmpty
   }
 
 }

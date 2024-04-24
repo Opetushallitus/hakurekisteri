@@ -8,6 +8,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import java.io.ByteArrayInputStream
 
 case class SiirtotiedostoClientConfig(region: String, bucket: String, roleArn: String)
+
 class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
   logger.info(s"Created SiirtotiedostoClient with config $config")
   lazy val siirtotiedostoPalvelu =
@@ -36,9 +37,9 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
         ""
       }
     } catch {
-      case e: Exception =>
-        logger.error(s"Siirtotiedoston tallennus s3-ämpäriin epäonnistui...")
-        throw e
+      case t: Throwable =>
+        logger.error(s"Siirtotiedoston tallennus s3-ämpäriin epäonnistui:", t)
+        throw t
     }
   }
 }
