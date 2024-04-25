@@ -25,7 +25,7 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
         logger.info(s"Saving siirtotiedosto... output: $output")
         siirtotiedostoPalvelu
           .saveSiirtotiedosto(
-            "valintarekisteri",
+            "sure",
             contentType,
             "",
             new ByteArrayInputStream(write(content).getBytes()),
