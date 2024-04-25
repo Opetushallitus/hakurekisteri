@@ -156,7 +156,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(
       koosteet.siirtotiedostojono
     ),
-    ("/ovara", "siirtotiedostojono") -> new OvaraResource(
+    ("/ovara", "ovara") -> new OvaraResource(
       new OvaraService(
         registers.ovaraDbRepository,
         new SiirtotiedostoClient(config.siirtotiedostoClientConfig),
