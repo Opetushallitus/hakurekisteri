@@ -6,7 +6,6 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
-import org.apache.commons.httpclient.HttpStatus
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, _}
 import support.PersonAliasesProvider
@@ -104,7 +103,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
     client
       .postObject[Map[String, Set[String]], Seq[HenkiloViite]](
         "oppijanumerorekisteri-service.duplicatesByPersonOids"
-      )(resource = queryObject, acceptedResponseCode = HttpStatus.SC_OK)
+      )(resource = queryObject, acceptedResponseCode = 200)
       .map(viitteet => {
         val oidToLinkedOids = {
           val viitteetByMasterOid =
@@ -130,7 +129,7 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
   override def getByHetu(hetu: String): Future[Henkilo] = {
     logger.debug(s"Querying with hetu ${hetu.substring(0, 6)}XXXX")
     client.readObject[Henkilo]("oppijanumerorekisteri-service.henkilo.byHetu", hetu)(
-      acceptedResponseCode = HttpStatus.SC_OK
+      acceptedResponseCode = 200
     )
   }
 
