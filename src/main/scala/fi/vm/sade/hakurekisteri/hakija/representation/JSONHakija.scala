@@ -245,7 +245,9 @@ object JSONHakijaV7 {
       oppivelvollisuusVoimassaAsti = hakija.henkilo.oppivelvollisuusVoimassaAsti,
       oikeusMaksuttomaanKoulutukseenVoimassaAsti =
         hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
-      lisakysymykset = hakija.henkilo.lisakysymykset
+      lisakysymykset = hakija.henkilo.lisakysymykset,
+      valintatuloksenJulkaisulupa =
+        hakija.ataruHakemus.map(_.valintatuloksenJulkaisulupa).getOrElse(false)
     )
 
   def hetu(hetu: String, syntymaaika: String): String = hetu match {
@@ -408,7 +410,8 @@ case class JSONHakijaV7(
   hakemus: HakijaV6Hakemus,
   oppivelvollisuusVoimassaAsti: Option[String],
   oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String],
-  lisakysymykset: Seq[Lisakysymys]
+  lisakysymykset: Seq[Lisakysymys],
+  valintatuloksenJulkaisulupa: Boolean
 )
 
 case class JSONHakijat(hakijat: Seq[JSONHakija])
