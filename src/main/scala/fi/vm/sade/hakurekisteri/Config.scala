@@ -5,6 +5,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
+import fi.vm.sade.hakurekisteri.ovara.SiirtotiedostoClientConfig
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
 import org.slf4j.LoggerFactory
 import support.{Integrations, SureDbLoggingConfig}
@@ -277,6 +278,15 @@ abstract class Config {
 
   val integrations = new IntegrationConfig(hostQa, properties)
   val email: EmailConfig = new EmailConfig(properties)
+
+  val siirtotiedostoClientConfig = SiirtotiedostoClientConfig(
+    properties.getOrElse("suoritusrekisteri.ovara.s3.region", "REGION MISSING"),
+    properties.getOrElse("suoritusrekisteri.ovara.s3.bucket", "BUCKET MISSING"),
+    properties.getOrElse("suoritusrekisteri.ovara.s3.target-role-arn", "TARGET ROLE MISSING")
+  )
+
+  val siirtotiedostoPageSize: Int =
+    properties.getOrElse("suoritusrekisteri.ovara.pagesize", "10000").toInt
 
   OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
 
