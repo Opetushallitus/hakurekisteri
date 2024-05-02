@@ -156,17 +156,17 @@ object Kausi {
 
 object StudentToKokelas {
 
-  def convert(oid: String, s: Student): Kokelas = {
-    val suoritus: VirallinenSuoritus = toYoTutkinto(oid, s)
+  def convert(personOid: String, s: Student): Kokelas = {
+    val suoritus: VirallinenSuoritus = toYoTutkinto(personOid, s)
     val yoTodistus = s.exams.map(exam =>
       YoKoe(
         ArvioYo(exam.grade, exam.points),
         exam.examId,
         exam.period.toLocalDate,
-        oid
+        personOid
       )
     )
-    Kokelas(oid, suoritus, yoTodistus)
+    Kokelas(personOid, suoritus, yoTodistus)
   }
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {

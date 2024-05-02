@@ -4,6 +4,12 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
+import fi.vm.sade.hakurekisteri.ovara.{
+  OvaraDbRepositoryImpl,
+  OvaraResource,
+  OvaraService,
+  SiirtotiedostoClient
+}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
@@ -150,6 +156,13 @@ class ScalatraBootstrap extends LifeCycle {
     ("/siirtotiedostojono", "siirtotiedostojono") -> new SiirtotiedostojonoResource(
       koosteet.siirtotiedostojono
     ),
+    ("/ovara", "ovara") -> new OvaraResource(
+      new OvaraService(
+        registers.ovaraDbRepository,
+        new SiirtotiedostoClient(config.siirtotiedostoClientConfig),
+        config.siirtotiedostoPageSize
+      )
+    ),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
     ("/rest/v2/hakijat", "rest/v2/hakijat") -> new HakijaResourceV2(koosteet.hakijat),
     ("/rest/v3/hakijat", "rest/v3/hakijat") -> new HakijaResourceV3(koosteet.hakijat),
@@ -224,7 +237,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/virta", "virta") -> new VirtaResource(
       koosteet.virtaQueue
     ), // Continuous Virta queue processing
-    ("/ytl", "ytl") -> new YtlResource(integrations.ytlIntegration),
+    ("/ytl", "ytl") -> new YtlResource(integrations.ytlFetchActor),
     ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(
       integrations.proxies.vastaanottotiedot,
       system,

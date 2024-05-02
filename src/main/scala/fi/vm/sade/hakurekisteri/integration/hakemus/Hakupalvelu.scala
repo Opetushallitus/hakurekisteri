@@ -1589,6 +1589,11 @@ case class FullHakemus(
     answers.flatMap(_.lisatiedot).flatMap(_.get("lupaMarkkinointi")).getOrElse("false").toBoolean
 }
 
+case class AtaruResponseHenkilot(
+  applications: List[AtaruHakemuksenHenkilotiedot],
+  offset: Option[String]
+)
+
 case class AtaruResponse(applications: List[AtaruHakemusDto], offset: Option[String])
 case class AtaruResponseToinenAste(
   applications: List[AtaruHakemusToinenAsteDto],
@@ -1646,6 +1651,8 @@ case class AtaruHakemusToinenAsteDto(
   urheilijanLisakysymykset: Option[UrheilijanLisakysymykset],
   urheilijanLisakysymyksetAmmatillinen: Option[UrheilijanLisakysymykset]
 )
+
+case class AtaruHakemuksenHenkilotiedot(oid: String, personOid: Option[String], ssn: Option[String])
 
 @SerialVersionUID(1)
 case class AtaruHakemus(

@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
-import akka.actor.{Actor, ActorLogging, Cancellable}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.InFuture
@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.{
   ParametritActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta.GetHautQueryFailedException
-import fi.vm.sade.hakurekisteri.integration.ytl.YtlIntegration
+import fi.vm.sade.hakurekisteri.integration.ytl.{ActiveKkHakuOids, YtlFetchActorRef}
 import org.joda.time.ReadableInstant
 
 import scala.concurrent.duration._
@@ -24,7 +24,7 @@ class HakuActor(
   hakuAggregator: HakuAggregatorActorRef,
   koskiService: IKoskiService,
   parametrit: ParametritActorRef,
-  ytlIntegration: YtlIntegration,
+  ytlIntegrationActor: YtlFetchActorRef,
   config: Config
 ) extends Actor
     with ActorLogging {
@@ -90,7 +90,7 @@ class HakuActor(
         .map(_.oid)
         .toSet
       log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
-      ytlIntegration.setAktiivisetKKHaut(ytlHakuOids)
+      ytlIntegrationActor.actor ! ActiveKkHakuOids(ytlHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
       koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)
       koskiService.setAktiivisetToisenAsteenJatkuvatHaut(activeToisenAsteenJatkuvaKoutaHakuOids)

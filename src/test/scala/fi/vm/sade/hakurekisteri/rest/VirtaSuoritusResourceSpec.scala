@@ -164,6 +164,9 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
         )
       )
     )
+
+    override def fetchHenkilotInBatches(henkiloOids: Set[String]): Future[Map[String, Henkilo]] =
+      ???
   }
 
   addServlet(
