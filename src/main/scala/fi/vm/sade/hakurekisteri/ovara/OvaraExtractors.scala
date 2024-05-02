@@ -1,8 +1,13 @@
 package fi.vm.sade.hakurekisteri.ovara
 
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import slick.jdbc.GetResult
 
-trait OvaraExtractors {
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
+
+trait OvaraExtractors extends HakurekisteriJsonSupport {
+  implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 
   protected implicit val getSiirtotiedostoSuoritusResult: GetResult[SiirtotiedostoSuoritus] =
     GetResult(r =>
@@ -23,7 +28,7 @@ trait OvaraExtractors {
         tyyppi = r.nextStringOption(),
         index = r.nextStringOption(),
         vahvistettu = r.nextBoolean(),
-        lahdeArvot = Map("arvot" -> r.nextString()) //Todo, parsitaan kannan jsonb mapiksi
+        lahdeArvot = parse(r.nextString).extract[Map[String, String]]
       )
     )
 
@@ -43,7 +48,7 @@ trait OvaraExtractors {
         myonnetty = r.nextStringOption(),
         source = r.nextString(),
         jarjestys = r.nextStringOption(),
-        lahdeArvot = Map("arvot" -> r.nextString()) //Todo, parsitaan kannan jsonb mapiksi
+        lahdeArvot = parse(r.nextString).extract[Map[String, String]]
       )
     )
 
