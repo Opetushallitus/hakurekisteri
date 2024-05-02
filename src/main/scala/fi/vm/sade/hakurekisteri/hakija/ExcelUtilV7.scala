@@ -197,7 +197,7 @@ object ExcelUtilV7 extends HakijatExcelWriterV3[JSONHakijatV7] {
             ht.urheilijanLisakysymykset.flatMap(_.laji).getOrElse(""),
             ht.urheilijanLisakysymykset.flatMap(_.liitto).getOrElse(""),
             ht.urheilijanLisakysymykset.flatMap(_.seura).getOrElse(""),
-            if (h.hakemus.julkaisulupa.getOrElse(false)) "Kyllä" else ""
+            if (h.sahkoisenAsioinninLupa) "Kyllä" else ""
           )
 
           def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
