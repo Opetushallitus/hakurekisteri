@@ -202,6 +202,13 @@ class HakijaActor(
     os: Option[XMLOsaaminen]
   ) = HakijaV6Hakemus(hakija, opiskelija, org, ht, os)
 
+  def createV7Hakemus(hakija: Hakija)(
+    opiskelija: Option[Opiskelija],
+    org: Option[Organisaatio],
+    ht: Seq[XMLHakutoive],
+    os: Option[XMLOsaaminen]
+  ) = HakijaV7Hakemus(hakija, opiskelija, org, ht, os)
+
   def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
@@ -244,6 +251,28 @@ class HakijaActor(
     val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
 
     data.tupledMap(createV6Hakemus(hakija))
+  }
+
+  def getHakijaV7Hakemus(hakija: Hakija): Future[HakijaV7Hakemus] = {
+    val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
+    val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
+    val osaaminen: Future[Option[XMLOsaaminen]] = Future.successful(
+      Option(
+        XMLOsaaminen(
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_fi,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_fi,
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_sv,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_sv,
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_en,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_en,
+          hakija.hakemus.osaaminen.yleinen_kielitutkinto_se,
+          hakija.hakemus.osaaminen.valtionhallinnon_kielitutkinto_se
+        )
+      )
+    )
+    val data = (opiskelutieto, lahtokoulu, ht, osaaminen).join
+
+    data.tupledMap(createV7Hakemus(hakija))
   }
 
   def getOpiskelijaTiedot(
@@ -318,7 +347,7 @@ class HakijaActor(
   }
 
   def hakija2JSONHakijaV7(hakija: Hakija): Future[JSONHakijaV7] = {
-    getHakijaV6Hakemus(hakija).map(data2JsonHakijaV7(hakija))
+    getHakijaV7Hakemus(hakija).map(data2JsonHakijaV7(hakija))
   }
 
   def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus) = {
@@ -343,7 +372,7 @@ class HakijaActor(
     JSONHakijaV6(hakija, hakemus)
   }
 
-  def data2JsonHakijaV7(hakija: Hakija)(hakemus: HakijaV6Hakemus) = {
+  def data2JsonHakijaV7(hakija: Hakija)(hakemus: HakijaV7Hakemus) = {
     JSONHakijaV7(hakija, hakemus)
   }
 
