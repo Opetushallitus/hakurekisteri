@@ -28,21 +28,23 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
     with Logging {
   val audit: Audit = SuoritusAuditVirkailija.audit
 
-  //def shouldBeAdmin = if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
-
-  //Todo, require rekpit rights
   get("/muodosta") {
-    val start = params.get("start").map(_.toLong)
-    val end = params.get("end").map(_.toLong)
-    (start, end) match {
-      case (Some(start), Some(end)) =>
-        logger.info(s"Muodostetaan siirtotiedosto! $start - $end")
-        val result = ovaraService.formSiirtotiedostotPaged(start, end)
-        Ok(s"$result")
-      case _ =>
-        logger.error(s"Toinen pakollisista parametreista (start $start, end $end) puuttuu!")
-        BadRequest(s"Start ($start) ja end ($end) ovat pakollisia parametreja")
+    if (currentUser.exists(_.isAdmin)) {
+      val start = params.get("start").map(_.toLong)
+      val end = params.get("end").map(_.toLong)
+      (start, end) match {
+        case (Some(start), Some(end)) =>
+          logger.info(s"Muodostetaan siirtotiedosto! $start - $end")
+          val result = ovaraService.formSiirtotiedostotPaged(start, end)
+          Ok(s"$result")
+        case _ =>
+          logger.error(s"Toinen pakollisista parametreista (start $start, end $end) puuttuu!")
+          BadRequest(s"Start ($start) ja end ($end) ovat pakollisia parametreja")
+      }
+    } else {
+      Forbidden("Ei tarvittavia oikeuksia ovara-siirtotiedoston muodostamiseen")
     }
+
   }
 
   override protected implicit def jsonFormats: Formats = HakurekisteriJsonSupport.format
