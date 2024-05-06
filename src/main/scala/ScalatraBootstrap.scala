@@ -160,6 +160,7 @@ class ScalatraBootstrap extends LifeCycle {
       new OvaraService(
         registers.ovaraDbRepository,
         new SiirtotiedostoClient(config.siirtotiedostoClientConfig),
+        koosteet.ensikertalainen,
         config.siirtotiedostoPageSize
       )
     ),

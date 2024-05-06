@@ -47,6 +47,23 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
 
   }
 
+  get("/muodosta/ensikertalaisuudet") {
+    if (currentUser.exists(_.isAdmin)) {
+      val hakuOid = params.get("haku")
+      hakuOid match {
+        case Some(hakuOid) =>
+          logger.info(s"Muodostetaan ensikertalaisten siirtotiedosto haulle $hakuOid")
+          val result = ovaraService.formSiirtotiedostoForHakus(Seq(hakuOid))
+          Ok(s"$result")
+        case _ =>
+          BadRequest(s"Pakollinen parametri (haku) puuttuu!")
+      }
+    } else {
+      Forbidden("Ei tarvittavia oikeuksia ovara-siirtotiedoston muodostamiseen")
+    }
+
+  }
+
   override protected implicit def jsonFormats: Formats = HakurekisteriJsonSupport.format
 
 }
