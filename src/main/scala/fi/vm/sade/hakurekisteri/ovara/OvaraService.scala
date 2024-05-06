@@ -1,7 +1,15 @@
 package fi.vm.sade.hakurekisteri.ovara
 
+import akka.actor.ActorRef
+import akka.pattern.ask
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, HaunEnsikertalaisetQuery}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.utils.slf4j.Logging
+
 import scala.annotation.tailrec
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
 
 trait IOvaraService {
   //Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
@@ -9,9 +17,18 @@ trait IOvaraService {
   def formSiirtotiedostotPaged(start: Long, end: Long): Map[String, Long]
 }
 
-class OvaraService(db: OvaraDbRepository, s3Client: SiirtotiedostoClient, pageSize: Int)
-    extends IOvaraService
+class OvaraService(
+  db: OvaraDbRepository,
+  s3Client: SiirtotiedostoClient,
+  ensikertalainenActor: ActorRef,
+  pageSize: Int
+) extends IOvaraService
     with Logging {
+
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+    2,
+    getClass.getSimpleName
+  )
 
   @tailrec
   private def saveInSiirtotiedostoPaged[T](
@@ -49,6 +66,48 @@ class OvaraService(db: OvaraDbRepository, s3Client: SiirtotiedostoClient, pageSi
         logger.error(s"Virhe muodostettaessa siirtotiedostoa parametreilla $params:", t)
         Left(t)
     }
+  }
+
+  //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
+  def formSiirtotiedostoForHakus(hakuOids: Seq[String]) = {
+    def formSiirtotiedostoForHaku(hakuOid: String) = {
+      implicit val to: Timeout = Timeout(30.minutes)
+
+      val ensikertalaiset: Future[Seq[Ensikertalainen]] =
+        (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid)).mapTo[Seq[Ensikertalainen]]
+      ensikertalaiset.map(ek => {
+        logger.info(
+          s"Saatiin ${ek.size} ensikertalaisuustietoa haulle $hakuOid. Tallennetaan siirtotiedosto."
+        )
+        s3Client.saveSiirtotiedosto[Ensikertalainen]("ensikertalainen", ek)
+      })
+    }
+
+    val infoStr =
+      if (hakuOids.size <= 5) s"hauille ${hakuOids.toString}" else s"${hakuOids.size} haulle."
+    logger.info(s"Muodostetaan siirtotiedostot $infoStr")
+    val resultsByHaku = hakuOids.map(hakuOid => {
+      try {
+        val result = formSiirtotiedostoForHaku(hakuOid)
+        //Todo, muu toteutus tälle? Mikä on riittävä timeout, mitä jos jäädään jumiin? Käsiteltäviä hakuja voi olla paljon,
+        //kaikkea ei voi tehdä rinnakkain. Muutaman kerrallaan varmaan voisi.
+        Await.result(result, 45.minutes)
+        logger.info(s"Valmista haulle $hakuOid")
+        (hakuOid, None)
+      } catch {
+        case t: Throwable =>
+          logger
+            .error("Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:", t)
+          (
+            hakuOid,
+            Some(t.getMessage)
+          ) //Todo, retry? Voisi olla järkevää, jos muodostetaan siirtotiedosto kymmenille hauille ja yksi satunnaissepäonnistuu.
+      }
+
+    })
+    val failed = resultsByHaku.filter(_._2.isDefined)
+    logger.error(s"Failed: $failed")
+    s"Onnistuneita ${hakuOids.size - failed.size}, epäonnistuneita ${failed.size}"
   }
 
   def formSiirtotiedostotPaged(start: Long, end: Long): Map[String, Long] = {
