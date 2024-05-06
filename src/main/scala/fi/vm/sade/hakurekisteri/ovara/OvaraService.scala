@@ -77,7 +77,8 @@ class OvaraService(
   case class SiirtotiedostoEnsikertalainen(
     hakuOid: String,
     henkiloOid: String,
-    ensikertalaisuustieto: Option[MenettamisenPeruste]
+    isEnsikertalainen: Boolean,
+    menettamisenPeruste: Option[MenettamisenPeruste]
   )
 
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
@@ -92,7 +93,12 @@ class OvaraService(
           s"Saatiin ${rawEnsikertalaiset.size} ensikertalaisuustietoa haulle $hakuOid. Tallennetaan siirtotiedosto."
         )
         val ensikertalaiset = rawEnsikertalaiset.map(e =>
-          SiirtotiedostoEnsikertalainen(hakuOid, e.henkiloOid, e.menettamisenPeruste)
+          SiirtotiedostoEnsikertalainen(
+            hakuOid,
+            e.henkiloOid,
+            e.menettamisenPeruste.isEmpty,
+            e.menettamisenPeruste
+          )
         )
         s3Client
           .saveSiirtotiedosto[SiirtotiedostoEnsikertalainen]("ensikertalainen", ensikertalaiset)
