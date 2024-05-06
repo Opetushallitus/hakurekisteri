@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.ovara
 
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.valinta.dokumenttipalvelu.SiirtotiedostoPalvelu
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.jackson.Serialization.{write, writePretty}
@@ -15,7 +16,7 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
     new SiirtotiedostoPalvelu(config.region, config.bucket, config.roleArn)
   val saveRetryCount = 2
 
-  implicit val formats: Formats = DefaultFormats
+  private implicit val formats = HakurekisteriJsonSupport.format
 
   def saveSiirtotiedosto[T](contentType: String, content: Seq[T]): String = {
     try {
