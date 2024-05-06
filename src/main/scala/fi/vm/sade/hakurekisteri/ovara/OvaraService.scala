@@ -94,7 +94,8 @@ class OvaraService(
         val ensikertalaiset = rawEnsikertalaiset.map(e =>
           SiirtotiedostoEnsikertalainen(hakuOid, e.henkiloOid, e.menettamisenPeruste)
         )
-        s3Client.saveSiirtotiedosto[SiirtotiedostoEnsikertalainen]("ensikertalainen", ensikertalaiset)
+        s3Client
+          .saveSiirtotiedosto[SiirtotiedostoEnsikertalainen]("ensikertalainen", ensikertalaiset)
       })
     }
 
