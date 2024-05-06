@@ -3,8 +3,13 @@ package fi.vm.sade.hakurekisteri.ovara
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, HaunEnsikertalaisetQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{
+  Ensikertalainen,
+  HaunEnsikertalaisetQuery,
+  MenettamisenPeruste
+}
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.utils.slf4j.Logging
 
 import scala.annotation.tailrec
@@ -15,6 +20,7 @@ trait IOvaraService {
   //Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
   //Tiedostot tallennetaan s3:seen.
   def formSiirtotiedostotPaged(start: Long, end: Long): Map[String, Long]
+  def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String])
 }
 
 class OvaraService(
@@ -68,18 +74,27 @@ class OvaraService(
     }
   }
 
+  case class SiirtotiedostoEnsikertalainen(
+    hakuOid: String,
+    henkiloOid: String,
+    ensikertalaisuustieto: Option[MenettamisenPeruste]
+  )
+
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
-  def formSiirtotiedostoForHakus(hakuOids: Seq[String]) = {
+  def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]) = {
     def formSiirtotiedostoForHaku(hakuOid: String) = {
       implicit val to: Timeout = Timeout(30.minutes)
 
       val ensikertalaiset: Future[Seq[Ensikertalainen]] =
         (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid)).mapTo[Seq[Ensikertalainen]]
-      ensikertalaiset.map(ek => {
+      ensikertalaiset.map((rawEnsikertalaiset: Seq[Ensikertalainen]) => {
         logger.info(
-          s"Saatiin ${ek.size} ensikertalaisuustietoa haulle $hakuOid. Tallennetaan siirtotiedosto."
+          s"Saatiin ${rawEnsikertalaiset.size} ensikertalaisuustietoa haulle $hakuOid. Tallennetaan siirtotiedosto."
         )
-        s3Client.saveSiirtotiedosto[Ensikertalainen]("ensikertalainen", ek)
+        val ensikertalaiset = rawEnsikertalaiset.map(e =>
+          SiirtotiedostoEnsikertalainen(hakuOid, e.henkiloOid, e.menettamisenPeruste)
+        )
+        s3Client.saveSiirtotiedosto[SiirtotiedostoEnsikertalainen]("ensikertalainen", ensikertalaiset)
       })
     }
 
@@ -97,7 +112,7 @@ class OvaraService(
       } catch {
         case t: Throwable =>
           logger
-            .error("Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:", t)
+            .error(s"Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:", t)
           (
             hakuOid,
             Some(t.getMessage)
@@ -148,4 +163,6 @@ class OvaraService(
 
 class OvaraServiceMock extends IOvaraService {
   override def formSiirtotiedostotPaged(start: Long, end: Long) = ???
+
+  override def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): Unit = ???
 }
