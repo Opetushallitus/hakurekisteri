@@ -53,7 +53,7 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
       hakuOid match {
         case Some(hakuOid) =>
           logger.info(s"Muodostetaan ensikertalaisten siirtotiedosto haulle $hakuOid")
-          val result = ovaraService.formSiirtotiedostoForHakus(Seq(hakuOid))
+          val result = ovaraService.formEnsikertalainenSiirtotiedostoForHakus(Seq(hakuOid))
           Ok(s"$result")
         case _ =>
           BadRequest(s"Pakollinen parametri (haku) puuttuu!")
