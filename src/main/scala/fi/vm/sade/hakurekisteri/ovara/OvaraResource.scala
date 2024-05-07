@@ -61,7 +61,19 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
     } else {
       Forbidden("Ei tarvittavia oikeuksia ovara-siirtotiedoston muodostamiseen")
     }
+  }
 
+  get("/muodosta/ensikertalaisuudet/kkhaut") {
+    if (currentUser.exists(_.isAdmin)) {
+      val vainAktiiviset: Boolean = params.get("vainAktiiviset").exists(_.toBoolean)
+      logger.info(
+        s"Muodostetaan ensikertalaisten siirtotiedosto kk-hauille. Vain aktiiviset: $vainAktiiviset"
+      )
+      val result = ovaraService.triggerEnsikertalaiset(vainAktiiviset)
+      Ok(s"Valmista - $result")
+    } else {
+      Forbidden("Ei tarvittavia oikeuksia ovara-siirtotiedoston muodostamiseen")
+    }
   }
 
   override protected implicit def jsonFormats: Formats = HakurekisteriJsonSupport.format

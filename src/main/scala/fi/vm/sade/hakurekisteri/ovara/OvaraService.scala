@@ -9,6 +9,15 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{
   MenettamisenPeruste
 }
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import fi.vm.sade.hakurekisteri.integration.haku.{
+  AllHaut,
+  GetHautQuery,
+  Haku,
+  HakuRequest,
+  RestHaku,
+  RestHakuResult
+}
+import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.utils.slf4j.Logging
 
@@ -27,6 +36,7 @@ class OvaraService(
   db: OvaraDbRepository,
   s3Client: SiirtotiedostoClient,
   ensikertalainenActor: ActorRef,
+  hakuActor: ActorRef,
   pageSize: Int
 ) extends IOvaraService
     with Logging {
@@ -80,6 +90,21 @@ class OvaraService(
     isEnsikertalainen: Boolean,
     menettamisenPeruste: Option[MenettamisenPeruste]
   )
+
+  //Haetaan hakujen oidit ja synkataan ensikertalaiset näille
+  def triggerEnsikertalaiset(vainAktiiviset: Boolean) = {
+    implicit val to: Timeout = Timeout(5.minutes)
+    val allHaut: Future[AllHaut] =
+      (hakuActor ? HakuRequest)
+        .mapTo[AllHaut] //fixme, tää on ongelma koska palautuu 0 hakua jos kaikkia hakuja ei oo vielä haettu actorin päässä.
+    val hakuResult = Await.result(allHaut, 5.minutes)
+    val kiinnostavat =
+      hakuResult.haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
+    logger.info(
+      s"Löydettiin ${kiinnostavat.size} kiinnostavaa hakua yhteensä ${hakuResult.haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
+    )
+    formEnsikertalainenSiirtotiedostoForHakus(kiinnostavat)
+  }
 
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
   def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]) = {
