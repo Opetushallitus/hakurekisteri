@@ -329,13 +329,40 @@ class KoskiSuoritusArvosanaParser {
     }
   }
 
-  private def isFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]): Boolean = {
+  private def hasFailedNinthGrade(suoritukset: Seq[KoskiSuoritus]): Boolean = {
     val ysiluokat = suoritukset.filter(_.koulutusmoduuli.isNinthGrade())
     val failed = ysiluokat.exists(_.jääLuokalle.getOrElse(false))
+    // tämä taitaa olla turha koska uusittuna läpäisty 9-luokka ei oletettavasti näy 9-luokan suorituksena
+    // vaan päättötodistuksena
     val succeeded = ysiluokat.exists(_.jääLuokalle.getOrElse(false) == false)
     failed && !succeeded
   }
 
+  private def isFailedNinthGrade(suoritus: KoskiSuoritus): Boolean = {
+    val ysiluokka = suoritus.koulutusmoduuli.isNinthGrade()
+    val jaaluokalle = suoritus.jääLuokalle.getOrElse(false) == true
+    ysiluokka && jaaluokalle
+  }
+
+  private def isVahvistettuPerusopetus(suoritukset: Seq[KoskiSuoritus]): Boolean = {
+    val vahvistettuPerusopetus = suoritukset
+      .filter(_.isPerusopetuksenoppimaara())
+      .filter(s =>
+        s.vahvistus.isDefined &&
+          s.vahvistus.exists(v => {
+            val valmistumispaiva = parseLocalDate(v.päivä)
+            !valmistumispaiva.isAfter(KoskiUtil.deadlineDate)
+          })
+      )
+    !vahvistettuPerusopetus.isEmpty
+  }
+  private def isValmisPerusopetus(opiskeluoikeus: KoskiOpiskeluoikeus): Boolean = {
+    opiskeluoikeus.tyyppi.exists(
+      _.koodiarvo == "perusopetus"
+    ) && opiskeluoikeus.tila.opiskeluoikeusjaksot.exists(jakso =>
+      jakso.tila.koodiarvo.contentEquals("valmistunut")
+    )
+  }
   private def perusopetuksenArvosanatSisaltavatNelosia(arvosanat: Seq[Arvosana]): Boolean = {
     arvosanat.exists(a =>
       a.arvio match {
@@ -352,7 +379,10 @@ class KoskiSuoritusArvosanaParser {
     opiskeluoikeus: KoskiOpiskeluoikeus
   ): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
-    val failedNinthGrade = isFailedNinthGrade(suoritukset)
+    val valmisPerusopetus = isValmisPerusopetus(opiskeluoikeus)
+    val vahvistettuPerusopetuksenOppimaara = isVahvistettuPerusopetus(suoritukset)
+    val failedNinthGrade =
+      hasFailedNinthGrade(suoritukset) && !(valmisPerusopetus || vahvistettuPerusopetuksenOppimaara)
     var lahdeArvot: Map[String, String] = Map[String, String]()
     lahdeArvot += ("last modified" -> System.currentTimeMillis().toString)
     for {
@@ -409,8 +439,8 @@ class KoskiSuoritusArvosanaParser {
             suorituksenValmistumispäivä = valmistuminen.valmistumisPaiva,
             isAikuistenPerusopetus = isAikuistenPerusopetus
           )
-
-          if (failedNinthGrade) {
+          // ei tuoda luokalle jäädyn 9-luokan arvosanoja
+          if (isFailedNinthGrade(suoritus)) {
             as = Seq.empty
           }
 
@@ -553,7 +583,7 @@ class KoskiSuoritusArvosanaParser {
 
         case Oids.perusopetusKomoOid =>
           val arvosanoissaNelosia = perusopetuksenArvosanatSisaltavatNelosia(arvosanat)
-          if (failedNinthGrade || suoritus.jääLuokalle.contains(true)) {
+          if (failedNinthGrade) {
             logger.info(
               s"Perusopetuksen tilapäättely - henkilö $personOid: merkitään luokalle jääväksi merkitty perusopetuksen suoritus tilaan KESKEYTYNYT (aiempi tila $suoritusTila)"
             )

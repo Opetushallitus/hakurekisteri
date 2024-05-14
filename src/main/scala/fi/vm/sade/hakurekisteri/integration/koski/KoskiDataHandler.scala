@@ -52,10 +52,6 @@ class KoskiDataHandler(
 
   implicit val localDateOrdering: Ordering[LocalDate] = _ compareTo _
 
-  private def loytyykoHylattyja(suoritus: KoskiSuoritus): Boolean = {
-    suoritus.osasuoritukset.exists(_.arviointi.exists(_.hyväksytty.contains(false)))
-  }
-
   private def shouldSaveSuoritus(
     henkiloOid: String,
     suoritus: KoskiSuoritus,
@@ -379,13 +375,6 @@ class KoskiDataHandler(
     }
   }
 
-  private def arvosanaForSuoritus(
-    arvosana: Arvosana,
-    s: Suoritus with Identified[UUID]
-  ): Arvosana = {
-    arvosana.copy(suoritus = s.id)
-  }
-
   private def saveArvosana(arvosana: Arvosana): Future[Any] = {
     (arvosanaRekisteri ? arvosana).recoverWith { case t: AskTimeoutException =>
       logger.error(
@@ -394,14 +383,6 @@ class KoskiDataHandler(
       )
       saveArvosana(arvosana)
     }
-  }
-
-  private def arvosanaToInsertResource(
-    arvosana: Arvosana,
-    suoritus: Suoritus with Identified[UUID],
-    personOidsWithAliases: PersonOidsWithAliases
-  ) = {
-    InsertResource[UUID, Arvosana](arvosanaForSuoritus(arvosana, suoritus), personOidsWithAliases)
   }
 
   private def getAliases(personOidsWithAliases: PersonOidsWithAliases): Set[String] = {
@@ -908,8 +889,3 @@ case class SuoritusLuokka(
   lasnaDate: LocalDate,
   luokkataso: Option[String] = None
 )
-
-case class MultipleSuoritusException(henkiloOid: String, myontaja: String, komo: String)
-    extends Exception(
-      s"Multiple suoritus found for henkilo $henkiloOid by myontaja $myontaja with komo $komo."
-    )
