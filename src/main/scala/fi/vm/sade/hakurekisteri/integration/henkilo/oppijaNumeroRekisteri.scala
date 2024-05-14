@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import org.apache.commons.httpclient.HttpStatus
@@ -12,8 +12,7 @@ import org.json4s.{DefaultFormats, _}
 import support.PersonAliasesProvider
 
 import scala.collection.Iterator
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 /**
@@ -63,6 +62,11 @@ object IOppijaNumeroRekisteri {
 class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSystem, config: Config)
     extends IOppijaNumeroRekisteri {
   private val logger = Logging.getLogger(system, this)
+
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+    config.integrations.asyncOperationThreadPoolSize,
+    getClass.getSimpleName
+  )
 
   def fetchInBatches(henkiloOids: Set[String], batchSize: Int) = {
     val started = System.currentTimeMillis()
