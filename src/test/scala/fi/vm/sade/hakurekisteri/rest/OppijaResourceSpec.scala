@@ -15,7 +15,8 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   IOppijaNumeroRekisteri,
   LinkedHenkiloOids,
-  MockPersonAliasesProvider
+  MockPersonAliasesProvider,
+  PersonOidsWithAliases
 }
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{
@@ -91,6 +92,13 @@ class OppijaResourceSpec
         )
       )
     }
+
+    override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+      fetchLinkedHenkiloOidsMap(henkiloOids)
+        .map(_.oidToLinkedOids)
+        .map(PersonOidsWithAliases(henkiloOids, _))
+    }
+
     override def getByHetu(hetu: String): Future[Henkilo] = {
       throw new UnsupportedOperationException("Not implemented")
     }

@@ -34,12 +34,7 @@ case class LinkedHenkiloOids(
 
 trait IOppijaNumeroRekisteri {
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids]
-
-  def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
-    fetchLinkedHenkiloOidsMap(henkiloOids)
-      .map(_.oidToLinkedOids)
-      .map(PersonOidsWithAliases(henkiloOids, _))
-  }
+  def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases]
 
   def getByHetu(hetu: String): Future[Henkilo]
   def fetchHenkilotInBatches(henkiloOids: Set[String]): Future[Map[String, Henkilo]]
@@ -88,6 +83,12 @@ class OppijaNumeroRekisteri(client: VirkailijaRestClient, val system: ActorSyste
           )
         })
     }
+  }
+
+  override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+    fetchLinkedHenkiloOidsMap(henkiloOids)
+      .map(_.oidToLinkedOids)
+      .map(PersonOidsWithAliases(henkiloOids, _))
   }
 
   override def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
@@ -186,6 +187,17 @@ object MockOppijaNumeroRekisteri extends IOppijaNumeroRekisteri {
   val masterOid = "1.2.246.562.24.67587718272"
   val henkiloOid = "1.2.246.562.24.58099330694"
   val linkedTestPersonOids = Seq(henkiloOid, masterOid)
+
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+    1,
+    getClass.getSimpleName
+  )
+
+  override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+    fetchLinkedHenkiloOidsMap(henkiloOids)
+      .map(_.oidToLinkedOids)
+      .map(PersonOidsWithAliases(henkiloOids, _))
+  }
 
   def fetchLinkedHenkiloOidsMap(henkiloOids: Set[String]): Future[LinkedHenkiloOids] = {
     Future.successful({
