@@ -5,7 +5,13 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.auditlog.{Changes, Target}
-import fi.vm.sade.hakurekisteri.{AuditUtil, YTLSyncForAll, YTLSyncForPerson}
+import fi.vm.sade.hakurekisteri.{
+  AuditUtil,
+  YTLSyncForAll,
+  YTLSyncForHaku,
+  YTLSyncForPerson,
+  YTLSyncForPersons
+}
 import fi.vm.sade.hakurekisteri.integration.ytl.{
   Kokelas,
   YtlFetchActorRef,
@@ -46,7 +52,7 @@ class YtlResource(ytlFetchActor: YtlFetchActorRef)(implicit
 
   def shouldBeAdmin = if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
 
-  post("/http_request") {
+  post("/http_request", operation(syncAll)) {
     shouldBeAdmin
     logger.info("Fetching YTL data for everybody")
     audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
@@ -54,16 +60,18 @@ class YtlResource(ytlFetchActor: YtlFetchActorRef)(implicit
     ytlFetchActor.actor ! YtlSyncAllHaut(tunniste)
     Accepted(s"YTL sync started, tunniste $tunniste")
   }
-  get("/http_request_byhaku/:hakuOid") {
+
+  get("/http_request_byhaku/:hakuOid", operation(syncHaku)) {
     shouldBeAdmin
     val hakuOid = params("hakuOid")
     logger.info(s"Syncing YTL data for haku $hakuOid")
-    audit.log(auditUser, YTLSyncForAll, new Target.Builder().build, Changes.EMPTY)
+    audit.log(auditUser, YTLSyncForHaku, AuditUtil.targetFromParams(params).build, Changes.EMPTY)
     val tunniste = "manual_sync_for_haku_" + hakuOid
     ytlFetchActor.actor ! YtlSyncHaku(hakuOid, tunniste)
     logger.info(s"Returning tunniste $tunniste to caller")
     Accepted(s"YTL sync started for haku $hakuOid, tunniste $tunniste")
   }
+
   get("/http_request/:personOid", operation(syncPerson)) {
     implicit val to: Timeout = Timeout(30.seconds)
     shouldBeAdmin
@@ -90,5 +98,25 @@ class YtlResource(ytlFetchActor: YtlFetchActorRef)(implicit
         logger.error(t, errorStr)
         InternalServerError(errorStr)
     }
+  }
+
+  post("/http_request/persons", operation(syncPersons)) {
+    implicit val to: Timeout = Timeout(30.seconds)
+    shouldBeAdmin
+    val personOids = parse(request.body).extract[Set[String]]
+    logger.info(s"Fetching YTL data for multiple person OIDs $personOids")
+    audit.log(
+      auditUser,
+      YTLSyncForPersons,
+      AuditUtil.targetFromParams(params).setField("oppijaOids", personOids.toString()).build(),
+      Changes.EMPTY
+    )
+    personOids.foreach(personOid => {
+      ytlFetchActor.actor ? YtlSyncSingle(
+        personOid,
+        tunniste = s"manual_sync_for_person_${personOid}"
+      )
+    })
+    Accepted(s"YTL sync started for persons $personOids")
   }
 }
