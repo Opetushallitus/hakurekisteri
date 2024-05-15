@@ -550,11 +550,11 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   hakemusService.addTrigger(arvosanaTrigger)
   hakemusService.addTrigger(ytlTrigger)
 
-  val daysToBacktrack: Int =
-    OphUrlProperties.getProperty("suoritusrekisteri.modifiedhakemukset.backtrack.days").toInt
+  val hoursToBacktrack: Int =
+    OphUrlProperties.getProperty("suoritusrekisteri.modifiedhakemukset.backtrack.hours").toInt
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset(modifiedAfter =
-    new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(daysToBacktrack))
+    new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(hoursToBacktrack))
   )
 
   val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()

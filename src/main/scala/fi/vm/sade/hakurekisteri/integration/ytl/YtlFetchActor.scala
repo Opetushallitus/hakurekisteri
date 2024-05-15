@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
@@ -52,7 +52,7 @@ class YtlFetchActor(
   val minIntervalBetween = 1000 * 60 * 60 * 22 //At least 22 hours between nightly syncs
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
-    config.integrations.asyncOperationThreadPoolSize,
+    20,
     getClass.getSimpleName
   )
 
@@ -99,7 +99,7 @@ class YtlFetchActor(
           log.error(t, s"($tunniste) Manual sync for haku ${s.hakuOid} failed...")
       }
       log.info(s"Ytl-sync käynnistetty haulle ${s.hakuOid} tunnisteella $tunniste")
-      resultF pipeTo sender
+      sender ! tunniste
     case s: YtlSyncSingle =>
       if (s.needsToBeActiveKkHakuOid.forall(oid => activeKKHakuOids.get().contains(oid))) {
         val tunniste = s.tunniste
@@ -110,7 +110,7 @@ class YtlFetchActor(
           case Failure(t) =>
             log.error(t, s"($tunniste) Manual sync for person ${s.personOid} failed...")
         }
-        log.info(s"Ytl-sync käynnistetty haulle ${s.personOid} tunnisteella $tunniste")
+        log.info(s"Ytl-sync käynnistetty oidille ${s.personOid} tunnisteella $tunniste")
         resultF pipeTo sender
       } else {
         val infoStr = s"Not ytl-syncing $s because the haku is not an active kk-haku"
