@@ -340,11 +340,11 @@ class KoskiSuoritusArvosanaParser {
 
   private def isFailedNinthGrade(suoritus: KoskiSuoritus): Boolean = {
     val ysiluokka = suoritus.koulutusmoduuli.isNinthGrade()
-    val jaaluokalle = suoritus.jääLuokalle.getOrElse(false) == true
+    val jaaluokalle = suoritus.jääLuokalle.getOrElse(false)
     ysiluokka && jaaluokalle
   }
 
-  private def isVahvistettuPerusopetus(suoritukset: Seq[KoskiSuoritus]): Boolean = {
+  private def hasVahvistettuPerusopetus(suoritukset: Seq[KoskiSuoritus]): Boolean = {
     val vahvistettuPerusopetus = suoritukset
       .filter(_.isPerusopetuksenoppimaara())
       .filter(s =>
@@ -380,7 +380,7 @@ class KoskiSuoritusArvosanaParser {
   ): Seq[SuoritusArvosanat] = {
     var result = Seq[SuoritusArvosanat]()
     val valmisPerusopetus = isValmisPerusopetus(opiskeluoikeus)
-    val vahvistettuPerusopetuksenOppimaara = isVahvistettuPerusopetus(suoritukset)
+    val vahvistettuPerusopetuksenOppimaara = hasVahvistettuPerusopetus(suoritukset)
     val failedNinthGrade =
       hasFailedNinthGrade(suoritukset) && !(valmisPerusopetus || vahvistettuPerusopetuksenOppimaara)
     var lahdeArvot: Map[String, String] = Map[String, String]()

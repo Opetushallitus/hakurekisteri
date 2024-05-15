@@ -512,7 +512,7 @@ class KoskiDataHandlerTest
     pt.get.suoritus.tila shouldBe "VALMIS"
   }
 
-  it should "parse keskeneräinen perusopetus as kesken and no arvosanat when jääluokalle is true in 9luokka before deadline" in {
+  it should "parse keskeneräinen perusopetus as keskeytynyt and no arvosanat when jääluokalle is true in 9luokka before deadline" in {
     val json: String = scala.io.Source
       .fromFile(jsonDir + "koskidata_perusopetus_kesken_jaanyt_9luokalle.json")
       .mkString
@@ -522,12 +522,15 @@ class KoskiDataHandlerTest
     KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
 
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    //result should have length 0
+    result should have length 2
+    // ei 9-luokan eikä päättötodistuksen arvosanoja
+    result(0).arvosanat should have length 0
+    result(1).arvosanat should have length 0
     val pt = getPerusopetusPäättötodistus(result)
     pt.get.suoritus.tila shouldBe "KESKEYTYNYT"
   }
 
-  it should "parse keskeneräinen perusopetus as kesken and no arvosanat when jääluokalle is true in 9luokka after deadline" in {
+  it should "parse keskeneräinen perusopetus as keskeytynyt and no arvosanat when jääluokalle is true in 9luokka after deadline" in {
     val json: String = scala.io.Source
       .fromFile(jsonDir + "koskidata_perusopetus_kesken_jaanyt_9luokalle.json")
       .mkString
@@ -537,7 +540,10 @@ class KoskiDataHandlerTest
     KoskiUtil.deadlineDate = LocalDate.now().minusDays(1)
 
     val result = koskiDatahandler.createSuorituksetJaArvosanatFromKoski(henkilo).head
-    //result should have length 0
+    result should have length 2
+    // ei 9-luokan eikä päättötodistuksen arvosanoja
+    result(0).arvosanat should have length 0
+    result(1).arvosanat should have length 0
     val pt = getPerusopetusPäättötodistus(result)
     pt.get.suoritus.tila shouldBe "KESKEYTYNYT"
   }
