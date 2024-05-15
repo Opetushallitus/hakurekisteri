@@ -334,7 +334,7 @@ class KoskiSuoritusArvosanaParser {
     val failed = ysiluokat.exists(_.jääLuokalle.getOrElse(false))
     // tämä taitaa olla turha koska uusittuna läpäisty 9-luokka ei oletettavasti näy 9-luokan suorituksena
     // vaan päättötodistuksena
-    val succeeded = ysiluokat.exists(_.jääLuokalle.getOrElse(false) == false)
+    val succeeded = ysiluokat.exists(!_.jääLuokalle.getOrElse(false))
     failed && !succeeded
   }
 
