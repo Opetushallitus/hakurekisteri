@@ -46,6 +46,14 @@ case object YTLSyncForPerson extends Operation {
   def name: String = "REQUEST_YTL_SYNC_FOR_PERSON"
 }
 
+case object YTLSyncForPersons extends Operation {
+  def name: String = "REQUEST_YTL_SYNC_FOR_PERSONS"
+}
+
+case object YTLSyncForHaku extends Operation {
+  def name: String = "REQUEST_YTL_SYNC_FOR_HAKU"
+}
+
 case object HenkilonTiedotVirrasta extends Operation {
   def name: String = "READ_VIRTA_TIEDOT"
 }

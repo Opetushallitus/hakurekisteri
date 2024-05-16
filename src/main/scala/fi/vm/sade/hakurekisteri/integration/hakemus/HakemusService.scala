@@ -30,7 +30,12 @@ import fi.vm.sade.hakurekisteri.integration.kouta.{
   KoutaInternalHakukohde
 }
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
-import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{
+  ExecutorUtil,
+  OphUrlProperties,
+  ServiceConfig,
+  VirkailijaRestClient
+}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.properties.OphProperties
 import org.joda.time.{DateTimeZone, LocalDate}
@@ -42,8 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -191,6 +195,11 @@ class HakemusService(
   maxOidsChunkSize: Int = 150
 )(implicit val system: ActorSystem)
     extends IHakemusService {
+
+  implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+    config.integrations.asyncOperationThreadPoolSize,
+    getClass.getSimpleName
+  )
 
   case class SearchParams(
     aoOids: Seq[String] = null,

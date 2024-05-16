@@ -10,7 +10,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
   IOppijaNumeroRekisteri,
-  LinkedHenkiloOids
+  LinkedHenkiloOids,
+  PersonOidsWithAliases
 }
 import fi.vm.sade.hakurekisteri.integration.virta.{
   VirtaClient,
@@ -141,6 +142,12 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
           )
         )
       }
+    }
+
+    override def enrichWithAliases(henkiloOids: Set[String]): Future[PersonOidsWithAliases] = {
+      fetchLinkedHenkiloOidsMap(henkiloOids)
+        .map(_.oidToLinkedOids)
+        .map(PersonOidsWithAliases(henkiloOids, _))
     }
 
     override def getByOids(oids: Set[String]): Future[Map[String, Henkilo]] = Future.successful(
