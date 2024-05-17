@@ -1020,7 +1020,6 @@ class KoskiDataHandlerTest
     Valmistumispäivämäärä ei päivittynyt todistuksen vahvistuspäivämääräkentästä kosken puolelta sureen,
     ennen kuin opiskeluoideuden tilan oli muuttanut valmiiksi koskessa. Olisi pitänyt päivittyä jo silloin,
     kun päättötodistus vahvistettiin. (Vaikka opiskeluoikeuden tila oli kesken)
-    Testattu tapauksella 080501A660R
      */
 
     val json: String = scala.io.Source.fromFile(jsonDir + "luokallejaanyt_conflu_10.json").mkString
