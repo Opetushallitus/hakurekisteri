@@ -204,6 +204,11 @@ case class KoskiSuoritus(
     tyyppi.exists(_.koodiarvo == "aikuistenperusopetuksenoppimaara")
   }
 
+  def isPerusopetuksenoppimaara(): Boolean = {
+    tyyppi.exists(_.koodiarvo == "perusopetuksenoppimaara") ||
+    tyyppi.exists(_.koodiarvo == "aikuistenperusopetuksenoppimaara")
+  }
+
   def laajuusVahintaan(min: BigDecimal): Boolean = {
     val sum =
       if (isOpistovuosi) {
