@@ -153,6 +153,8 @@ case class SiirtotiedostoOpiskeluoikeus(
 )
 
 case class SiirtotiedostoPagingParams(
+  executionId: String, //uuid
+  fileCounter: Int,
   tyyppi: String,
   start: Long,
   end: Long,
