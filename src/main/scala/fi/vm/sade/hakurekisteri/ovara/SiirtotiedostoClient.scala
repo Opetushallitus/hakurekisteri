@@ -18,28 +18,37 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
 
   private implicit val formats = HakurekisteriJsonSupport.format
 
-  def saveSiirtotiedosto[T](contentType: String, content: Seq[T]): String = {
+  def saveSiirtotiedosto[T](
+    contentType: String,
+    content: Seq[T],
+    executionId: String,
+    fileNumber: Int
+  ): String = {
     try {
       if (content.nonEmpty) {
         val output = writePretty(Seq(content.head))
-        logger.info(s"Saving siirtotiedosto... total ${content.length}, first: ${content.head}")
-        logger.info(s"Saving siirtotiedosto... output: $output")
+        logger.info(
+          s"($executionId) Saving siirtotiedosto... total ${content.length}, first: ${content.head}"
+        )
+        logger.info(s"($executionId) Saving siirtotiedosto... output: $output")
         siirtotiedostoPalvelu
           .saveSiirtotiedosto(
             "sure",
             contentType,
             "",
+            executionId,
+            fileNumber,
             new ByteArrayInputStream(write(content).getBytes()),
             saveRetryCount
           )
           .key
       } else {
-        logger.info("Ei tallennettavaa!")
+        logger.info(s"($executionId) Ei tallennettavaa!")
         ""
       }
     } catch {
       case t: Throwable =>
-        logger.error(s"Siirtotiedoston tallennus s3-ämpäriin epäonnistui:", t)
+        logger.error(s"($executionId) Siirtotiedoston tallennus s3-ämpäriin epäonnistui:", t)
         throw t
     }
   }
