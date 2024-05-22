@@ -73,13 +73,13 @@ class HakuActor(
     case sq: Seq[_] =>
       storedHakus = sq.collect { case h: Haku => h }
       val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
-      val ytlHakus = activeHakus.filter(_.kkHaku)
+      val kkHakus = activeHakus.filter(_.kkHaku)
       val activeYhteisHakus: Seq[Haku] = activeHakus.filter(_.hakutapaUri.startsWith("hakutapa_01"))
       val activeKKYhteisHakus = activeYhteisHakus.filter(_.kkHaku)
       val active2AsteYhteisHakus = activeYhteisHakus.filter(_.toisenAsteenHaku)
-      val ytlHakuOidsWithNames =
-        ytlHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
-      val ytlHakuOids: Set[String] = ytlHakus.map(_.oid).toSet
+      val kkHakuOidsWithNames =
+        kkHakus.map(haku => haku.oid -> haku.nimi.fi.getOrElse("haulla ei nimeä")).toMap
+      val kkHakuOids: Set[String] = kkHakus.map(_.oid).toSet
       val active2AsteYhteisHakuOids: Set[String] = active2AsteYhteisHakus.map(_.oid).toSet
       val activeKKYhteisHakuOids: Set[String] = activeKKYhteisHakus.map(_.oid).toSet
       val activeToisenAsteenJatkuvaKoutaHakuOids = activeHakus
@@ -89,14 +89,15 @@ class HakuActor(
         .filter(_.oid.length == 35)
         .map(_.oid)
         .toSet
-      log.info(s"Asetetaan aktiiviset YTL-haut: ${ytlHakuOidsWithNames.toString()} ")
-      ytlIntegrationActor.actor ! ActiveKkHakuOids(ytlHakuOids)
+      log.info(s"Asetetaan aktiiviset Kk-haut: ${kkHakuOidsWithNames.toString()} ")
+      ytlIntegrationActor.actor ! ActiveKkHakuOids(kkHakuOids)
       koskiService.setAktiiviset2AsteYhteisHaut(active2AsteYhteisHakuOids)
       koskiService.setAktiivisetKKYhteisHaut(activeKKYhteisHakuOids)
       koskiService.setAktiivisetToisenAsteenJatkuvatHaut(activeToisenAsteenJatkuvaKoutaHakuOids)
+      koskiService.setAktiivisetKKHaut(kkHakuOids)
       log.info(s"size of stored application system set: [${storedHakus.size}]")
       log.info(s"active application systems: [${activeHakus.size}]")
-      log.info(s"active ytl application systems: [${ytlHakuOids.size}]")
+      log.info(s"active ytl application systems: [${kkHakuOids.size}]")
       log.info(s"active 2.aste-yhteishakus: [${active2AsteYhteisHakuOids.size}]")
       log.info(s"active korkeakoulu-yhteishakus: [${activeKKYhteisHakuOids.size}]")
       log.info(

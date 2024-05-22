@@ -57,6 +57,12 @@ class KoskiService(
     aktiivisetKKYhteisHakuOidit.set(hakuOids)
   }
 
+  val aktiivisetKKHakuOidit = new AtomicReference[Set[String]](Set.empty)
+  def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = {
+    logger.info(s"Asetetaan aktiiviset KK-yhteishaut haut: $hakuOids")
+    aktiivisetKKHakuOidit.set(hakuOids)
+  }
+
   val aktiivistenToisenAsteenJatkuvienHakujenOidit = new AtomicReference[Set[String]](Set.empty)
   def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit = {
     logger.info(s"Asetetaan aktiiviset toisen asteen jatkuvat haut: $hakuOids")
@@ -168,7 +174,7 @@ class KoskiService(
    * - Aktiivisten korkeakouluhakujen ammatilliset suoritukset Koskesta
    */
   override def updateAktiivisetKkAsteenHaut(): () => Unit = { () =>
-    val haut: Set[String] = aktiivisetKKYhteisHakuOidit.get()
+    val haut: Set[String] = aktiivisetKKHakuOidit.get()
     logger.info(
       s"Saatiin tarjonnasta aktiivisia korkeakoulujen hakuja ${haut.size} kpl, aloitetaan ammatillisten suoritusten päivitys."
     )

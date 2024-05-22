@@ -10,6 +10,8 @@ trait IKoskiService {
 
   def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit
 
+  def setAktiivisetKKHaut(hakuOids: Set[String]): Unit
+
   def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit
 
   def updateAktiivisetKkAsteenHaut(): () => Unit
@@ -50,6 +52,7 @@ trait IKoskiService {
 class KoskiServiceMock extends IKoskiService {
   override def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = None
   override def setAktiivisetKKYhteisHaut(hakuOids: Set[String]): Unit = None
+  override def setAktiivisetKKHaut(hakuOids: Set[String]): Unit = None
   override def setAktiivisetToisenAsteenJatkuvatHaut(hakuOids: Set[String]): Unit = None
   override def updateAktiivisetKkAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenHaut(): () => Unit = () => ()
