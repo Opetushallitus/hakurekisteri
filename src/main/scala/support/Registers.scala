@@ -34,7 +34,7 @@ class BareRegisters(
   config: Config
 ) extends Registers {
   override val suoritusRekisteri = system.actorOf(
-    Props(new SuoritusJDBCActor(journals.suoritusJournal, 5, integrationsProvider, config)),
+    Props(new SuoritusJDBCActor(journals.suoritusJournal, 15, integrationsProvider, config)),
     "suoritukset"
   )
   override val ytlSuoritusRekisteri = system.actorOf(
@@ -42,7 +42,7 @@ class BareRegisters(
     "ytl-suoritukset"
   )
   override val opiskelijaRekisteri = system.actorOf(
-    Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 5, config)),
+    Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 10, config)),
     "opiskelijat"
   )
   override val opiskeluoikeusRekisteri = system.actorOf(
