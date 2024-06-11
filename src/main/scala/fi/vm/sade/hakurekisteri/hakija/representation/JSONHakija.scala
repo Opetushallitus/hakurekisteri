@@ -196,7 +196,7 @@ object JSONHakijaV6 {
 object JSONHakijaV7 {
   import RicherString._
 
-  private[hakija] def apply(hakija: Hakija, hakemus: HakijaV6Hakemus): JSONHakijaV7 =
+  private[hakija] def apply(hakija: Hakija, hakemus: HakijaV7Hakemus): JSONHakijaV7 =
     JSONHakijaV7(
       hetu = hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
       oppijanumero = hakija.henkilo.oppijanumero,
@@ -245,7 +245,8 @@ object JSONHakijaV7 {
       oppivelvollisuusVoimassaAsti = hakija.henkilo.oppivelvollisuusVoimassaAsti,
       oikeusMaksuttomaanKoulutukseenVoimassaAsti =
         hakija.henkilo.oikeusMaksuttomaanKoulutukseenVoimassaAsti,
-      lisakysymykset = hakija.henkilo.lisakysymykset
+      lisakysymykset = hakija.henkilo.lisakysymykset,
+      sahkoisenAsioinninLupa = hakija.ataruHakemus.map(_.sahkoisenAsioinninLupa).getOrElse(false)
     )
 
   def hetu(hetu: String, syntymaaika: String): String = hetu match {
@@ -405,10 +406,11 @@ case class JSONHakijaV7(
   kiinnostunutoppisopimuksesta: Boolean,
   huoltaja1: Option[HuoltajaV7],
   huoltaja2: Option[HuoltajaV7],
-  hakemus: HakijaV6Hakemus,
+  hakemus: HakijaV7Hakemus,
   oppivelvollisuusVoimassaAsti: Option[String],
   oikeusMaksuttomaanKoulutukseenVoimassaAsti: Option[String],
-  lisakysymykset: Seq[Lisakysymys]
+  lisakysymykset: Seq[Lisakysymys],
+  sahkoisenAsioinninLupa: Boolean
 )
 
 case class JSONHakijat(hakijat: Seq[JSONHakija])

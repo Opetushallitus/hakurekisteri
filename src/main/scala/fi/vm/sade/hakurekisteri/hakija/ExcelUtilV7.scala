@@ -81,7 +81,8 @@ object ExcelUtilV7 extends HakijatExcelWriterV3[JSONHakijatV7] {
     "Urheilija-valmentaja-puh",
     "Urheilija-laji",
     "Urheilija-liitto",
-    "Urheilija-seura"
+    "Urheilija-seura",
+    "Sähköisen asioinnin lupa"
   )
 
   private def getLisakysymysIdsAndQuestionsInOrder(
@@ -195,7 +196,8 @@ object ExcelUtilV7 extends HakijatExcelWriterV3[JSONHakijatV7] {
             ht.urheilijanLisakysymykset.flatMap(_.valmentaja_puh).getOrElse(""),
             ht.urheilijanLisakysymykset.flatMap(_.laji).getOrElse(""),
             ht.urheilijanLisakysymykset.flatMap(_.liitto).getOrElse(""),
-            ht.urheilijanLisakysymykset.flatMap(_.seura).getOrElse("")
+            ht.urheilijanLisakysymykset.flatMap(_.seura).getOrElse(""),
+            if (h.sahkoisenAsioinninLupa) "Kyllä" else ""
           )
 
           def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {

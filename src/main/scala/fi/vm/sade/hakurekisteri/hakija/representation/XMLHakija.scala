@@ -399,6 +399,70 @@ case class HakijaV6Hakemus(
   hakutoiveet: Seq[XMLHakutoive],
   osaaminen: Option[XMLOsaaminen]
 )
+
+object HakijaV7Hakemus {
+  private[hakija] def apply(
+    hakija: Hakija,
+    opiskelutieto: Option[Opiskelija],
+    lahtokoulu: Option[Organisaatio],
+    toiveet: Seq[XMLHakutoive],
+    osaaminen: Option[XMLOsaaminen]
+  ): HakijaV7Hakemus = {
+    HakijaV7Hakemus(
+      vuosi = hakija.hakemus.hakutoiveet.headOption
+        .flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamisvuosi))
+        .getOrElse(""),
+      kausi = hakija.hakemus.hakutoiveet.headOption
+        .flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamiskausi.map(_.toString)))
+        .getOrElse(""),
+      hakemusnumero = hakija.hakemus.hakemusnumero,
+      hakemuksenJattopaiva =
+        hakija.ataruHakemus.map(h => h.hakemusFirstSubmittedTime).getOrElse("ei tiedossa"),
+      hakemuksenMuokkauspaiva =
+        hakija.ataruHakemus.map(h => h.createdTime).getOrElse("ei tiedossa"),
+      lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
+      lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
+      luokka = opiskelutieto.map(_.luokka),
+      luokkataso = opiskelutieto.map(_.luokkataso),
+      pohjakoulutus = resolvePohjakoulutus(getRelevantSuoritus(hakija.suoritukset)),
+      todistusvuosi = getRelevantSuoritus(hakija.suoritukset).flatMap(resolveYear),
+      muukoulutus = hakija.henkilo.muukoulutus,
+      julkaisulupa = Some(hakija.hakemus.julkaisulupa),
+      yhteisetaineet = None,
+      lukiontasapisteet = None,
+      lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
+      yleinenkoulumenestys = None,
+      painotettavataineet = None,
+      hakutoiveet = toiveet,
+      osaaminen = osaaminen,
+      sahkoisenAsioinninLupa = hakija.ataruHakemus.map(_.sahkoisenAsioinninLupa)
+    )
+  }
+}
+
+case class HakijaV7Hakemus(
+  vuosi: String,
+  kausi: String,
+  hakemusnumero: String,
+  hakemuksenJattopaiva: String, //alkuperäinen jättöpäivä
+  hakemuksenMuokkauspaiva: String, //viimeisimmän version tallennuspäivä
+  lahtokoulu: Option[String],
+  lahtokoulunnimi: Option[String],
+  luokka: Option[String],
+  luokkataso: Option[String],
+  pohjakoulutus: String,
+  todistusvuosi: Option[String],
+  muukoulutus: Option[String],
+  julkaisulupa: Option[Boolean],
+  yhteisetaineet: Option[BigDecimal],
+  lukiontasapisteet: Option[BigDecimal],
+  lisapistekoulutus: Option[String],
+  yleinenkoulumenestys: Option[BigDecimal],
+  painotettavataineet: Option[BigDecimal],
+  hakutoiveet: Seq[XMLHakutoive],
+  osaaminen: Option[XMLOsaaminen],
+  sahkoisenAsioinninLupa: Option[Boolean]
+)
 case class XMLHakutoive(
   hakukohdeOid: String,
   hakujno: Short,
