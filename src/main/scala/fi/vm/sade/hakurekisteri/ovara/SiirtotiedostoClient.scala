@@ -23,7 +23,7 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
     content: Seq[T],
     executionId: String,
     fileNumber: Int
-  ): String = {
+  ): Unit = {
     try {
       if (content.nonEmpty) {
         val output = writePretty(Seq(content.head))
@@ -44,7 +44,6 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
           .key
       } else {
         logger.info(s"($executionId) Ei tallennettavaa!")
-        ""
       }
     } catch {
       case t: Throwable =>
