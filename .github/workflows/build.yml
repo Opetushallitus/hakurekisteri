@@ -36,7 +36,7 @@ jobs:
           npm -v
           node -v
 
-      - uses: MathRobin/timezone-action@v1.1
+      - uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "Europe/Helsinki"
 
@@ -53,33 +53,12 @@ jobs:
           key: ${{ github.sha }}
 
   deploy-container:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/cache@v4
-        id: restore-build
-        with:
-          path: |
-            target
-          key: ${{ github.sha }}
-
-      - name: Build Docker container
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          git clone https://github.com/Opetushallitus/ci-tools.git
-          source ci-tools/common/setup-tools.sh
-          export ARTIFACT_NAME="suoritusrekisteri"
-          mv target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar 
-          jar xf $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar META-INF/native
-          mv META-INF/native $DOCKER_BUILD_DIR/native_libs
-          cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
-          export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
-          ./ci-tools/common/pull-image.sh
-          ./ci-tools/github-build/build-fatjar.sh $ARTIFACT_NAME
-          ./ci-tools/github-build/upload-image.sh $ARTIFACT_NAME
+    needs: [build]
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    with:
+      application: suoritusrekisteri
+      base-image: baseimage-fatjar-openjdk11:master
+      configfolder: src/main/resources/oph-configuration
+      jarfile: suoritusrekisteri*allinone
+    secrets:
+      AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
