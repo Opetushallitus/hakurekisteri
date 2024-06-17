@@ -140,9 +140,12 @@ suoritusrekisteri.pistesyotto-service.max-connections={{ suoritusrekisteri_piste
 suoritusrekisteri.pistesyotto-service.max-connection-queue-ms={{ suoritusrekisteri_pistesyottoservice_max_connection_queue_ms | default('44444') }}
 suoritusrekisteri.hakemusservice.max.oids.chunk.size = {{ suoritusrekisteri_hakemusservice_max_oids_chunk_size | default('150')}}
 suoritusrekisteri.async.pools.size = {{ suoritusrekisteri_async_pools_size | default('8') }}
+suoritusrekisteri.ovara.s3.region = {{ aws_region }}
+suoritusrekisteri.ovara.s3.bucket = {{ ovara_siirtotiedosto_s3_bucket }}
+suoritusrekisteri.ovara.s3.target-role-arn = {{ ovara_siirtotiedosto_s3_target_role_arn }}
+suoritusrekisteri.ovara.pagesize = {{ suoritusrekisteri_ovara_pagesize | default('10000')}}
 user.home.conf=${user.home}/oph-configuration
 web.url.cas=https\://${host.cas}/cas
-
 # YTL HTTP API
 ytl.baseUrl={{suoritusrekisteri_ytl_http_host}}
 ytl.http.download.directory={{suoritusrekisteri_ytl_http_download_directory}}

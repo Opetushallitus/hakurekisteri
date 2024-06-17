@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import akka.testkit.TestActorRef
@@ -32,6 +31,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{
   OpiskeluoikeusTable
 }
 import fi.vm.sade.hakurekisteri.oppija.Oppija
+import fi.vm.sade.hakurekisteri.ovara.OvaraDbRepository
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
@@ -231,8 +231,10 @@ class OppijaResourceSpec
         system.actorOf(Props(new FakeAuthorizer(opiskelijat)))
       override val suoritusRekisteri: ActorRef =
         system.actorOf(Props(new FakeAuthorizer(suoritukset)))
-      override val ytlSuoritusRekisteri: ActorRef =
+      override val ytlSuoritusRekisteri: ActorRef = {
         system.actorOf(Props(new FakeAuthorizer(ytlSuoritukset)))
+      }
+      override val ovaraDbRepository: OvaraDbRepository = mock[OvaraDbRepository]
     }
     val tarjontaActor = TarjontaActorRef(system.actorOf(Props(new Actor {
       override def receive: Receive = {

@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.MockConfig
@@ -16,6 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
+import fi.vm.sade.hakurekisteri.ovara.OvaraDbRepository
 import fi.vm.sade.hakurekisteri.rest.support.{
   HakurekisteriJsonSupport,
   Registers,
@@ -90,6 +90,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
       system.actorOf(Props(new FakeAuthorizer(suoritukset)))
     override val ytlSuoritusRekisteri: ActorRef =
       system.actorOf(Props(new FakeAuthorizer(ytlSuoritukset)))
+    override val ovaraDbRepository: OvaraDbRepository = mock[OvaraDbRepository]
   }
 
   val notImplementedActor = system.actorOf(Props(new Actor {
