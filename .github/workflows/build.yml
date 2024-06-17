@@ -64,5 +64,6 @@ jobs:
       base-image: baseimage-fatjar-openjdk11:master
       configfolder: src/main/resources/oph-configuration
       jarfile: suoritusrekisteri*allinone
+      native-libraries: true
     secrets:
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
