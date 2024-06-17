@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: linux-arm64-22.04-2core-8gb-75gb
+    runs-on: self-hosted
 
     steps:
       - uses: actions/checkout@v4
