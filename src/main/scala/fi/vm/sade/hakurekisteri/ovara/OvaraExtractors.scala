@@ -13,12 +13,12 @@ trait OvaraExtractors extends HakurekisteriJsonSupport {
     GetResult(r =>
       SiirtotiedostoSuoritus(
         resourceId = r.nextString(),
-        komo = r.nextString(),
+        komo = r.nextStringOption(),
         myontaja = r.nextString(),
-        tila = r.nextString(),
-        valmistuminen = r.nextString(),
+        tila = r.nextStringOption(),
+        valmistuminen = r.nextStringOption(),
         henkiloOid = r.nextString(),
-        yksilollistaminen = r.nextString(),
+        yksilollistaminen = r.nextStringOption(),
         suoritusKieli = r.nextStringOption(),
         inserted = r.nextLong(),
         deleted = r.nextBooleanOption(),
