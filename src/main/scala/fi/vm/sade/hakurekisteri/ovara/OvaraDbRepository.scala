@@ -1,14 +1,8 @@
 package fi.vm.sade.hakurekisteri.ovara
-import slick.jdbc.ActionBasedSQLInterpolation
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-//import slick.jdbc.JdbcBackend.Database
-//import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import support.Journals
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, _}
 trait OvaraDbRepository {
   def getChangedSuoritusIds(after: Long, before: Long): Seq[String]
@@ -50,7 +44,7 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
     params: SiirtotiedostoPagingParams
   ): Seq[SiirtotiedostoArvosana] = {
     val query =
-      sql"""select resource_id, suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted, deleted, pisteet, myonnetty, source, jarjestys, lahde_arvot, current, lahde_arvot
+      sql"""select resource_id, suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted, deleted, pisteet, myonnetty, source, jarjestys, lahde_arvot
            from arvosana where current and inserted >= ${params.start} and inserted <= ${params.end}
                          order by inserted desc limit ${params.pageSize} offset ${params.offset}"""
         .as[SiirtotiedostoArvosana]
@@ -89,15 +83,15 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
     )
   }
 }
-//Todo, varmista oikeasti optionaaliset kentät
+
 case class SiirtotiedostoSuoritus(
   resourceId: String,
-  komo: String,
+  komo: Option[String],
   myontaja: String,
-  tila: String,
-  valmistuminen: String,
+  tila: Option[String],
+  valmistuminen: Option[String],
   henkiloOid: String,
-  yksilollistaminen: String,
+  yksilollistaminen: Option[String],
   suoritusKieli: Option[String],
   inserted: Long,
   deleted: Option[Boolean],
@@ -113,7 +107,7 @@ case class SiirtotiedostoSuoritus(
 case class SiirtotiedostoArvosana(
   resourceId: String,
   suoritus: String,
-  arvosana: Option[String], //todo varmista onko tyhjänä "" vai null
+  arvosana: Option[String],
   asteikko: Option[String],
   aine: Option[String],
   lisatieto: Option[String],
