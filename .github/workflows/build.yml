@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: linux-arm64-22.04-2core-8gb-75gb
 
     steps:
       - uses: actions/checkout@v4
