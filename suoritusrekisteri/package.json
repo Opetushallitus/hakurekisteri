@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "build": "npm ci -s && ../node_modules/.bin/bower install && coffee --join target/classes/webapp/compiled/scripts.js --compile src/main/resources/coffee/*.coffee",
+    "watch": "npm ci -s && ../node_modules/.bin/bower install && coffee --watch --join target/classes/webapp/compiled/scripts.js --compile src/main/resources/coffee/*.coffee"
+  },
+  "name": "hakurekisteri",
+  "description": "hakurekisteri",
+  "version": "0.0.1",
+  "devDependencies": {
+    "bower": "^1.8.14",
+    "coffeescript": "1.7.0",
+    "mocha-headless-chrome": "^4.0.0"
+  }
+}
