@@ -551,7 +551,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   hakemusService.addTrigger(ytlTrigger)
 
   val hoursToBacktrack: Int =
-    OphUrlProperties.getProperty("suoritusrekisteri.modifiedhakemukset.backtrack.hours").toInt
+    OphUrlProperties.getOrElse("suoritusrekisteri.modifiedhakemukset.backtrack.hours", "1").toInt
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset(modifiedAfter =
     new Date(Platform.currentTime - TimeUnit.HOURS.toMillis(hoursToBacktrack))
