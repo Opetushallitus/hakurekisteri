@@ -218,7 +218,7 @@ class MockDevConfig extends Config {
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(
     ProjectRootFinder.findProjectRoot().getAbsolutePath,
-    "src/test/resources/oph-configuration"
+    "suoritusrekisteri/src/test/resources/oph-configuration"
   )
 }
 
