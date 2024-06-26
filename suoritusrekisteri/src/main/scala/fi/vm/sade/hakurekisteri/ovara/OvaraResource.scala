@@ -17,6 +17,7 @@ import org.scalatra.{SessionSupport, _}
 import org.scalatra.json.{JValueResult, JacksonJsonSupport}
 import org.slf4j.LoggerFactory
 
+import java.util.UUID
 import scala.util.Try
 
 class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
@@ -35,7 +36,19 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
       (start, end) match {
         case (Some(start), Some(end)) =>
           logger.info(s"Muodostetaan siirtotiedosto! $start - $end")
-          val result = ovaraService.formSiirtotiedostotPaged(start, end)
+          val result = ovaraService.formSiirtotiedostotPaged(
+            SiirtotiedostoProcess(
+              -1,
+              UUID.randomUUID().toString,
+              start,
+              end,
+              "start",
+              None,
+              SiirtotiedostoProcessInfo(Map.empty),
+              finishedSuccessfully = false,
+              None
+            )
+          )
           Ok(s"$result")
         case _ =>
           logger.error(s"Toinen pakollisista parametreista (start $start, end $end) puuttuu!")

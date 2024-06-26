@@ -9,6 +9,24 @@ import org.json4s.jackson.JsonMethods._
 trait OvaraExtractors extends HakurekisteriJsonSupport {
   implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 
+  protected implicit val getSiirtotiedostoProcessInfoResult: GetResult[SiirtotiedostoProcess] =
+    GetResult(r =>
+      SiirtotiedostoProcess(
+        id = r.nextLong(),
+        executionId = r.nextString(),
+        windowStart = r.nextLong(),
+        windowEnd = r.nextLong(),
+        runStart = r.nextString(),
+        runEnd = r.nextStringOption(),
+        info = r
+          .nextStringOption()
+          .map(parse(_).extract[SiirtotiedostoProcessInfo])
+          .getOrElse(SiirtotiedostoProcessInfo(Map.empty)),
+        finishedSuccessfully = r.nextBoolean(),
+        errorMessage = r.nextStringOption()
+      )
+    )
+
   protected implicit val getSiirtotiedostoSuoritusResult: GetResult[SiirtotiedostoSuoritus] =
     GetResult(r =>
       SiirtotiedostoSuoritus(

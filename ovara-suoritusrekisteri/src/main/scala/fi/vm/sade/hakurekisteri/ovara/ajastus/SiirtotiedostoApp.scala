@@ -4,15 +4,22 @@ import akka.actor.ActorSystem
 import org.slf4j.{Logger, LoggerFactory}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.ovara.{OvaraDbRepository, OvaraDbRepositoryImpl, OvaraService, SiirtotiedostoClient}
+import fi.vm.sade.hakurekisteri.ovara.{
+  OvaraDbRepository,
+  OvaraDbRepositoryImpl,
+  OvaraService,
+  SiirtotiedostoClient,
+  SiirtotiedostoProcess,
+  SiirtotiedostoProcessInfo
+}
 import support.{BareRegisters, BaseKoosteet, DbJournals, Integrations, PersonAliasesProvider}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 object SiirtotiedostoApp {
   private val logger: Logger =
     LoggerFactory.getLogger("fi.vm.sade.valintatulosservice.ovara.ajastus.SiirtotiedostoApp")
-
 
   def createOvaraService(config: Config, system: ActorSystem) = {
     implicit val actorSystem: ActorSystem = system
@@ -57,7 +64,7 @@ object SiirtotiedostoApp {
       val ovaraService = createOvaraService(config, system)
 
       //Todo implement ajastus db logic and instantiate OvaraService etc
-      val result = ovaraService.formSiirtotiedostotPaged(1718312400000L, System.currentTimeMillis())
+      val result = ovaraService.formNextSiirtotiedosto
       logger.info(s"Operation result: $result")
       system.terminate()
     } catch {
