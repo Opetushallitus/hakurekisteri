@@ -29,7 +29,8 @@ import scala.concurrent.duration.DurationInt
 trait IOvaraService {
   //Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
   //Tiedostot tallennetaan s3:seen.
-  def formSiirtotiedostotPaged(start: Long, end: Long): Map[String, Long]
+  def formNextSiirtotiedosto(): SiirtotiedostoProcess
+  def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess
   def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String])
 }
 
@@ -174,18 +175,45 @@ class OvaraService(
     s"Onnistuneita ${hakuOids.size - failed.size}, epäonnistuneita ${failed.size}"
   }
 
-  def formSiirtotiedostotPaged(start: Long, end: Long): Map[String, Long] = {
-    //lukitaan aikaikkunan loppuhetki korkeintaan nykyhetkeen, jolloin ei tarvitse huolehtia tämän jälkeen kantaan mahdollisesti tulevista muutoksista,
-    //ja eri tyyppiset tiedostot muodostetaan samalle aikaikkunalle.
+  def formNextSiirtotiedosto = {
     val executionId = UUID.randomUUID().toString
-    logger.info(s"($executionId) Muodostetaan siirtotiedosto, $start $end")
+    val latestProcessInfo: Option[SiirtotiedostoProcess] =
+      db.getLatestProcessInfo
+    logger.info(s"Haettiin tieto edellisestä siirtotiedostoprosessista: $latestProcessInfo")
+
+    val windowStart = latestProcessInfo match {
+      case Some(processInfo) if processInfo.finishedSuccessfully => processInfo.windowEnd
+      case Some(processInfo)                                     => processInfo.windowStart //retry previous
+      case None                                                  => 0
+    }
+
+    val windowEnd = System.currentTimeMillis()
+
+    val newProcessInfo =
+      db.createNewProcess(executionId, windowStart, windowEnd)
+    logger.info(s"Luotiin ja persistoitiin tieto luodusta: $newProcessInfo")
+
+    //Todo, jonkinlainen mekanismi sille että muodostetaan ensikertalaisuudet kerran päivässä, muulloin vain muut muutokset.
+    val result = formSiirtotiedostotPaged(
+      newProcessInfo.getOrElse(throw new RuntimeException("Siirtotiedosto process does not exist!"))
+    )
+    logger.info(s"Siirtotiedostojen muodostus valmistui, persistoidaan tulokset: $result")
+    db.persistFinishedProcess(result)
+    result
+  }
+
+  def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess = {
+    val executionId = UUID.randomUUID().toString
+    logger.info(
+      s"($executionId) Muodostetaan siirtotiedosto, ${process.windowStart} ${process.windowEnd}"
+    )
     val baseParams =
       SiirtotiedostoPagingParams(
         executionId,
         1,
         "",
-        start,
-        math.min(System.currentTimeMillis(), end),
+        process.windowStart,
+        process.windowEnd,
         0,
         pageSize
       )
@@ -213,13 +241,15 @@ class OvaraService(
       "opiskeluoikeus" -> opiskeluoikeusResult
     )
     logger.info(s"($executionId) Siirtotiedostot muodostettu, tuloksia: $resultCounts")
-    resultCounts
+    process.copy(info = SiirtotiedostoProcessInfo(resultCounts))
   }
 
 }
 
 class OvaraServiceMock extends IOvaraService {
-  override def formSiirtotiedostotPaged(start: Long, end: Long) = ???
+  override def formSiirtotiedostotPaged(process: SiirtotiedostoProcess) = ???
 
   override def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): Unit = ???
+
+  override def formNextSiirtotiedosto(): SiirtotiedostoProcess = ???
 }

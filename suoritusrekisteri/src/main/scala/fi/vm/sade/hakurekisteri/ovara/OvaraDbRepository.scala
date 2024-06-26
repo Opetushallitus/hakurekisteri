@@ -2,9 +2,19 @@ package fi.vm.sade.hakurekisteri.ovara
 
 import scala.concurrent.Await
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import org.json4s.jackson.Serialization.write
 
+import java.util.UUID
 import scala.concurrent.duration.{Duration, _}
 trait OvaraDbRepository {
+  def getLatestProcessInfo: Option[SiirtotiedostoProcess]
+  def createNewProcess(
+    executionId: String,
+    windowStart: Long,
+    windowEnd: Long
+  ): Option[SiirtotiedostoProcess]
+  def persistFinishedProcess(process: SiirtotiedostoProcess): Option[SiirtotiedostoProcess]
+
   def getChangedSuoritusIds(after: Long, before: Long): Seq[String]
   def getChangedArvosanaIds(after: Long, before: Long): Seq[String]
 
@@ -17,7 +27,54 @@ trait OvaraDbRepository {
 
 }
 
+case class SiirtotiedostoProcessInfo(entityTotals: Map[String, Long])
+
+case class SiirtotiedostoProcess(
+  id: Long,
+  executionId: String,
+  windowStart: Long,
+  windowEnd: Long,
+  runStart: String,
+  runEnd: Option[String],
+  info: SiirtotiedostoProcessInfo,
+  finishedSuccessfully: Boolean,
+  errorMessage: Option[String]
+)
+
 class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraExtractors {
+
+  def getLatestProcessInfo(): Option[SiirtotiedostoProcess] = {
+    runBlocking(
+      sql"""select id, uuid, window_start, window_end, run_start, run_end, info, success, error_message from siirtotiedosto order by id desc limit 1"""
+        .as[SiirtotiedostoProcess]
+        .headOption
+    )
+  }
+
+  def createNewProcess(
+    executionId: String,
+    windowStart: Long,
+    windowEnd: Long
+  ): Option[SiirtotiedostoProcess] = {
+    runBlocking(
+      sql"""insert into siirtotiedosto(id, uuid, window_start, window_end, run_start, run_end, info, success, error_message)
+           values (default, $executionId, $windowStart, $windowEnd, now(), null, '{"entityTotals": {}}'::jsonb, false, '')
+           returning *""".as[SiirtotiedostoProcess].headOption
+    )
+  }
+
+  def persistFinishedProcess(process: SiirtotiedostoProcess) = {
+    runBlocking(
+      sql"""update siirtotiedosto set
+                         run_end = now(),
+                         info = ${write(process.info)}::jsonb,
+                         success = ${process.finishedSuccessfully},
+                         error_message = ${process.errorMessage}
+                     where id = ${process.id} and uuid = ${process.executionId} returning *"""
+        .as[SiirtotiedostoProcess]
+        .headOption
+    )
+  }
 
   def getChangedSuoritusIds(after: Long, before: Long): Seq[String] = {
     val query =
