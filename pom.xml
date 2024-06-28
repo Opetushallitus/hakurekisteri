@@ -11,7 +11,7 @@
         <module>suoritusrekisteri</module>
     </modules>
     <version>15.0-SNAPSHOT</version>
-    <name>suoritusrekisteri</name>
+    <name>suoritusrekisteri-parent</name>
     <organization>
         <name>suoritusrekisteri</name>
     </organization>
@@ -1636,4 +1636,29 @@
             <layout>default</layout>
         </repository>
     </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.0.1</version>
+                <configuration>
+                    <scala>
+                        <scalafmt>
+                            <version>2.7.1</version>
+                            <file>.scalafmt.conf</file>
+                        </scalafmt>
+                    </scala>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
