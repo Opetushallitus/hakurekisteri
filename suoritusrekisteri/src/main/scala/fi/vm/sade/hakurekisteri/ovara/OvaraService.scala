@@ -203,13 +203,12 @@ class OvaraService(
   }
 
   def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess = {
-    val executionId = UUID.randomUUID().toString
     logger.info(
-      s"($executionId) Muodostetaan siirtotiedosto, ${process.windowStart} ${process.windowEnd}"
+      s"(${process.executionId}) Muodostetaan siirtotiedosto, $process"
     )
     val baseParams =
       SiirtotiedostoPagingParams(
-        executionId,
+        process.executionId,
         1,
         "",
         process.windowStart,
@@ -240,7 +239,7 @@ class OvaraService(
       "opiskelija" -> opiskelijaResult,
       "opiskeluoikeus" -> opiskeluoikeusResult
     )
-    logger.info(s"($executionId) Siirtotiedostot muodostettu, tuloksia: $resultCounts")
+    logger.info(s"(${process.executionId}) Siirtotiedostot muodostettu, tuloksia: $resultCounts")
     process.copy(info = SiirtotiedostoProcessInfo(resultCounts))
   }
 
