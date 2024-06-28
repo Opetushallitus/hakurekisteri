@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "build": "npm ci -s && ../node_modules/.bin/bower install && coffee --join target/classes/webapp/compiled/scripts.js --compile src/main/resources/coffee/*.coffee",
-    "watch": "npm ci -s && ../node_modules/.bin/bower install && coffee --watch --join target/classes/webapp/compiled/scripts.js --compile src/main/resources/coffee/*.coffee"
+    "build": "npm ci -s && node_modules/.bin/bower install && coffee --join target/classes/webapp/compiled/scripts.js --compile src/main/resources/coffee/*.coffee",
+    "watch": "npm ci -s && node_modules/.bin/bower install && coffee --watch --join target/classes/webapp/compiled/scripts.js --compile src/main/resources/coffee/*.coffee"
   },
   "name": "hakurekisteri",
   "description": "hakurekisteri",

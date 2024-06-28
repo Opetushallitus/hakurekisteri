@@ -248,6 +248,7 @@
                                 <argument>build</argument>
                                 <argument>-s</argument>
                             </arguments>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
                         </configuration>
                     </execution>
                     <execution>

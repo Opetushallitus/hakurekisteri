@@ -28,6 +28,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
+          cache-dependency-path: suoritusrekisteri/package-lock.json
 
       - name: Run NPM
         run: |
@@ -49,7 +50,8 @@ jobs:
         id: restore-build
         with:
           path: |
-            target
+            suoritusrekisteri/target
+            ovara-suoritusrekisteri/target
           key: ${{ github.sha }}
 
   deploy-container:
@@ -63,7 +65,8 @@ jobs:
         id: restore-build
         with:
           path: |
-            target
+            suoritusrekisteri/target
+            ovara-suoritusrekisteri/target
           key: ${{ github.sha }}
 
       - name: Build Docker container
@@ -74,12 +77,19 @@ jobs:
         run: |
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          export ARTIFACT_NAME="suoritusrekisteri"
-          mv target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar 
-          jar xf $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar META-INF/native
+          mv suoritusrekisteri/target/suoritusrekisteri*allinone.jar $DOCKER_BUILD_DIR/artifact/suoritusrekisteri.jar 
+          jar xf $DOCKER_BUILD_DIR/artifact/suoritusrekisteri.jar META-INF/native
           mv META-INF/native $DOCKER_BUILD_DIR/native_libs
-          cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
+          cp -vr suoritusrekisteri/src/main/resources/* $DOCKER_BUILD_DIR/config/
+          
+          ./ci-tools/common/clean-docker-build-dir.sh
+          mv ovara-suoritusrekisteri/target/ovara-suoritusrekisteri*jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/ovara-suoritusrekisteri.jar 
+          jar xf $DOCKER_BUILD_DIR/artifact/ovara-suoritusrekisteri.jar META-INF/native
+          mv META-INF/native $DOCKER_BUILD_DIR/native_libs
+          cp -vr ovara-suoritusrekisteri/src/main/resources/* $DOCKER_BUILD_DIR/config/
+          
           export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
           ./ci-tools/common/pull-image.sh
-          ./ci-tools/github-build/build-fatjar.sh $ARTIFACT_NAME
-          ./ci-tools/github-build/upload-image.sh $ARTIFACT_NAME
+          ./ci-tools/github-build/build-fatjar.sh suoritusrekisteri
+          ./ci-tools/github-build/upload-image.sh suoritusrekisteri
+          ./ci-tools/github-build/upload-image.sh ovara-suoritusrekisteri
