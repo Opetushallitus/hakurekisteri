@@ -74,7 +74,10 @@ class SureTestJetty(
   suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
   suoritusrekisteriApp.setBaseResource(
     new ResourceCollection(
-      Array(root + "/src/main/resources/webapp", root + "/target/classes/webapp")
+      Array(
+        root + "/suoritusrekisteri/src/main/resources/webapp",
+        root + "/suoritusrekisteri/target/classes/webapp"
+      )
     )
   )
   suoritusrekisteriApp.setContextPath("/suoritusrekisteri")
@@ -84,7 +87,7 @@ class SureTestJetty(
   val mockApp = new WebAppContext()
   mockApp.setAttribute("hakurekisteri.config", config)
   mockApp.setBaseResource(
-    new ResourceCollection(Array(root + "/src/test/resources/front-mock-files"))
+    new ResourceCollection(Array(root + "/suoritusrekisteri/src/test/resources/front-mock-files"))
   )
   mockApp.setContextPath("/")
   mockApp.setInitParameter(
