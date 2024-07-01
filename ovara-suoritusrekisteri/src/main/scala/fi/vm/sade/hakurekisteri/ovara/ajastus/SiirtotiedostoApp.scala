@@ -49,9 +49,9 @@ object SiirtotiedostoApp {
     )
   }
   def main(args: Array[String]): Unit = {
-    try {
-      implicit val system: ActorSystem = ActorSystem("ovara-suoritusrekisteri")
+    implicit val system: ActorSystem = ActorSystem("ovara-suoritusrekisteri")
 
+    try {
       println("Hello, ovara-suoritusrekisteri world!")
 
       logger.info(s"Hello, ovara-suoritusrekisteri world!")
@@ -71,6 +71,7 @@ object SiirtotiedostoApp {
       case t: Throwable =>
         println(s"Virhe siirtotiedoston muodostamisessa: ${t.getMessage}")
         logger.error(s"Virhe siirtotiedoston muodostamisessa: ${t.getMessage}", t)
+        system.terminate()
     }
   }
 }
