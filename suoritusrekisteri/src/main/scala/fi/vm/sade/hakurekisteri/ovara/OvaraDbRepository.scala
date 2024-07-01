@@ -58,7 +58,7 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
   ): Option[SiirtotiedostoProcess] = {
     runBlocking(
       sql"""insert into siirtotiedosto(id, uuid, window_start, window_end, run_start, run_end, info, success, error_message)
-           values (default, $executionId, $windowStart, $windowEnd, now(), null, '{"entityTotals": {}}'::jsonb, false, '')
+           values (nextval('siirtotiedosto_id_seq'), $executionId, $windowStart, $windowEnd, now(), null, '{"entityTotals": {}}'::jsonb, false, '')
            returning *""".as[SiirtotiedostoProcess].headOption
     )
   }
