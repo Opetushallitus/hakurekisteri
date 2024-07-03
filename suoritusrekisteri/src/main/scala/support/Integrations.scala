@@ -629,6 +629,168 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   logger.info(s"Initializing BaseIntegrations ... done!")
 }
 
+//Sisältää lähinnä minimitoiminnallisuuden jotta saadaan muodostettua ensikertalaisuudet EnsikertalainenActorin avulla
+//+ tämän tukitoiminnot. Muut toiminnallisuudet stubattu/null, eikä näitä ole tarkoitus käyttää mihinkään.
+class OvaraIntegrations(system: ActorSystem, config: Config) extends Integrations {
+  private val logger = LoggerFactory.getLogger(getClass)
+  logger.info(s"Initializing OvaraIntegrations started...")
+  val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
+  val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
+
+  system.registerOnTermination(() => {
+    restEc.shutdown()
+    vrEc.shutdown()
+    restEc.awaitTermination(3, TimeUnit.SECONDS)
+    vrEc.awaitTermination(3, TimeUnit.SECONDS)
+  })
+
+  private val tarjontaClient =
+    new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(restEc, system)
+  private val koutaInternalClient =
+    new VirkailijaRestClient(
+      config.integrations.koutaInternalConfig,
+      None,
+      jSessionName = "session",
+      serviceUrlSuffix = "/auth/login"
+    )(
+      restEc,
+      system
+    )
+  private val parametritClient =
+    new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
+  private val organisaatioClient =
+    new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(restEc, system)
+  private val koodistoClient =
+    new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
+  val hakemusClient =
+    new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
+  val ataruHakemusClient = new VirkailijaRestClient(
+    config.integrations.ataruConfig,
+    None,
+    jSessionName = "ring-session",
+    serviceUrlSuffix = "/auth/cas"
+  )(restEc, system)
+  private val pistesyottoClient = null
+  val valintalaskentaClient = null
+  private val valintarekisteriClient =
+    new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
+  private val onrClient =
+    new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system)
+
+  val pistesyottoService = null
+
+  def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
+    BackoffSupervisor.props(
+      Backoff.onStop(
+        props,
+        childName = name,
+        minBackoff = 3.seconds,
+        maxBackoff = 30.seconds,
+        randomFactor = 0.2
+      )
+    ),
+    name
+  )
+
+  val cacheFactory = CacheFactory.apply(OphUrlProperties)(system)
+
+  val koodisto = new KoodistoActorRef(
+    system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
+  )
+  val koutaInternal: KoutaInternalActorRef = new KoutaInternalActorRef(
+    getSupervisedActorFor(
+      Props(new KoutaInternalActor(koodisto, koutaInternalClient, config)),
+      "koutaInternal"
+    )
+  )
+  val tarjonta: TarjontaActorRef = new TarjontaActorRef(
+    getSupervisedActorFor(
+      Props(new TarjontaActor(tarjontaClient, config, cacheFactory)),
+      "tarjonta"
+    )
+  )
+  val hakuAggregator: HakuAggregatorActorRef = new HakuAggregatorActorRef(
+    getSupervisedActorFor(
+      Props(new HakuAggregatorActor(tarjonta, koutaInternal, config)),
+      "hakuAggregator"
+    )
+  )
+  val hakukohdeAggregator: HakukohdeAggregatorActorRef = new HakukohdeAggregatorActorRef(
+    getSupervisedActorFor(
+      Props(new HakukohdeAggregatorActor(tarjonta, koutaInternal, config)),
+      "hakukohdeAggregator"
+    )
+  )
+  val organisaatiot = OrganisaatioActorRef(
+    getSupervisedActorFor(
+      Props(new HttpOrganisaatioActor(organisaatioClient, config, cacheFactory)),
+      "organisaatio"
+    )
+  )
+  val henkilo = null
+
+  val koskiDataHandler = null
+
+  val koosteService: IKoosteService = null
+  val valintalaskentaTulosService: IValintalaskentaTulosService = null
+  val valintaperusteetService: IValintaperusteetService = null
+  val hakukohderyhmaService: IHakukohderyhmaService = null
+  val parametrit: ParametritActorRef = new ParametritActorRef(
+    system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit")
+  )
+  val ytlKokelasPersister: YtlKokelasPersister = null
+  override val ytlHttp: YtlHttpFetch = null
+
+  val valintaTulos: ValintaTulosActorRef = null
+
+  val valintarekisteri: ValintarekisteriActorRef = ValintarekisteriActorRef(
+    system.actorOf(
+      Props(new ValintarekisteriActor(valintarekisteriClient, config)),
+      "valintarekisteri"
+    )
+  )
+
+  val koskiService: IKoskiService =
+    new KoskiServiceMock //huom. käytetään mockattua KoskiServicea ja YtlFetchActoria
+  val ytlFetchActor = new YtlFetchActorRef(
+    system.actorOf(Props(new DummyActor), "fake-ytl")
+  )
+
+  val haut: ActorRef = system.actorOf(
+    Props(
+      new HakuActor(hakuAggregator, koskiService, parametrit, ytlFetchActor, config)
+    ),
+    "haut"
+  )
+
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri =
+    new OppijaNumeroRekisteri(onrClient, system, config)
+  val hakemusService = new HakemusService(
+    hakemusClient,
+    ataruHakemusClient,
+    hakukohdeAggregator,
+    koutaInternal,
+    organisaatiot,
+    oppijaNumeroRekisteri,
+    koodisto,
+    config,
+    cacheFactory,
+    maxOidsChunkSize = config.properties
+      .getOrElse("suoritusrekisteri.hakemusservice.max.oids.chunk.size", "150")
+      .toInt
+  )(system)
+
+  override val valpasIntegration: ValpasIntergration = null
+
+  val virta: VirtaActorRef = null
+  val virtaResource: VirtaResourceActorRef = null
+  val proxies = new HttpProxies(valintarekisteriClient)
+
+  override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = null
+
+  logger.info(s"Initializing OvaraIntegrations ... done!")
+}
+
 trait TypedActorRef {
   val actor: ActorRef
 }
