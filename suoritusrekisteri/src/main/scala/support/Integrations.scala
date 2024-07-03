@@ -5,6 +5,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{AskableActorRef, Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
+import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory.InMemoryCacheFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{
   HakuActor,
@@ -692,7 +693,7 @@ class OvaraIntegrations(system: ActorSystem, config: Config) extends Integration
     name
   )
 
-  val cacheFactory = CacheFactory.apply(OphUrlProperties)(system)
+  val cacheFactory = new InMemoryCacheFactory
 
   val koodisto = new KoodistoActorRef(
     system.actorOf(Props(new KoodistoActor(koodistoClient, config, cacheFactory)), "koodisto")
