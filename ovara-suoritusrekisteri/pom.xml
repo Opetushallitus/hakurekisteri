@@ -10,7 +10,7 @@
     <artifactId>ovara-suoritusrekisteri</artifactId>
     <packaging>jar</packaging>
 
-    <name>ovara-hakurekisteri</name>
+    <name>ovara-suoritusrekisteri</name>
     <url>http://maven.apache.org</url>
 
     <properties>

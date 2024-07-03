@@ -9,16 +9,8 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{
   MenettamisenPeruste
 }
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
-import fi.vm.sade.hakurekisteri.integration.haku.{
-  AllHaut,
-  GetHautQuery,
-  Haku,
-  HakuRequest,
-  RestHaku,
-  RestHakuResult
-}
-import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
+
 import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.UUID
@@ -29,9 +21,9 @@ import scala.concurrent.duration.DurationInt
 trait IOvaraService {
   //Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
   //Tiedostot tallennetaan s3:seen.
-  def formNextSiirtotiedosto(): SiirtotiedostoProcess
+  def muodostaSeuraavaSiirtotiedosto(): SiirtotiedostoProcess
   def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess
-  def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String])
+  def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): String
 }
 
 class OvaraService(
@@ -44,7 +36,7 @@ class OvaraService(
     with Logging {
 
   implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
-    2,
+    6,
     getClass.getSimpleName
   )
 
@@ -101,23 +93,48 @@ class OvaraService(
   //Haetaan hakujen oidit ja synkataan ensikertalaiset näille
   def triggerEnsikertalaiset(vainAktiiviset: Boolean) = {
     implicit val to: Timeout = Timeout(5.minutes)
-    val allHaut: Future[AllHaut] =
-      (hakuActor ? HakuRequest)
-        .mapTo[AllHaut] //fixme, tää on ongelma koska palautuu 0 hakua jos kaikkia hakuja ei oo vielä haettu actorin päässä.
-    val hakuResult = Await.result(allHaut, 5.minutes)
-    val kiinnostavat =
-      hakuResult.haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
-    logger.info(
-      s"Löydettiin ${kiinnostavat.size} kiinnostavaa hakua yhteensä ${hakuResult.haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
-    )
-    formEnsikertalainenSiirtotiedostoForHakus(kiinnostavat)
+
+    val MILLIS_TO_WAIT = 5000
+    //Odotetaan, että HakuActor saa haut ladattua cacheen.
+    //Haut tarvitaan cacheen myös sitä varten, että EnsikertalaisActor kutsuu myöhemmin HakuActoria.
+    def waitForHautCache(millisToWaitLeft: Long = 600 * 1000): Seq[Haku] = {
+      if (millisToWaitLeft > 0) {
+        val allHaut: Future[AllHaut] =
+          (hakuActor ? HakuRequest)
+            .mapTo[AllHaut]
+        val hakuResult: AllHaut = Await.result(allHaut, 10.seconds)
+        if (hakuResult.haut.nonEmpty) {
+          hakuResult.haut
+        } else {
+          logger.info(s"HakuCache ei vielä valmis, odotetaan $MILLIS_TO_WAIT ms")
+          Thread.sleep(MILLIS_TO_WAIT)
+          waitForHautCache(millisToWaitLeft - MILLIS_TO_WAIT)
+        }
+      } else {
+        throw new RuntimeException(s"Hakuja ei saatu ladattua")
+      }
+    }
+
+    logger.info(s"Muodostetaan ensikertalaisuudet, vain aktiiviset: $vainAktiiviset")
+    try {
+      val haut = waitForHautCache(600 * 1000)
+      val kiinnostavat =
+        haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
+      logger.info(
+        s"Löydettiin ${kiinnostavat.size} kiinnostavaa hakua yhteensä ${haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
+      )
+      formEnsikertalainenSiirtotiedostoForHakus(kiinnostavat)
+    } catch {
+      case t: Throwable =>
+        logger.error(s"Ensikertalaisten siirtotiedostojen muodostaminen epäonnistui: ", t)
+    }
   }
 
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
-  def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]) = {
+  def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): String = {
     val executionId = UUID.randomUUID().toString
     var fileNumber = 1
-    def formSiirtotiedostoForHaku(hakuOid: String) = {
+    def formEnsikertalainenSiirtotiedostoForHaku(hakuOid: String) = {
       implicit val to: Timeout = Timeout(30.minutes)
 
       val ensikertalaiset: Future[Seq[Ensikertalainen]] =
@@ -148,34 +165,39 @@ class OvaraService(
       if (hakuOids.size <= 5) s"hauille ${hakuOids.toString}" else s"${hakuOids.size} haulle."
     logger.info(s"($executionId) Muodostetaan siirtotiedostot $infoStr")
     val resultsByHaku = hakuOids.map(hakuOid => {
+      val start = System.currentTimeMillis()
       try {
-        val result = formSiirtotiedostoForHaku(hakuOid)
-        //Todo, muu toteutus tälle? Mikä on riittävä timeout, mitä jos jäädään jumiin? Käsiteltäviä hakuja voi olla paljon,
-        //kaikkea ei voi tehdä rinnakkain. Muutaman kerrallaan varmaan voisi.
+        val result = formEnsikertalainenSiirtotiedostoForHaku(hakuOid)
         Await.result(result, 45.minutes)
-        logger.info(s"($executionId) Valmista haulle $hakuOid")
+        logger.info(
+          s"($executionId) Valmista haulle $hakuOid, kesto ${System.currentTimeMillis() - start} ms"
+        )
         fileNumber += 1
         (hakuOid, None)
       } catch {
         case t: Throwable =>
           logger
             .error(
-              s"($executionId) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
-              t
+              s"($executionId) (${System.currentTimeMillis() - start} ms) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
+              t.getMessage
             )
           (
             hakuOid,
             Some(t.getMessage)
-          ) //Todo, retry? Voisi olla järkevää, jos muodostetaan siirtotiedosto kymmenille hauille ja yksi satunnaissepäonnistuu.
+          )
       }
 
     })
     val failed = resultsByHaku.filter(_._2.isDefined)
-    logger.error(s"($executionId) Failed: $failed")
+    failed.foreach(result =>
+      logger.error(
+        s"Ei saatu muodostettua ensikertalaisten siirtotiedostoa haulle ${result._1}: ${result._2}"
+      )
+    )
     s"Onnistuneita ${hakuOids.size - failed.size}, epäonnistuneita ${failed.size}"
   }
 
-  def formNextSiirtotiedosto = {
+  def muodostaSeuraavaSiirtotiedosto = {
     val executionId = UUID.randomUUID().toString
     val latestProcessInfo: Option[SiirtotiedostoProcess] =
       db.getLatestProcessInfo
@@ -189,17 +211,35 @@ class OvaraService(
 
     val windowEnd = System.currentTimeMillis()
 
-    val newProcessInfo =
+    val newProcessInfo: SiirtotiedostoProcess =
       db.createNewProcess(executionId, windowStart, windowEnd)
+        .getOrElse(throw new RuntimeException("Siirtotiedosto process does not exist!"))
     logger.info(s"Luotiin ja persistoitiin tieto luodusta: $newProcessInfo")
 
-    //Todo, jonkinlainen mekanismi sille että muodostetaan ensikertalaisuudet kerran päivässä, muulloin vain muut muutokset.
-    val result = formSiirtotiedostotPaged(
-      newProcessInfo.getOrElse(throw new RuntimeException("Siirtotiedosto process does not exist!"))
-    )
-    logger.info(s"Siirtotiedostojen muodostus valmistui, persistoidaan tulokset: $result")
-    db.persistFinishedProcess(result)
-    result
+    try {
+      //Todo, only do this once a day, eg. when hour == 0
+      if (true) {
+        logger.info(s"${newProcessInfo.executionId} Muodostetaan ensikertalaisuudet")
+        triggerEnsikertalaiset(true)
+      }
+
+      val processResult: SiirtotiedostoProcess = formSiirtotiedostotPaged(
+        newProcessInfo
+      )
+
+      logger.info(s"Siirtotiedostojen muodostus valmistui, persistoidaan tulokset: $processResult")
+      db.persistFinishedProcess(processResult)
+      processResult
+    } catch {
+      case t: Throwable =>
+        logger.error(
+          s"Virhe siirtotiedoston muodostamisessa tai persistoinnissa, merkitään virhe kantaan...",
+          t
+        )
+        db.persistFinishedProcess(newProcessInfo.copy(errorMessage = Some(t.getMessage)))
+        throw t
+    }
+
   }
 
   def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess = {
@@ -240,7 +280,7 @@ class OvaraService(
       "opiskeluoikeus" -> opiskeluoikeusResult
     )
     logger.info(s"(${process.executionId}) Siirtotiedostot muodostettu, tuloksia: $resultCounts")
-    process.copy(info = SiirtotiedostoProcessInfo(resultCounts))
+    process.copy(info = SiirtotiedostoProcessInfo(resultCounts), finishedSuccessfully = true)
   }
 
 }
@@ -248,7 +288,7 @@ class OvaraService(
 class OvaraServiceMock extends IOvaraService {
   override def formSiirtotiedostotPaged(process: SiirtotiedostoProcess) = ???
 
-  override def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): Unit = ???
+  override def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): String = ???
 
-  override def formNextSiirtotiedosto(): SiirtotiedostoProcess = ???
+  override def muodostaSeuraavaSiirtotiedosto(): SiirtotiedostoProcess = ???
 }
