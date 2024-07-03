@@ -10,7 +10,6 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{
 }
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
-
 import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.UUID
@@ -164,30 +163,32 @@ class OvaraService(
     val infoStr =
       if (hakuOids.size <= 5) s"hauille ${hakuOids.toString}" else s"${hakuOids.size} haulle."
     logger.info(s"($executionId) Muodostetaan siirtotiedostot $infoStr")
-    val resultsByHaku = hakuOids.map(hakuOid => {
-      val start = System.currentTimeMillis()
-      try {
-        val result = formEnsikertalainenSiirtotiedostoForHaku(hakuOid)
-        Await.result(result, 45.minutes)
-        logger.info(
-          s"($executionId) Valmista haulle $hakuOid, kesto ${System.currentTimeMillis() - start} ms"
-        )
-        fileNumber += 1
-        (hakuOid, None)
-      } catch {
-        case t: Throwable =>
-          logger
-            .error(
-              s"($executionId) (${System.currentTimeMillis() - start} ms) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
-              t.getMessage
-            )
-          (
-            hakuOid,
-            Some(t.getMessage)
+    val resultsByHaku = hakuOids.par
+      .map(hakuOid => {
+        val start = System.currentTimeMillis()
+        try {
+          val result = formEnsikertalainenSiirtotiedostoForHaku(hakuOid)
+          Await.result(result, 45.minutes)
+          logger.info(
+            s"($executionId) Valmista haulle $hakuOid, kesto ${System.currentTimeMillis() - start} ms"
           )
-      }
+          fileNumber += 1
+          (hakuOid, None)
+        } catch {
+          case t: Throwable =>
+            logger
+              .error(
+                s"($executionId) (${System.currentTimeMillis() - start} ms) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
+                t.getCause.getMessage
+              )
+            (
+              hakuOid,
+              Some(t.getMessage)
+            )
+        }
 
-    })
+      })
+      .toList
     val failed = resultsByHaku.filter(_._2.isDefined)
     failed.foreach(result =>
       logger.error(
@@ -217,8 +218,7 @@ class OvaraService(
     logger.info(s"Luotiin ja persistoitiin tieto luodusta: $newProcessInfo")
 
     try {
-      //Todo, only do this once a day, eg. when hour == 0
-      if (true) {
+      if (OvaraUtil.shouldFormEnsikertalaiset()) {
         logger.info(s"${newProcessInfo.executionId} Muodostetaan ensikertalaisuudet")
         triggerEnsikertalaiset(true)
       }
