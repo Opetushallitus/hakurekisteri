@@ -65,7 +65,6 @@ object SiirtotiedostoApp {
 
       val ovaraService = createOvaraService(config, system)
 
-      //Todo implement ajastus db logic and instantiate OvaraService etc
       ovaraService.muodostaSeuraavaSiirtotiedosto
       system.terminate()
     } catch {
