@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
 import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
@@ -96,6 +97,7 @@ class OvaraService(
     val MILLIS_TO_WAIT = 5000
     //Odotetaan, että HakuActor saa haut ladattua cacheen.
     //Haut tarvitaan cacheen myös sitä varten, että EnsikertalaisActor kutsuu myöhemmin HakuActoria.
+    @tailrec
     def waitForHautCache(millisToWaitLeft: Long = 600 * 1000): Seq[Haku] = {
       if (millisToWaitLeft > 0) {
         val allHaut: Future[AllHaut] =
@@ -116,7 +118,7 @@ class OvaraService(
 
     logger.info(s"Muodostetaan ensikertalaisuudet, vain aktiiviset: $vainAktiiviset")
     try {
-      val haut = waitForHautCache(600 * 1000)
+      val haut: Seq[Haku] = waitForHautCache(600 * 1000)
       val kiinnostavat =
         haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
       logger.info(
@@ -132,10 +134,11 @@ class OvaraService(
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
   def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): String = {
     val executionId = UUID.randomUUID().toString
-    var fileNumber = 1
+    val fileCounter = new AtomicReference[Int](0)
+    val results = new AtomicReference[List[(String, Option[String])]](List.empty)
     def formEnsikertalainenSiirtotiedostoForHaku(hakuOid: String) = {
       implicit val to: Timeout = Timeout(30.minutes)
-
+      logger.info(s"($executionId) Ei löytynyt lainkaan ensikertalaisuustietoja haulle $hakuOid")
       val ensikertalaiset: Future[Seq[Ensikertalainen]] =
         (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid)).mapTo[Seq[Ensikertalainen]]
       ensikertalaiset.map((rawEnsikertalaiset: Seq[Ensikertalainen]) => {
@@ -150,21 +153,28 @@ class OvaraService(
             e.menettamisenPeruste
           )
         )
-        s3Client
-          .saveSiirtotiedosto[SiirtotiedostoEnsikertalainen](
-            "ensikertalainen",
-            ensikertalaiset,
-            executionId,
-            fileNumber
+        if (ensikertalaiset.nonEmpty) {
+          s3Client
+            .saveSiirtotiedosto[SiirtotiedostoEnsikertalainen](
+              "ensikertalainen",
+              ensikertalaiset,
+              executionId,
+              fileCounter.updateAndGet(c => c + 1)
+            )
+        } else {
+          logger.info(
+            s"($executionId) Ei löytynyt lainkaan ensikertalaisuustietoja haulle $hakuOid"
           )
+        }
+
       })
     }
 
     val infoStr =
       if (hakuOids.size <= 5) s"hauille ${hakuOids.toString}" else s"${hakuOids.size} haulle."
     logger.info(s"($executionId) Muodostetaan siirtotiedostot $infoStr")
-    val resultsByHaku = hakuOids.par
-      .map(hakuOid => {
+    hakuOids.par
+      .foreach(hakuOid => {
         val start = System.currentTimeMillis()
         try {
           val result = formEnsikertalainenSiirtotiedostoForHaku(hakuOid)
@@ -172,24 +182,27 @@ class OvaraService(
           logger.info(
             s"($executionId) Valmista haulle $hakuOid, kesto ${System.currentTimeMillis() - start} ms"
           )
-          fileNumber += 1
-          (hakuOid, None)
+          val totalProcessed = results.updateAndGet(r => (hakuOid, None) :: r)
+          logger.info(
+            s"Valmiina ${totalProcessed.size} / ${hakuOids.size}, onnistuneita ${totalProcessed
+              .count(_._2.isEmpty)} ja epäonnistuneita ${totalProcessed.count(_._2.nonEmpty)}"
+          )
         } catch {
           case t: Throwable =>
+            val errorMessage = if (t.getCause != null) t.getCause.getMessage else t.getMessage
             logger
               .error(
-                s"($executionId) (${System.currentTimeMillis() - start} ms) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
-                t.getCause.getMessage
+                s"($executionId) (kesto ${System.currentTimeMillis() - start} ms) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
+                errorMessage
               )
-            (
-              hakuOid,
-              Some(t.getMessage)
+            val totalProcessed = results.updateAndGet(r => (hakuOid, Some(errorMessage)) :: r)
+            logger.info(
+              s"Valmiina ${totalProcessed.size} / ${hakuOids.size}, onnistuneita ${totalProcessed
+                .count(_._2.isEmpty)} ja epäonnistuneita ${totalProcessed.count(_._2.nonEmpty)}"
             )
         }
-
       })
-      .toList
-    val failed = resultsByHaku.filter(_._2.isDefined)
+    val failed = results.get().filter(_._2.isDefined)
     failed.foreach(result =>
       logger.error(
         s"Ei saatu muodostettua ensikertalaisten siirtotiedostoa haulle ${result._1}: ${result._2}"
