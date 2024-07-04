@@ -18,9 +18,11 @@ import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
 
+/**
+ * Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
+ * Tiedostot tallennetaan s3:seen.
+ */
 trait IOvaraService {
-  //Muodostetaan siirtotiedostot kaikille neljälle tyypille. Jos dataa on aikavälillä paljon, muodostuu useita tiedostoja per tyyppi.
-  //Tiedostot tallennetaan s3:seen.
   def muodostaSeuraavaSiirtotiedosto(): SiirtotiedostoProcess
   def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess
   def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): String
@@ -135,7 +137,7 @@ class OvaraService(
   def formEnsikertalainenSiirtotiedostoForHakus(hakuOids: Seq[String]): String = {
     val executionId = UUID.randomUUID().toString
     val fileCounter = new AtomicReference[Int](0)
-    val results = new AtomicReference[List[(String, Option[String])]](List.empty)
+    val results = new AtomicReference[List[(String, Option[Throwable])]](List.empty)
     def formEnsikertalainenSiirtotiedostoForHaku(hakuOid: String) = {
       implicit val to: Timeout = Timeout(30.minutes)
       logger.info(s"($executionId) Ei löytynyt lainkaan ensikertalaisuustietoja haulle $hakuOid")
@@ -189,13 +191,12 @@ class OvaraService(
           )
         } catch {
           case t: Throwable =>
-            val errorMessage = if (t.getCause != null) t.getCause.getMessage else t.getMessage
             logger
               .error(
                 s"($executionId) (kesto ${System.currentTimeMillis() - start} ms) Siirtotiedoston muodostaminen haun $hakuOid ensikertalaisista epäonnistui:",
-                errorMessage
+                t
               )
-            val totalProcessed = results.updateAndGet(r => (hakuOid, Some(errorMessage)) :: r)
+            val totalProcessed = results.updateAndGet(r => (hakuOid, Some(t)) :: r)
             logger.info(
               s"Valmiina ${totalProcessed.size} / ${hakuOids.size}, onnistuneita ${totalProcessed
                 .count(_._2.isEmpty)} ja epäonnistuneita ${totalProcessed.count(_._2.nonEmpty)}"
