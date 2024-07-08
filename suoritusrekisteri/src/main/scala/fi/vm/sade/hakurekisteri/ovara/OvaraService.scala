@@ -249,7 +249,7 @@ class OvaraService(
       )
 
       val ensikertalaisetResults =
-        if (true)
+        if (OvaraUtil.shouldFormEnsikertalaiset())
           triggerEnsikertalaiset(true)
         else Seq.empty
 
