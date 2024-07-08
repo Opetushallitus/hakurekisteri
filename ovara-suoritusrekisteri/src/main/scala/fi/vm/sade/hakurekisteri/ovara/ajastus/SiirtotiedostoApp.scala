@@ -14,9 +14,8 @@ object SiirtotiedostoApp {
   private val logger: Logger =
     LoggerFactory.getLogger("fi.vm.sade.valintatulosservice.ovara.ajastus.SiirtotiedostoApp")
 
-  def createOvaraService(config: Config, system: ActorSystem) = {
-    implicit val actorSystem: ActorSystem = system
-    val journals = new DbJournals(config)
+  private def createOvaraService(config: Config, system: ActorSystem): OvaraService = {
+    val journals = new DbJournals(config)(system)
 
     val ovaraIntegrations = new OvaraIntegrations(system, config)
 
@@ -54,7 +53,7 @@ object SiirtotiedostoApp {
   }
 
   def main(args: Array[String]): Unit = {
-    implicit val system: ActorSystem = ActorSystem("ovara-suoritusrekisteri")
+    implicit val actorSystem: ActorSystem = ActorSystem("ovara-suoritusrekisteri")
     try {
       logger.info(s"Hello, ovara-suoritusrekisteri world!")
 
@@ -63,18 +62,16 @@ object SiirtotiedostoApp {
       val clientConfig = config.siirtotiedostoClientConfig
       logger.info(s"Using clientConfig: $clientConfig")
 
-      val ovaraService = createOvaraService(config, system)
+      val ovaraService = createOvaraService(config, actorSystem)
 
       ovaraService.muodostaSeuraavaSiirtotiedosto
-      system.terminate()
     } catch {
       case t: Throwable =>
         logger.error(s"Siirtotiedoston muodostaminen epäonnistui, lopetetaan: ${t.getMessage}", t)
-        system.terminate()
-        Thread.sleep(5000)
-        System.exit(
-          1
-        ) //Fixme, juuri nyt tämä on tarpeellinen että suoritus saadaan katki, mutta siistimmin voisi yrittää. Joku service/actor ilmeisesti jää ajoon myös system.terminaten jölkeen.
+    } finally {
+      actorSystem.terminate()
+      Thread.sleep(5000)
+      System.exit(0) //Fixme, actorSystem.terminate ei jostain syystä pysäytä kaikkea.
     }
   }
 }
