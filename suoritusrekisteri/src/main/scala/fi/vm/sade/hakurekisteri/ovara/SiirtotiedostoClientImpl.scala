@@ -10,7 +10,18 @@ import java.io.ByteArrayInputStream
 
 case class SiirtotiedostoClientConfig(region: String, bucket: String, roleArn: String)
 
-class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
+trait SiirtotiedostoClient {
+  def saveSiirtotiedosto[T](
+    contentType: String,
+    content: Seq[T],
+    executionId: String,
+    fileNumber: Int
+  ): Unit
+}
+
+class SiirtotiedostoClientImpl(config: SiirtotiedostoClientConfig)
+    extends SiirtotiedostoClient
+    with Logging {
   logger.info(s"Created SiirtotiedostoClient with config $config")
   lazy val siirtotiedostoPalvelu =
     new SiirtotiedostoPalvelu(config.region, config.bucket, config.roleArn)
@@ -50,5 +61,18 @@ class SiirtotiedostoClient(config: SiirtotiedostoClientConfig) extends Logging {
         logger.error(s"($executionId) Siirtotiedoston tallennus s3-ämpäriin epäonnistui:", t)
         throw t
     }
+  }
+}
+
+class MockSiirtotiedostoClient() extends SiirtotiedostoClient with Logging {
+  override def saveSiirtotiedosto[T](
+    contentType: String,
+    content: Seq[T],
+    executionId: String,
+    fileNumber: Int
+  ): Unit = {
+    logger.info(
+      s"($executionId) Saving siirtotiedosto... total ${content.length}, first: ${content.head}"
+    )
   }
 }

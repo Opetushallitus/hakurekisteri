@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.ovara.{
   OvaraDbRepositoryImpl,
   OvaraResource,
   OvaraService,
-  SiirtotiedostoClient
+  SiirtotiedostoClientImpl
 }
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaResource, EmptyLisatiedotResource}
@@ -159,7 +159,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/ovara", "ovara") -> new OvaraResource(
       new OvaraService(
         registers.ovaraDbRepository,
-        new SiirtotiedostoClient(config.siirtotiedostoClientConfig),
+        new SiirtotiedostoClientImpl(config.siirtotiedostoClientConfig),
         koosteet.ensikertalainen,
         integrations.haut,
         config.siirtotiedostoPageSize

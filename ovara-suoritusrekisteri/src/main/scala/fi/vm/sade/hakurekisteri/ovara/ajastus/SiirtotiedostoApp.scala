@@ -5,7 +5,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
-import fi.vm.sade.hakurekisteri.ovara.{OvaraService, SiirtotiedostoClient}
+import fi.vm.sade.hakurekisteri.ovara.{OvaraService, SiirtotiedostoClientImpl}
 import support.{BareRegisters, DbJournals, Integrations, OvaraIntegrations, PersonAliasesProvider}
 
 import scala.concurrent.Future
@@ -45,7 +45,7 @@ object SiirtotiedostoApp {
 
     new OvaraService(
       registers.ovaraDbRepository,
-      new SiirtotiedostoClient(config.siirtotiedostoClientConfig),
+      new SiirtotiedostoClientImpl(config.siirtotiedostoClientConfig),
       ensikertalainenActor,
       ovaraIntegrations.haut,
       config.siirtotiedostoPageSize
