@@ -122,6 +122,14 @@ trait Integrations {
   val ytlFetchActor: YtlFetchActorRef
 }
 
+trait OvaraIntegrations {
+  val tarjonta: TarjontaActorRef
+  val haut: ActorRef
+  val valintarekisteri: ValintarekisteriActorRef
+  val hakemusService: IHakemusService
+  val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
+}
+
 object Integrations {
   def apply(rekisterit: Registers, system: ActorSystem, config: Config): Integrations =
     config.mockMode match {
@@ -632,7 +640,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
 //Sisältää lähinnä minimitoiminnallisuuden jotta saadaan muodostettua ensikertalaisuudet EnsikertalainenActorin avulla
 //+ tämän tukitoiminnot. Muut toiminnallisuudet stubattu/null, eikä näitä ole tarkoitus käyttää mihinkään.
-class OvaraIntegrations(system: ActorSystem, config: Config) extends Integrations {
+class OvaraBaseIntegrations(system: ActorSystem, config: Config) extends OvaraIntegrations {
   private val logger = LoggerFactory.getLogger(getClass)
   logger.info(s"Initializing OvaraIntegrations started...")
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
@@ -671,14 +679,10 @@ class OvaraIntegrations(system: ActorSystem, config: Config) extends Integration
     jSessionName = "ring-session",
     serviceUrlSuffix = "/auth/cas"
   )(restEc, system)
-  private val pistesyottoClient = null
-  val valintalaskentaClient = null
   private val valintarekisteriClient =
     new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
   private val onrClient =
     new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system)
-
-  val pistesyottoService = null
 
   def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
@@ -728,22 +732,9 @@ class OvaraIntegrations(system: ActorSystem, config: Config) extends Integration
       "organisaatio"
     )
   )
-  val henkilo = null
-
-  val koskiDataHandler = null
-
-  val koosteService: IKoosteService = null
-  val valintalaskentaTulosService: IValintalaskentaTulosService = null
-  val valintaperusteetService: IValintaperusteetService = null
-  val hakukohderyhmaService: IHakukohderyhmaService = null
   val parametrit: ParametritActorRef = new ParametritActorRef(
     system.actorOf(Props(new HttpParameterActor(parametritClient, config)), "parametrit")
   )
-  val ytlKokelasPersister: YtlKokelasPersister = null
-  override val ytlHttp: YtlHttpFetch = null
-
-  val valintaTulos: ValintaTulosActorRef = null
-
   val valintarekisteri: ValintarekisteriActorRef = ValintarekisteriActorRef(
     system.actorOf(
       Props(new ValintarekisteriActor(valintarekisteriClient, config)),
@@ -752,7 +743,7 @@ class OvaraIntegrations(system: ActorSystem, config: Config) extends Integration
   )
 
   val koskiService: IKoskiService =
-    new KoskiServiceMock //huom. käytetään mockattua KoskiServicea ja YtlFetchActoria
+    new KoskiServiceMock //huom. käytetään mockattua KoskiServicea ja YtlFetchActoria, jotka tarvitaan hakuActoria varten
   val ytlFetchActor = new YtlFetchActorRef(
     system.actorOf(Props(new DummyActor), "fake-ytl")
   )
@@ -781,13 +772,7 @@ class OvaraIntegrations(system: ActorSystem, config: Config) extends Integration
       .toInt
   )(system)
 
-  override val valpasIntegration: ValpasIntergration = null
-
-  val virta: VirtaActorRef = null
-  val virtaResource: VirtaResourceActorRef = null
   val proxies = new HttpProxies(valintarekisteriClient)
-
-  override val hakemusBasedPermissionChecker: HakemusBasedPermissionCheckerActorRef = null
 
   logger.info(s"Initializing OvaraIntegrations ... done!")
 }
