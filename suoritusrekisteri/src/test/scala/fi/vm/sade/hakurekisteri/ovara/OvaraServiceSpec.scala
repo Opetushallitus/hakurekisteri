@@ -2,28 +2,45 @@ package fi.vm.sade.hakurekisteri.ovara
 
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import org.scalatest.{FlatSpec, Matchers}
-import support.{DbJournals}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import support.DbJournals
 
-class OvaraServiceSpec extends FlatSpec with Matchers {
+import scala.concurrent.duration._
+import scala.language.implicitConversions
+import scala.concurrent.Await
 
-  private implicit val database = ItPostgres.getDatabase
+class OvaraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
+
+  private implicit var database: HakurekisteriDriver.backend.Database = _
   private implicit val system = ActorSystem("test-ovara")
 
   private val config: MockConfig = new MockConfig
-  private val journals: DbJournals = new DbJournals(config)
 
-  val ovaraRepository = new OvaraDbRepositoryImpl(journals.database)
   val client = new MockSiirtotiedostoClient
 
-  private val ovaraService = new OvaraService(
-    ovaraRepository,
-    client,
-    null, //Todo, no test for ensikertalaisuus right now
-    null, //Only needed for ensikertalaiset
-    1000
-  )
+  var ovaraService: OvaraService = _
+
+  override def beforeAll(): Unit = {
+    val journals: DbJournals = new DbJournals(config)
+    database = journals.database
+    ovaraService = new OvaraService(
+      new OvaraDbRepositoryImpl(database),
+      client,
+      null, //Todo, no test for ensikertalaisuus right now
+      null, //Only needed for ensikertalaiset
+      1000
+    )
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
+    try super.afterAll()
+    finally {
+      Await.result(system.terminate(), 15.seconds)
+      database.close()
+    }
+  }
 
   it should "form siirtotiedosto with sliding time windows" in {
     val result = ovaraService.muodostaSeuraavaSiirtotiedosto
