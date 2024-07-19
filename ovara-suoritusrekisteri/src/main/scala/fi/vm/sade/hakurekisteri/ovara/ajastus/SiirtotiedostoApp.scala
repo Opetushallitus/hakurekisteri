@@ -71,7 +71,7 @@ object SiirtotiedostoApp {
     } finally {
       actorSystem.terminate()
       Thread.sleep(5000)
-      System.exit(0) //Fixme, actorSystem.terminate ei jostain syystä pysäytä kaikkea.
+      System.exit(0)
     }
   }
 }
