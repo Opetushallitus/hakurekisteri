@@ -2197,7 +2197,6 @@ class KoskiDataHandlerTest
       oidHenkilo = koskiKenkilo.henkilö.oid.get,
       hetu = None,
       kaikkiHetut = None,
-      henkiloTyyppi = "whatever",
       etunimet = None,
       kutsumanimi = None,
       sukunimi = None,

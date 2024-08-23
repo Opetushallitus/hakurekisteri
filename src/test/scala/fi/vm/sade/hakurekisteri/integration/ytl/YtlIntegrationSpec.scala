@@ -433,7 +433,6 @@ class YtlIntegrationSpec
       oidHenkilo = testHenkiloOid,
       hetu = Some(testHetu),
       kaikkiHetut = Some(testKaikkiHetut),
-      henkiloTyyppi = "OPPIJA",
       etunimet = Some("Tessa"),
       kutsumanimi = Some("Tessa"),
       sukunimi = Some("Testihenkilö"),
