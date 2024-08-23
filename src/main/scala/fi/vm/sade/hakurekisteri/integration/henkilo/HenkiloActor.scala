@@ -130,8 +130,7 @@ case class CreateHenkilo(
   externalIds: Option[Seq[String]] = None,
   syntymaaika: Option[String] = None,
   sukupuoli: Option[String] = None,
-  aidinkieli: Option[Kieli] = None,
-  henkiloTyyppi: String
+  aidinkieli: Option[Kieli] = None
 )
 
 @SerialVersionUID(1)
@@ -139,7 +138,6 @@ case class Henkilo(
   oidHenkilo: String,
   hetu: Option[String],
   kaikkiHetut: Option[Seq[String]],
-  henkiloTyyppi: String,
   etunimet: Option[String],
   kutsumanimi: Option[String],
   sukunimi: Option[String],
