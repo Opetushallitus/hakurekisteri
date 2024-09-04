@@ -46,7 +46,9 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
               None,
               SiirtotiedostoProcessInfo(Map.empty),
               finishedSuccessfully = false,
-              None
+              None,
+              ensikertalaisuudetFormedToday =
+                true //Ei muodosteta ensikertalaisuuksia, sitä varten on erillinen rajapinta.
             )
           )
           Ok(s"$result")
@@ -78,12 +80,13 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
 
   get("/muodosta/ensikertalaisuudet/kkhaut") {
     if (currentUser.exists(_.isAdmin)) {
+      val executionId = UUID.randomUUID().toString
       val vainAktiiviset: Boolean = params.get("vainAktiiviset").exists(_.toBoolean)
       logger.info(
-        s"Muodostetaan ensikertalaisten siirtotiedosto kk-hauille. Vain aktiiviset: $vainAktiiviset"
+        s"$executionId Muodostetaan ensikertalaisten siirtotiedosto kk-hauille. Vain aktiiviset: $vainAktiiviset"
       )
-      val result = ovaraService.triggerEnsikertalaiset(vainAktiiviset)
-      Ok(s"Valmista - $result")
+      val result = ovaraService.triggerEnsikertalaiset(vainAktiiviset, executionId)
+      Ok(s"$executionId Valmista - $result")
     } else {
       Forbidden("Ei tarvittavia oikeuksia ovara-siirtotiedoston muodostamiseen")
     }

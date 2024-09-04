@@ -97,7 +97,10 @@ class OvaraService(
   )
 
   //Haetaan hakujen oidit ja synkataan ensikertalaiset näille
-  def triggerEnsikertalaiset(vainAktiiviset: Boolean): Seq[HaunEnsikertalaisetResult] = {
+  def triggerEnsikertalaiset(
+    vainAktiiviset: Boolean,
+    executionId: String
+  ): Seq[HaunEnsikertalaisetResult] = {
     implicit val to: Timeout = Timeout(5.minutes)
 
     val MILLIS_TO_WAIT = 5000
@@ -113,28 +116,32 @@ class OvaraService(
         if (hakuResult.haut.nonEmpty) {
           hakuResult.haut
         } else {
-          logger.info(s"HakuCache ei vielä valmis, odotetaan $MILLIS_TO_WAIT ms")
+          logger.info(s"$executionId HakuCache ei vielä valmis, odotetaan $MILLIS_TO_WAIT ms")
           Thread.sleep(MILLIS_TO_WAIT)
           waitForHautCache(millisToWaitLeft - MILLIS_TO_WAIT)
         }
       } else {
+        logger.error(s"$executionId Hakuja ei saatu ladattua")
         throw new RuntimeException(s"Hakuja ei saatu ladattua")
       }
     }
 
-    logger.info(s"Muodostetaan ensikertalaisuudet, vain aktiiviset: $vainAktiiviset")
+    logger.info(s"$executionId Muodostetaan ensikertalaisuudet, vain aktiiviset: $vainAktiiviset")
     try {
       val haut: Seq[Haku] = waitForHautCache(600 * 1000)
       val kiinnostavat =
         haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
       logger.info(
-        s"Löydettiin ${kiinnostavat.size} kiinnostavaa hakua yhteensä ${haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
+        s"$executionId Löydettiin ${kiinnostavat.size} kiinnostavaa hakua yhteensä ${haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
       )
       formEnsikertalainenSiirtotiedostoForHakus(kiinnostavat)
     } catch {
       case t: Throwable =>
-        logger.error(s"Ensikertalaisten siirtotiedostojen muodostaminen epäonnistui: ", t)
-        Seq.empty
+        logger.error(
+          s"$executionId Ensikertalaisten siirtotiedostojen muodostaminen epäonnistui: ",
+          t
+        )
+        throw t
     }
   }
 
@@ -227,20 +234,22 @@ class OvaraService(
     val executionId = UUID.randomUUID().toString
     val latestProcessInfo: Option[SiirtotiedostoProcess] =
       db.getLatestProcessInfo
-    logger.info(s"Haettiin tieto edellisestä siirtotiedostoprosessista: $latestProcessInfo")
+    logger.info(
+      s"$executionId Haettiin tieto edellisestä siirtotiedostoprosessista: $latestProcessInfo"
+    )
 
     val windowStart = latestProcessInfo match {
       case Some(processInfo) if processInfo.finishedSuccessfully => processInfo.windowEnd
       case Some(processInfo)                                     => processInfo.windowStart //retry previous
       case None                                                  => 0
     }
-
     val windowEnd = System.currentTimeMillis()
+    val formEnsikertalaisuudet = !latestProcessInfo.exists(_.ensikertalaisuudetFormedToday)
 
     val newProcessInfo: SiirtotiedostoProcess =
       db.createNewProcess(executionId, windowStart, windowEnd)
         .getOrElse(throw new RuntimeException("Siirtotiedosto process does not exist!"))
-    logger.info(s"Luotiin ja persistoitiin tieto luodusta: $newProcessInfo")
+    logger.info(s"$executionId Luotiin ja persistoitiin tieto luodusta: $newProcessInfo")
 
     try {
 
@@ -249,9 +258,10 @@ class OvaraService(
       )
 
       val ensikertalaisetResults =
-        if (OvaraUtil.shouldFormEnsikertalaiset())
-          triggerEnsikertalaiset(true)
-        else Seq.empty
+        if (formEnsikertalaisuudet) {
+          logger.info(s"$executionId Muo")
+          triggerEnsikertalaiset(true, executionId)
+        } else Seq.empty
 
       val combinedInfo = SiirtotiedostoProcessInfo(
         mainResults.info.entityTotals ++ ensikertalaisetResults
@@ -259,17 +269,20 @@ class OvaraService(
           .toMap
       )
 
-      val combinedResults = mainResults.copy(info = combinedInfo)
+      val combinedSuccessfulResults = mainResults.copy(
+        info = combinedInfo,
+        ensikertalaisuudetFormedToday = formEnsikertalaisuudet
+      )
 
       logger.info(
-        s"Siirtotiedostojen muodostus valmistui, persistoidaan tulokset: $combinedResults"
+        s"$executionId Siirtotiedostojen muodostus valmistui, persistoidaan tulokset: $combinedSuccessfulResults"
       )
-      db.persistFinishedProcess(combinedResults)
-      combinedResults
+      db.persistFinishedProcess(combinedSuccessfulResults)
+      combinedSuccessfulResults
     } catch {
       case t: Throwable =>
         logger.error(
-          s"Virhe siirtotiedoston muodostamisessa tai persistoinnissa, merkitään virhe kantaan...",
+          s"$executionId Virhe siirtotiedoston muodostamisessa tai persistoinnissa, merkitään virhe kantaan...",
           t
         )
         db.persistFinishedProcess(newProcessInfo.copy(errorMessage = Some(t.getMessage)))

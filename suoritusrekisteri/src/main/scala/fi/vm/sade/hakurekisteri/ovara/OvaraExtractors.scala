@@ -23,7 +23,8 @@ trait OvaraExtractors extends HakurekisteriJsonSupport {
           .map(parse(_).extract[SiirtotiedostoProcessInfo])
           .getOrElse(SiirtotiedostoProcessInfo(Map.empty)),
         finishedSuccessfully = r.nextBoolean(),
-        errorMessage = r.nextStringOption()
+        errorMessage = r.nextStringOption(),
+        ensikertalaisuudetFormedToday = r.nextBoolean()
       )
     )
 

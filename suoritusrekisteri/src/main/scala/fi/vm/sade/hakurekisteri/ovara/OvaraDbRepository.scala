@@ -38,14 +38,15 @@ case class SiirtotiedostoProcess(
   runEnd: Option[String],
   info: SiirtotiedostoProcessInfo,
   finishedSuccessfully: Boolean,
-  errorMessage: Option[String]
+  errorMessage: Option[String],
+  ensikertalaisuudetFormedToday: Boolean
 )
 
 class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraExtractors {
 
   def getLatestProcessInfo(): Option[SiirtotiedostoProcess] = {
     runBlocking(
-      sql"""select id, uuid, window_start, window_end, run_start, run_end, info, success, error_message from siirtotiedosto order by id desc limit 1"""
+      sql"""select id, uuid, window_start, window_end, run_start, run_end, info, success, error_message, exists(select 1 from siirtotiedosto where run_start >= now()::date and success and ensikertalaisuudet) as ensikertalaisuudet_formed_today from siirtotiedosto order by id desc limit 1"""
         .as[SiirtotiedostoProcess]
         .headOption
     )
@@ -69,7 +70,8 @@ class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraEx
                          run_end = now(),
                          info = ${write(process.info)}::jsonb,
                          success = ${process.finishedSuccessfully},
-                         error_message = ${process.errorMessage}
+                         error_message = ${process.errorMessage},
+                         ensikertalaisuudet = ${process.ensikertalaisuudetFormedToday}
                      where id = ${process.id} and uuid = ${process.executionId} returning *"""
         .as[SiirtotiedostoProcess]
         .headOption
