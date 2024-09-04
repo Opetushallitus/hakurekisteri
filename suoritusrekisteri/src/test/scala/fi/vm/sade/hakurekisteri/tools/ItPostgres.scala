@@ -42,7 +42,7 @@ object ItPostgres extends Logging {
     val db = Database.forURL(container.jdbcUrl, container.username, container.password)
     val tablesTruncate = runAwait(
       db.run(
-        sql"select tablename from pg_catalog.pg_tables WHERE schemaname != 'information_schema' AND schemaname != 'pg_catalog' AND tablename != 'flyway_schema_history'"
+        sql"select tablename from pg_catalog.pg_tables WHERE schemaname != 'information_schema' AND schemaname != 'pg_catalog' AND tablename != 'flyway_schema_history' AND tablename != 'siirtotiedosto'"
           .as[String]
       )
     )
