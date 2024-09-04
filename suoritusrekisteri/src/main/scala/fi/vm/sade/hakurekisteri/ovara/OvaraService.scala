@@ -233,7 +233,7 @@ class OvaraService(
   def muodostaSeuraavaSiirtotiedosto = {
     val executionId = UUID.randomUUID().toString
     val latestProcessInfo: Option[SiirtotiedostoProcess] =
-      db.getLatestProcessInfo
+      db.getLatestSuccessfulProcessInfo
     logger.info(
       s"$executionId Haettiin tieto edellisestä siirtotiedostoprosessista: $latestProcessInfo"
     )

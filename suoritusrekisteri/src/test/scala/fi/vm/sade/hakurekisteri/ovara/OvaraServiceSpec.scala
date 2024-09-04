@@ -90,7 +90,7 @@ class OvaraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
   override def afterAll(): Unit = {
     try super.afterAll()
     finally {
-      Await.result(system.terminate(), 15.seconds)
+      Await.result(system.terminate(), 5.seconds)
       database.close()
     }
   }

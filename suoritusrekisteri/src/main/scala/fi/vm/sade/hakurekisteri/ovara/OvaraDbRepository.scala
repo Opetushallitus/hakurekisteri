@@ -7,7 +7,7 @@ import org.json4s.jackson.Serialization.write
 import java.util.UUID
 import scala.concurrent.duration.{Duration, _}
 trait OvaraDbRepository {
-  def getLatestProcessInfo: Option[SiirtotiedostoProcess]
+  def getLatestSuccessfulProcessInfo: Option[SiirtotiedostoProcess]
   def createNewProcess(
     executionId: String,
     windowStart: Long,
@@ -44,9 +44,12 @@ case class SiirtotiedostoProcess(
 
 class OvaraDbRepositoryImpl(db: Database) extends OvaraDbRepository with OvaraExtractors {
 
-  def getLatestProcessInfo(): Option[SiirtotiedostoProcess] = {
+  def getLatestSuccessfulProcessInfo(): Option[SiirtotiedostoProcess] = {
     runBlocking(
-      sql"""select id, uuid, window_start, window_end, run_start, run_end, info, success, error_message, exists(select 1 from siirtotiedosto where run_start >= now()::date and success and ensikertalaisuudet) as ensikertalaisuudet_formed_today from siirtotiedosto order by id desc limit 1"""
+      sql"""select id, uuid, window_start, window_end, run_start, run_end, info, success, error_message,
+       exists(select 1 from siirtotiedosto where run_start >= now()::date and success and ensikertalaisuudet) as ensikertalaisuudet_formed_today
+           from siirtotiedosto where success
+           order by id desc limit 1"""
         .as[SiirtotiedostoProcess]
         .headOption
     )
