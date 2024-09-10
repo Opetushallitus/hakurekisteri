@@ -16,7 +16,7 @@ object KoskiUtil {
   )
 
   lazy val tuvaStartDate: LocalDate = {
-    new LocalDate(deadlineDate.year().get() - 1, 8, 1)
+    new LocalDate(deadlineDate.year().get() - 1, 1git status, 1)
   }
 
   //format "2020-06-01T00:00:00+02:00"

@@ -5642,7 +5642,7 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "store tutkintokoulutukseen valmentava koulutus as valmis without arvosanat if deadline date is tomorrow, alku is before 1.8. last year and opintoviikot is 29" in {
+  it should "store tutkintokoulutukseen valmentava koulutus as valmis without arvosanat if deadline date is tomorrow, alku is before 1.1. last year and opintoviikot is 29" in {
     val json: String = scala.io.Source
       .fromFile(jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_010822_valmis.json")
       .mkString
@@ -5677,7 +5677,7 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "store tutkintokoulutukseen valmentava koulutus as valmis without arvosanat if deadline date is tomorrow, alku is before 1.8. last year and opintoviikot is 19" in {
+  it should "store tutkintokoulutukseen valmentava koulutus as valmis without arvosanat if deadline date is tomorrow, alku is before 1.1. last year and opintoviikot is 19" in {
     val json: String = scala.io.Source
       .fromFile(
         jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_19ov_kesken.json"
@@ -5714,7 +5714,7 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "store tutkintokoulutukseen valmentava koulutus as valmis without arvosanat if deadline date was yesterday, alku is before 1.8. last year and opintoviikot is 19" in {
+  it should "store tutkintokoulutukseen valmentava koulutus as valmis without arvosanat if deadline date was yesterday, alku is before 1.1. last year and opintoviikot is 19" in {
     val json: String = scala.io.Source
       .fromFile(
         jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_19ov_kesken.json"
@@ -5751,12 +5751,12 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "store tutkintokoulutukseen valmentava koulutus as kesken without arvosanat if deadline date is tomorrow, alku is after 1.8. last year and opintoviikot is 18" in {
-    val startDate = new LocalDate(LocalDate.now().year().get() - 1, 8, 22)
+  it should "store tutkintokoulutukseen valmentava koulutus as kesken without arvosanat if deadline date is tomorrow, alku is after 1.1. last year and opintoviikot is 18" in {
+    val startDate = new LocalDate(LocalDate.now().year().get() - 1, 1, 22)
     val dateStr = ISODateTimeFormat.date().print(startDate)
     val json: String = scala.io.Source
       .fromFile(
-        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
+        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_18ov_kesken.json"
       )
       .mkString
       .replaceFirst("PLACEHOLDER", dateStr)
@@ -5792,12 +5792,12 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "store tutkintokoulutukseen valmentava koulutus as keskeytynyt without arvosanat if deadline date was yesterday, alku is after 1.8. last year and opintoviikot is 18" in {
-    val startDate = new LocalDate(LocalDate.now().year().get() - 1, 8, 22)
+  it should "store tutkintokoulutukseen valmentava koulutus as keskeytynyt without arvosanat if deadline date was yesterday, alku is after 1.1. last year and opintoviikot is 18" in {
+    val startDate = new LocalDate(LocalDate.now().year().get() - 1, 1, 22)
     val dateStr = ISODateTimeFormat.date().print(startDate)
     val json: String = scala.io.Source
       .fromFile(
-        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
+        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_18ov_kesken.json"
       )
       .mkString
       .replaceFirst("PLACEHOLDER", dateStr)
@@ -5832,12 +5832,12 @@ class KoskiDataHandlerTest
     arvosanat should have length 0
   }
 
-  it should "not store tutkintokoulutukseen valmentava koulutus if deadline date was yesterday, alku is before 1.8. last year and opintoviikot is 18" in {
-    val startDate = new LocalDate(LocalDate.now().year().get() - 1, 7, 31)
+  it should "not store tutkintokoulutukseen valmentava koulutus if deadline date was yesterday, alku is before 1.1. last year and opintoviikot is 18" in {
+    val startDate = new LocalDate(LocalDate.now().year().get() - 2, 12, 31)
     val dateStr = ISODateTimeFormat.date().print(startDate)
     val json: String = scala.io.Source
       .fromFile(
-        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_aloitus_030822_18ov_kesken.json"
+        jsonDir + "koskidata_tutkintokoulutukseen_valmentava_18ov_kesken.json"
       )
       .mkString
       .replaceFirst("PLACEHOLDER", dateStr)
