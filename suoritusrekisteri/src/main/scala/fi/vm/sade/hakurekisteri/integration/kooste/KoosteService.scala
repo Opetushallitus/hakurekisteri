@@ -18,11 +18,18 @@ trait IKoosteService {
     hakuOid: String,
     hs: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]]
+  def getProxysuorituksetForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Map[String, Map[String, String]]]
   def getSuoritukset(
     hakuOid: String,
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]]
   def getHarkinnanvaraisuudet(hs: Seq[HakijaHakemus]): Future[Seq[HakemuksenHarkinnanvaraisuus]]
+  def getHarkinnanvaraisuudetForHakemusOids(
+    hakemusOids: Seq[String]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]]
 }
 
 class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(implicit
@@ -59,6 +66,18 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
     }
   }
 
+  def getHarkinnanvaraisuudetForHakemusOids(
+    hakemusOids: Seq[String]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    if (hakemusOids.isEmpty) {
+      Future.successful(Seq.empty)
+    } else {
+      restClient.postObject[Seq[String], Seq[HakemuksenHarkinnanvaraisuus]](
+        "valintalaskentakoostepalvelu.harkinnanvaraisuudet.hakemuksille"
+      )(200, hakemusOids)
+    }
+  }
+
   def getSuorituksetForAtaruhakemukset(
     hakuOid: String,
     hs: Seq[HakijaHakemus]
@@ -77,7 +96,25 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
       logger.info(s"No ataruhakemukses found!")
       Future.successful(Map.empty)
     }
+  }
 
+  def getProxysuorituksetForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Map[String, Map[String, String]]] = {
+
+    logger.info(
+      s"Getting atarusuoritukset from koostepalvelu for ${hakemusOids.size} ataruhakemukses in haku $hakuOid"
+    )
+    if (hakemusOids.nonEmpty) {
+      restClient.postObject[Seq[String], Map[String, Map[String, String]]](
+        "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
+        hakuOid
+      )(200, hakemusOids)
+    } else {
+      logger.info(s"No ataruhakemukses found!")
+      Future.successful(Map.empty)
+    }
   }
 
   def getSuoritukset(
@@ -110,6 +147,7 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
   }
 
   case class HakemusHakija(opiskelijaOid: String, hakemus: FullHakemus)
+
 }
 
 class KoosteServiceMock extends IKoosteService {
@@ -128,4 +166,17 @@ class KoosteServiceMock extends IKoosteService {
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]] =
     Future.successful(Map[String, Map[String, String]]())
+
+  override def getProxysuorituksetForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Map[String, Map[String, String]]] = {
+    Future.successful(Map.empty)
+  }
+
+  override def getHarkinnanvaraisuudetForHakemusOids(
+    hakemusOids: Seq[String]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    Future.successful(Seq.empty)
+  }
 }

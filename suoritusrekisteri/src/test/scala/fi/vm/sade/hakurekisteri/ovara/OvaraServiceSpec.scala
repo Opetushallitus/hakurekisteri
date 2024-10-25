@@ -82,7 +82,9 @@ class OvaraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
       client,
       ekActorMock,
       hakuActorMock,
-      1000
+      1000,
+      null,
+      null
     )
     super.beforeAll()
   }

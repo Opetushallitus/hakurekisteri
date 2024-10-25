@@ -9,7 +9,14 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{
   MenettamisenPeruste
 }
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemusToinenAste,
+  AtaruHenkiloSearchParams,
+  AtaruSearchParams,
+  IHakemusService
+}
 import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest}
+import fi.vm.sade.hakurekisteri.integration.kooste.{IKoosteService, KoosteService}
 import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.UUID
@@ -37,7 +44,9 @@ class OvaraService(
   s3Client: SiirtotiedostoClient,
   ensikertalainenActor: ActorRef,
   hakuActor: ActorRef,
-  pageSize: Int
+  pageSize: Int,
+  hakemusService: IHakemusService,
+  koosteService: IKoosteService
 ) extends IOvaraService
     with Logging {
 
@@ -96,8 +105,9 @@ class OvaraService(
     menettamisenPeruste: Option[MenettamisenPeruste]
   )
 
-  //Haetaan hakujen oidit ja synkataan ensikertalaiset näille
-  def triggerEnsikertalaiset(
+  //Kerran päivässä muodostetaan uudelleen päätellyt tiedot, joista on vaikea sanoa millä hetkellä ne tarkalleen muuttuvat koska ne yhdistelevät useiden palveluiden dataa.
+  //Näitä ovat ensikertalaisuudet (kk-haut), pohjakoulutus (toisen asteen haut) sekä harkinnanvaraisuus (toisen asteen yhteishaku)
+  def triggerDailyProcessing(
     vainAktiiviset: Boolean,
     executionId: String
   ): Seq[HaunEnsikertalaisetResult] = {
@@ -126,15 +136,32 @@ class OvaraService(
       }
     }
 
-    logger.info(s"$executionId Muodostetaan ensikertalaisuudet, vain aktiiviset: $vainAktiiviset")
+    logger.info(s"$executionId Muodostetaan päivittäiset, vain aktiiviset: $vainAktiiviset")
     try {
       val haut: Seq[Haku] = waitForHautCache(600 * 1000)
-      val kiinnostavat =
+
+      //(Aktiiviset) toisen asteen yhteishaut
+      val hautForHarkinnanvaraisuus = haut
+        .filter(haku =>
+          (!vainAktiiviset || haku.isActive) && haku.toisenAsteenHaku && haku.hakutapaUri
+            .startsWith("hakutapa_01")
+        )
+        .map(_.oid)
+      //(Aktiiviset) toisen asteen haut
+      val hautForPohjakoulutus =
+        haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.toisenAsteenHaku)
+      //(Aktiiviset) kk-haut
+
+      val pResult =
+        Future.sequence(formPohjakoulutusSiirtotiedostoForHakus(hautForHarkinnanvaraisuus))
+      Await.result(pResult, 5.minutes)
+
+      val hautForEnsikertalaisuus =
         haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
       logger.info(
-        s"$executionId Löydettiin ${kiinnostavat.size} kiinnostavaa hakua yhteensä ${haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
+        s"$executionId Löydettiin ${hautForEnsikertalaisuus.size} kiinnostavaa hakua yhteensä ${haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
       )
-      formEnsikertalainenSiirtotiedostoForHakus(kiinnostavat)
+      formEnsikertalainenSiirtotiedostoForHakus(hautForEnsikertalaisuus)
     } catch {
       case t: Throwable =>
         logger.error(
@@ -143,6 +170,37 @@ class OvaraService(
         )
         throw t
     }
+  }
+
+  def formPohjakoulutusSiirtotiedostoForHakus(hakuOids: Seq[String]) = {
+    logger.info(s"Haut: $hakuOids")
+    hakuOids.map(hakuOid => {
+      logger.info(s"Pohjakoulutus: Käsitellään haku $hakuOid")
+      val hakemusOids: Future[Seq[String]] = hakemusService
+        .ataruhakemustenHenkilot(
+          AtaruHenkiloSearchParams(hakuOid = Some(hakuOid), hakukohdeOids = None)
+        )
+        .map(_.map(_.oid))
+      val pohjakoulutukset = hakemusOids.flatMap(hakemusOids => {
+        logger.info(s"Saatiin ${hakemusOids.size} hakemusta haulle $hakuOid")
+        val partitions = hakemusOids.grouped(5000).toList
+        val poh = koosteService.getProxysuorituksetForHakemusOids(hakuOid, partitions.head)
+        val harkinnanvaraisuudetF = koosteService.getHarkinnanvaraisuudetForHakemusOids(
+          partitions.head
+        ) //Todo, käsitellään kaikki fiksusti sopivalla rinnakkaisuudella
+
+        for {
+          pohjakoulutukset <- poh
+          harkinnanvaraisuudet <- harkinnanvaraisuudetF
+        } yield {
+          logger.info(s"Saatiin pohjakoulutukset, eka: ${pohjakoulutukset.head}")
+          logger.info(s"Saatiin harkinnanvaraisuudet, eka: ${harkinnanvaraisuudet.head}")
+          pohjakoulutukset
+        }
+      })
+      logger.info("Pohjakoulutus valmis!")
+      pohjakoulutukset
+    })
   }
 
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
@@ -260,7 +318,7 @@ class OvaraService(
       val ensikertalaisetResults =
         if (formEnsikertalaisuudet) {
           logger.info(s"$executionId Muo")
-          triggerEnsikertalaiset(true, executionId)
+          triggerDailyProcessing(true, executionId)
         } else Seq.empty
 
       val combinedInfo = SiirtotiedostoProcessInfo(

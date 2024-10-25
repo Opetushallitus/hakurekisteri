@@ -131,42 +131,62 @@ object ListFullSearchDto {
 
 trait IHakemusService {
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]]
+
   def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]]
+
   def personOidstoMasterOids(personOids: Set[String]): Future[Map[String, String]]
+
   def hakemuksetForHakukohde(
     hakukohdeOid: String,
     organisaatio: Option[String]
   ): Future[Seq[HakijaHakemus]]
+
   def hakemuksetForHakukohdes(
     hakukohdeOid: Set[String],
     organisaatio: Option[String]
   ): Future[Seq[HakijaHakemus]]
+
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
+
   def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]]
+
   def personOidsForHakukohde(
     hakukohdeOid: String,
     organisaatio: Option[String]
   ): Future[Set[String]]
+
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[HakijaHakemus]]
+
   def hakemuksetForToisenAsteenAtaruHaku(
     hakuOid: String,
     organisaatio: Option[String],
     hakukohdekoodi: Option[String],
     hakukohdeOid: Option[String]
   ): Future[Seq[AtaruHakemusToinenAste]]
+
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(
     hakuOid: String,
     hakukohdeOid: Option[String]
   ): Future[Seq[HakijaHakemus]]
+
   def hakemuksetForPersonsInHaku(
     personOids: Set[String],
     hakuOid: String
   ): Future[Seq[HakijaHakemus]]
+
   def addTrigger(trigger: Trigger): Unit
+
   def reprocessHaunHakemukset(hakuOid: String): Unit
+
   def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
+
   def hetuAndPersonOidForHakuLite(hakuOid: String): Future[Seq[HetuPersonOid]]
+
   def hetuAndPersonOidForPersonOid(personOid: String): Future[Seq[HakemusHakuHetuPersonOid]]
+
+  def ataruhakemustenHenkilot(
+    params: AtaruHenkiloSearchParams
+  ): Future[List[AtaruHakemuksenHenkilotiedot]]
 }
 
 case class AtaruHenkiloSearchParams(
@@ -511,7 +531,7 @@ class HakemusService(
       )
   }
 
-  private def ataruhakemustenHenkilot(
+  override def ataruhakemustenHenkilot(
     params: AtaruHenkiloSearchParams
   ): Future[List[AtaruHakemuksenHenkilotiedot]] = {
     val p = params.hakuOid.fold[Map[String, Any]](Map.empty)(oid => Map("hakuOid" -> oid)) ++
@@ -1267,4 +1287,8 @@ class HakemusServiceMock extends IHakemusService {
   override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] =
     Future.successful(Set.empty)
 
+  override def ataruhakemustenHenkilot(
+    params: AtaruHenkiloSearchParams
+  ): Future[List[AtaruHakemuksenHenkilotiedot]] =
+    Future.successful(List[AtaruHakemuksenHenkilotiedot]())
 }
