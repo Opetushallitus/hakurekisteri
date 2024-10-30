@@ -15,7 +15,8 @@ trait SiirtotiedostoClient {
     contentType: String,
     content: Seq[T],
     executionId: String,
-    fileNumber: Int
+    fileNumber: Int,
+    additionalInfo: Option[String] = None
   ): Unit
 }
 
@@ -33,7 +34,8 @@ class SiirtotiedostoClientImpl(config: SiirtotiedostoClientConfig)
     contentType: String,
     content: Seq[T],
     executionId: String,
-    fileNumber: Int
+    fileNumber: Int,
+    additionalInfo: Option[String] = None
   ): Unit = {
     try {
       if (content.nonEmpty) {
@@ -69,7 +71,8 @@ class MockSiirtotiedostoClient() extends SiirtotiedostoClient with Logging {
     contentType: String,
     content: Seq[T],
     executionId: String,
-    fileNumber: Int
+    fileNumber: Int,
+    additionalInfo: Option[String] = None
   ): Unit = {
     logger.info(
       s"($executionId) Saving siirtotiedosto... total ${content.length}, first: ${content.head}"
