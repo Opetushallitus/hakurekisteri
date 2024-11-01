@@ -56,7 +56,7 @@ object SiirtotiedostoApp {
       ovaraIntegrations.haut,
       config.siirtotiedostoPageSize,
       ovaraIntegrations.hakemusService,
-      null //fixme
+      ovaraIntegrations.koosteService
     )
   }
 

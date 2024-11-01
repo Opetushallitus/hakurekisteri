@@ -127,6 +127,7 @@ trait OvaraIntegrations {
   val haut: ActorRef
   val valintarekisteri: ValintarekisteriActorRef
   val hakemusService: IHakemusService
+  val koosteService: IKoosteService
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
 }
 
@@ -696,7 +697,9 @@ class OvaraBaseIntegrations(system: ActorSystem, config: Config) extends OvaraIn
     ),
     name
   )
-
+  private val koosteClient =
+    new VirkailijaRestClient(config.integrations.koosteConfig, None)(restEc, system)
+  val koosteService = new KoosteService(koosteClient)(system)
   val cacheFactory = new InMemoryCacheFactory
 
   val koodisto = new KoodistoActorRef(
