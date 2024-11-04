@@ -10,6 +10,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{
 }
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
+  AtaruHakemuksenHenkilotiedot,
   AtaruHakemusToinenAste,
   AtaruHenkiloSearchParams,
   AtaruSearchParams,
@@ -34,11 +35,24 @@ trait IOvaraService {
   def muodostaSeuraavaSiirtotiedosto(): SiirtotiedostoProcess
   def formSiirtotiedostotPaged(process: SiirtotiedostoProcess): SiirtotiedostoProcess
   def formEnsikertalainenSiirtotiedostoForHakus(
-    hakuOids: Seq[String]
+    hakuOids: Set[String]
   ): Seq[SiirtotiedostoResultForHaku]
 }
 
-case class SiirtotiedostoResultForHaku(hakuOid: String, total: Int, error: Option[Throwable])
+case class SiirtotiedostoResultForHaku(
+  hakuOid: String,
+  tyyppi: String,
+  total: Int,
+  error: Option[Throwable]
+)
+
+case class DailyProcessingParams(
+  executionId: String,
+  vainAktiiviset: Boolean,
+  ensikertalaisuudet: Boolean,
+  harkinnanvaraisuudet: Boolean,
+  proxySuoritukset: Boolean
+)
 
 class OvaraService(
   db: OvaraDbRepository,
@@ -122,10 +136,9 @@ class OvaraService(
   //Kerran päivässä muodostetaan uudelleen päätellyt tiedot, joista on vaikea sanoa millä hetkellä ne tarkalleen muuttuvat koska ne yhdistelevät useiden palveluiden dataa.
   //Näitä ovat ensikertalaisuudet (kk-haut), pohjakoulutus (toisen asteen haut) sekä harkinnanvaraisuus (toisen asteen yhteishaku)
   def triggerDailyProcessing(
-    vainAktiiviset: Boolean,
-    executionId: String
+    params: DailyProcessingParams
   ): Seq[SiirtotiedostoResultForHaku] = {
-    implicit val to: Timeout = Timeout(5.minutes)
+    implicit val to: Timeout = Timeout(11.minutes)
 
     val MILLIS_TO_WAIT = 5000
     //Odotetaan, että HakuActor saa haut ladattua cacheen.
@@ -140,50 +153,80 @@ class OvaraService(
         if (hakuResult.haut.nonEmpty) {
           hakuResult.haut
         } else {
-          logger.info(s"$executionId HakuCache ei vielä valmis, odotetaan $MILLIS_TO_WAIT ms")
+          logger.info(
+            s"${params.executionId} HakuCache ei vielä valmis, odotetaan $MILLIS_TO_WAIT ms"
+          )
           Thread.sleep(MILLIS_TO_WAIT)
           waitForHautCache(millisToWaitLeft - MILLIS_TO_WAIT)
         }
       } else {
-        logger.error(s"$executionId Hakuja ei saatu ladattua")
+        logger.error(s"${params.executionId} Hakuja ei saatu ladattua")
         throw new RuntimeException(s"Hakuja ei saatu ladattua")
       }
     }
 
-    logger.info(s"$executionId Muodostetaan päivittäiset, vain aktiiviset: $vainAktiiviset")
+    logger.info(s"${params.executionId} Muodostetaan päivittäiset, params: $params")
     try {
       val haut: Seq[Haku] = waitForHautCache(600 * 1000)
 
-      //(Aktiiviset) toisen asteen yhteishaut
-      val hautForHarkinnanvaraisuus = haut
-        .filter(haku =>
-          (!vainAktiiviset || haku.isActive) && haku.toisenAsteenHaku && haku.hakutapaUri
-            .startsWith("hakutapa_01")
+      //Harkinnanvaraisuudet (aktiivisille) toisen asteen yhteishauille
+      val hautForHarkinnanvaraisuus =
+        if (params.harkinnanvaraisuudet)
+          haut
+            .filter(haku =>
+              (!params.vainAktiiviset || haku.isActive) && haku.toisenAsteenHaku && haku.hakutapaUri
+                .startsWith("hakutapa_01")
+            )
+            .map(_.oid)
+            .toSet
+        else Set[String]()
+
+      //Proxysuoritukset (aktiivisille) toisen asteen hauille
+      val hautForProxysuoritukset =
+        if (params.proxySuoritukset)
+          haut
+            .filter(haku => (!params.vainAktiiviset || haku.isActive) && haku.toisenAsteenHaku)
+            .map(_.oid)
+            .toSet
+        else Set[String]()
+
+      //Ensikertalaisuudet (aktiivisille) kk-hauille
+      logger.info(
+        s"Käsitellään ${hautForHarkinnanvaraisuus.size} haun harkinnanvaraisuudet ja ${hautForProxysuoritukset.size} haun proxySuoritukset"
+      )
+      val harkinnanvaraisuusAndProxysuorituksetResultsF = Future(
+        processHakusForHarkinnanvaraisuusAndPohjakoulutus(
+          params.executionId,
+          hautForHarkinnanvaraisuus,
+          hautForProxysuoritukset
         )
-        .map(_.oid)
-        .toSet
-      //(Aktiiviset) toisen asteen haut
-      val hautForPohjakoulutus =
-        haut
-          .filter(haku => (!vainAktiiviset || haku.isActive) && haku.toisenAsteenHaku)
-          .map(_.oid)
-          .toSet
-      //(Aktiiviset) kk-haut
-      processHakusForHarkinnanvaraisuusAndPohjakoulutus(
-        hautForHarkinnanvaraisuus.take(5),
-        hautForPohjakoulutus.take(5)
       )
 
-      val hautForEnsikertalaisuus =
-        haut.filter(haku => (!vainAktiiviset || haku.isActive) && haku.kkHaku).map(_.oid)
+      val hautForEnsikertalaisuus = if (params.ensikertalaisuudet) {
+        haut
+          .filter(haku => (!params.vainAktiiviset || haku.isActive) && haku.kkHaku)
+          .map(_.oid)
+          .toSet
+      } else Set[String]()
       logger.info(
-        s"$executionId Löydettiin ${hautForEnsikertalaisuus.size} kiinnostavaa hakua yhteensä ${haut.size} hausta. Vain aktiiviset: $vainAktiiviset"
+        s"Käsitellään ${hautForHarkinnanvaraisuus.size} haun harkinnanvaraisuudet, ${hautForProxysuoritukset.size} haun proxySuoritukset ja ${hautForEnsikertalaisuus.size} haun harkinnanvaraisuudet"
       )
-      formEnsikertalainenSiirtotiedostoForHakus(hautForEnsikertalaisuus)
+
+      val ensikertalaisetResultsF = Future(
+        formEnsikertalainenSiirtotiedostoForHakus(hautForEnsikertalaisuus)
+      )
+
+      val combinedResults = for {
+        harkinnanvaraisuusPohjakoulutus <- harkinnanvaraisuusAndProxysuorituksetResultsF
+        ensikertalaiset <- ensikertalaisetResultsF
+      } yield {
+        harkinnanvaraisuusPohjakoulutus ++ ensikertalaiset
+      }
+      Await.result(combinedResults, 3.hours)
     } catch {
       case t: Throwable =>
         logger.error(
-          s"$executionId Ensikertalaisten siirtotiedostojen muodostaminen epäonnistui: ",
+          s"${params.executionId} Ensikertalaisten siirtotiedostojen muodostaminen epäonnistui: ",
           t
         )
         throw t
@@ -191,11 +234,11 @@ class OvaraService(
   }
 
   @tailrec
-  private def formHarkinnanvaraisuudetSiirtotiedostoForHaku(
+  private def processHakemusChunksForHarkinnanvaraisuus(
     executionId: String,
     tyyppi: String,
     hakuOid: String,
-    hakemusChunks: Seq[Seq[String]],
+    hakemusChunks: Seq[List[AtaruHakemuksenHenkilotiedot]],
     totalCount: Int,
     fileCounter: Int
   ): Either[Throwable, Int] = {
@@ -204,11 +247,11 @@ class OvaraService(
       Right(totalCount)
     } else {
       logger.info(
-        s"Muodostetaan HARKINNANVARAISUUS koostepalvelusiirtotiedosto haulle ${hakuOid}, erä ${fileCounter + 1}"
+        s"Muodostetaan HARKINNANVARAISUUS koostepalvelusiirtotiedosto haulle ${hakuOid}, erä ${fileCounter}"
       )
 
-      val safeResult: Future[Int] = koosteService
-        .getHarkinnanvaraisuudetForHakemusOids(hakemusChunks.head)
+      val batchResultF: Future[Int] = koosteService
+        .getHarkinnanvaraisuudetForHakemusOids(hakemusChunks.head.map(_.oid))
         .map((batchRes: Seq[HakemuksenHarkinnanvaraisuus]) => {
           logger.info("Tallennetaan tiedosto...")
           s3Client
@@ -223,16 +266,16 @@ class OvaraService(
         })
       val batchResult: Either[Throwable, Int] =
         try {
-          Right(Await.result(safeResult, 5.minutes))
+          Right(Await.result(batchResultF, 8.minutes))
         } catch {
           case t: Throwable =>
-            logger.info(s"Erän prosessointi epäonnistui: ${t.getMessage}", t)
+            logger.info(s"$tyyppi Erän ${fileCounter} prosessointi epäonnistui: ${t.getMessage}", t)
             Left(t)
         }
       batchResult match {
         case Left(t) => Left(t)
         case Right(r) =>
-          formHarkinnanvaraisuudetSiirtotiedostoForHaku(
+          processHakemusChunksForHarkinnanvaraisuus(
             executionId,
             tyyppi,
             hakuOid,
@@ -245,11 +288,11 @@ class OvaraService(
   }
 
   @tailrec
-  private def formProxySuorituksetSiirtotiedostoForHaku(
+  private def processHakemusChunksForProxySuoritukset(
     executionId: String,
     tyyppi: String,
     hakuOid: String,
-    hakemusChunks: Seq[Seq[String]],
+    hakemusChunks: Seq[List[AtaruHakemuksenHenkilotiedot]],
     totalCount: Int,
     fileCounter: Int
   ): Either[Throwable, Int] = {
@@ -258,17 +301,21 @@ class OvaraService(
       Right(totalCount)
     } else {
       logger.info(
-        s"$tyyppi Muodostetaan PROXYSUORITUKSET koostepalvelusiirtotiedosto haulle ${hakuOid}, erä ${fileCounter + 1}"
+        s"$tyyppi Muodostetaan PROXYSUORITUKSET koostepalvelusiirtotiedosto haulle ${hakuOid}, erä ${fileCounter}"
       )
-
+      val currentChunk = hakemusChunks.head.filter(_.personOid.isDefined)
+      val personOidToHakemusOidMap = currentChunk.map(ht => ht.personOid.get -> ht.oid).toMap
       val safeResult: Future[Int] = koosteService
-        .getProxysuorituksetForHakemusOids(hakuOid, hakemusChunks.head)
+        .getProxysuorituksetForHakemusOids(hakuOid, currentChunk.map(_.oid))
         .map(rawChunkResult => {
           logger.info(s"$tyyppi Tallennetaan tiedosto...")
           val parsedResult = rawChunkResult
             .map(singleResult => {
               SiirtotiedostoProxySuoritukset(
-                hakemusOid = "hakemusOid",
+                hakemusOid = personOidToHakemusOidMap.getOrElse(
+                  singleResult._1,
+                  throw new RuntimeException("personOid -> hakemusOid mapping not found!")
+                ),
                 hakuOid = hakuOid,
                 henkiloOid = singleResult._1,
                 values = singleResult._2
@@ -285,18 +332,21 @@ class OvaraService(
             )
           parsedResult.size
         })
-      val batchResult: Either[Throwable, Int] =
+      val batchResultF: Either[Throwable, Int] =
         try {
-          Right(Await.result(safeResult, 5.minutes))
+          Right(Await.result(safeResult, 7.minutes))
         } catch {
           case t: Throwable =>
-            logger.info(s"$tyyppi Erän prosessointi epäonnistui: ${t.getMessage}", t)
+            logger.info(
+              s"$tyyppi Erän prosessointi epäonnistui haulle $hakuOid: ${t.getMessage}",
+              t
+            )
             Left(t)
         }
-      batchResult match {
+      batchResultF match {
         case Left(t) => Left(t)
         case Right(r) =>
-          formProxySuorituksetSiirtotiedostoForHaku(
+          processHakemusChunksForProxySuoritukset(
             executionId,
             tyyppi,
             hakuOid,
@@ -309,54 +359,112 @@ class OvaraService(
   }
 
   def processHakusForHarkinnanvaraisuusAndPohjakoulutus(
+    executionId: String,
     harkinnanvaraisuusHakuOids: Set[String],
-    pohjakoulutusHakuOids: Set[String]
-  ) = {
-    val allHakuOids = harkinnanvaraisuusHakuOids.union(pohjakoulutusHakuOids)
-    val allResults: Set[(String, Int, Int)] = allHakuOids.map(hakuOid => {
-      logger.info(s"Käsitellään haku $hakuOid")
-      val hakemusOids: Future[Seq[String]] = hakemusService
-        .ataruhakemustenHenkilot(
-          AtaruHenkiloSearchParams(hakuOid = Some(hakuOid), hakukohdeOids = None)
-        )
-        .map(_.map(_.oid))
+    proxySuorituksetHakuOids: Set[String]
+  ): List[SiirtotiedostoResultForHaku] = {
+    implicit val ec: ExecutionContext = ExecutorUtil.createExecutor(
+      8,
+      "koostepalvelu-siirtotiedosto-executor"
+    )
+    val allHakuOids = harkinnanvaraisuusHakuOids.union(proxySuorituksetHakuOids)
+    val processedHakus = new AtomicReference[Int](0)
+    val hakuOidGroups = allHakuOids.grouped(allHakuOids.size / 8 + 1).toList
+    val allResults: List[SiirtotiedostoResultForHaku] = hakuOidGroups.par
+      .flatMap(hakuOids => {
+        logger.info(s"Käsitellään ${hakuOids.size} hakua.......")
+        hakuOids.flatMap(hakuOid => {
+          val started = System.currentTimeMillis()
+          logger.info(s"${Thread.currentThread().getName} Käsitellään haku $hakuOid")
+          val hakemusOids: Future[List[AtaruHakemuksenHenkilotiedot]] = hakemusService
+            .ataruhakemustenHenkilot(
+              AtaruHenkiloSearchParams(hakuOid = Some(hakuOid), hakukohdeOids = None)
+            )
 
-      val hakemusOidsRes = Await.result(hakemusOids, 5.minutes).grouped(50).toSeq
-      logger.info(s"Saatiin jokunen hakemusOid (${hakemusOidsRes.size})")
-      val harkinannvaraisuudetF = Future(
-        formHarkinnanvaraisuudetSiirtotiedostoForHaku(
-          "exec-id",
-          "harkinnanvaraisuudet",
-          hakuOid,
-          hakemusChunks = hakemusOidsRes,
-          totalCount = 0,
-          fileCounter = 0
-        )
-      )
-      val proxySuorituksetF = Future(
-        formProxySuorituksetSiirtotiedostoForHaku(
-          "exec-id",
-          "proxysuoritukset",
-          hakuOid,
-          hakemusChunks = hakemusOidsRes,
-          totalCount = 0,
-          fileCounter = 0
-        )
-      )
-      val harkinnanvaraisuudetResult = Await.result(harkinannvaraisuudetF, 20.minutes)
-      val proxySuorituksetResult = Await.result(proxySuorituksetF, 20.minutes)
-      logger.info(s"Kaikki valmista  (${hakemusOidsRes.size})")
-      (hakuOid, 1, 1)
-    })
-    logger.info("Yhdistetään")
-    //val allResultsCombined = Future.sequence(allResults.flatMap(r => Seq(r._2) :+ r._3))
-    //val awaited = Await.result(allResultsCombined, 15.minutes)
+          val hakemusOidsRes = Await.result(hakemusOids, 6.minutes).grouped(2500).toSeq
+          logger.info(
+            s"${Thread.currentThread().getName} Saatiin ${hakemusOidsRes.size} hakemuserää haulle ${hakuOid}"
+          )
+
+          val harkinannvaraisuudetF = if (harkinnanvaraisuusHakuOids.contains(hakuOid)) {
+            Some(
+              Future(
+                processHakemusChunksForHarkinnanvaraisuus(
+                  executionId,
+                  "harkinnanvaraisuudet",
+                  hakuOid,
+                  hakemusChunks = hakemusOidsRes,
+                  totalCount = 0,
+                  fileCounter = 1
+                )
+              )
+            )
+          } else {
+            None
+          }
+
+          val proxySuorituksetF = if (proxySuorituksetHakuOids.contains(hakuOid)) {
+            Some(
+              Future(
+                processHakemusChunksForProxySuoritukset(
+                  executionId,
+                  "proxysuoritukset",
+                  hakuOid,
+                  hakemusChunks = hakemusOidsRes,
+                  totalCount = 0,
+                  fileCounter = 1
+                )
+              )
+            )
+          } else {
+            None
+          }
+
+          val harkinnanvaraisuudetResult: Option[SiirtotiedostoResultForHaku] =
+            harkinannvaraisuudetF.map(future => {
+              Await.result(future, 2.hours) match {
+                case Left(t) =>
+                  SiirtotiedostoResultForHaku(hakuOid, "harkinnanvaraisuudet", 0, Some(t))
+                case Right(resultCount) =>
+                  SiirtotiedostoResultForHaku(hakuOid, "harkinnanvaraisuudet", resultCount, None)
+              }
+            })
+
+          val proxySuorituksetResult: Option[SiirtotiedostoResultForHaku] =
+            proxySuorituksetF.map(future => {
+              Await.result(future, 2.hours) match {
+                case Left(t) => SiirtotiedostoResultForHaku(hakuOid, "proxysuoritukset", 0, Some(t))
+                case Right(resultCount) =>
+                  SiirtotiedostoResultForHaku(hakuOid, "proxysuoritukset", resultCount, None)
+              }
+            })
+
+          logger.info(
+            s"${Thread.currentThread().getName} Kaikki valmista haulle ${hakuOid}: ${List(harkinnanvaraisuudetResult, proxySuorituksetResult)}! Took ${(System
+              .currentTimeMillis() - started) / 1000} seconds"
+          )
+          logger.info(
+            s"Käsitelty yhteensä ${processedHakus.updateAndGet(p => p + 1)} / ${allHakuOids.size} hakua"
+          )
+          List(harkinnanvaraisuudetResult, proxySuorituksetResult).filter(_.isDefined).map(_.get)
+        })
+      })
+      .toList
+
     logger.info(s"pling! ${allResults}")
+    allResults
+      .filter(_.error.isDefined)
+      .foreach(res =>
+        logger.error(
+          s"Haun ${res.hakuOid} ${res.tyyppi} epäonnistui: ${res.error.map(_.getMessage).getOrElse("")}"
+        )
+      )
+    allResults
   }
 
   //Ensivaiheessa ajetaan tämä kaikille kk-hauille kerran, myöhemmin riittää synkata kerran päivässä aktiivisten kk-hakujen tiedot
   def formEnsikertalainenSiirtotiedostoForHakus(
-    hakuOids: Seq[String]
+    hakuOids: Set[String]
   ): Seq[SiirtotiedostoResultForHaku] = {
     val executionId = UUID.randomUUID().toString
     val fileCounter = new AtomicReference[Int](0)
@@ -408,7 +516,9 @@ class OvaraService(
             s"($executionId) Valmista haulle $hakuOid, kesto ${System.currentTimeMillis() - start} ms"
           )
           val totalProcessed =
-            results.updateAndGet(r => SiirtotiedostoResultForHaku(result._1, result._2, None) :: r)
+            results.updateAndGet(r =>
+              SiirtotiedostoResultForHaku(result._1, "ensikertalaisuus", result._2, None) :: r
+            )
           logger.info(
             s"Valmiina ${totalProcessed.size} / ${hakuOids.size}, onnistuneita ${totalProcessed
               .count(_.error.isEmpty)} ja epäonnistuneita ${totalProcessed.count(_.error.nonEmpty)}"
@@ -421,7 +531,9 @@ class OvaraService(
                 t
               )
             val totalProcessed =
-              results.updateAndGet(r => SiirtotiedostoResultForHaku(hakuOid, 0, Some(t)) :: r)
+              results.updateAndGet(r =>
+                SiirtotiedostoResultForHaku(hakuOid, "ensikertalaisuus", 0, Some(t)) :: r
+              )
             logger.info(
               s"Valmiina ${totalProcessed.size} / ${hakuOids.size}, onnistuneita ${totalProcessed
                 .count(_.error.isEmpty)} ja epäonnistuneita ${totalProcessed.count(_.error.nonEmpty)}"
@@ -466,14 +578,22 @@ class OvaraService(
         newProcessInfo
       )
 
-      val ensikertalaisetResults =
+      val dailyResults: Seq[SiirtotiedostoResultForHaku] =
         if (formEnsikertalaisuudet) {
-          logger.info(s"$executionId Muo")
-          triggerDailyProcessing(true, executionId)
+          logger.info(s"$executionId Muodostetaan päivittäiset tiedostot")
+          triggerDailyProcessing(
+            DailyProcessingParams(
+              executionId,
+              vainAktiiviset = true,
+              ensikertalaisuudet = true,
+              harkinnanvaraisuudet = true,
+              proxySuoritukset = true
+            )
+          )
         } else Seq.empty
 
       val combinedInfo = SiirtotiedostoProcessInfo(
-        mainResults.info.entityTotals ++ ensikertalaisetResults
+        mainResults.info.entityTotals ++ dailyResults
           .map(r => "ek_" + r.hakuOid -> r.total.toLong)
           .toMap
       )
@@ -547,7 +667,7 @@ class OvaraServiceMock extends IOvaraService {
   override def formSiirtotiedostotPaged(process: SiirtotiedostoProcess) = ???
 
   override def formEnsikertalainenSiirtotiedostoForHakus(
-    hakuOids: Seq[String]
+    hakuOids: Set[String]
   ): Seq[SiirtotiedostoResultForHaku] = ???
 
   override def muodostaSeuraavaSiirtotiedosto(): SiirtotiedostoProcess = ???

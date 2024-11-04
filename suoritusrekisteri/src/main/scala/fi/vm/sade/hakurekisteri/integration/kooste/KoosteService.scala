@@ -99,9 +99,6 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
     }
   }
 
-  //Koostepalvelun proxysuoritusrajapinta ottaa parametriksi hakemusOideja, mutta palauttaa tiedot henkilöOideille.
-  //Tässä voisi olla joskus refaktoroinnin paikka, mutta toistaiseksi pyydetään tiedot hakemuksen henkilöOidille
-  //ja lisätään dataan hakemusOid sen perusteella tässä päässä.
   def getProxysuorituksetForHakemusOids(
     hakuOid: String,
     hakemusOids: Seq[String]

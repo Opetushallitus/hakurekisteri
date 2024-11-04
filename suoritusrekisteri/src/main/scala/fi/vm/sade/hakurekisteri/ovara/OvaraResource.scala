@@ -15,12 +15,13 @@ import org.json4s._
 import org.json4s.jackson.Serialization.write
 import org.scalatra.{SessionSupport, _}
 import org.scalatra.json.{JValueResult, JacksonJsonSupport}
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.slf4j.LoggerFactory
 
 import java.util.UUID
 import scala.util.Try
 
-class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
+class OvaraResource(ovaraService: OvaraService)(implicit val security: Security, sw: Swagger)
     extends ScalatraServlet
     with JValueResult
     with JacksonJsonSupport
@@ -28,6 +29,8 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
     with SecuritySupport
     with Logging {
   val audit: Audit = SuoritusAuditVirkailija.audit
+
+  protected implicit def swagger: SwaggerEngine[_] = sw
 
   get("/muodosta") {
     if (currentUser.exists(_.isAdmin)) {
@@ -68,7 +71,7 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
       hakuOid match {
         case Some(hakuOid) =>
           logger.info(s"Muodostetaan ensikertalaisten siirtotiedosto haulle $hakuOid")
-          val result = ovaraService.formEnsikertalainenSiirtotiedostoForHakus(Seq(hakuOid))
+          val result = ovaraService.formEnsikertalainenSiirtotiedostoForHakus(Set(hakuOid))
           Ok(s"$result")
         case _ =>
           BadRequest(s"Pakollinen parametri (haku) puuttuu!")
@@ -78,14 +81,24 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security)
     }
   }
 
-  get("/muodosta/ensikertalaisuudet/kkhaut") {
+  get("/muodosta/paivittaiset") {
     if (currentUser.exists(_.isAdmin)) {
       val executionId = UUID.randomUUID().toString
       val vainAktiiviset: Boolean = params.get("vainAktiiviset").exists(_.toBoolean)
-      logger.info(
-        s"$executionId Muodostetaan ensikertalaisten siirtotiedosto kk-hauille. Vain aktiiviset: $vainAktiiviset"
+      val ensikertalaisuudet: Boolean = params.get("ensikertalaisuudet").exists(_.toBoolean)
+      val harkinnanvaraisuudet: Boolean = params.get("harkinnanvaraisuudet").exists(_.toBoolean)
+      val proxySuoritukset: Boolean = params.get("proxySuoritukset").exists(_.toBoolean)
+      val combinedParams = DailyProcessingParams(
+        executionId,
+        vainAktiiviset,
+        ensikertalaisuudet = ensikertalaisuudet,
+        harkinnanvaraisuudet = harkinnanvaraisuudet,
+        proxySuoritukset = proxySuoritukset
       )
-      val result = ovaraService.triggerEnsikertalaiset(vainAktiiviset, executionId)
+      logger.info(
+        s"$executionId Muodostetaan päivittäiset siirtotiedostot. $combinedParams"
+      )
+      val result = ovaraService.triggerDailyProcessing(combinedParams)
       Ok(s"$executionId Valmista - $result")
     } else {
       Forbidden("Ei tarvittavia oikeuksia ovara-siirtotiedoston muodostamiseen")
