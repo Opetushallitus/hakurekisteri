@@ -489,7 +489,7 @@ class OvaraService(
         if (ensikertalaiset.nonEmpty) {
           s3Client
             .saveSiirtotiedosto[SiirtotiedostoEnsikertalainen](
-              "ensikertalainen",
+              "ensikertalaiset",
               ensikertalaiset,
               executionId,
               fileCounter.updateAndGet(c => c + 1)
@@ -594,7 +594,7 @@ class OvaraService(
 
       val combinedInfo = SiirtotiedostoProcessInfo(
         mainResults.info.entityTotals ++ dailyResults
-          .map(r => "ek_" + r.hakuOid -> r.total.toLong)
+          .map(r => r.tyyppi + "_" + r.hakuOid -> r.total.toLong)
           .toMap
       )
 
