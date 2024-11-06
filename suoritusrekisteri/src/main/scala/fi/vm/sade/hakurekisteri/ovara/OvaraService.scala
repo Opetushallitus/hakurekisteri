@@ -583,9 +583,8 @@ class OvaraService(
         } else Seq.empty
 
       val combinedInfo = SiirtotiedostoProcessInfo(
-        mainResults.info.entityTotals ++ dailyResults
-          .map(r => r.tyyppi + "_" + r.hakuOid -> r.total.toLong)
-          .toMap
+        entityTotals = mainResults.info.entityTotals,
+        dailyResults = dailyResults
       )
 
       val combinedSuccessfulResults = mainResults.copy(
@@ -648,7 +647,10 @@ class OvaraService(
       "opiskeluoikeus" -> opiskeluoikeusResult
     )
     logger.info(s"(${process.executionId}) Siirtotiedostot muodostettu, tuloksia: $resultCounts")
-    process.copy(info = SiirtotiedostoProcessInfo(resultCounts), finishedSuccessfully = true)
+    process.copy(
+      info = SiirtotiedostoProcessInfo(resultCounts, Seq.empty),
+      finishedSuccessfully = true
+    )
   }
 
 }

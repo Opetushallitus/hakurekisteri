@@ -47,7 +47,7 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security,
               end,
               "start",
               None,
-              SiirtotiedostoProcessInfo(Map.empty),
+              SiirtotiedostoProcessInfo(Map.empty, Seq.empty),
               finishedSuccessfully = false,
               None,
               ensikertalaisuudetFormedToday =
