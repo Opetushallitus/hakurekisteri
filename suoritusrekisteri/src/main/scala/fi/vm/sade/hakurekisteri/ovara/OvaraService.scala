@@ -272,7 +272,7 @@ class OvaraService(
           logger.info(
             s"${Thread.currentThread().getName} Odotellaan tuloksia haulle $hakuOid, erä $fileCounter"
           )
-          Right(Await.result(batchResultF, 4.minutes))
+          Right(Await.result(batchResultF, 6.minutes))
         } catch {
           case t: Throwable =>
             logger.error(
