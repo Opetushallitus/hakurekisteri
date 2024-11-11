@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.kooste
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
-  AtaruHakemus,
   AtaruHakemusToinenAste,
   FullHakemus,
   HakemuksenHarkinnanvaraisuus,
@@ -69,7 +68,9 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
   def getHarkinnanvaraisuudetForHakemusOids(
     hakemusOids: Seq[String]
   ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
-    logger.info(s"Haetaan koostepalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle")
+    logger.info(
+      s"${Thread.currentThread().getName} Haetaan koostepalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle"
+    )
     if (hakemusOids.isEmpty) {
       Future.successful(Seq.empty)
     } else {
@@ -83,18 +84,11 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
     hakuOid: String,
     hs: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]] = {
-
     val hakemusOids = hs.map(hh => hh.oid).toList
-    logger.info(
-      s"Getting atarusuoritukset from koostepalvelu for ataruhakemukset: ${hakemusOids}"
-    )
     if (hakemusOids.nonEmpty) {
-      restClient.postObject[List[String], Map[String, Map[String, String]]](
-        "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
-        hakuOid
-      )(200, hakemusOids)
+      getProxysuorituksetForHakemusOids(hakuOid, hakemusOids)
     } else {
-      logger.info(s"No ataruhakemukses found!")
+      logger.debug(s"No ataruhakemukses found!")
       Future.successful(Map.empty)
     }
   }
@@ -105,7 +99,7 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
   ): Future[Map[String, Map[String, String]]] = {
 
     logger.info(
-      s"Getting atarusuoritukset from koostepalvelu for ${hakemusOids.size} ataruhakemukses in haku $hakuOid"
+      s"${Thread.currentThread().getName} Getting atarusuoritukset from koostepalvelu for ${hakemusOids.size} ataruhakemukses in haku $hakuOid"
     )
     if (hakemusOids.nonEmpty) {
       restClient.postObject[Seq[String], Map[String, Map[String, String]]](
