@@ -294,7 +294,7 @@ class OvaraService(
     }
   }
 
-  val GROUP_SIZE_PROXY = 2000
+  val GROUP_SIZE_PROXY = 100
   def processHakuForProxysuoritukset(executionId: String, hakuOid: String)(implicit
     ec: ExecutionContext
   ): Future[SiirtotiedostoResultForHaku] = {
@@ -357,7 +357,8 @@ class OvaraService(
     }
   }
 
-  val GROUP_SIZE = 2000
+  val GROUP_SIZE =
+    100 //Tämä on varmaan naurettavan pieni, mutta suoritusaika vaihtelee valtavasti ja suuremmista määristä seuraa timeouteja.
   def processHakuForHarkinnanvaraisuus(executionId: String, hakuOid: String)(implicit
     ec: ExecutionContext
   ): Future[SiirtotiedostoResultForHaku] = {
@@ -383,7 +384,8 @@ class OvaraService(
                   s"${Thread.currentThread().getName} erä ${fileCounter.get()}/${erat.size} harkinnanvaraisuudet epäonnistui haulle $hakuOid, yritetään kerran uudelleen",
                   e
                 )
-                koosteService.getHarkinnanvaraisuudetForHakemusOids(chunk.map(_.oid))
+                koosteService
+                  .getHarkinnanvaraisuudetForHakemusOids(chunk.map(_.oid))
               }
               .map(harkinnanvaraisuudet => {
                 logger.info(
