@@ -378,14 +378,14 @@ class OvaraService(
         erat.foldLeft(Future.successful(0)) { case (accResult, chunk) =>
           accResult.flatMap(rs => {
             koosteService
-              .getHarkinnanvaraisuudetForHakemusOids(chunk.map(_.oid))
+              .getHarkinnanvaraisuudetForHakemusOidsWithTimeout(chunk.map(_.oid), 5.minutes)
               .recoverWith { case e: Exception =>
                 logger.error(
                   s"${Thread.currentThread().getName} erä ${fileCounter.get()}/${erat.size} harkinnanvaraisuudet epäonnistui haulle $hakuOid, yritetään kerran uudelleen",
                   e
                 )
                 koosteService
-                  .getHarkinnanvaraisuudetForHakemusOids(chunk.map(_.oid))
+                  .getHarkinnanvaraisuudetForHakemusOidsWithTimeout(chunk.map(_.oid), 5.minutes)
               }
               .map(harkinnanvaraisuudet => {
                 logger.info(

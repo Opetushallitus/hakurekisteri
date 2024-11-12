@@ -10,7 +10,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
 }
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
-import scala.concurrent.Future
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.{Await, Future}
 
 trait IKoosteService {
   def getSuorituksetForAtaruhakemukset(
@@ -26,6 +27,10 @@ trait IKoosteService {
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]]
   def getHarkinnanvaraisuudet(hs: Seq[HakijaHakemus]): Future[Seq[HakemuksenHarkinnanvaraisuus]]
+  def getHarkinnanvaraisuudetForHakemusOidsWithTimeout(
+    hakemusOids: Seq[String],
+    timeout: Duration
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]]
   def getHarkinnanvaraisuudetForHakemusOids(
     hakemusOids: Seq[String]
   ): Future[Seq[HakemuksenHarkinnanvaraisuus]]
@@ -62,6 +67,24 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
         restClient.postObject[Seq[HakemuksenHarkinnanvaraisuus], Seq[HakemuksenHarkinnanvaraisuus]](
           "valintalaskentakoostepalvelu.harkinnanvaraisuudet.atarutiedoille"
         )(200, harkinnanvaraisuudet)
+    }
+  }
+
+  def getHarkinnanvaraisuudetForHakemusOidsWithTimeout(
+    hakemusOids: Seq[String],
+    timeout: Duration
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    try {
+      logger.info(
+        s"${Thread.currentThread().getName} Haetaan koostepalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle, timeout $timeout"
+      )
+      Future.successful(Await.result(getHarkinnanvaraisuudetForHakemusOids(hakemusOids), timeout))
+    } catch {
+      case e: Exception =>
+        logger.info(
+          s"${Thread.currentThread().getName} harkinnanvaraisuus fetch timed out for ${hakemusOids.size}, $timeout"
+        )
+        Future.failed(e)
     }
   }
 
@@ -174,4 +197,9 @@ class KoosteServiceMock extends IKoosteService {
   ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
     Future.successful(Seq.empty)
   }
+
+  override def getHarkinnanvaraisuudetForHakemusOidsWithTimeout(
+    hakemusOids: Seq[String],
+    timeout: Duration
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = ???
 }
