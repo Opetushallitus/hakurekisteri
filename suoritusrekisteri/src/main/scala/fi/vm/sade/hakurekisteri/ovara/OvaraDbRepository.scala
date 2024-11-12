@@ -28,8 +28,7 @@ trait OvaraDbRepository {
 }
 
 case class SiirtotiedostoProcessInfo(
-  entityTotals: Map[String, Long],
-  dailyResults: Seq[SiirtotiedostoResultForHaku]
+  entityTotals: Map[String, String] = Map.empty
 )
 
 case class SiirtotiedostoProcess(
