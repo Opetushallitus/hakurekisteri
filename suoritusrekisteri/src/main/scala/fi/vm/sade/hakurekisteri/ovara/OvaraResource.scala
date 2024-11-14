@@ -15,7 +15,7 @@ import org.json4s._
 import org.json4s.jackson.Serialization.write
 import org.scalatra.{SessionSupport, _}
 import org.scalatra.json.{JValueResult, JacksonJsonSupport}
-import org.scalatra.swagger.{Swagger, SwaggerEngine}
+import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.slf4j.LoggerFactory
 
 import java.util.UUID
@@ -27,12 +27,14 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security,
     with JacksonJsonSupport
     with SessionSupport
     with SecuritySupport
-    with Logging {
+    with Logging
+    with OvaraSwaggerApi {
   val audit: Audit = SuoritusAuditVirkailija.audit
 
   protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected def applicationDescription: String = "Ovara-Resource"
 
-  get("/muodosta") {
+  get("/muodosta", operation(muodostaAikavalille)) {
     if (currentUser.exists(_.isAdmin)) {
       val start = params.get("start").map(_.toLong)
       val end = params.get("end").map(_.toLong)
@@ -65,7 +67,7 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security,
 
   }
 
-  get("/muodosta/paivittaiset") {
+  get("/muodosta/paivittaiset", operation(muodostaPaivittaiset)) {
     if (currentUser.exists(_.isAdmin)) {
       val executionId = UUID.randomUUID().toString
       val vainAktiiviset: Boolean = params.get("vainAktiiviset").exists(_.toBoolean)
