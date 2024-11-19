@@ -18,7 +18,7 @@ import scala.util.{Success, Try}
 
 trait ValpasSwaggerApi extends SwaggerSupport {
   val warmUpValpasCache: SwaggerSupportSyntax.OperationBuilder =
-    apiOperation("warmUpValpasCache")
+    apiOperation[Map[String, String]]("warmUpValpasCache")
       .summary("Valpas-tietojen välimuistin virkistysrajanpinta")
       .description(
         "Virkistää polkuparametrina annetulle haulle välimuistit"
@@ -33,7 +33,7 @@ trait ValpasSwaggerApi extends SwaggerSupport {
           .optional
       )
       .parameter(
-        pathParam("hakuOid").description("Haun OID").required
+        pathParam[String]("hakuOid").description("Haun OID").required
       )
       .tags("Valpas-resource")
 
