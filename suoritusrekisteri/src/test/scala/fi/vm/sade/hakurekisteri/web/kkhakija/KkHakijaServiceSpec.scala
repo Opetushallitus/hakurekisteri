@@ -342,9 +342,17 @@ class KkHakijaServiceSpec
     )
 
     hakijat.size should be(2)
-    hakijat.last.hakemukset.head.hKelpoisuusMaksuvelvollisuus.get should be("REQUIRED")
-    hakijat.last.hakemukset.head.hKelpoisuus should be("ELIGIBLE")
-    hakijat.last.hakemukset.head.pohjakoulutus should contain("kk")
+    val hakija = hakijat
+      .filter(h =>
+        h.hakemukset.exists(hakemus =>
+          hakemus.hakemusnumero.equals("1.2.246.562.11.00000000000000005261")
+        )
+      )
+      .head
+    hakija.hakemukset.head.hKelpoisuusMaksuvelvollisuus.get should be("REQUIRED")
+    hakija.hakemukset.head.hKelpoisuus should be("ELIGIBLE")
+    hakija.hakemukset.head.pohjakoulutus should contain("kk")
+
   }
 
   test("should return five hakijas") {
