@@ -338,7 +338,7 @@ class OvaraService(
                 )
                 s3Client
                   .saveSiirtotiedosto[SiirtotiedostoProxySuoritukset](
-                    "proxysuoritukset",
+                    "proxysuoritus",
                     proxySuoritukset,
                     executionId,
                     fileCounter.getAndUpdate(n => n + 1),
@@ -446,7 +446,7 @@ class OvaraService(
         if (ensikertalaiset.nonEmpty) {
           s3Client
             .saveSiirtotiedosto[SiirtotiedostoEnsikertalainen](
-              "ensikertalaiset",
+              "ensikertalainen",
               ensikertalaiset,
               executionId,
               fileCounter.updateAndGet(c => c + 1)
