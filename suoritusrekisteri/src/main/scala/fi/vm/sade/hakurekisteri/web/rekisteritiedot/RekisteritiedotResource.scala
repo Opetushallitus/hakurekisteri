@@ -12,10 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemu
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{
-  Opiskeluoikeus,
-  OpiskeluoikeusHenkilotQuery,
-}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, OppijaFetcher, Todistus}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
@@ -25,7 +22,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.oppija.OppijatPostSize
 import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{Parameter, Swagger, SwaggerEngine}
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
 import scala.collection.JavaConverters._
