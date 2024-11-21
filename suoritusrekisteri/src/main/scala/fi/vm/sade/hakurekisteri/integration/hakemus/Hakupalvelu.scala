@@ -41,7 +41,6 @@ import fi.vm.sade.hakurekisteri.suoritus.{
   yksilollistaminen
 }
 import fi.vm.sade.hakurekisteri.{Config, Oids}
-import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
 

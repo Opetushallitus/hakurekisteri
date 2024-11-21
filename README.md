@@ -73,13 +73,6 @@ Paikallisesti ajettaessa käynnistä Postgres-palvelinprosessi esim. Dockerilla:
 
 Testeissä sovellus käyttää sisäistä Postgres-kantaa (ItPostgres.scala).
 
-## Arvosanavalidaattori
-
-Arvosanojen tuonnissa käytettävä validaattori on erillisessä [repositoriossa](https://github.com/Opetushallitus/validaattori).
-
-Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käytössä jarrina. Validaattorin client-side -versio on bundlattu samaan jarriin ja serveröidään ValidatorJavasccriptServletin toimesta.
-
-
 ## Admin / Testauksen huomioita
 
 * Hakemusten synkronoinnin voi pakottaa kutsumalla GET /suoritusrekisteri/rest/v1/haut/refresh/hakemukset

@@ -827,21 +827,6 @@
         </dependency>
 
         <dependency>
-            <groupId>validator</groupId>
-            <artifactId>hakurekisteri-validation</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.cemerick</groupId>
-                    <artifactId>austin</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.clojure</groupId>
-                    <artifactId>clojurescript</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-testkit_2.12</artifactId>
             <version>2.5.19</version>
