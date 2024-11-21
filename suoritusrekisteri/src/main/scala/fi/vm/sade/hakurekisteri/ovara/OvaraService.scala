@@ -352,7 +352,7 @@ class OvaraService(
       countF.map(count => SiirtotiedostoResultForHaku(hakuOid, "proxysuoritukset", count, None))
     } catch {
       case t: Throwable =>
-        logger.error(s"Jotain meni yllättävän paljon vikaan", t)
+        logger.error(s"$executionId Jotain meni yllättävän paljon vikaan", t)
         Future.successful(SiirtotiedostoResultForHaku(hakuOid, "proxysuoritukset", 0, Some(t)))
     }
   }
