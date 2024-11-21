@@ -76,11 +76,11 @@ class OvaraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
       hakuOid: String,
       hakemusOids: Seq[String]
     ): Future[Map[String, Map[String, String]]] = {
-      //println(s"Proxysuoritukset!> ${hakemusOids.head.split('.').last}" )
+      //koostepalvelun proxysuoritukset-rajapintaa kutsutaan hakemusOideilla, mutta se palauttaa mapin jossa
+      //avaimina ovat kyseisiltä hakemuksilta poimitut henkilöOidit. Simuloidaan sitä näin.
       val result = hakemusOids
         .map(hakemusOid => "1.2.3.24." + hakemusOid.split('.').last -> Map("key" -> "value"))
         .toMap
-      println(s"Proxysuoritukset! $result")
       Future.successful(result)
     }
   }
