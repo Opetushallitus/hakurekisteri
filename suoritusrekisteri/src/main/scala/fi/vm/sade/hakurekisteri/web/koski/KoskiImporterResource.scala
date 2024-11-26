@@ -35,7 +35,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
 
   override protected def applicationDescription: String = "Koski integraation rest-api"
 

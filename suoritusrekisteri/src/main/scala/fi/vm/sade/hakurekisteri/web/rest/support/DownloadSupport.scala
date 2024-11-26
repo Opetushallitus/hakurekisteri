@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.rest.support
 
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 import ApiFormat._
 import org.scalatra.{CookieOptions, Cookie}

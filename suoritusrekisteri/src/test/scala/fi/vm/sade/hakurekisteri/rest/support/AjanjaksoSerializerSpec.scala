@@ -1,16 +1,16 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatest.{Matchers, FlatSpec}
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.jackson.Serialization._
 import org.json4s.jackson.JsonMethods
-
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import org.joda.time.DateTime._
 import com.github.nscala_time.time.Implicits._
-import org.json4s.JsonAST.{JValue, JString, JNothing}
+import org.json4s.JsonAST.{JNothing, JString, JValue}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AjanjaksoSerializerSpec extends FlatSpec with Matchers {
+class AjanjaksoSerializerSpec extends AnyFlatSpec with Matchers {
 
   protected implicit def jsonFormats: Formats = DefaultFormats + new AjanjaksoSerializer
 

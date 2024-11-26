@@ -5,13 +5,13 @@ import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.scalatest.Matchers
+import org.scalatest.matchers.should
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaiting {
+import org.scalatest.Assertions
+class ResourceActorSpec extends ScalatraFunSuite with FutureWaiting with Assertions {
   implicit val timeout: Timeout = 5.seconds
 
   test("ResourceActor should save resource when receiving it") {
@@ -20,6 +20,7 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
     val resource = new TestResource("foo")
     resourceActor ! resource
     resourceActor.underlyingActor.store.values should contain(resource)
+
     Await.result(system.terminate(), 15.seconds)
   }
 
@@ -32,4 +33,6 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
     }
     Await.result(system.terminate(), 15.seconds)
   }
+
+  override def header = ???
 }

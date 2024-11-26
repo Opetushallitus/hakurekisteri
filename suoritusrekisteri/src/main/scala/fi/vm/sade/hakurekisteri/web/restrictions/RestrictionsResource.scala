@@ -28,7 +28,7 @@ class RestrictionsResource(parameterActor: ParametritActorRef)(implicit
     with QueryLogging {
 
   //override protected def applicationDescription: String = "Ohjausparametrirajoitteiden hakemisen rajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 

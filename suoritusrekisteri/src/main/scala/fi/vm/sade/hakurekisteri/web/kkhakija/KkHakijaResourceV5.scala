@@ -36,14 +36,14 @@ class KkHakijaResourceV5(kkHakijaService: KkHakijaService, ophConfig: Config)(im
     with HakijaResourceSupport {
 
   protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
-  protected implicit def swagger: SwaggerEngine[_] = sw
+  protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
   override val streamingRender: (OutputStream, Seq[Hakija]) => Unit = KkExcelUtilV5.write
 
   get("/", operation(query)) {
-    val q = KkHakijaQuery(params, currentUser)
+    val q = KkHakijaQuery(params.toMap, currentUser)
     val tyyppi = getFormatFromTypeParam()
     if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
     val thisResponse = response

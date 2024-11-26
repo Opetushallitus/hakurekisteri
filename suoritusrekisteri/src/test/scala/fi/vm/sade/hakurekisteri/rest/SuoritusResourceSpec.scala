@@ -25,12 +25,12 @@ import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
 
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 

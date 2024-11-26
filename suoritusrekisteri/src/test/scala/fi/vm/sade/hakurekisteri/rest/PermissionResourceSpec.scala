@@ -20,14 +20,21 @@ import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.jackson.Serialization._
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
-import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.scalatra.test.ScalatraTests
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with BeforeAndAfterAll {
+class PermissionResourceSpec
+    extends AnyFunSuite
+    with MockitoSugar
+    with BeforeAndAfterAll
+    with Matchers
+    with ScalatraTests {
 
   implicit val system = ActorSystem("permission-test-system")
   implicit val format = HakurekisteriJsonSupport.format
@@ -248,4 +255,5 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     Await.result(system.terminate(), 15.seconds)
   }
 
+  override def header = ???
 }

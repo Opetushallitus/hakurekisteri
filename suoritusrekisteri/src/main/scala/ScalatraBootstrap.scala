@@ -47,11 +47,18 @@ import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
 import fi.vm.sade.hakurekisteri.web.valpas.ValpasServlet
 import fi.vm.sade.hakurekisteri.{Config, ProductionServerConfig}
 import gui.GuiServlet
-
-import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
-import org.json4s._
+import jakarta.servlet.{
+  DispatcherType,
+  FilterRegistration,
+  Servlet,
+  ServletContext,
+  ServletContextEvent
+}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
+
+import org.json4s._
+
 import org.scalatra.{Handler, LifeCycle, ScalatraServlet}
 import org.slf4j.LoggerFactory
 import org.springframework.beans.MutablePropertyValues
@@ -110,7 +117,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     context.setInitParameter(org.scalatra.EnvironmentKey, "production")
     if ("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
-      context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
+      context.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
     }
 
     val servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
@@ -280,9 +287,11 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   val cleanupListener = new ContextCleanupListener
 
   override def init(context: ServletContext) {
-    initWebApplicationContext(context)
-
-    val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
+    val applicationContext = initWebApplicationContext(context)
+    val security: FilterRegistration.Dynamic = applicationContext.getServletContext.addFilter(
+      "springSecurityFilterChain",
+      classOf[DelegatingFilterProxy]
+    )
     security.addMappingForUrlPatterns(
       java.util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC),
       true,

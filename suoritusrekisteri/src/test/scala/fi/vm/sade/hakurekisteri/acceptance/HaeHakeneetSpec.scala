@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.acceptance
 
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
+
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
@@ -18,7 +19,8 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
 
   def createTestUser(user: String, organisaatioOids: Set[String]) = new User {
     override val username: String = user
-    override val auditSession = AuditSessionRequest(user, organisaatioOids, "", "")
+    override val auditSession: AuditSessionRequest =
+      AuditSessionRequest(user, organisaatioOids, "", "")
     override def orgsFor(action: String, resource: String): Set[String] = organisaatioOids
     override def casAuthenticationToken: CasAuthenticationToken =
       fi.vm.sade.hakurekisteri.web.rest.support.TestUser.casAuthenticationToken
@@ -34,9 +36,9 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
   info("haluan tiedon kouluuni hakeneista oppilaista")
   info("että voin alkaa tekemään valmisteluja tulevaa varten")
 
-  feature("Muodosta hakeneet ja valitut siirtotiedosto") {
+  Feature("Muodosta hakeneet ja valitut siirtotiedosto") {
 
-    scenario("Opetuspisteeseen X hakijat") {
+    Scenario("Opetuspisteeseen X hakijat") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -65,7 +67,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       })
     }
 
-    scenario("Kaikki hakeneet") {
+    Scenario("Kaikki hakeneet") {
       Given("Kaikkiaan kaksi henkilöä täyttää hakemuksen")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -83,7 +85,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakijat.hakijat.size should equal(2)
     }
 
-    scenario("Hyväksytyt hakijat") {
+    Scenario("Hyväksytyt hakijat") {
       Given("N henkilöä täyttää hakemuksen")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -101,7 +103,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakijat.hakijat.size should equal(1)
     }
 
-    scenario("Paikan vastaanottaneet hakijat") {
+    Scenario("Paikan vastaanottaneet hakijat") {
       Given("N henkilöä täyttää hakemuksen")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -119,7 +121,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakijat.hakijat.size should equal(1)
     }
 
-    scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
+    Scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
       Given(
         "Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä"
       )
@@ -151,4 +153,6 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
     Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
+
+  override def header = ???
 }

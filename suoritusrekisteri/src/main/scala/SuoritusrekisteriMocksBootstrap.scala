@@ -26,7 +26,7 @@ import fi.vm.sade.hakurekisteri.web.jonotus.{
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaService
 import fi.vm.sade.hakurekisteri.web.proxies._
 
-import javax.servlet.ServletContext
+import jakarta.servlet.ServletContext
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{Extraction, _}
 import org.scalatra._

@@ -1,10 +1,20 @@
 package fi.vm.sade.hakurekisteri.web.rest.support
 
 import org.json4s.Formats
-import org.scalatra.swagger._
+import org.scalatra._
 import org.scalatra.{ScalatraBase, ScalatraServlet}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import javax.servlet.ServletConfig
+import org.scalatra.swagger.{
+  ApiInfo,
+  ContactInfo,
+  DataType,
+  JacksonSwaggerBase,
+  LicenseInfo,
+  ResponseMessage,
+  Swagger
+}
+
+import jakarta.servlet.ServletConfig
 
 class ResourcesApp(forceHttps: Boolean)(implicit val swagger: Swagger)
     extends ScalatraServlet
@@ -28,9 +38,8 @@ class HakurekisteriSwagger
         title = "Haku- ja valintarekisteri",
         description = "rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
         termsOfServiceUrl = "https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/",
-        contact = "verkkotoimitus_opintopolku@oph.fi",
-        license = "EUPL 1.1 or latest approved by the European Commission",
-        licenseUrl = "http://www.osor.eu/eupl/"
+        contact = ContactInfo("verkkotoimitus", "(placeholder) url", "verkkotoimitus_opintopolku@oph.fi"),
+        license = LicenseInfo("license", "http://www.osor.eu/eupl/")
       )
     )
 

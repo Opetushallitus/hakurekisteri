@@ -33,9 +33,9 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
   info("haluan tiedon kouluuni hakeneista oppilaista")
   info("että voin alkaa tekemään valmisteluja tulevaa varten")
 
-  feature("Muodosta hakeneet ja valitut siirtotiedosto") {
+  Feature("Muodosta hakeneet ja valitut siirtotiedosto") {
 
-    scenario("Opetuspisteeseen X hakijat") {
+    Scenario("Opetuspisteeseen X hakijat") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -64,7 +64,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       })
     }
 
-    scenario("Kaikki hakeneet") {
+    Scenario("Kaikki hakeneet") {
       Given("Kaikkiaan kaksi henkilöä täyttää hakemuksen")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -82,7 +82,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       hakijat.hakijat.size should equal(2)
     }
 
-    scenario("Hyväksytyt hakijat") {
+    Scenario("Hyväksytyt hakijat") {
       Given("N henkilöä täyttää hakemuksen")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -100,7 +100,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       hakijat.hakijat.size should equal(1)
     }
 
-    scenario("Paikan vastaanottaneet hakijat") {
+    Scenario("Paikan vastaanottaneet hakijat") {
       Given("N henkilöä täyttää hakemuksen")
       Hakupalvelu has (FullHakemus1, FullHakemus2)
 
@@ -118,7 +118,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       hakijat.hakijat.size should equal(1)
     }
 
-    scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
+    Scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
       Given(
         "Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä"
       )
@@ -144,7 +144,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
       hakijat.hakijat.head.hakemus.hakutoiveet.head.kaksoistutkinto should equal(Some(true))
     }
 
-    scenario("Vain tietyn hakukohteen tiedot") {
+    Scenario("Vain tietyn hakukohteen tiedot") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
       Hakupalvelu has (FullHakemus1, FullHakemus2, FullHakemus4)
 

@@ -47,7 +47,7 @@ class RekisteritiedotResource(
     with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -66,7 +66,7 @@ class RekisteritiedotResource(
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val q = queryForParams(params)
+    val q = queryForParams(params.toMap)
 
     if (params.get("oppilaitosOid").isEmpty && params.get("vuosi").isEmpty) {
       logger.error(
@@ -164,7 +164,7 @@ class RekisteritiedotResource(
   get("/light", operation(light)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val q = queryForParams(params)
+    val q = queryForParams(params.toMap)
 
     if (params.get("oppilaitosOid").isEmpty && params.get("vuosi").isEmpty) {
       logger.error(

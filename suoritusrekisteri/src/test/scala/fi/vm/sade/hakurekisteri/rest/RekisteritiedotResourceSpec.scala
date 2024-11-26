@@ -26,10 +26,9 @@ import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksiloll
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.{RekisteriQuery, RekisteritiedotResource}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity, TestUser}
-import org.apache.commons.lang.NotImplementedException
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.jackson.Serialization._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -96,7 +95,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
   val notImplementedActor = system.actorOf(Props(new Actor {
     override def receive: Receive = { case msg =>
       println(s"$self got message $msg from ${sender()}")
-      Future.failed(new NotImplementedException("not implemented")) pipeTo sender
+      Future.failed(new RuntimeException("not implemented")) pipeTo sender
     }
   }))
 

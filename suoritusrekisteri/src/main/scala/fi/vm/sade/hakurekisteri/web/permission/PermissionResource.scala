@@ -39,7 +39,7 @@ class PermissionResource(
     with QueryLogging {
 
   override protected def applicationDescription: String = "Oikeuksien tarkistuksen rajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val askTimeout: Timeout = timeout.getOrElse(2.minutes)
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -117,8 +117,8 @@ class PermissionResource(
     case t: IllegalArgumentException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
-    case MappingException(_, e: Throwable) if e.getCause != null =>
-      val cause: Throwable = e.getCause
+    case t: MappingException if t.getCause != null =>
+      val cause: Throwable = t.getCause
       logger.warning(s"cannot parse request object: $cause")
       BadRequest(PermissionCheckResponse(errorMessage = Some(cause.getMessage)))
     case t: JsonMappingException =>

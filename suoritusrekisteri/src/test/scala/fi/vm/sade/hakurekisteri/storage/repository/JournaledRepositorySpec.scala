@@ -2,17 +2,17 @@ package fi.vm.sade.hakurekisteri.storage.repository
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.{TestJournal, TestRepo, TestResource}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks._
-import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class JournaledRepositorySpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with RepositoryBehaviors[TestResource] {
 
