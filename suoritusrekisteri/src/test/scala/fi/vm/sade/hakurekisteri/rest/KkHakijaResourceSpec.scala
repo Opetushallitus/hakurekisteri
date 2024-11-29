@@ -21,17 +21,17 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaService}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.Waiters
-import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.ScalatraTests
+import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class KkHakijaResourceSpec
-    extends AnyFunSuite
+    extends ScalatraFunSuite
     with HakeneetSupport
     with MockitoSugar
     with DispatchSupport
