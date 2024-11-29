@@ -54,7 +54,9 @@ object SiirtotiedostoApp {
       new SiirtotiedostoClientImpl(config.siirtotiedostoClientConfig),
       ensikertalainenActor,
       ovaraIntegrations.haut,
-      config.siirtotiedostoPageSize
+      config.siirtotiedostoPageSize,
+      ovaraIntegrations.hakemusService,
+      ovaraIntegrations.koosteService
     )
   }
 

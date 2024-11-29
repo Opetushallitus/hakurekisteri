@@ -12,8 +12,10 @@ Muodostaa erilliset siirtotiedostot aikaikkunassa muuttuneille tiedoille:
 
 Jos muuttuneita tietoja on paljon (konffiarvo suoritusrekisteri.ovara.pagesize), muodostuu useita tiedostoja per tyyppi.
 
-Lisäksi kerran vuorokaudessa muodostetaan siirtotiedostot kaikkien aktiivisten kk-hakujen päätellyille
-ensikertalaisuustiedoille, jokainen haku erilliseen tiedostoon.
+Lisäksi kerran vuorokaudessa muodostetaan siirtotiedostot kaikkien seuraaville, jokainen haku tarpeen mukaan useaan erilliseen tiedostoon:
+-aktiivisten hakujen päätellyt ensikertalaisuustiedot
+-aktiivisten toisen asteen hakujen proxysuoritustiedot valintalaskentakoostepalvelusta
+-aktiivisten toisen asteen yhteishakujen päätellyt harkinnanvaraisuustiedot valintalaskentakoostepalvelusta
 
 Muodostetut tiedostot tallennetaan sovellukselle konffattuun s3-ämpäriin seuraavien konffiarvojen perusteella:
 suoritusrekisteri.ovara.s3.region

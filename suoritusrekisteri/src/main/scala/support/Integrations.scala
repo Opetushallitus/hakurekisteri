@@ -127,6 +127,7 @@ trait OvaraIntegrations {
   val haut: ActorRef
   val valintarekisteri: ValintarekisteriActorRef
   val hakemusService: IHakemusService
+  val koosteService: IKoosteService
   val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
 }
 
@@ -259,6 +260,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   private val logger = LoggerFactory.getLogger(getClass)
   logger.info(s"Initializing BaseIntegrations started...")
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
+  val koosteEc = ExecutorUtil.createExecutor(10, "kooste-client-pool")
   val laskentaEc = ExecutorUtil.createExecutor(10, "valintalaskenta-client-pool")
   val pisteEc = ExecutorUtil.createExecutor(10, "pistesyotto-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
@@ -269,6 +271,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   system.registerOnTermination(() => {
     restEc.shutdown()
+    koosteEc.shutdown()
     vtsEc.shutdown()
     laskentaEc.shutdown()
     pisteEc.shutdown()
@@ -309,7 +312,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     serviceUrlSuffix = "/auth/cas"
   )(restEc, system)
   private val koosteClient =
-    new VirkailijaRestClient(config.integrations.koosteConfig, None)(restEc, system)
+    new VirkailijaRestClient(config.integrations.koosteConfig, None)(koosteEc, system)
   private val parametritClient =
     new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient =
@@ -696,7 +699,9 @@ class OvaraBaseIntegrations(system: ActorSystem, config: Config) extends OvaraIn
     ),
     name
   )
-
+  private val koosteClient =
+    new VirkailijaRestClient(config.integrations.koosteConfig, None)(restEc, system)
+  val koosteService = new KoosteService(koosteClient)(system)
   val cacheFactory = new InMemoryCacheFactory
 
   val koodisto = new KoodistoActorRef(

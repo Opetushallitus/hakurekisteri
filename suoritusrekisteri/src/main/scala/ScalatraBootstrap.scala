@@ -162,7 +162,9 @@ class ScalatraBootstrap extends LifeCycle {
         new SiirtotiedostoClientImpl(config.siirtotiedostoClientConfig),
         koosteet.ensikertalainen,
         integrations.haut,
-        config.siirtotiedostoPageSize
+        config.siirtotiedostoPageSize,
+        integrations.hakemusService,
+        integrations.koosteService
       )
     ),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),

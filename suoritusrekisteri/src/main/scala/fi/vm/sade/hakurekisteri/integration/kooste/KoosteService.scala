@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.kooste
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.{
-  AtaruHakemus,
   AtaruHakemusToinenAste,
   FullHakemus,
   HakemuksenHarkinnanvaraisuus,
@@ -11,18 +10,30 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
 }
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
-import scala.concurrent.Future
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.{Await, Future}
 
 trait IKoosteService {
   def getSuorituksetForAtaruhakemukset(
     hakuOid: String,
     hs: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]]
+  def getProxysuorituksetForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Map[String, Map[String, String]]]
   def getSuoritukset(
     hakuOid: String,
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]]
   def getHarkinnanvaraisuudet(hs: Seq[HakijaHakemus]): Future[Seq[HakemuksenHarkinnanvaraisuus]]
+  def getHarkinnanvaraisuudetForHakemusOidsWithTimeout(
+    hakemusOids: Seq[String],
+    timeout: Duration
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]]
+  def getHarkinnanvaraisuudetForHakemusOids(
+    hakemusOids: Seq[String]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]]
 }
 
 class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(implicit
@@ -59,17 +70,62 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
     }
   }
 
+  def getHarkinnanvaraisuudetForHakemusOidsWithTimeout(
+    hakemusOids: Seq[String],
+    timeout: Duration
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    try {
+      logger.info(
+        s"${Thread.currentThread().getName} Haetaan koostepalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle, timeout $timeout"
+      )
+      Future.successful(Await.result(getHarkinnanvaraisuudetForHakemusOids(hakemusOids), timeout))
+    } catch {
+      case e: Exception =>
+        logger.info(
+          s"${Thread.currentThread().getName} harkinnanvaraisuus fetch timed out for ${hakemusOids.size}, $timeout"
+        )
+        Future.failed(e)
+    }
+  }
+
+  def getHarkinnanvaraisuudetForHakemusOids(
+    hakemusOids: Seq[String]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    logger.info(
+      s"${Thread.currentThread().getName} Haetaan koostepalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle"
+    )
+    if (hakemusOids.isEmpty) {
+      Future.successful(Seq.empty)
+    } else {
+      restClient.postObject[Seq[String], Seq[HakemuksenHarkinnanvaraisuus]](
+        "valintalaskentakoostepalvelu.harkinnanvaraisuudet.hakemuksille"
+      )(200, hakemusOids)
+    }
+  }
+
   def getSuorituksetForAtaruhakemukset(
     hakuOid: String,
     hs: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]] = {
-
     val hakemusOids = hs.map(hh => hh.oid).toList
+    if (hakemusOids.nonEmpty) {
+      getProxysuorituksetForHakemusOids(hakuOid, hakemusOids)
+    } else {
+      logger.debug(s"No ataruhakemukses found!")
+      Future.successful(Map.empty)
+    }
+  }
+
+  def getProxysuorituksetForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Map[String, Map[String, String]]] = {
+
     logger.info(
-      s"Getting atarusuoritukset from koostepalvelu for ataruhakemukset: ${hakemusOids}"
+      s"${Thread.currentThread().getName} Getting atarusuoritukset from koostepalvelu for ${hakemusOids.size} ataruhakemukses in haku $hakuOid"
     )
     if (hakemusOids.nonEmpty) {
-      restClient.postObject[List[String], Map[String, Map[String, String]]](
+      restClient.postObject[Seq[String], Map[String, Map[String, String]]](
         "valintalaskentakoostepalvelu.atarusuorituksetByOpiskelijaOid",
         hakuOid
       )(200, hakemusOids)
@@ -77,7 +133,6 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
       logger.info(s"No ataruhakemukses found!")
       Future.successful(Map.empty)
     }
-
   }
 
   def getSuoritukset(
@@ -110,6 +165,7 @@ class KoosteService(restClient: VirkailijaRestClient, pageSize: Int = 200)(impli
   }
 
   case class HakemusHakija(opiskelijaOid: String, hakemus: FullHakemus)
+
 }
 
 class KoosteServiceMock extends IKoosteService {
@@ -128,4 +184,22 @@ class KoosteServiceMock extends IKoosteService {
     hakemukset: Seq[HakijaHakemus]
   ): Future[Map[String, Map[String, String]]] =
     Future.successful(Map[String, Map[String, String]]())
+
+  override def getProxysuorituksetForHakemusOids(
+    hakuOid: String,
+    hakemusOids: Seq[String]
+  ): Future[Map[String, Map[String, String]]] = {
+    Future.successful(Map.empty)
+  }
+
+  override def getHarkinnanvaraisuudetForHakemusOids(
+    hakemusOids: Seq[String]
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = {
+    Future.successful(Seq.empty)
+  }
+
+  override def getHarkinnanvaraisuudetForHakemusOidsWithTimeout(
+    hakemusOids: Seq[String],
+    timeout: Duration
+  ): Future[Seq[HakemuksenHarkinnanvaraisuus]] = ???
 }
