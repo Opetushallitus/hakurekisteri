@@ -12,7 +12,13 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.koodisto.MockedKoodistoActor
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, HakurekisteriJsonSupport, JDBCJournal, Role, User}
+import fi.vm.sade.hakurekisteri.rest.support.{
+  AuditSessionRequest,
+  HakurekisteriJsonSupport,
+  JDBCJournal,
+  Role,
+  User
+}
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}

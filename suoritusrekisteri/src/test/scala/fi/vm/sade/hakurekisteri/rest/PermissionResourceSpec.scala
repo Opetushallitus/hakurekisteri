@@ -27,11 +27,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class PermissionResourceSpec
-    extends ScalatraFunSuite
-    with MockitoSugar
-    with Matchers
-    {
+class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Matchers {
 
   implicit val system = ActorSystem("permission-test-system")
 

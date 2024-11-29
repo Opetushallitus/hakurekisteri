@@ -38,7 +38,8 @@ class HakurekisteriSwagger
         title = "Haku- ja valintarekisteri",
         description = "rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
         termsOfServiceUrl = "https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/",
-        contact = ContactInfo("verkkotoimitus", "(placeholder) url", "verkkotoimitus_opintopolku@oph.fi"),
+        contact =
+          ContactInfo("verkkotoimitus", "(placeholder) url", "verkkotoimitus_opintopolku@oph.fi"),
         license = LicenseInfo("license", "http://www.osor.eu/eupl/")
       )
     )
