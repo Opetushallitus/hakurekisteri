@@ -2,7 +2,7 @@
 
 ## Ajoympäristöjen versiot
 
- - Java 11
+ - Java 17
  - Scala 2.12
  - Node.js 12 & NPM 6
 

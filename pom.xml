@@ -16,7 +16,7 @@
         <name>suoritusrekisteri</name>
     </organization>
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <scala.version>2.12.20</scala.version>
         <spring.version>6.2.0</spring.version>
         <spring-security.version>6.4.0</spring-security.version>
@@ -1451,7 +1451,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
-            <version>1.2.0</version>
+            <version>1.4.14</version>
         </dependency>
         <dependency>
             <groupId>io.findify</groupId>
