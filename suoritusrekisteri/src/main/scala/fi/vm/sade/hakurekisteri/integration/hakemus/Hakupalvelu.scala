@@ -1461,7 +1461,12 @@ case class Name(translations: Translations)
 
 case class Header(translations: Translations)
 
-case class Address(recipient: String, streetAddress: Option[String], postalCode: Option[String], postOffice: Option[String])
+case class Address(
+  recipient: String,
+  streetAddress: Option[String],
+  postalCode: Option[String],
+  postOffice: Option[String]
+)
 
 case class Translations(fi: String, sv: String, en: String)
 
