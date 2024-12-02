@@ -4265,7 +4265,8 @@ class KoskiDataHandlerTest
 
   it should "import arvosanat for kesken-tilainen nuorten perusopetuksen oppiaineen oppimäärä without erityinen suoritustapa" in {
     // After tuva cutoff date is dynamic, let's update it to be a valid one JSON before parsing.
-    val startDate = new LocalDate(LocalDate.now().year().get() - 1, 8, 22)
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(1)
+    val startDate = new LocalDate(KoskiUtil.deadlineDate.year().get() - 1, 8, 22)
     val dateStr = ISODateTimeFormat.date().print(startDate)
     val json: String =
       scala.io.Source
@@ -4290,7 +4291,6 @@ class KoskiDataHandlerTest
       .suoritukset
       .head
       .arviointi shouldBe defined
-    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
 
     Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
