@@ -249,7 +249,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             ApplicationAttachment(
               Option(Name(Translations("suomi", "ruotsi", "englanti"))),
               Option(Header(Translations("suomi", "ruotsi", "englanti"))),
-              Address("Vastaanottaja", "Tie 1", "00100", "Helsinki")
+              Address("Vastaanottaja", Some("Tie 1"), Some("00100"), Some("Helsinki"))
             )
           )
         ),
@@ -494,7 +494,7 @@ trait HakeneetSupport extends Suite with HakurekisteriJsonSupport with SpecsLike
             ApplicationAttachment(
               Option(Name(Translations("suomi", "ruotsi", "englanti"))),
               Option(Header(Translations("suomi", "ruotsi", "englanti"))),
-              Address("Vastaanottajan kanslia", "Tie 1", "00100", "Helsinki")
+              Address("Vastaanottajan kanslia", Some("Tie 1"), Some("00100"), Some("Helsinki"))
             )
           )
         ),
