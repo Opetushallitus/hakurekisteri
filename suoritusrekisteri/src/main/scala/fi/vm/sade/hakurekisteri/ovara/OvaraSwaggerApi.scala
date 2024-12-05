@@ -8,12 +8,12 @@ trait OvaraSwaggerApi extends SwaggerSupport {
     .summary("Muodostaa siirtotiedostot aikavälillä muuttuneista tiedostoista.")
     .description("Muodostaa siirtotiedostot aikavälillä muuttuneista tiedostoista.")
     .parameter(
-      pathParam[Long]("start")
+      queryParam[Long]("start")
         .description("Aikavälin alkuhetki, esim 1731537749666")
         .defaultValue(1731587749666L)
     )
     .parameter(
-      pathParam[Long]("end")
+      queryParam[Long]("end")
         .description("Aikavälin loppuhetki, esim 1731587968107L")
         .defaultValue(1731587968107L)
     )
@@ -27,19 +27,19 @@ trait OvaraSwaggerApi extends SwaggerSupport {
       "Muodostaa ovara-siirtotiedostot relevanttien hakujen ensikertalaisuuksille, proxysuoritustiedoille ja harkinnanvaraisuuksille."
     )
     .parameter(
-      pathParam[Boolean]("vainAktiiviset")
+      queryParam[Boolean]("vainAktiiviset")
         .description("Käsitelläänkö vain aktiiviset haut")
     )
     .parameter(
-      pathParam[Boolean]("ensikertalaisuudet")
+      queryParam[Boolean]("ensikertalaisuudet")
         .description("Muodostetaanko ensikertalaisuudet")
     )
     .parameter(
-      pathParam[Boolean]("harkinnanvaraisuudet")
+      queryParam[Boolean]("harkinnanvaraisuudet")
         .description("Muodostetaanko harkinnanvaraisuudet")
     )
     .parameter(
-      pathParam[Boolean]("proxySuoritukset")
+      queryParam[Boolean]("proxySuoritukset")
         .description("Muodostetaanko proxySuoritukset")
     )
     .tags("Ovara-resource")
