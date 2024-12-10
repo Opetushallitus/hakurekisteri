@@ -17,6 +17,7 @@ class HakureRekisteriMochaTest extends FlatSpec with CleanSharedTestJettyBeforeE
       "node_modules/mocha-headless-chrome/bin/start",
       "-t",
       totalMochaTestsMaxDuration.toMillis.toString,
+      //"-v",
       "-f",
       "http://localhost:" + port + "/test/runner.html"
     )
