@@ -165,13 +165,13 @@ class KoskiService(
             logger.info(
               s"refreshChangedOppijasFromKoski : saatiin käsiteltyä muutokset alkaen $muuttunutJalkeenStr. Onnistuneita ${all._2.size}, epäonnistuneita ${all._1.size}, epäonnistuneet: ${all._1}"
             )
-            refreshChangedOppijasFromKoski(Some(thisQueryStart), 15.seconds)
+            refreshChangedOppijasFromKoski(Some(thisQueryStart), 5.minutes)
           case Failure(f) =>
             logger.error(
               s"refreshChangedOppijasFromKoski : jotain meni vikaan muutosten käsittelyssä. Yritetään myöhemmin uudelleen samoilla parametreilla. ${f.getMessage}",
               f
             )
-            refreshChangedOppijasFromKoski(Some(muuttunutJalkeenStr), 1.minutes)
+            refreshChangedOppijasFromKoski(Some(muuttunutJalkeenStr), 1.minute)
         }
       })
     }
@@ -272,11 +272,6 @@ class KoskiService(
         s"Saatiin hakemuspalvelusta ${personOidsSet.size} oppijanumeroa ja ${aliasCount} aliasta haulle $hakuOid"
       )
       handleKoskiRefreshForOppijaOids(personOidsWithAliases.henkiloOidsWithLinkedOids, params)
-      /*handleHenkiloUpdate(
-        personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq,
-        params,
-        s"hakuOid: $hakuOid"
-      )*/
     }
 
     val now = System.currentTimeMillis()
