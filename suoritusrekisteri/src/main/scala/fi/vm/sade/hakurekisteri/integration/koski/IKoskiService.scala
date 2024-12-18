@@ -41,8 +41,8 @@ trait IKoskiService {
   def fetchOppivelvollisuusTietos(oppijaOids: Seq[String]): Future[Seq[OppivelvollisuusTieto]]
 
   def refreshChangedOppijasFromKoski(
-    cursor: Option[String] = None,
-    timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
+    lastQueryStart: Option[String],
+    timeToWaitUntilNextBatch: FiniteDuration = 10.seconds
   )(implicit scheduler: Scheduler): Unit
 
   def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit
