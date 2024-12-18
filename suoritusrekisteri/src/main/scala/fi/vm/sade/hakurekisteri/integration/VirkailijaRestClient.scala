@@ -5,7 +5,7 @@ import java.net.ConnectException
 import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.security.SecureRandom
-import java.util.UUID
+import java.util.{Base64, UUID}
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.{ActorSystem, Props}
@@ -19,8 +19,8 @@ import fi.vm.sade.scalaproperties.OphProperties
 import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie}
 import org.asynchttpclient._
 import org.asynchttpclient.filter.ThrottleRequestFilter
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
@@ -123,8 +123,10 @@ class VirkailijaRestClient(
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
       url: String,
-      basicAuth: Boolean = false
+      basicAuth: Boolean = false,
+      koskiMassaluovutusResult: Boolean = false
     )(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
+      //logger.info(s"request to $url")
       val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 
@@ -158,7 +160,28 @@ class VirkailijaRestClient(
               internalClient(requestWithCookies, handler)
             }
           ) yield result
+        case (Some(un), Some(pw), true) if koskiMassaluovutusResult =>
+          for (
+            result <- {
+              //logger.info(s"Sending basic authed koskiMassaluovutusResult query! $url")
+              cookies += new DefaultCookie("CSRF", Config.csrf)
+              val requestWithCookies =
+                addCookies(requestWithPostHeaders, cookies).toRequest
+              val realm = new Realm.Builder(un, pw)
+                .setUsePreemptiveAuth(false)
+                .setScheme(Realm.AuthScheme.NTLM)
+              val basicAuthHeader =
+                "Basic " + Base64.getEncoder.encodeToString((un + ":" + pw).getBytes)
+              val requestWithRealm = requestWithCookies.toBuilder
+                .setRealm(realm)
+                .setHeader("Authorization", basicAuthHeader)
+                .build()
+              //logger.info(s"Request before sending: ${requestWithRealm.getRealm}, ${requestWithRealm.getHeaders}, $requestWithRealm")
+              internalClient(requestWithRealm, handler)
+            }
+          ) yield result
         case (Some(un), Some(pw), true) =>
+          //logger.info(s"Sending basic authed query! $url")
           for (
             result <- {
               cookies += new DefaultCookie("CSRF", Config.csrf)
@@ -188,7 +211,8 @@ class VirkailijaRestClient(
 
   private def tryClient[A <: AnyRef: Manifest](
     url: String,
-    basicAuth: Boolean = false
+    basicAuth: Boolean = false,
+    koskiMassaluovutusResult: Boolean = false
   )(
     acceptedResponseCodes: Seq[Int],
     maxRetries: Int,
@@ -196,7 +220,9 @@ class VirkailijaRestClient(
     retryOnceOn502: Boolean = true
   ): Future[A] =
     Client
-      .request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes: _*))
+      .request[A, A](url, basicAuth, koskiMassaluovutusResult)(
+        JsonExtractor.handler[A](acceptedResponseCodes: _*)
+      )
       .recoverWith {
         case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
           logger.warning("Expired jsession, fetching new JSessionId")
@@ -355,6 +381,17 @@ class VirkailijaRestClient(
     readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
   }
 
+  def readKoskiMassaluovutusResultFromUrl[A <: AnyRef: Manifest](
+    url: String,
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int = 0
+  ): Future[A] = {
+    val retryCount = new AtomicInteger(1)
+    val result = tryClient[A](url, true, true)(acceptedResponseCodes, maxRetries, retryCount)
+    logLongQuery(result, url)
+    result
+  }
+
   def readObjectFromUrl[A <: AnyRef: Manifest](
     url: String,
     acceptedResponseCodes: Seq[Int],
@@ -446,6 +483,7 @@ object JsonExtractor extends HakurekisteriJsonSupport {
         val reader = new InputStreamReader(resp.getResponseBodyAsStream)
         Try(read[T](reader)).recover { case t: Throwable =>
           val logger = Logging.getLogger(system, this)
+          logger.error(s"Tried to parse ${resp.getResponseBody}")
           logger.error(s"Error when parsing data from ${resp.getUri}: ${t.getMessage}")
           reader.close()
           throw t

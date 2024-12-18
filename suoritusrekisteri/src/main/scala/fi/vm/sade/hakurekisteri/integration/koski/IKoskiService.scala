@@ -47,6 +47,15 @@ trait IKoskiService {
 
   def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit
 
+  def updateHenkilotNew(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])]
+
+  def updateHenkilotNewMuuttunutJalkeen(
+    muuttunutJalkeen: String,
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])]
 }
 
 class KoskiServiceMock extends IKoskiService {
@@ -85,4 +94,14 @@ class KoskiServiceMock extends IKoskiService {
   ): Future[Unit] = ???
 
   override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = ???
+
+  override def updateHenkilotNew(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])] = ???
+
+  override def updateHenkilotNewMuuttunutJalkeen(
+    muuttunutJalkeen: String,
+    params: KoskiSuoritusHakuParams
+  ): Future[(Seq[String], Seq[String])] = ???
 }
