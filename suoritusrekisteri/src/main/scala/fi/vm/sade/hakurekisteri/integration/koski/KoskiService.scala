@@ -129,18 +129,6 @@ class KoskiService(
     )
   }
 
-  private def fetchChangedOppijas(
-    params: SearchParamsWithCursor
-  ): Future[MuuttuneetOppijatResponse] = {
-    logger.info(
-      s"Haetaan muuttuneet henkilöoidit Koskesta, timestamp: " + params.timestamp.toString + ", cursor: " + params.cursor.toString
-    )
-    virkailijaRestClient.readObjectWithBasicAuth[MuuttuneetOppijatResponse](
-      "koski.sure.muuttuneet-oppijat",
-      params
-    )(acceptedResponseCode = 200, maxRetries = 2)
-  }
-
   def refreshChangedOppijasFromKoski(
     lastQueryStart: Option[String],
     timeToWaitUntilNextBatch: FiniteDuration = 10.seconds
@@ -188,67 +176,6 @@ class KoskiService(
       })
     }
   }
-
-  /*def refreshChangedOppijasFromKoski(
-    cursor: Option[String] = None,
-    timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
-  )(implicit scheduler: Scheduler): Unit = {
-    val endDateSuomiTime =
-      KoskiUtil.deadlineDate
-        .plusDays(1)
-        .toDateTimeAtStartOfDay(DateTimeZone.forTimeZone(HelsinkiTimeZone))
-    if (endDateSuomiTime.isBeforeNow) {
-      logger.info(
-        "refreshChangedOppijasFromKoski : Cutoff date of {} reached, stopping.",
-        endDateSuomiTime.toString
-      )
-    } else {
-      scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
-        val timestamp: Option[String] =
-          if (cursor.isEmpty) {
-            logger.info(
-              s"Fetching changes from Koski starting from ${KoskiUtil.koskiFetchStartTime}"
-            )
-            Some(KoskiUtil.koskiFetchStartTime)
-          } else None
-        val params = SearchParamsWithCursor(timestamp, cursor)
-        fetchChangedOppijas(params).onComplete {
-          case Success(response: MuuttuneetOppijatResponse) =>
-            logger.info(
-              "refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.",
-              response.result.size
-            )
-            val koskiParams = KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
-            handleHenkiloUpdate(response.result, koskiParams, "refreshChangedOppijas").onComplete {
-              case Success(s) =>
-                logger.info(
-                  "refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}",
-                  response.result.size
-                )
-                if (response.mayHaveMore)
-                  refreshChangedOppijasFromKoski(
-                    Some(response.nextCursor),
-                    15.seconds
-                  ) //Haetaan nopeammin jos kaikkia tietoja samalla cursorilla ei vielä saatu
-                else
-                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 1.minutes)
-              case Failure(e) =>
-                logger.error(
-                  "refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden tietojen haussa",
-                  e
-                )
-                refreshChangedOppijasFromKoski(cursor, 2.minutes)
-            }
-          case Failure(e) =>
-            logger.error(
-              "refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden selvittämisessä",
-              e
-            )
-            refreshChangedOppijasFromKoski(cursor, 2.minutes)
-        }
-      })
-    }
-  }*/
 
   /*
    *OK-227 : haun automatisointi.
