@@ -28,7 +28,7 @@ import fi.vm.sade.hakurekisteri.integration.{
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.mockito.Mockito
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 

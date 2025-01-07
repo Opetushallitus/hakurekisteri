@@ -1,8 +1,8 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import java.io.OutputStream
+import fi.vm.sade.javautils.poi.OphCellStyles
 
-import fi.vm.sade.javautils.poi.OphCellStyles.OphXssfCellStyles
+import java.io.OutputStream
 import org.apache.poi.ss.usermodel.CellType.BLANK
 import org.apache.poi.ss.usermodel.CellType.BOOLEAN
 import org.apache.poi.ss.usermodel.CellType.ERROR
@@ -36,7 +36,7 @@ class Workbook(val sheets: Seq[Sheet]) {
 
   def toExcel: poi.Workbook = {
     val workbook = new XSSFWorkbook()
-    val ophXssfCellStyles = new OphXssfCellStyles(workbook)
+    val ophXssfCellStyles = new OphCellStyles(workbook)
 
     for (sheet <- sheets) {
       val eSheet = workbook.createSheet(sheet.name)
@@ -57,7 +57,7 @@ object Workbook {
 
   def apply(original: poi.Workbook): Workbook = {
 
-    implicit def cellToString(cell: poi.Cell): String = cell.getCellTypeEnum match {
+    implicit def cellToString(cell: poi.Cell): String = cell.getCellType match {
       case STRING =>
         cell.getStringCellValue
       case BLANK   => ""

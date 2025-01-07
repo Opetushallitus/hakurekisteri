@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class HakupalveluSpec extends FlatSpec with Matchers {
+class HakupalveluSpec extends AnyFlatSpec with Matchers {
 
   it should "use komo koodi for TUVA10" in {
     val suoritus: VirallinenSuoritus = createSuoritus("TUVA10")

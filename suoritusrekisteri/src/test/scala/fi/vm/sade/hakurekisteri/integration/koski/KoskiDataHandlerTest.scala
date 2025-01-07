@@ -22,9 +22,11 @@ import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.tagobjects.Retryable
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers, Retries}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Retries}
 import org.slf4j.LoggerFactory
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
@@ -32,7 +34,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class KoskiDataHandlerTest
-    extends FlatSpec
+    extends AnyFlatSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll
     with Matchers

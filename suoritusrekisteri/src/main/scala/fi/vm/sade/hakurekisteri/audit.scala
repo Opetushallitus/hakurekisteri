@@ -4,7 +4,7 @@ import java.net.InetAddress
 import fi.vm.sade.auditlog._
 import fi.vm.sade.javautils.http.HttpServletRequestUtils
 
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import org.ietf.jgss.{GSSException, Oid}
 import org.json4s.jackson.Serialization
 import org.scalatra.Params
@@ -130,7 +130,8 @@ object AuditUtil {
     try {
       val userAgent = Option(request.getHeader("User-Agent")).getOrElse("Unknown user agent")
       val session = request.getSession(false).getId
-      val ip = InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
+
+      val ip = InetAddress.getByName(request.getRemoteAddr)
       new User(new Oid(userOid), ip, session, userAgent)
     } catch {
       case e: Throwable =>

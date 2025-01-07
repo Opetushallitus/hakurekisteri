@@ -2,7 +2,7 @@
 
 ## Ajoympäristöjen versiot
 
- - Java 11
+ - Java 17
  - Scala 2.12
  - Node.js 12 & NPM 6
 
@@ -72,13 +72,6 @@ Sovellusta paikallisesti ajettaessa se käyttää properties-tiedostossa määri
 Paikallisesti ajettaessa käynnistä Postgres-palvelinprosessi esim. Dockerilla: `docker run -p 5432:5432 postgres`
 
 Testeissä sovellus käyttää sisäistä Postgres-kantaa (ItPostgres.scala).
-
-## Arvosanavalidaattori
-
-Arvosanojen tuonnissa käytettävä validaattori on erillisessä [repositoriossa](https://github.com/Opetushallitus/validaattori).
-
-Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käytössä jarrina. Validaattorin client-side -versio on bundlattu samaan jarriin ja serveröidään ValidatorJavasccriptServletin toimesta.
-
 
 ## Admin / Testauksen huomioita
 

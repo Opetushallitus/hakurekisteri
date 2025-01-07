@@ -1,12 +1,14 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulos
-import org.scalatest.{Matchers, FlatSpec}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-class ValintaTulosSpec extends FlatSpec with Matchers {
+class ValintaTulosSpec extends AnyFlatSpec with Matchers {
   behavior of "Valinnan tulosten parsinta"
 
   trait Parsed extends HakurekisteriJsonSupport {

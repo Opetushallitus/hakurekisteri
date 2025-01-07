@@ -30,7 +30,7 @@ class VirtaResource(virtaQueue: ActorRef)(implicit
     with VirtaSwaggerApi {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected def applicationDescription: String = "VIRTA-rajapinnat"
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)

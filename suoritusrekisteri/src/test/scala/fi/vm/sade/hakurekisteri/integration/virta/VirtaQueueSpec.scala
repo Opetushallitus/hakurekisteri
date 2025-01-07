@@ -11,11 +11,12 @@ import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.DateTime
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.concurrent.Await
 
-class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
+class VirtaQueueSpec extends AnyWordSpec with Matchers with FutureWaiting {
   implicit val system = ActorSystem("test-virta-queue")
   private val mockConfig: MockConfig = new MockConfig
 

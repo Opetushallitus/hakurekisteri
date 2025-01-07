@@ -29,7 +29,7 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers._
-import org.scalatest.words.EmptyWord
+import org.scalatest.matchers.dsl.EmptyWord
 import org.scalatra.test.HttpComponentsClient
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 

@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.util.UUID
-
 import akka.actor._
 import akka.event.Logging
 import akka.testkit.TestActorRef
@@ -16,16 +15,17 @@ import fi.vm.sade.hakurekisteri.{Oids, SpecsLikeMockito}
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s._
 import org.scalatest.concurrent.Waiters
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.collection.Seq
 import scala.concurrent.duration._
 import scala.language.{implicitConversions, reflectiveCalls}
 
 class HakemusActorSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with FutureWaiting
     with SpecsLikeMockito

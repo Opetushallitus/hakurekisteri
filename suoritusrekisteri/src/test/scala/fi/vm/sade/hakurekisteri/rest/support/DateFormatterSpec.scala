@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.joda.time.DateTime
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DateFormatterSpec extends FlatSpec with Matchers {
+class DateFormatterSpec extends AnyFlatSpec with Matchers {
 
   behavior of "HakurekisteriDefaultFormats.lossless.dateFormat"
 

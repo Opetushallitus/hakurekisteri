@@ -1,14 +1,16 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
 import org.mockito.Mockito
-import org.mockito.Mockito.{never, verify, times, reset}
+import org.mockito.Mockito.{never, reset, times, verify}
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import support.{ArchiveScheduler, Archiver}
 
 class ArchiveSchedulerSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll
     with Matchers

@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.util.UUID
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.{MockConfig, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{
@@ -14,11 +13,12 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import org.joda.time.LocalDate
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Future
 
-class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito {
+class VirtaActorSpec extends AnyFlatSpec with Matchers with FutureWaiting with SpecsLikeMockito {
   implicit val system = ActorSystem("test-virta-system")
   override implicit val ec = system.dispatcher
 

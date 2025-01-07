@@ -43,7 +43,7 @@ class KkHakijaResource(kkHakijaService: KkHakijaService)(implicit
     with HakijaResourceSupport {
 
   protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
-  protected implicit def swagger: SwaggerEngine[_] = sw
+  protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   implicit val defaultTimeout: Timeout = 120.seconds
@@ -51,7 +51,7 @@ class KkHakijaResource(kkHakijaService: KkHakijaService)(implicit
   override val streamingRender: (OutputStream, Seq[Hakija]) => Unit = KkExcelUtil.write
 
   get("/", operation(query)) {
-    val q = KkHakijaQuery(params, currentUser)
+    val q = KkHakijaQuery(params.toMap, currentUser)
     val tyyppi = getFormatFromTypeParam()
     if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
     val thisResponse = response

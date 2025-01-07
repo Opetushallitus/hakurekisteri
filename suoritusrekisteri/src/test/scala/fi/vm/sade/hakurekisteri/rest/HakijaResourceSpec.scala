@@ -78,8 +78,8 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Loca
   test("result is binary and not empty when asked in Excel") {
     get("/?hakuehto=Kaikki&tyyppi=Excel&haku=dummy&organisaatio=dummy") {
       body.length should not be 0
-      header("Content-Type") should include("application/octet-stream")
-      header("Content-Disposition") should be("attachment;filename=hakijat.xlsx")
+      response.header("Content-Type") should include("application/octet-stream")
+      response.header("Content-Disposition") should be("attachment;filename=hakijat.xlsx")
     }
   }
 
@@ -89,4 +89,5 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Loca
     super.stop()
   }
 
+  override def header = ???
 }

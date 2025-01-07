@@ -1,8 +1,8 @@
 package support
 
 import fi.vm.sade.utils.slf4j.Logging
-import javax.servlet.ServletConfig
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.ServletConfig
+import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.collections4.EnumerationUtils
 import org.eclipse.jetty.proxy.ProxyServlet
 import org.eclipse.jetty.servlet.ServletHolder

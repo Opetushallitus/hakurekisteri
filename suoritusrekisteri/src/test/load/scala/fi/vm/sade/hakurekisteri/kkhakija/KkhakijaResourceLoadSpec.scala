@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class KkhakijaResourceLoadSpec extends FlatSpec with Matchers {
+class KkhakijaResourceLoadSpec extends AnyFlatSpec with Matchers {
 
   behavior of "kkhakijat-service"
 

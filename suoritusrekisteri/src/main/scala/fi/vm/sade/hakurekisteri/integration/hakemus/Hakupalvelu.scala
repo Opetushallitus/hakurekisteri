@@ -41,7 +41,6 @@ import fi.vm.sade.hakurekisteri.suoritus.{
   yksilollistaminen
 }
 import fi.vm.sade.hakurekisteri.{Config, Oids}
-import hakurekisteri.perusopetus.Yksilollistetty
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory._
 
@@ -1462,7 +1461,12 @@ case class Name(translations: Translations)
 
 case class Header(translations: Translations)
 
-case class Address(recipient: String, streetAddress: String, postalCode: String, postOffice: String)
+case class Address(
+  recipient: String,
+  streetAddress: Option[String],
+  postalCode: Option[String],
+  postOffice: Option[String]
+)
 
 case class Translations(fi: String, sv: String, en: String)
 

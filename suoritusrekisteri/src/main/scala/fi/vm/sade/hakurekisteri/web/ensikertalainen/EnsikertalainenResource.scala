@@ -46,7 +46,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
     with SecuritySupport
     with QueryLogging {
 
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 

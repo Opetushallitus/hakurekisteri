@@ -11,8 +11,8 @@ class HaeValmistuvatSpec extends HakurekisteriContainer with GivenWhenThen {
   info("jotta saan ohjausta")
   info("ja apua hakuprosessissa")
 
-  feature("Lähtökoulu- ja luokka-tiedot") {
-    scenario("Keväällä valmistuminen") {
+  Feature("Lähtökoulu- ja luokka-tiedot") {
+    Scenario("Keväällä valmistuminen") {
       Given("Kaksi henkilöä valmistuu keväällä")
       Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
       Matti valmistuu (Keväällä, 2014) koulusta "1.2.4"
@@ -33,7 +33,7 @@ class HaeValmistuvatSpec extends HakurekisteriContainer with GivenWhenThen {
       haettu.head.asInstanceOf[VirallinenSuoritus].valmistuminen should beBefore("01.08.2014")
     }
 
-    scenario("Valmistuu kahdesti") {
+    Scenario("Valmistuu kahdesti") {
       Given("henkilö valmistuu keväällä ja syksyllä")
       Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
       Mikko valmistuu (Syksyllä, 2014) koulusta "1.2.4"
@@ -54,4 +54,6 @@ class HaeValmistuvatSpec extends HakurekisteriContainer with GivenWhenThen {
       haettu.head.asInstanceOf[VirallinenSuoritus].valmistuminen should beBefore("31.12.2014")
     }
   }
+
+  override def header = ???
 }

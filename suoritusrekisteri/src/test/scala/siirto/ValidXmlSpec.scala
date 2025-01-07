@@ -1,14 +1,15 @@
 package siirto
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.xml.sax.InputSource
+
 import scala.xml.Elem
 import java.io.StringReader
 import scala.xml.Source._
-
 import scala.language.implicitConversions
 
-class ValidXmlSpec extends FlatSpec with Matchers {
+class ValidXmlSpec extends AnyFlatSpec with Matchers {
 
   implicit def elemToInputSource(elem: Elem): InputSource = {
     fromReader(new StringReader(elem.toString()))

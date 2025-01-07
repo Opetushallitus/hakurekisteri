@@ -12,12 +12,8 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{HenkiloHakijaQuery, IHakemu
 import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{
-  Opiskeluoikeus,
-  OpiskeluoikeusHenkilotQuery,
-  OpiskeluoikeusQuery
-}
-import fi.vm.sade.hakurekisteri.oppija.{InvalidTodistus, Oppija, OppijaFetcher, Todistus}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
+import fi.vm.sade.hakurekisteri.oppija.{Oppija, OppijaFetcher, Todistus}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -25,9 +21,8 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.oppija.OppijatPostSize
 import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
-import fi.vm.sade.hakurekisteri.web.validation.{ScalaValidator, SimpleValidatable, Validatable}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{Parameter, Swagger, SwaggerEngine}
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
 import scala.collection.JavaConverters._
@@ -52,11 +47,10 @@ class RekisteritiedotResource(
     with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  val valid = new hakurekisteri.api.HakurekisteriValidator() with ScalaValidator
 
   before() {
     contentType = formats("json")
@@ -72,7 +66,7 @@ class RekisteritiedotResource(
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val q = queryForParams(params)
+    val q = queryForParams(params.toMap)
 
     if (params.get("oppilaitosOid").isEmpty && params.get("vuosi").isEmpty) {
       logger.error(
@@ -142,9 +136,6 @@ class RekisteritiedotResource(
     vuosi = params.get("vuosi").flatMap(_.blankOption)
   )
 
-  implicit val v: Validatable[Todistus] =
-    SimpleValidatable(t => ValidatedTodistus(t.suoritus, t.arvosanat.asJava))
-
   get("/:oid", operation(read)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
@@ -162,14 +153,7 @@ class RekisteritiedotResource(
 
       private val tiedotFuture: Future[Seq[Product with Serializable]] =
         for (oppija <- fetchTiedot(params("oid")))
-          yield for (todistus <- oppija.suoritukset) yield {
-            valid
-              .validateData(todistus)
-              .leftMap { (errors) =>
-                InvalidTodistus(todistus, errors.list.toList)
-              }
-              .fold(identity, identity)
-          }
+          yield for (todistus <- oppija.suoritukset) yield todistus
       logQuery(q, t0, tiedotFuture)
 
       val is = tiedotFuture
@@ -180,7 +164,7 @@ class RekisteritiedotResource(
   get("/light", operation(light)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val q = queryForParams(params)
+    val q = queryForParams(params.toMap)
 
     if (params.get("oppilaitosOid").isEmpty && params.get("vuosi").isEmpty) {
       logger.error(
@@ -222,7 +206,7 @@ class RekisteritiedotResource(
               ) =>
             true
           case Todistus(s: VirallinenSuoritus, _) if s.valmistuminen.getYear < 2015 => false
-          case t: Todistus                                                          => valid.validateData(t).isFailure
+          case t: Todistus                                                          => false
           case default                                                              => false
         }
       }

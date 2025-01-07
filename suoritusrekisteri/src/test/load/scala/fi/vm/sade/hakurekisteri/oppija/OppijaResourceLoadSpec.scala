@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class OppijaResourceLoadSpec extends FlatSpec with Matchers {
+class OppijaResourceLoadSpec extends AnyFlatSpec with Matchers {
 
   behavior of "oppijat-service"
 

@@ -36,7 +36,7 @@ class OppilaitosResource(opiskelijaActor: ActorRef)(implicit
     with QueryLogging {
 
   override protected def applicationDescription: String = "Oppilaitoksen opiskelijat rajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -56,7 +56,7 @@ class OppilaitosResource(opiskelijaActor: ActorRef)(implicit
     val t0 = Platform.currentTime
     implicit val user: User = getUser
 
-    val q = OppilaitoksenOpiskelijatQuery.apply(params)
+    val q = OppilaitoksenOpiskelijatQuery.apply(params.toMap)
 
     audit.log(
       auditUser,
@@ -84,7 +84,7 @@ class OppilaitosResource(opiskelijaActor: ActorRef)(implicit
     val t0 = Platform.currentTime
     implicit val user: User = getUser
 
-    val q = OppilaitoksenOpiskelijatQuery.apply(params)
+    val q = OppilaitoksenOpiskelijatQuery.apply(params.toMap)
 
     audit.log(
       auditUser,

@@ -19,15 +19,17 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver
 import org.joda.time.DateTime
-import org.scalatest.mockito.MockitoSugar.mock
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import support.DbJournals
 
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 import scala.concurrent.{Await, Future}
 
-class OvaraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
+class OvaraServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   private implicit var database: HakurekisteriDriver.backend.Database = _
   private implicit val system = ActorSystem("test-ovara")
