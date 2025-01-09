@@ -163,25 +163,24 @@ class VirkailijaRestClient(
         case (Some(un), Some(pw), true) if koskiMassaluovutusResult =>
           for (
             result <- {
-              //logger.info(s"Sending basic authed koskiMassaluovutusResult query! $url")
               cookies += new DefaultCookie("CSRF", Config.csrf)
               val requestWithCookies =
                 addCookies(requestWithPostHeaders, cookies).toRequest
               val realm = new Realm.Builder(un, pw)
                 .setUsePreemptiveAuth(false)
-                .setScheme(Realm.AuthScheme.NTLM)
+                .setScheme(
+                  Realm.AuthScheme.NTLM
+                ) //Tämä tarvitaan, jotta basic authilla toimivat Koski -> s3 ohjautuvat pyynnöt toimivat
               val basicAuthHeader =
                 "Basic " + Base64.getEncoder.encodeToString((un + ":" + pw).getBytes)
               val requestWithRealm = requestWithCookies.toBuilder
                 .setRealm(realm)
                 .setHeader("Authorization", basicAuthHeader)
                 .build()
-              //logger.info(s"Request before sending: ${requestWithRealm.getRealm}, ${requestWithRealm.getHeaders}, $requestWithRealm")
               internalClient(requestWithRealm, handler)
             }
           ) yield result
         case (Some(un), Some(pw), true) =>
-          //logger.info(s"Sending basic authed query! $url")
           for (
             result <- {
               cookies += new DefaultCookie("CSRF", Config.csrf)
