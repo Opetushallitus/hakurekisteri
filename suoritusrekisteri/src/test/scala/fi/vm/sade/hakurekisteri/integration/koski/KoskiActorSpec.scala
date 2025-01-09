@@ -50,8 +50,8 @@ class KoskiActorSpec
   })
   val koskiDataHandler: KoskiDataHandler = new KoskiDataHandler(testRef, testRef, testRef)
   val opiskelijaParser = new KoskiOpiskelijaParser
-  val params: KoskiSuoritusHakuParams =
-    new KoskiSuoritusHakuParams(saveLukio = true, saveAmmatillinen = false)
+  val params: KoskiSuoritusTallennusParams =
+    new KoskiSuoritusTallennusParams(saveLukio = true, saveAmmatillinen = false)
 
   it should "empty KoskiHenkilo should throw NoSuchElementException" in {
     try {

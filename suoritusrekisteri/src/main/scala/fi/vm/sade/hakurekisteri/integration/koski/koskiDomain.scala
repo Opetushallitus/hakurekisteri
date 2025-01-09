@@ -375,7 +375,7 @@ case class Kotiopetusjakso(alku: String, loppu: Option[String])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 
-case class KoskiSuoritusHakuParams(
+case class KoskiSuoritusTallennusParams(
   saveLukio: Boolean = false,
   saveAmmatillinen: Boolean = false,
   saveSeiskaKasiJaValmistava: Boolean = false,

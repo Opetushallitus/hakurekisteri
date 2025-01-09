@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.integration.koski.{
   IKoskiService,
   KoskiService,
-  KoskiSuoritusHakuParams,
+  KoskiSuoritusTallennusParams,
   KoskiUtil
 }
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
@@ -17,7 +17,6 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, Use
 import org.scalatra.{AsyncResult, FutureSupport}
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
-import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 
 class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(implicit
@@ -71,9 +70,9 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
       Changes.EMPTY
     )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotWithAliases(
+      override val is: Future[_] = koskiService.updateHenkilotNew(
         Set(personOid),
-        KoskiSuoritusHakuParams(
+        KoskiSuoritusTallennusParams(
           saveLukio = haeLukio,
           saveAmmatillinen = haeAmmatilliset,
           saveSeiskaKasiJaValmistava = haeSeiskaKasiJaValmistava
@@ -105,9 +104,9 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
       Changes.EMPTY
     )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotWithAliases(
+      override val is: Future[_] = koskiService.updateHenkilotNew(
         personOids,
-        KoskiSuoritusHakuParams(
+        KoskiSuoritusTallennusParams(
           saveLukio = haeLukio,
           saveAmmatillinen = haeAmmatilliset,
           saveSeiskaKasiJaValmistava = haeSeiskaKasiJaValmistava
@@ -137,7 +136,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
     new AsyncResult {
       override val is: Future[_] = koskiService.syncHaunHakijat(
         hakuOid,
-        KoskiSuoritusHakuParams(
+        KoskiSuoritusTallennusParams(
           saveLukio = haeLukio,
           saveAmmatillinen = haeAmmatilliset,
           saveSeiskaKasiJaValmistava = haeSeiskaKasiJaValmistava
@@ -145,5 +144,4 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
       )
     }
   }
-
 }
