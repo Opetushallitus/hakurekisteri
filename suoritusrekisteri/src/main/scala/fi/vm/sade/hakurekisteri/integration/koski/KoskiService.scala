@@ -395,20 +395,24 @@ class KoskiService(
     saveSuoritusBatchWithRetries(retries)
   }
 
+  private def callKoskiToCreateMassaluovutusQuery(queryParams: KoskiMassaluovutusQueryParams): Future[KoskiMassaluovutusQueryResponse] = {
+    virkailijaRestClient
+      .postObjectWithCodes[KoskiMassaluovutusQueryParams, KoskiMassaluovutusQueryResponse](
+        "koski.sure.massaluovutus.create-query",
+        Seq(200),
+        maxRetries = 2,
+        resource = queryParams,
+        basicAuth = true
+      )
+  }
+
   private def createAndHandleKoskiMassaluovutusQuery(
     koskiQuery: KoskiMassaluovutusQueryParams,
     params: KoskiSuoritusTallennusParams
   ): Future[KoskiProcessingResults] = {
     try {
       logger.info(s"Kutsutaan Kosken massaluovutusrajapintaa: $koskiQuery")
-      val resultF = virkailijaRestClient
-        .postObjectWithCodes[KoskiMassaluovutusQueryParams, KoskiMassaluovutusQueryResponse](
-          "koski.sure.massaluovutus.create-query",
-          Seq(200),
-          maxRetries = 2,
-          resource = koskiQuery,
-          basicAuth = true
-        )
+      val resultF = callKoskiToCreateMassaluovutusQuery(koskiQuery)
         .flatMap((baseQueryResponse: KoskiMassaluovutusQueryResponse) => {
           logger.info(
             s"Saatiin vastaus massaluovutusrajapinnalta: ${baseQueryResponse
@@ -473,7 +477,7 @@ class KoskiService(
           logger.info(
             s"Pollataan lisää piakkoin! Koskessa valmiina ${previousPollResult.map(_.files).getOrElse(Seq.empty).size}"
           )
-          Thread.sleep(5000)
+          Thread.sleep(params.massaluovutusPollWaitMillis)
           pollMassaluovutus(resultsUrl)
       }
       pollResultF.flatMap(massaluovutusQueryResponse => {
@@ -578,7 +582,7 @@ class KoskiService(
         Future.successful(KoskiProcessingResults(Set[String](), Set[String]()))
       ) { case (accFuture, (oidBatch, batchNr)) =>
         accFuture.flatMap(accResult => {
-          logger.info(s"Käsitellään erä ${batchNr + 1}/${groupedOids.size + 1}")
+          logger.info(s"Käsitellään erä ${batchNr + 1}/${groupedOids.size}")
           createAndHandleKoskiMassaluovutusQuery(
             KoskiMassaluovutusQueryParams(
               "sure-oppijat",
