@@ -14,6 +14,7 @@ case class KoskiHenkiloContainer(
 
 case class KoskiHenkilo(
   oid: Option[String],
+  kaikkiOidit: Option[Seq[String]],
   hetu: Option[String],
   syntymäaika: Option[String],
   etunimet: Option[String],

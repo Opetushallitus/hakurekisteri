@@ -200,7 +200,7 @@ class KoskiActorSpec
   }
   object HenkiloContainer {
     def apply(): HenkiloContainerBuilder = HenkiloContainerBuilder(
-      KoskiHenkilo(None, Some(""), None, Some(""), Some(""), Some("")),
+      KoskiHenkilo(None, None, Some(""), None, Some(""), Some(""), Some("")),
       Seq(),
       ""
     )
