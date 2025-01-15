@@ -649,7 +649,7 @@ class KoskiService(
       val groupedOids: Seq[(Set[String], Int)] =
         oppijaOids.grouped(massaluovutusMaxOppijaOids).zipWithIndex.toSeq
       logger.info(s"Haetaan Koski-tiedot ${oppijaOids.size} oppijalle ${groupedOids.size} erässä")
-      groupedOids.foldLeft(
+      val result = groupedOids.foldLeft(
         Future.successful(KoskiProcessingResults(Set[String](), Set[String]()))
       ) { case (accFuture, (oidBatch, batchNr)) =>
         accFuture.flatMap(accResult => {
@@ -671,6 +671,19 @@ class KoskiService(
           )
         })
       }
+      result.onComplete {
+        case Success(processingResults) =>
+          logger.info(
+            s"handleKoskiRefreshForOppijaOids : saatiin käsiteltyä Koski-tiedot ${oppijaOids.size} oppijalle. Onnistuneita ${processingResults.succeededHenkiloOids.size}, epäonnistuneita ${processingResults.failedHenkiloOids.size}. ${processingResults
+              .getFailedStr()}"
+          )
+        case Failure(f) =>
+          logger.error(
+            s"handleKoskiRefreshForOppijaOids : jotain meni vikaan muutosten käsittelyssä ${oppijaOids.size} oppijalle.  ${f.getMessage}",
+            f
+          )
+      }
+      result
     }
   }
 
