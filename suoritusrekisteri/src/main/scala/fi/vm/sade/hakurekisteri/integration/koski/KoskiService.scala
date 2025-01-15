@@ -363,13 +363,13 @@ class KoskiService(
   def resolveKoulusivistyskieletFromMassaluovutus(
     resultsUrl: String
   ): Future[Map[String, Seq[String]]] = {
-    pollMassaluovutus(resultsUrl).flatMap(result => {
+    pollMassaluovutus(resultsUrl).flatMap((result: KoskiMassaluovutusQueryResponse) => {
       if (result.isFailed()) {
         logger.error(s"Virhe Kosken päässä massaluovutuskyselyssä $resultsUrl: ${result}")
         throw new RuntimeException(s"Virhe Kosken päässä massaluovutuskyselyssä $resultsUrl")
       } else if (result.isFinished()) {
         logger.info(
-          s"Valmista Kosken päässä, voidaan hakea koulusivistyskielet. Tiedostoja yhteensä ${result.files.size}"
+          s"Valmista Kosken päässä, voidaan hakea koulusivistyskielet. Tiedostoja yhteensä ${result.files.size}. $result"
         )
         result.files.foldLeft(
           Future.successful(Map[String, Seq[String]]())
@@ -591,6 +591,7 @@ class KoskiService(
   }
 
   def pollMassaluovutus(url: String) = {
+    logger.info(s"Pollataan massaluovutuskyselyä, url $url")
     virkailijaRestClient
       .readObjectFromUrl[KoskiMassaluovutusQueryResponse](
         url,
