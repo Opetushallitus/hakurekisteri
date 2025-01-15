@@ -532,7 +532,7 @@ object AkkaHakupalvelu {
       har.receptionStatus,
       har.processingStatus,
       name,
-      har.applicationAttachment.address.recipient
+      har.applicationAttachment.address.recipient.getOrElse("")
     )
   }
 
@@ -1462,7 +1462,7 @@ case class Name(translations: Translations)
 case class Header(translations: Translations)
 
 case class Address(
-  recipient: String,
+  recipient: Option[String],
   streetAddress: Option[String],
   postalCode: Option[String],
   postOffice: Option[String]
