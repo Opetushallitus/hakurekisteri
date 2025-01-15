@@ -1012,16 +1012,10 @@ class HakemusService(
         "haku-app.personoidsbyapplicationsystem",
         organisaatio.orNull
       )(200, Set(hakuOid))
-      ataruHakemukset: Seq[AtaruHakemus] <- ataruhakemukset(
-        AtaruSearchParams(
-          hakijaOids = None,
-          hakukohdeOids = None,
-          hakuOid = Some(hakuOid),
-          organizationOid = organisaatio,
-          modifiedAfter = None
-        )
+      ataruPersonOids: Set[String] <- hetuAndPersonOidForHakuLite(hakuOid).map(
+        _.map(_.personOid).toSet
       )
-    } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
+    } yield hakuappPersonOids ++ ataruPersonOids
   }
 
   override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = {
