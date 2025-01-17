@@ -151,9 +151,11 @@ class KoskiService(
       )
     } else {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
-        logger.info(s"refreshChangedOppijasFromKoski activating!")
         //vvvv-kk-ppThh:mm:ss
-        val muuttunutJalkeenStr = KoskiUtil.koskiFetchStartTime
+        val muuttunutJalkeenStr = lastQueryStart.getOrElse(KoskiUtil.koskiFetchStartTime)
+        logger.info(
+          s"refreshChangedOppijasFromKoski käynnistyy! Käsitellään muuttuneet $muuttunutJalkeenStr"
+        )
         val thisQueryStart = new SimpleDateFormat(
           "yyyy-MM-dd'T'HH:mm:ss"
         ) //tästä tulee seuraavan iteraation aloitushetki
