@@ -1,0 +1,14 @@
+{
+  "queryId" : "1bdbcd75-298a-46be-9500-237e1f2626d5",
+  "requestedBy" : "1.2.246.562.24.43116640405",
+  "query" : {
+    "type" : "sure-muuttuneet",
+    "format" : "application/json",
+    "muuttuneetJälkeen" : "2024-12-31T15:25:44"
+  },
+  "createdAt" : "2025-01-20T15:25:44.478091+02:00",
+  "startedAt" : "2025-01-20T15:25:45.987650+02:00",
+  "finishedAt" : "2025-01-20T15:29:19.077071+02:00",
+  "files" : [ "https://localhost/koski/api/massaluovutus/1bdbcd75-298a-46be-9500-237e1f2626d5/0.json", "https://localhost/koski/api/massaluovutus/1bdbcd75-298a-46be-9500-237e1f2626d5/1.json"],
+  "status" : "complete"
+}
