@@ -435,7 +435,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     rekisterit.opiskelijaRekisteri
   )(system.dispatcher)
   val koskiService =
-    new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler, config)(
+    new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler)(
       system
     )
   val koosteService = new KoosteService(koosteClient)(system)

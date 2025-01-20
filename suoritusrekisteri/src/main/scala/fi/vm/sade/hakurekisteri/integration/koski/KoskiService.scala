@@ -69,9 +69,7 @@ class KoskiService(
   virkailijaRestClient: VirkailijaRestClient,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
   hakemusService: IHakemusService,
-  koskiDataHandler: KoskiDataHandler,
-  config: Config,
-  pageSize: Int = 200
+  koskiDataHandler: KoskiDataHandler
 )(implicit val system: ActorSystem)
     extends IKoskiService {
   implicit val ec: ExecutionContextExecutorService =
