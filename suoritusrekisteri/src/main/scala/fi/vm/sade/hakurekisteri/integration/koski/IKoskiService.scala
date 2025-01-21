@@ -26,16 +26,6 @@ trait IKoskiService {
 
   def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusTallennusParams): Future[Unit]
 
-  def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusTallennusParams
-  ): Future[(Seq[String], Seq[String])]
-
-  def updateHenkilotWithAliases(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusTallennusParams
-  ): Future[(Seq[String], Seq[String])]
-
   def fetchKoulusivistyskielet(oppijaOids: Seq[String]): Future[Map[String, Seq[String]]]
 
   def fetchOppivelvollisuusTietos(oppijaOids: Seq[String]): Future[Seq[OppivelvollisuusTieto]]
@@ -47,12 +37,12 @@ trait IKoskiService {
 
   def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit
 
-  def updateHenkilotNew(
+  def handleKoskiRefreshForOppijaOids(
     oppijaOids: Set[String],
     params: KoskiSuoritusTallennusParams
   ): Future[KoskiProcessingResults]
 
-  def updateHenkilotNewMuuttunutJalkeen(
+  def handleKoskiRefreshMuuttunutJalkeen(
     muuttunutJalkeen: String,
     params: KoskiSuoritusTallennusParams
   ): Future[KoskiProcessingResults]
@@ -66,14 +56,6 @@ class KoskiServiceMock extends IKoskiService {
   override def updateAktiivisetKkAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit = () => ()
-  override def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusTallennusParams
-  ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
-  override def updateHenkilotWithAliases(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusTallennusParams
-  ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
 
   override def fetchOppivelvollisuusTietos(
     oppijaOids: Seq[String]
@@ -98,12 +80,12 @@ class KoskiServiceMock extends IKoskiService {
     params: KoskiSuoritusTallennusParams
   ): Future[Unit] = ???
 
-  override def updateHenkilotNew(
+  override def handleKoskiRefreshForOppijaOids(
     oppijaOids: Set[String],
     params: KoskiSuoritusTallennusParams
   ): Future[KoskiProcessingResults] = ???
 
-  override def updateHenkilotNewMuuttunutJalkeen(
+  override def handleKoskiRefreshMuuttunutJalkeen(
     muuttunutJalkeen: String,
     params: KoskiSuoritusTallennusParams
   ): Future[KoskiProcessingResults] = ???
