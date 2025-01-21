@@ -1146,17 +1146,14 @@ class HakemusService(
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
       logger.info(
-        "processModifiedHakemukset : Fetching modified hakemukses from haku-app and ataru, " +
+        "processModifiedHakemukset : Fetching modified hakemukses from ataru, " +
           s"modified since $formattedDate"
       )
       val allApplications: Future[List[HakijaHakemus]] = for {
-        hakuappApplications: Seq[FullHakemus] <- fetchHakemuksetChunked(
-          params = SearchParams(updatedAfter = formattedDate)
-        )
         ataruApplications: List[HakijaHakemus] <- ataruhakemukset(
           AtaruSearchParams(None, None, None, None, Some(formattedDate))
         )
-      } yield hakuappApplications.toList ::: ataruApplications
+      } yield ataruApplications
       allApplications
         .flatMap(aa => {
           logger.info(
