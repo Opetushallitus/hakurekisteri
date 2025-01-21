@@ -1061,14 +1061,14 @@ class HakemusService(
         hakukohdeOids = None,
         hakuOid = Some(hakuOid)
       )
-    ).map(result => {
-      logger.info(s"Saatiin atarusta henkilötiedot ${result.size} hakemukselta")
+    ).map((result: Seq[AtaruHakemuksenHenkilotiedot]) => {
+      logger.info(s"Saatiin atarusta henkilötiedot ${result.size} hakemukselta haulle $hakuOid")
       val hetuJaPersonOidTiedossa: Seq[HetuPersonOid] =
         result.collect({ case AtaruHakemuksenHenkilotiedot(_, Some(personOid), Some(ssn)) =>
           HetuPersonOid(ssn, personOid)
         })
       logger.info(
-        s"Hetu ja personOid tiedossa ${hetuJaPersonOidTiedossa.size} hakemukselle ${result.size} hakemuksesta"
+        s"Hetu ja personOid tiedossa ${hetuJaPersonOidTiedossa.size} hakemukselle ${result.size} hakemuksesta haulle $hakuOid"
       )
       hetuJaPersonOidTiedossa
     })

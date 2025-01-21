@@ -70,7 +70,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
       Changes.EMPTY
     )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotNew(
+      override val is: Future[_] = koskiService.handleKoskiRefreshForOppijaOids(
         Set(personOid),
         KoskiSuoritusTallennusParams(
           saveLukio = haeLukio,
@@ -104,7 +104,7 @@ class KoskiImporterResource(koskiService: IKoskiService, ophConfig: Config)(impl
       Changes.EMPTY
     )
     new AsyncResult {
-      override val is: Future[_] = koskiService.updateHenkilotNew(
+      override val is: Future[_] = koskiService.handleKoskiRefreshForOppijaOids(
         personOids,
         KoskiSuoritusTallennusParams(
           saveLukio = haeLukio,
