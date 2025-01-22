@@ -126,7 +126,6 @@ class VirkailijaRestClient(
       basicAuth: Boolean = false,
       koskiMassaluovutusResult: Boolean = false
     )(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
-      //logger.info(s"request to $url")
       val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
 

@@ -760,10 +760,9 @@ class KoskiService(
       )
     }
     val henkiloOidToHenkilo: Future[Map[String, Henkilo]] =
-      if (params.saveSeiskaKasiJaValmistava) {
-        logger.info(s"hep! Haetaan lisää onr-dataa...")
+      if (params.saveSeiskaKasiJaValmistava)
         oppijaNumeroRekisteri.getByOids(loytyyHenkiloOidi.flatMap(_.henkilö.oid).toSet)
-      } else
+      else
         Future.successful(Map.empty)
 
     henkiloOidToHenkilo.flatMap(henkilot =>
