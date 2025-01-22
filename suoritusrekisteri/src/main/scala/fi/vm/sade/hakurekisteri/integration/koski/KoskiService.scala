@@ -294,15 +294,10 @@ class KoskiService(
     syncHaunHakijat(hakuOid, params, hakuOid => hakemusService.personOidsForHaku(hakuOid, None))
   }
 
+  //Palautetaan map, joka sisältää saman koulusivistyskielen kaikille henkilön aliaksille.
   def koulusivistyskieletForAliases(koskiData: KoskiHenkiloContainer): Map[String, Seq[String]] = {
-    val kaikkiOidit = (koskiData.henkilö.oid, koskiData.henkilö.kaikkiOidit) match {
-      case (_, Some(kaikkiOidit)) =>
-        kaikkiOidit //Todo, varmista että masterOid on kaikissa oideissa mukana. Mut eiköhän ole. Voi yksinkertaistaa päättelyä myös jos kaikkiOidit palautuvat aina.
-      case (Some(oid), _) => Seq(oid)
-      case _              => Seq.empty
-    }
     val koulusivistyskieli = resolveKoulusivistyskieli(koskiData)
-    kaikkiOidit.map(oid => oid -> koulusivistyskieli).toMap
+    koskiData.henkilö.kaikkiOidit.getOrElse(Seq.empty).map(oid => oid -> koulusivistyskieli).toMap
   }
 
   def fetchKoulusivistyskieletMassa(oppijaOids: Set[String]): Future[Map[String, Seq[String]]] = {
