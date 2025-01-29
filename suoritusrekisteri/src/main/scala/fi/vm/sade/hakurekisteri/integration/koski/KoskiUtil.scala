@@ -25,7 +25,7 @@ object KoskiUtil {
       case s: String if s.length == 19 => s
       case _ =>
         new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-          .format(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3)))
+          .format(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
     }
 
   lazy val koskiImporterResourceInUse: Boolean =

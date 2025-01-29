@@ -381,5 +381,5 @@ case class KoskiSuoritusTallennusParams(
   saveAmmatillinen: Boolean = false,
   saveSeiskaKasiJaValmistava: Boolean = false,
   retryWaitMillis: Long = 10000,
-  massaluovutusPollWaitMillis: Long = 2500
+  massaluovutusPollWaitMillis: Long = 5000
 )
