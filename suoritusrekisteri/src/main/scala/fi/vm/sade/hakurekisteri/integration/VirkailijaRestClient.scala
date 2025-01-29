@@ -487,7 +487,6 @@ object JsonExtractor extends HakurekisteriJsonSupport {
         val reader = new InputStreamReader(resp.getResponseBodyAsStream)
         Try(read[T](reader)).recover { case t: Throwable =>
           val logger = Logging.getLogger(system, this)
-          logger.error(s"Tried to parse ${resp.getResponseBody}")
           logger.error(s"Error when parsing data from ${resp.getUri}: ${t.getMessage}")
           reader.close()
           throw t
