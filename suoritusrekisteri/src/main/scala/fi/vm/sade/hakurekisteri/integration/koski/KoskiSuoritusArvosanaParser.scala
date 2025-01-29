@@ -652,7 +652,7 @@ class KoskiSuoritusArvosanaParser {
               logger.info(
                 "Henkilön {} keskeytyneeltä peruskoulusuoritukselta, oppilaitosOid: {} puuttuu keskeytymipäivämäärä, käytetään opiskeluoikeuden aikaleimaa: {}",
                 personOid,
-                suoritus.toimipiste.get.oid.getOrElse("Puuttuva organisaatioOid"),
+                suoritus.toimipiste.map(_.oid).getOrElse("Puuttuva organisaatioOid"),
                 LocalDateTime.parse(opiskeluoikeus.aikaleima.get)
               )
               LocalDateTime.parse(opiskeluoikeus.aikaleima.get)
@@ -660,7 +660,7 @@ class KoskiSuoritusArvosanaParser {
               logger.info(
                 "Henkilön {} keskeytyneeltä peruskoulusuoritukselta, oppilaitosOid: {} puuttuu keskeytymipäivämäärä ja opiskeluoikeuden aikaleima. Käytetään siirtopäivämäärää: {}",
                 personOid,
-                suoritus.toimipiste.get.oid.getOrElse("Puuttuva organisaatioOid"),
+                suoritus.toimipiste.map(_.oid).getOrElse("Puuttuva organisaatioOid"),
                 LocalDateTime.now()
               )
               LocalDateTime.now()
