@@ -103,7 +103,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     }
 
   override def getAll(ids: Seq[I]): Seq[R with Identified[I]] =
-    Await.result(journal.db.run(all.filter(_.resourceId.inSet(ids)).result), 60.seconds).collect {
+    Await.result(journal.db.run(all.filter(_.resourceId.inSet(ids)).result), 120.seconds).collect {
       case Updated(res) => res
     }
 

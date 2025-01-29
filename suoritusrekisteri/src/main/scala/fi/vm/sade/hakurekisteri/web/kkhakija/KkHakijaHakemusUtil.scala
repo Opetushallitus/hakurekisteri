@@ -302,7 +302,7 @@ object KkHakijaHakemusUtil {
         a.receptionStatus,
         a.processingStatus,
         getLiitteenNimi(a.applicationAttachment),
-        a.applicationAttachment.address.recipient
+        a.applicationAttachment.address.recipient.getOrElse("")
       )
     )
     liitteet match {
