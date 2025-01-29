@@ -124,7 +124,7 @@ class VirkailijaRestClient(
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
       url: String,
       basicAuth: Boolean = false,
-      koskiMassaluovutusResult: Boolean = false
+      useNTLM: Boolean = false
     )(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
@@ -159,7 +159,7 @@ class VirkailijaRestClient(
               internalClient(requestWithCookies, handler)
             }
           ) yield result
-        case (Some(un), Some(pw), true) if koskiMassaluovutusResult =>
+        case (Some(un), Some(pw), true) if useNTLM =>
           for (
             result <- {
               cookies += new DefaultCookie("CSRF", Config.csrf)
@@ -210,7 +210,7 @@ class VirkailijaRestClient(
   private def tryClient[A <: AnyRef: Manifest](
     url: String,
     basicAuth: Boolean = false,
-    koskiMassaluovutusResult: Boolean = false
+    useNTLM: Boolean = false
   )(
     acceptedResponseCodes: Seq[Int],
     maxRetries: Int,
@@ -218,7 +218,7 @@ class VirkailijaRestClient(
     retryOnceOn502: Boolean = true
   ): Future[A] =
     Client
-      .request[A, A](url, basicAuth, koskiMassaluovutusResult)(
+      .request[A, A](url, basicAuth, useNTLM)(
         JsonExtractor.handler[A](acceptedResponseCodes: _*)
       )
       .recoverWith {
@@ -379,13 +379,19 @@ class VirkailijaRestClient(
     readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
   }
 
-  def readKoskiMassaluovutusResultFromUrl[A <: AnyRef: Manifest](
+  def readFileFromUrlWithBasicAuth[A <: AnyRef: Manifest](
     url: String,
     acceptedResponseCodes: Seq[Int],
-    maxRetries: Int = 0
+    maxRetries: Int = 0,
+    useNTLM: Boolean = true
   ): Future[A] = {
     val retryCount = new AtomicInteger(1)
-    val result = tryClient[A](url, true, true)(acceptedResponseCodes, maxRetries, retryCount)
+    val result =
+      tryClient[A](url, basicAuth = true, useNTLM = useNTLM)(
+        acceptedResponseCodes,
+        maxRetries,
+        retryCount
+      )
     logLongQuery(result, url)
     result
   }
