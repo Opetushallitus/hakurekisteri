@@ -557,10 +557,11 @@ class KoskiService(
     try {
       logger.info(s"Haetaan massaluovutus-tulostiedosto $fileUrl")
       val koskiTiedotF = virkailijaRestClient
-        .readKoskiMassaluovutusResultFromUrl[Seq[KoskiMassaluovutusFileResult]](
+        .readFileFromUrlWithBasicAuth[Seq[KoskiMassaluovutusFileResult]](
           fileUrl,
           Seq(200),
-          maxRetries = 2
+          maxRetries = 2,
+          useNTLM = true
         )
         .map((koskiTiedotResult: Seq[KoskiMassaluovutusFileResult]) => {
           val henkiloContainers: Seq[KoskiHenkiloContainer] = koskiTiedotResult
