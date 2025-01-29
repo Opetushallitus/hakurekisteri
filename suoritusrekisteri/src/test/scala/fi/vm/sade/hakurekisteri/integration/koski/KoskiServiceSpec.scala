@@ -47,6 +47,7 @@ class KoskiServiceSpec
     koskiDataHandler = koskiDatahandler
   ) {
 
+    //This mock succeeds with everything else except unlucky 1.2.246.562.24.01234512345
     override def saveKoskiDataWithRetries(
       data: Seq[KoskiHenkiloContainer],
       params: KoskiSuoritusTallennusParams,
@@ -54,10 +55,13 @@ class KoskiServiceSpec
       retries: Int
     ): Future[KoskiProcessingResults] = {
       logger.info(s"Mocking saveKoskiDataWithRetries for ${data.size} containers, params $params")
+      val henkiloOids = data.map(_.henkilö.oid.getOrElse("no-oid-found")).toSet
+      val (failed, succeeded) =
+        henkiloOids.partition(oid => "1.2.246.562.24.01234512345".equals(oid))
       Future.successful(
         KoskiProcessingResults(
-          succeededHenkiloOids = data.map(_.henkilö.oid.getOrElse("no-oid-found")).toSet,
-          failedHenkiloOids = Set.empty
+          succeededHenkiloOids = succeeded,
+          failedHenkiloOids = failed
         )
       )
     }
@@ -110,7 +114,7 @@ class KoskiServiceSpec
           List(),
           readJsonFile(
             "massaluovutus_sure_muuttuneet_query_kesken.json"
-          ) //Sisältää yhden valmiin tiedosto-urlia
+          ) //Sisältää yhden valmiin tiedosto-urlin
         ),
         (
           200,
@@ -151,8 +155,8 @@ class KoskiServiceSpec
         )
       )
 
-    val future = koskiService.handleKoskiRefreshForOppijaOids(
-      Set("1.2.246.562.24.83121267367"),
+    val future = koskiService.handleKoskiRefreshMuuttunutJalkeen(
+      "2024-04-02'T'14:22:11",
       KoskiSuoritusTallennusParams(
         saveLukio = true,
         saveAmmatillinen = true,
@@ -160,7 +164,7 @@ class KoskiServiceSpec
       )
     )
     val finalResult = Await.result(future, 10.seconds)
-    finalResult.failedHenkiloOids.size should equal(0)
-    finalResult.succeededHenkiloOids.size should equal(20)
+    finalResult.failedHenkiloOids.size should equal(1)
+    finalResult.succeededHenkiloOids.size should equal(19)
   }
 }
