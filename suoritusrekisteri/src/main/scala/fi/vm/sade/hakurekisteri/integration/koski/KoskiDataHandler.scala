@@ -130,7 +130,9 @@ class KoskiDataHandler(
       if (
         !suoritus.laajuusVahintaan(19)
         && opiskeluoikeus.tila.opiskeluoikeusjaksot
-          .exists(ooj => KoskiUtil.eiHalututAlleVaaditunPistemaaranTilat.contains(ooj.tila.koodiarvo))
+          .exists(ooj =>
+            KoskiUtil.eiHalututAlleVaaditunPistemaaranTilat.contains(ooj.tila.koodiarvo)
+          )
       ) {
         logger.info(
           s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka sisälsi alle 19 opintoviikkoa.ja " +
