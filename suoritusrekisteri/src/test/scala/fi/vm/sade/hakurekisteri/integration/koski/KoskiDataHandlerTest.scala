@@ -5853,7 +5853,7 @@ class KoskiDataHandlerTest
       koskiDatahandler.processHenkilonTiedotKoskesta(
         henkilo,
         PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
-        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+        new KoskiSuoritusTallennusParams(saveLukio = false, saveAmmatillinen = false)
       ),
       5.seconds
     )
