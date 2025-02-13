@@ -101,7 +101,7 @@ object KoskiUtil {
 
   val AIKUISTENPERUS_LUOKKAASTE = "AIK"
 
-  val eiHalututAlle30opValmaTilat =
+  val eiHalututAlleVaaditunPistemaaranTilat =
     Set("eronnut", "erotettu", "katsotaaneronneeksi", "mitatoity", "peruutettu", "valmistunut")
 
   val eronneeseenRinnastettavatKoskiTilat =

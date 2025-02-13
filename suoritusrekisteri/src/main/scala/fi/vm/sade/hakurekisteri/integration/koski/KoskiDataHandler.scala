@@ -104,7 +104,7 @@ class KoskiDataHandler(
       suoritus.tyyppi.exists(_.koodiarvo == "valma")
       && !suoritus.laajuusVahintaan(30)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
-        .exists(ooj => KoskiUtil.eiHalututAlle30opValmaTilat.contains(ooj.tila.koodiarvo))
+        .exists(ooj => KoskiUtil.eiHalututAlleVaaditunPistemaaranTilat.contains(ooj.tila.koodiarvo))
     ) {
       logger.info(
         s"Filtteröitiin henkilöltä $henkiloOid valma-suoritus, joka sisälsi alle 30 osp ja " +
@@ -117,11 +117,11 @@ class KoskiDataHandler(
       suoritus.isOpistovuosi()
       && !suoritus.laajuusVahintaan(26.5)
       && opiskeluoikeus.tila.opiskeluoikeusjaksot
-        .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+        .exists(ooj => KoskiUtil.eiHalututAlleVaaditunPistemaaranTilat.contains(ooj.tila.koodiarvo))
     ) {
       logger.info(
         s"Filtteröitiin henkilöltä $henkiloOid opistovuosi oppivelvollisille-suoritus, joka sisälsi alle 26,5 osp ja " +
-          s"kuului eronneeseen rinnastettaviin tiloihin."
+          s"kuului eronneeseen rinnastettaviin tiloihin tai oli valmis."
       )
       return false
     }
@@ -130,17 +130,19 @@ class KoskiDataHandler(
       if (
         !suoritus.laajuusVahintaan(19)
         && opiskeluoikeus.tila.opiskeluoikeusjaksot
-          .exists(ooj => KoskiUtil.eronneeseenRinnastettavatKoskiTilat.contains(ooj.tila.koodiarvo))
+          .exists(ooj =>
+            KoskiUtil.eiHalututAlleVaaditunPistemaaranTilat.contains(ooj.tila.koodiarvo)
+          )
       ) {
         logger.info(
           s"Filtteröitiin henkilöltä $henkiloOid tuva-suoritus, joka sisälsi alle 19 opintoviikkoa.ja " +
-            s"kuului eronneeseen rinnastettaviin tiloihin."
+            s"kuului eronneeseen rinnastettaviin tiloihin tai oli valmis."
         )
         return false
       }
       if (!suoritus.laajuusVahintaan(19) && KoskiUtil.isBeforeTuvaStartDate(lasnaDate.get)) {
         logger.info(
-          s"Filtteröitiin henkilöltä $henkiloOid keskeneräinen tuva-suoritus, joka on alkanut ennen viime vuoden elokuun ensimmäistä päivää."
+          s"Filtteröitiin henkilöltä $henkiloOid keskeneräinen tuva-suoritus, joka on alkanut ennen viime vuoden tammikuun ensimmäistä päivää."
         )
         return false
       }
