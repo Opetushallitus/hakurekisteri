@@ -23,7 +23,7 @@
         <scalatra.version>3.0.0-M5-jakarta</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.6</json4s.version>
-        <netty.version>4.1.115.Final</netty.version>
+        <netty.version>4.1.118.Final</netty.version>
         <jetty.version>11.0.24</jetty.version>
         <jetty.server.version>9.4.56.v20240826</jetty.server.version>
         <dokumenttipalvelu.version>6.13-SNAPSHOT</dokumenttipalvelu.version>
