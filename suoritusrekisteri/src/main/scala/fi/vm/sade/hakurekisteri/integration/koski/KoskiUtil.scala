@@ -19,12 +19,12 @@ object KoskiUtil {
     new LocalDate(deadlineDate.year().get() - 1, 1, 1)
   }
 
-  //format "2020-06-01T00:00:00+02:00"
+  //"2024-12-17T10:55:33" massaluovutsrajapinnan käyttämä formaatti
   lazy val koskiFetchStartTime: String =
     OphUrlProperties.getProperty("suoritusrekisteri.koski.start.timestamp") match {
-      case s: String if !s.isEmpty => s
+      case s: String if s.length == 19 => s
       case _ =>
-        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
           .format(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
     }
 

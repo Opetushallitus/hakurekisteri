@@ -20,33 +20,32 @@ trait IKoskiService {
 
   def syncHaunHakijat(
     hakuOid: String,
-    params: KoskiSuoritusHakuParams,
+    params: KoskiSuoritusTallennusParams,
     personOidsForHakuFn: String => Future[Set[String]]
   ): Future[Unit]
 
-  def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit]
-
-  def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])]
-
-  def updateHenkilotWithAliases(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])]
+  def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusTallennusParams): Future[Unit]
 
   def fetchKoulusivistyskielet(oppijaOids: Seq[String]): Future[Map[String, Seq[String]]]
 
   def fetchOppivelvollisuusTietos(oppijaOids: Seq[String]): Future[Seq[OppivelvollisuusTieto]]
 
   def refreshChangedOppijasFromKoski(
-    cursor: Option[String] = None,
-    timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
+    lastQueryStart: Option[String],
+    timeToWaitUntilNextBatch: FiniteDuration = 10.seconds
   )(implicit scheduler: Scheduler): Unit
 
   def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit
 
+  def handleKoskiRefreshForOppijaOids(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults]
+
+  def handleKoskiRefreshMuuttunutJalkeen(
+    muuttunutJalkeen: String,
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults]
 }
 
 class KoskiServiceMock extends IKoskiService {
@@ -57,14 +56,6 @@ class KoskiServiceMock extends IKoskiService {
   override def updateAktiivisetKkAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenHaut(): () => Unit = () => ()
   override def updateAktiivisetToisenAsteenJatkuvatHaut(): () => Unit = () => ()
-  override def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
-  override def updateHenkilotWithAliases(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])] = Future.successful(Seq[String](), Seq[String]())
 
   override def fetchOppivelvollisuusTietos(
     oppijaOids: Seq[String]
@@ -80,9 +71,22 @@ class KoskiServiceMock extends IKoskiService {
   ): Future[Map[String, Seq[String]]] = Future.successful(Map[String, Seq[String]]())
   override def syncHaunHakijat(
     hakuOid: String,
-    params: KoskiSuoritusHakuParams,
+    params: KoskiSuoritusTallennusParams,
     personOidsForHakuFn: String => Future[Set[String]]
   ): Future[Unit] = ???
 
-  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams): Future[Unit] = ???
+  override def syncHaunHakijat(
+    hakuOid: String,
+    params: KoskiSuoritusTallennusParams
+  ): Future[Unit] = ???
+
+  override def handleKoskiRefreshForOppijaOids(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults] = ???
+
+  override def handleKoskiRefreshMuuttunutJalkeen(
+    muuttunutJalkeen: String,
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults] = ???
 }

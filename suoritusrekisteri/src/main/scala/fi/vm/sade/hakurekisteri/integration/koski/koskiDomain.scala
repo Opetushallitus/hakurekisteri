@@ -14,6 +14,7 @@ case class KoskiHenkiloContainer(
 
 case class KoskiHenkilo(
   oid: Option[String],
+  kaikkiOidit: Option[Seq[String]],
   hetu: Option[String],
   syntymäaika: Option[String],
   etunimet: Option[String],
@@ -375,9 +376,10 @@ case class Kotiopetusjakso(alku: String, loppu: Option[String])
 
 case class KoskiErityisenTuenPaatos(opiskeleeToimintaAlueittain: Option[Boolean])
 
-case class KoskiSuoritusHakuParams(
+case class KoskiSuoritusTallennusParams(
   saveLukio: Boolean = false,
   saveAmmatillinen: Boolean = false,
   saveSeiskaKasiJaValmistava: Boolean = false,
-  retryWaitMillis: Long = 10000
+  retryWaitMillis: Long = 10000,
+  massaluovutusPollWaitMillis: Long = 5000
 )
