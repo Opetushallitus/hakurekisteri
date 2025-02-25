@@ -23,7 +23,7 @@
         <scalatra.version>3.0.0-M5-jakarta</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.6</json4s.version>
-        <netty.version>4.1.115.Final</netty.version>
+        <netty.version>4.1.118.Final</netty.version>
         <jetty.version>11.0.24</jetty.version>
         <jetty.server.version>9.4.56.v20240826</jetty.server.version>
         <dokumenttipalvelu.version>6.13-SNAPSHOT</dokumenttipalvelu.version>
@@ -294,6 +294,33 @@
                 <artifactId>httpclient</artifactId>
                 <version>1.0.1-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.27.1</version>
+            </dependency>
+
+            <!-- for transitive deps -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.18.0</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>netty-nio-client</artifactId>
+                <version>2.30.26</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>s3</artifactId>
+                <version>2.30.26</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>sts</artifactId>
+                <version>2.30.26</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -357,8 +384,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.19</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
@@ -727,7 +752,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.14.0</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
