@@ -795,7 +795,7 @@ class KoskiDataHandler(
                 Opiskelija(
                   oppilaitosOid = opiskeluoikeus.oppilaitos.get.oid.get,
                   luokkataso = "valmistava",
-                  luokka = "",
+                  luokka = "Valmistava",
                   henkiloOid = henkiloOid,
                   alkuPaiva =
                     opiskeluoikeus.aikaleima.map(al => DateTime.parse(al)).getOrElse(null),
