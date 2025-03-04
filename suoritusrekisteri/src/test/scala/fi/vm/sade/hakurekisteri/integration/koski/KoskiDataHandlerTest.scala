@@ -2036,6 +2036,7 @@ class KoskiDataHandlerTest
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
     opiskelijat.size should equal(1)
+
     val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
     oppilaitos.head should not be empty
     oppilaitos.head should equal("1.2.246.562.10.207119642610")
@@ -3836,6 +3837,7 @@ class KoskiDataHandlerTest
   }
 
   it should "save 8-luokkalainen opiskelija with oppilaitos for 8_luokka_lasna.json" in {
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -3855,10 +3857,14 @@ class KoskiDataHandlerTest
     alkamispaiva.head should equal(
       LocalDate.parse("2021-08-02").toDateTimeAtStartOfDay.getMillis.toString
     )
-
+    val loppupaiva = run(database.run(sql"select loppu_paiva from opiskelija".as[String]))
+    loppupaiva.head should equal(
+      KoskiUtil.deadlineDate.toDateTimeAtStartOfDay.getMillis.toString
+    )
   }
 
   it should "save perusopetukseen valmistava opiskelija for koskidata_perusopetukseen_valmistava.json" in {
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava.json")
@@ -3880,6 +3886,39 @@ class KoskiDataHandlerTest
     val alkamispaiva = run(database.run(sql"select alku_paiva from opiskelija".as[String]))
     alkamispaiva.head should equal(
       DateTime.parse("2021-02-24T14:14:19.627477").getMillis.toString
+    )
+    val loppupaiva = run(database.run(sql"select loppu_paiva from opiskelija".as[String]))
+    loppupaiva.head should equal(
+      KoskiUtil.deadlineDate.toDateTimeAtStartOfDay.getMillis.toString
+    )
+  }
+
+  it should "save Koskideadline as loppupaiva for perusopetukseen valmistava opiskelija with päättymispäivä for koskidata_perusopetukseen_valmistava_loppupvm.json" in {
+    val json: String =
+      scala.io.Source
+        .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_loppupvm.json")
+        .mkString
+    val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    henkilo should not be null
+    henkilo.opiskeluoikeudet.head.tyyppi should not be empty
+
+    Await.result(
+      koskiDatahandler.updateOppilaitosSeiskaKasiJaValmistava(henkilo),
+      5.seconds
+    )
+
+    val opiskelijaCount = run(database.run(sql"select count(*) from opiskelija".as[String]))
+    opiskelijaCount.head should equal("1")
+    val oppilaitos = run(database.run(sql"select oppilaitos_oid from opiskelija".as[String]))
+    oppilaitos.head should not be empty
+    oppilaitos.head should equal("1.2.246.562.10.48771790549")
+    val alkamispaiva = run(database.run(sql"select alku_paiva from opiskelija".as[String]))
+    alkamispaiva.head should equal(
+      DateTime.parse("2024-03-20T06:54:56.321363").getMillis.toString
+    )
+    val loppupaiva = run(database.run(sql"select loppu_paiva from opiskelija".as[String]))
+    loppupaiva.head should equal(
+      KoskiUtil.deadlineDate.toDateTimeAtStartOfDay.getMillis.toString
     )
   }
 

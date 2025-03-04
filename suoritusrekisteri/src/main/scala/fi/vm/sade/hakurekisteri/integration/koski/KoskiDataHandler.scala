@@ -797,9 +797,8 @@ class KoskiDataHandler(
                   luokkataso = "valmistava",
                   luokka = "",
                   henkiloOid = henkiloOid,
-                  alkuPaiva =
-                    opiskeluoikeus.aikaleima.map(al => DateTime.parse(al)).getOrElse(null),
-                  loppuPaiva = None,
+                  alkuPaiva = opiskeluoikeus.aikaleima.map(al => DateTime.parse(al)).orNull,
+                  loppuPaiva = Some(KoskiUtil.deadlineDate.toDateTimeAtStartOfDay),
                   source = KoskiUtil.koski_integration_source
                 )
               case "perusopetus" =>
@@ -817,8 +816,8 @@ class KoskiDataHandler(
                   henkiloOid = henkiloOid,
                   alkuPaiva = opiskeluoikeus.getSeiskaKasiluokanAlkamispaiva
                     .map(ap => ap.toDateTimeAtStartOfDay)
-                    .getOrElse(null),
-                  loppuPaiva = None,
+                    .orNull,
+                  loppuPaiva = Some(KoskiUtil.deadlineDate.toDateTimeAtStartOfDay),
                   source = KoskiUtil.koski_integration_source
                 )
             }
