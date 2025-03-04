@@ -3837,6 +3837,7 @@ class KoskiDataHandlerTest
   }
 
   it should "save 8-luokkalainen opiskelija with oppilaitos for 8_luokka_lasna.json" in {
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
     val henkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
     henkilo should not be null
@@ -3863,6 +3864,7 @@ class KoskiDataHandlerTest
   }
 
   it should "save perusopetukseen valmistava opiskelija for koskidata_perusopetukseen_valmistava.json" in {
+    KoskiUtil.deadlineDate = LocalDate.now().plusDays(30)
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava.json")
