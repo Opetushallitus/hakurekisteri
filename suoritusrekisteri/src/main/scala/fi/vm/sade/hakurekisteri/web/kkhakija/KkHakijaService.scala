@@ -1196,7 +1196,7 @@ class KkHakijaService(
           yoSuoritusVuosi = getYoSuoritusVuosi(suoritukset),
           turvakielto = hakemus.henkilo.turvakielto.getOrElse(false),
           hakemukset = hakemukset,
-          ensikertalainen = ens.get(hakemus.henkilo.oidHenkilo)
+          ensikertalainen = hakemus.personOid.flatMap(ens.get)
         )
       })
     case _ => ???
