@@ -2080,6 +2080,40 @@ class KoskiDataHandlerTest
     suoritus.size should equal(0)
   }
 
+  it should "handle error properly and not store data in case of multiple läsna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_monessalasna.json")
+      .mkString
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo should not be null
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+    Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
+        ),
+        Option(alaikainenOnrHenkilo)
+      ),
+      5.seconds
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(0)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
   it should "not store 18 year old 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
     val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -3958,7 +3992,7 @@ class KoskiDataHandlerTest
     result.head.toInt should equal(0)
   }
 
-  it should "throw error if there are multiple lasna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
+  it should "throw error if there are multiple läsna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_monessalasna.json")

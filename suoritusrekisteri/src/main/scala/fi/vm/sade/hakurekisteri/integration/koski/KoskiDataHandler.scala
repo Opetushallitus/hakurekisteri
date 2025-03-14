@@ -623,7 +623,25 @@ class KoskiDataHandler(
           henkilo
         )
       ) {
-        Await.result(updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer), 5.seconds)
+        try {
+          Await.result(updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer), 5.seconds)
+        } catch {
+          case e: Exception =>
+            logger.error(
+              s"Koski-opiskelijan päivitys henkilölle $henkiloOid epäonnistui.",
+              e
+            )
+            return Future.successful(
+              Seq(
+                Left(
+                  new RuntimeException(
+                    s"Koski-opiskelijan päivitys henkilölle $henkiloOid epäonnistui.",
+                    e
+                  )
+                )
+              )
+            )
+        }
       }
 
       val suorituksetForRemoving = tallennettavatSuoritukset
