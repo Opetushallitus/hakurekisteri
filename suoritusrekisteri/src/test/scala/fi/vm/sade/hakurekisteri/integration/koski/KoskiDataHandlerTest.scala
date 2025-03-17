@@ -2103,7 +2103,7 @@ class KoskiDataHandlerTest
       ),
       60.seconds
     )
-    
+
     result should have size 1
     result.head shouldBe a[Left[_, _]]
     result.head.left.get.getMessage should include(
