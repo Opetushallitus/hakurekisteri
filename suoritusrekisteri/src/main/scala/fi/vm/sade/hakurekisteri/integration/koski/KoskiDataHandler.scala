@@ -616,11 +616,12 @@ class KoskiDataHandler(
         Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo) && s.arvosanat.isEmpty
       )
 
-      // Tallennetaan mahdollinen 7-8-valmistava luokkatiedot vain silloin, kun valmista ja vahvistettua
+      // Tallennetaan mahdollinen 7-8-valmistava vain silloin, kun valmista ja vahvistettua
       // perusopetuksen suoritusta ei ollut.
-      val shouldSaveSeiskaKasi = tallennettavatSuoritukset.isEmpty &&
-        params.saveSeiskaKasiJaValmistava &&
-        isAlaikainen(henkilo)
+      val tallennaSeiskaKasiValmentava =
+        tallennettavatSuoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
+          henkilo
+        )
 
       val suorituksetForRemoving = tallennettavatSuoritukset
 
@@ -634,27 +635,12 @@ class KoskiDataHandler(
         )
       }
 
-      // poistot tehdään joka tapauksess
-      val deleteFuture = checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
-        fetchedSuoritukset,
-        suorituksetForRemoving,
-        henkiloOid,
-        getAliases(personOidsWithAliases)
-      ).recover { case e: Exception =>
-        Seq(
-          Left(
-            new RuntimeException(s"Koski-opiskelijan poisto henkilölle $henkiloOid epäonnistui.", e)
-          )
-        )
-      }
-
-      deleteFuture.flatMap { _ =>
-        if (shouldSaveSeiskaKasi) {
-          // Tallennetaan alaikäisille 7-8-valmistaville luokkatiedot mutta ei suorituksia
-          updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer)
-            .map(_ => Seq(Right(None)))
-            .recover { case e: Exception =>
-              logger.error(s"Koski-opiskelijan päivitys henkilölle $henkiloOid epäonnistui.", e)
+      // Kludge jotta saadaan kutsu ketjutettua niin että mahd. virhe pysyy tallessa
+      val seiskaKasiValmentavaResult = if (tallennaSeiskaKasiValmentava) {
+        updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer).recoverWith {
+          case e: Exception =>
+            logger.error(s"Koski-opiskelijan päivitys henkilölle $henkiloOid epäonnistui.", e)
+            Future.successful(
               Seq(
                 Left(
                   new RuntimeException(
@@ -663,18 +649,46 @@ class KoskiDataHandler(
                   )
                 )
               )
-            }
-        } else {
+            )
+        }
+      } else {
+        Future.successful(Seq.empty[Either[Exception, Option[SuoritusArvosanat]]])
+      }
+      seiskaKasiValmentavaResult.flatMap(_ =>
+        checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
+          fetchedSuoritukset,
+          suorituksetForRemoving,
+          henkiloOid,
+          getAliases(personOidsWithAliases)
+        ).recoverWith { case e: Exception =>
+          Future.successful(
+            Seq(
+              Left(
+                new RuntimeException(
+                  s"Koski-opiskelijan poisto henkilölle $henkiloOid epäonnistui.",
+                  e
+                )
+              )
+            )
+          )
+        }.flatMap(_ =>
           Future.sequence(tallennettavatSuoritukset.map {
-            case s @ SuoritusArvosanat(useSuoritus, arvosanat, luokka, lasnaDate, luokkaTaso) =>
+            case s @ SuoritusArvosanat(
+                  useSuoritus: VirallinenSuoritus,
+                  arvosanat: Seq[Arvosana],
+                  luokka: String,
+                  lasnaDate: LocalDate,
+                  luokkaTaso: Option[String]
+                ) =>
               try {
                 //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
                 //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
                 //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
                 if (
                   !useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
-                  (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(viimeisimmatSuoritukset) ||
-                    !useSuoritus.komo.equals(Oids.perusopetusKomoOid))
+                  (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(
+                    viimeisimmatSuoritukset
+                  ) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))
                 ) {
                   saveSuoritusAndArvosanat(
                     henkiloOid,
@@ -702,10 +716,9 @@ class KoskiDataHandler(
               }
             case _ => Future.successful(Right(None))
           })
-        }
-      }
+        )
+      )
     })
-
   def createSuorituksetJaArvosanatFromKoski(
     henkilo: KoskiHenkiloContainer
   ): Seq[Seq[SuoritusArvosanat]] = {

@@ -2090,7 +2090,7 @@ class KoskiDataHandlerTest
     koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
     val alaikainenOnrHenkilo: Henkilo =
       generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
-    Await.result(
+    val result = Await.result(
       koskiDatahandler.processHenkilonTiedotKoskesta(
         koskiHenkilo,
         PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
@@ -2102,6 +2102,12 @@ class KoskiDataHandlerTest
         Option(alaikainenOnrHenkilo)
       ),
       5.seconds
+    )
+
+    result should have size 1
+    result.head shouldBe a[Left[_, _]]
+    result.head.left.get.getMessage should include(
+      "Koski-opiskelijan päivitys henkilölle 1.2.246.562.24.92170778843 epäonnistui"
     )
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
