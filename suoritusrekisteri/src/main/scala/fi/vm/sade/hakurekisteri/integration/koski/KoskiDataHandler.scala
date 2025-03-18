@@ -645,14 +645,14 @@ class KoskiDataHandler(
           }
           .recover { case e: Exception =>
             logger.error(
-              s"Koski-opiskelijan päivitys 7/8/valmistava-luokan henkilölle $henkiloOid epäonnistui.",
+              s"Koski-opiskelijan luokkatietojen päivitys 7/8/valmistava-luokan henkilölle $henkiloOid epäonnistui.",
               e
             )
             // Virhe talteen mutta ei propagoida poikkeusta
             Seq(
               Left(
                 new RuntimeException(
-                  s"Koski-opiskelijan päivitys henkilölle $henkiloOid epäonnistui.",
+                  s"Koski-opiskelijan luokkatietojen päivitys 7/8/valmistava-luokan henkilölle $henkiloOid epäonnistui.",
                   e
                 )
               )
