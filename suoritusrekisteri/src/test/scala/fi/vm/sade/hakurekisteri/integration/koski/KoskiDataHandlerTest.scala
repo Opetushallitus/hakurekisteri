@@ -2107,7 +2107,7 @@ class KoskiDataHandlerTest
     result should have size 1
     result.head shouldBe a[Left[_, _]]
     result.head.left.get.getMessage should include(
-      "Koski-opiskelijan päivitys henkilölle 1.2.246.562.24.92170778843 epäonnistui"
+      "Koski-opiskelijan luokkatietojen päivitys 7/8/valmistava-luokan henkilölle 1.2.246.562.24.92170778843 epäonnistui."
     )
 
     val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
