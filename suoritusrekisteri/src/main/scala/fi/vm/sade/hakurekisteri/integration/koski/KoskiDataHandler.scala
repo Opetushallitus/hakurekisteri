@@ -580,7 +580,8 @@ class KoskiDataHandler(
     viimeisimmatSuoritukset: Seq[SuoritusArvosanat],
     personOidsWithAliases: PersonOidsWithAliases,
     params: KoskiSuoritusHakuParams
-  ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] =
+  ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
+
     fetchExistingSuoritukset(henkiloOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
@@ -616,15 +617,12 @@ class KoskiDataHandler(
         Oids.perusopetuksenOppiaineenOppimaaraOid.contains(s.suoritus.komo) && s.arvosanat.isEmpty
       )
 
-      // Tallennetaan mahdollinen 7-8-valmistava vain silloin, kun valmista ja vahvistettua
-      // perusopetuksen suoritusta ei ollut.
-      if (
+      // Tallennetaan mahdollinen 7-8-valmistava vain alaikäiselle ja
+      // silloin, kun valmista ja vahvistettua perusopetuksen suoritusta ei ollut.
+      val tallennaSeiskaKasiValmistava =
         tallennettavatSuoritukset.isEmpty && params.saveSeiskaKasiJaValmistava && isAlaikainen(
           henkilo
         )
-      ) {
-        Await.result(updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer), 5.seconds)
-      }
 
       val suorituksetForRemoving = tallennettavatSuoritukset
 
@@ -638,69 +636,103 @@ class KoskiDataHandler(
         )
       }
 
-      checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
-        fetchedSuoritukset,
-        suorituksetForRemoving,
-        henkiloOid,
-        getAliases(personOidsWithAliases)
-      ).recoverWith { case e: Exception =>
-        Future.successful(
-          Seq(
-            Left(
-              new RuntimeException(
-                s"Koski-opiskelijan poisto henkilölle $henkiloOid epäonnistui.",
-                e
+      // Kludge jotta saadaan jatkettua suoritusta ilman poikkeusta oikealla paluuarvolla
+      // ja pidettyä virhe tallessa
+      val seiskaKasiValmistavaResult = if (tallennaSeiskaKasiValmistava) {
+        updateOppilaitosSeiskaKasiJaValmistava(koskiHenkiloContainer)
+          .flatMap { case _ =>
+            Future.successful(Seq.empty[Either[Exception, Option[SuoritusArvosanat]]])
+          }
+          .recover { case e: Exception =>
+            logger.error(
+              s"Koski-opiskelijan luokkatietojen päivitys 7/8/valmistava-luokan henkilölle $henkiloOid epäonnistui.",
+              e
+            )
+            // Virhe talteen mutta ei propagoida poikkeusta
+            Seq(
+              Left(
+                new RuntimeException(
+                  s"Koski-opiskelijan luokkatietojen päivitys 7/8/valmistava-luokan henkilölle $henkiloOid epäonnistui.",
+                  e
+                )
               )
             )
-          )
-        )
-      }.flatMap(_ =>
-        Future.sequence(tallennettavatSuoritukset.map {
-          case s @ SuoritusArvosanat(
-                useSuoritus: VirallinenSuoritus,
-                arvosanat: Seq[Arvosana],
-                luokka: String,
-                lasnaDate: LocalDate,
-                luokkaTaso: Option[String]
-              ) =>
-            try {
-              //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
-              //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
-              //todo tarkista, onko tämä vielä tarpeen, tai voisiko tätä ainakin muokata? Nyt tänne asti ei pitäisi tulla ei-ysejä peruskoululaisia.
-              if (
-                !useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
-                (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(
-                  viimeisimmatSuoritukset
-                ) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))
-              ) {
-                saveSuoritusAndArvosanat(
-                  henkiloOid,
-                  fetchedSuoritukset,
-                  useSuoritus,
-                  arvosanat,
-                  luokka,
-                  lasnaDate,
-                  luokkaTaso,
-                  personOidsWithAliases
-                ).map((x: SuoritusArvosanat) => Right(Some(x)))
-              } else {
-                Future.successful(Right(None))
-              }
-            } catch {
-              case e: Exception =>
-                Future.successful(
-                  Left(
-                    new RuntimeException(
-                      s"Koski-suoritusarvosanojen $s tallennus henkilölle $henkiloOid epäonnistui.",
-                      e
-                    )
+          }
+      } else {
+        Future.successful(Seq.empty[Either[Exception, Option[SuoritusArvosanat]]])
+      }
+
+      seiskaKasiValmistavaResult.flatMap { seiskaKasiResult =>
+        // Jos tuli aikaisempi tallennusvirhe, lopetetaan tähän
+        if (seiskaKasiResult.exists(_.isLeft)) {
+          Future.successful(seiskaKasiResult)
+        } else {
+          // Käsitellään suoritukset
+          checkAndDeleteIfSuoritusDoesNotExistAnymoreInKoski(
+            fetchedSuoritukset,
+            suorituksetForRemoving,
+            henkiloOid,
+            getAliases(personOidsWithAliases)
+          ).recoverWith { case e: Exception =>
+            Future.successful(
+              Seq(
+                Left(
+                  new RuntimeException(
+                    s"Koski-opiskelijan poisto henkilölle $henkiloOid epäonnistui.",
+                    e
                   )
                 )
-            }
-          case _ => Future.successful(Right(None))
-        })
-      )
+              )
+            )
+          }.flatMap { _ =>
+            Future.sequence(tallennettavatSuoritukset.map {
+              case s @ SuoritusArvosanat(
+                    useSuoritus: VirallinenSuoritus,
+                    arvosanat: Seq[Arvosana],
+                    luokka: String,
+                    lasnaDate: LocalDate,
+                    luokkaTaso: Option[String]
+                  ) =>
+                try {
+                  //Suren suoritus = Kosken opiskeluoikeus + päättötodistussuoritus
+                  //Suren luokkatieto = Koskessa peruskoulun 9. luokan suoritus
+                  if (
+                    !useSuoritus.komo.equals(Oids.perusopetusLuokkaKomoOid) &&
+                    (s.peruskoulututkintoJaYsisuoritusTaiPKAikuiskoulutus(
+                      viimeisimmatSuoritukset
+                    ) || !useSuoritus.komo.equals(Oids.perusopetusKomoOid))
+                  ) {
+                    saveSuoritusAndArvosanat(
+                      henkiloOid,
+                      fetchedSuoritukset,
+                      useSuoritus,
+                      arvosanat,
+                      luokka,
+                      lasnaDate,
+                      luokkaTaso,
+                      personOidsWithAliases
+                    ).map((x: SuoritusArvosanat) => Right(Some(x)))
+                  } else {
+                    Future.successful(Right(None))
+                  }
+                } catch {
+                  case e: Exception =>
+                    Future.successful(
+                      Left(
+                        new RuntimeException(
+                          s"Koski-suoritusarvosanojen $s tallennus henkilölle $henkiloOid epäonnistui.",
+                          e
+                        )
+                      )
+                    )
+                }
+              case _ => Future.successful(Right(None))
+            })
+          }
+        }
+      }
     })
+  }
 
   def createSuorituksetJaArvosanatFromKoski(
     henkilo: KoskiHenkiloContainer

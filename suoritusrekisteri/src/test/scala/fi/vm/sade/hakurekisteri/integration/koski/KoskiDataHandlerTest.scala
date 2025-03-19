@@ -2080,6 +2080,46 @@ class KoskiDataHandlerTest
     suoritus.size should equal(0)
   }
 
+  it should "handle error properly and not store data in case of multiple läsna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
+    val json: String = scala.io.Source
+      .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_monessalasna.json")
+      .mkString
+    val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
+    val henkiloOid: String = koskiHenkilo.henkilö.oid.toString
+    koskiHenkilo should not be null
+    koskiHenkilo.opiskeluoikeudet.head.tyyppi should not be empty
+    val alaikainenOnrHenkilo: Henkilo =
+      generateTestONRHenkilo(koskiHenkilo, LocalDate.now().minusYears(15).toString())
+    val result = Await.result(
+      koskiDatahandler.processHenkilonTiedotKoskesta(
+        koskiHenkilo,
+        PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
+        new KoskiSuoritusHakuParams(
+          saveLukio = false,
+          saveAmmatillinen = false,
+          saveSeiskaKasiJaValmistava = true
+        ),
+        Option(alaikainenOnrHenkilo)
+      ),
+      60.seconds
+    )
+
+    result should have size 1
+    result.head shouldBe a[Left[_, _]]
+    result.head.left.get.getMessage should include(
+      "Koski-opiskelijan luokkatietojen päivitys 7/8/valmistava-luokan henkilölle 1.2.246.562.24.92170778843 epäonnistui."
+    )
+
+    val opiskelijat = run(database.run(sql"select henkilo_oid from opiskelija".as[String]))
+    opiskelijat.size should equal(0)
+    val suoritus = run(
+      database.run(
+        sql"select valmistuminen from suoritus where henkilo_oid = $henkiloOid".as[String]
+      )
+    )
+    suoritus.size should equal(0)
+  }
+
   it should "not store 18 year old 8-luokkalainen opiskelija when KoskiSuoritusHakuParams.saveSeiskaKasiJaValmentava is true" in {
     val json: String = scala.io.Source.fromFile(jsonDir + "8_luokka_lasna.json").mkString
     val koskiHenkilo: KoskiHenkiloContainer = parse(json).extract[KoskiHenkiloContainer]
@@ -3958,7 +3998,7 @@ class KoskiDataHandlerTest
     result.head.toInt should equal(0)
   }
 
-  it should "throw error if there are multiple lasna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
+  it should "throw error if there are multiple läsna-opiskeluoikeus for koskidata_perusopetukseen_valmistava_monessalasna.json" in {
     val json: String =
       scala.io.Source
         .fromFile(jsonDir + "koskidata_perusopetukseen_valmistava_monessalasna.json")
