@@ -2094,7 +2094,7 @@ class KoskiDataHandlerTest
       koskiDatahandler.processHenkilonTiedotKoskesta(
         koskiHenkilo,
         PersonOidsWithAliases(koskiHenkilo.henkilö.oid.toSet),
-        new KoskiSuoritusHakuParams(
+        new KoskiSuoritusTallennusParams(
           saveLukio = false,
           saveAmmatillinen = false,
           saveSeiskaKasiJaValmistava = true
@@ -5932,7 +5932,7 @@ class KoskiDataHandlerTest
       koskiDatahandler.processHenkilonTiedotKoskesta(
         henkilo,
         PersonOidsWithAliases(henkilo.henkilö.oid.toSet),
-        new KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
+        new KoskiSuoritusTallennusParams(saveLukio = false, saveAmmatillinen = false)
       ),
       5.seconds
     )
