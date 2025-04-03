@@ -286,13 +286,6 @@ class HakemusServiceSpec
     val system = ActorSystem("hakurekisteri")
     implicit val scheduler = system.scheduler
 
-    when(endPoint.request(forPattern(".*listfull.*start=0.*")))
-      .thenReturn((200, List(), getJson("listfull-0")))
-      .thenReturn((200, List(), "[]"))
-    when(endPoint.request(forPattern(".*listfull.*start=1.*")))
-      .thenReturn((200, List(), getJson("listfull-1")))
-    when(endPoint.request(forPattern(".*listfull.*start=2.*")))
-      .thenReturn((200, List(), "[]"))
     when(endPoint.request(forPattern(".*/lomake-editori/api/external/suoritusrekisteri")))
       .thenReturn((200, List(), getJson("ataruApplications")))
 
@@ -301,7 +294,6 @@ class HakemusServiceSpec
       Trigger(f = (hakemus: HakijaHakemus, personOidsWithAliases: PersonOidsWithAliases) => {
         triggerCounter += 1
       })
-
     hakemusService.addTrigger(trigger)
     hakemusService.addTrigger(trigger)
 
@@ -309,7 +301,8 @@ class HakemusServiceSpec
 
     Thread.sleep(2000)
 
-    triggerCounter should be(44)
+    //2 hakemusta, 2 triggeriä per hakemus
+    triggerCounter should be(4)
   }
 
   it should "be able to skip application without person oid" in {
