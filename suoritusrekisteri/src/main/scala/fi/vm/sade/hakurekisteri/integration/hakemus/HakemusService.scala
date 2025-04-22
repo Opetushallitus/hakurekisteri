@@ -132,7 +132,7 @@ object ListFullSearchDto {
 trait IHakemusService {
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]]
 
-  def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]]
+  def hakemuksetForPersons(masterOids: Map[String, String]): Future[Seq[HakijaHakemus]]
 
   def personOidstoMasterOids(personOids: Set[String]): Future[Map[String, String]]
 
@@ -703,16 +703,17 @@ class HakemusService(
   implicit val formats = HakurekisteriJsonSupport.format
 
   def hakemuksetForPersonsFromHakuappAndAtaru(
-    personOids: Set[String]
+    searchablePersonOids: Set[String],
+    masterOids: Map[String, String]
   ): Future[Seq[HakijaHakemus]] = {
     val hakuAppCall = hakuappRestClient
       .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(
         200,
-        personOids
+        searchablePersonOids
       )
     val ataruCall = ataruhakemukset(
       AtaruSearchParams(
-        hakijaOids = Some(personOids.toList),
+        hakijaOids = Some(searchablePersonOids.toList),
         hakukohdeOids = None,
         hakuOid = None,
         organizationOid = None,
@@ -721,8 +722,8 @@ class HakemusService(
     )
 
     def updateCache(hakemukset: Seq[HakijaHakemus]): Seq[HakijaHakemus] = {
-      hakemukset.groupBy(_.personOid).foreach {
-        case (Some(personOid), allHakemukset) =>
+      hakemukset.groupBy(_.personOid.map(oid => masterOids.getOrElse(oid, oid))).foreach {
+        case (Some(masterOid), allHakemukset) =>
           val f: Seq[FullHakemus] = allHakemukset.flatMap {
             case f: FullHakemus => Some(f)
             case _              => None
@@ -733,10 +734,10 @@ class HakemusService(
           }
           try {
             val json: String = write(AllHakemukset(f, a))
-            hakemusCache + (personOid, json)
+            hakemusCache + (masterOid, json)
           } catch {
             case e: Exception =>
-              logger.error(s"Couldn't store $personOid hakemus to Redis cache", e)
+              logger.error(s"Couldn't store $masterOid hakemus to Redis cache", e)
           }
         case _ =>
         // dont care
@@ -759,8 +760,8 @@ class HakemusService(
     fetchAllHakemukset
   }
 
-  def hakemuksetForPersons(personOids: Set[String]): Future[Seq[HakijaHakemus]] = {
-
+  def hakemuksetForPersons(masterOids: Map[String, String]): Future[Seq[HakijaHakemus]] = {
+    val personOids = masterOids.values.toSet
     val cachedHakemukset: Future[Set[Option[AllHakemukset]]] = hakemusCache match {
       case redis: RedisCache[String, String] =>
         def parse(s: Option[String]): Option[AllHakemukset] = {
@@ -787,9 +788,14 @@ class HakemusService(
           case None      => Seq.empty
         }
       )
-      missedHakemukset <- personOids.diff(foundHakemukset.flatMap(_.personOid).toSet) match {
+      missedHakemukset <- personOids.diff(
+        foundHakemukset
+          .flatMap(_.personOid)
+          .map(oid => masterOids.getOrElse(oid, oid))
+          .toSet
+      ) match {
         case s if s.isEmpty => Future.successful(Seq.empty[HakijaHakemus])
-        case s              => hakemuksetForPersonsFromHakuappAndAtaru(s)
+        case s              => hakemuksetForPersonsFromHakuappAndAtaru(s, masterOids)
       }
     } yield foundHakemukset ++ missedHakemukset
   }
@@ -1235,7 +1241,9 @@ class HakemusService(
 
 class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForPerson(personOid: String) = Future.successful(Seq[FullHakemus]())
-  override def hakemuksetForPersons(personOids: Set[String]) = Future.successful(Seq[FullHakemus]())
+  override def hakemuksetForPersons(masterOids: Map[String, String]) =
+    Future.successful(Seq[FullHakemus]())
+
   override def personOidstoMasterOids(personOids: Set[String]) =
     Future.successful(personOids.map(kv => (kv, kv)).toMap)
 
