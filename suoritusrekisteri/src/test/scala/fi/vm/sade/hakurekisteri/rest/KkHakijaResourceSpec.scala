@@ -14,7 +14,6 @@ import fi.vm.sade.hakurekisteri.integration.koski.KoskiServiceMock
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParametritActorRef
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import fi.vm.sade.hakurekisteri.integration.valintaperusteet.ValintaperusteetServiceMock
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActorRef
@@ -22,8 +21,10 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaResource, KkHakijaService}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
+import org.scalatra.test.ScalatraTests
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
@@ -35,7 +36,9 @@ class KkHakijaResourceSpec
     with MockitoSugar
     with DispatchSupport
     with Waiters
-    with LocalhostProperties {
+    with LocalhostProperties
+    with ScalatraTests
+    with Matchers {
   private implicit val swagger: Swagger = new HakurekisteriSwagger
   private implicit val security: TestSecurity = new TestSecurity
 
@@ -122,4 +125,6 @@ class KkHakijaResourceSpec
     Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
+
+  override def header = ???
 }

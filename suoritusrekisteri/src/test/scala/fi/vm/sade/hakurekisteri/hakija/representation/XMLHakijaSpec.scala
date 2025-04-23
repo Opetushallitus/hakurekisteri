@@ -2,9 +2,10 @@ package fi.vm.sade.hakurekisteri.hakija.representation
 
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.LocalDate
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class XMLHakijaSpec extends FlatSpec with Matchers {
+class XMLHakijaSpec extends AnyFlatSpec with Matchers {
 
   def createSuoritus(pohjakoulutus: String): VirallinenSuoritus = {
     VirallinenSuoritus(

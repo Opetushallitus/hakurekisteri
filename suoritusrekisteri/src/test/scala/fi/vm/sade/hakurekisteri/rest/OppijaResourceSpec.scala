@@ -47,7 +47,7 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.read
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -157,7 +157,7 @@ class OppijaResourceSpec
 
   var valintarekisteri: TestActorRef[TestingValintarekisteriActor] = _
   var resource: OppijaResource = _
-  val hakemusServiceMock = mock[IHakemusService]
+  val hakemusServiceMock: IHakemusService = mock[IHakemusService]
   val config: MockConfig = new MockConfig
 
   private lazy val suoritusJournal =
@@ -501,6 +501,8 @@ class OppijaResourceSpec
     )
     journal
   }
+
+  override def header = ???
 }
 
 class TestingValintarekisteriActor(restClient: VirkailijaRestClient, config: Config)

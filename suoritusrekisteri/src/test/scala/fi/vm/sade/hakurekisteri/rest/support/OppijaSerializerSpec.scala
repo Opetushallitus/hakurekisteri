@@ -1,17 +1,17 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import java.util.UUID
-
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.oppija.{Todistus, Oppija}
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, VirallinenSuoritus}
-import org.joda.time.{LocalDate, DateTime}
-import org.scalatest.{FlatSpec, Matchers}
+import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
+import org.joda.time.{DateTime, LocalDate}
 import org.json4s.jackson.Serialization._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class OppijaSerializerSpec extends FlatSpec with Matchers {
+class OppijaSerializerSpec extends AnyFlatSpec with Matchers {
 
   implicit val formats = HakurekisteriJsonSupport.format
 

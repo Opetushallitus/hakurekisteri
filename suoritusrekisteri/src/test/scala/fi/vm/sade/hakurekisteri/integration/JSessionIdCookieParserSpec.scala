@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class JSessionIdCookieParserSpec extends FlatSpec with Matchers {
+class JSessionIdCookieParserSpec extends AnyFlatSpec with Matchers {
 
   behavior of "JSessionIdCookieParser"
 

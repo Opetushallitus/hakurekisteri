@@ -25,8 +25,8 @@ import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
-import org.mockito.{ArgumentMatchers, Matchers, Mockito}
-import org.scalatest.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchers, Mockito}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -139,4 +139,5 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
     super.stop()
   }
 
+  override def header = ???
 }

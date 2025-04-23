@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, Security
 import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import org.junit.runner.RunWith
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -111,4 +111,6 @@ class YtlResourceSpec
     }
     Thread.sleep(5000)
   }
+
+  override def header = ???
 }

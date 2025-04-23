@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.util.concurrent.TimeUnit
-
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.{
   CapturingAsyncHttpClient,
@@ -13,8 +12,10 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.LocalDate
 import org.mockito.Mockito
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -45,7 +46,7 @@ object VirtaResults {
 }
 
 class VirtaClientSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with Waiters
     with MockitoSugar

@@ -1,20 +1,24 @@
 package fi.vm.sade.hakurekisteri
 
-import org.scalatest.{Matchers, WordSpec}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import org.json4s.jackson.Serialization._
-import java.util.UUID
 
+import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer}
 import fi.vm.sade.hakurekisteri.storage.Identified
+
 import java.text.SimpleDateFormat
-
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
-
 import org.joda.time.{DateTime, MonthDay}
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
 
-class IdentifiableSerializationSpec extends WordSpec with Matchers with HakurekisteriJsonSupport {
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
+class IdentifiableSerializationSpec
+    extends AnyWordSpec
+    with Matchers
+    with HakurekisteriJsonSupport {
 
   override protected implicit def jsonFormats = super.jsonFormats ++ List(new SuoritusDeserializer)
 

@@ -84,7 +84,7 @@ class OpiskeluoikeusResourceSpec extends ScalatraFunSuite with BeforeAndAfterEac
       "{\"myontaja\":\"1.10.1.10.1\",\"henkiloOid\":\"1.24.12345\",\"aika\":{\"alku\":\"2015-01-01T00:00:00.000Z\",\"loppu\":\"2014-12-31T00:00:00.000Z\"}}"
     post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
       status should be(400)
-      body should include("Pakollista kenttää komo ei löydy")
+      new String(bodyBytes, "utf-8") should include("Pakollista kenttää komo ei löydy")
     }
   }
 

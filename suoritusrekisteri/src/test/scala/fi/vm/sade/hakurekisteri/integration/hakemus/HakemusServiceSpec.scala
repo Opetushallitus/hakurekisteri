@@ -16,13 +16,15 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
 import org.scalatest._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class HakemusServiceSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with MockitoSugar
     with DispatchSupport

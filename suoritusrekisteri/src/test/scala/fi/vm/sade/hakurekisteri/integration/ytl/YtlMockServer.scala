@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.net.SocketException
 import java.util.UUID
-import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
+import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker

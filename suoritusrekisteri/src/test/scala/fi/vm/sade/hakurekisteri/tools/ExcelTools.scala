@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.tools
 
-import fi.vm.sade.javautils.poi.OphCellStyles.OphXssfCellStyles
+import fi.vm.sade.javautils.poi.OphCellStyles
 import org.apache.poi.ss.usermodel.CellType.STRING
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook}
@@ -13,7 +13,7 @@ trait ExcelTools {
   case class WorkbookData(sheets: (String, String)*) {
 
     case class RichWorkbook(workbook: XSSFWorkbook) {
-      private val ophXssfCellStyles = new OphXssfCellStyles(workbook)
+      private val ophXssfCellStyles = new OphCellStyles(workbook)
 
       def readData(data: String): Array[Array[String]] =
         Source.fromString(data.trim.stripMargin).getLines().toArray.map(_.split("\\|").map(_.trim))

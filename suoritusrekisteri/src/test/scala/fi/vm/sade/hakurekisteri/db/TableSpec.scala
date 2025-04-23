@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.db
 
 import java.util.UUID
-
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.batchimport.{
   BatchState,
@@ -15,14 +14,17 @@ import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Updated}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import org.joda.time.DateTime
 import org.postgresql.util.PSQLException
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll}
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.language.existentials
 
-class TableSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
+class TableSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   implicit val system = ActorSystem("test-jdbc")
   implicit val ec: ExecutionContext = system.dispatcher
   behavior of "ImportBatchTable"

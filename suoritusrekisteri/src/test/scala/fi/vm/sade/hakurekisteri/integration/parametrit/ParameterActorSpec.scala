@@ -8,16 +8,14 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.DateTime
 import org.mockito.Mockito._
-import org.scalatest.Matchers
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
 
 class ParameterActorSpec
     extends ScalatraFunSuite
-    with Matchers
     with Waiters
     with MockitoSugar
     with DispatchSupport
@@ -289,6 +287,7 @@ class ParameterActorSpec
     })
   }
 
+  override def header = ???
 }
 
 object ParameterResults {

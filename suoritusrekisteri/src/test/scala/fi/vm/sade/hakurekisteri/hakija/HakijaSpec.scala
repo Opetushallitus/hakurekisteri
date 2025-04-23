@@ -8,9 +8,10 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.koski.OppivelvollisuusTieto
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class HakijaSpec extends FlatSpec with Matchers {
+class HakijaSpec extends AnyFlatSpec with Matchers {
 
   object OppilaitosX
       extends Organisaatio(

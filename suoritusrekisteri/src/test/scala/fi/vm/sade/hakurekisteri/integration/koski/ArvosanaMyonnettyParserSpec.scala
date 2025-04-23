@@ -4,10 +4,11 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.test.tools.ClassPathUtil
 import org.joda.time.LocalDate
 import org.json4s.jackson.JsonMethods
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class ArvosanaMyonnettyParserSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with HakurekisteriJsonSupport
     with JsonMethods {

@@ -39,8 +39,9 @@ import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures.whenReady
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.LoggerFactory
 import support.{BareRegisters, DbJournals, PersonAliasesProvider}
 
@@ -48,7 +49,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
 
 class YtlIntegrationSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll
     with Matchers

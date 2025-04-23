@@ -10,9 +10,8 @@ import fi.vm.sade.hakurekisteri.{MockCacheFactory, MockConfig}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.Matchers
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -21,7 +20,6 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 class OrganisaatioActorSpec
     extends ScalatraFunSuite
-    with Matchers
     with Waiters
     with MockitoSugar
     with DispatchSupport
@@ -343,6 +341,7 @@ class OrganisaatioActorSpec
     w.await(timeout(Span(5000, Millis)), dismissals(1))
   }
 
+  override def header = ???
 }
 
 object OrganisaatioResults {

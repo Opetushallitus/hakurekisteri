@@ -10,15 +10,17 @@ import fi.vm.sade.utils.tcp.PortChecker
 import org.mockito.Mockito.{times, verify, when}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import redis.embedded.RedisServer
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 class RedisCacheSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with ActorSystemSupport
     with BeforeAndAfterAll

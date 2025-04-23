@@ -2,12 +2,13 @@ package fi.vm.sade.hakurekisteri.integration
 
 import fi.vm.sade.hakurekisteri.MockCacheFactory
 import fi.vm.sade.hakurekisteri.integration.cache.InMemoryFutureCache
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class FutureCacheSpec extends FlatSpec with Matchers {
+class FutureCacheSpec extends AnyFlatSpec with Matchers {
 
   val cacheFactory = MockCacheFactory.get
 

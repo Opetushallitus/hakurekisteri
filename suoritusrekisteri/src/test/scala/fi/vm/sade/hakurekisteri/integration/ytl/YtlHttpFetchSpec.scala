@@ -8,7 +8,7 @@ import org.apache.commons.io.IOUtils
 import org.json4s.NoTypeHints
 import org.json4s.jackson.Serialization
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.slf4j.LoggerFactory
 

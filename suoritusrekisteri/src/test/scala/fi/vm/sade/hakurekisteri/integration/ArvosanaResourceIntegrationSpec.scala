@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
@@ -14,13 +13,15 @@ import org.joda.time.LocalDate
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods.{compact, parse}
 import org.json4s.{Extraction, JArray, JValue}
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class ArvosanaResourceIntegrationSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with CleanSharedTestJettyBeforeEach
     with BeforeAndAfterAll
     with Matchers {
@@ -188,4 +189,6 @@ class ArvosanaResourceIntegrationSpec
     val jValue: JValue = Extraction.decompose(o)(HakurekisteriJsonSupport.format)
     compact(jValue)
   }
+
+  override def header = ???
 }

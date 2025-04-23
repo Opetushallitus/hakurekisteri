@@ -1,0 +1,127 @@
+{
+  "henkilö" : {
+    "oid" : "1.2.246.562.24.92170778843",
+    "hetu" : "010107A977S",
+    "syntymäaika" : "2007-01-01",
+    "etunimet" : "Testi",
+    "kutsumanimi" : "Testi",
+    "sukunimi" : "Heppunen",
+    "äidinkieli" : {
+      "koodiarvo" : "FI",
+      "nimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "lyhytNimi" : {
+        "fi" : "suomi",
+        "sv" : "finska",
+        "en" : "Finnish"
+      },
+      "koodistoUri" : "kieli",
+      "koodistoVersio" : 1
+    },
+    "turvakielto" : false
+  },
+  "opiskeluoikeudet" : [
+    {
+      "oid": "1.2.246.562.15.14266710483",
+      "versionumero": 3,
+      "aikaleima": "2024-03-20T06:54:56.321363",
+      "lähdejärjestelmänId": {
+        "id": "356990",
+        "lähdejärjestelmä": {
+          "koodiarvo": "primus",
+          "nimi": {
+            "fi": "primus"
+          },
+          "koodistoUri": "lahdejarjestelma",
+          "koodistoVersio": 1
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.48771790549",
+        "oppilaitosnumero": {
+          "koodiarvo": "08545",
+          "nimi": {
+            "fi": "Puropellon koulu",
+            "sv": "Puropellon koulu",
+            "en": "Puropellon koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Puropellon koulu",
+            "sv": "Puropellon koulu",
+            "en": "Puropellon koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Puropellon koulu",
+          "sv": "Puropellon koulu",
+          "en": "Puropellon koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "853",
+          "nimi": {
+            "fi": "Turku",
+            "sv": "Åbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.56820737825",
+        "nimi": {
+          "fi": "Turun kaupunki",
+          "sv": "Åbo stad",
+          "en": "Turun kaupunki"
+        },
+        "yTunnus": "0204819-8",
+        "kotipaikka": {
+          "koodiarvo": "853",
+          "nimi": {
+            "fi": "Turku",
+            "sv": "Åbo"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2024-03-20",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [],
+      "tyyppi": {
+        "koodiarvo": "perusopetukseenvalmistavaopetus",
+        "nimi": {
+          "fi": "Perusopetukseen valmistava opetus",
+          "sv": "Förberedande undervisning för den grundläggande utbildningen",
+          "en": "Instruction preparing for basic education"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetukseen valmistava opetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2024-03-20",
+      "päättymispäivä": "2025-05-30"
+    }
+  ]
+}

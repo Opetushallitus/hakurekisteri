@@ -18,7 +18,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
-class ValintaTulosLoadSpec extends FlatSpec with Matchers {
+class ValintaTulosLoadSpec extends AnyFlatSpec with Matchers {
 
   behavior of "valinta-tulos-service"
 

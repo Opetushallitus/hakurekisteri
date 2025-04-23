@@ -18,7 +18,7 @@ import scala.util.{Success, Try}
 
 trait ValpasSwaggerApi extends SwaggerSupport {
   val warmUpValpasCache: SwaggerSupportSyntax.OperationBuilder =
-    apiOperation("warmUpValpasCache")
+    apiOperation[Map[String, String]]("warmUpValpasCache")
       .summary("Valpas-tietojen välimuistin virkistysrajanpinta")
       .description(
         "Virkistää polkuparametrina annetulle haulle välimuistit"
@@ -33,7 +33,7 @@ trait ValpasSwaggerApi extends SwaggerSupport {
           .optional
       )
       .parameter(
-        pathParam("hakuOid").description("Haun OID").required
+        pathParam[String]("hakuOid").description("Haun OID").required
       )
       .tags("Valpas-resource")
 
@@ -67,7 +67,7 @@ class ValpasServlet(valpasIntergration: ValpasIntergration)(implicit
     with ValpasSwaggerApi
     with FutureSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected def applicationDescription: String = "Valpas-Resource"
   override protected implicit def jsonFormats: Formats = DefaultFormats
   override protected implicit def executor: ExecutionContext = system.dispatcher

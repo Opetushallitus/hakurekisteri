@@ -41,7 +41,7 @@ class HakijaResourceV5(hakijaActor: ActorRef)(implicit
 
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
 
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -52,7 +52,7 @@ class HakijaResourceV5(hakijaActor: ActorRef)(implicit
   }
 
   get("/", operation(queryV2)) {
-    val q = HakijaQuery(params, currentUser, 5)
+    val q = HakijaQuery(params.toMap, currentUser, 5)
     if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
     val tyyppi = getFormatFromTypeParam()
     val thisResponse = response

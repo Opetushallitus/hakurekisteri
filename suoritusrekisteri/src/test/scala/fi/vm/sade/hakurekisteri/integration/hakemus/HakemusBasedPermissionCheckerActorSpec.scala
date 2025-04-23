@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -14,14 +13,15 @@ import fi.vm.sade.hakurekisteri.web.rest.support.TestUser
 import org.mockito.Mockito.when
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, _}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class HakemusBasedPermissionCheckerActorSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with MockitoSugar
     with ActorSystemSupport

@@ -2,18 +2,18 @@ package fi.vm.sade.hakurekisteri.storage.repository
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import fi.vm.sade.hakurekisteri.integration.henkilo.PersonOidsWithAliases
 import fi.vm.sade.hakurekisteri.storage.Identified
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.Tables.Table
-import org.scalatest.{FlatSpec, Matchers}
 
 import scala.annotation.tailrec
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-trait RepositoryBehaviors[T] { this: FlatSpec with Matchers =>
+trait RepositoryBehaviors[T] { this: AnyFlatSpec with Matchers =>
 
   trait RepoContext {
     val repoConstructor: Seq[T] => Repository[T, UUID]

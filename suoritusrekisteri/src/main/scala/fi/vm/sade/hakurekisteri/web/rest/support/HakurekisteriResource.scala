@@ -15,8 +15,6 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import org.json4s.JsonAST.{JNull, JString}
 import org.json4s.{DefaultFormats, Formats, JValue}
 import org.scalatra._
-import org.scalatra.commands._
-import org.scalatra.forms.{FormSupport, MappingValueType}
 import org.scalatra.i18n.I18nSupport
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
@@ -167,7 +165,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]](
     with FutureSupport
     with QueryLogging
     with SecuritySupport
-    with I18nSupport
+    //with I18nSupport todo fixme kenties: tästä aiheutui ongelmia, jotka korjaantuivat poistolla. En tätä kirjoittaessa tiedä, mitä hyödyllistä tämä tekee, mutta voihan se jotain tehdä.
     with ValidationSupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -294,7 +292,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]](
   }
 
   def queryResource(user: Option[User], t0: Long): Product with Serializable = {
-    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, user, t0)) recover {
+    (Try(qb(params.toMap)) map ((q: Query[A]) => ResourceQuery(q, user, t0)) recover {
       case e: Exception =>
         logger.error(e, "Bad query: " + params)
         throw new IllegalArgumentException("illegal query params")
@@ -310,7 +308,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A]](
     }
   }
 
-  protected implicit def swagger: SwaggerEngine[_] = sw
+  protected implicit def swagger: SwaggerEngine = sw
 }
 
 object ResourceNotEnabledException extends Exception

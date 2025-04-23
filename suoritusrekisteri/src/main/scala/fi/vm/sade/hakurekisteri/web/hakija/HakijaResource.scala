@@ -59,7 +59,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   implicit val defaultTimeout: Timeout = 120.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -89,7 +89,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit
 
   get("/", operation(query)) {
     val t0 = Platform.currentTime
-    val q = HakijaQuery(params, currentUser, 1)
+
+    val q = HakijaQuery(params.toMap, currentUser, 1)
 
     if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
 

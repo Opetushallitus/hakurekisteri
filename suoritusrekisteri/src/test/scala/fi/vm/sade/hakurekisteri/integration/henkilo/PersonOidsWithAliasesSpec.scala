@@ -3,10 +3,11 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.scalatest.concurrent.Waiters
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class PersonOidsWithAliasesSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with FutureWaiting
     with SpecsLikeMockito

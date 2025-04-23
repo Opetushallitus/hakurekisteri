@@ -40,7 +40,7 @@ class OppijaResource(
     with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)

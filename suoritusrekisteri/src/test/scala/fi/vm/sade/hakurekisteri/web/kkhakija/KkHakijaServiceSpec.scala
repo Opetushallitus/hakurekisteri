@@ -42,7 +42,7 @@ import org.mockito.{ArgumentMatchers, Mockito}
 import org.mockito.Mockito._
 import org.scalatest.Assertion
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 
@@ -236,7 +236,7 @@ class KkHakijaServiceSpec
       15.seconds
     )
 
-    hakijat.size should be(0)
+    assert(hakijat.isEmpty)
   }
 
   test(
@@ -342,9 +342,17 @@ class KkHakijaServiceSpec
     )
 
     hakijat.size should be(2)
-    hakijat.last.hakemukset.head.hKelpoisuusMaksuvelvollisuus.get should be("REQUIRED")
-    hakijat.last.hakemukset.head.hKelpoisuus should be("ELIGIBLE")
-    hakijat.last.hakemukset.head.pohjakoulutus should contain("kk")
+    val hakija = hakijat
+      .filter(h =>
+        h.hakemukset.exists(hakemus =>
+          hakemus.hakemusnumero.equals("1.2.246.562.11.00000000000000005261")
+        )
+      )
+      .head
+    hakija.hakemukset.head.hKelpoisuusMaksuvelvollisuus.get should be("REQUIRED")
+    hakija.hakemukset.head.hKelpoisuus should be("ELIGIBLE")
+    hakija.hakemukset.head.pohjakoulutus should contain("kk")
+
   }
 
   test("should return five hakijas") {
@@ -759,7 +767,7 @@ class KkHakijaServiceSpec
     hakijat.last.koulusivistyskieli should be(Some("99"))
   }
 
-  def testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(apiVersion: Int): Assertion = {
+  private def testAsiointikieliTakenFromAtaruHakemuksetAndNeverFromHenkilo(apiVersion: Int) = {
     val serviceThatShouldTakeAsiointikieliFromHakemus = new KkHakijaService(
       hakemusService,
       Hakupalvelu,
@@ -963,4 +971,6 @@ class KkHakijaServiceSpec
     Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
+
+  override def header = ???
 }

@@ -42,7 +42,7 @@ class YtlResource(ytlFetchActor: YtlFetchActorRef)(implicit
     with FutureSupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected def applicationDescription: String = "Ytl-Resource"
   override protected implicit def executor: ExecutionContext = system.dispatcher
 

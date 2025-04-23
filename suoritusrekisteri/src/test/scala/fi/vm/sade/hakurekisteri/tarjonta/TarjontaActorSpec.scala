@@ -10,13 +10,12 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   TarjontaRestHakuAika
 }
 import org.joda.time.LocalDate
-import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
+class TarjontaActorSpec extends ScalatraFunSuite {
 
   implicit val system: ActorSystem = ActorSystem()
 
@@ -72,4 +71,6 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
     Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
+
+  override def header = ???
 }

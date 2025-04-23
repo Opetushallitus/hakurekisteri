@@ -11,17 +11,16 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActor
 }
 import org.junit.runner.RunWith
-import org.scalatest.Matchers
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
-class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar {
+class KoodistoActorSpec extends ScalatraFunSuite with MockitoSugar {
   private val koodisto = "koodisto"
   private val koodiArvo = "arvo"
   private val koodiUri = "uri"
@@ -82,4 +81,6 @@ class KoodistoActorSpec extends ScalatraFunSuite with Matchers with MockitoSugar
     Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
+
+  override def header = ???
 }

@@ -19,17 +19,18 @@ import fi.vm.sade.hakurekisteri.web.permission.{PermissionCheckResponse, Permiss
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.jackson.Serialization._
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with BeforeAndAfterAll {
+class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Matchers {
 
   implicit val system = ActorSystem("permission-test-system")
+
   implicit val format = HakurekisteriJsonSupport.format
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -85,6 +86,16 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
       }
     })))
   }
+
+  addServlet(
+    new PermissionResource(
+      suoritusActor,
+      opiskelijaActor,
+      hakemusBasedPermissionCheckerActor = noPermissionForOrgsMockPermissionChecker,
+      Some(1.seconds)
+    ),
+    "/noPermission/"
+  )
 
   addServlet(
     new PermissionResource(
@@ -195,15 +206,6 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
   }
 
   test("should return true if matching suoritus found, despite no hakemus based permission") {
-    addServlet(
-      new PermissionResource(
-        suoritusActor,
-        opiskelijaActor,
-        hakemusBasedPermissionCheckerActor = noPermissionForOrgsMockPermissionChecker,
-        Some(1.seconds)
-      ),
-      "/noPermission/"
-    )
     val json =
       """{
         |  "personOidsForSamePerson": ["1.2.246.562.24.1"],
@@ -248,4 +250,5 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     Await.result(system.terminate(), 15.seconds)
   }
 
+  override def header = ???
 }

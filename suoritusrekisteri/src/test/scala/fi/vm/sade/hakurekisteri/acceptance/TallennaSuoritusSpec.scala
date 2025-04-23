@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.tools.Peruskoulu
 import org.joda.time.{DateTime, LocalDate}
 import org.junit.runner.RunWith
 import org.scalatest.GivenWhenThen
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
@@ -16,8 +16,8 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
     "Koulun virkailijana tallennan kouluni oppilaiden tutkintosuoritukset jotta niitä voi hyödyntää haussa ja valinnassa"
   )
 
-  feature("Suorituksen tallentaminen") {
-    scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
+  Feature("Suorituksen tallentaminen") {
+    Scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
       Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavakkeet")
       koulu lahettaa
         <ROWSET>
@@ -88,7 +88,7 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
 
     }
 
-    scenario("Esitäytetyn lomakkeen lähettäminen tuottaa opiskelijatiedon") {
+    Scenario("Esitäytetyn lomakkeen lähettäminen tuottaa opiskelijatiedon") {
       Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavaakkeet")
       koulu lahettaa
         <ROWSET>
@@ -157,7 +157,7 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
 
     }
 
-    scenario("Tallennetaan suoritus tyhjään kantaan") {
+    Scenario("Tallennetaan suoritus tyhjään kantaan") {
       Given("kanta on tyhjä")
       db is empty
 
@@ -170,7 +170,7 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
       peruskouluSuoritukset should equal(Seq(suoritus))
     }
 
-    scenario("Tallennettaan kantaan jossa on tietoa") {
+    Scenario("Tallennettaan kantaan jossa on tietoa") {
       Given("kannassa on suorituksia")
       db has (suoritus, suoritus2)
 
@@ -182,7 +182,7 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
       peruskouluSuoritukset should contain(suoritus3.asInstanceOf[Suoritus])
     }
 
-    scenario("Vanhat tiedot säilyvät") {
+    Scenario("Vanhat tiedot säilyvät") {
       Given("kannassa on suorituksia")
       db has (suoritus, suoritus2)
 
@@ -197,5 +197,4 @@ class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
     }
 
   }
-
 }

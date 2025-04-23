@@ -2,15 +2,12 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 
 import java.net.InetAddress
 import java.security.Principal
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import fi.vm.sade.hakurekisteri.{AuditUtil, Config}
 import fi.vm.sade.hakurekisteri.rest.support.{AuditSessionRequest, OPHUser, Role, User}
-import fi.vm.sade.javautils.http.HttpServletRequestUtils
-
-import javax.servlet.http.HttpServletRequest
 import org.apache.commons.lang3.builder.ToStringBuilder
-import org.jasig.cas.client.authentication.AttributePrincipalImpl
-import org.jasig.cas.client.validation.AssertionImpl
+import org.apereo.cas.client.authentication.AttributePrincipalImpl
+import org.apereo.cas.client.validation.AssertionImpl
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.springframework.security.core.{Authentication, GrantedAuthority}
 
@@ -42,7 +39,7 @@ class SpringSecurity extends Security {
   private def userAgent(r: HttpServletRequest): String =
     Option(r.getHeader("User-Agent")).getOrElse("Unknown user agent")
   private def inetAddress(r: HttpServletRequest): String =
-    HttpServletRequestUtils.getRemoteAddress(r)
+    r.getRemoteAddr
 
   override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
     a =>
@@ -87,7 +84,7 @@ object TestUser extends User {
     "1.10.3"
   )
   override val username: String = "Test"
-  override val auditSession =
+  override val auditSession: AuditSessionRequest =
     AuditSessionRequest(username, Set("1.2.246.562.10.00000000001"), "", "")
   override def toString: String = ToStringBuilder.reflectionToString(this)
   override def casAuthenticationToken: CasAuthenticationToken = new CasAuthenticationToken(

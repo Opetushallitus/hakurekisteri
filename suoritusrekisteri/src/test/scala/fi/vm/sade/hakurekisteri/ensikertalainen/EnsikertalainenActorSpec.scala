@@ -21,19 +21,20 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.{DateTime, LocalDate}
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar.mock
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.reflectiveCalls
 
 class EnsikertalainenActorSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with FutureWaiting
-    with BeforeAndAfterAll
-    with MockitoSugar {
+    with BeforeAndAfterAll {
 
   implicit val system = ActorSystem("ensikertalainen-test-system")
   implicit val timeout: Timeout = 10.seconds

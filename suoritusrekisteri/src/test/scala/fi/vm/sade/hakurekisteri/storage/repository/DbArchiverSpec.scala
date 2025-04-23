@@ -9,9 +9,11 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import org.scalatest.Retries.{isRetryable, withRetryOnFailure}
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.tagobjects.Retryable
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers, Retries}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Retries}
 import slick.sql.SqlAction
 import support.DbJournals
 
@@ -19,7 +21,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class DbArchiverSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll
     with Matchers

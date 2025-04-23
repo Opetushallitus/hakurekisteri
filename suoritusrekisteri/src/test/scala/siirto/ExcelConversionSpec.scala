@@ -2,14 +2,15 @@ package siirto
 
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
 import fi.vm.sade.hakurekisteri.tools.{ExcelTools, XmlEquality}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import siirto.DataCollectionConversions._
 import siirto.ExcelConversions._
 
 import scala.xml.{Elem, Node}
 import scalaz._
 
-class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
+class ExcelConversionSpec extends AnyFlatSpec with Matchers with XmlEquality with ExcelTools {
 
   behavior of "Excel conversion"
 

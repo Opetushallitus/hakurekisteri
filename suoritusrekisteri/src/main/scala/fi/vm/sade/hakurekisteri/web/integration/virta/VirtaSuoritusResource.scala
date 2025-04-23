@@ -39,7 +39,7 @@ class VirtaSuoritusResource(
     with SecuritySupport
     with FutureSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String =
     "Henkilön suoritusten haun rajapinta Virta-palvelusta"

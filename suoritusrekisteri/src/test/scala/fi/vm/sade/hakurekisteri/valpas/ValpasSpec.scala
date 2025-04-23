@@ -74,14 +74,15 @@ import fi.vm.sade.hakurekisteri.integration.{
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.{ArgumentCaptor, Mockito}
 import org.mockito.ArgumentMatchers._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, _}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class ValpasSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with MockitoSugar
     with ActorSystemSupport

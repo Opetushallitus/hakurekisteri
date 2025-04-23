@@ -1,9 +1,8 @@
 package fi.vm.sade.hakurekisteri
 
-import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.hakija._
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import fi.vm.sade.hakurekisteri.hakija.representation.{
   XMLHakemus,
   XMLHakija,
@@ -11,10 +10,12 @@ import fi.vm.sade.hakurekisteri.hakija.representation.{
   XMLHakutoive
 }
 import org.apache.poi.ss.usermodel.{Workbook, WorkbookFactory}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.immutable.IndexedSeq
 
-class ExcelUtilSpec extends ScalatraFunSuite {
+class ExcelUtilSpec extends AnyFunSuite with Matchers {
 
   test("write as excel should return non zero length result") {
     val hakijat = XMLHakijat(
@@ -97,4 +98,5 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     resultMap.get((1, 1)) should be(Some("1.1"))
     resultMap.get((1, 7)) should be(Some("NotHelsinki"))
   }
+
 }

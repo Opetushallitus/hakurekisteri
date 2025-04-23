@@ -39,7 +39,7 @@ class PermissionResource(
     with QueryLogging {
 
   override protected def applicationDescription: String = "Oikeuksien tarkistuksen rajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  override protected implicit def swagger: SwaggerEngine = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val askTimeout: Timeout = timeout.getOrElse(2.minutes)
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -51,6 +51,19 @@ class PermissionResource(
   post("/", operation(checkPermission)) {
     val t0 = Platform.currentTime
     val r: PermissionCheckRequest = read[PermissionCheckRequest](request.body)
+    val paramValidationError: Option[String] = r match {
+      case r if r.personOidsForSamePerson.isEmpty =>
+        Some("requirement failed: Person oid list empty.")
+      case r if r.personOidsForSamePerson.exists(_.isEmpty) =>
+        Some("requirement failed: Blank person oid in oid list.")
+      case r if r.organisationOids.isEmpty =>
+        Some("requirement failed: Organisation oid list empty.")
+      case r if r.organisationOids.exists(_.isEmpty) =>
+        Some("requirement failed: Blank organisation oid in organisation oid list.")
+      case _ => None
+    }
+    paramValidationError.map(errorStr => throw new IllegalArgumentException(errorStr))
+
     logger.info(
       s"Checking permission for: personOidsForSamePerson ${r.personOidsForSamePerson} organisationOids ${r.organisationOids}."
     )
@@ -73,7 +86,7 @@ class PermissionResource(
         val result = organisationGrantsPermission || hakemusGrantsPermission
         if (hakemusGrantsPermission && !organisationGrantsPermission) {
           val targetToLog: String = if (r.personOidsForSamePerson.size > 10) {
-            r.personOidsForSamePerson.size + " applicants."
+            r.personOidsForSamePerson.size.toString + " applicants."
           } else {
             " personoids " + r.personOidsForSamePerson
           }
@@ -117,8 +130,8 @@ class PermissionResource(
     case t: IllegalArgumentException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
-    case MappingException(_, e: Throwable) if e.getCause != null =>
-      val cause: Throwable = e.getCause
+    case t: MappingException if t.getCause != null =>
+      val cause: Throwable = t.getCause
       logger.warning(s"cannot parse request object: $cause")
       BadRequest(PermissionCheckResponse(errorMessage = Some(cause.getMessage)))
     case t: JsonMappingException =>
@@ -138,12 +151,7 @@ class PermissionResource(
 case class PermissionCheckRequest(
   personOidsForSamePerson: Set[String],
   organisationOids: Set[String]
-) {
-  require(personOidsForSamePerson.nonEmpty, "Person oid list empty.")
-  require(!personOidsForSamePerson.exists(_.isEmpty), "Blank person oid in oid list.")
-  require(organisationOids.nonEmpty, "Organisation oid list empty.")
-  require(!organisationOids.exists(_.isEmpty), "Blank organisation oid in organisation oid list.")
-}
+)
 
 case class PermissionCheckResponse(
   accessAllowed: Option[Boolean] = None,

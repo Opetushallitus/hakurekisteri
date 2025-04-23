@@ -31,7 +31,7 @@ class OvaraResource(ovaraService: OvaraService)(implicit val security: Security,
     with OvaraSwaggerApi {
   val audit: Audit = SuoritusAuditVirkailija.audit
 
-  protected implicit def swagger: SwaggerEngine[_] = sw
+  protected implicit def swagger: SwaggerEngine = sw
   override protected def applicationDescription: String = "Ovara-Resource"
 
   get("/muodosta", operation(muodostaAikavalille)) {

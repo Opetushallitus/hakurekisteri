@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.{
 import fi.vm.sade.utils.slf4j.Logging
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.Waiters
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
