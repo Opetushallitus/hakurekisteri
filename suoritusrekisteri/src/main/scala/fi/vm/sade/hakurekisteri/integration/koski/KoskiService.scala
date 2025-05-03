@@ -1,12 +1,11 @@
 package fi.vm.sade.hakurekisteri.integration.koski
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import java.util.concurrent.atomic.AtomicReference
 import java.util.TimeZone
 import akka.actor.{ActorSystem, Scheduler}
-import akka.event.Logging
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.henkilo.{
   Henkilo,
@@ -15,23 +14,66 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
 }
 import org.joda.time.{DateTime, DateTimeZone}
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
+import org.slf4j.{Logger, LoggerFactory}
 
-import scala.annotation.tailrec
-import scala.concurrent.ExecutionContext.Implicits.global
+import java.sql.Date
+import java.text.SimpleDateFormat
+import scala.concurrent.ExecutionContextExecutorService
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Success}
+
+case class KoskiMassaluovutusQueryParams(
+  `type`: String,
+  format: String,
+  oppijaOids: Option[Set[String]], //Käytännössä joko oppijaOids tai muuttuneetJälkeen on määritelty
+  muuttuneetJälkeen: Option[String]
+)
+case class KoskiMassaluovutusQueryResponse(
+  queryId: String,
+  requestedBy: String,
+  query: KoskiMassaluovutusQueryParams,
+  createdAt: Option[String],
+  startedAt: Option[String],
+  finishedAt: Option[String],
+  files: Seq[String],
+  resultsUrl: Option[String],
+  progress: Option[Map[String, String]],
+  sourceDataUpdatedAt: Option[String],
+  status: String
+) {
+  def isFinished() = status.equals("complete") || isFailed()
+  def isFailed() = status.equals("failed")
+}
+
+case class KoskiProcessingResults(
+  succeededHenkiloOids: Set[String],
+  failedHenkiloOids: Set[String]
+) {
+  def getFailedStr() = {
+    if (failedHenkiloOids.isEmpty) ""
+    else
+      s"Epäonnistuneet (${Math.min(failedHenkiloOids.size, 50)} ensimmäistä:) ${failedHenkiloOids
+        .take(50)}"
+  }
+}
+
+case class KoskiMassaluovutusFileResult(
+  oppijaOid: String,
+  kaikkiOidit: Seq[String],
+  aikaleima: String,
+  opiskeluoikeudet: Seq[KoskiOpiskeluoikeus]
+)
 
 class KoskiService(
   virkailijaRestClient: VirkailijaRestClient,
   oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
   hakemusService: IHakemusService,
-  koskiDataHandler: KoskiDataHandler,
-  config: Config,
-  pageSize: Int = 200
+  koskiDataHandler: KoskiDataHandler
 )(implicit val system: ActorSystem)
     extends IKoskiService {
-
+  implicit val ec: ExecutionContextExecutorService =
+    ExecutorUtil.createExecutor(8, "koski-sure-executor-pool")
   private val koskiKoulusivistyskieliCache: Cache[String, Seq[String]] =
     Scaffeine()
       .recordStats()
@@ -40,10 +82,11 @@ class KoskiService(
       .build[String, Seq[String]]()
 
   private val HelsinkiTimeZone = TimeZone.getTimeZone("Europe/Helsinki")
-  private val logger = Logging.getLogger(system, this)
+  val logger: Logger = LoggerFactory.getLogger(getClass)
 
   private var startTimestamp: Long = 0L
-  private var oneJobAtATime = Future.successful({})
+  private var oneJobAtATime =
+    Future.successful(KoskiProcessingResults(Set[String](), Set[String]()))
 
   val aktiiviset2AsteYhteisHakuOidit = new AtomicReference[Set[String]](Set.empty)
   def setAktiiviset2AsteYhteisHaut(hakuOids: Set[String]): Unit = {
@@ -72,15 +115,10 @@ class KoskiService(
   private val fetchPersonAliases
     : Seq[KoskiHenkiloContainer] => Future[(Seq[KoskiHenkiloContainer], PersonOidsWithAliases)] = {
     hs: Seq[KoskiHenkiloContainer] =>
+      logger.info(s"Haetaan aliaksia henkilöille...")
       val personOids: Seq[String] = hs.flatMap(_.henkilö.oid)
       oppijaNumeroRekisteri.enrichWithAliases(personOids.toSet).map((hs, _))
   }
-
-  case class SearchParamsWithCursor(
-    timestamp: Option[String],
-    cursor: Option[String],
-    pageSize: Int = 5000
-  )
 
   override def fetchOppivelvollisuusTietos(
     oppijaOids: Seq[String]
@@ -95,22 +133,11 @@ class KoskiService(
     )
   }
 
-  private def fetchChangedOppijas(
-    params: SearchParamsWithCursor
-  ): Future[MuuttuneetOppijatResponse] = {
-    logger.info(
-      s"Haetaan muuttuneet henkilöoidit Koskesta, timestamp: " + params.timestamp.toString + ", cursor: " + params.cursor.toString
-    )
-    virkailijaRestClient.readObjectWithBasicAuth[MuuttuneetOppijatResponse](
-      "koski.sure.muuttuneet-oppijat",
-      params
-    )(acceptedResponseCode = 200, maxRetries = 2)
-  }
-
   def refreshChangedOppijasFromKoski(
-    cursor: Option[String] = None,
-    timeToWaitUntilNextBatch: FiniteDuration = 1.minutes
+    lastQueryStart: Option[String],
+    timeToWaitUntilNextBatch: FiniteDuration = 10.seconds
   )(implicit scheduler: Scheduler): Unit = {
+    logger.info(s"refreshChangedOppijasFromKoski called!")
     val endDateSuomiTime =
       KoskiUtil.deadlineDate
         .plusDays(1)
@@ -122,47 +149,34 @@ class KoskiService(
       )
     } else {
       scheduler.scheduleOnce(timeToWaitUntilNextBatch)({
-        val timestamp: Option[String] =
-          if (cursor.isEmpty) {
+        //vvvv-kk-ppThh:mm:ss
+        val muuttunutJalkeenStr = lastQueryStart.getOrElse(KoskiUtil.koskiFetchStartTime)
+        logger.info(
+          s"refreshChangedOppijasFromKoski käynnistyy! Käsitellään muuttuneet $muuttunutJalkeenStr"
+        )
+        val thisQueryStart = new SimpleDateFormat(
+          "yyyy-MM-dd'T'HH:mm:ss"
+        ) //tästä tulee seuraavan iteraation aloitushetki
+          .format(new Date(System.currentTimeMillis()))
+        logger.info(
+          s"refreshChangedOppijasFromKoski : nyt $thisQueryStart, haetaan muuttuneet jälkeen: $muuttunutJalkeenStr"
+        )
+        val koskiParams = KoskiSuoritusTallennusParams(saveLukio = false, saveAmmatillinen = false)
+        val resultF = handleKoskiRefreshMuuttunutJalkeen(muuttunutJalkeenStr, koskiParams)
+
+        resultF.onComplete {
+          case Success(processingResults) =>
             logger.info(
-              s"Fetching changes from Koski starting from ${KoskiUtil.koskiFetchStartTime}"
+              s"refreshChangedOppijasFromKoski : saatiin käsiteltyä muutokset alkaen $muuttunutJalkeenStr. Onnistuneita ${processingResults.succeededHenkiloOids.size}, epäonnistuneita ${processingResults.failedHenkiloOids.size}. ${processingResults
+                .getFailedStr()}"
             )
-            Some(KoskiUtil.koskiFetchStartTime)
-          } else None
-        val params = SearchParamsWithCursor(timestamp, cursor)
-        fetchChangedOppijas(params).onComplete {
-          case Success(response: MuuttuneetOppijatResponse) =>
-            logger.info(
-              "refreshChangedOppijasFromKoski : got {} muuttunees oppijas from Koski.",
-              response.result.size
-            )
-            val koskiParams = KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = false)
-            handleHenkiloUpdate(response.result, koskiParams, "refreshChangedOppijas").onComplete {
-              case Success(s) =>
-                logger.info(
-                  "refreshChangedOppijasFromKoski : batch handling success. Oppijas handled: {}",
-                  response.result.size
-                )
-                if (response.mayHaveMore)
-                  refreshChangedOppijasFromKoski(
-                    Some(response.nextCursor),
-                    15.seconds
-                  ) //Haetaan nopeammin jos kaikkia tietoja samalla cursorilla ei vielä saatu
-                else
-                  refreshChangedOppijasFromKoski(Some(response.nextCursor), 1.minutes)
-              case Failure(e) =>
-                logger.error(
-                  "refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden tietojen haussa: {}",
-                  e
-                )
-                refreshChangedOppijasFromKoski(cursor, 2.minutes)
-            }
-          case Failure(e) =>
+            refreshChangedOppijasFromKoski(Some(thisQueryStart), 5.minutes)
+          case Failure(f) =>
             logger.error(
-              "refreshChangedOppijasFromKoski : Jokin meni vikaan muuttuneiden oppijoiden selvittämisessä : {}",
-              e
+              s"refreshChangedOppijasFromKoski : jotain meni vikaan muutosten käsittelyssä. Yritetään myöhemmin uudelleen samoilla parametreilla. ${f.getMessage}",
+              f
             )
-            refreshChangedOppijasFromKoski(cursor, 2.minutes)
+            refreshChangedOppijasFromKoski(Some(muuttunutJalkeenStr), 1.minute)
         }
       })
     }
@@ -185,7 +199,7 @@ class KoskiService(
       Await.result(
         syncHaunHakijat(
           haku,
-          KoskiSuoritusHakuParams(saveLukio = false, saveAmmatillinen = true)
+          KoskiSuoritusTallennusParams(saveLukio = false, saveAmmatillinen = true)
         ),
         5.hours
       )
@@ -210,7 +224,7 @@ class KoskiService(
       Await.result(
         syncHaunHakijat(
           haku,
-          KoskiSuoritusHakuParams(
+          KoskiSuoritusTallennusParams(
             saveLukio = true,
             saveAmmatillinen = false,
             saveSeiskaKasiJaValmistava = true
@@ -234,7 +248,7 @@ class KoskiService(
       Await.result(
         syncHaunHakijat(
           hakuOid,
-          KoskiSuoritusHakuParams(
+          KoskiSuoritusTallennusParams(
             saveLukio = true,
             saveAmmatillinen = false,
             saveSeiskaKasiJaValmistava = true
@@ -249,26 +263,9 @@ class KoskiService(
 
   override def syncHaunHakijat(
     hakuOid: String,
-    params: KoskiSuoritusHakuParams,
+    params: KoskiSuoritusTallennusParams,
     personOidsForHakuFn: String => Future[Set[String]]
   ) = {
-    def handleUpdate(personOidsSet: Set[String]): Future[Unit] = {
-      val personOidsWithAliases: PersonOidsWithAliases = Await.result(
-        oppijaNumeroRekisteri.enrichWithAliases(personOidsSet),
-        Duration(1, TimeUnit.MINUTES)
-      )
-      val aliasCount: Int =
-        personOidsWithAliases.henkiloOidsWithLinkedOids.size - personOidsSet.size
-      logger.info(
-        s"Saatiin hakemuspalvelusta ${personOidsSet.size} oppijanumeroa ja ${aliasCount} aliasta haulle $hakuOid"
-      )
-      handleHenkiloUpdate(
-        personOidsWithAliases.henkiloOidsWithLinkedOids.toSeq,
-        params,
-        s"hakuOid: $hakuOid"
-      )
-    }
-
     val now = System.currentTimeMillis()
     synchronized {
       if (oneJobAtATime.isCompleted) {
@@ -276,7 +273,10 @@ class KoskiService(
         startTimestamp = System.currentTimeMillis()
         //OK-227 : We'll have to wait that the onJobAtATime is REALLY done:
         oneJobAtATime = Await.ready(
-          personOidsForHakuFn(hakuOid).flatMap(handleUpdate),
+          personOidsForHakuFn(hakuOid).flatMap(oids => {
+            logger.info(s"Saatiin hakemuspalvelusta ${oids.size} oppijanumeroa haulle $hakuOid.")
+            handleKoskiRefreshForOppijaOids(oids, params)
+          }),
           5.hours
         )
         logger.info(s"Päivitys Koskesta haulle ${hakuOid} valmistui.")
@@ -290,121 +290,370 @@ class KoskiService(
     }
   }
 
-  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusHakuParams) = {
+  override def syncHaunHakijat(hakuOid: String, params: KoskiSuoritusTallennusParams) = {
     syncHaunHakijat(hakuOid, params, hakuOid => hakemusService.personOidsForHaku(hakuOid, None))
   }
 
-  def handleHenkiloUpdate(
-    personOids: Seq[String],
-    params: KoskiSuoritusHakuParams,
-    description: String = ""
-  ): Future[Unit] = {
-    if (personOids.isEmpty) {
-      logger.info(s"HandleHenkiloUpdate ($description) no personOids to process.")
-      Future.successful({})
-    } else {
-      logger.info(s"HandleHenkiloUpdate ($description) {} oppijanumeros", personOids.size)
-      val maxOppijatBatchSize: Int = config.integrations.koskiMaxOppijatBatchSize
-      val groupedOids: Seq[Seq[String]] = personOids.grouped(maxOppijatBatchSize).toSeq
-      val totalGroups: Int = groupedOids.length
-      var updateHenkiloResults = (Seq[String](), Seq[String]())
-      logger.info(
-        s"HandleHenkiloUpdate ($description) yhteensä $totalGroups kappaletta $maxOppijatBatchSize kokoisia ryhmiä."
-      )
+  //Palautetaan map, joka sisältää saman koulusivistyskielen kaikille henkilön aliaksille.
+  def koulusivistyskieletForAliases(koskiData: KoskiHenkiloContainer): Map[String, Seq[String]] = {
+    val koulusivistyskieli = resolveKoulusivistyskieli(koskiData)
+    koskiData.henkilö.kaikkiOidit.getOrElse(Seq.empty).map(oid => oid -> koulusivistyskieli).toMap
+  }
 
-      def handleBatch(
-        batches: Seq[(Seq[String], Int)],
-        acc: (Seq[String], Seq[String])
-      ): Future[(Seq[String], Seq[String])] = {
-        def updateHenkilotWithRetries(
-          oppijaOids: Set[String],
-          params: KoskiSuoritusHakuParams,
-          era: Int,
-          retriesLeft: Int
-        ): Future[(Seq[String], Seq[String])] = {
-          updateHenkilot(oppijaOids, params).recoverWith({ case e: Exception =>
-            if (retriesLeft > 0) {
-              logger.error(
-                e,
-                s"HandleHenkiloUpdate ($description) Virhe päivitettäessä henkilöiden tietoja erässä $era / $totalGroups, yritetään uudelleen. Uudelleenyrityksiä jäljellä: $retriesLeft"
-              )
-              Future { Thread.sleep(params.retryWaitMillis) }.flatMap(_ =>
-                updateHenkilotWithRetries(oppijaOids, params, era, retriesLeft - 1)
-              )
-            } else {
-              logger.error(
-                e,
-                s"HandleHenkiloUpdate ($description) Virhe päivitettäessä henkilöiden tietoja erässä $era / $totalGroups, ei enää uudelleenyrityksiä jäljellä."
-              )
-              throw e
-            }
-          })
-        }
+  def fetchKoulusivistyskieletMassa(oppijaOids: Set[String]): Future[Map[String, Seq[String]]] = {
+    val query = KoskiMassaluovutusQueryParams(
+      "sure-oppijat",
+      "application/json",
+      Some(oppijaOids),
+      muuttuneetJälkeen = None
+    )
+    callKoskiToCreateMassaluovutusQuery(query).flatMap(queryResult =>
+      resolveKoulusivistyskieletFromMassaluovutus(queryResult.resultsUrl.get)
+    )
+  }
 
-        if (batches.isEmpty) {
-          Future(acc)
-        } else {
-          val (subSeq, index) = batches.head
-          logger.info(
-            s"HandleHenkiloUpdate ($description) Päivitetään Koskesta $maxOppijatBatchSize henkilön tiedot Sureen. Erä ${index + 1} / $totalGroups."
-          )
-          updateHenkilotWithRetries(subSeq.toSet, params, index + 1, retriesLeft = 3).flatMap(s => {
-            logger.info(
-              s"HandleHenkiloUpdate ($description) Erä ${index + 1} / $totalGroups käsitelty virheittä."
-            )
-            handleBatch(batches.tail, (s._1 ++ acc._1, s._2 ++ acc._2))
-          })
-        }
-      }
-
-      val f: Future[(Seq[String], Seq[String])] =
-        handleBatch(groupedOids.zipWithIndex, updateHenkiloResults)
-      f.flatMap(results => {
+  def resolveKoulusivistyskieletFromMassaluovutus(
+    resultsUrl: String
+  ): Future[Map[String, Seq[String]]] = {
+    pollMassaluovutus(resultsUrl).flatMap((result: KoskiMassaluovutusQueryResponse) => {
+      if (result.isFailed()) {
+        logger.error(s"Virhe Kosken päässä massaluovutuskyselyssä $resultsUrl: ${result}")
+        throw new RuntimeException(s"Virhe Kosken päässä massaluovutuskyselyssä $resultsUrl")
+      } else if (result.isFinished()) {
         logger.info(
-          s"HandleHenkiloUpdate ($description) Koskipäivitys valmistui! Päivitettiin yhteensä ${results._1.size + results._2.size} henkilöä. " +
-            s"Onnistuneita päivityksiä ${results._2.size}. " +
-            s"Epäonnistuneita päivityksiä ${results._1.size}. " +
-            s"Epäonnistuneet: ${results._1}."
+          s"Valmista Kosken päässä, voidaan hakea koulusivistyskielet. Tiedostoja yhteensä ${result.files.size}. $result"
         )
-        Future.successful({})
-      }).recoverWith { case e: Exception =>
-        logger.error(e, s"HandleHenkiloUpdate ($description) Koskipäivitys epäonnistui")
-        Future.failed(e)
+        result.files.foldLeft(
+          Future.successful(Map[String, Seq[String]]())
+        ) { case (accFuture, fileUrl) =>
+          accFuture.flatMap(accResult => {
+            logger.info(s"Haetaan koulusivistyskielet tiedostosta $fileUrl")
+            fetchKoskiResultFile(fileUrl)
+              .map(koskiContainers => koskiContainers.map(koulusivistyskieletForAliases))
+              .map(_.flatten.toMap)
+              .map(batchResult => {
+                logger.info(
+                  s"Saatiin yhteensä ${batchResult.size} uutta entryä (alias -> kielet), yhdistellään aiempiin ${accResult.size} entryyn. Eka ${batchResult.headOption}"
+                )
+                accResult ++ batchResult
+              })
+          })
+        }
+      } else {
+        logger.info(s"Koskessa ei vielä valmista, pollataan kohta uudestaan.")
+        Thread.sleep(5000)
+        resolveKoulusivistyskieletFromMassaluovutus(resultsUrl)
       }
+    })
+  }
+
+  def saveKoskiDataWithRetries(
+    data: Seq[KoskiHenkiloContainer],
+    params: KoskiSuoritusTallennusParams,
+    description: String = "",
+    retries: Int
+  ) = {
+    def saveSuoritusBatchWithRetries(retriesLeft: Int): Future[KoskiProcessingResults] = {
+      try {
+        logger.info(s"$description, käsitellään koski-data ${data.size} henkilölle")
+        fetchPersonAliases(data)
+          .flatMap(res => {
+            val (henkilot, personOidsWithAliases) = res
+            logger.info(
+              s"$description Saatiin Koskesta ${henkilot.size} henkilöä, aliakset haettu!"
+            )
+            saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, params)
+              .map(failedAndSucceeded =>
+                KoskiProcessingResults(
+                  succeededHenkiloOids = failedAndSucceeded._2.toSet,
+                  failedHenkiloOids = failedAndSucceeded._1.toSet
+                )
+              )
+              .recoverWith({ case e: Exception =>
+                if (retriesLeft > 0) {
+                  logger.warn(
+                    s"$description Virhe käsiteltäessä henkilöiden koski-tietoja, yritetään uudelleen. Uudelleenyrityksiä jäljellä: $retriesLeft",
+                    e
+                  )
+                  Future { Thread.sleep(params.retryWaitMillis) }.flatMap(_ =>
+                    saveSuoritusBatchWithRetries(retriesLeft - 1)
+                  )
+                } else {
+                  logger.error(
+                    s"$description Virhe käsiteltäessä henkilöiden koski-tietoja, ei enää uudelleenyrityksiä jäljellä.",
+                    e
+                  )
+                  throw e
+                }
+              })
+          })
+      } catch {
+        case e: Exception if retriesLeft > 0 =>
+          logger.warn(
+            s"$description Tapahtui virhe käsiteltäessä koskidataa: ${e.getMessage}. Uudelleenyrityksiä jäljellä ${retriesLeft}, yritetään uudelleen."
+          )
+          saveSuoritusBatchWithRetries(retriesLeft - 1)
+        case e: Exception if retriesLeft == 0 =>
+          logger.error(
+            s"$description Tapahtui virhe käsiteltäessä koskidataa: ${e.getMessage}. Ei enää uudelleenyrityksiä jäljellä.",
+            e
+          )
+          throw e
+      }
+
+    }
+    saveSuoritusBatchWithRetries(retries)
+  }
+
+  private def callKoskiToCreateMassaluovutusQuery(
+    queryParams: KoskiMassaluovutusQueryParams
+  ): Future[KoskiMassaluovutusQueryResponse] = {
+    virkailijaRestClient
+      .postObjectWithCodes[KoskiMassaluovutusQueryParams, KoskiMassaluovutusQueryResponse](
+        "koski.sure.massaluovutus.create-query",
+        Seq(200),
+        maxRetries = 2,
+        resource = queryParams,
+        basicAuth = true
+      )
+  }
+
+  private def createAndHandleKoskiMassaluovutusQuery(
+    koskiQuery: KoskiMassaluovutusQueryParams,
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults] = {
+    try {
+      logger.info(s"Kutsutaan Kosken massaluovutusrajapintaa: $koskiQuery")
+      val resultF = callKoskiToCreateMassaluovutusQuery(koskiQuery)
+        .flatMap((baseQueryResponse: KoskiMassaluovutusQueryResponse) => {
+          logger.info(
+            s"Saatiin vastaus massaluovutusrajapinnalta: ${baseQueryResponse
+              .copy(files = Seq.empty)}, pollataan tilaa ja käsitellään tiedostot"
+          )
+          pollMassaluovutusAndHandleResults(
+            baseQueryResponse.resultsUrl.get,
+            params
+          )
+        })
+      resultF.onComplete {
+        case Success(results) =>
+          logger.info(
+            s"Massaluovutusqueryn $koskiQuery käsittely onnistui. Onnistuneita oppijoita ${results.succeededHenkiloOids.size} ja epäonnistuneita ${results.failedHenkiloOids.size}."
+          )
+        case Failure(f) =>
+          logger.error(s"Massaluovutusqueryn $koskiQuery käsittely epäonnistui: ${f.getMessage}", f)
+      }
+      resultF
+    } catch {
+      case e: Throwable =>
+        logger.error(
+          s"Jotain meni pieleen käsiteltäessä massaluovutusQuerya $koskiQuery, ${e.getStackTrace}",
+          e
+        )
+        Future.failed(e)
     }
   }
 
-  override def updateHenkilotWithAliases(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])] = {
-    logger.info(s"Haetaan oppijanumerorekisteristä aliakset oppijanumeroille: $oppijaOids")
-    val personOidsWithAliases: PersonOidsWithAliases = Await.result(
-      oppijaNumeroRekisteri.enrichWithAliases(oppijaOids),
-      Duration(1, TimeUnit.MINUTES)
-    )
-    val aliasCount: Int = personOidsWithAliases.henkiloOidsWithLinkedOids.size - oppijaOids.size
-    logger.info(
-      s"Yhteensä ${personOidsWithAliases.henkiloOidsWithLinkedOids.size} oppijanumeroa joista aliaksia ${aliasCount} kpl."
-    )
-    updateHenkilot(personOidsWithAliases.henkiloOidsWithLinkedOids, params)
+  def pollIfNeeded(
+    resultsUrl: String,
+    previousPollResult: Option[KoskiMassaluovutusQueryResponse],
+    handled: Set[String],
+    waitMillis: Long
+  ): Future[KoskiMassaluovutusQueryResponse] = {
+    previousPollResult match {
+      case Some(ppr) if ppr.isFinished() && ppr.files.size > handled.size =>
+        logger.info(
+          s"Kysely on valmistunut Kosken päässä, ei tarvitse pollata enää."
+        )
+        Future.successful(previousPollResult.get)
+      case Some(ppr) if (ppr.files.size > handled.size) =>
+        logger.info(s"Käsittelemättömiä tiedostoja on vielä, ei tarvita pollausta.")
+        Future.successful(previousPollResult.get)
+      case Some(ppr) if ppr.isFinished() =>
+        logger.info(s"Valmista, lopetetaan.")
+        Future.successful(previousPollResult.get)
+
+      case _ =>
+        logger.info(
+          s"Pollataan lisää piakkoin! Koskessa valmiina ${previousPollResult.map(_.files).getOrElse(Seq.empty).size}"
+        )
+        Thread.sleep(waitMillis)
+        pollMassaluovutus(resultsUrl).map(result =>
+          if (result.isFailed()) {
+            logger.error(s"Virhe Kosken päässä kyselyssä $resultsUrl: $result")
+            throw new RuntimeException(s"Virhe Kosken päässä kyselyssä $resultsUrl: $result")
+          } else result
+        )
+    }
   }
 
-  def fetchHenkilot(
-    oppijaOids: Set[String]
-  ): Future[Seq[KoskiHenkiloContainer]] = {
+  def pollMassaluovutusAndHandleResults(
+    resultsUrl: String,
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults] = {
+    var handled: Set[String] = Set[String]()
+
+    def pollAndHandleUntilReady(
+      accProcessingResults: KoskiProcessingResults,
+      previousPollResult: Option[KoskiMassaluovutusQueryResponse]
+    ): Future[KoskiProcessingResults] = {
+      val pollResultF: Future[KoskiMassaluovutusQueryResponse] =
+        pollIfNeeded(resultsUrl, previousPollResult, handled, params.massaluovutusPollWaitMillis)
+      pollResultF.flatMap(massaluovutusQueryResponse => {
+        logger.info(
+          s"Koskessa valmiina: ${massaluovutusQueryResponse.files.size} tiedostoa (${massaluovutusQueryResponse.progress}), käsitelty aiemmin ${handled.size} tiedostoa."
+        )
+
+        val filesReadyInKoski: Set[String] = massaluovutusQueryResponse.files.toSet
+        val nextUnhandledFile: Option[String] = (filesReadyInKoski -- handled).headOption
+
+        nextUnhandledFile match {
+          case Some(fileUrl) =>
+            logger.info(s"Käsitellään tiedosto $fileUrl")
+            handled = handled ++ nextUnhandledFile
+            val description: String =
+              s"KoskiMassaluovutus, käsitellään tiedosto nro ${handled.size}"
+            val batchResult = fetchKoskiResultFile(fileUrl).flatMap(fileResult => {
+              saveKoskiDataWithRetries(fileResult, params, description, 3)
+            })
+            val combinedResultsF = batchResult.map(batchResults => {
+              accProcessingResults.copy(
+                succeededHenkiloOids =
+                  accProcessingResults.succeededHenkiloOids ++ batchResults.succeededHenkiloOids,
+                failedHenkiloOids =
+                  accProcessingResults.failedHenkiloOids ++ batchResults.failedHenkiloOids
+              )
+            })
+            combinedResultsF.flatMap(combinedResults =>
+              pollAndHandleUntilReady(combinedResults, Some(massaluovutusQueryResponse))
+            )
+          case None if !massaluovutusQueryResponse.isFinished() =>
+            logger.info(s"Ei käsiteltävää, pollataan kohta uudestaan.")
+            pollAndHandleUntilReady(accProcessingResults, Some(massaluovutusQueryResponse))
+          case None if massaluovutusQueryResponse.isFinished() =>
+            logger.info(
+              s"Valmista. ${accProcessingResults.succeededHenkiloOids.size} onnistunutta ja ${accProcessingResults.failedHenkiloOids.size} epäonnistunutta henkilöä. Lopetetaan! $massaluovutusQueryResponse"
+            )
+            Future.successful(accProcessingResults)
+        }
+      })
+    }
+
+    pollAndHandleUntilReady(KoskiProcessingResults(Set[String](), Set[String]()), None)
+  }
+
+  def pollMassaluovutus(url: String) = {
+    logger.info(s"Pollataan massaluovutuskyselyä, url $url")
     virkailijaRestClient
-      .postObjectWithCodes[Set[String], Seq[KoskiHenkiloContainer]](
-        "koski.sure",
+      .readObjectFromUrl[KoskiMassaluovutusQueryResponse](
+        url,
         Seq(200),
-        maxRetries = 2,
-        resource = oppijaOids,
+        2,
         basicAuth = true
       )
-      .recoverWith { case e: Exception =>
-        logger.error("Kutsu koskeen oppijanumeroille {} epäonnistui: {} ", oppijaOids, e)
+  }
+
+  def fetchKoskiResultFile(fileUrl: String): Future[Seq[KoskiHenkiloContainer]] = {
+    try {
+      logger.info(s"Haetaan massaluovutus-tulostiedosto $fileUrl")
+      val koskiTiedotF = virkailijaRestClient
+        .readFileFromUrlWithBasicAuth[Seq[KoskiMassaluovutusFileResult]](
+          fileUrl,
+          Seq(200),
+          maxRetries = 2,
+          useNTLM = true
+        )
+        .map((koskiTiedotResult: Seq[KoskiMassaluovutusFileResult]) => {
+          val henkiloContainers: Seq[KoskiHenkiloContainer] = koskiTiedotResult
+            .map(kv =>
+              KoskiHenkiloContainer(
+                KoskiHenkilo(
+                  Some(kv.oppijaOid),
+                  Some(kv.kaikkiOidit),
+                  None,
+                  None,
+                  None,
+                  None,
+                  None
+                ),
+                kv.opiskeluoikeudet
+              )
+            )
+            .toList
+          if (henkiloContainers.isEmpty)
+            logger.warn(s"Jostain syystä tiedostosta $fileUrl ei löytynyt oppijoita...")
+          henkiloContainers
+        })
+      koskiTiedotF
+    } catch {
+      case e: Exception =>
+        logger.error(s"Virhe käsiteltäessä tuloksia osoitteesta $fileUrl", e)
         Future.failed(e)
+    }
+  }
+
+  val massaluovutusMaxOppijaOids: Int = 5000
+  override def handleKoskiRefreshForOppijaOids(
+    oppijaOids: Set[String],
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults] = {
+    if (oppijaOids.isEmpty) {
+      Future.successful(KoskiProcessingResults(Set[String](), Set[String]()))
+    } else {
+      val groupedOids: Seq[(Set[String], Int)] =
+        oppijaOids.grouped(massaluovutusMaxOppijaOids).zipWithIndex.toSeq
+      logger.info(s"Haetaan Koski-tiedot ${oppijaOids.size} oppijalle ${groupedOids.size} erässä")
+      val result = groupedOids.foldLeft(
+        Future.successful(KoskiProcessingResults(Set[String](), Set[String]()))
+      ) { case (accFuture, (oidBatch, batchNr)) =>
+        accFuture.flatMap(accResult => {
+          logger.info(s"Käsitellään erä ${batchNr + 1}/${groupedOids.size}")
+          createAndHandleKoskiMassaluovutusQuery(
+            KoskiMassaluovutusQueryParams(
+              "sure-oppijat",
+              "application/json",
+              Some(oidBatch),
+              muuttuneetJälkeen = None
+            ),
+            params
+          ).map(batchResult =>
+            KoskiProcessingResults(
+              succeededHenkiloOids =
+                accResult.succeededHenkiloOids ++ batchResult.succeededHenkiloOids,
+              failedHenkiloOids = accResult.failedHenkiloOids ++ batchResult.failedHenkiloOids
+            )
+          )
+        })
       }
+      result.onComplete {
+        case Success(processingResults) =>
+          logger.info(
+            s"handleKoskiRefreshForOppijaOids : saatiin käsiteltyä Koski-tiedot ${oppijaOids.size} oppijalle. Onnistuneita ${processingResults.succeededHenkiloOids.size}, epäonnistuneita ${processingResults.failedHenkiloOids.size}. ${processingResults
+              .getFailedStr()}"
+          )
+        case Failure(f) =>
+          logger.error(
+            s"handleKoskiRefreshForOppijaOids : jotain meni vikaan muutosten käsittelyssä ${oppijaOids.size} oppijalle.  ${f.getMessage}",
+            f
+          )
+      }
+      result
+    }
+  }
+
+  override def handleKoskiRefreshMuuttunutJalkeen(
+    muuttunutJalkeen: String,
+    params: KoskiSuoritusTallennusParams
+  ): Future[KoskiProcessingResults] = {
+    createAndHandleKoskiMassaluovutusQuery(
+      KoskiMassaluovutusQueryParams(
+        "sure-muuttuneet",
+        "application/json",
+        None,
+        muuttuneetJälkeen = Some(muuttunutJalkeen)
+      ),
+      params
+    )
   }
 
   def resolveKoulusivistyskieli(henkilo: KoskiHenkiloContainer): Seq[String] = {
@@ -420,12 +669,13 @@ class KoskiService(
 
   private def fetchKoulusivistyskieletInBatches(
     oidBatches: Seq[Set[String]],
-    acc: Seq[KoskiHenkiloContainer]
+    acc: Map[String, Seq[String]]
   ): Future[Map[String, Seq[String]]] = {
     if (oidBatches.isEmpty) {
-      Future(acc.map(h => (h.henkilö.oid.get, resolveKoulusivistyskieli(h))).toMap)
+      Future(acc)
     } else {
-      fetchHenkilot(oidBatches.head).flatMap((result: Seq[KoskiHenkiloContainer]) => {
+      logger.info(s"Haetaan koulusivistyskieliä ${oidBatches.head.size} kokoiselle batchille.")
+      fetchKoulusivistyskieletMassa(oidBatches.head).flatMap((result: Map[String, Seq[String]]) => {
         fetchKoulusivistyskieletInBatches(oidBatches.tail, acc ++ result)
       })
     }
@@ -434,11 +684,15 @@ class KoskiService(
   private def fetchKoulusivistyskieletForReal(
     oppijaOids: Seq[String]
   ): Future[Map[String, Seq[String]]] = {
-    val grouped = oppijaOids.toSet.grouped(1000).toSeq
-    logger.info(
-      s"Haetaan oikeasti kolusivistyskieli ${oppijaOids.size} oppijalle ${grouped.size} erässä Koskesta"
-    )
-    fetchKoulusivistyskieletInBatches(grouped, Seq.empty)
+    if (oppijaOids.nonEmpty) {
+      val grouped = oppijaOids.toSet.grouped(50).toSeq
+      logger.info(
+        s"Haetaan oikeasti kolusivistyskieli ${oppijaOids.size} oppijalle ${grouped.size} erässä Koskesta"
+      )
+      fetchKoulusivistyskieletInBatches(grouped, Map[String, Seq[String]]())
+    } else {
+      Future.successful(Map[String, Seq[String]]())
+    }
   }
 
   override def fetchKoulusivistyskielet(
@@ -461,20 +715,6 @@ class KoskiService(
     }
 
     fetched.zipWith(Future.successful(cached))(_ ++ _)
-  }
-
-  override def updateHenkilot(
-    oppijaOids: Set[String],
-    params: KoskiSuoritusHakuParams
-  ): Future[(Seq[String], Seq[String])] = {
-    val oppijat = fetchHenkilot(oppijaOids)
-    oppijat
-      .flatMap(fetchPersonAliases)
-      .flatMap(res => {
-        val (henkilot, personOidsWithAliases) = res
-        logger.info(s"Saatiin Koskesta ${henkilot.size} henkilöä, aliakset haettu!")
-        saveKoskiHenkilotAsSuorituksetAndArvosanat(henkilot, personOidsWithAliases, params)
-      })
   }
 
   //Poistaa KoskiHenkiloContainerin sisältä sellaiset opiskeluoikeudet, joilla ei ole oppilaitosta jolla on määritelty oid.
@@ -505,7 +745,7 @@ class KoskiService(
   private def saveKoskiHenkilotAsSuorituksetAndArvosanat(
     henkilot: Seq[KoskiHenkiloContainer],
     personOidsWithAliases: PersonOidsWithAliases,
-    params: KoskiSuoritusHakuParams
+    params: KoskiSuoritusTallennusParams
   ): Future[(Seq[String], Seq[String])] = {
     val filteredHenkilot: Seq[KoskiHenkiloContainer] =
       removeOpiskeluoikeudesWithoutDefinedOppilaitosAndOppilaitosOids(henkilot)
@@ -547,8 +787,8 @@ class KoskiService(
               val es = results.collect { case Left(e) => e }
               es.foreach(e =>
                 logger.error(
-                  e,
-                  s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} epäonnistui"
+                  s"Koskitietojen tallennus henkilölle ${henkilo.henkilö.oid.get} epäonnistui",
+                  e
                 )
               )
               if (es.isEmpty) {
