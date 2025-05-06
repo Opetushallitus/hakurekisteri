@@ -722,6 +722,7 @@ class HakemusService(
     )
 
     def updateCache(hakemukset: Seq[HakijaHakemus]): Seq[HakijaHakemus] = {
+      logger.info(s"Updating ${hakemukset.size} hakemusta to cache")
       hakemukset.groupBy(_.personOid.map(oid => masterOids.getOrElse(oid, oid))).foreach {
         case (Some(masterOid), allHakemukset) =>
           val f: Seq[FullHakemus] = allHakemukset.flatMap {
@@ -739,6 +740,8 @@ class HakemusService(
             case e: Exception =>
               logger.error(s"Couldn't store $masterOid hakemus to Redis cache", e)
           }
+        case (None, h) =>
+          logger.warning(s"Person oid missing from hakemus ${h.map(_.oid)}")
         case _ =>
         // dont care
       }
@@ -753,8 +756,8 @@ class HakemusService(
     fetchAllHakemukset.onComplete {
       case Success(all) =>
         updateCache(all)
-      case _ =>
-      //
+      case Failure(t) =>
+        logger.error(t, "fetchAllHakemukset failed")
     }
 
     fetchAllHakemukset
