@@ -23,7 +23,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
   KoodistoActorRef,
   KoodistoKoodiArvot
 }
-import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActor, KoutaInternalActorRef}
+import fi.vm.sade.hakurekisteri.integration.kouta.{KoutaInternalActorRef}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.pistesyotto.{
   PistesyottoService,
@@ -34,8 +34,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{
   HakukohdeOid,
   HakukohteenKoulutukset,
   Koulutusohjelma,
-  TarjontaActorRef,
-  TarjontaHakukohde
+  TarjontaActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{
   ValintaTulos,
@@ -225,14 +224,16 @@ class ValpasIntergration(
   def formatHakuAlkamispaivamaara(date: ReadableInstant): String = Formatter.print(date)
   private def hakemusToValintatulosQuery(
     hakuOid: String,
-    hakemukset: Seq[HakijaHakemus]
+    hakemukset: Seq[HakijaHakemus],
+    masterOids: Map[String, String]
   ): VirkailijanValintatulos = {
     val hetulla = hakemukset.filter(_.hetu.isDefined)
     val ilmanHetua = hakemukset.filter(_.hetu.isEmpty)
 
     def groupBy(h: Seq[HakijaHakemus]): Map[String, Set[String]] = {
-      h.groupBy(_.personOid.get).map { case (henkilo, hakemukset) =>
-        (henkilo, hakemukset.map(_.oid).toSet)
+      h.groupBy(_.personOid.map(o => masterOids.getOrElse(o, o)).get).map {
+        case (henkilo, hakemukset) =>
+          (henkilo, hakemukset.map(_.oid).toSet)
       }
     }
     VirkailijanValintatulos(hakuOid, groupBy(hetulla), groupBy(ilmanHetua))
@@ -523,7 +524,7 @@ class ValpasIntergration(
     oidToHaku: Map[String, Haku],
     hakemukset: Seq[HakijaHakemus],
     osallistumisetFuture: Future[Seq[ValintalaskentaOsallistuminen]]
-  ): Future[Seq[Try[ValpasHakemus]]] = {
+  )(masterOids: Map[String, String]): Future[Seq[Try[ValpasHakemus]]] = {
     val hakukohdeOids: Set[String] =
       hakemukset
         .flatMap(_.hakutoiveet.getOrElse(Seq.empty))
@@ -543,7 +544,7 @@ class ValpasIntergration(
 
       Future
         .sequence(byHaku.map { case (hakuOid, hakemukset) =>
-          fetchHaunTulokset(hakuOid, hakemukset)
+          fetchHaunTulokset(hakuOid, hakemukset, masterOids)
         })
         .map(_.flatten.toSeq.groupBy(_.hakemusOid))
     }
@@ -717,7 +718,15 @@ class ValpasIntergration(
 
                 val tulokset: Future[Seq[ValintaTulos]] =
                   if (warmUpValintatulokset) {
-                    fetchHaunTulokset(hakuOid, hakemukset)
+                    hakemusService
+                      .personOidstoMasterOids(
+                        hakemukset
+                          .map(_.personOid)
+                          .filter(_.isDefined)
+                          .map(_.get)
+                          .toSet
+                      )
+                      .flatMap(masterOids => fetchHaunTulokset(hakuOid, hakemukset, masterOids))
                   } else {
                     Future.successful(Seq.empty[ValintaTulos])
                   }
@@ -763,7 +772,8 @@ class ValpasIntergration(
 
   private def fetchHaunTulokset(
     hakuOid: String,
-    hakemukset: Seq[HakijaHakemus]
+    hakemukset: Seq[HakijaHakemus],
+    masterOids: Map[String, String]
   ): Future[Seq[ValintaTulos]] = {
     val hks: List[Seq[HakijaHakemus]] =
       hakemukset.sliding(MAX_TULOKSET_KERRALLA, MAX_TULOKSET_KERRALLA).toList
@@ -771,7 +781,8 @@ class ValpasIntergration(
     Future
       .sequence(
         hks.map(h =>
-          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, h)).mapTo[Seq[ValintaTulos]]
+          (valintaTulos.actor ? hakemusToValintatulosQuery(hakuOid, h, masterOids))
+            .mapTo[Seq[ValintaTulos]]
         )
       )
       .map(vv => vv.flatten)
@@ -794,7 +805,7 @@ class ValpasIntergration(
         hakemusService.personOidstoMasterOids(query.oppijanumerot)
 
       val hakemuksetFuture = masterOids
-        .flatMap(masterOids => hakemusService.hakemuksetForPersons(masterOids.values.toSet))
+        .flatMap(hakemusService.hakemuksetForPersons)
         .map(_.filter(_.stateValid))
 
       val osallistumisetFuture =
@@ -833,8 +844,10 @@ class ValpasIntergration(
           if (hakemukset.isEmpty) {
             Future.successful(Seq.empty)
           } else {
-            fetchValintarekisteriAndTarjonta(haut, hakemukset, osallistumisetFuture)
+            masterOids
+              .flatMap(fetchValintarekisteriAndTarjonta(haut, hakemukset, osallistumisetFuture))
               .flatMap(collectValintatulosResults)
+
           }
       } yield valpasHakemukset).recoverWith { case e: Exception =>
         logger.error(s"Failed to fetch Valpas-tiedot:", e)
