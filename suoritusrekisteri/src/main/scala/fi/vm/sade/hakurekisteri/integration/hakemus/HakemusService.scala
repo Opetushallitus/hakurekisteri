@@ -800,7 +800,13 @@ class HakemusService(
         case s if s.isEmpty => Future.successful(Seq.empty[HakijaHakemus])
         case s              => hakemuksetForPersonsFromHakuappAndAtaru(s, masterOids)
       }
-    } yield foundHakemukset ++ missedHakemukset
+    } yield {
+      logger.info(
+        s"Result for personOids ${personOids}: cachedHakemukset ${cachedHakemukset.map(_.isDefined)}, foundHakemukset ${foundHakemukset
+          .map(_.oid)}, missedHakemukset ${missedHakemukset.map(_.oid)}"
+      )
+      foundHakemukset ++ missedHakemukset
+    }
   }
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
