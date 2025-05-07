@@ -725,13 +725,11 @@ class HakemusService(
       logger.info(s"Updating ${hakemukset.map(_.oid)} to cache")
       hakemukset.groupBy(_.personOid.map(oid => masterOids.getOrElse(oid, oid))).foreach {
         case (Some(masterOid), allHakemukset) =>
-          val f: Seq[FullHakemus] = allHakemukset.flatMap {
-            case f: FullHakemus => Some(f)
-            case _              => None
+          val f: Seq[FullHakemus] = allHakemukset.collect { case f: FullHakemus =>
+            f
           }
-          val a: Seq[AtaruHakemus] = allHakemukset.flatMap {
-            case f: AtaruHakemus => Some(f)
-            case _               => None
+          val a: Seq[AtaruHakemus] = allHakemukset.collect { case a: AtaruHakemus =>
+            a
           }
           try {
             val json: String = write(AllHakemukset(f, a))
@@ -793,8 +791,10 @@ class HakemusService(
       )
       missedHakemukset <- personOids.diff(
         foundHakemukset
-          .flatMap(_.personOid)
-          .map(oid => masterOids.getOrElse(oid, oid))
+          .map(_.personOid)
+          .collect { case Some(oid) =>
+            masterOids.getOrElse(oid, oid)
+          }
           .toSet
       ) match {
         case s if s.isEmpty => Future.successful(Seq.empty[HakijaHakemus])
