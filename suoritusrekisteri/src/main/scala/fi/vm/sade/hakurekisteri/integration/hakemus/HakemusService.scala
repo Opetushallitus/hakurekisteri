@@ -722,7 +722,7 @@ class HakemusService(
     )
 
     def updateCache(hakemukset: Seq[HakijaHakemus]): Seq[HakijaHakemus] = {
-      logger.info(s"Updating ${hakemukset.size} hakemusta to cache")
+      logger.info(s"Updating ${hakemukset.map(_.oid)} to cache")
       hakemukset.groupBy(_.personOid.map(oid => masterOids.getOrElse(oid, oid))).foreach {
         case (Some(masterOid), allHakemukset) =>
           val f: Seq[FullHakemus] = allHakemukset.flatMap {
