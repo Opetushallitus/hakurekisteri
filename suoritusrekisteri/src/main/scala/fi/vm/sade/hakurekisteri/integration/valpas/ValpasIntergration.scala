@@ -794,7 +794,7 @@ class ValpasIntergration(
         hakemusService.personOidstoMasterOids(query.oppijanumerot)
 
       val hakemuksetFuture = masterOids
-        .flatMap(masterOids => hakemusService.hakemuksetForPersons(masterOids.values.toSet))
+        .flatMap(hakemusService.hakemuksetForPersons)
         .map(_.filter(_.stateValid))
 
       val osallistumisetFuture =
