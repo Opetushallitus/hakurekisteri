@@ -703,17 +703,16 @@ class HakemusService(
   implicit val formats = HakurekisteriJsonSupport.format
 
   def hakemuksetForPersonsFromHakuappAndAtaru(
-    searchablePersonOids: Set[String],
-    masterOids: Map[String, String]
+    personOids: Set[String]
   ): Future[Seq[HakijaHakemus]] = {
     val hakuAppCall = hakuappRestClient
       .postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(
         200,
-        searchablePersonOids
+        personOids
       )
     val ataruCall = ataruhakemukset(
       AtaruSearchParams(
-        hakijaOids = Some(searchablePersonOids.toList),
+        hakijaOids = Some(personOids.toList),
         hakukohdeOids = None,
         hakuOid = None,
         organizationOid = None,
@@ -721,29 +720,46 @@ class HakemusService(
       )
     )
 
-    def updateCache(hakemukset: Seq[HakijaHakemus]): Seq[HakijaHakemus] = {
+    def updateCache(hakemukset: Seq[HakijaHakemus]): Unit = {
       logger.info(s"Updating ${hakemukset.map(_.oid)} to cache")
-      hakemukset.groupBy(_.personOid.map(oid => masterOids.getOrElse(oid, oid))).foreach {
-        case (Some(masterOid), allHakemukset) =>
-          val f: Seq[FullHakemus] = allHakemukset.collect { case f: FullHakemus =>
-            f
+      val personOidsFromHakuAppApplications = hakemukset
+        .collect { case f: FullHakemus =>
+          f.personOid
+        }
+        .filter(_.isDefined)
+        .map(_.get)
+        .toSet
+      (personOidsFromHakuAppApplications match {
+        case oids if oids.isEmpty => Future.successful(Map[String, String]())
+        case oids                 => personOidstoMasterOids(oids)
+      }).foreach(masterOids =>
+        hakemukset
+          .groupBy {
+            case a: AtaruHakemus           => Some(a.henkilo.oidHenkilo)
+            case t: AtaruHakemusToinenAste => Some(t.henkilo.oidHenkilo)
+            case f: FullHakemus            => f.personOid.map(oid => masterOids.getOrElse(oid, oid))
           }
-          val a: Seq[AtaruHakemus] = allHakemukset.collect { case a: AtaruHakemus =>
-            a
+          .foreach {
+            case (Some(masterOid), allHakemukset) =>
+              val f: Seq[FullHakemus] = allHakemukset.collect { case f: FullHakemus =>
+                f
+              }
+              val a: Seq[AtaruHakemus] = allHakemukset.collect { case a: AtaruHakemus =>
+                a
+              }
+              try {
+                val json: String = write(AllHakemukset(f, a))
+                hakemusCache + (masterOid, json)
+              } catch {
+                case e: Exception =>
+                  logger.error(s"Couldn't store $masterOid hakemus to Redis cache", e)
+              }
+            case (None, h) =>
+              logger.warning(s"Person oid missing from hakemus ${h.map(_.oid)}")
+            case _ =>
+            // dont care
           }
-          try {
-            val json: String = write(AllHakemukset(f, a))
-            hakemusCache + (masterOid, json)
-          } catch {
-            case e: Exception =>
-              logger.error(s"Couldn't store $masterOid hakemus to Redis cache", e)
-          }
-        case (None, h) =>
-          logger.warning(s"Person oid missing from hakemus ${h.map(_.oid)}")
-        case _ =>
-        // dont care
-      }
-      hakemukset
+      )
     }
 
     val fetchAllHakemukset: Future[List[HakijaHakemus]] = for {
@@ -798,7 +814,7 @@ class HakemusService(
           .toSet
       ) match {
         case s if s.isEmpty => Future.successful(Seq.empty[HakijaHakemus])
-        case s              => hakemuksetForPersonsFromHakuappAndAtaru(s, masterOids)
+        case s              => hakemuksetForPersonsFromHakuappAndAtaru(s)
       }
     } yield {
       logger.info(
