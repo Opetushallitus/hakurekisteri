@@ -722,15 +722,14 @@ class HakemusService(
     )
 
     def updateCache(hakemukset: Seq[HakijaHakemus]): Seq[HakijaHakemus] = {
+      logger.info(s"Updating ${hakemukset.map(_.oid)} to cache")
       hakemukset.groupBy(_.personOid.map(oid => masterOids.getOrElse(oid, oid))).foreach {
         case (Some(masterOid), allHakemukset) =>
-          val f: Seq[FullHakemus] = allHakemukset.flatMap {
-            case f: FullHakemus => Some(f)
-            case _              => None
+          val f: Seq[FullHakemus] = allHakemukset.collect { case f: FullHakemus =>
+            f
           }
-          val a: Seq[AtaruHakemus] = allHakemukset.flatMap {
-            case f: AtaruHakemus => Some(f)
-            case _               => None
+          val a: Seq[AtaruHakemus] = allHakemukset.collect { case a: AtaruHakemus =>
+            a
           }
           try {
             val json: String = write(AllHakemukset(f, a))
@@ -739,6 +738,8 @@ class HakemusService(
             case e: Exception =>
               logger.error(s"Couldn't store $masterOid hakemus to Redis cache", e)
           }
+        case (None, h) =>
+          logger.warning(s"Person oid missing from hakemus ${h.map(_.oid)}")
         case _ =>
         // dont care
       }
@@ -753,8 +754,8 @@ class HakemusService(
     fetchAllHakemukset.onComplete {
       case Success(all) =>
         updateCache(all)
-      case _ =>
-      //
+      case Failure(t) =>
+        logger.error(t, "fetchAllHakemukset failed")
     }
 
     fetchAllHakemukset
@@ -790,14 +791,22 @@ class HakemusService(
       )
       missedHakemukset <- personOids.diff(
         foundHakemukset
-          .flatMap(_.personOid)
-          .map(oid => masterOids.getOrElse(oid, oid))
+          .map(_.personOid)
+          .collect { case Some(oid) =>
+            masterOids.getOrElse(oid, oid)
+          }
           .toSet
       ) match {
         case s if s.isEmpty => Future.successful(Seq.empty[HakijaHakemus])
         case s              => hakemuksetForPersonsFromHakuappAndAtaru(s, masterOids)
       }
-    } yield foundHakemukset ++ missedHakemukset
+    } yield {
+      logger.info(
+        s"Result for personOids ${personOids}: cachedHakemukset ${cachedHakemukset.map(_.isDefined)}, foundHakemukset ${foundHakemukset
+          .map(_.oid)}, missedHakemukset ${missedHakemukset.map(_.oid)}"
+      )
+      foundHakemukset ++ missedHakemukset
+    }
   }
 
   def hakemuksetForPerson(personOid: String): Future[Seq[HakijaHakemus]] = {
