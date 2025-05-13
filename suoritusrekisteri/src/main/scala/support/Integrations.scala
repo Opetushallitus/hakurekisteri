@@ -558,7 +558,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   }
 
   hakemusService.addTrigger(arvosanaTrigger)
-  hakemusService.addTrigger(ytlTrigger)
+  //hakemusService.addTrigger(ytlTrigger)
 
   val hoursToBacktrack: Int =
     OphUrlProperties.getOrElse("suoritusrekisteri.modifiedhakemukset.backtrack.hours", "1").toInt
