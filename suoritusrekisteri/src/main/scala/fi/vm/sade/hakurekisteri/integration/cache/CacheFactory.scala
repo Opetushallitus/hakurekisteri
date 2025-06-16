@@ -172,7 +172,11 @@ class RedisCache[K, T](
     }
 
     def deserialize(bs: ByteString): T = {
-      val ois = new ObjectInputStream(new ByteArrayInputStream(bs.toArray))
+      val ois = new ObjectInputStream(
+        new BufferedInputStream(
+          new ByteArrayInputStream(bs.toArray)
+        )
+      )
       try {
         ois.readObject().asInstanceOf[T]
       } finally {
