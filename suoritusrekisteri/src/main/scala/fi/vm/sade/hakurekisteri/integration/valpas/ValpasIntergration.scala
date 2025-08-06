@@ -215,7 +215,7 @@ class ValpasIntergration(
   hakemusService: IHakemusService
 ) {
   implicit val ec: ExecutionContextExecutorService =
-    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
+    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(10))
   implicit val defaultTimeout: Timeout = 120.seconds
   private val logger = LoggerFactory.getLogger(getClass)
 
