@@ -5,7 +5,7 @@ import java.net.ConnectException
 import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.security.SecureRandom
-import java.util.UUID
+import java.util.{Base64, UUID}
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.{ActorSystem, Props}
@@ -19,8 +19,8 @@ import fi.vm.sade.scalaproperties.OphProperties
 import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie}
 import org.asynchttpclient._
 import org.asynchttpclient.filter.ThrottleRequestFilter
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
@@ -123,7 +123,8 @@ class VirkailijaRestClient(
 
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](
       url: String,
-      basicAuth: Boolean = false
+      basicAuth: Boolean = false,
+      useNTLM: Boolean = false
     )(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request: Req = dispatch.url(url) <:< Map("Caller-Id" -> Config.callerId)
       val cookies = new scala.collection.mutable.ListBuffer[Cookie]()
@@ -158,6 +159,26 @@ class VirkailijaRestClient(
               internalClient(requestWithCookies, handler)
             }
           ) yield result
+        case (Some(un), Some(pw), true) if useNTLM =>
+          for (
+            result <- {
+              cookies += new DefaultCookie("CSRF", Config.csrf)
+              val requestWithCookies =
+                addCookies(requestWithPostHeaders, cookies).toRequest
+              val realm = new Realm.Builder(un, pw)
+                .setUsePreemptiveAuth(false)
+                .setScheme(
+                  Realm.AuthScheme.NTLM
+                ) //Tämä tarvitaan, jotta basic authilla toimivat Koski -> s3 ohjautuvat pyynnöt toimivat
+              val basicAuthHeader =
+                "Basic " + Base64.getEncoder.encodeToString((un + ":" + pw).getBytes)
+              val requestWithRealm = requestWithCookies.toBuilder
+                .setRealm(realm)
+                .setHeader("Authorization", basicAuthHeader)
+                .build()
+              internalClient(requestWithRealm, handler)
+            }
+          ) yield result
         case (Some(un), Some(pw), true) =>
           for (
             result <- {
@@ -188,7 +209,8 @@ class VirkailijaRestClient(
 
   private def tryClient[A <: AnyRef: Manifest](
     url: String,
-    basicAuth: Boolean = false
+    basicAuth: Boolean = false,
+    useNTLM: Boolean = false
   )(
     acceptedResponseCodes: Seq[Int],
     maxRetries: Int,
@@ -196,7 +218,9 @@ class VirkailijaRestClient(
     retryOnceOn502: Boolean = true
   ): Future[A] =
     Client
-      .request[A, A](url, basicAuth)(JsonExtractor.handler[A](acceptedResponseCodes: _*))
+      .request[A, A](url, basicAuth, useNTLM)(
+        JsonExtractor.handler[A](acceptedResponseCodes: _*)
+      )
       .recoverWith {
         case j: ExecutionException if j.getCause.getCause.isInstanceOf[JSessionIdCookieException] =>
           logger.warning("Expired jsession, fetching new JSessionId")
@@ -353,6 +377,23 @@ class VirkailijaRestClient(
     val url1: String = OphUrlProperties.url(uriKey, args: _*)
     //logger.info(s"Tehdään rajapintakutsu: " + url1)
     readObjectFromUrl(url1, Seq(acceptedResponseCode), maxRetries, true)
+  }
+
+  def readFileFromUrlWithBasicAuth[A <: AnyRef: Manifest](
+    url: String,
+    acceptedResponseCodes: Seq[Int],
+    maxRetries: Int = 0,
+    useNTLM: Boolean = true
+  ): Future[A] = {
+    val retryCount = new AtomicInteger(1)
+    val result =
+      tryClient[A](url, basicAuth = true, useNTLM = useNTLM)(
+        acceptedResponseCodes,
+        maxRetries,
+        retryCount
+      )
+    logLongQuery(result, url)
+    result
   }
 
   def readObjectFromUrl[A <: AnyRef: Manifest](
