@@ -19,11 +19,11 @@
         <java.version>17</java.version>
         <scala.version>2.12.20</scala.version>
         <spring.version>6.2.0</spring.version>
-        <spring-security.version>6.4.0</spring-security.version>
+        <spring-security.version>6.4.8</spring-security.version>
         <scalatra.version>3.0.0-M5-jakarta</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.6</json4s.version>
-        <netty.version>4.1.118.Final</netty.version>
+        <netty.version>4.1.124.Final</netty.version>
         <jetty.version>11.0.24</jetty.version>
         <jetty.server.version>9.4.56.v20240826</jetty.server.version>
         <dokumenttipalvelu.version>6.13-SNAPSHOT</dokumenttipalvelu.version>
