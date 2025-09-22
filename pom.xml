@@ -18,8 +18,8 @@
     <properties>
         <java.version>17</java.version>
         <scala.version>2.12.20</scala.version>
-        <spring.version>6.2.0</spring.version>
-        <spring-security.version>6.4.0</spring-security.version>
+        <spring.version>6.2.11</spring.version>
+        <spring-security.version>6.4.11</spring-security.version>
         <scalatra.version>3.0.0-M5-jakarta</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.6</json4s.version>
