@@ -1357,7 +1357,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
-            <version>1.4.14</version>
+            <version>1.5.7</version>
         </dependency>
         <dependency>
             <groupId>io.findify</groupId>
