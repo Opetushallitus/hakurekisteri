@@ -57,7 +57,7 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
         logger.warn(
           "Using OS temporary directory for YTL files since 'ytl.http.download.directory' configuration is missing!"
         )
-        com.google.common.io.Files.createTempDir()
+        Files.createTempDirectory("temp-ytl-download").toFile
       }
 
   override def read(uuid: String): Iterator[InputStream] = {

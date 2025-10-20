@@ -10,7 +10,7 @@
         <module>ovara-suoritusrekisteri</module>
         <module>suoritusrekisteri</module>
     </modules>
-    <version>15.0-SNAPSHOT</version>
+    <version>16.0-SNAPSHOT</version>
     <name>suoritusrekisteri-parent</name>
     <organization>
         <name>suoritusrekisteri</name>
@@ -18,26 +18,21 @@
     <properties>
         <java.version>17</java.version>
         <scala.version>2.12.20</scala.version>
-        <spring.version>6.2.0</spring.version>
-        <spring-security.version>6.4.0</spring-security.version>
+        <spring.version>6.2.11</spring.version>
+        <spring-security.version>6.5.5</spring-security.version>
         <scalatra.version>3.0.0-M5-jakarta</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.6</json4s.version>
-        <netty.version>4.1.118.Final</netty.version>
+        <netty.version>4.1.128.Final</netty.version>
         <jetty.version>11.0.24</jetty.version>
         <jetty.server.version>9.4.56.v20240826</jetty.server.version>
-        <dokumenttipalvelu.version>6.13-SNAPSHOT</dokumenttipalvelu.version>
+        <dokumenttipalvelu.version>6.15-SNAPSHOT</dokumenttipalvelu.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <slf4j-api.version>2.0.16</slf4j-api.version>
     </properties>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-common</artifactId>
-                <version>4.1.118.Final</version>
-            </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-http</artifactId>
@@ -177,7 +172,7 @@
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
-                <version>2.8.5</version>
+                <version>2.8.9</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
@@ -187,12 +182,12 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>2.9.7</version>
+                <version>2.15.0</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.9.10.4</version>
+                <version>2.15.0</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -207,7 +202,7 @@
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
                 <artifactId>akka-actor_2.12</artifactId>
-                <version>2.5.19</version>
+                <version>2.5.32</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.scala-lang</groupId>
@@ -243,7 +238,7 @@
             <dependency>
                 <groupId>org.asynchttpclient</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>2.12.3</version>
+                <version>2.12.4</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.sun.activation</groupId>
@@ -262,7 +257,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>io.netty</groupId>
-                        <artifactId>netty-transport-native-unix-common</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -311,17 +306,72 @@
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>netty-nio-client</artifactId>
-                <version>2.30.26</version>
+                <version>2.35.10</version>
             </dependency>
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>s3</artifactId>
-                <version>2.30.26</version>
+                <version>2.35.10</version>
             </dependency>
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>sts</artifactId>
-                <version>2.30.26</version>
+                <version>2.35.10</version>
+            </dependency>
+            <!-- xmltooling dependency -->
+            <dependency>
+                <groupId>org.apache.santuario</groupId>
+                <artifactId>xmlsec</artifactId>
+                <version>2.2.6</version>
+            </dependency>
+            <!-- opensaml dependency -->
+            <dependency>
+                <groupId>org.owasp.esapi</groupId>
+                <artifactId>esapi</artifactId>
+                <version>2.5.2.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents.core5</groupId>
+                        <artifactId>httpcore5</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>2.12.0</version>
+            </dependency>
+            <!-- esapi dependency -->
+            <dependency>
+                <groupId>commons-fileupload</groupId>
+                <artifactId>commons-fileupload</artifactId>
+                <version>1.6.0</version>
+            </dependency>
+            <!-- scala-utils dependency -->
+            <dependency>
+                <groupId>com.hubspot.jinjava</groupId>
+                <artifactId>jinjava</artifactId>
+                <version>2.7.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- jinjava transitive dependency -->
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>2.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -346,17 +396,29 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>21.0</version>
+            <version>33.3.1-jre</version>
         </dependency>
         <dependency>
-          <groupId>com.github.ben-manes.caffeine</groupId>
-          <artifactId>caffeine</artifactId>
-          <version>3.0.5</version>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.0.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.errorprone</groupId>
+                    <artifactId>error_prone_annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
             <version>3.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
@@ -473,7 +535,7 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>1.9.2</version>
+            <version>1.11.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -680,6 +742,10 @@
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -774,7 +840,7 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-testkit_2.12</artifactId>
-            <version>2.5.19</version>
+            <version>2.5.32</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -786,7 +852,7 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-slf4j_2.12</artifactId>
-            <version>2.5.19</version>
+            <version>2.5.32</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -999,7 +1065,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.4</version>
+            <version>42.7.7</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -1168,7 +1234,19 @@
                     <groupId>com.typesafe</groupId>
                     <artifactId>config</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.hubspot.jinjava</groupId>
+                    <artifactId>jinjava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.hubspot.jinjava</groupId>
+            <artifactId>jinjava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalaj</groupId>
@@ -1422,7 +1500,7 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-stream_2.12</artifactId>
-            <version>2.5.19</version>
+            <version>2.5.32</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1437,7 +1515,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.205</version>
+            <version>1.12.792</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
