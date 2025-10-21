@@ -4,13 +4,15 @@ import fi.vm.sade.utils.slf4j.Logging
 import jakarta.servlet.ServletConfig
 import jakarta.servlet.http.HttpServletRequest
 import org.apache.commons.collections4.EnumerationUtils
-import org.eclipse.jetty.proxy.ProxyServlet
-import org.eclipse.jetty.servlet.ServletHolder
-import org.eclipse.jetty.webapp.WebAppContext
+import org.eclipse.jetty.ee10.servlet.ServletHolder
+import org.eclipse.jetty.ee10.webapp.WebAppContext
+import org.eclipse.jetty.ee10.proxy.AsyncProxyServlet
 
 import scala.collection.JavaConverters._
 
-class LocalDevProxyingServlet(proxyTarget: String) extends ProxyServlet.Transparent with Logging {
+class LocalDevProxyingServlet(proxyTarget: String)
+    extends AsyncProxyServlet.Transparent
+    with Logging {
   override def init(config: ServletConfig): Unit = {
     val initParameters = EnumerationUtils
       .toList(config.getInitParameterNames)

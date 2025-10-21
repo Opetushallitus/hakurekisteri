@@ -115,6 +115,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
+    context.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false")
     context.setInitParameter(org.scalatra.EnvironmentKey, "production")
     if ("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
       context.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
@@ -270,7 +271,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     import scala.concurrent.duration._
 
-    Await.result(system.terminate(), 15.seconds)
+    Await.result(system.terminate(), 30.seconds)
 
     OPHSecurity.destroy(context)
   }

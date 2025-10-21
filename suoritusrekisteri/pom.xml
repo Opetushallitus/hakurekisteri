@@ -125,6 +125,9 @@
                     <junitxml>.</junitxml>
                     <filereports>WDF TestSuite.txt</filereports>
                     <parallel>false</parallel>
+                    <systemProperties>
+                        <postgresRunningOnPort>${postgresRunningOnPort}</postgresRunningOnPort>
+                    </systemProperties>
                     <stdout>I</stdout>
                 </configuration>
                 <executions>

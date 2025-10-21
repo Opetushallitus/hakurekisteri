@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.io._
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Paths}
 import java.text.SimpleDateFormat
 
 import com.amazonaws.{AmazonClientException, AmazonServiceException}
@@ -12,10 +12,8 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
-import com.amazonaws.regions.Regions
 
 import scala.util.Try
-import collection.JavaConverters._
 
 trait FileAccess {
 

@@ -82,6 +82,7 @@ class OppilaitosResourceSpec extends ScalatraFunSuite with BeforeAndAfterEach {
         )
       )
     )
+    servletContextHandler.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false")
     addServlet(new OppilaitosResource(guardedOpiskelijaRekisteri), "/*")
 
     super.beforeAll()
@@ -95,9 +96,9 @@ class OppilaitosResourceSpec extends ScalatraFunSuite with BeforeAndAfterEach {
     }
   }
 
-  test("returns 404 if no parameters are given") {
+  test("returns 403 if no parameters are given") {
     get("/") {
-      response.status should be(404)
+      response.status should be(403)
     }
   }
 

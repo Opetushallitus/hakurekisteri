@@ -2,7 +2,7 @@ package support
 
 import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.pattern.{AskableActorRef, Backoff, BackoffOpts, BackoffSupervisor}
+import akka.pattern.{AskableActorRef, BackoffOpts, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory
 import fi.vm.sade.hakurekisteri.integration.cache.CacheFactory.InMemoryCacheFactory
@@ -360,7 +360,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     serviceUrlSuffix = "/auth/cas"
   )(restEc, system)
   val pistesyottoService = new PistesyottoService(pistesyottoClient)
-  def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
+  private def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
       BackoffOpts.onStop(
         props,
@@ -687,7 +687,7 @@ class OvaraBaseIntegrations(system: ActorSystem, config: Config) extends OvaraIn
   private val onrClient =
     new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system)
 
-  def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
+  private def getSupervisedActorFor(props: Props, name: String) = system.actorOf(
     BackoffSupervisor.props(
       BackoffOpts.onStop(
         props,

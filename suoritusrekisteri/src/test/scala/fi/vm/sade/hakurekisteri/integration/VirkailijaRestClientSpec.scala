@@ -65,7 +65,7 @@ class VirkailijaRestClientSpec
       Await.result(response, 10.seconds)
     }
     thrown.getMessage() should include(
-      "Unrecognized token 'invalid': was expecting ('true', 'false' or 'null')"
+      "Unrecognized token 'invalid': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')"
     )
   }
 

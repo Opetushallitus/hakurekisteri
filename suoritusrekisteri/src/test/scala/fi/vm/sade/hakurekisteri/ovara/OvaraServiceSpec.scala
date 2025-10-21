@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.ovara
 
-import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, Haku, HakuRequest, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.haku.{AllHaut, GetHaku, Haku, HakuRequest, Kieliversiot}
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
@@ -13,7 +13,10 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{
   HakemusService,
   HakemusServiceMock
 }
-import fi.vm.sade.hakurekisteri.integration.henkilo.OppijaNumeroRekisteri
+import fi.vm.sade.hakurekisteri.integration.henkilo.{
+  MockOppijaNumeroRekisteri,
+  OppijaNumeroRekisteri
+}
 import fi.vm.sade.hakurekisteri.integration.kooste.KoosteServiceMock
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActorRef
@@ -99,10 +102,10 @@ class OvaraServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll 
         mock[ActorRef],
         mock[ValintarekisteriActorRef],
         mock[TarjontaActorRef],
-        mock[ActorRef],
-        mock[HakemusService],
-        mock[OppijaNumeroRekisteri],
-        mock[Config]
+        hakuActorMock,
+        hakemusServiceMocked,
+        MockOppijaNumeroRekisteri,
+        config
       )
     )
   )
@@ -160,6 +163,7 @@ class OvaraServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll 
 
   class MockHakuActor extends Actor {
     override def receive: Receive = {
+      case GetHaku(oid) if oid == kkHaku.oid => sender ! kkHaku
       case HakuRequest =>
         sender ! AllHaut(Seq(someHakuToDoNothingWith, kkHaku, toisenAsteenYhteishaku))
       case msg: Int => sender ! msg.toString

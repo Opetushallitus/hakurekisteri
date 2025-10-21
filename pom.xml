@@ -20,9 +20,9 @@
         <scala.version>2.12.20</scala.version>
         <spring.version>6.2.11</spring.version>
         <spring-security.version>6.5.5</spring-security.version>
-        <scalatra.version>3.0.0-M5-jakarta</scalatra.version>
+        <scalatra.version>3.1.2</scalatra.version>
         <slick.version>3.3.0</slick.version>
-        <json4s.version>4.0.6</json4s.version>
+        <json4s.version>4.0.7</json4s.version>
         <netty.version>4.1.128.Final</netty.version>
         <jetty.version>11.0.24</jetty.version>
         <jetty.server.version>9.4.56.v20240826</jetty.server.version>
@@ -33,16 +33,6 @@
     </properties>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-http</artifactId>
-                <version>11.0.24</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scalatest</groupId>
-                <artifactId>scalatest-core_2.12</artifactId>
-                <version>3.2.19</version>
-            </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
@@ -465,22 +455,8 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.12</artifactId>
-            <version>3.0.0-M5-jakarta</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalatra.rl</groupId>
-                    <artifactId>rl_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.12</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>scalatra-jakarta_2.12</artifactId>
+            <version>${scalatra.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
@@ -488,31 +464,14 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-json_2.12</artifactId>
-            <version>3.0.0-M5-jakarta</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-core_2.12</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>scalatra-json-jakarta_2.12</artifactId>
+            <version>${scalatra.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-swagger_2.12</artifactId>
-            <version>3.0.0-M5-jakarta</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-ext_2.12</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>scalatra-swagger-jakarta_2.12</artifactId>
+            <version>${scalatra.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.scalatra</groupId>-->
-<!--            <artifactId>scalatra-forms_2.12</artifactId>-->
-<!--            <version>${scalatra.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
@@ -794,42 +753,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <!--<dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-continuation</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>-->
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <!--<dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
-            <version>${jetty.server.version}</version>
-        </dependency>-->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-proxy</artifactId>
-            <version>${jetty.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>javax.mail</groupId>
@@ -1275,6 +1198,7 @@
             <groupId>org.scalatestplus</groupId>
             <artifactId>mockito-5-12_2.12</artifactId>
             <version>3.2.19.0</version>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1285,8 +1209,8 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.12</artifactId>
-<!--            <version>3.0.5</version>-->
-            <version>3.2.16</version>
+            <version>3.2.19</version>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -1305,7 +1229,7 @@
         <dependency>
             <groupId>com.dimafeng</groupId>
             <artifactId>testcontainers-scala_2.12</artifactId>
-            <version>0.39.4</version>
+            <version>0.43.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -1325,62 +1249,32 @@
         <dependency>
             <groupId>com.dimafeng</groupId>
             <artifactId>testcontainers-scala-postgresql_2.12</artifactId>
-            <version>0.39.4</version>
+            <version>0.43.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>5.12.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest_2.12</artifactId>
-<!--            <version>${scalatra.version}</version>-->
+            <artifactId>scalatra-scalatest-jakarta_2.12</artifactId>
             <version>${scalatra.version}</version>
             <scope>test</scope>
-           <!-- <exclusions>
-                <exclusion>
-                    <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalatra</groupId>
-                    <artifactId>scalatra-test_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>eu.medsea.mimeutil</groupId>
-                    <artifactId>mime-util</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-core</artifactId>
-                </exclusion>
-            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-test_2.12</artifactId>
-<!--            <version>${scalatra.version}</version>-->
-            <version>3.0.0-M5-jakarta</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-webapp</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <!--<exclusion>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-all</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-core</artifactId>
-                </exclusion>-->
-            </exclusions>
+            <artifactId>scalatra-test-jakarta_2.12</artifactId>
+            <version>${scalatra.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-proxy</artifactId>
+            <version>12.0.20</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>eu.medsea.mimeutil</groupId>
@@ -1433,9 +1327,15 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-access</artifactId>
-            <version>1.4.14</version>
+            <groupId>ch.qos.logback.access</groupId>
+            <artifactId>logback-access-jetty12</artifactId>
+            <version>2.0.6</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-server</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.findify</groupId>

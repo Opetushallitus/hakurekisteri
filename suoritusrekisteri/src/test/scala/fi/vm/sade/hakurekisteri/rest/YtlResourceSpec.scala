@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.ytl._
@@ -14,7 +14,14 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{
+  Await,
+  ExecutionContext,
+  ExecutionContextExecutor,
+  ExecutionContextExecutorService,
+  Future
+}
 
 @RunWith(classOf[JUnitRunner])
 class YtlResourceSpec
@@ -22,14 +29,20 @@ class YtlResourceSpec
     with DispatchSupport
     with YtlMockFixture
     with MockFactory {
-  implicit val system = ActorSystem()
-  implicit val clientEc = ExecutorUtil.createExecutor(1, "ytl-resource-test-pool")
+  implicit val system: ActorSystem = ActorSystem("ytl-resource-test-system")
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val clientEc: ExecutionContextExecutorService =
+    ExecutorUtil.createExecutor(1, "ytl-resource-test-pool")
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
   val hakemusService = stub[IHakemusService]
   val fileSystem = YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties, fileSystem)
   val config: Config = new MockConfig
+
+  override def afterAll(): Unit = {
+    Await.result(system.terminate(), 15.seconds)
+  }
 
   val successfulYtlKokelasPersister: KokelasPersister = mock[KokelasPersister]
   (successfulYtlKokelasPersister
@@ -81,6 +94,9 @@ class YtlResourceSpec
     HakemusHakuHetuPersonOid(f.oid, f.applicationSystemId, f.hetu.get, f.personOid.get)
 
   test("should launch YTL fetch") {
+    hakemusService.hetuAndPersonOidForHakuLite _ when (*) returns Future.successful(
+      Seq(HetuPersonOid("hetu", "personOid"))
+    )
     post("/http_request") {
       status should be(202)
     }
@@ -111,6 +127,4 @@ class YtlResourceSpec
     }
     Thread.sleep(5000)
   }
-
-  override def header = ???
 }

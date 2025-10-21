@@ -28,7 +28,7 @@ object JDBCUtil {
     Await.result(
       db.run(
         MTable
-          .getTables(tableName)
+          .getTables(None, None, Some(tableName), None)
           .flatMap((t: Vector[MTable]) => {
             if (t.isEmpty) {
               schemaActionExtensionMethods(
@@ -41,7 +41,6 @@ object JDBCUtil {
       ),
       queryTimeout
     )
-
   }
 }
 

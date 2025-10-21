@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import akka.actor.{ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.{Config, DefaultConfig, MockCacheFactory, MockConfig}
+import fi.vm.sade.hakurekisteri.{Config, MockCacheFactory}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakukohde.HakukohdeAggregatorActorRef
@@ -12,10 +12,8 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActorRef
 import fi.vm.sade.hakurekisteri.integration.kouta.KoutaInternalActorRef
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActorRef
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActorRef
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
-import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
@@ -308,6 +306,8 @@ class HakemusServiceSpec
     hakemusService.processModifiedHakemukset(refreshFrequency = 1.second)
 
     Thread.sleep(2000)
+
+    Await.result(system.terminate(), 15.seconds)
 
     triggerCounter should be(44)
   }

@@ -3,10 +3,9 @@ package fi.vm.sade.hakurekisteri
 import ch.qos.logback.access.jetty.RequestLogImpl
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.properties.OphProperties
+import org.eclipse.jetty.ee10.webapp.WebAppContext
 import org.eclipse.jetty.server.{Connector, RequestLog, Server, ServerConnector}
-import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.util.thread.{QueuedThreadPool, ThreadPool}
-import org.eclipse.jetty.webapp.WebAppContext
 
 object SureStandaloneJetty extends App {
   new SureStandaloneJetty().start
@@ -15,7 +14,9 @@ object SureStandaloneJetty extends App {
 class SureStandaloneJetty(config: Config = Config.globalConfig) {
   private val suoritusrekisteriApp = new WebAppContext()
   suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
-  suoritusrekisteriApp.setBaseResource(Resource.newClassPathResource("/webapp"))
+  suoritusrekisteriApp.setBaseResource(
+    suoritusrekisteriApp.getResourceFactory.newClassLoaderResource("/webapp")
+  )
   suoritusrekisteriApp.setContextPath("/suoritusrekisteri")
   suoritusrekisteriApp.setInitParameter(org.scalatra.EnvironmentKey, "production")
   suoritusrekisteriApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
