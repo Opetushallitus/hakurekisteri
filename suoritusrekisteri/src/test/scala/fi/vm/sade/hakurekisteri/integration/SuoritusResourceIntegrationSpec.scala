@@ -16,7 +16,6 @@ import org.joda.time.{DateTime, LocalDate}
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{JArray, JValue}
-import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -300,6 +299,4 @@ class SuoritusResourceIntegrationSpec
   private def toJson(suoritus1: VirallinenSuoritus): String = {
     compact(new SuoritusSerializer().serialize(jsonFormats)(suoritus1))
   }
-
-  override def header = ???
 }

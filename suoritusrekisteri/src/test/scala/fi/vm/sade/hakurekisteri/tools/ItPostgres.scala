@@ -4,6 +4,7 @@ import akka.util.Timeout
 import fi.vm.sade.utils.slf4j.Logging
 import org.slf4j.{Logger, LoggerFactory}
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import org.testcontainers.utility.DockerImageName
 import slick.jdbc.JdbcBackend
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.PostgresProfile.api._
@@ -12,9 +13,14 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.{Await, Future}
 
 object ItPostgres extends Logging {
-
+  private def asyncExecutor = AsyncExecutor.default("slick-executor", 20)
   val container: PostgreSQLContainer =
-    PostgreSQLContainer.Def(databaseName = "suoritusrekisteri").createContainer()
+    PostgreSQLContainer
+      .Def(
+        dockerImageName = DockerImageName.parse("postgres:15"),
+        databaseName = "suoritusrekisteri"
+      )
+      .createContainer()
   container.configure { c =>
     c.withPrivilegedMode(true)
     c.withInitScript("database/init.sql")
@@ -39,7 +45,12 @@ object ItPostgres extends Logging {
 
   def reset(): Unit = {
     log.info("Resetting database tables ...")
-    val db = Database.forURL(container.jdbcUrl, container.username, container.password)
+    val db = Database.forURL(
+      url = container.jdbcUrl,
+      user = container.username,
+      password = container.password,
+      executor = asyncExecutor
+    )
     val tablesTruncate = runAwait(
       db.run(
         sql"select tablename from pg_catalog.pg_tables WHERE schemaname != 'information_schema' AND schemaname != 'pg_catalog' AND tablename != 'flyway_schema_history' AND tablename != 'siirtotiedosto'"
@@ -50,7 +61,7 @@ object ItPostgres extends Logging {
     db.close()
   }
 
-  def stop() {
+  def stop(): Unit = {
     container.stop()
     running = false
   }
@@ -61,7 +72,12 @@ object ItPostgres extends Logging {
   }
 
   def getDatabase: JdbcBackend.DatabaseDef = {
-    Database.forURL(container.jdbcUrl, container.username, container.password)
+    Database.forURL(
+      url = container.jdbcUrl,
+      user = container.username,
+      password = container.password,
+      executor = asyncExecutor
+    )
   }
 
   private def runAwait[T](f: Future[T]): T = Await.result(f, atMost = timeout.duration)

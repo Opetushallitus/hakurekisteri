@@ -12,6 +12,6 @@ trait ActorSystemSupport {
 
     f(system)
 
-    Await.result(system.terminate(), 15.seconds)
+    Await.result(system.terminate(), 30.seconds)
   }
 }

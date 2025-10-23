@@ -186,7 +186,7 @@ trait KkHakijaSwaggerApiV3
 
   registerModel(incidentReportModel)
 
-  val query: OperationBuilder = apiOperation[Seq[HakijaV3]]("haeKkHakijat")
+  val query: OperationBuilder = apiOperation[Seq[HakijaV3]]("haeKkHakijatV3")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
@@ -210,13 +210,13 @@ trait KkHakijaSwaggerApiV3
     .parameter(
       queryParam[String]("hakuehto")
         .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
-        .allowableValues(Hakuehto.values.toList)
+        .allowableValues(Hakuehto.values.map(_.toString).toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
         .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
-        .allowableValues(ApiFormat.Json, ApiFormat.Excel)
+        .allowableValues(ApiFormat.Json.toString, ApiFormat.Excel.toString)
     )
     .produces("application/json", "application/octet-stream")
     .responseMessage(

@@ -35,7 +35,6 @@ import org.springframework.security.cas.authentication.CasAuthenticationToken
 
 import scala.compat.Platform
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -114,7 +113,7 @@ class SuoritusResourceWithOPHSpec
           RestrictionPeriods(
             opoUpdateGraduation = List(SendingPeriod(0, periodEnd))
           )
-        )
+        )(jsonFormats)
       )
     )
     result
@@ -126,6 +125,7 @@ class SuoritusResourceWithOPHSpec
   val asyncClientRestrictionActive = new CapturingAsyncHttpClient(createEndpointMock(0L))
 
   override def beforeAll(): Unit = {
+    ItPostgres.reset()
     system = ActorSystem("test-suoritus-resource")
     database = ItPostgres.getDatabase
 
@@ -160,7 +160,7 @@ class SuoritusResourceWithOPHSpec
     val json =
       ("{\"henkiloOid\":\"1.2.246.562.24.71944845619\",\"source\":\"Test\",\"vahvistettu\":true,\"komo\":\"1.2.246.562.13.62959769647\",\"myontaja\":\"1.2.246.562.10.39644336305\",\"tila\":\"VALMIS\",\"valmistuminen\":\"2016-05-04T21:00:00.000Z\",\"yksilollistaminen\":\"Ei\",\"suoritusKieli\":\"FI\",\"id\":\"22d606f9-b150-44eb-9ad3-60c7a0bffdb8\"}")
     post("/", json, Map("Content-type" -> "application/json")) {
-      response.status should be(201)
+      status should be(201)
     }
   }
 
@@ -168,7 +168,7 @@ class SuoritusResourceWithOPHSpec
     val json =
       ("{\"henkiloOid\":\"1.2.246.562.24.71944845619\",\"source\":\"Test\",\"vahvistettu\":true,\"komo\":\"1.2.246.562.13.62959769647\",\"myontaja\":\"1.2.246.562.10.39644336305\",\"tila\":\"VALMIS\",\"valmistuminen\":\"2016-05-04T21:00:00.000Z\",\"yksilollistaminen\":\"Ei\",\"suoritusKieli\":\"FI\",\"id\":\"22d606f9-b150-44eb-9ad3-60c7a0bffdb8\"}")
     post("/", json, Map("Content-type" -> "application/json")) {
-      response.status should be(201)
+      status should be(201)
     }
   }
 
@@ -195,7 +195,8 @@ class SuoritusResourceWithOPOSpec
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now, "1.2.4")
 
   override def beforeAll(): Unit = {
-    system = ActorSystem("test-suoritus-resource")
+    ItPostgres.reset()
+    system = ActorSystem("test-suoritus-resource-opo")
     database = ItPostgres.getDatabase
     val suoritusJournal =
       new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable], config = mockConfig)
@@ -230,7 +231,7 @@ class SuoritusResourceWithOPOSpec
     val json =
       ("{\"henkiloOid\":\"1.2.246.562.24.71944845619\",\"source\":\"Test\",\"vahvistettu\":true,\"komo\":\"1.2.246.562.13.62959769647\",\"myontaja\":\"1.2.246.562.10.39644336305\",\"tila\":\"VALMIS\",\"valmistuminen\":\"2016-05-04T21:00:00.000Z\",\"yksilollistaminen\":\"Ei\",\"suoritusKieli\":\"FI\",\"id\":\"22d606f9-b150-44eb-9ad3-60c7a0bffdb8\"}")
     post("/bar", json, Map("Content-type" -> "application/json")) {
-      response.status should be(201)
+      status should be(201)
     }
   }
 
@@ -238,7 +239,7 @@ class SuoritusResourceWithOPOSpec
     val json =
       ("{\"henkiloOid\":\"1.2.246.562.24.71944845619\",\"source\":\"Test\",\"vahvistettu\":true,\"komo\":\"1.2.246.562.13.62959769647\",\"myontaja\":\"1.2.246.562.10.39644336305\",\"tila\":\"VALMIS\",\"valmistuminen\":\"2016-05-04T21:00:00.000Z\",\"yksilollistaminen\":\"Ei\",\"suoritusKieli\":\"FI\",\"id\":\"22d606f9-b150-44eb-9ad3-60c7a0bffdb8\"}")
     post("/foo", json, Map("Content-type" -> "application/json")) {
-      response.status should be(404)
+      status should be(404)
     }
   }
 }

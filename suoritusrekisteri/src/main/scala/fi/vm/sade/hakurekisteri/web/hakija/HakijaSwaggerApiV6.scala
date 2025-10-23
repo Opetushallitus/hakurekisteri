@@ -181,13 +181,13 @@ trait HakijaSwaggerApiV6
     .parameter(
       queryParam[String]("hakuehto")
         .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
-        .allowableValues(Hakuehto.values.toList)
+        .allowableValues(Hakuehto.values.map(_.toString).toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
         .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
-        .allowableValues(ApiFormat.Excel, ApiFormat.Json)
+        .allowableValues(ApiFormat.Excel.toString, ApiFormat.Json.toString)
         .required
     )
     .parameter(

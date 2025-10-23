@@ -243,13 +243,13 @@ trait KkHakijaSwaggerApiV5
     .parameter(
       queryParam[String]("hakuehto")
         .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
-        .allowableValues(Hakuehto.values.toList)
+        .allowableValues(Hakuehto.values.map(_.toString).toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
         .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
-        .allowableValues(ApiFormat.Json, ApiFormat.Excel)
+        .allowableValues(ApiFormat.Json.toString, ApiFormat.Excel.toString)
     )
     .parameter(
       queryParam[Option[Boolean]]("palautaKoulusivistyskielet")
