@@ -15,7 +15,7 @@
   -->
 
 <!--
-    spring security context for front/backend applications/services, uses cas+kayttooikeuspalvelu
+    spring security context for front/backend applications/services, uses cas
 
     NOTE!
 
