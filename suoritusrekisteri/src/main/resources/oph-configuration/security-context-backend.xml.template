@@ -132,8 +132,10 @@
       NOTE: In a real application you should not use an in memory implementation.
     -->
 
+    <beans:bean id="authenticationUserDetailsService" class="fi.vm.sade.javautils.kayttooikeusclient.OphUserDetailsServiceImpl" />
+
     <beans:bean id="casAuthenticationProvider" class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
-        <beans:property name="userDetailsService" ref="userDetailsService"/>
+        <beans:property name="authenticationUserDetailsService" ref="authenticationUserDetailsService"/>
         <beans:property name="serviceProperties" ref="casServiceProperties"/>
         <beans:property name="ticketValidator" ref="casTicketValidator"/>
         <beans:property name="key" value="${cas_key}"/>
@@ -145,8 +147,6 @@
     </beans:bean>
 
     <!--p:configLocation="classpath:ehcacheClearPass.xml"-->
-
-    <beans:bean id="userDetailsService" class="fi.vm.sade.javautils.kayttooikeusclient.OphUserDetailsServiceImpl"/>
 
     <beans:bean id="casServiceProperties" class="org.springframework.security.cas.ServiceProperties">
         <beans:property name="service" value="${cas_service}/j_spring_cas_security_check"/>
