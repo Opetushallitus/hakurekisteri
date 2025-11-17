@@ -146,10 +146,7 @@
 
     <!--p:configLocation="classpath:ehcacheClearPass.xml"-->
 
-    <beans:bean id="userDetailsService" class="fi.vm.sade.javautils.kayttooikeusclient.OphUserDetailsServiceImpl">
-        <beans:constructor-arg index="0" value="${host.alb}" />
-        <beans:constructor-arg index="1" value="koodisto" />
-    </beans:bean>
+    <beans:bean id="userDetailsService" class="fi.vm.sade.javautils.kayttooikeusclient.OphUserDetailsServiceImpl"/>
 
     <beans:bean id="casServiceProperties" class="org.springframework.security.cas.ServiceProperties">
         <beans:property name="service" value="${cas_service}/j_spring_cas_security_check"/>
