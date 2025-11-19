@@ -579,9 +579,8 @@ class KoskiDataHandler(
     henkiloOid: String,
     viimeisimmatSuoritukset: Seq[SuoritusArvosanat],
     personOidsWithAliases: PersonOidsWithAliases,
-    params: KoskiSuoritusHakuParams
+    params: KoskiSuoritusTallennusParams
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
-
     fetchExistingSuoritukset(henkiloOid, personOidsWithAliases).flatMap(fetchedSuoritukset => {
       //OY-227 : Check and delete if there is suoritus which is not included on new suoritukset.
       var tallennettavatSuoritukset = viimeisimmatSuoritukset
@@ -885,7 +884,7 @@ class KoskiDataHandler(
   def processHenkilonTiedotKoskesta(
     koskihenkilöcontainer: KoskiHenkiloContainer,
     personOidsWithAliases: PersonOidsWithAliases,
-    params: KoskiSuoritusHakuParams,
+    params: KoskiSuoritusTallennusParams,
     henkilo: Option[Henkilo] = None
   ): Future[Seq[Either[Exception, Option[SuoritusArvosanat]]]] = {
     val henkiloOid = koskihenkilöcontainer.henkilö.oid.get

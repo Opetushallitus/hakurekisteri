@@ -435,7 +435,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     rekisterit.opiskelijaRekisteri
   )(system.dispatcher)
   val koskiService =
-    new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler, config)(
+    new KoskiService(koskiClient, oppijaNumeroRekisteri, hakemusService, koskiDataHandler)(
       system
     )
   val koosteService = new KoosteService(koosteClient)(system)
@@ -602,7 +602,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     }
     if (KoskiUtil.updateToisenAsteenHaut) {
       // refreshChangedOppijasFromKoski is bound to toisen asteen haut
-      koskiService.refreshChangedOppijasFromKoski()
+      logger.info(s"Päivitetään toisen asteen haut!")
+      koskiService.refreshChangedOppijasFromKoski(None)
       quartzScheduler.scheduleJob(
         lambdaJob(koskiService.updateAktiivisetToisenAsteenHaut()),
         newTrigger().startNow().withSchedule(cronSchedule(koskiCronJob)).build()

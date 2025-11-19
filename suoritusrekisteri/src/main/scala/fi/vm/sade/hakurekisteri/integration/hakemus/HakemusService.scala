@@ -1043,16 +1043,10 @@ class HakemusService(
         "haku-app.personoidsbyapplicationsystem",
         organisaatio.orNull
       )(200, Set(hakuOid))
-      ataruHakemukset: Seq[AtaruHakemus] <- ataruhakemukset(
-        AtaruSearchParams(
-          hakijaOids = None,
-          hakukohdeOids = None,
-          hakuOid = Some(hakuOid),
-          organizationOid = organisaatio,
-          modifiedAfter = None
-        )
+      ataruPersonOids: Set[String] <- hetuAndPersonOidForHakuLite(hakuOid).map(
+        _.map(_.personOid).toSet
       )
-    } yield hakuappPersonOids ++ ataruHakemukset.flatMap(_.personOid)
+    } yield hakuappPersonOids ++ ataruPersonOids
   }
 
   override def springPersonOidsForJatkuvaHaku(hakuOid: String): Future[Set[String]] = {
@@ -1098,14 +1092,14 @@ class HakemusService(
         hakukohdeOids = None,
         hakuOid = Some(hakuOid)
       )
-    ).map(result => {
-      logger.info(s"Saatiin atarusta henkilötiedot ${result.size} hakemukselta")
+    ).map((result: Seq[AtaruHakemuksenHenkilotiedot]) => {
+      logger.info(s"Saatiin atarusta henkilötiedot ${result.size} hakemukselta haulle $hakuOid")
       val hetuJaPersonOidTiedossa: Seq[HetuPersonOid] =
         result.collect({ case AtaruHakemuksenHenkilotiedot(_, Some(personOid), Some(ssn)) =>
           HetuPersonOid(ssn, personOid)
         })
       logger.info(
-        s"Hetu ja personOid tiedossa ${hetuJaPersonOidTiedossa.size} hakemukselle ${result.size} hakemuksesta"
+        s"Hetu ja personOid tiedossa ${hetuJaPersonOidTiedossa.size} hakemukselle ${result.size} hakemuksesta haulle $hakuOid"
       )
       hetuJaPersonOidTiedossa
     })
@@ -1183,17 +1177,14 @@ class HakemusService(
       val lastChecked = new Date()
       val formattedDate = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)
       logger.info(
-        "processModifiedHakemukset : Fetching modified hakemukses from haku-app and ataru, " +
+        "processModifiedHakemukset : Fetching modified hakemukses from ataru, " +
           s"modified since $formattedDate"
       )
       val allApplications: Future[List[HakijaHakemus]] = for {
-        hakuappApplications: Seq[FullHakemus] <- fetchHakemuksetChunked(
-          params = SearchParams(updatedAfter = formattedDate)
-        )
         ataruApplications: List[HakijaHakemus] <- ataruhakemukset(
           AtaruSearchParams(None, None, None, None, Some(formattedDate))
         )
-      } yield hakuappApplications.toList ::: ataruApplications
+      } yield ataruApplications
       allApplications
         .flatMap(aa => {
           logger.info(
