@@ -371,7 +371,7 @@
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
             <artifactId>opintopolku-user-details-service</artifactId>
-            <version>0.3.0-SNAPSHOT</version>
+            <version>0.5.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.spire-math</groupId>
@@ -595,17 +595,6 @@
                 <exclusion>
                     <groupId>net.sf.ehcache</groupId>
                     <artifactId>ehcache-jgroupsreplication</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>opiskelijavalinnat-utils</groupId>
-            <artifactId>java-cas</artifactId>
-            <version>1.2.4-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
