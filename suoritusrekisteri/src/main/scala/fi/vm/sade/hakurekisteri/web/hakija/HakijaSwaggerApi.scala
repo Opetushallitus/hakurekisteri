@@ -110,13 +110,13 @@ trait HakijaSwaggerApi
     .parameter(
       queryParam[String]("hakuehto")
         .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
-        .allowableValues(Hakuehto.values.toList)
+        .allowableValues(Hakuehto.values.map(_.toString).toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
         .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
-        .allowableValues(ApiFormat.values.toList)
+        .allowableValues(ApiFormat.values.map(_.toString).toList)
         .required
     )
     .parameter(
@@ -214,13 +214,13 @@ trait HakijaSwaggerApi
     .parameter(
       queryParam[String]("hakuehto")
         .description("hakuehto")
-        .allowableValues(Hakuehto.values.toList)
+        .allowableValues(Hakuehto.values.map(_.toString).toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
         .description("tietotyyppi")
-        .allowableValues(ApiFormat.Excel, ApiFormat.Json)
+        .allowableValues(ApiFormat.Excel.toString, ApiFormat.Json.toString)
         .required
     )
     .parameter(

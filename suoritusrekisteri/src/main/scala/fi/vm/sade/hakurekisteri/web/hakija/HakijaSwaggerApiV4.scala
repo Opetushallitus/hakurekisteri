@@ -126,7 +126,7 @@ trait HakijaSwaggerApiV4
     )
   )
 
-  val queryV2: OperationBuilder = apiOperation[JSONHakijatV4]("haeHakijatV4")
+  val queryV4: OperationBuilder = apiOperation[JSONHakijatV4]("haeHakijatV4")
     .summary("näyttää kaikki hakijat")
     .description(
       "Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti."
@@ -141,13 +141,13 @@ trait HakijaSwaggerApiV4
     .parameter(
       queryParam[String]("hakuehto")
         .description(s"${Hakuehto.values.map(_.toString).reduce((prev, next) => s"$prev, $next")}")
-        .allowableValues(Hakuehto.values.toList)
+        .allowableValues(Hakuehto.values.map(_.toString).toList)
         .required
     )
     .parameter(
       queryParam[String]("tyyppi")
         .description(s"tietotyyppi ${ApiFormat.Excel} tai ${ApiFormat.Json}")
-        .allowableValues(ApiFormat.Excel, ApiFormat.Json)
+        .allowableValues(ApiFormat.Excel.toString, ApiFormat.Json.toString)
         .required
     )
     .parameter(

@@ -359,6 +359,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
   val koutaInternalUrlQa = s"https://$hostQa/kouta-internal"
+  val valintalaskentakoostepalveluUrlQa = s"https://$hostQa/valintalaskentakoostepalvelu"
   val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
   val valintaperusteetServiceUrlQa = s"https://$hostQa/valintaperusteet-service"
   val hakukohderyhmaPalveluUrlQA = s"https://$hostQa/hakukohderyhmapalvelu"
@@ -372,7 +373,10 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val tarjontaServiceUrl =
     properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
   val koutaInternalUrl = properties.getOrElse("cas.service.kouta-internal", koutaInternalUrlQa)
-  val koosteServiceUrl = properties("cas.service.valintalaskentakoostepalvelu")
+  val koosteServiceUrl = properties.getOrElse(
+    "cas.service.valintalaskentakoostepalvelu",
+    valintalaskentakoostepalveluUrlQa
+  )
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
   val ataruUrl = properties.getOrElse("cas.service.ataru", ataruUrlQa)
   val koodistoServiceUrl =

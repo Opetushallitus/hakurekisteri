@@ -7,14 +7,10 @@ import fi.vm.sade.hakurekisteri.tools.Zip
 import fi.vm.sade.scalaproperties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.apache.commons.io.IOUtils
-import org.eclipse.jetty.security.authentication.BasicAuthenticator
-import org.eclipse.jetty.security.{ConstraintMapping, ConstraintSecurityHandler, HashLoginService}
+import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.server.{RequestLog, Server}
-import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
-import org.eclipse.jetty.util.security.{Constraint, Credential}
-import org.scalatest.{Outcome, TestSuite, TestSuiteMixin, fixture}
+import org.scalatest.{Outcome, TestSuite, TestSuiteMixin}
 
-import javax.security.auth.Subject
 import scala.collection.mutable
 
 trait YtlMockFixture extends TestSuiteMixin {

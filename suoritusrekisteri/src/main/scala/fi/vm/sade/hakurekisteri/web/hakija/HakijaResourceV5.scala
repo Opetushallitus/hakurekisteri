@@ -51,7 +51,7 @@ class HakijaResourceV5(hakijaActor: ActorRef)(implicit
     ExcelUtilV5.write(out, hakijat)
   }
 
-  get("/", operation(queryV2)) {
+  get("/", operation(queryV5)) {
     val q = HakijaQuery(params.toMap, currentUser, 5)
     if (q.haku.isEmpty || q.organisaatio.isEmpty) throw HakijaParamMissingException
     val tyyppi = getFormatFromTypeParam()
