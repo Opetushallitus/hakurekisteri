@@ -4,13 +4,13 @@
 
  - Java 17
  - Scala 2.12
- - Node.js 12 & NPM 6
+ - Node.js 20 & pnpm 10
 
 ## Fronttidevaus ja mocha-testit
 
 Setup:
 
-1. Laita fronttikäännös pyörimään: `npm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
+1. Laita fronttikäännös pyörimään: `pnpm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
 2. Käynnistä serveri IDEAsta: `SureTestJettyWithMocks`, jolloin serveri toimii ilman ulkoisia depsuja
 3. Aja Mocha-testit selaimessa: http://localhost:8080/test/runner.html
 
@@ -18,7 +18,7 @@ Mocha-testit käyttävät tällä hetkellä suurelta osin frontend-mockeja, jote
 
 Tarvittaessa voit päivittää front-riippuvuudet komennolla
 
-    bower update
+    pnpm exec bower update
 
 ## Testit
 
