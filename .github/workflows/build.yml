@@ -24,15 +24,19 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@latest
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: suoritusrekisteri/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: suoritusrekisteri/pnpm-lock.yaml
 
       - name: Run NPM
         run: |
-          npm install bower
+          pnpm install bower
           node_modules/bower/bin/bower update
           npm -v
           node -v

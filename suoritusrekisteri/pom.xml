@@ -210,13 +210,13 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm version</id>
+                        <id>pnpm version</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>npm</executable>
+                            <executable>pnpm</executable>
                             <arguments>
                                 <argument>-v</argument>
                             </arguments>
@@ -242,11 +242,10 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>npm</executable>
+                            <executable>pnpm</executable>
                             <arguments>
                                 <argument>run</argument>
                                 <argument>build</argument>
-                                <argument>-s</argument>
                             </arguments>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                         </configuration>

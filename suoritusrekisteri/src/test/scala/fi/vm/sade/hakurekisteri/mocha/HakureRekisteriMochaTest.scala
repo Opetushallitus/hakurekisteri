@@ -17,6 +17,12 @@ class HakureRekisteriMochaTest
 
   "Mocha tests" should "pass" in {
     val pb = Seq(
+      "pnpm",
+      "exec",
+      "browsers",
+      "install",
+      "chrome",
+      "&&",
       "node_modules/mocha-headless-chrome/bin/start",
       "-t",
       totalMochaTestsMaxDuration.toMillis.toString,
