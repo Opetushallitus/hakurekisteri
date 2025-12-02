@@ -128,8 +128,13 @@ class OppijaResource(
         s"too many person oids: ${henkilot.size} was greater than the allowed maximum ${OppijatPostSize.maxOppijatPostSize}"
       throw new IllegalArgumentException(msg)
     }
-    if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) {
-      throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
+    if (
+      henkilot
+        .exists(oid => !oid.startsWith("1.2.246.562.24.") && !oid.startsWith("1.2.246.562.98."))
+    ) {
+      throw new IllegalArgumentException(
+        "person oid must start with 1.2.246.562.24. or 1.2.246.562.98."
+      )
     }
     val hakuOid: Option[String] = params.get("haku")
 

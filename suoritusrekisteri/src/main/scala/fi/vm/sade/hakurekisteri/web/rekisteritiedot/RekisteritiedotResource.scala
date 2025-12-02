@@ -102,8 +102,13 @@ class RekisteritiedotResource(
     val henkilot = parse(request.body).extract[Set[String]]
     if (henkilot.size > OppijatPostSize.maxOppijatPostSize)
       throw new IllegalArgumentException("too many person oids")
-    if (henkilot.exists(!_.startsWith("1.2.246.562.24.")))
-      throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
+    if (
+      henkilot
+        .exists(oid => !oid.startsWith("1.2.246.562.24.") && !oid.startsWith("1.2.246.562.98."))
+    )
+      throw new IllegalArgumentException(
+        "person oid must start with 1.2.246.562.24. or 1.2.246.562.98."
+      )
 
     val personOidsWithAliases = oppijaNumeroRekisteri.enrichWithAliases(henkilot)
 
