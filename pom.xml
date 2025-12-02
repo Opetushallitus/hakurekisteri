@@ -30,6 +30,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <slf4j-api.version>2.0.16</slf4j-api.version>
+        <testcontainers.version>2.0.2</testcontainers.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -67,7 +68,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.6</version>
+                <version>3.20.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
@@ -286,6 +287,14 @@
                 <artifactId>commons-compress</artifactId>
                 <version>1.27.1</version>
             </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
 
             <!-- for transitive deps -->
             <dependency>
@@ -369,6 +378,10 @@
         <dependency>
             <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
             <artifactId>dokumenttipalvelu</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -1227,19 +1240,10 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.dimafeng</groupId>
-            <artifactId>testcontainers-scala_2.12</artifactId>
-            <version>0.43.0</version>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-localstack</artifactId>
             <scope>test</scope>
             <exclusions>
-                <exclusion>
-                    <groupId>net.java.dev.jna</groupId>
-                    <artifactId>jna</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-annotations</artifactId>
@@ -1247,10 +1251,13 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.dimafeng</groupId>
-            <artifactId>testcontainers-scala-postgresql_2.12</artifactId>
-            <version>0.43.0</version>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -1338,42 +1345,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>io.findify</groupId>
-            <artifactId>s3mock_2.12</artifactId>
-            <version>0.2.3</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.typesafe</groupId>
-                    <artifactId>config</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.amazonaws</groupId>
-                    <artifactId>aws-java-sdk-s3</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.typesafe.akka</groupId>
-                    <artifactId>akka-stream_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-reflect</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-http_2.12</artifactId>
             <version>10.0.7</version>
@@ -1409,21 +1380,6 @@
                 <exclusion>
                     <groupId>com.typesafe</groupId>
                     <artifactId>config</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.792</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
