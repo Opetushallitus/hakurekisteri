@@ -454,7 +454,7 @@ class OppijaResourceSpec
   test("OppijaResource should return 400 if invalid person oids is sent as POST") {
     post("/?haku=1.2.3.4", """["foo","1.2.246.562.24.00000000002"]""") {
       response.status should be(BAD_REQUEST)
-      response.body should include("person oid must start with 1.2.246.562.24.")
+      response.body should include("person oid must start with 1.2.246.562.24. or 1.2.246.562.98.")
     }
   }
 
