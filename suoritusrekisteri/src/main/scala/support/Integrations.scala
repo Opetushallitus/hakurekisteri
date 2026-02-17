@@ -319,10 +319,8 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
   private val pistesyottoClient =
     new VirkailijaRestClient(
-      config.integrations.pistesyottoConfig,
-      None,
-      jSessionName = "ring-session",
-      serviceUrlSuffix = "/auth/cas"
+      config.integrations.valintalaskentaConfig,
+      None
     )(pisteEc, system)
   val valintalaskentaClient =
     new VirkailijaRestClient(
