@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
 import java.util.UUID
-
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
@@ -195,6 +194,14 @@ case class VirallinenSisalto(
   }
 }
 
+object rajattuOppimaara extends Enumeration {
+  type RajattuOppimaara = Value
+  val OsittainRajattu = Value("OsittainRajattu")
+  val PaaosinTaiKokonaanRajattu = Value("PaaosinTaiKokonaanRajattu")
+}
+
+import fi.vm.sade.hakurekisteri.suoritus.rajattuOppimaara._
+
 case class VirallinenSuoritus(
   komo: String,
   myontaja: String,
@@ -207,7 +214,8 @@ case class VirallinenSuoritus(
   vahv: Boolean = true,
   lahde: String,
   suoritustyyppi: Option[String] = None,
-  lahdeArvot: Map[String, String] = Map.empty
+  lahdeArvot: Map[String, String] = Map.empty,
+  rajattuOppimaara: Option[RajattuOppimaara] = None
 ) extends Suoritus(henkilo, vahv, lahde) {
 
   override val core = VirallinenSisalto(henkilo, komo, myontaja, vahv, suoritustyyppi.orNull)
