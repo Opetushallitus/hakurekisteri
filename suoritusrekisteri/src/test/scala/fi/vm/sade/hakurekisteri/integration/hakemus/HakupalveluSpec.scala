@@ -85,7 +85,15 @@ class HakupalveluSpec extends AnyFlatSpec with Matchers {
 
   def createSuoritus(komo: String): VirallinenSuoritus = {
     AkkaHakupalvelu
-      .getSuoritus(Some(komo), "SPEC", null, "SUORITTAJA", "FI", Some("HAKIJA"))
+      .getSuoritus(
+        Some(komo),
+        "SPEC",
+        null,
+        "SUORITTAJA",
+        "FI",
+        Some("HAKIJA"),
+        ataruHakemus = false
+      )
       .get
       .asInstanceOf[VirallinenSuoritus]
   }

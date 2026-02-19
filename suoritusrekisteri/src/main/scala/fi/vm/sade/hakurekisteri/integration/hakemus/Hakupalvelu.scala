@@ -818,7 +818,8 @@ object AkkaHakupalvelu {
           valmistuminen,
           suorittaja,
           opetuskieli.getOrElse("FI"),
-          hakemus.personOid
+          hakemus.personOid,
+          ataruHakemus = true
         ).toSeq,
         viimeisinOpiskelutieto.map(tieto => Seq(tieto)).getOrElse(Seq.empty),
         Hakemus(
@@ -984,7 +985,8 @@ object AkkaHakupalvelu {
           valmistuminen,
           suorittaja,
           kieli,
-          hakemus.personOid
+          hakemus.personOid,
+          ataruHakemus = false
         ).toSeq,
         lahtokoulu match {
           case Some(oid) =>
@@ -1121,7 +1123,8 @@ object AkkaHakupalvelu {
     valmistuminen: LocalDate,
     suorittaja: String,
     kieli: String,
-    hakija: Option[String]
+    hakija: Option[String],
+    ataruHakemus: Boolean
   ): Option[Suoritus] = {
     Seq(pohjakoulutus).collectFirst {
       case Some("0") =>
@@ -1136,7 +1139,7 @@ object AkkaHakupalvelu {
           vahv = false,
           lahde = hakija.getOrElse(Oids.ophOrganisaatioOid)
         )
-      case Some("1") =>
+      case Some(v) if v == "1" || (ataruHakemus && Set("8", "9").contains(v)) =>
         VirallinenSuoritus(
           "peruskoulu",
           myontaja,
