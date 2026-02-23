@@ -7,44 +7,27 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija.representation.UrheilijanLisakysymykset
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{
-  IOppijaNumeroRekisteri,
-  Kieli,
-  PersonOidsWithAliases
-}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, PersonOidsWithAliases}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{
   GetRinnasteinenKoodiArvoQuery,
   KoodistoActorRef
 }
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
-import fi.vm.sade.hakurekisteri.integration.koski.{
-  IKoskiService,
-  KoskiHenkiloContainer,
-  OppivelvollisuusTieto
-}
+import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, OppivelvollisuusTieto}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{
   IValintalaskentaTulosService,
-  LaskennanTulosHakemukselle,
   LaskennanTulosValinnanvaihe
 }
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{
-  Komoto,
-  Suoritus,
-  SuoritusQuery,
-  SuoritusQueryWithPersonAliases,
-  VirallinenSuoritus,
-  yksilollistaminen
-}
+import fi.vm.sade.hakurekisteri.suoritus.rajattuOppimaara._
+import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
-import org.slf4j.LoggerFactory._
 
-import java.io
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import scala.collection.immutable.Iterable
@@ -818,7 +801,8 @@ object AkkaHakupalvelu {
           valmistuminen,
           suorittaja,
           opetuskieli.getOrElse("FI"),
-          hakemus.personOid
+          hakemus.personOid,
+          ataruHakemus = true
         ).toSeq,
         viimeisinOpiskelutieto.map(tieto => Seq(tieto)).getOrElse(Seq.empty),
         Hakemus(
@@ -984,7 +968,8 @@ object AkkaHakupalvelu {
           valmistuminen,
           suorittaja,
           kieli,
-          hakemus.personOid
+          hakemus.personOid,
+          ataruHakemus = false
         ).toSeq,
         lahtokoulu match {
           case Some(oid) =>
@@ -1121,7 +1106,8 @@ object AkkaHakupalvelu {
     valmistuminen: LocalDate,
     suorittaja: String,
     kieli: String,
-    hakija: Option[String]
+    hakija: Option[String],
+    ataruHakemus: Boolean
   ): Option[Suoritus] = {
     Seq(pohjakoulutus).collectFirst {
       case Some("0") =>
@@ -1136,7 +1122,7 @@ object AkkaHakupalvelu {
           vahv = false,
           lahde = hakija.getOrElse(Oids.ophOrganisaatioOid)
         )
-      case Some("1") =>
+      case Some(v) if v == "1" || (ataruHakemus && Set("8", "9").contains(v)) =>
         VirallinenSuoritus(
           "peruskoulu",
           myontaja,
@@ -1146,7 +1132,12 @@ object AkkaHakupalvelu {
           yksilollistaminen.Ei,
           kieli,
           vahv = false,
-          lahde = hakija.getOrElse(Oids.ophOrganisaatioOid)
+          lahde = hakija.getOrElse(Oids.ophOrganisaatioOid),
+          rajattuOppimaara = (ataruHakemus, v) match {
+            case (true, "8") => Some(OsittainRajattu)
+            case (true, "9") => Some(PaaosinTaiKokonaanRajattu)
+            case _           => None
+          }
         )
       case Some("2") =>
         VirallinenSuoritus(

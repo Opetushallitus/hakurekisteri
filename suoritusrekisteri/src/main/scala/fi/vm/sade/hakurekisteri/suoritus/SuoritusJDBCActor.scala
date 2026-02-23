@@ -35,7 +35,21 @@ class SuoritusJDBCActor(
     case VapaamuotoinenSuoritus(henkilo, _, _, _, tyyppi, index, _) =>
       t.henkiloOid === henkilo && (t.tyyppi === tyyppi).asColumnOf[Boolean] && (t.index === index)
         .asColumnOf[Boolean]
-    case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _, suoritustyyppi, _) =>
+    case VirallinenSuoritus(
+          komo,
+          myontaja,
+          _,
+          _,
+          henkilo,
+          _,
+          _,
+          _,
+          vahv,
+          _,
+          suoritustyyppi,
+          _,
+          _
+        ) =>
       (t.komo === komo).asColumnOf[Boolean] &&
         t.myontaja === myontaja &&
         t.henkiloOid === henkilo &&
@@ -68,7 +82,21 @@ class SuoritusJDBCActor(
       case VapaamuotoinenSuoritus(henkilo, _, _, _, tyyppi, index, _) =>
         (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) && (t.tyyppi === tyyppi)
           .asColumnOf[Boolean] && (t.index === index).asColumnOf[Boolean]
-      case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _, suoritustyyppi, _) =>
+      case VirallinenSuoritus(
+            komo,
+            myontaja,
+            _,
+            _,
+            henkilo,
+            _,
+            _,
+            _,
+            vahv,
+            _,
+            suoritustyyppi,
+            _,
+            _
+          ) =>
         (t.komo === komo).asColumnOf[Boolean] &&
           t.myontaja === myontaja &&
           (t.henkiloOid inSet personOidsWithAliases.henkiloOidsWithLinkedOids) &&

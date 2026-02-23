@@ -11,8 +11,9 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.suoritus.rajattuOppimaara._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.{Alueittain, Ei, Kokonaan, Osittain}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, rajattuOppimaara}
 
 import scala.util.Try
 import scala.xml.Node
@@ -116,11 +117,16 @@ object XMLHakemus {
       s.komo match {
         case "ulkomainen" => "0"
         case "peruskoulu" =>
-          s.yksilollistaminen match {
-            case Ei         => "1"
-            case Osittain   => "2"
-            case Alueittain => "3"
-            case Kokonaan   => "6"
+          s.rajattuOppimaara match {
+            case Some(OsittainRajattu)           => "8"
+            case Some(PaaosinTaiKokonaanRajattu) => "9"
+            case _ =>
+              s.yksilollistaminen match {
+                case Ei         => "1"
+                case Osittain   => "2"
+                case Alueittain => "3"
+                case Kokonaan   => "6"
+              }
           }
         case "lukio"          => "9"
         case jatkuvahaku2aste => jatkuvahaku2aste
@@ -148,8 +154,8 @@ object XMLHakemus {
   }
 
   def resolveYear(suoritus: VirallinenSuoritus): Option[String] = suoritus match {
-    case VirallinenSuoritus("ulkomainen", _, _, _, _, _, _, _, _, _, _, _) => None
-    case VirallinenSuoritus(_, _, _, date, _, _, _, _, _, _, _, _) =>
+    case VirallinenSuoritus("ulkomainen", _, _, _, _, _, _, _, _, _, _, _, _) => None
+    case VirallinenSuoritus(_, _, _, date, _, _, _, _, _, _, _, _, _) =>
       if (!Suoritus.realValmistuminenNotKnownLocalDate.equals(date))
         Some(date.getYear.toString)
       else
