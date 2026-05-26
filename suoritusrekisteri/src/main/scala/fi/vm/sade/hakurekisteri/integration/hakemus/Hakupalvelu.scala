@@ -256,6 +256,14 @@ class AkkaHakupalvelu(
     q match {
       case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, hakukohdeOid, _, _, _) =>
         val usesSupa = hakuOid == supaHakuOid
+        if (usesSupa)
+          logger.info(
+            s"Haetaan harkinnanvaraisuustiedot ja valintojen avain-arvot Suorituspalvelusta haulle $hakuOid"
+          )
+        else
+          logger.info(
+            s"Haetaan harkinnanvaraisuustiedot ja valintojen avain-arvot Koostepalvelusta haulle $hakuOid"
+          )
         for {
           hakemukset <- hakemusService
             .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi, hakukohdeOid)
