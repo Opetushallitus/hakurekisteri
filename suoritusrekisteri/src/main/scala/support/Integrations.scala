@@ -441,7 +441,11 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     )
   val koosteService = new KoosteService(koosteClient)(system)
   private val supaClient =
-    new VirkailijaRestClient(config.integrations.supaConfig, None)(restEc, system)
+    new VirkailijaRestClient(
+      config.integrations.supaConfig,
+      None,
+      serviceUrlSuffix = "/api/login/j_spring_cas_security_check"
+    )(restEc, system)
   val supaService = new SupaService(supaClient)(system)
   val valintalaskentaTulosService = new ValintalaskentaTulosService(valintalaskentaClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
