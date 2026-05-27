@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.{
 }
 import fi.vm.sade.hakurekisteri.integration.kooste.IKoosteService
 import fi.vm.sade.hakurekisteri.integration.koski.{IKoskiService, OppivelvollisuusTieto}
+import fi.vm.sade.hakurekisteri.integration.supa.ISupaService
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.valintalaskentatulos.{
   IValintalaskentaTulosService,
@@ -66,6 +67,7 @@ class AkkaHakupalvelu(
   virkailijaClient: VirkailijaRestClient,
   hakemusService: IHakemusService,
   koosteService: IKoosteService,
+  supaService: ISupaService,
   hakuActor: ActorRef,
   koodisto: KoodistoActorRef,
   config: Config,
@@ -247,19 +249,31 @@ class AkkaHakupalvelu(
     }
   }
 
+  //Haetaan tietyt tiedot kevään 2026 toisen asteen yhteishaulle Suorituspalvelusta Koostepalvelun sijaan.
+  private val supaHakuOid = "1.2.246.562.29.00000000000000075761"
+
   override def getToisenAsteenAtaruHakijat(q: HakijaQuery, haku: Haku): Future[Seq[Hakija]] = {
     q match {
       case HakijaQuery(Some(hakuOid), organisaatio, hakukohdekoodi, hakukohdeOid, _, _, _) =>
+        val usesSupa = hakuOid == supaHakuOid
+        if (usesSupa)
+          logger.info(
+            s"Haetaan harkinnanvaraisuustiedot ja valintojen avain-arvot Suorituspalvelusta haulle $hakuOid"
+          )
+        else
+          logger.info(
+            s"Haetaan harkinnanvaraisuustiedot ja valintojen avain-arvot Koostepalvelusta haulle $hakuOid"
+          )
         for {
           hakemukset <- hakemusService
             .hakemuksetForToisenAsteenAtaruHaku(hakuOid, organisaatio, hakukohdekoodi, hakukohdeOid)
-          harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <- koosteService
-            .getHarkinnanvaraisuudet(hakemukset)
+          harkinnanvaraisuudet: Seq[HakemuksenHarkinnanvaraisuus] <-
+            if (usesSupa) supaService.getHarkinnanvaraisuudet(hakemukset)
+            else koosteService.getHarkinnanvaraisuudet(hakemukset)
           hakukohteidenTulokset <- getHakemustenHakutoiveidenLaskennanTulokset(hakemukset, q)
-          hakijaSuorituksetMap <- koosteService.getSuorituksetForAtaruhakemukset(
-            hakuOid,
-            hakemukset
-          )
+          hakijaSuorituksetMap: Map[String, Map[String, String]] <-
+            if (usesSupa) supaService.getSuorituksetForAtaruhakemukset(hakuOid, hakemukset)
+            else koosteService.getSuorituksetForAtaruhakemukset(hakuOid, hakemukset)
           maakoodit <- maatjavaltiot2To1AtaruToinenAste(hakemukset)
           oppivelvollisuusTiedot = getOppivelvollisuustiedot(hakemukset, q.version)
           personOids = hakemukset.map(h => h.personOid.get)

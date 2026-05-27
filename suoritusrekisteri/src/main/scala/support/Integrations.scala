@@ -34,6 +34,7 @@ import fi.vm.sade.hakurekisteri.integration.kooste.{
   KoosteService,
   KoosteServiceMock
 }
+import fi.vm.sade.hakurekisteri.integration.supa.{ISupaService, SupaService, SupaServiceMock}
 import fi.vm.sade.hakurekisteri.integration.koski._
 import fi.vm.sade.hakurekisteri.integration.kouta.{
   KoutaInternalActor,
@@ -98,6 +99,7 @@ trait Integrations {
   val organisaatiot: OrganisaatioActorRef
   val hakemusService: IHakemusService
   val koosteService: IKoosteService
+  val supaService: ISupaService
   val tarjonta: TarjontaActorRef
   val koutaInternal: KoutaInternalActorRef
   val hakuAggregator: HakuAggregatorActorRef
@@ -159,6 +161,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val hakemusService = new HakemusServiceMock
   override val koskiService = new KoskiServiceMock
   override val koosteService = new KoosteServiceMock
+  override val supaService = new SupaServiceMock
   override val valintalaskentaTulosService = new ValintalaskentaTulosServiceMock
   override val valintaperusteetService = new ValintaperusteetServiceMock
   override val hakukohderyhmaService = new HakukohderyhmaServiceMock
@@ -437,6 +440,13 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       system
     )
   val koosteService = new KoosteService(koosteClient)(system)
+  private val supaClient =
+    new VirkailijaRestClient(
+      config.integrations.supaConfig,
+      None,
+      serviceUrlSuffix = "/api/login/j_spring_cas_security_check"
+    )(restEc, system)
+  val supaService = new SupaService(supaClient)(system)
   val valintalaskentaTulosService = new ValintalaskentaTulosService(valintalaskentaClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
   val hakukohderyhmaService = new HakukohderyhmaService(hakukohderyhmaClient)(system)
