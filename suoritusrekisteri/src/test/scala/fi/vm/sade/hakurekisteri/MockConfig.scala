@@ -15,8 +15,8 @@ class MockConfig extends Config {
   override val databaseUrl = ItPostgres.getEndpointURL
   override val databaseHost = "localhost"
   override val databasePort = dbPort.toString
-  override val postgresUser = ItPostgres.container.username
-  override val postgresPassword = ItPostgres.container.password
+  override val postgresUser = ItPostgres.container.getUsername
+  override val postgresPassword = ItPostgres.container.getPassword
   override val archiveNonCurrentAfterDays = "180"
   override val archiveBatchSize = "3"
 

@@ -3,42 +3,33 @@ package fi.vm.sade.hakurekisteri.tools
 import akka.util.Timeout
 import fi.vm.sade.utils.slf4j.Logging
 import org.slf4j.{Logger, LoggerFactory}
-import com.dimafeng.testcontainers.PostgreSQLContainer
-import org.testcontainers.utility.DockerImageName
+import org.testcontainers.postgresql.PostgreSQLContainer
 import slick.jdbc.JdbcBackend
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.PostgresProfile.api._
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{Await, Future}
+import scala.collection.JavaConverters._
 
 object ItPostgres extends Logging {
   private def asyncExecutor = AsyncExecutor.default("slick-executor", 20)
   val container: PostgreSQLContainer =
-    PostgreSQLContainer
-      .Def(
-        dockerImageName = DockerImageName.parse("postgres:15"),
-        databaseName = "suoritusrekisteri"
-      )
-      .createContainer()
-  container.configure { c =>
-    c.withPrivilegedMode(true)
-    c.withInitScript("database/init.sql")
-  }
-  private val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+    new PostgreSQLContainer("postgres:15")
+      .withDatabaseName("suoritusrekisteri")
+      .withPrivilegedMode(true)
+      .withInitScript("database/init.sql")
+  container.setPortBindings(List("55432:5432").asJava)
   container.start()
-  var port: Int = getPortNumber()
+  private val timeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+  var port: Int = 55432
   lazy val log: Logger = LoggerFactory.getLogger(getClass)
   private var running = true
-
-  private def getPortNumber(): Int = {
-    container.jdbcUrl.split("jdbc:postgresql://localhost:").last.split("\\/").head.toInt
-  }
 
   def start(): Unit = {
     if (!running) {
       container.start()
-      port = getPortNumber()
+      port = 55432
       running = true
     }
   }
@@ -46,9 +37,9 @@ object ItPostgres extends Logging {
   def reset(): Unit = {
     log.info("Resetting database tables ...")
     val db = Database.forURL(
-      url = container.jdbcUrl,
-      user = container.username,
-      password = container.password,
+      url = container.getJdbcUrl,
+      user = container.getUsername,
+      password = container.getPassword,
       executor = asyncExecutor
     )
     val tablesTruncate = runAwait(
@@ -68,14 +59,14 @@ object ItPostgres extends Logging {
 
   def getEndpointURL: String = {
     start()
-    container.jdbcUrl
+    container.getJdbcUrl
   }
 
   def getDatabase: JdbcBackend.DatabaseDef = {
     Database.forURL(
-      url = container.jdbcUrl,
-      user = container.username,
-      password = container.password,
+      url = container.getJdbcUrl,
+      user = container.getUsername,
+      password = container.getPassword,
       executor = asyncExecutor
     )
   }

@@ -3,16 +3,22 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.io._
 import java.nio.file.{Files, Paths}
 import java.text.SimpleDateFormat
-
-import com.amazonaws.{AmazonClientException, AmazonServiceException}
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.slf4j.{Logger, LoggerFactory}
+import software.amazon.awssdk.awscore.exception.AwsServiceException
+import software.amazon.awssdk.core.exception.SdkClientException
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.{
+  GetObjectRequest,
+  ListObjectsV2Request,
+  PutObjectRequest
+}
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
-
 import scala.util.Try
 
 trait FileAccess {
@@ -93,16 +99,19 @@ class YtlFileFileSystem(val config: OphProperties) extends YtlFileSystem(config)
   }
 }
 
-class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3)
+class YtlS3FileSystem(val config: OphProperties, val s3client: S3Client)
     extends YtlFileSystem(config) {
 
   def this(config: OphProperties) =
     this(
       config,
-      AmazonS3ClientBuilder.standard
-        .withRegion(
-          Option(config.getOrElse("ytl.s3.region", null)).getOrElse(
-            throw new RuntimeException(s"S3 region configuration 'ytl.s3.region' is missing!")
+      S3Client
+        .builder()
+        .region(
+          Region.of(
+            Option(config.getOrElse("ytl.s3.region", null)).getOrElse(
+              throw new RuntimeException(s"S3 region configuration 'ytl.s3.region' is missing!")
+            )
           )
         )
         .build()
@@ -118,14 +127,24 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3)
     Try(
       closeInCaseOfFailure(
         s3client
-          .listObjectsV2(bucket)
-          .getObjectSummaries
+          .listObjectsV2(ListObjectsV2Request.builder().bucket(bucket).build())
+          .contents()
           .asScala
-          .map(_.getKey)
+          .map(_.key())
           .filter(_.contains(uuid))
           .toList
-          .map(key => Try(s3client.getObject(bucket, key)))
-      ).map(_.getObjectContent).iterator
+          .map(key =>
+            Try(
+              s3client.getObject(
+                GetObjectRequest
+                  .builder()
+                  .bucket(bucket)
+                  .key(key)
+                  .build()
+              )
+            )
+          )
+      ).iterator
     ) match {
       case Success(x) => x
       case Failure(t) => logAndThrowS3Exception(t)
@@ -134,7 +153,14 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3)
 
   override def write(groupUuid: String, uuid: String)(input: InputStream) = {
     try {
-      s3client.putObject(bucket, fileName(groupUuid, uuid), input, null)
+      s3client.putObject(
+        PutObjectRequest
+          .builder()
+          .bucket(bucket)
+          .key(fileName(groupUuid, uuid))
+          .build(),
+        RequestBody.fromInputStream(input, input.available())
+      )
     } catch {
       case t: Throwable => logAndThrowS3Exception(t)
     } finally {
@@ -144,13 +170,14 @@ class YtlS3FileSystem(val config: OphProperties, val s3client: AmazonS3)
 
   private def logAndThrowS3Exception(t: Throwable) = {
     t match {
-      case e: AmazonServiceException =>
+      case e: AwsServiceException =>
         logger.error(
-          s"""Got error from Amazon s3. HTTP status code ${e.getStatusCode}, AWS Error Code ${e.getErrorCode},
-           error message ${e.getErrorMessage}, error type ${e.getErrorType}, request ID ${e.getRequestId}""",
+          s"""Got error from Amazon s3. HTTP status code ${e
+            .statusCode()}, AWS Error Code ${e.awsErrorDetails().errorCode()},
+           error message ${e.awsErrorDetails().errorMessage()}, request ID ${e.requestId()}""",
           e
         )
-      case e: AmazonClientException =>
+      case e: SdkClientException =>
         logger.error(s"""Unable to connect to Amazon s3. Got error message ${e.getMessage}""", e)
       case e => logger.error(s"""Got unexpected exception when connecting Amazon s3""", e)
     }
