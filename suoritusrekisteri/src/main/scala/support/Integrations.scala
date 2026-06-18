@@ -446,7 +446,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       None,
       serviceUrlSuffix = "/api/login/j_spring_cas_security_check"
     )(restEc, system)
-  val supaService = new SupaService(supaClient)(system)
+  val supaService = new SupaService(supaClient, config.integrations.supaBatchSize)(system)
   val valintalaskentaTulosService = new ValintalaskentaTulosService(valintalaskentaClient)(system)
   val valintaperusteetService = new ValintaperusteetService(valintaperusteetClient)(system)
   val hakukohderyhmaService = new HakukohderyhmaService(hakukohderyhmaClient)(system)
