@@ -29,8 +29,9 @@ trait ISupaService {
   ): Future[Map[String, Map[String, String]]]
 }
 
-class SupaService(restClient: VirkailijaRestClient)(implicit val system: ActorSystem)
-    extends ISupaService {
+class SupaService(restClient: VirkailijaRestClient, batchSize: Int = 5000)(implicit
+  val system: ActorSystem
+) extends ISupaService {
 
   private val logger = Logging.getLogger(system, this)
   private implicit val ec: ExecutionContext = system.dispatcher
@@ -42,12 +43,23 @@ class SupaService(restClient: VirkailijaRestClient)(implicit val system: ActorSy
     if (hakemusOids.isEmpty) {
       Future.successful(Seq.empty)
     } else {
+      val batches = hakemusOids.grouped(batchSize).toList
       logger.info(
-        s"${Thread.currentThread().getName} Haetaan suorituspalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle"
+        s"${Thread.currentThread().getName} Haetaan suorituspalvelusta harkinnanvaraisuudet ${hakemusOids.size} hakemukselle ${batches.size} erässä (eräkoko $batchSize)"
       )
-      restClient.postObject[SupaHarkinnanvaraisuusRequest, Seq[HakemuksenHarkinnanvaraisuus]](
-        "suorituspalvelu.harkinnanvaraisuus"
-      )(200, SupaHarkinnanvaraisuusRequest(hakemusOids))
+      batches.zipWithIndex.foldLeft(Future.successful(Seq.empty[HakemuksenHarkinnanvaraisuus])) {
+        case (acc, (batch, idx)) =>
+          acc.flatMap { previousResults =>
+            logger.info(
+              s"${Thread.currentThread().getName} Haetaan harkinnanvaraisuudet erä ${idx + 1}/${batches.size} (${batch.size} hakemusta)"
+            )
+            restClient
+              .postObject[SupaHarkinnanvaraisuusRequest, Seq[HakemuksenHarkinnanvaraisuus]](
+                "suorituspalvelu.harkinnanvaraisuus"
+              )(200, SupaHarkinnanvaraisuusRequest(batch))
+              .map(previousResults ++ _)
+          }
+      }
     }
   }
 
@@ -59,19 +71,30 @@ class SupaService(restClient: VirkailijaRestClient)(implicit val system: ActorSy
     if (hakemusOids.isEmpty) {
       Future.successful(Map.empty)
     } else {
+      val batches = hakemusOids.grouped(batchSize).toList
       logger.info(
-        s"${Thread.currentThread().getName} Haetaan suorituspalvelusta suoritukset ${hakemusOids.size} hakemukselle haussa $hakuOid"
+        s"${Thread.currentThread().getName} Haetaan suorituspalvelusta suoritukset ${hakemusOids.size} hakemukselle haussa $hakuOid ${batches.size} erässä (eräkoko $batchSize)"
       )
-      restClient
-        .postObject[SupaValintadataRequest, SupaValintadataResponse](
-          "suorituspalvelu.valintadata"
-        )(200, SupaValintadataRequest(hakuOid, hakemusOids))
-        .map { response =>
-          response.valintaHakemukset.map { hakemus =>
-            val avainMap = hakemus.avaimet.collect { case SupaAvain(k, Some(v)) => k -> v }.toMap
-            hakemus.hakijaOid -> avainMap
-          }.toMap
-        }
+      batches.zipWithIndex.foldLeft(Future.successful(Map.empty[String, Map[String, String]])) {
+        case (acc, (batch, idx)) =>
+          acc.flatMap { previousResults =>
+            logger.info(
+              s"${Thread.currentThread().getName} Haetaan suoritukset erä ${idx + 1}/${batches.size} (${batch.size} hakemusta) haussa $hakuOid"
+            )
+            restClient
+              .postObject[SupaValintadataRequest, SupaValintadataResponse](
+                "suorituspalvelu.valintadata"
+              )(200, SupaValintadataRequest(hakuOid, batch))
+              .map { response =>
+                val batchMap = response.valintaHakemukset.map { hakemus =>
+                  val avainMap =
+                    hakemus.avaimet.collect { case SupaAvain(k, Some(v)) => k -> v }.toMap
+                  hakemus.hakijaOid -> avainMap
+                }.toMap
+                previousResults ++ batchMap
+              }
+          }
+      }
     }
   }
 }

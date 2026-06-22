@@ -507,6 +507,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
       "suoritusrekisteri.suorituspalvelu.max-connection-queue-ms"
     ).toInt
   )
+  val supaBatchSize: Int =
+    properties.getOrElse("suoritusrekisteri.suorituspalvelu.batch.size", "5000").toInt
   val tarjontaConfig = ServiceConfig(
     serviceUrl = tarjontaServiceUrl,
     properties = properties,
