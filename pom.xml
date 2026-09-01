@@ -180,6 +180,11 @@
                 <version>2.15.0</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.15.0</version>
+            </dependency>
+            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
@@ -888,6 +893,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- jackson-annotations on julistettava suoraan: se tuli aiemmin mukana polulla
+             scala-utils_2.12 -> jackson-databind, ja kun scala-utils poistettiin, databind tulee
+             enää jinjavan kautta, jossa jackson-annotations on suljettu pois (ks. yllä). Ilman
+             tätä mm. testcontainers kaatuu ClassNotFoundException-virheeseen. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
             <artifactId>json4s-jackson_2.12</artifactId>
@@ -1120,57 +1133,10 @@
             <artifactId>scala-lang_2.12</artifactId>
             <version>1.0.2-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-utils_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaj</groupId>
-                    <artifactId>scalaj-http_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-jackson_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.dataformat</groupId>
-                    <artifactId>jackson-dataformat-yaml</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-ext_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-core_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.github.cb372</groupId>
-                    <artifactId>scalacache-guava_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>de.flapdoodle.embed</groupId>
-                    <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.typesafe</groupId>
-                    <artifactId>config</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.hubspot.jinjava</groupId>
-                    <artifactId>jinjava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- fi.vm.sade:scala-utils_2.12 (ja sen mukana tullut scala-logging_2.12) on poistettu:
+             arkistoitu Opetushallitus/scala-utils ei ole enää ylläpidossa. Käytössä olleet
+             Logging, Timer ja PortChecker on siirretty tähän repositoryyn hakemistoon
+             suoritusrekisteri/src/main/scala/fi/vm/sade/utils/ alkuperäisillä paketeillaan. -->
         <dependency>
             <groupId>com.hubspot.jinjava</groupId>
             <artifactId>jinjava</artifactId>
@@ -1422,7 +1388,7 @@
         </dependency>
     </dependencies>
     <repositories>
-        <repository>
+        <!--<repository>
             <id>ophsnapshots</id>
             <name>oph-snapshots</name>
             <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local/</url>
@@ -1445,7 +1411,7 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-          </repository>
+          </repository>-->
       <repository>
             <id>Sonatype</id>
             <name>Sonatype</name>
