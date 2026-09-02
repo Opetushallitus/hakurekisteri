@@ -31,6 +31,33 @@
     </properties>
     <dependencyManagement>
         <dependencies>
+            <!-- BOM-tuonnit pitävät kirjastoperheen kaikki artefaktit samassa versiossa, myös ne
+                 joita ei ole erikseen pinnattu (esim. spring-aop, spring-beans, spring-jcl ja
+                 spring-security-crypto). Tämä on edellytys enforcerin dependencyConvergence-
+                 säännölle, kun versioita nostetaan.
+                 HUOM: dependencyManagementissa ensimmäinen osuma voittaa ja import laajenee
+                 paikalleen, joten BOMien on oltava tämän lohkon alussa. -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-bom</artifactId>
+                <version>${spring-security.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
