@@ -23,6 +23,7 @@
         <scalatra.version>3.1.2</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.7</json4s.version>
+        <jackson.version>2.18.10</jackson.version>
         <netty.version>4.1.137.Final</netty.version>
         <dokumenttipalvelu.version>6.15-SNAPSHOT</dokumenttipalvelu.version>
         <maven.compiler.source>11</maven.compiler.source>
@@ -55,6 +56,13 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
                 <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -193,21 +201,6 @@
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-parser-combinators_2.12</artifactId>
                 <version>1.1.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.15.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.15.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.15.0</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -387,11 +380,12 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- jinjava transitive dependency -->
+            <!-- jinjava transitive dependency. Versio on se, jota jackson-dataformat-yaml
+                 ${jackson.version} pyytää; aiempi pinni 2.0 pakotti sen neljä minoria taaksepäin. -->
             <dependency>
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>2.0</version>
+                <version>2.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
