@@ -462,15 +462,24 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
         </dependency>
+        <!-- 2.5.2 määrittelee c3p0:n ja HikariCP:n provided-scopessa, joten ne eivät tule
+             enää mukaan lainkaan (provided ei ole transitiivinen). Tämä poistaa c3p0:n ja
+             mchange-commons-javan haavoittuvuudet. Sovellus käyttää oletus-RAMJobStorea.
+             quartz-jobs on poistettu: org.quartz.jobs.* ei ole käytössä missään. -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.quartz-scheduler</groupId>
-            <artifactId>quartz-jobs</artifactId>
-            <version>2.3.2</version>
+            <version>2.5.2</version>
+            <exclusions>
+                <!-- Quartz tarvitsee JAXB:tä vain XML-pohjaiseen job-konfiguraatioon
+                     (quartz_jobs.xml), jota täällä ei käytetä: jobit rakennetaan koodissa
+                     JobBuilderilla. jakarta.xml.bind-api 4.0.4 sisältää jakarta.xml.bind-
+                     paketit ja pudottaisi javax.xml.bind-paketit, joita muu koodi tarvitsee. -->
+                <exclusion>
+                    <groupId>jakarta.xml.bind</groupId>
+                    <artifactId>jakarta.xml.bind-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
