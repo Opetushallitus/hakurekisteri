@@ -215,7 +215,16 @@
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
-                <version>2.8.9</version>
+                <!-- auditlogger 9.2.7 on käännetty gson 2.12.0:aa vasten. -->
+                <version>2.12.0</version>
+            </dependency>
+            <!-- guava 33.3.1-jre pyytää 2.28.0:aa ja gson 2.12.0 pyytää 2.36.0:aa, eikä artefakti
+                 ole hallittu muualla -> dependencyConvergence kaatuu ilman tätä. Sisältää vain
+                 annotaatioita (CLASS-retentio), joten versiolla ei ole ajonaikaista merkitystä. -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.36.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
@@ -1135,7 +1144,9 @@
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>auditlogger</artifactId>
-            <version>8.3.1-SNAPSHOT</version>
+            <!-- 8.3.1-SNAPSHOT löytyi vain poistetusta OPH Artifactorysta; 9.2.7-SNAPSHOT on
+                 saatavilla GitHub Packagesista. Käytössä oleva API on yhteensopiva. -->
+            <version>9.2.7-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.graylog2</groupId>
@@ -1171,11 +1182,6 @@
             <artifactId>scala-reflect</artifactId>
             <version>${scala.version}</version>
         </dependency>
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-lang_2.12</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-        </dependency>
         <!-- fi.vm.sade:scala-utils_2.12 (ja sen mukana tullut scala-logging_2.12) on poistettu:
              arkistoitu Opetushallitus/scala-utils ei ole enää ylläpidossa. Käytössä olleet
              Logging, Timer ja PortChecker on siirretty tähän repositoryyn hakemistoon
@@ -1195,16 +1201,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- fi.vm.sade:scala-properties_2.12 (arkistoitu, saatavilla vain poistetusta OPH
+             Artifactorysta) on poistettu. Sen ainoa luokka OphProperties on siirretty tähän
+             repositoryyn (suoritusrekisteri/src/main/scala/fi/vm/sade/scalaproperties/) ja
+             kantaluokka tulee suoraan ylläpidetystä java-properties-artefaktista. -->
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>fi.vm.sade.java-utils</groupId>
-                    <artifactId>java-properties</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-properties</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
