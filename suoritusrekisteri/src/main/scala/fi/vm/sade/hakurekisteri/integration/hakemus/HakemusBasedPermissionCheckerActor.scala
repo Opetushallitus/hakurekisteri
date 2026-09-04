@@ -7,7 +7,6 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActorRef}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
-import fi.vm.sade.scala.future.OphFutures
 import org.json4s.jackson.Serialization
 import support.TypedActorRef
 
