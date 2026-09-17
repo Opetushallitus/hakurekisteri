@@ -18,14 +18,14 @@
     <properties>
         <java.version>17</java.version>
         <scala.version>2.12.20</scala.version>
-        <spring.version>6.2.11</spring.version>
-        <spring-security.version>6.5.5</spring-security.version>
+        <spring.version>6.2.19</spring.version>
+        <spring-security.version>6.5.11</spring-security.version>
         <scalatra.version>3.1.2</scalatra.version>
         <slick.version>3.3.0</slick.version>
         <json4s.version>4.0.7</json4s.version>
-        <netty.version>4.1.128.Final</netty.version>
-        <jetty.version>11.0.24</jetty.version>
-        <jetty.server.version>9.4.56.v20240826</jetty.server.version>
+        <jackson.version>2.18.10</jackson.version>
+        <netty.version>4.1.137.Final</netty.version>
+        <jetty.version>12.0.38</jetty.version>
         <dokumenttipalvelu.version>6.15-SNAPSHOT</dokumenttipalvelu.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -33,6 +33,59 @@
     </properties>
     <dependencyManagement>
         <dependencies>
+            <!-- BOM-tuonnit pitävät kirjastoperheen kaikki artefaktit samassa versiossa, myös ne
+                 joita ei ole erikseen pinnattu (esim. spring-aop, spring-beans, spring-jcl ja
+                 spring-security-crypto). Tämä on edellytys enforcerin dependencyConvergence-
+                 säännölle, kun versioita nostetaan.
+                 HUOM: dependencyManagementissa ensimmäinen osuma voittaa ja import laajenee
+                 paikalleen, joten BOMien on oltava tämän lohkon alussa. -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-bom</artifactId>
+                <version>${spring-security.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Jetty tulee transitiivisesti scalatra-compat-jakartan kautta eikä sitä
+                 määritellä täällä missään. BOMit ovat tapa hallita sen versiota.
+                 Molemmat tarvitaan: jetty-server/-http/-security ovat jetty-bomissa,
+                 jetty-ee10-webapp/-servlet/-proxy jetty-ee10-bomissa. Pysytään 12.0.x:ssä,
+                 koska 12.1 siirtää servlet-kerroksen ee11-paketteihin. -->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-bom</artifactId>
+                <version>${jetty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-bom</artifactId>
+                <version>${jetty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
@@ -162,27 +215,21 @@
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
-                <version>2.8.9</version>
+                <!-- auditlogger 9.2.7 on käännetty gson 2.12.0:aa vasten. -->
+                <version>2.12.0</version>
+            </dependency>
+            <!-- guava 33.3.1-jre pyytää 2.28.0:aa ja gson 2.12.0 pyytää 2.36.0:aa, eikä artefakti
+                 ole hallittu muualla -> dependencyConvergence kaatuu ilman tätä. Sisältää vain
+                 annotaatioita (CLASS-retentio), joten versiolla ei ole ajonaikaista merkitystä. -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.36.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-parser-combinators_2.12</artifactId>
                 <version>1.1.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.15.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.15.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>${netty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>
@@ -228,7 +275,7 @@
             <dependency>
                 <groupId>org.asynchttpclient</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>2.12.4</version>
+                <version>2.16.1</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.sun.activation</groupId>
@@ -357,11 +404,12 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- jinjava transitive dependency -->
+            <!-- jinjava transitive dependency. Versio on se, jota jackson-dataformat-yaml
+                 ${jackson.version} pyytää; aiempi pinni 2.0 pakotti sen neljä minoria taaksepäin. -->
             <dependency>
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>2.0</version>
+                <version>2.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -443,15 +491,24 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
         </dependency>
+        <!-- 2.5.2 määrittelee c3p0:n ja HikariCP:n provided-scopessa, joten ne eivät tule
+             enää mukaan lainkaan (provided ei ole transitiivinen). Tämä poistaa c3p0:n ja
+             mchange-commons-javan haavoittuvuudet. Sovellus käyttää oletus-RAMJobStorea.
+             quartz-jobs on poistettu: org.quartz.jobs.* ei ole käytössä missään. -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.quartz-scheduler</groupId>
-            <artifactId>quartz-jobs</artifactId>
-            <version>2.3.2</version>
+            <version>2.5.2</version>
+            <exclusions>
+                <!-- Quartz tarvitsee JAXB:tä vain XML-pohjaiseen job-konfiguraatioon
+                     (quartz_jobs.xml), jota täällä ei käytetä: jobit rakennetaan koodissa
+                     JobBuilderilla. jakarta.xml.bind-api 4.0.4 sisältää jakarta.xml.bind-
+                     paketit ja pudottaisi javax.xml.bind-paketit, joita muu koodi tarvitsee. -->
+                <exclusion>
+                    <groupId>jakarta.xml.bind</groupId>
+                    <artifactId>jakarta.xml.bind-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -888,6 +945,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- jackson-annotations on julistettava suoraan: se tuli aiemmin mukana polulla
+             scala-utils_2.12 -> jackson-databind, ja kun scala-utils poistettiin, databind tulee
+             enää jinjavan kautta, jossa jackson-annotations on suljettu pois (ks. yllä). Ilman
+             tätä mm. testcontainers kaatuu ClassNotFoundException-virheeseen. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
             <artifactId>json4s-jackson_2.12</artifactId>
@@ -992,7 +1057,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.7</version>
+            <version>42.7.13</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -1079,7 +1144,9 @@
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>auditlogger</artifactId>
-            <version>8.3.1-SNAPSHOT</version>
+            <!-- 8.3.1-SNAPSHOT löytyi vain poistetusta OPH Artifactorysta; 9.2.7-SNAPSHOT on
+                 saatavilla GitHub Packagesista. Käytössä oleva API on yhteensopiva. -->
+            <version>9.2.7-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.graylog2</groupId>
@@ -1115,62 +1182,10 @@
             <artifactId>scala-reflect</artifactId>
             <version>${scala.version}</version>
         </dependency>
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-lang_2.12</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-utils_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaj</groupId>
-                    <artifactId>scalaj-http_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-jackson_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.dataformat</groupId>
-                    <artifactId>jackson-dataformat-yaml</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-ext_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-core_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.github.cb372</groupId>
-                    <artifactId>scalacache-guava_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>de.flapdoodle.embed</groupId>
-                    <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.typesafe</groupId>
-                    <artifactId>config</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.hubspot.jinjava</groupId>
-                    <artifactId>jinjava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- fi.vm.sade:scala-utils_2.12 (ja sen mukana tullut scala-logging_2.12) on poistettu:
+             arkistoitu Opetushallitus/scala-utils ei ole enää ylläpidossa. Käytössä olleet
+             Logging, Timer ja PortChecker on siirretty tähän repositoryyn hakemistoon
+             suoritusrekisteri/src/main/scala/fi/vm/sade/utils/ alkuperäisillä paketeillaan. -->
         <dependency>
             <groupId>com.hubspot.jinjava</groupId>
             <artifactId>jinjava</artifactId>
@@ -1186,16 +1201,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- fi.vm.sade:scala-properties_2.12 (arkistoitu, saatavilla vain poistetusta OPH
+             Artifactorysta) on poistettu. Sen ainoa luokka OphProperties on siirretty tähän
+             repositoryyn (suoritusrekisteri/src/main/scala/fi/vm/sade/scalaproperties/) ja
+             kantaluokka tulee suoraan ylläpidetystä java-properties-artefaktista. -->
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>fi.vm.sade.java-utils</groupId>
-                    <artifactId>java-properties</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-properties</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -1287,7 +1300,6 @@
         <dependency>
             <groupId>org.eclipse.jetty.ee10</groupId>
             <artifactId>jetty-ee10-proxy</artifactId>
-            <version>12.0.20</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -1422,7 +1434,7 @@
         </dependency>
     </dependencies>
     <repositories>
-        <repository>
+        <!--<repository>
             <id>ophsnapshots</id>
             <name>oph-snapshots</name>
             <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local/</url>
@@ -1445,7 +1457,7 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-          </repository>
+          </repository>-->
       <repository>
             <id>Sonatype</id>
             <name>Sonatype</name>
